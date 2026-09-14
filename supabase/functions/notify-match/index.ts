@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 // JWT generation for Firebase
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -238,29 +239,23 @@ serve(async (req) => {
       }
     }
 
-    // 5. Fetch push tokens for all recipients
-    let allTokensToSend: { token: string }[] = [];
+    // 5. Fetch push tokens for all recipients respecting preferences
+    const prefColumn = isFriendly ? "pref_notify_smash" : "pref_notify_point";
+    const { pushTokens, emails } = await getNotificationTargets(supabaseClient, recipientArr, prefColumn);
 
-    if (recipientArr.length > 0) {
-      const { data: tokenRows } = await supabaseClient
-        .from("user_push_tokens")
-        .select("token")
-        .in("user_id", recipientArr);
-      if (tokenRows) allTokensToSend = tokenRows as { token: string }[];
-    }
+    console.log(`[notify-match] Found ${pushTokens.length} tokens and ${emails.length} emails`);
 
-    console.log(`[notify-match] Found ${allTokensToSend.length} tokens`);
-
-    if (allTokensToSend.length === 0) {
+    if (pushTokens.length === 0) {
       return new Response(
         JSON.stringify({ message: "In-app notifications created, no push tokens available" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Deduplicate tokens
+    // Deduplicate tokens (getNotificationTargets returns unique tokens per user_id natively? 
+    // actually user_push_tokens can have multiple tokens per user, so we deduplicate by token)
     const uniqueTokens = [
-      ...new Map(allTokensToSend.map((t) => [t.token, t])).values(),
+      ...new Map(pushTokens.map((t) => [t.token, t])).values(),
     ];
 
     const fcmAccessToken = await getFirebaseAccessToken();
@@ -290,7 +285,7 @@ serve(async (req) => {
             android: {
               priority: "high",
               notification: {
-                channel_id: "notify_smash",
+                channel_id: isFriendly ? "notify_smash" : "notify_point",
               },
             },
             webpush: {

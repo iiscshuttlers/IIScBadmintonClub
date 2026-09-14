@@ -41,6 +41,8 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
 
   // DB-backed sound preferences
   const [prefs, setPrefs] = useState({
+    pref_receive_push:   profile?.pref_receive_push   ?? true,
+    pref_receive_email:  profile?.pref_receive_email  ?? true,
     pref_notify_smash:   profile?.pref_notify_smash   ?? true,
     pref_notify_point:   profile?.pref_notify_point   ?? true,
     pref_notify_serve:   profile?.pref_notify_serve   ?? true,
@@ -176,22 +178,37 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
 
         <div className="space-y-6 mt-4">
           {/* Master Push Toggle */}
+          {/* Master Email Toggle */}
           <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${pushGranted ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}`}>
-                {pushGranted ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              <div className={`p-2 rounded-lg ${prefs.pref_receive_email ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}`}>
+                {prefs.pref_receive_email ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
               </div>
               <div>
-                <h4 className="font-bold text-foreground">Device Notifications</h4>
+                <h4 className="font-bold text-foreground">Email Notifications</h4>
+                <p className="text-xs text-muted-foreground">Receive important alerts via email</p>
+              </div>
+            </div>
+            <Switch checked={prefs.pref_receive_email} onCheckedChange={() => handleTogglePref("pref_receive_email")} />
+          </div>
+
+          {/* Master Push Toggle (System + App Preference) */}
+          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${pushGranted && prefs.pref_receive_push ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}`}>
+                {pushGranted && prefs.pref_receive_push ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              </div>
+              <div>
+                <h4 className="font-bold text-foreground">Push Notifications</h4>
                 <p className="text-xs text-muted-foreground">Receive push alerts on this device</p>
               </div>
             </div>
-            {pushGranted ? (
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 px-2.5 py-1 rounded-full">Enabled</span>
-            ) : (
+            {!pushGranted ? (
               <Button onClick={handleEnablePush} disabled={loading} size="sm" variant="outline" className="font-bold text-xs h-8">
                 {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Enable"}
               </Button>
+            ) : (
+              <Switch checked={prefs.pref_receive_push} onCheckedChange={() => handleTogglePref("pref_receive_push")} />
             )}
           </div>
 
@@ -234,7 +251,14 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
 
           {/* ── Activity Preferences ── */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">Activity</h4>
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity</h4>
+              {Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android' && (
+                <span className="text-[10px] text-muted-foreground italic">
+                  * Customize sounds in Android Settings
+                </span>
+              )}
+            </div>
             <PreferenceItem
               title="Match Confirmations"
               description="When someone confirms a match you logged"

@@ -101,7 +101,7 @@ export default function Navigation() {
     userAvatar,
     pendingActionCount,
   } = useNavigationAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin, profile } = useAuth();
   const { updateInfo, openUpdateDialog } = useAppUpdate();
   const { mode, setMode } = useAppMode();
@@ -349,37 +349,12 @@ export default function Navigation() {
                                 <UserCircle className="mr-2 h-4 w-4" />
                                 <span>Public Profile</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
-                                <User className="mr-2 h-4 w-4" />
-                                <span>Edit Player Profile</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
-                                <User className="mr-2 h-4 w-4" />
-                                <span>Personal Space</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLocation("/my-matches")} className="cursor-pointer">
-                                <Trophy className="mr-2 h-4 w-4 text-amber-500" />
-                                <span>My Matches</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
-                                <Bell className="mr-2 h-4 w-4" />
-                                <span>Subscriptions</span>
+                              <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-slate-700 dark:text-slate-300">
+                                <Settings className="mr-2 h-4 w-4" />
+                                <span>Settings</span>
                               </DropdownMenuItem>
                             </>
-                          ) : (
-                            <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
-                              <UserPlus className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                              <span>Create / Set Up Profile</span>
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Account Settings</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
-                            {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
-                            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                          </DropdownMenuItem>
+                          ) : null}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
                             <LogOut className="mr-2 h-4 w-4" />
@@ -448,33 +423,16 @@ export default function Navigation() {
                               <UserCircle className="mr-2 h-4 w-4" />
                               <span>Public Profile</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
-                              <User className="mr-2 h-4 w-4" />
-                              <span>Edit Player Profile</span>
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
                               <User className="mr-2 h-4 w-4" />
                               <span>Personal Space</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
-                              <Bell className="mr-2 h-4 w-4" />
-                              <span>Subscriptions</span>
+                            <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-slate-700 dark:text-slate-300">
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Settings</span>
                             </DropdownMenuItem>
                           </>
-                        ) : (
-                          <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
-                            <UserPlus className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>Create / Set Up Profile</span>
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Account Settings</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
-                          {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
-                          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                        </DropdownMenuItem>
+                        ) : null}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -513,33 +471,7 @@ export default function Navigation() {
 
               <div className="pt-2 mt-2">
 
-                {/* Light/Dark toggle is hidden while ThemeContext enforces dark
-                    (switchable=false makes toggleTheme undefined). Rendering it
-                    gave users a control that did nothing — and calling it would
-                    have thrown, since toggleTheme is optional. */}
-                {toggleTheme && (
-                <div className="mb-3 flex bg-slate-100 dark:bg-slate-900 rounded-2xl p-1.5 gap-1.5 border border-slate-200/60 dark:border-slate-800">
-                  <button
-                    onClick={() => { if (theme === "dark") toggleTheme(); }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                      theme === "light"
-                        ? "bg-white shadow-sm text-amber-600 border border-amber-200/60"
-                        : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <Sun className="w-4 h-4" /> Light
-                  </button>
-                  <button
-                    onClick={() => { if (theme === "light") toggleTheme(); }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                      theme === "dark"
-                        ? "bg-slate-800 shadow-sm text-indigo-300 border border-indigo-800/60"
-                        : "text-muted-foreground hover:text-muted-foreground"
-                    }`}
-                  >
-                    <Moon className="w-4 h-4" /> Dark
-                  </button>
-                </div>)}
+
 
                 {updateInfo && (
                   <button
@@ -559,7 +491,7 @@ export default function Navigation() {
                   <div className="space-y-0.5">
 
 
-                    {myPlayerId ? (
+                    {myPlayerId && (
                       <>
                         <button
                           className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
@@ -571,88 +503,25 @@ export default function Navigation() {
                           <UserCircle className="h-4 w-4 text-amber-500" /> Public Profile
                         </button>
                         <button
-                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-semibold text-sm transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-primary font-bold text-sm transition-colors cursor-pointer"
                           onClick={() => {
                             setIsOpen(false);
-                            setLocation("/profile/setup");
+                            setLocation(`/player/${myPlayerId}/personal`);
                           }}
                         >
-                          <User className="h-4 w-4" /> Edit Player Profile
+                          <User className="h-4 w-4" /> Personal Space
+                        </button>
+                        <button
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer"
+                          onClick={() => {
+                            setIsOpen(false);
+                            setLocation("/settings");
+                          }}
+                        >
+                          <Settings className="h-4 w-4" /> Settings
                         </button>
                       </>
-                    ) : (
-                      <button
-                        className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm transition-colors cursor-pointer"
-                        onClick={() => {
-                          setIsOpen(false);
-                          setLocation("/profile/setup");
-                        }}
-                      >
-                        <UserPlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Create / Set Up Profile
-                      </button>
                     )}
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        if (myPlayerId) {
-                          setLocation(`/player/${myPlayerId}/personal`);
-                        } else {
-                          toast.info("Please set up your profile to access your Personal Space.", {
-                            action: {
-                              label: "Set Up Profile",
-                              onClick: () => setLocation("/profile/setup"),
-                            },
-                            duration: 6000,
-                          });
-                          setLocation("/profile/setup");
-                        }
-                      }}
-                    >
-                      <User className="h-4 w-4 text-primary" /> Personal Space
-                    </button>
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        setLocation("/profile/subscriptions");
-                      }}
-                    >
-                      <Bell className="h-4 w-4 text-amber-500" /> Subscriptions
-                    </button>
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        setIsNotificationSettingsOpen(true);
-                      }}
-                    >
-                      <BellRing className="h-4 w-4 text-amber-500" /> Notification Settings
-                    </button>
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        setLocation("/personal/me");
-                      }}
-                    >
-                      <Settings className="h-4 w-4 text-muted-foreground" /> Account Settings
-                    </button>
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        handleInvite();
-                      }}
-                    >
-                      <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
-                    </button>
-                    <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                      <Shield className="h-4 w-4 text-muted-foreground" /> Privacy Policy
-                    </Link>
-                    <Link href="/glossary" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                      <BookOpen className="h-4 w-4 text-muted-foreground" /> Glossary
-                    </Link>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => {
@@ -681,7 +550,7 @@ export default function Navigation() {
         )}
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
-      {!/^\/player\/[^/]+\/personal/.test(location) && (
+      {!new RegExp('^/player/[^/]+/personal').test(location) && (
       <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"

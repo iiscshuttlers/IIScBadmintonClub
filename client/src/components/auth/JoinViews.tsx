@@ -24,9 +24,26 @@ export function WelcomeView({ auth }: { auth: JoinAuthContext }) {
         <p className="text-base font-bold text-muted-foreground dark:text-slate-200">Your campus shuttlers hub</p>
         <p className="text-xs text-muted-foreground dark:text-muted-foreground">Track matches · Climb the ladder · Connect with players</p>
       </div>
-      <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 transition">
-        <LogIn className="w-4 h-4" /> Sign In
-      </button>
+      {auth.biometricReady && !auth.showBiometricPrompt ? (
+        <>
+          <button
+            type="button"
+            onClick={auth.handleBiometricSignIn}
+            disabled={auth.loading}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-primary text-primary-foreground font-black text-base shadow-lg shadow-primary/25 hover:opacity-90 transition"
+          >
+            <Fingerprint className="w-5 h-5" />
+            {auth.biometricEmail ? `Sign in as ${auth.biometricEmail.split("@")[0]}` : "Sign in with Fingerprint"}
+          </button>
+          <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200 transition font-bold text-sm">
+            Sign in with password instead
+          </button>
+        </>
+      ) : (
+        <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 transition">
+          <LogIn className="w-4 h-4" /> Sign In
+        </button>
+      )}
       <button onClick={() => { auth.reset(); auth.setMode("signup"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary dark:hover:text-primary transition">
         <UserPlus className="w-4 h-4" /> Create Account
       </button>

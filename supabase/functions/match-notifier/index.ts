@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import nodemailer from "npm:nodemailer";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,18 +74,15 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
 
   const { data: players } = await supabase
     .from("players")
-    .select("id, full_name, email, iisc_email")
+    .select("id, full_name, email, iisc_email, pref_receive_email, pref_notify_smash")
     .in("id", playerIds);
     
   if (!players || players.length === 0) return;
 
   const playerMap = new Map(players.map((p: any) => [p.id, p]));
 
-  // Fetch Push Tokens
-  const { data: pushTokens } = await supabase
-    .from("user_push_tokens")
-    .select("user_id, token")
-    .in("user_id", playerIds);
+  // Fetch Push Tokens via unified helper
+  const { pushTokens } = await getNotificationTargets(supabase, playerIds, "pref_notify_smash");
     
   const tokensMap = new Map<string, string[]>();
   if (pushTokens) {
@@ -162,7 +160,9 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
 
     // 1. Send Email
     const targetEmail = player.iisc_email || player.email;
-    if (transporter && targetEmail) {
+    const canSendEmail = player.pref_receive_email !== false && player.pref_notify_smash !== false;
+    
+    if (transporter && targetEmail && canSendEmail) {
       const mailOptions = {
         from: `"IISc Badminton Club" <${Deno.env.get("SMTP_USER")}>`,
         to: targetEmail,
@@ -277,7 +277,7 @@ async function dispatchFanNotifications(supabase: any, tournamentIds: string[], 
   if (notificationsToSend.length === 0) return;
 
   const userIdsToNotify = Array.from(new Set(notificationsToSend.map(n => n.user_id)));
-  const { data: pushTokens } = await supabase.from("user_push_tokens").select("user_id, token").in("user_id", userIdsToNotify);
+  const { pushTokens } = await getNotificationTargets(supabase, userIdsToNotify, "pref_notify_whistle");
   
   const tokensMap = new Map();
   if (pushTokens) {

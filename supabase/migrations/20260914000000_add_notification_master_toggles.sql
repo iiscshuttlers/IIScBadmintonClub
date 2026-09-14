@@ -1,0 +1,9 @@
+-- Migration to add master notification toggles
+ALTER TABLE players
+ADD COLUMN pref_receive_push BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_receive_email BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_notify_smash BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_notify_point BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_notify_serve BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_notify_whistle BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN pref_notify_victory BOOLEAN NOT NULL DEFAULT TRUE;

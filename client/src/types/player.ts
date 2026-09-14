@@ -14,6 +14,8 @@ export interface PlayerRow {
   favorite_idol: string | null;
   favorite_format: string | null;
   push_token?: string | null;
+  pref_receive_push?: boolean;
+  pref_receive_email?: boolean;
   pref_notify_smash?: boolean;
   pref_notify_point?: boolean;
   pref_notify_serve?: boolean;

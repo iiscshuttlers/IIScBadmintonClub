@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -173,15 +174,12 @@ serve(async () => {
               link: "/my-matches"
             });
 
-            // Send Push
+            // Send Push via preferences
             if (accessToken && serviceAccount) {
-              const { data: tokens } = await supabase
-                .from("user_push_tokens")
-                .select("token")
-                .eq("user_id", playerId);
+              const { pushTokens } = await getNotificationTargets(supabase, [playerId], "pref_notify_smash");
 
-              if (tokens && tokens.length > 0) {
-                const uniqueTokens = Array.from(new Set(tokens.map((t: any) => t.token)));
+              if (pushTokens && pushTokens.length > 0) {
+                const uniqueTokens = Array.from(new Set(pushTokens.map((t: any) => t.token)));
                 for (const token of uniqueTokens) {
                   await sendFcmNotification(token as string, title, body, serviceAccount.project_id, accessToken);
                 }
@@ -247,13 +245,10 @@ serve(async () => {
 
             // Send Push
             if (accessToken && serviceAccount) {
-              const { data: tokens } = await supabase
-                .from("user_push_tokens")
-                .select("token")
-                .eq("user_id", alert.user_id);
+              const { pushTokens } = await getNotificationTargets(supabase, [alert.user_id], "pref_notify_smash");
 
-              if (tokens && tokens.length > 0) {
-                const uniqueTokens = Array.from(new Set(tokens.map((t: any) => t.token)));
+              if (pushTokens && pushTokens.length > 0) {
+                const uniqueTokens = Array.from(new Set(pushTokens.map((t: any) => t.token)));
                 for (const token of uniqueTokens) {
                   await sendFcmNotification(token as string, title, body, serviceAccount.project_id, accessToken);
                 }

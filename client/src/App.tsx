@@ -81,6 +81,7 @@ const Glossary = lazy(() => import("./pages/Glossary"));
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
 
 import { VenueWelcomeModal } from "@/components/VenueWelcomeModal";
@@ -197,6 +198,7 @@ function AppRoutes() {
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/profile/subscriptions"><ProtectedRoute><SubscriptionsPage /></ProtectedRoute></Route>
+          <Route path="/settings"><ProtectedRoute><SettingsPage /></ProtectedRoute></Route>
           
           <Route path="/my-matches"><ProtectedRoute><MyMatchesPage /></ProtectedRoute></Route>
           <Route path="/standings" component={TournamentStandingsPage} />

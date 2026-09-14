@@ -38,10 +38,13 @@ Deno.serve(async (req) => {
     );
 
     // 1. Get calling user's auth UID
-    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    const tokenStr = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authErr } = await userClient.auth.getUser(tokenStr);
+    
     if (authErr || !user) {
+      console.warn("[register-push-token] Auth error:", authErr);
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Unauthorized", details: authErr }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 },
       );
     }

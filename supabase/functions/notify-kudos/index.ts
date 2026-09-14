@@ -5,6 +5,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -84,18 +85,10 @@ serve(async (req) => {
 
   const winnerId = match.winner_id as string;
 
-  // Check notify preference
-  const { data: winner } = await supabase
-    .from("players")
-    .select("notify_friendly")
-    .eq("id", winnerId)
-    .single();
+  // Check notify preference and fetch tokens
+  const { pushTokens } = await getNotificationTargets(supabase, [winnerId], "pref_notify_victory");
 
-  if (winner?.notify_friendly === false) {
-    return new Response(JSON.stringify({ sent: 0, reason: "opted_out" }), { headers: corsHeaders });
-  }
-
-  // Create in-app notification
+  // Create in-app notification regardless of push preferences
   const notifTitle = "Someone liked your match! ❤️";
   const notifBody = `${giver_name} gave kudos on your match.`;
 
@@ -107,14 +100,8 @@ serve(async (req) => {
     link: "/my-matches"
   });
 
-  // Fetch winner's push tokens
-  const { data: tokens } = await supabase
-    .from("user_push_tokens")
-    .select("token")
-    .eq("user_id", winnerId);
-
-  if (!tokens || tokens.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });
+  if (!pushTokens || pushTokens.length === 0) {
+    return new Response(JSON.stringify({ sent: 0, reason: "opted_out_or_no_tokens" }), { headers: corsHeaders });
   }
 
   const sa: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
@@ -125,7 +112,7 @@ serve(async (req) => {
   const staleTokens: string[] = [];
   let sent = 0;
 
-  for (const { token } of tokens) {
+  for (const { token } of pushTokens) {
     const res = await fetch(
       `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
       {

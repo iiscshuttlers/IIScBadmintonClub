@@ -13,6 +13,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -74,7 +75,7 @@ async function sendFcm(
           notification: { title, body },
           android: {
             priority: "high",
-            notification: { channel_id: "notify_victory" },
+            notification: { channel_id: "notify_serve" },
           },
           data,
         },
@@ -128,18 +129,17 @@ serve(async (req) => {
         return new Response(JSON.stringify({ sent: 0, reason: "no_buddies" }), { headers: corsHeaders });
       }
 
-      // Filter buddies who have pref_notify_buddy_status = true
+      // Filter buddies who have pref_notify_serve = true (repurposing for social requests)
       let buddyPlayers = null;
       const { data, error } = await supabase
         .from("players")
-        .select("id")
-        .in("id", buddies)
-        .neq("pref_notify_buddy_status", false);
+        .select("id, pref_notify_serve")
+        .in("id", buddies);
         
-      if (!error) {
-        buddyPlayers = data;
+      if (!error && data) {
+        buddyPlayers = data.filter(p => p.pref_notify_serve !== false);
       } else {
-        console.warn("[notify-social] Could not filter by pref_notify_buddy_status:", error);
+        console.warn("[notify-social] Could not filter by pref_notify_serve:", error);
       }
         
       targetUserIds = buddyPlayers ? buddyPlayers.map(p => p.id) : buddies;
@@ -183,13 +183,10 @@ serve(async (req) => {
       );
     }
 
-    // to_player_id is now the auth UUID directly
-    const { data: tokens } = await supabase
-      .from("user_push_tokens")
-      .select("token")
-      .in("user_id", targetUserIds);
+    // Fetch push tokens via getNotificationTargets
+    const { pushTokens } = await getNotificationTargets(supabase, targetUserIds, "pref_notify_serve");
 
-    if (!tokens || tokens.length === 0) {
+    if (!pushTokens || pushTokens.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });
     }
 
@@ -208,10 +205,10 @@ serve(async (req) => {
     let sent = 0;
     const staleTokens: string[] = [];
 
-    for (const { token } of tokens) {
-      const { ok, stale } = await sendFcm(token as string, title, body, notifData, sa.project_id, accessToken);
+    for (const { token } of pushTokens) {
+      const { ok, stale } = await sendFcm(token, title, body, notifData, sa.project_id, accessToken);
       if (ok) sent++;
-      if (stale) staleTokens.push(token as string);
+      if (stale) staleTokens.push(token);
     }
 
     // Clean up stale tokens

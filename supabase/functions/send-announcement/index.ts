@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,25 +78,22 @@ Deno.serve(async (req) => {
       console.log("No players found!");
     }
 
-    // Fetch all push tokens for Firebase push notifications
-    const { data: tokens, error: tokErr } = await supabase
-      .from("user_push_tokens")
-      .select("token, user_id");
-
-    if (tokErr) throw new Error(tokErr.message);
+    // Fetch push tokens via getNotificationTargets for users that enabled 'pref_notify_whistle'
+    const allUserIds = allUsers ? allUsers.map(u => u.id) : [];
+    const { pushTokens } = await getNotificationTargets(supabase, allUserIds, "pref_notify_whistle");
 
     // If no push tokens, just return success (in-app notifications are created anyway)
-    if (!tokens || tokens.length === 0) {
+    if (!pushTokens || pushTokens.length === 0) {
       return new Response(JSON.stringify({ message: "Announcement sent (in-app only, no push tokens registered)", sent: 0, failed: 0, total: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const uniqueUserIds = [...new Set(tokens.map((t) => t.user_id).filter(Boolean))];
+    const uniqueUserIds = [...new Set(pushTokens.map((t) => t.user_id).filter(Boolean))];
 
     const fcmToken = await getFirebaseAccessToken();
     const projectId = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id;
-    const uniqueTokens = [...new Map(tokens.map((t) => [t.token, t])).values()];
+    const uniqueTokens = [...new Map(pushTokens.map((t) => [t.token, t])).values()];
 
     const results = await Promise.allSettled(
       uniqueTokens.map(async (t) => {

@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,13 +52,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const { data: tokens, error: tokErr } = await supabase
-      .from("user_push_tokens")
-      .select("token, user_id");
+    // Fetch all players to get all IDs
+    const { data: allUsers } = await supabase.from("players").select("id");
+    const allUserIds = allUsers ? allUsers.map(u => u.id) : [];
 
-    if (tokErr) throw new Error(tokErr.message);
+    // Filter by pref_notify_whistle
+    const { pushTokens } = await getNotificationTargets(supabase, allUserIds, "pref_notify_whistle");
 
-    if (!tokens || tokens.length === 0) {
+    if (!pushTokens || pushTokens.length === 0) {
       return new Response(JSON.stringify({ message: "No push tokens registered", sent: 0, failed: 0, total: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -65,7 +67,7 @@ Deno.serve(async (req) => {
 
     const fcmToken = await getFirebaseAccessToken();
     const projectId = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id;
-    const uniqueTokens = [...new Map(tokens.map((t) => [t.token, t])).values()];
+    const uniqueTokens = [...new Map(pushTokens.map((t) => [t.token, t])).values()];
 
     const results = await Promise.allSettled(
       uniqueTokens.map(async (t) => {

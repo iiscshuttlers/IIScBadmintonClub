@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 import { isDeadToken } from "../_shared/fcm.ts";
+import { getNotificationTargets } from "../_shared/notifications.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -89,16 +90,10 @@ serve(async () => {
     const confirmerId = match.player2_id as string;
     const submitterName = (match.player1 as any)?.full_name ?? "Your opponent";
 
-    // Check player's notify_confirmation preference
-    const { data: player } = await supabase
-      .from("players")
-      .select("notify_confirmation")
-      .eq("id", confirmerId)
-      .single();
+    // Fetch confirmer's push tokens via preferences
+    const { pushTokens } = await getNotificationTargets(supabase, [confirmerId], "pref_notify_point");
 
-    if (player && player.notify_confirmation === false) continue;
-
-    // Create in-app notification
+    // We can still create in-app notifications if they opted out of push, so do that before skipping tokens
     const notifTitle = "Match awaiting your confirmation";
     const notifBody = `${submitterName} logged a match. Open the app to confirm or dispute the result.`;
 
@@ -110,18 +105,19 @@ serve(async () => {
       link: "/my-matches#pending"
     });
 
-    // Fetch confirmer's push tokens
-    const { data: tokens } = await supabase
-      .from("user_push_tokens")
-      .select("token")
-      .eq("user_id", confirmerId);
-
-    if (!tokens || tokens.length === 0) continue;
+    if (!pushTokens || pushTokens.length === 0) {
+      // Update nudge_sent_at to throttle re-nudges even if no push token
+      await supabase
+        .from("matches")
+        .update({ nudge_sent_at: new Date().toISOString() })
+        .eq("id", match.id);
+      continue;
+    }
 
     const title = notifTitle;
     const body = notifBody;
 
-    for (const { token } of tokens) {
+    for (const { token } of pushTokens) {
       const res = await fetch(
         `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
         {

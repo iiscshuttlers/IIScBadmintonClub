@@ -76,18 +76,22 @@ export async function enableWebPush(): Promise<boolean> {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ token, platform: "web" }),
-        }
-      );
+      if (session?.access_token) {
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`,
+              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ token, platform: "web" }),
+          }
+        );
+      } else {
+        console.warn("[WebPush] No active session, skipping token registration on backend.");
+      }
     } catch (err) {
       console.warn("[WebPush] Failed to register web token:", err);
     }
@@ -141,11 +145,11 @@ export function usePushNotifications(userId: string | undefined) {
     const createAndroidChannels = async () => {
       if (Capacitor.getPlatform() !== 'android') return;
       const channels: Channel[] = [
-        { id: "notify_smash",   name: "Match notifications",  description: "New matches logged against you",            importance: 4, visibility: 1 },
-        { id: "notify_point",   name: "Match confirmations",  description: "When your match result is confirmed",        importance: 4, visibility: 1 },
-        { id: "notify_serve",   name: "Match requests",       description: "Pings and match requests from other players",importance: 4, visibility: 1 },
-        { id: "notify_whistle", name: "Announcements",        description: "Club announcements and live match alerts",   importance: 3, visibility: 1 },
-        { id: "notify_victory", name: "Achievements",         description: "ELO milestones, top-10, buddy requests",    importance: 3, visibility: 1 },
+        { id: "notify_smash",   name: "Match notifications",  description: "New matches logged against you",            importance: 4, visibility: 1, sound: "smash.wav" },
+        { id: "notify_point",   name: "Match confirmations",  description: "When your match result is confirmed",        importance: 4, visibility: 1, sound: "point.wav" },
+        { id: "notify_serve",   name: "Match requests",       description: "Pings and match requests from other players",importance: 4, visibility: 1, sound: "serve.wav" },
+        { id: "notify_whistle", name: "Announcements",        description: "Club announcements and live match alerts",   importance: 3, visibility: 1, sound: "whistle.wav" },
+        { id: "notify_victory", name: "Achievements",         description: "ELO milestones, top-10, buddy requests",    importance: 3, visibility: 1, sound: "victory.wav" },
       ];
       for (const channel of channels) {
         try {
@@ -163,28 +167,31 @@ export function usePushNotifications(userId: string | undefined) {
         //    is emitted before anyone is listening and never gets saved.
         await PushNotifications.addListener("registration", async (token) => {
           if (userId && token.value) {
-            alert("Token successfully received from FCM!");
             console.log("[Push] Token received, registering via edge function. platform:", Capacitor.getPlatform());
             try {
               const { data: { session } } = await supabase.auth.getSession();
-              const res = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                    "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
-                  },
-                  body: JSON.stringify({ token: token.value, platform: Capacitor.getPlatform() }),
+              if (session?.access_token) {
+                const res = await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${session.access_token}`,
+                      "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    },
+                    body: JSON.stringify({ token: token.value, platform: Capacitor.getPlatform() }),
+                  }
+                );
+                const result = await res.json();
+                if (!res.ok) {
+                  console.error("[Push] Edge function token save failed:", result);
+                  Sentry.captureMessage(`[Push] Edge function token save failed: ${JSON.stringify(result)}`, "error");
+                } else {
+                  console.log("[Push] Token registered via edge function:", result);
                 }
-              );
-              const result = await res.json();
-              if (!res.ok) {
-                console.error("[Push] Edge function token save failed:", result);
-                Sentry.captureMessage(`[Push] Edge function token save failed: ${JSON.stringify(result)}`, "error");
               } else {
-                console.log("[Push] Token registered via edge function:", result);
+                console.warn("[Push] No active session, skipping token registration on backend.");
               }
             } catch (err) {
               console.error("[Push] Failed to register token:", err);
@@ -264,22 +271,13 @@ export function usePushNotifications(userId: string | undefined) {
 
         // 3. Check permissions, then register (fires "registration" → listener saves token)
         const permStatus = await PushNotifications.checkPermissions();
-        if (permStatus.receive === "prompt") {
-          const requested = await PushNotifications.requestPermissions();
-          if (requested.receive !== "granted") {
-            alert("Push permission denied after prompt");
-            return;
-          }
-        } else if (permStatus.receive !== "granted") {
-          alert("Push permission currently denied: " + permStatus.receive);
-          return; // Permission denied
+        if (permStatus.receive !== "granted") {
+          return; // Permission not granted yet (or denied). Wait for user to enable in settings.
         }
 
         await PushNotifications.register();
-        alert("PushNotifications.register() called successfully");
         isRegistered = true;
       } catch (err) {
-        alert("Push Registration Error: " + String(err));
         console.warn("Failed to register push notifications", err);
         Sentry.captureException(err, { extra: { context: "PushNotifications.register" } });
       }
