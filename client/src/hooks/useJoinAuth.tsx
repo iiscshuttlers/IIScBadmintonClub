@@ -80,6 +80,7 @@ export function useJoinAuth() {
   useEffect(() => {
     if (isInitializing) return;
     if (!session) return;
+    if (showBiometricPrompt) return; // Prevent redirect while prompt is open
     if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
 
     if (profile) {
@@ -97,7 +98,7 @@ export function useJoinAuth() {
       }
       setLocation("/profile/setup");
     }
-  }, [isInitializing, session, profile, setLocation]);
+  }, [isInitializing, session, profile, showBiometricPrompt, setLocation]);
 
   /**
    * After a successful sign-in on a native device, offer to store the session

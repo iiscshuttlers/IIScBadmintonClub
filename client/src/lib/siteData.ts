@@ -8,13 +8,22 @@ import { supabase, isSupabaseConfigured } from "./supabase";
  * Usage:
  *   const holidays = await fetchSiteData<Holiday[]>("holidays", "holidays.json");
  */
+const inFlightRequests = new Map<string, Promise<any>>();
+
 export async function fetchSiteData<T>(
   key: string,
   fallbackFile: string,
   /** Timeout in ms before falling back to static file */
   timeoutMs = 8_000,
 ): Promise<T> {
-  // Try Supabase first
+  const cacheKey = `${key}:${fallbackFile}`;
+  
+  if (inFlightRequests.has(cacheKey)) {
+    return inFlightRequests.get(cacheKey) as Promise<T>;
+  }
+
+  const promise = (async () => {
+    // Try Supabase first
   if (isSupabaseConfigured) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -50,17 +59,29 @@ export async function fetchSiteData<T>(
     }
   }
 
-  // Fallback: fetch from static JSON in public/data/
-  const res = await fetch(
-    `${import.meta.env.BASE_URL}data/${fallbackFile}?v=${Date.now()}`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) {
-    throw new Error(`Fallback file not found: ${fallbackFile}`);
+    const res = await fetch(
+      `${import.meta.env.BASE_URL}data/${fallbackFile}?v=${Date.now()}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) {
+      throw new Error(`Fallback file not found: ${fallbackFile}`);
+    }
+    const contentType = res.headers.get("content-type");
+    if (contentType && !contentType.includes("application/json")) {
+      throw new Error(`Fallback file is not JSON: ${fallbackFile}`);
+    }
+    return res.json();
+  })();
+
+  inFlightRequests.set(cacheKey, promise);
+  try {
+    return await promise;
+  } finally {
+    // Remove from in-flight cache shortly after resolution to allow fresh refetches
+    setTimeout(() => {
+      if (inFlightRequests.get(cacheKey) === promise) {
+        inFlightRequests.delete(cacheKey);
+      }
+    }, 100);
   }
-  const contentType = res.headers.get("content-type");
-  if (contentType && !contentType.includes("application/json")) {
-    throw new Error(`Fallback file is not JSON: ${fallbackFile}`);
-  }
-  return res.json();
 }
