@@ -197,7 +197,7 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
           message: {
             token,
             notification: { title, body },
-            android: { priority: "high" },
+            android: { priority: "high", notification: { channel_id: "notify_smash" } },
             data: { matchId: match.id, type: "match_reminder", action: "view_match" }
           }
         };
@@ -302,7 +302,7 @@ async function dispatchFanNotifications(supabase: any, tournamentIds: string[], 
         message: {
           token,
           notification: { title, body },
-          android: { priority: "high" },
+          android: { priority: "high", notification: { channel_id: "notify_whistle" } },
           data: { matchId: m.id, type: "fan_reminder", action: "view_match" }
         }
       };

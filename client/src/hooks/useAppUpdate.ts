@@ -15,6 +15,8 @@ export type AppUpdateInfo = {
   versionName: string;
   changelog: string;
   downloadUrl: string;
+  /** Unique token for this specific prompt to track dismissals. */
+  promptToken: string;
 };
 
 type AppUpdateContextValue = {
@@ -24,8 +26,10 @@ type AppUpdateContextValue = {
   isDialogOpen: boolean;
   /** Manually open the update dialog (e.g. from the Menu). */
   openUpdateDialog: () => void;
-  /** Dismiss / close the update dialog. */
+  /** Dismiss / close the update dialog temporarily (until next app launch). */
   dismissUpdate: () => void;
+  /** Skip this specific update version permanently. */
+  skipUpdate: (promptToken: string) => void;
 };
 
 const AppUpdateContext = createContext<AppUpdateContextValue>({
@@ -33,7 +37,10 @@ const AppUpdateContext = createContext<AppUpdateContextValue>({
   isDialogOpen: false,
   openUpdateDialog: () => {},
   dismissUpdate: () => {},
+  skipUpdate: () => {},
 });
+
+const DONT_REMIND_KEY = "iisc_dont_remind_update";
 
 // Marks that the auto-prompt has already been shown for a given build during
 // this app launch. sessionStorage survives an in-app reload (pull-to-refresh)
@@ -66,6 +73,7 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
             downloadUrl:
               latest.downloadUrl ??
               "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
+            promptToken: `${required}:${latest?.forcedAt ?? ""}`,
           });
 
           // Re-prompt when the admin forces again, even at the same version:
@@ -73,7 +81,10 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
           // asked again. Without it, keying on versionCode alone meant a repeat
           // force was silently swallowed.
           const promptToken = `${required}:${latest?.forcedAt ?? ""}`;
-          if (sessionStorage.getItem(AUTO_PROMPT_KEY) !== promptToken) {
+          
+          const isPermanentlySkipped = localStorage.getItem(DONT_REMIND_KEY) === promptToken;
+          
+          if (!isPermanentlySkipped && sessionStorage.getItem(AUTO_PROMPT_KEY) !== promptToken) {
             sessionStorage.setItem(AUTO_PROMPT_KEY, promptToken);
             setIsDialogOpen(true);
           }
@@ -99,10 +110,14 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
 
   const openUpdateDialog = useCallback(() => setIsDialogOpen(true), []);
   const dismissUpdate = useCallback(() => setIsDialogOpen(false), []);
+  const skipUpdate = useCallback((promptToken: string) => {
+    localStorage.setItem(DONT_REMIND_KEY, promptToken);
+    setIsDialogOpen(false);
+  }, []);
 
   return createElement(
     AppUpdateContext.Provider,
-    { value: { updateInfo, isDialogOpen, openUpdateDialog, dismissUpdate } },
+    { value: { updateInfo, isDialogOpen, openUpdateDialog, dismissUpdate, skipUpdate } },
     children,
   );
 }

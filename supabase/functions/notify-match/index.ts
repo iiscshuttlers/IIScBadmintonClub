@@ -290,7 +290,6 @@ serve(async (req) => {
             android: {
               priority: "high",
               notification: {
-                sound: "smash",
                 channel_id: "notify_smash",
               },
             },

@@ -354,7 +354,7 @@ function GlobalAuthGuard() {
 }
 
 function AppContent() {
-  const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
+  const { updateInfo, isDialogOpen, dismissUpdate, skipUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const { profile, session } = useAuth();
@@ -510,7 +510,11 @@ function AppContent() {
               />
             )}
             {isDialogOpen && updateInfo && (
-              <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
+              <UpdateDialog 
+                info={updateInfo} 
+                onDismiss={dismissUpdate} 
+                onSkip={() => skipUpdate(updateInfo.promptToken)} 
+              />
             )}
           </TooltipProvider>
   );

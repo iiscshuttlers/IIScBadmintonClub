@@ -276,7 +276,7 @@ export function AdminSettings() {
           </div>
           <button
             onClick={() => update("maintenanceMode", !settings.maintenanceMode)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${settings.maintenanceMode ? "bg-rose-500" : "bg-slate-300 dark:bg-slate-600"}`}
+            className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.maintenanceMode ? "bg-rose-500" : "bg-slate-300 dark:bg-slate-600"}`}
           >
             <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.maintenanceMode ? "left-6" : "left-0.5"}`} />
           </button>
@@ -309,7 +309,7 @@ export function AdminSettings() {
           <h3 className="font-black text-slate-800 dark:text-foreground">Feature Toggles</h3>
         </div>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
               <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
@@ -317,27 +317,27 @@ export function AdminSettings() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setLocation("/standings")}
-                className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition flex items-center gap-1"
+                className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition flex items-center gap-1 shrink-0"
               >
                 View <ExternalLink className="w-3 h-3" />
               </button>
               <button
                 onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+                className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
               >
                 <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Player Directory</p>
               <p className="text-xs text-muted-foreground mt-0.5">Show the searchable player directory in Pulse to all users. (Admins can always see it)</p>
             </div>
             <button
               onClick={() => update("showPlayerDirectory", !settings.showPlayerDirectory)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showPlayerDirectory ? "left-6" : "left-0.5"}`} />
             </button>
@@ -352,14 +352,14 @@ export function AdminSettings() {
           <h3 className="font-black text-slate-800 dark:text-foreground">Automation & Notifications</h3>
         </div>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Push on Announcements</p>
               <p className="text-xs text-muted-foreground mt-0.5">Send a push notification when a new announcement is published</p>
             </div>
             <button
               onClick={() => update("matchAnnouncementPush", !settings.matchAnnouncementPush)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.matchAnnouncementPush ? "left-6" : "left-0.5"}`} />
             </button>
@@ -412,7 +412,7 @@ export function AdminSettings() {
             ]}
           />
         </div>
-        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
           <div>
             <p className="font-bold text-slate-800 dark:text-foreground text-sm">Send Update Notification</p>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">Sends a push notification to all users and forces the update popup on next launch.</p>
@@ -442,7 +442,7 @@ export function AdminSettings() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Players */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Players</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Names, ELOs, roles, etc.</p>
@@ -466,7 +466,7 @@ export function AdminSettings() {
           </div>
 
           {/* Matches */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Matches</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Scores, timestamps, umpires.</p>
@@ -490,7 +490,7 @@ export function AdminSettings() {
           </div>
 
           {/* Tournaments */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Tournaments</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">All tournament listings.</p>
