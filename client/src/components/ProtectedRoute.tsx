@@ -19,6 +19,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!session) {
+    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
     return <Redirect to="/join" />;
   }
 

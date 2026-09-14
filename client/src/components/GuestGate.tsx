@@ -90,7 +90,7 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
             </p>
 
             {/* Sign In button */}
-            <Link href="/join">
+            <Link href="/join" onClick={() => sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash)}>
               <button className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] cursor-pointer">
                 <LogIn className="w-4 h-4" />
                 Sign In to Access
@@ -98,7 +98,7 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
             </Link>
 
             {/* Create account link */}
-            <Link href="/join">
+            <Link href="/join" onClick={() => sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash)}>
               <button className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer">
                 <UserPlus className="w-4 h-4" />
                 Create Account
