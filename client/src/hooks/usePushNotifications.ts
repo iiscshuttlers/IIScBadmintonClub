@@ -163,6 +163,7 @@ export function usePushNotifications(userId: string | undefined) {
         //    is emitted before anyone is listening and never gets saved.
         await PushNotifications.addListener("registration", async (token) => {
           if (userId && token.value) {
+            alert("Token successfully received from FCM!");
             console.log("[Push] Token received, registering via edge function. platform:", Capacitor.getPlatform());
             try {
               const { data: { session } } = await supabase.auth.getSession();
@@ -181,19 +182,23 @@ export function usePushNotifications(userId: string | undefined) {
               const result = await res.json();
               if (!res.ok) {
                 console.error("[Push] Edge function token save failed:", result);
+                Sentry.captureMessage(`[Push] Edge function token save failed: ${JSON.stringify(result)}`, "error");
               } else {
                 console.log("[Push] Token registered via edge function:", result);
               }
             } catch (err) {
               console.error("[Push] Failed to register token:", err);
+              Sentry.captureException(err, { extra: { context: "EdgeFunction_RegisterPushToken" } });
             }
           } else {
             console.warn("[Push] Registration event fired but userId or token is missing. userId:", userId);
+            Sentry.captureMessage(`[Push] Registration event fired but userId or token is missing. userId: ${userId}`, "warning");
           }
         });
 
         await PushNotifications.addListener("registrationError", (error) => {
           console.error("Error on registration: " + JSON.stringify(error));
+          Sentry.captureMessage(`Error on registration: ${JSON.stringify(error)}`, "error");
         });
 
         await PushNotifications.addListener(
@@ -261,14 +266,20 @@ export function usePushNotifications(userId: string | undefined) {
         const permStatus = await PushNotifications.checkPermissions();
         if (permStatus.receive === "prompt") {
           const requested = await PushNotifications.requestPermissions();
-          if (requested.receive !== "granted") return;
+          if (requested.receive !== "granted") {
+            alert("Push permission denied after prompt");
+            return;
+          }
         } else if (permStatus.receive !== "granted") {
+          alert("Push permission currently denied: " + permStatus.receive);
           return; // Permission denied
         }
 
         await PushNotifications.register();
+        alert("PushNotifications.register() called successfully");
         isRegistered = true;
       } catch (err) {
+        alert("Push Registration Error: " + String(err));
         console.warn("Failed to register push notifications", err);
         Sentry.captureException(err, { extra: { context: "PushNotifications.register" } });
       }
