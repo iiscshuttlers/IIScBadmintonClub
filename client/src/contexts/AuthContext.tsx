@@ -14,6 +14,7 @@ import { useGeofenceAuthSync } from "@/hooks/useGeofenceAuthSync";
 import { toast } from "sonner";
 import { Badge } from "@capawesome/capacitor-badge";
 import { useMatchNotifications } from "@/hooks/useMatchNotifications";
+import { isBiometricEnabled } from "@/lib/biometricAuth";
 
 import type { PlayerRow } from "@/types";
 
@@ -111,7 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id, sessionLoading]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isBiometricEnabled()) {
+      await supabase.auth.signOut({ scope: "local" });
+    } else {
+      await supabase.auth.signOut();
+    }
     window.location.href = `${import.meta.env.BASE_URL}join`;
   };
 

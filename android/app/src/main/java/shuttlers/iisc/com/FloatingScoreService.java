@@ -58,33 +58,29 @@ public class FloatingScoreService extends Service {
         FrameLayout frame = new FrameLayout(this);
         GradientDrawable shape = new GradientDrawable();
         shape.setShape(GradientDrawable.RECTANGLE);
-        shape.setCornerRadius(50f);
-        shape.setColor(0xEE1E293B); // Tailwind slate-800
-        shape.setStroke(2, 0xFF8B5CF6); // Tailwind violet-500
+        shape.setCornerRadius(40f);
+        shape.setColor(0xF20F172A); // Tailwind slate-900 with ~95% opacity
+        shape.setStroke(2, 0xFF334155); // Tailwind slate-700
         frame.setBackground(shape);
 
         column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.setPadding(40, 16, 40, 20);
+        column.setPadding(50, 30, 50, 30);
 
         frame.addView(column);
 
-        // Visible close button so the overlay can be dismissed without
-        // relying on the undiscoverable double-tap gesture.
+        // Subtle close button inside the widget
         TextView closeButton = new TextView(this);
         closeButton.setText("✕");
-        closeButton.setTextColor(0xFFFFFFFF);
-        closeButton.setTextSize(12f);
+        closeButton.setTextColor(0xFF64748B); // Tailwind slate-500
+        closeButton.setTextSize(14f);
         closeButton.setTypeface(null, android.graphics.Typeface.BOLD);
         closeButton.setGravity(android.view.Gravity.CENTER);
-        GradientDrawable closeShape = new GradientDrawable();
-        closeShape.setShape(GradientDrawable.OVAL);
-        closeShape.setColor(0xFFEF4444); // Tailwind red-500
-        closeButton.setBackground(closeShape);
-        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(48, 48);
+        
+        FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(60, 60);
         closeParams.gravity = Gravity.TOP | Gravity.RIGHT;
-        closeParams.topMargin = -14;
-        closeParams.rightMargin = -14;
+        closeParams.topMargin = 10;
+        closeParams.rightMargin = 10;
         closeButton.setOnClickListener(v -> closeOverlay());
         frame.addView(closeButton, closeParams);
 
@@ -166,33 +162,72 @@ public class FloatingScoreService extends Service {
                 String score = match.optString("score", "00 - 00");
                 String teams = match.optString("teams", "");
 
+                // LIVE indicator above the first match
+                if (i == 0) {
+                    LinearLayout headerLayout = new LinearLayout(this);
+                    headerLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    headerLayout.setGravity(Gravity.CENTER);
+                    headerLayout.setPadding(0, 0, 0, 12);
+
+                    TextView liveDot = new TextView(this);
+                    liveDot.setText("●");
+                    liveDot.setTextColor(0xFFEF4444); // red-500
+                    liveDot.setTextSize(8f);
+                    liveDot.setPadding(0, 0, 8, 0);
+                    
+                    TextView liveText = new TextView(this);
+                    liveText.setText("LIVE BROADCAST");
+                    liveText.setTextColor(0xFFEF4444); // red-500
+                    liveText.setTextSize(9f);
+                    liveText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    
+                    headerLayout.addView(liveDot);
+                    headerLayout.addView(liveText);
+                    column.addView(headerLayout);
+                }
+
                 if (i > 0) {
                     View divider = new View(this);
                     LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT, 2);
-                    divParams.setMargins(0, 16, 0, 16);
+                    divParams.setMargins(0, 20, 0, 20);
                     divider.setLayoutParams(divParams);
-                    divider.setBackgroundColor(0xFF334155); // Tailwind slate-700
+                    divider.setBackgroundColor(0xFF1E293B); // Tailwind slate-800
                     column.addView(divider);
                 }
 
                 if (!teams.isEmpty()) {
                     TextView teamsText = new TextView(this);
-                    teamsText.setText(teams);
-                    teamsText.setTextColor(0xFFCBD5E1); // Tailwind slate-300
-                    teamsText.setTextSize(12f);
+                    String teamsHtml = teams.replace(" vs ", " <font color='#64748B'><i>vs</i></font> ");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        teamsText.setText(android.text.Html.fromHtml(teamsHtml, android.text.Html.FROM_HTML_MODE_LEGACY));
+                    } else {
+                        teamsText.setText(android.text.Html.fromHtml(teamsHtml));
+                    }
+                    teamsText.setTextColor(0xFFE2E8F0); // Tailwind slate-200
+                    teamsText.setTextSize(11f);
                     teamsText.setTypeface(null, android.graphics.Typeface.BOLD);
                     teamsText.setGravity(android.view.Gravity.CENTER);
                     teamsText.setMaxWidth(500);
+                    teamsText.setPadding(0, 0, 0, 4);
                     column.addView(teamsText);
                 }
 
                 TextView scoreText = new TextView(this);
-                scoreText.setText(score);
+                // Dim the hyphen in the score
+                String scoreHtml = score.replace(" - ", " <font color='#475569'>-</font> ");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    scoreText.setText(android.text.Html.fromHtml(scoreHtml, android.text.Html.FROM_HTML_MODE_LEGACY));
+                } else {
+                    scoreText.setText(android.text.Html.fromHtml(scoreHtml));
+                }
                 scoreText.setTextColor(0xFFFFFFFF);
-                scoreText.setTextSize(28f);
+                scoreText.setTextSize(34f);
                 scoreText.setTypeface(null, android.graphics.Typeface.BOLD);
                 scoreText.setGravity(android.view.Gravity.CENTER);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    scoreText.setLetterSpacing(0.05f);
+                }
                 column.addView(scoreText);
             }
 

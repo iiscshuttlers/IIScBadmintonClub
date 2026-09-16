@@ -458,7 +458,7 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
             wrapperStyle={{ width: "100%", height: "100%" }}
             contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            <img loading="lazy" src={src} alt={alt} className="max-w-[90vw] max-h-[90vh] rounded-2xl object-contain shadow-2xl" />
+            <img loading="lazy" src={src} alt={alt} className="w-full h-full max-w-[90vw] max-h-[90vh] rounded-2xl object-contain shadow-2xl" />
           </TransformComponent>
         </TransformWrapper>
       </div>

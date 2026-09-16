@@ -51,10 +51,10 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
         ? data.filter(p => (p.gender || "").toLowerCase() === targetGender)
         : data;
 
-      const sortedOverall = [...data].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0));
-      const sortedSingles = [...sameGenderData].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0));
-      const sortedDoubles = [...sameGenderData].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0));
-      const sortedMixed = [...data].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0));
+      const sortedOverall = [...data].filter(p => p.elo_rating != null && p.elo_rating !== 1200).sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0));
+      const sortedSingles = [...sameGenderData].filter(p => p.singles_elo != null && p.singles_elo !== 1200).sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0));
+      const sortedDoubles = [...sameGenderData].filter(p => p.doubles_elo != null && p.doubles_elo !== 1200).sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0));
+      const sortedMixed = [...data].filter(p => p.mixed_elo != null && p.mixed_elo !== 1200).sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0));
 
       const overallRank = sortedOverall.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;
       const singlesRank = sortedSingles.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;

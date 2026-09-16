@@ -59,7 +59,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                         <img
                           src={player.avatar}
                           alt={player.fullName}
-                          className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
+                          className="w-full h-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
                         />
                       </TransformComponent>
                     </TransformWrapper>

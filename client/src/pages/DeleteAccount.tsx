@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { disableBiometricLogin } from "@/lib/biometricAuth";
 import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "sonner";
@@ -99,6 +100,7 @@ export default function DeleteAccount() {
       }
 
       // 5. Sign out locally
+      await disableBiometricLogin();
       await supabase.auth.signOut();
 
       setStep("done");
@@ -222,7 +224,7 @@ export default function DeleteAccount() {
 
             <p className="text-center text-xs text-muted-foreground dark:text-muted-foreground">
               If you just need a break, consider{" "}
-              <button onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+              <button onClick={async () => { await disableBiometricLogin(); await supabase.auth.signOut(); navigate("/"); }}
                 className="text-primary dark:text-primary font-bold hover:underline inline-flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> signing out
               </button>{" "}

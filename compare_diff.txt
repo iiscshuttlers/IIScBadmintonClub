@@ -1,0 +1,248 @@
+diff --git a/client/src/pages/ComparePlayers.tsx b/client/src/pages/ComparePlayers.tsx
+index b9a76d0..f3ceac1 100644
+--- a/client/src/pages/ComparePlayers.tsx
++++ b/client/src/pages/ComparePlayers.tsx
+@@ -6,6 +6,7 @@ import { fetchPlayer, fetchPlayerList } from "@/services/playerService";
+ import { fetchPlayerMatches } from "@/services/matchService";
+ import { Card } from "@/components/ui/card";
+ import { Link } from "wouter";
++
+ import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
+ import type { PlayerRow } from "@/types/player";
+ import type { MatchWithPlayers } from "@/types/match";
+@@ -14,6 +15,7 @@ import { getEloTier } from "@/lib/tiers";
+ import { calculateRanksMap } from "@/lib/rankingUtils";
+ import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
+ import { toast } from "sonner";
++import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
+ import {
+   LineChart,
+   Line,
+@@ -42,6 +44,7 @@ export default function ComparePlayers() {
+   const [allPlayers, setAllPlayers] = useState<PlayerRow[]>([]);
+   const [matches, setMatches] = useState<MatchWithPlayers[]>([]);
+   const [loading, setLoading] = useState(true);
++  const { archivedTournaments } = useArchivedTournaments();
+ 
+   usePageMeta({ title: "Player Comparison" });
+ 
+@@ -137,6 +140,48 @@ export default function ComparePlayers() {
+   const p1WinRate = totalMatches > 0 ? Math.round((p1Wins / totalMatches) * 100) : 0;
+   const p2WinRate = totalMatches > 0 ? Math.round((p2Wins / totalMatches) * 100) : 0;
+ 
++  // Helper to dynamically calculate achievements based on archived tournaments
++  const getDynamicMedalsCount = (player: PlayerRow | null) => {
++    if (!player) return 0;
++    const manual = player.achievements?.filter((a: string) => a.trim().length > 0) || [];
++    const combined = [...manual];
++    
++    archivedTournaments.forEach((t) => {
++      if (t.winners) {
++        t.winners.forEach((w) => {
++          const playerName = (player.full_name || "").toLowerCase();
++          const firstName = playerName.split(" ")[0];
++          const isPlayerInString = (str?: string) => {
++            if (!str) return false;
++            const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
++            return cleanStr.includes(playerName) || cleanStr.includes(firstName);
++          };
++          
++          const isWinner = isPlayerInString(w.winner);
++          const isRunnerUp = isPlayerInString(w.runnerUp);
++          const isBronze = w.bronze?.some(b => isPlayerInString(b));
++          
++          if (isWinner || isRunnerUp || isBronze) {
++            const position = isWinner ? "Winner" : isRunnerUp ? "Runner-Up" : "Bronze";
++            const yearMatch = t.startDate.match(/^(\d{4})/);
++            const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
++            const dynAch = `${w.category} ${position} - ${t.name.replace(/ 20\d{2}$/, "")} ${year}`;
++            
++            const dynLower = dynAch.toLowerCase().replace(/[^\w\s]/g, "");
++            const exists = manual.some((m: string) => m.toLowerCase().replace(/[^\w\s]/g, "") === dynLower);
++            if (!exists) {
++              combined.push(dynAch);
++            }
++          }
++        });
++      }
++    });
++    return combined.length;
++  };
++
++  const p1MedalsCount = getDynamicMedalsCount(player1);
++  const p2MedalsCount = getDynamicMedalsCount(player2);
++
+   // Format breakdown
+   const formatBreakdown = ["Singles", "Doubles", "Mixed Doubles"].map(fmt => {
+     const fmtMatches = matches.filter(m => m.category === fmt);
+@@ -149,7 +194,7 @@ export default function ComparePlayers() {
+     return { format: fmt, p1Wins: fP1Wins, p2Wins: fP2Wins, total: fmtMatches.length };
+   }).filter(f => f.total > 0);
+ 
+-  // Single format labels: "Singles" → "S", "Doubles" → "D", "Mixed Doubles" → "XD"
++  // Single format labels: "Singles" → "Singles", "Doubles" → "Doubles", "Mixed Doubles" → "Mixed"
+   const fmtLabel = (f: string) => f === "Singles" ? "Singles" : f === "Doubles" ? "Doubles" : "Mixed";
+   const fmtColor1 = "text-primary dark:text-primary";
+   const fmtColor2 = "text-blue-600 dark:text-blue-400";
+@@ -169,161 +214,6 @@ export default function ComparePlayers() {
+       <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/pulse'} className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
+           <ChevronLeft className="w-5 h-5 mr-1" />
+           Back to H2H
+-        </button>
+-
+-      <div className="text-center mb-10">
+-        <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-rose-200 dark:border-rose-900/50">
+-          <Swords className="w-4 h-4" /> Head to Head Rivalry
+-          <InfoModal
+-            title="H2H RIVALRY"
+-            items={[
+-              { badge: "AI", title: "Pundit Analysis", desc: "Our AI model analyzes playing styles to predict the outcome of future matches between these two players." }
+-            ]}
+-            triggerClassName="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200"
+-          />
+-        </div>
+-        <h1 className="text-3xl sm:text-4xl font-black text-foreground dark:text-foreground flex items-center justify-center gap-4">
+-          <span className="truncate max-w-[40%] text-right">{player1.full_name.split(" ")[0]}</span>
+-          <span className="text-slate-300 dark:text-muted-foreground text-2xl font-mono italic">VS</span>
+-          <span className="truncate max-w-[40%] text-left">{player2.full_name.split(" ")[0]}</span>
+-        </h1>
+-      </div>
+-
+-      {/* Overview Cards */}
+-      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8 text-center relative z-10">
+-        <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-primary rounded-3xl overflow-hidden relative">
+-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Wins</div>
+-          <div className="text-4xl sm:text-5xl font-black text-foreground dark:text-foreground">{p1Wins}</div>
+-        </Card>
+-        
+-        <div className="flex flex-col items-center justify-center">
+-          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-200 dark:border-slate-700">
+-            <Trophy className="w-5 h-5 text-amber-500" />
+-          </div>
+-          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Encounters</div>
+-          <div className="text-xl font-black text-muted-foreground dark:text-slate-300">{matches.length}</div>
+-        </div>
+-
+-        <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-blue-500 rounded-3xl overflow-hidden relative">
+-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Wins</div>
+-          <div className="text-4xl sm:text-5xl font-black text-foreground dark:text-foreground">{p2Wins}</div>
+-        </Card>
+-      </div>
+-
+-      {/* Profiles Side by Side */}
+-      <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-8">
+-        {/* Player 1 */}
+-        <div className="flex flex-col items-center text-center">
+-          <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary/30 dark:border-primary shadow-lg mb-4" />
+-          <div className="relative group w-full px-1 mx-auto">
+-            <select
+-              value={player1.id}
+-              onChange={(e) => {
+-                if (e.target.value !== player2.id) {
+-                  setLocation(`/compare/${e.target.value}/${player2.id}`);
+-                }
+-              }}
+-              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
+-            >
+-              <option value={player1.id} className="hidden">{player1.full_name}</option>
+-              {allPlayers.map((p) => (
+-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
+-                  {p.full_name}
+-                </option>
+-              ))}
+-            </select>
+-            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+-            </div>
+-          </div>
+-          
+-          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).text}`}>
+-             <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • OVR: {p1Rank}
+-          </div>
+-        </div>
+-
+-        {/* Player 2 */}
+-        <div className="flex flex-col items-center text-center">
+-          <img src={player2.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg mb-4" />
+-          <div className="relative group w-full px-1 mx-auto">
+-            <select
+-              value={player2.id}
+-              onChange={(e) => {
+-                if (e.target.value !== player1.id) {
+-                  setLocation(`/compare/${player1.id}/${e.target.value}`);
+-                }
+-              }}
+-              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
+-            >
+-              <option value={player2.id} className="hidden">{player2.full_name}</option>
+-              {allPlayers.map((p) => (
+-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
+-                  {p.full_name}
+-                </option>
+-              ))}
+-            </select>
+-            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+-            </div>
+-          </div>
+-          
+-          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).text}`}>
+-             <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • OVR: {p2Rank}
+-          </div>
+-        </div>
+-      </div>
+-
+-      {/* Win Rate Bar */}
+-      {totalMatches > 0 && (
+-        <div className="mb-12">
+-          <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-2 px-2">
+-            <span className="text-primary dark:text-primary">{p1WinRate}% Win Rate</span>
+-            <span className="text-blue-600 dark:text-blue-400">{p2WinRate}% Win Rate</span>
+-          </div>
+-          <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+-            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${p1WinRate}%` }} />
+-            <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${p2WinRate}%` }} />
+-          </div>
+-          
+-          {/* Matchup Streak */}
+-          <div className="mt-4 flex justify-center">
+-            {p1Streak > 1 && (
+-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black">
+-                <Flame className="w-3 h-3" /> {player1.full_name.split(" ")[0]} is on a {p1Streak} match win streak!
+-              </span>
+-            )}
+-            {p2Streak > 1 && (
+-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black">
+-                <Flame className="w-3 h-3" /> {player2.full_name.split(" ")[0]} is on a {p2Streak} match win streak!
+-              </span>
+-            )}
+-          </div>
+-        </div>
+-      )}
+-
+-      <TeaserOverlay isLocked={!session}>
+-        {/* AI Prediction Pundit Card */}
+-      <AiPredictionCard player1={player1} player2={player2} p1Wins={p1Wins} p2Wins={p2Wins} matches={matches} />
+-
+-      {/* Tale of the Tape */}
+-      <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
+-        <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-6 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
+-          Tale of the Tape
+-        </h3>
+-        
+-        <div className="space-y-4">
+-          {[
+-            { label: "Department", icon: MapPin, p1Val: player1.department, p2Val: player2.department, color: "text-rose-500 dark:text-rose-400", chip: "bg-rose-100 dark:bg-rose-500/15" },
+-            { label: "Playing Style", icon: Activity, p1Val: player1.playing_style || "Balanced", p2Val: player2.playing_style || "Balanced", color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+-            { label: "Dominant Hand", icon: User, p1Val: player1.dominant_hand || "Right-handed", p2Val: player2.dominant_hand || "Right-handed", color: "text-violet-500 dark:text-violet-400", chip: "bg-violet-100 dark:bg-violet-500/15" },
+-            { label: "Medals", icon: Trophy, p1Val: player1.achievements?.length || 0, p2Val: player2.achievements?.length || 0, color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+-            { label: "Experience", icon: Flame, p1Val: player1.started_playing_year ? `${new Date().getFullYear() - player1.started_playing_year} yrs` : "N/A", p2Val: player2.started_playing_year ? `${new Date().getFullYear() - player2.started_playing_year} yrs` : "N/A", color: "text-orange-500 dark:text-orange-400", chip: "bg-orange-100 dark:bg-orange-500/15" },
+-            { label: "Fav Format", icon: Activity, p1Val: player1.favorite_format || "N/A", p2Val: player2.favorite_format || "N/A", color: "text-emerald-500 dark:text-emerald-400", chip: "bg-emerald-100 dark:bg-emerald-500/15" }
+-          ].map((stat, idx) => (
+-            <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
+-              <div className="flex-1 text-right text-sm font-bold text-primary dark:text-primary pr-4">{stat.p1Val}</div>
+-              <div className="w-24 shrink-0 flex flex-col items-center justify-center">
+-                 <span className={`flex items-center justify-center w-8 h-8 rounded-full mb-1 ${stat.chip}`}>
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </span>
+                  <span className={`text-[10px] font-black uppercase tracking-wider text-center ${stat.color}`}>{stat.label}</span>

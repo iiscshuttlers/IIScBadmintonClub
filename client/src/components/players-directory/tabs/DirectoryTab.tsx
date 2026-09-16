@@ -163,6 +163,7 @@ export function DirectoryTab({
         allDepartments={allDepartments}
         filteredPlayersCount={filteredPlayers.length}
         otherPlayersCount={otherPlayersCount}
+        viewMode={viewMode}
       />
 
       {/* Directory Sub-Navigation (Individuals / Teams) */}

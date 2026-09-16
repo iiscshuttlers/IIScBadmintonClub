@@ -7,6 +7,7 @@ export interface MatchRow {
   team1_partner_id: string | null;
   team2_partner_id: string | null;
   winner_id: string | null;
+  winner_side?: number | null;
   match_score: string | null;
   sets_json: any;
   category: string;

@@ -23,6 +23,7 @@ export function DirectoryFilters({
   allDepartments,
   filteredPlayersCount,
   otherPlayersCount,
+  viewMode,
 }: {
   searchQuery: string;
   setSearchQuery: (v: string) => void;
@@ -41,6 +42,7 @@ export function DirectoryFilters({
   allDepartments: string[];
   filteredPlayersCount: number;
   otherPlayersCount: number;
+  viewMode?: string;
 }) {
   const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
   useEffect(() => {
@@ -53,6 +55,8 @@ export function DirectoryFilters({
         if (data) setTournaments(data);
       });
   }, []);
+
+  const isIndividuals = !viewMode || viewMode === "individuals";
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
@@ -82,7 +86,7 @@ export function DirectoryFilters({
 
         <div className="flex gap-2 w-full md:w-auto shrink-0">
           {/* Tournament selector */}
-          {setTournamentFilter && (
+          {setTournamentFilter && viewMode !== "h2h" && (
             <div className="relative flex-1 min-w-0">
               <Trophy className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <select
@@ -99,45 +103,49 @@ export function DirectoryFilters({
           )}
 
           {/* Sort selector */}
-          <div className={`relative ${setTournamentFilter ? "flex-[1.2]" : "flex-1"} min-w-0`}>
-            <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full pl-7 pr-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
-            >
-              <option value="elo">Overall</option>
-              <option value="singles">Singles</option>
-              <option value="doubles">Doubles</option>
-              <option value="mixed">Mixed Doubles</option>
-              <option value="winpct">Win %</option>
-              <option value="name">Name</option>
-              <option value="department">Department</option>
-              <option value="level">Level</option>
-            </select>
-          </div>
+          {isIndividuals && (
+            <div className={`relative flex-1 min-w-0`}>
+              <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full pl-7 pr-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
+              >
+                <option value="elo">Overall</option>
+                <option value="singles">Singles</option>
+                <option value="doubles">Doubles</option>
+                <option value="mixed">Mixed Doubles</option>
+                <option value="winpct">Win %</option>
+                <option value="name">Name</option>
+                <option value="department">Department</option>
+                <option value="level">Level</option>
+              </select>
+            </div>
+          )}
 
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-3 rounded-2xl border text-xs font-bold transition
-          ${
-            showFilters
-              ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary text-primary dark:text-primary"
-              : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
-          }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Filters</span>
-            {(levelFilter !== "All" || departmentFilter !== "All") && (
-              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-            )}
-          </button>
+          {isIndividuals && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-3 rounded-2xl border text-xs font-bold transition
+            ${
+              showFilters
+                ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary text-primary dark:text-primary"
+                : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+            }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Filters</span>
+              {(levelFilter !== "All" || departmentFilter !== "All") && (
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Expandable filters */}
       <AnimatePresence>
-        {showFilters && (
+        {isIndividuals && showFilters && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -222,7 +230,7 @@ export function DirectoryFilters({
       </AnimatePresence>
 
       {/* Result count */}
-      {(searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
+      {isIndividuals && (searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
         <p className="text-xs font-bold text-muted-foreground dark:text-muted-foreground mt-5">
           Showing{" "}
           <span className="text-primary dark:text-primary">

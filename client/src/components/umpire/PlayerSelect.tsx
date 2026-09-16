@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Plus, Minus, X } from 'lucide-react';
 import type { PlayerSlim as Player } from '@/types';
+import { isFuzzyMatch } from '@/lib/utils';
 
 export function PlayerSelect({
   value,
@@ -46,7 +47,7 @@ export function PlayerSelect({
   }, [value, players, fallbackName]);
 
   const filtered = players.filter((p) =>
-    (p.full_name || "").toLowerCase().includes((search || "").toLowerCase())
+    isFuzzyMatch(search, p.full_name)
   );
 
   useEffect(() => {

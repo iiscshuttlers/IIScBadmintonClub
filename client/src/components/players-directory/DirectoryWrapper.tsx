@@ -105,7 +105,27 @@ export function DirectoryWrapper() {
       participantIds = new Set();
       for (const m of allMatches) {
         if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) continue;
-        if (categoryFilter !== "All" && m.category !== categoryFilter) continue;
+        if (categoryFilter !== "All") {
+          const catLower = (m.category || "").toLowerCase();
+          const filterLower = (categoryFilter || "").toLowerCase();
+          let matches = false;
+          
+          if (filterLower === "men's singles") {
+            matches = catLower.includes("ms") || catLower.includes("men's singles") || catLower.includes("mens singles");
+          } else if (filterLower === "women's singles") {
+            matches = catLower.includes("ws") || catLower.includes("women's singles") || catLower.includes("womens singles");
+          } else if (filterLower === "men's doubles") {
+            matches = catLower.includes("md") || catLower.includes("men's doubles") || catLower.includes("mens doubles") || (catLower.includes("doubles") && !catLower.includes("women") && !catLower.includes("wd") && !catLower.includes("mixed") && !catLower.includes("xd"));
+          } else if (filterLower === "women's doubles") {
+            matches = catLower.includes("wd") || catLower.includes("women's doubles") || catLower.includes("womens doubles");
+          } else if (filterLower === "mixed doubles") {
+            matches = catLower.includes("xd") || catLower.includes("mixed");
+          } else {
+            matches = catLower === filterLower;
+          }
+
+          if (!matches) continue;
+        }
         if (m.player1_id) participantIds.add(m.player1_id);
         if (m.player2_id) participantIds.add(m.player2_id);
         if (m.player3_id) participantIds.add(m.player3_id);
@@ -136,7 +156,27 @@ export function DirectoryWrapper() {
           let losses = 0;
           for (const m of allMatches) {
             if (m.tournament_id !== tournamentFilter) continue;
-            if (categoryFilter !== "All" && m.category !== categoryFilter) continue;
+            if (categoryFilter !== "All") {
+              const catLower = (m.category || "").toLowerCase();
+              const filterLower = (categoryFilter || "").toLowerCase();
+              let matches = false;
+              
+              if (filterLower === "men's singles") {
+                matches = catLower.includes("ms") || catLower.includes("men's singles") || catLower.includes("mens singles");
+              } else if (filterLower === "women's singles") {
+                matches = catLower.includes("ws") || catLower.includes("women's singles") || catLower.includes("womens singles");
+              } else if (filterLower === "men's doubles") {
+                matches = catLower.includes("md") || catLower.includes("men's doubles") || catLower.includes("mens doubles") || (catLower.includes("doubles") && !catLower.includes("women") && !catLower.includes("wd") && !catLower.includes("mixed") && !catLower.includes("xd"));
+              } else if (filterLower === "women's doubles") {
+                matches = catLower.includes("wd") || catLower.includes("women's doubles") || catLower.includes("womens doubles");
+              } else if (filterLower === "mixed doubles") {
+                matches = catLower.includes("xd") || catLower.includes("mixed");
+              } else {
+                matches = catLower === filterLower;
+              }
+
+              if (!matches) continue;
+            }
             
             const isTeam1 = m.player1_id === p.id || m.player3_id === p.id;
             const isTeam2 = m.player2_id === p.id || m.player4_id === p.id;

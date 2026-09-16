@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
+import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock, ChevronDown, ChevronUp, ChevronRight, Pin } from "lucide-react";
 import { toast } from "sonner";
 import { MatchService } from "@/services/matchService";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -364,8 +364,8 @@ function MatchBroadcastCard({
           {Capacitor.isNativePlatform() && (
             <button 
                onClick={() => togglePinScore(match.id)} 
-               className={`shrink-0 px-2.5 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-               <Tv2 className="w-4 h-4" /> <span className="hidden sm:inline">{isScorePinned ? "Unpin Score" : "Pin Score"}</span>
+               className={`shrink-0 px-3 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+               <Pin className={`w-3.5 h-3.5 ${isScorePinned ? "fill-white" : ""}`} /> <span>{isScorePinned ? "Unpin Scores" : "Pin Scores"}</span>
             </button>
           )}
         </div>
@@ -458,11 +458,11 @@ function MatchBroadcastCard({
           {showAdminControls && (
             <>
               {!showAdminForm ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 w-full">
               {/* Umpire/Admin Takeover Button */}
               <button
                 onClick={() => onTakeoverRequest(match)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 font-bold text-xs rounded-lg transition"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 font-bold text-[11px] sm:text-xs rounded-lg transition"
               >
                 <MonitorPlay className="w-4 h-4" /> Open in Umpire
               </button>
@@ -477,9 +477,9 @@ function MatchBroadcastCard({
                   setAdminSets(parsed);
                   setShowAdminForm(true); 
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary/70 font-bold text-xs rounded-lg transition"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary/70 font-bold text-[11px] sm:text-xs rounded-lg transition"
               >
-                <Save className="w-4 h-4" /> Enter Final Score
+                <Save className="w-4 h-4" /> Final Score
               </button>
               <button
                 onClick={() => {
@@ -493,17 +493,17 @@ function MatchBroadcastCard({
                     });
                   }
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/25 border border-[var(--danger)]/40 text-[var(--danger)] font-bold text-xs rounded-lg transition"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/25 border border-[var(--danger)]/40 text-[var(--danger)] font-bold text-[11px] sm:text-xs rounded-lg transition"
               >
-                <Trash2 className="w-4 h-4" /> Kill Broadcast
+                <Trash2 className="w-4 h-4 shrink-0" /> <span className="truncate">Kill Broadcast</span>
               </button>
               <button
                 onClick={sendScorePush}
                 disabled={sendingPush}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[var(--winner)]/15 hover:bg-[var(--winner)]/25 border border-[var(--winner)]/40 text-[var(--winner)] font-bold text-xs rounded-lg transition disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-[var(--winner)]/15 hover:bg-[var(--winner)]/25 border border-[var(--winner)]/40 text-[var(--winner)] font-bold text-[11px] sm:text-xs rounded-lg transition disabled:opacity-50"
               >
-                {sendingPush ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
-                Push Score to All
+                {sendingPush ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Bell className="w-4 h-4 shrink-0" />}
+                <span className="truncate">Push Score</span>
               </button>
             </div>
           ) : (

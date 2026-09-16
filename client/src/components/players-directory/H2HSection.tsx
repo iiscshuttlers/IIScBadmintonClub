@@ -6,6 +6,8 @@ import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { RivalriesDashboard } from "./RivalriesDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { calculateRanksMap } from "@/lib/rankingUtils";
+import { PlayerSelect } from "@/components/ui/PlayerSelect";
+import { ChevronDown } from "lucide-react";
 
 export function H2HSection() {
   const { session } = useAuth();
@@ -282,17 +284,18 @@ export function H2HSection() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <select
-                value={p1Id}
-                onChange={(e) => setP1Id(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-sm text-slate-800 dark:text-slate-200 text-center"
-              >
-                {players.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative group w-full px-1 mx-auto">
+                <PlayerSelect
+                  value={p1Id}
+                  onChange={setP1Id}
+                  players={players}
+                  placeholder="Player 1"
+                  className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+                />
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-primary dark:text-primary">
+                  <ChevronDown className="w-4 h-4 drop-shadow-sm" />
+                </div>
+              </div>
               <div className="flex gap-1.5 flex-row justify-center text-[10px] font-black mt-1 mx-auto min-h-[24px] w-full">
                 {!!rankMap[p1?.id || ""]?.overall && (
                   <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
@@ -426,17 +429,18 @@ export function H2HSection() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <select
-                value={p2Id}
-                onChange={(e) => setP2Id(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-sm text-slate-800 dark:text-slate-200 text-center"
-              >
-                {players.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative group w-full px-1 mx-auto">
+                <PlayerSelect
+                  value={p2Id}
+                  onChange={setP2Id}
+                  players={players}
+                  placeholder="Player 2"
+                  className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+                />
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-blue-500 dark:text-blue-400">
+                  <ChevronDown className="w-4 h-4 drop-shadow-sm" />
+                </div>
+              </div>
               <div className="flex gap-1.5 flex-row justify-center text-[10px] font-black mt-1 mx-auto min-h-[24px] w-full">
                 {!!rankMap[p2?.id || ""]?.overall && (
                   <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">

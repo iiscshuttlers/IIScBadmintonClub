@@ -2,17 +2,20 @@ import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { fetchPlayer, fetchPlayerList } from "@/services/playerService";
 import { fetchPlayerMatches } from "@/services/matchService";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
+import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
-import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown, Sparkles, Loader2 } from "lucide-react";
+import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler, Sparkles, Loader2 } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
+import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
 import { toast } from "sonner";
 import {
   LineChart,
@@ -44,6 +47,19 @@ export default function ComparePlayers() {
   const [loading, setLoading] = useState(true);
 
   usePageMeta({ title: "Player Comparison" });
+
+  const { archivedTournaments } = useArchivedTournaments();
+
+  const getMedalCount = (name: string) => {
+    if (!archivedTournaments) return 0;
+    const leaderboard = computeWinnerLeaderboard(archivedTournaments);
+    const entry = leaderboard.find(l => {
+       const lowerName = name.toLowerCase();
+       const lName = l.name.toLowerCase();
+       return lName === lowerName || lowerName.includes(lName) || lName.includes(lowerName.split(' ')[0]);
+    });
+    return entry ? entry.wins : 0;
+  };
 
   useEffect(() => {
     fetchPlayerList().then((data) => setAllPlayers(data || []));
@@ -100,7 +116,7 @@ export default function ComparePlayers() {
 
   for (const m of matches) {
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2;
+    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
     
     if (winnerTeam === p1Team) p1Wins++;
     else p2Wins++;
@@ -122,7 +138,7 @@ export default function ComparePlayers() {
   for (let i = matches.length - 1; i >= 0; i--) {
     const m = matches[i];
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2;
+    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
     
     if (winnerTeam === p1Team) {
       if (p2Streak > 0) break;
@@ -143,7 +159,7 @@ export default function ComparePlayers() {
     let fP1Wins = 0, fP2Wins = 0;
     for (const m of fmtMatches) {
       const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-      const winnerTeam = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2;
+      const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
       if (winnerTeam === p1Team) fP1Wins++; else fP2Wins++;
     }
     return { format: fmt, p1Wins: fP1Wins, p2Wins: fP2Wins, total: fmtMatches.length };
@@ -216,24 +232,18 @@ export default function ComparePlayers() {
         <div className="flex flex-col items-center text-center">
           <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary/30 dark:border-primary shadow-lg mb-4" />
           <div className="relative group w-full px-1 mx-auto">
-            <select
+            <PlayerSelect
               value={player1.id}
-              onChange={(e) => {
-                if (e.target.value !== player2.id) {
-                  setLocation(`/compare/${e.target.value}/${player2.id}`);
+              onChange={(newId) => {
+                if (newId && newId !== player2.id) {
+                  setLocation(`/compare/${newId}/${player2.id}`);
                 }
               }}
-              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
-            >
-              <option value={player1.id} className="hidden">{player1.full_name}</option>
-              {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
-                  {p.full_name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              players={allPlayers}
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+            />
+            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-primary dark:text-primary">
+              <ChevronDown className="w-5 h-5 drop-shadow-md" />
             </div>
           </div>
           
@@ -246,24 +256,18 @@ export default function ComparePlayers() {
         <div className="flex flex-col items-center text-center">
           <img src={player2.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg mb-4" />
           <div className="relative group w-full px-1 mx-auto">
-            <select
+            <PlayerSelect
               value={player2.id}
-              onChange={(e) => {
-                if (e.target.value !== player1.id) {
-                  setLocation(`/compare/${player1.id}/${e.target.value}`);
+              onChange={(newId) => {
+                if (newId && newId !== player1.id) {
+                  setLocation(`/compare/${player1.id}/${newId}`);
                 }
               }}
-              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
-            >
-              <option value={player2.id} className="hidden">{player2.full_name}</option>
-              {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
-                  {p.full_name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              players={allPlayers}
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+            />
+            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-blue-500 dark:text-blue-400">
+              <ChevronDown className="w-5 h-5 drop-shadow-md" />
             </div>
           </div>
           
@@ -316,7 +320,7 @@ export default function ComparePlayers() {
             { label: "Department", icon: MapPin, p1Val: player1.department, p2Val: player2.department, color: "text-rose-500 dark:text-rose-400", chip: "bg-rose-100 dark:bg-rose-500/15" },
             { label: "Playing Style", icon: Activity, p1Val: player1.playing_style || "Balanced", p2Val: player2.playing_style || "Balanced", color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
             { label: "Dominant Hand", icon: User, p1Val: player1.dominant_hand || "Right-handed", p2Val: player2.dominant_hand || "Right-handed", color: "text-violet-500 dark:text-violet-400", chip: "bg-violet-100 dark:bg-violet-500/15" },
-            { label: "Medals", icon: Trophy, p1Val: player1.achievements?.length || 0, p2Val: player2.achievements?.length || 0, color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+            { label: "Medals", icon: Trophy, p1Val: getMedalCount(player1.full_name), p2Val: getMedalCount(player2.full_name), color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
             { label: "Experience", icon: Flame, p1Val: player1.started_playing_year ? `${new Date().getFullYear() - player1.started_playing_year} yrs` : "N/A", p2Val: player2.started_playing_year ? `${new Date().getFullYear() - player2.started_playing_year} yrs` : "N/A", color: "text-orange-500 dark:text-orange-400", chip: "bg-orange-100 dark:bg-orange-500/15" },
             { label: "Fav Format", icon: Activity, p1Val: player1.favorite_format || "N/A", p2Val: player2.favorite_format || "N/A", color: "text-emerald-500 dark:text-emerald-400", chip: "bg-emerald-100 dark:bg-emerald-500/15" }
           ].map((stat, idx) => (

@@ -75,9 +75,13 @@ public class FloatingScorePlugin extends Plugin {
 
         Intent intent = new Intent(getContext(), FloatingScoreService.class);
         intent.putExtra("matches", matchesJson);
-        getContext().startService(intent);
-
-        call.resolve();
+        try {
+            getContext().startService(intent);
+            call.resolve();
+        } catch (Exception e) {
+            // Android 8+ forbids starting background services if the app is currently in the background.
+            call.reject("Could not start FloatingScoreService: " + e.getMessage());
+        }
     }
 
     @PluginMethod

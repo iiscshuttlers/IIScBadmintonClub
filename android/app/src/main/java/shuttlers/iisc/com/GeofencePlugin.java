@@ -33,8 +33,7 @@ import java.security.GeneralSecurityException;
         @Permission(strings = {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
-        }, alias = "location"),
-        @Permission(strings = {Manifest.permission.ACCESS_BACKGROUND_LOCATION}, alias = "backgroundLocation")
+        }, alias = "location")
     }
 )
 public class GeofencePlugin extends Plugin {
@@ -102,7 +101,7 @@ public class GeofencePlugin extends Plugin {
                 requestPermissionForAlias("location", call, "locationPermissionCallback");
                 return;
             }
-            ensureBackgroundLocation(call);
+            addGeofence(call);
         } catch (Exception e) {
             String msg = "Geofence setup crashed: " + e.getClass().getName() + " - " + e.getMessage();
             Log.e(TAG, msg, e);
@@ -149,43 +148,9 @@ public class GeofencePlugin extends Plugin {
                 call.reject("Location permission not granted");
                 return;
             }
-            ensureBackgroundLocation(call);
+            addGeofence(call);
         } catch (Exception e) {
             String msg = "Location permission callback crashed: " + e.getClass().getName() + " - " + e.getMessage();
-            Log.e(TAG, msg, e);
-            call.reject(msg, e);
-        }
-    }
-
-    /**
-     * Android 10+ rejects a combined foreground+background location request outright, so
-     * background access must be requested as a separate, later step after foreground is granted.
-     * Background is nice-to-have for reliable exit events; we still add the geofence in the
-     * foreground-only case rather than blocking setup on it.
-     */
-    private void ensureBackgroundLocation(PluginCall call) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                    && getPermissionState("backgroundLocation") != PermissionState.GRANTED) {
-                requestPermissionForAlias("backgroundLocation", call, "backgroundLocationPermissionCallback");
-                return;
-            }
-            addGeofence(call);
-        } catch (Exception e) {
-            String msg = "Ensure background location crashed: " + e.getClass().getName() + " - " + e.getMessage();
-            Log.e(TAG, msg, e);
-            call.reject(msg, e);
-        }
-    }
-
-    @PermissionCallback
-    private void backgroundLocationPermissionCallback(PluginCall call) {
-        try {
-            // Proceed regardless of outcome: foreground-only geofencing still works, just less
-            // reliably in the background, which is an acceptable degradation.
-            addGeofence(call);
-        } catch (Exception e) {
-            String msg = "Background location permission callback crashed: " + e.getClass().getName() + " - " + e.getMessage();
             Log.e(TAG, msg, e);
             call.reject(msg, e);
         }
