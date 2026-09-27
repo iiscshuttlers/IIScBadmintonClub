@@ -82,14 +82,7 @@
                 android:resource="@xml/widget_live_score_info" />
         </receiver>
         
-        <!-- Not exported: the geofencing PendingIntent is delivered by Play services using this
-             app's own identity, so external apps gain nothing from an exported receiver and it
-             would otherwise let any app trigger fake presence events / notifications. -->
-        <receiver android:name=".GeofenceReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="shuttlers.iisc.com.ACTION_GEOFENCE_TRANSITION" />
-            </intent-filter>
-        </receiver>
+
         
         <service
             android:name=".UmpireTileService"
@@ -121,8 +114,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 
     <!-- Camera and NFC are optional so the app is available on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
