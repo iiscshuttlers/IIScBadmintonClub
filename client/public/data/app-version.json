@@ -1,6 +1,6 @@
 {
-  "versionCode": 413,
-  "versionName": "4.13",
+  "versionCode": 414,
+  "versionName": "4.14",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "Version 4.13 released with bug fixes and performance improvements."
+  "changelog": "- chore: remove geofencing feature and location permissions for Play policy compliance"
 }

@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 414,
+    "versionName": "4.14",
+    "date": "2026-10-01T06:09:25.174Z",
+    "changes": [
+      "- chore: remove geofencing feature and location permissions for Play policy compliance"
+    ]
+  },
+  {
     "versionCode": 413,
     "versionName": "4.13",
     "date": "2026-09-27T05:51:24.480Z",
