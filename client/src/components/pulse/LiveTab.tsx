@@ -62,14 +62,19 @@ export function LiveTab() {
           const match = data.find((t: any) => t.id === queryTournamentId);
           if (match) {
             setActiveTournament(match);
+            setTournamentFilter(match.id);
             return;
           }
         }
         const active = data.find((t: any) => t.status === "active");
         if (active) {
           setActiveTournament(active);
+          setTournamentFilter(active.id);
         } else {
-          setActiveTournament(data[0]);
+          // Prefer team tournament if available, else latest
+          const preferred = data.find((t: any) => t.format_family === "TEAM") || data[0];
+          setActiveTournament(preferred);
+          setTournamentFilter(preferred.id);
         }
       }
     }
@@ -84,6 +89,9 @@ export function LiveTab() {
     if (selected) {
       setActiveTournament(selected);
       setTournamentFilter(tId);
+      const url = new URL(window.location.href);
+      url.searchParams.set("id", tId);
+      window.history.replaceState({}, "", url.toString());
     }
   };
 
@@ -254,7 +262,7 @@ export function LiveTab() {
                 >
                   {tournaments.map((t: any) => (
                     <option key={t.id} value={t.id}>
-                      {t.name} ({t.status})
+                      {t.name} ({t.format_family === "TEAM" ? "Team" : "Open"}{t.status ? `, ${t.status}` : ""})
                     </option>
                   ))}
                 </select>
@@ -275,7 +283,7 @@ export function LiveTab() {
           { id: "polls", label: "Polls", icon: ListChecks },
           { id: "schedule", label: "Schedule", icon: Calendar },
           { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
-          { id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" },
+          ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
         ].map((tab: any) => (
@@ -340,7 +348,9 @@ export function LiveTab() {
               >
                 <option value="all">All Tournaments</option>
                 {tournaments.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.format_family === "TEAM" ? "Team" : "Open"}{t.status ? `, ${t.status}` : ""})
+                  </option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -383,7 +393,13 @@ export function LiveTab() {
               {(() => {
                 const upcomingMatches: any[] = [];
                 const completedMatches: any[] = [];
-                let myMatchesList = [...myAllMatches];
+                let myMatchesList = myAllMatches.filter((m: any) => {
+                  const tId = tournamentFilter !== "all" ? tournamentFilter : activeTournamentId;
+                  if (tId) {
+                    return m.tournament_id === tId;
+                  }
+                  return true;
+                });
 
                 if (searchQuery.trim()) {
                   const q = searchQuery.toLowerCase().trim();
@@ -728,7 +744,34 @@ export function LiveTab() {
       {/* 5. Points Table / Standings */}
       {!loading && activeSubTab === "standings" && (
         <div className="mb-6">
-          {activeTournamentId ? (
+          {activeTournament && activeTournament.format_family !== "TEAM" ? (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+              <div className="w-16 h-16 bg-amber-50 dark:bg-amber-950/40 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200 dark:border-amber-800/50">
+                <Trophy className="w-8 h-8 text-amber-500" />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-1">
+                Points Table Not Available
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Points tables and league standings are only available for <strong>Team Tournaments</strong>. 
+                {activeTournament?.name ? ` "${activeTournament.name}"` : " This event"} is an individual (open event) tournament where players advance via knockout brackets.
+              </p>
+              <div className="mt-5 flex justify-center gap-3">
+                <button
+                  onClick={() => setActiveSubTab("brackets")}
+                  className="px-4 py-2 bg-primary text-primary-foreground font-bold text-xs rounded-full shadow-sm hover:opacity-90 transition"
+                >
+                  View Draw & Brackets
+                </button>
+                <button
+                  onClick={() => setActiveSubTab("matches")}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                >
+                  View Matches
+                </button>
+              </div>
+            </div>
+          ) : activeTournamentId ? (
             <TeamStandingsTable tournamentId={activeTournamentId} />
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
