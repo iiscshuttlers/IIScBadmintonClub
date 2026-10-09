@@ -43,13 +43,49 @@ export function LiveTab() {
 
   const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
-  
+  const [tournaments, setTournaments] = useState<any[]>([]);
+
   useEffect(() => {
-    supabase.from("tournaments").select("*").eq("status", "active").limit(1).then(({ data }) => {
-      if (data && data.length > 0) setActiveTournament(data[0]);
-    });
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryTournamentId = searchParams.get("id") || searchParams.get("tournament_id");
+
+    async function loadTournaments() {
+      const { data } = await supabase
+        .from("tournaments")
+        .select("*")
+        .neq("status", "deleted")
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        setTournaments(data);
+        if (queryTournamentId) {
+          const match = data.find((t: any) => t.id === queryTournamentId);
+          if (match) {
+            setActiveTournament(match);
+            return;
+          }
+        }
+        const active = data.find((t: any) => t.status === "active");
+        if (active) {
+          setActiveTournament(active);
+        } else {
+          setActiveTournament(data[0]);
+        }
+      }
+    }
+
+    loadTournaments();
   }, []);
+
   const activeTournamentId = activeTournament?.id;
+
+  const handleSelectTournament = (tId: string) => {
+    const selected = tournaments.find((t: any) => t.id === tId);
+    if (selected) {
+      setActiveTournament(selected);
+      setTournamentFilter(tId);
+    }
+  };
 
   const [feedView, setFeedView] = useQueryState<"my" | "tournament">("feed", "tournament");
 
@@ -156,18 +192,6 @@ export function LiveTab() {
     await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
   };
 
-  const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
-  useEffect(() => {
-    supabase
-      .from("tournaments")
-      .select("id, name")
-      .neq("status", "deleted")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) setTournaments(data);
-      });
-  }, []);
-
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
   const renderSkeleton = () => (
@@ -215,10 +239,29 @@ export function LiveTab() {
   return (
     <div className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
       {activeTournament && (
-        <div className="text-center mb-3 mt-0">
-          <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
-            {activeTournament.name}
-          </h1>
+        <div className="text-center mb-4 mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+              {activeTournament.name}
+            </h1>
+            {tournaments.length > 1 && (
+              <div className="relative inline-block ml-1">
+                <select
+                  value={activeTournament.id}
+                  onChange={(e) => handleSelectTournament(e.target.value)}
+                  className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                  title="Switch Tournament"
+                >
+                  {tournaments.map((t: any) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.status})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            )}
+          </div>
           {activeTournament.subtitle && (
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
           )}
@@ -252,9 +295,19 @@ export function LiveTab() {
       </div>
       
       {/* 0. Details */}
-      {!loading && activeSubTab === "details" && activeTournament && (
+      {!loading && activeSubTab === "details" && (
         <div className="mb-6">
-          <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
+          {activeTournament ? (
+            <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <FileText className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Details</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                No active or selected tournament was found.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -637,10 +690,17 @@ export function LiveTab() {
       )}
 
       {/* Schedule Tab */}
-      {activeSubTab === "schedule" && activeTournamentId && (
+      {activeSubTab === "schedule" && (
         <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
           <h2 className="font-black text-lg mb-4 text-slate-800 dark:text-foreground">Match Schedule</h2>
-          <LiveMatchSchedule tournamentId={activeTournamentId} playerName={ownProfile?.full_name || null} />
+          {activeTournamentId ? (
+            <LiveMatchSchedule tournamentId={activeTournamentId} playerName={ownProfile?.full_name || null} />
+          ) : (
+            <div className="text-center py-10 text-slate-400">
+              <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="font-bold text-sm">No tournament schedule available.</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -652,16 +712,33 @@ export function LiveTab() {
       )}
 
       {/* 4. Brackets */}
-      {!loading && activeSubTab === "brackets" && activeTournamentId && (
+      {!loading && activeSubTab === "brackets" && (
         <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-          <LiveBracketsSection tournamentId={activeTournamentId} showBrackets={true} />
+          {activeTournamentId ? (
+            <LiveBracketsSection tournamentId={activeTournamentId} showBrackets={true} />
+          ) : (
+            <div className="text-center py-10 text-slate-400">
+              <LayoutList className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="font-bold text-sm">No brackets available.</p>
+            </div>
+          )}
         </div>
       )}
 
       {/* 5. Points Table / Standings */}
-      {!loading && activeSubTab === "standings" && activeTournamentId && (
+      {!loading && activeSubTab === "standings" && (
         <div className="mb-6">
-          <TeamStandingsTable tournamentId={activeTournamentId} />
+          {activeTournamentId ? (
+            <TeamStandingsTable tournamentId={activeTournamentId} />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Standings Available</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                No active team tournament is selected.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
