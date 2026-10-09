@@ -12,6 +12,10 @@ for(let i=0; i<lines.length; i++) {
 }
 
 if (start === -1 || end === -1) {
+  if (fs.existsSync('client/src/components/umpire/UmpireSetupFlow.tsx')) {
+    console.log('Already extracted! (UmpireSetupFlow.tsx exists)');
+    process.exit(0);
+  }
   console.log('Bounds not found');
   process.exit(1);
 }

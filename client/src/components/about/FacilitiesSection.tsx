@@ -11,6 +11,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { motion } from "framer-motion";
+import { CourtScheduleSection } from "./CourtScheduleSection";
 
 type Holiday = {
   date: string;
@@ -375,6 +376,9 @@ export function FacilitiesSection() {
             </div>
           </div>
         </section>
+
+        {/* Real-time Court Availability & Tournament Schedule (At the end of page) */}
+        <CourtScheduleSection />
       </div>
     </section>
   );

@@ -46,9 +46,19 @@ export function PlayerSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [value, players, fallbackName]);
 
-  const filtered = players.filter((p) =>
-    isFuzzyMatch(search, p.full_name)
-  );
+  const isInputFocusedOnSelected = Boolean(value && players.find((p) => p.id === value)?.full_name === search);
+
+  const filtered = players.filter((p) => {
+    if (!search || !search.trim() || isInputFocusedOnSelected) return true;
+    const q = search.trim().toLowerCase();
+    return (
+      isFuzzyMatch(q, p.full_name) ||
+      p.full_name.toLowerCase().includes(q) ||
+      Boolean(p.email && (p.email.toLowerCase().includes(q) || isFuzzyMatch(q, p.email))) ||
+      Boolean(p.iisc_email && (p.iisc_email.toLowerCase().includes(q) || isFuzzyMatch(q, p.iisc_email))) ||
+      Boolean(p.nickname && isFuzzyMatch(q, p.nickname))
+    );
+  });
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -102,7 +112,7 @@ export function PlayerSelect({
         className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground truncate"
       />
       {isOpen && (
-        <div ref={listboxRef} className="absolute z-60 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+        <div ref={listboxRef} className="absolute z-60 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-56 overflow-y-auto">
           {filtered.length === 0 ? (
             <div
               className={`p-3 text-sm font-bold cursor-pointer text-primary ${activeIndex === 0 ? "bg-primary/80/50" : "hover:bg-primary/80/30"}`}
@@ -115,9 +125,22 @@ export function PlayerSelect({
               <div
                 key={p.id}
                 onClick={() => { onChange(p.id); setSearch(p.full_name); setIsOpen(false); }}
-                className={`p-3 text-sm font-bold cursor-pointer transition-colors ${activeIndex === idx ? "bg-primary/20 text-primary" : "hover:bg-primary/80/30 text-slate-200"}`}
+                className={`p-2.5 text-sm font-bold cursor-pointer transition-colors border-b border-slate-700/40 last:border-0 ${activeIndex === idx ? "bg-primary/20 text-primary" : "hover:bg-primary/80/30 text-slate-200"}`}
               >
-                {p.full_name}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate">{p.full_name}</span>
+                  {p._isSuggested && (
+                    <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
+                      Suggested Match
+                    </span>
+                  )}
+                </div>
+                {(p.iisc_email || p.email) && (
+                  <div className="text-[11px] font-normal text-slate-400 truncate mt-0.5">
+                    {p.iisc_email && <span className="text-emerald-400/90 mr-2">IISc: {p.iisc_email}</span>}
+                    {p.email && p.iisc_email !== p.email && <span>{p.email}</span>}
+                  </div>
+                )}
               </div>
             ))
           )}

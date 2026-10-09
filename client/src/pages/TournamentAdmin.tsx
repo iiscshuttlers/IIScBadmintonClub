@@ -1,15 +1,20 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Trophy, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { TournamentManager } from "@/components/admin/TournamentManager";
+import { TeamTournamentManager } from "@/components/admin/TeamTournamentManager";
 import { AdminHistoryProvider } from "@/contexts/AdminHistoryContext";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function TournamentAdmin() {
   const { session, isInitializing, isMainAdmin, isAdmin } = useAuth();
   const [, navigate] = useLocation();
+
+  const [tournament, setTournament] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   usePageMeta({
     title: "Tournament Manager — IISc Shuttlers",
@@ -20,7 +25,21 @@ export default function TournamentAdmin() {
     if (!isInitializing && !session) navigate("/join");
   }, [isInitializing, session, navigate]);
 
-  if (isInitializing) {
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const id = searchParams.get("id");
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    supabase.from('tournaments').select('format_family').eq('id', id).single()
+      .then(({ data }) => {
+        setTournament(data);
+        setLoading(false);
+      });
+  }, []);
+
+  if (isInitializing || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060d1b]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -68,7 +87,10 @@ export default function TournamentAdmin() {
 
         {/* Content */}
         <div className="max-w-5xl mx-auto px-4 py-6">
-          <TournamentManager />
+          {tournament?.format_family === 'TEAM' 
+            ? <TeamTournamentManager tournamentId={new URLSearchParams(window.location.search).get("id") || ""} /> 
+            : <TournamentManager />
+          }
         </div>
       </div>
     </AdminHistoryProvider>

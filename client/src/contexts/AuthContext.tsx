@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { isMasterAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useGeofenceAuthSync } from "@/hooks/useGeofenceAuthSync";
+
 import { toast } from "sonner";
 import { Badge } from "@capawesome/capacitor-badge";
 import { useMatchNotifications } from "@/hooks/useMatchNotifications";
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     : (isAdmin || playerRole === 'umpire');
 
   usePushNotifications(profile?.id);
-  useGeofenceAuthSync(session);
+
 
   const updateRole = async (playerId: string, role: string) => {
     const { error } = await supabase.rpc('set_player_role', { p_id: playerId, p_role: role });

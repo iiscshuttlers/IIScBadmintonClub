@@ -20,7 +20,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(PipPlugin.class);
     registerPlugin(PlayerMotionPlugin.class);
     registerPlugin(WidgetManagerPlugin.class);
-    registerPlugin(GeofencePlugin.class);
+
     registerPlugin(MediaPermissionsPlugin.class);
     super.onCreate(savedInstanceState);
     if (getSupportActionBar() != null) {

@@ -18,14 +18,14 @@ export default function Hub() {
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    return ["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab : "lost-found";
+    return ["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab : "facilities";
   });
 
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      setActiveTab(["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab as any : "lost-found");
+      setActiveTab(["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab as any : "facilities");
     };
     window.addEventListener("popstate", handlePopState);
     

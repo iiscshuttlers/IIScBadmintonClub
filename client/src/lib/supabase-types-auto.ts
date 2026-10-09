@@ -99,130 +99,6 @@ export type Database = {
         }
         Relationships: []
       }
-      buddy_requests: {
-        Row: {
-          created_at: string
-          id: string
-          message: string | null
-          receiver_id: string
-          sender_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message?: string | null
-          receiver_id: string
-          sender_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string | null
-          receiver_id?: string
-          sender_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "buddy_requests_receiver_id_fkey"
-            columns: ["receiver_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buddy_requests_receiver_id_fkey"
-            columns: ["receiver_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buddy_requests_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buddy_requests_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      challenges: {
-        Row: {
-          challenged_id: string | null
-          challenger_id: string | null
-          created_at: string | null
-          format: string
-          id: string
-          message: string | null
-          scheduled_time: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          challenged_id?: string | null
-          challenger_id?: string | null
-          created_at?: string | null
-          format: string
-          id?: string
-          message?: string | null
-          scheduled_time?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          challenged_id?: string | null
-          challenger_id?: string | null
-          created_at?: string | null
-          format?: string
-          id?: string
-          message?: string | null
-          scheduled_time?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "challenges_challenged_id_fkey"
-            columns: ["challenged_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenges_challenged_id_fkey"
-            columns: ["challenged_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenges_challenger_id_fkey"
-            columns: ["challenger_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenges_challenger_id_fkey"
-            columns: ["challenger_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       club_courts: {
         Row: {
           court_number: number
@@ -254,30 +130,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      court_visits: {
-        Row: {
-          day_of_week: number
-          hour: number
-          id: string
-          user_id: string
-          visited_at: string
-        }
-        Insert: {
-          day_of_week: number
-          hour: number
-          id?: string
-          user_id: string
-          visited_at?: string
-        }
-        Update: {
-          day_of_week?: number
-          hour?: number
-          id?: string
-          user_id?: string
-          visited_at?: string
-        }
-        Relationships: []
       }
       doubles_teams: {
         Row: {
@@ -597,318 +449,6 @@ export type Database = {
           },
         ]
       }
-      match_health_data: {
-        Row: {
-          calories_burned: number | null
-          created_at: string | null
-          hr_avg: number | null
-          hr_max: number | null
-          hr_min: number | null
-          hr_recovery: number | null
-          hr_resting: number | null
-          hr_samples: Json | null
-          hr_zone_1_pct: number | null
-          hr_zone_2_pct: number | null
-          hr_zone_3_pct: number | null
-          hr_zone_4_pct: number | null
-          hr_zone_5_pct: number | null
-          hrv_avg: number | null
-          id: string
-          match_id: string
-          match_source: string
-          player_id: string | null
-          spo2_avg: number | null
-          spo2_min: number | null
-          steps: number | null
-        }
-        Insert: {
-          calories_burned?: number | null
-          created_at?: string | null
-          hr_avg?: number | null
-          hr_max?: number | null
-          hr_min?: number | null
-          hr_recovery?: number | null
-          hr_resting?: number | null
-          hr_samples?: Json | null
-          hr_zone_1_pct?: number | null
-          hr_zone_2_pct?: number | null
-          hr_zone_3_pct?: number | null
-          hr_zone_4_pct?: number | null
-          hr_zone_5_pct?: number | null
-          hrv_avg?: number | null
-          id?: string
-          match_id: string
-          match_source: string
-          player_id?: string | null
-          spo2_avg?: number | null
-          spo2_min?: number | null
-          steps?: number | null
-        }
-        Update: {
-          calories_burned?: number | null
-          created_at?: string | null
-          hr_avg?: number | null
-          hr_max?: number | null
-          hr_min?: number | null
-          hr_recovery?: number | null
-          hr_resting?: number | null
-          hr_samples?: Json | null
-          hr_zone_1_pct?: number | null
-          hr_zone_2_pct?: number | null
-          hr_zone_3_pct?: number | null
-          hr_zone_4_pct?: number | null
-          hr_zone_5_pct?: number | null
-          hrv_avg?: number | null
-          id?: string
-          match_id?: string
-          match_source?: string
-          player_id?: string | null
-          spo2_avg?: number | null
-          spo2_min?: number | null
-          steps?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_health_data_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_health_data_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_motion_stats: {
-        Row: {
-          avg_magnitude: number | null
-          created_at: string | null
-          id: string
-          idle_pct: number | null
-          match_id: string
-          match_source: string
-          max_magnitude: number | null
-          recorded_by: string | null
-          running_pct: number | null
-          sample_count: number
-          smash_sprint_pct: number | null
-          walking_pct: number | null
-        }
-        Insert: {
-          avg_magnitude?: number | null
-          created_at?: string | null
-          id?: string
-          idle_pct?: number | null
-          match_id: string
-          match_source: string
-          max_magnitude?: number | null
-          recorded_by?: string | null
-          running_pct?: number | null
-          sample_count?: number
-          smash_sprint_pct?: number | null
-          walking_pct?: number | null
-        }
-        Update: {
-          avg_magnitude?: number | null
-          created_at?: string | null
-          id?: string
-          idle_pct?: number | null
-          match_id?: string
-          match_source?: string
-          max_magnitude?: number | null
-          recorded_by?: string | null
-          running_pct?: number | null
-          sample_count?: number
-          smash_sprint_pct?: number | null
-          walking_pct?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_motion_stats_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_motion_stats_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_player_paths: {
-        Row: {
-          avg_speed_mps: number | null
-          calibration_id: string | null
-          created_at: string | null
-          distance_covered_m: number | null
-          id: string
-          match_id: string
-          match_source: string
-          peak_speed_mps: number | null
-          player_label: string | null
-          points: Json
-          processed_by: string | null
-          rally_number: number
-          sample_count: number
-          side: string
-        }
-        Insert: {
-          avg_speed_mps?: number | null
-          calibration_id?: string | null
-          created_at?: string | null
-          distance_covered_m?: number | null
-          id?: string
-          match_id: string
-          match_source: string
-          peak_speed_mps?: number | null
-          player_label?: string | null
-          points: Json
-          processed_by?: string | null
-          rally_number: number
-          sample_count?: number
-          side: string
-        }
-        Update: {
-          avg_speed_mps?: number | null
-          calibration_id?: string | null
-          created_at?: string | null
-          distance_covered_m?: number | null
-          id?: string
-          match_id?: string
-          match_source?: string
-          peak_speed_mps?: number | null
-          player_label?: string | null
-          points?: Json
-          processed_by?: string | null
-          rally_number?: number
-          sample_count?: number
-          side?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_player_paths_calibration_id_fkey"
-            columns: ["calibration_id"]
-            isOneToOne: false
-            referencedRelation: "match_video_calibration"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_player_paths_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_player_paths_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_rally_stats: {
-        Row: {
-          avg_intensity: number | null
-          created_at: string | null
-          direction_changes: number | null
-          duration_ms: number
-          game_num: number | null
-          id: string
-          match_id: string
-          match_source: string
-          peak_intensity: number | null
-          player_id: string | null
-          rally_number: number
-          recorded_by: string | null
-          scoring_team: number | null
-          shot_count: number
-          smash_count: number
-          started_at: string | null
-          t1_score: number | null
-          t2_score: number | null
-        }
-        Insert: {
-          avg_intensity?: number | null
-          created_at?: string | null
-          direction_changes?: number | null
-          duration_ms: number
-          game_num?: number | null
-          id?: string
-          match_id: string
-          match_source: string
-          peak_intensity?: number | null
-          player_id?: string | null
-          rally_number: number
-          recorded_by?: string | null
-          scoring_team?: number | null
-          shot_count?: number
-          smash_count?: number
-          started_at?: string | null
-          t1_score?: number | null
-          t2_score?: number | null
-        }
-        Update: {
-          avg_intensity?: number | null
-          created_at?: string | null
-          direction_changes?: number | null
-          duration_ms?: number
-          game_num?: number | null
-          id?: string
-          match_id?: string
-          match_source?: string
-          peak_intensity?: number | null
-          player_id?: string | null
-          rally_number?: number
-          recorded_by?: string | null
-          scoring_team?: number | null
-          shot_count?: number
-          smash_count?: number
-          started_at?: string | null
-          t1_score?: number | null
-          t2_score?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_rally_stats_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_rally_stats_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_rally_stats_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_rally_stats_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       match_reminders: {
         Row: {
           created_at: string | null
@@ -944,231 +484,6 @@ export type Database = {
           },
         ]
       }
-      match_sensor_analytics: {
-        Row: {
-          accel_avg: number | null
-          accel_peak: number | null
-          accel_std: number | null
-          avg_shot_interval_ms: number | null
-          avg_swing_speed: number | null
-          clear_count: number | null
-          created_at: string | null
-          direction_changes: number | null
-          drive_count: number | null
-          fastest_shot_interval_ms: number | null
-          fatigue_index: number | null
-          first_half_intensity: number | null
-          forward_back_pct: number | null
-          gyro_avg: number | null
-          gyro_peak: number | null
-          gyro_std: number | null
-          id: string
-          lateral_pct: number | null
-          match_id: string
-          match_source: string
-          max_swing_speed: number | null
-          net_shot_count: number | null
-          player_id: string | null
-          second_half_intensity: number | null
-          smash_count: number | null
-          total_swings: number | null
-          vertical_pct: number | null
-        }
-        Insert: {
-          accel_avg?: number | null
-          accel_peak?: number | null
-          accel_std?: number | null
-          avg_shot_interval_ms?: number | null
-          avg_swing_speed?: number | null
-          clear_count?: number | null
-          created_at?: string | null
-          direction_changes?: number | null
-          drive_count?: number | null
-          fastest_shot_interval_ms?: number | null
-          fatigue_index?: number | null
-          first_half_intensity?: number | null
-          forward_back_pct?: number | null
-          gyro_avg?: number | null
-          gyro_peak?: number | null
-          gyro_std?: number | null
-          id?: string
-          lateral_pct?: number | null
-          match_id: string
-          match_source: string
-          max_swing_speed?: number | null
-          net_shot_count?: number | null
-          player_id?: string | null
-          second_half_intensity?: number | null
-          smash_count?: number | null
-          total_swings?: number | null
-          vertical_pct?: number | null
-        }
-        Update: {
-          accel_avg?: number | null
-          accel_peak?: number | null
-          accel_std?: number | null
-          avg_shot_interval_ms?: number | null
-          avg_swing_speed?: number | null
-          clear_count?: number | null
-          created_at?: string | null
-          direction_changes?: number | null
-          drive_count?: number | null
-          fastest_shot_interval_ms?: number | null
-          fatigue_index?: number | null
-          first_half_intensity?: number | null
-          forward_back_pct?: number | null
-          gyro_avg?: number | null
-          gyro_peak?: number | null
-          gyro_std?: number | null
-          id?: string
-          lateral_pct?: number | null
-          match_id?: string
-          match_source?: string
-          max_swing_speed?: number | null
-          net_shot_count?: number | null
-          player_id?: string | null
-          second_half_intensity?: number | null
-          smash_count?: number | null
-          total_swings?: number | null
-          vertical_pct?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_sensor_analytics_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_sensor_analytics_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_stroke_analytics: {
-        Row: {
-          confidence: number
-          created_at: string | null
-          id: string
-          match_id: string
-          match_source: string
-          peak_acceleration: number
-          processed_by: string | null
-          rally_number: number
-          stroke_type: string
-        }
-        Insert: {
-          confidence: number
-          created_at?: string | null
-          id?: string
-          match_id: string
-          match_source: string
-          peak_acceleration: number
-          processed_by?: string | null
-          rally_number: number
-          stroke_type: string
-        }
-        Update: {
-          confidence?: number
-          created_at?: string | null
-          id?: string
-          match_id?: string
-          match_source?: string
-          peak_acceleration?: number
-          processed_by?: string | null
-          rally_number?: number
-          stroke_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_stroke_analytics_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_stroke_analytics_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_video_calibration: {
-        Row: {
-          court_length_m: number
-          court_width_m: number
-          created_at: string | null
-          created_by: string | null
-          dst_points: Json
-          homography_matrix: Json
-          id: string
-          match_id: string
-          match_source: string
-          src_points: Json
-          sync_anchor_rally_number: number
-          sync_anchor_wallclock: string
-          sync_video_time_ms: number
-          video_frame_height: number
-          video_frame_width: number
-        }
-        Insert: {
-          court_length_m?: number
-          court_width_m?: number
-          created_at?: string | null
-          created_by?: string | null
-          dst_points: Json
-          homography_matrix: Json
-          id?: string
-          match_id: string
-          match_source: string
-          src_points: Json
-          sync_anchor_rally_number: number
-          sync_anchor_wallclock: string
-          sync_video_time_ms: number
-          video_frame_height: number
-          video_frame_width: number
-        }
-        Update: {
-          court_length_m?: number
-          court_width_m?: number
-          created_at?: string | null
-          created_by?: string | null
-          dst_points?: Json
-          homography_matrix?: Json
-          id?: string
-          match_id?: string
-          match_source?: string
-          src_points?: Json
-          sync_anchor_rally_number?: number
-          sync_anchor_wallclock?: string
-          sync_video_time_ms?: number
-          video_frame_height?: number
-          video_frame_width?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_video_calibration_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_video_calibration_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       matches: {
         Row: {
           category: string
@@ -1181,7 +496,6 @@ export type Database = {
           elo_change_p4: number | null
           ended_at: string | null
           id: string
-          is_friendly: boolean | null
           kudos_count: number | null
           kudos_users: string[] | null
           player1_id: string | null
@@ -1209,7 +523,6 @@ export type Database = {
           elo_change_p4?: number | null
           ended_at?: string | null
           id?: string
-          is_friendly?: boolean | null
           kudos_count?: number | null
           kudos_users?: string[] | null
           player1_id?: string | null
@@ -1237,7 +550,6 @@ export type Database = {
           elo_change_p4?: number | null
           ended_at?: string | null
           id?: string
-          is_friendly?: boolean | null
           kudos_count?: number | null
           kudos_users?: string[] | null
           player1_id?: string | null
@@ -1497,57 +809,6 @@ export type Database = {
           },
         ]
       }
-      player_sleep_data: {
-        Row: {
-          awake_minutes: number | null
-          created_at: string | null
-          deep_minutes: number | null
-          id: string
-          light_minutes: number | null
-          player_id: string | null
-          rem_minutes: number | null
-          sleep_date: string
-          total_minutes: number | null
-        }
-        Insert: {
-          awake_minutes?: number | null
-          created_at?: string | null
-          deep_minutes?: number | null
-          id?: string
-          light_minutes?: number | null
-          player_id?: string | null
-          rem_minutes?: number | null
-          sleep_date: string
-          total_minutes?: number | null
-        }
-        Update: {
-          awake_minutes?: number | null
-          created_at?: string | null
-          deep_minutes?: number | null
-          id?: string
-          light_minutes?: number | null
-          player_id?: string | null
-          rem_minutes?: number | null
-          sleep_date?: string
-          total_minutes?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_sleep_data_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_sleep_data_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       players: {
         Row: {
           achievements: string[] | null
@@ -1598,6 +859,13 @@ export type Database = {
           playing_level: string | null
           playing_style: string | null
           pref_notify_buddy_status: boolean | null
+          pref_notify_point: boolean
+          pref_notify_serve: boolean
+          pref_notify_smash: boolean
+          pref_notify_victory: boolean
+          pref_notify_whistle: boolean
+          pref_receive_email: boolean
+          pref_receive_push: boolean
           quote: string | null
           racket_details: Json | null
           recent_form: string[] | null
@@ -1667,6 +935,13 @@ export type Database = {
           playing_level?: string | null
           playing_style?: string | null
           pref_notify_buddy_status?: boolean | null
+          pref_notify_point?: boolean
+          pref_notify_serve?: boolean
+          pref_notify_smash?: boolean
+          pref_notify_victory?: boolean
+          pref_notify_whistle?: boolean
+          pref_receive_email?: boolean
+          pref_receive_push?: boolean
           quote?: string | null
           racket_details?: Json | null
           recent_form?: string[] | null
@@ -1736,6 +1011,13 @@ export type Database = {
           playing_level?: string | null
           playing_style?: string | null
           pref_notify_buddy_status?: boolean | null
+          pref_notify_point?: boolean
+          pref_notify_serve?: boolean
+          pref_notify_smash?: boolean
+          pref_notify_victory?: boolean
+          pref_notify_whistle?: boolean
+          pref_receive_email?: boolean
+          pref_receive_push?: boolean
           quote?: string | null
           racket_details?: Json | null
           recent_form?: string[] | null
@@ -1835,6 +1117,89 @@ export type Database = {
         }
         Relationships: []
       }
+      tie_lineups: {
+        Row: {
+          id: string
+          player1_id: string
+          player2_id: string | null
+          rubber_order: number
+          side: string
+          submitted_by: string
+          tie_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          player1_id: string
+          player2_id?: string | null
+          rubber_order: number
+          side: string
+          submitted_by: string
+          tie_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          player1_id?: string
+          player2_id?: string | null
+          rubber_order?: number
+          side?: string
+          submitted_by?: string
+          tie_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tie_lineups_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_tie_id_fkey"
+            columns: ["tie_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_ties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           advances_to_match: string | null
@@ -1859,6 +1224,8 @@ export type Database = {
           reminder_sent: boolean | null
           round: number
           round_name: string
+          rubber_label: string | null
+          rubber_order: number | null
           scheduled_at: string | null
           score: string | null
           scored_at: string | null
@@ -1868,6 +1235,7 @@ export type Database = {
           status: string
           team1_label: string | null
           team2_label: string | null
+          tie_id: string | null
           tournament_id: string
           umpired_by: string | null
           video_url: string | null
@@ -1897,6 +1265,8 @@ export type Database = {
           reminder_sent?: boolean | null
           round: number
           round_name: string
+          rubber_label?: string | null
+          rubber_order?: number | null
           scheduled_at?: string | null
           score?: string | null
           scored_at?: string | null
@@ -1906,6 +1276,7 @@ export type Database = {
           status?: string
           team1_label?: string | null
           team2_label?: string | null
+          tie_id?: string | null
           tournament_id: string
           umpired_by?: string | null
           video_url?: string | null
@@ -1935,6 +1306,8 @@ export type Database = {
           reminder_sent?: boolean | null
           round?: number
           round_name?: string
+          rubber_label?: string | null
+          rubber_order?: number | null
           scheduled_at?: string | null
           score?: string | null
           scored_at?: string | null
@@ -1944,6 +1317,7 @@ export type Database = {
           status?: string
           team1_label?: string | null
           team2_label?: string | null
+          tie_id?: string | null
           tournament_id?: string
           umpired_by?: string | null
           video_url?: string | null
@@ -2019,6 +1393,13 @@ export type Database = {
             columns: ["scored_by"]
             isOneToOne: false
             referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_tie_id_fkey"
+            columns: ["tie_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_ties"
             referencedColumns: ["id"]
           },
           {
@@ -2171,12 +1552,305 @@ export type Database = {
           },
         ]
       }
+      tournament_team_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_by: string | null
+          player_id: string
+          responded_at: string | null
+          role: string
+          status: string
+          team_id: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          player_id: string
+          responded_at?: string | null
+          role?: string
+          status?: string
+          team_id: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          player_id?: string
+          responded_at?: string | null
+          role?: string
+          status?: string
+          team_id?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_team_members_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_team_standings"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_team_members_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_teams: {
+        Row: {
+          captain_id: string
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          pool: string | null
+          seed: number | null
+          short_name: string
+          status: string
+          tournament_id: string
+        }
+        Insert: {
+          captain_id: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          pool?: string | null
+          seed?: number | null
+          short_name: string
+          status?: string
+          tournament_id: string
+        }
+        Update: {
+          captain_id?: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          pool?: string | null
+          seed?: number | null
+          short_name?: string
+          status?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_ties: {
+        Row: {
+          advances_to_slot: string | null
+          advances_to_tie: string | null
+          created_at: string | null
+          id: string
+          lineup_deadline: string | null
+          lineup_locked_a: boolean
+          lineup_locked_b: boolean
+          loser_advances_to_slot: string | null
+          loser_advances_to_tie: string | null
+          needs_admin_decision: boolean
+          result_type: string
+          round_name: string | null
+          round_number: number | null
+          scheduled_at: string | null
+          score_team_a: number
+          score_team_b: number
+          stage: string | null
+          state: string
+          team_a_id: string | null
+          team_b_id: string | null
+          tie_code: string
+          tournament_id: string
+          updated_at: string | null
+          winner_team_id: string | null
+        }
+        Insert: {
+          advances_to_slot?: string | null
+          advances_to_tie?: string | null
+          created_at?: string | null
+          id?: string
+          lineup_deadline?: string | null
+          lineup_locked_a?: boolean
+          lineup_locked_b?: boolean
+          loser_advances_to_slot?: string | null
+          loser_advances_to_tie?: string | null
+          needs_admin_decision?: boolean
+          result_type?: string
+          round_name?: string | null
+          round_number?: number | null
+          scheduled_at?: string | null
+          score_team_a?: number
+          score_team_b?: number
+          stage?: string | null
+          state?: string
+          team_a_id?: string | null
+          team_b_id?: string | null
+          tie_code: string
+          tournament_id: string
+          updated_at?: string | null
+          winner_team_id?: string | null
+        }
+        Update: {
+          advances_to_slot?: string | null
+          advances_to_tie?: string | null
+          created_at?: string | null
+          id?: string
+          lineup_deadline?: string | null
+          lineup_locked_a?: boolean
+          lineup_locked_b?: boolean
+          loser_advances_to_slot?: string | null
+          loser_advances_to_tie?: string | null
+          needs_admin_decision?: boolean
+          result_type?: string
+          round_name?: string | null
+          round_number?: number | null
+          scheduled_at?: string | null
+          score_team_a?: number
+          score_team_b?: number
+          stage?: string | null
+          state?: string
+          team_a_id?: string | null
+          team_b_id?: string | null
+          tie_code?: string
+          tournament_id?: string
+          updated_at?: string | null
+          winner_team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_ties_advances_to_tie_fkey"
+            columns: ["advances_to_tie"]
+            isOneToOne: false
+            referencedRelation: "tournament_ties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_loser_advances_to_tie_fkey"
+            columns: ["loser_advances_to_tie"]
+            isOneToOne: false
+            referencedRelation: "tournament_ties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_team_a_id_fkey"
+            columns: ["team_a_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_team_standings"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_team_a_id_fkey"
+            columns: ["team_a_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_team_b_id_fkey"
+            columns: ["team_b_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_team_standings"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_team_b_id_fkey"
+            columns: ["team_b_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_winner_team_id_fkey"
+            columns: ["winner_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_team_standings"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "tournament_ties_winner_team_id_fkey"
+            columns: ["winner_team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournaments: {
         Row: {
           archived_at: string | null
           auto_reminders_enabled: boolean | null
           bracket_format: string
           categories: string[] | null
+          counts_for_elo: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -2185,13 +1859,23 @@ export type Database = {
           form_close_date: string | null
           form_status: string | null
           form_url: string | null
+          format_family: string
           id: string
+          ignore_gender_rules: boolean
+          max_rubbers_per_player: number | null
           name: string
+          play_dead_rubbers: boolean
           require_app_registration: boolean
           show_brackets: boolean | null
           show_participants: boolean | null
           start_date: string | null
           status: string
+          team_roster_max: number | null
+          team_roster_min: number | null
+          team_self_registration: boolean
+          tie_format_config: Json | null
+          tie_points_draw: number | null
+          tie_points_win: number | null
           tournament_type: string
           venue: string | null
           year: number
@@ -2201,6 +1885,7 @@ export type Database = {
           auto_reminders_enabled?: boolean | null
           bracket_format?: string
           categories?: string[] | null
+          counts_for_elo?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2209,13 +1894,23 @@ export type Database = {
           form_close_date?: string | null
           form_status?: string | null
           form_url?: string | null
+          format_family?: string
           id?: string
+          ignore_gender_rules?: boolean
+          max_rubbers_per_player?: number | null
           name: string
+          play_dead_rubbers?: boolean
           require_app_registration?: boolean
           show_brackets?: boolean | null
           show_participants?: boolean | null
           start_date?: string | null
           status?: string
+          team_roster_max?: number | null
+          team_roster_min?: number | null
+          team_self_registration?: boolean
+          tie_format_config?: Json | null
+          tie_points_draw?: number | null
+          tie_points_win?: number | null
           tournament_type?: string
           venue?: string | null
           year: number
@@ -2225,6 +1920,7 @@ export type Database = {
           auto_reminders_enabled?: boolean | null
           bracket_format?: string
           categories?: string[] | null
+          counts_for_elo?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2233,13 +1929,23 @@ export type Database = {
           form_close_date?: string | null
           form_status?: string | null
           form_url?: string | null
+          format_family?: string
           id?: string
+          ignore_gender_rules?: boolean
+          max_rubbers_per_player?: number | null
           name?: string
+          play_dead_rubbers?: boolean
           require_app_registration?: boolean
           show_brackets?: boolean | null
           show_participants?: boolean | null
           start_date?: string | null
           status?: string
+          team_roster_max?: number | null
+          team_roster_min?: number | null
+          team_self_registration?: boolean
+          tie_format_config?: Json | null
+          tie_points_draw?: number | null
+          tie_points_win?: number | null
           tournament_type?: string
           venue?: string | null
           year?: number
@@ -2442,42 +2148,6 @@ export type Database = {
           },
         ]
       }
-      venue_presence_events: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          player_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_type: string
-          id?: string
-          player_id: string
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          player_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "venue_presence_events_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "venue_presence_events_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       search_players_view: {
@@ -2489,6 +2159,30 @@ export type Database = {
           overall_rank: number | null
         }
         Relationships: []
+      }
+      tournament_team_standings: {
+        Row: {
+          drawn: number | null
+          lost: number | null
+          played: number | null
+          pool: string | null
+          rubbers_against: number | null
+          rubbers_for: number | null
+          team_id: string | null
+          team_name: string | null
+          tie_points: number | null
+          tournament_id: string | null
+          won: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -2669,6 +2363,13 @@ export type Database = {
           playing_level: string | null
           playing_style: string | null
           pref_notify_buddy_status: boolean | null
+          pref_notify_point: boolean
+          pref_notify_serve: boolean
+          pref_notify_smash: boolean
+          pref_notify_victory: boolean
+          pref_notify_whistle: boolean
+          pref_receive_email: boolean
+          pref_receive_push: boolean
           quote: string | null
           racket_details: Json | null
           recent_form: string[] | null
@@ -2695,6 +2396,28 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      create_team: {
+        Args: {
+          p_captain_id: string
+          p_logo_url: string
+          p_name: string
+          p_short_name: string
+          p_tournament_id: string
+        }
+        Returns: string
+      }
+      create_tie: {
+        Args: {
+          p_advances_to_slot: string
+          p_advances_to_tie: string
+          p_stage: string
+          p_team_a_id: string
+          p_team_b_id: string
+          p_tie_code: string
+          p_tournament_id: string
+        }
+        Returns: string
       }
       debug_recalc: { Args: never; Returns: undefined }
       delete_guest_player: { Args: { p_guest_id: string }; Returns: undefined }
@@ -2736,6 +2459,11 @@ export type Database = {
         Args: { match_id: string; p1_increment: number; p2_increment: number }
         Returns: undefined
       }
+      invite_team_member: {
+        Args: { p_player_id: string; p_team_id: string }
+        Returns: string
+      }
+      is_active_team_member: { Args: { t_team_id: string }; Returns: boolean }
       is_authorized_for_analytics: {
         Args: {
           p_auth_uid: string
@@ -2745,9 +2473,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_team_captain: { Args: { t_team_id: string }; Returns: boolean }
+      is_team_staff: { Args: { t_team_id: string }; Returns: boolean }
+      is_tournament_manager: { Args: { t_id: string }; Returns: boolean }
       link_label_to_player: {
         Args: { p_label: string; p_partner_id?: string; p_player_id: string }
         Returns: number
+      }
+      lock_tie_lineup: {
+        Args: { p_side: string; p_tie_id: string }
+        Returns: boolean
       }
       pick_team_label: {
         Args: { p_rebuilt: string; p_stored: string }
@@ -2797,6 +2532,15 @@ export type Database = {
         Args: { p_match_id: string }
         Returns: undefined
       }
+      remove_team_member: { Args: { p_member_id: string }; Returns: boolean }
+      respond_team_invite: {
+        Args: { p_accept: boolean; p_member_id: string }
+        Returns: boolean
+      }
+      save_tie_lineup: {
+        Args: { p_assignments: Json; p_side: string; p_tie_id: string }
+        Returns: boolean
+      }
       send_buddy_request: { Args: { p_target_id: string }; Returns: undefined }
       send_ping_notification: {
         Args: { p_sender_name: string; p_target_id: string }
@@ -2805,6 +2549,10 @@ export type Database = {
       set_player_role: {
         Args: { p_id: string; p_role: string }
         Returns: undefined
+      }
+      set_tie_result: {
+        Args: { p_note: string; p_tie_id: string; p_winner_team_id: string }
+        Returns: boolean
       }
       set_tournament_match_times: {
         Args: { p_ended_at: string; p_match_id: string; p_started_at: string }
@@ -2915,6 +2663,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_tie_format: { Args: { config: Json }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

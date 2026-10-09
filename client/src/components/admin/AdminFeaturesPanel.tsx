@@ -12,7 +12,6 @@ import {
   BarChart3, Trophy, Target, Coins
 } from "lucide-react";
 import { toast } from "sonner";
-import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
 
@@ -566,7 +565,7 @@ export function AdminFeaturesPanel() {
           <ChallengesAdminPanel />
           <div className={cardCls}>
             {sectionTitle(<Zap className="w-4 h-4" />, "Player View Preview")}
-            <WeeklyChallenges />
+            <p className="text-sm text-muted-foreground">Weekly Challenges feature is currently disabled.</p>
           </div>
         </div>
       )}

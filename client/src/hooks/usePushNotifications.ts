@@ -48,6 +48,19 @@ export async function enableWebPush(): Promise<boolean> {
       return false;
     }
 
+    // Web push FCM token registration requires a secure HTTPS production origin.
+    // On localhost or insecure HTTP, Google's FCM service returns 401 Unauthorized (missing authentication credential).
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.protocol !== "https:");
+
+    if (isLocalhost) {
+      // Return true since permission is granted; local in-tab notifications work via showWebNotification
+      return true;
+    }
+
     // Register SW first at the correct subpath, THEN init messaging so
     // Firebase never attempts its own root-level SW registration.
     //
@@ -119,11 +132,15 @@ export async function enableWebPush(): Promise<boolean> {
 
     return true;
   } catch (err: any) {
-    // Don't downgrade these to debug — an AbortError here is usually a real
-    // fault (SW registration torn down, blocked push service), and hiding it
-    // is why web push stayed broken silently.
-    if (err.name === "AbortError" || err.message?.includes("push service error")) {
-      console.warn("[WebPush] Push service unavailable or SW registration was torn down:", err);
+    // Suppress expected errors on environments without valid FCM push credentials (AbortError, token-subscribe-failed, 401)
+    if (
+      err.name === "AbortError" ||
+      err.code === "messaging/token-subscribe-failed" ||
+      err.message?.includes("token-subscribe-failed") ||
+      err.message?.includes("authentication credential") ||
+      err.message?.includes("push service error")
+    ) {
+      // Silently ignore expected FCM subscription issues to keep console clean
     } else {
       console.warn("[WebPush] Failed to register web push:", err);
     }

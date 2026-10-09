@@ -77,14 +77,16 @@ const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Glossary = lazy(() => import("./pages/Glossary"));
+const HostTournament = lazy(() => import("./pages/HostTournament"));
+const HostTournamentWizard = lazy(() => import("./pages/HostTournamentWizard"));
 
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
+const TournamentTeamHub = lazy(() => import("./pages/TournamentTeamHub"));
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
 
-import { VenueWelcomeModal } from "@/components/VenueWelcomeModal";
 
 const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
 const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
@@ -136,6 +138,13 @@ function AppRoutes() {
           <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#champions`; return null; }} />
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
+          <Route path="/team-hub/:id">
+            <ProtectedRoute>
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <TournamentTeamHub />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
           <Route path="/join" component={Join} />
           <Route path="/player/:id">
             <GuestGate feature="Player Profile">
@@ -174,6 +183,8 @@ function AppRoutes() {
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/glossary" component={Glossary} />
+          <Route path="/host-tournament" component={HostTournament} />
+          <Route path="/host-tournament/new" component={HostTournamentWizard} />
           <Route path="/login-callback" component={() => {
             const [, setLoc] = useLocation();
             const { session, isInitializing } = useAuth();
@@ -243,7 +254,6 @@ function AppRoutes() {
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
-        <VenueWelcomeModal />
       </Suspense>
     </ErrorBoundary>
   );

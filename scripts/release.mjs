@@ -13,7 +13,7 @@
  *  8. Commits + pushes version files (triggers GitHub Pages deploy)
  */
 
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, copyFileSync } from "fs";
 import { execSync, spawn } from "child_process";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -205,8 +205,8 @@ try {
   const oneDriveApkPath = resolve(oneDriveApkDir, finalApkName);
   const oneDriveAabPath = resolve(oneDriveAabDir, finalAabName);
   
-  spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
-  spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();
+  copyFileSync(APK_SRC, oneDriveApkPath);
+  copyFileSync(AAB_SRC, oneDriveAabPath);
 
   // Also copy to local releases directory
   const localReleasesDir = resolve(root, "releases");
@@ -215,10 +215,10 @@ try {
   if (!existsSync(localApkDir)) execSync(`mkdir "${localApkDir}"`);
   if (!existsSync(localAabDir)) execSync(`mkdir "${localAabDir}"`);
   
-  execSync(`copy "${APK_SRC}" "${resolve(localApkDir, finalApkName)}"`);
-  execSync(`copy "${AAB_SRC}" "${resolve(localAabDir, finalAabName)}"`);
+  copyFileSync(APK_SRC, resolve(localApkDir, finalApkName));
+  copyFileSync(AAB_SRC, resolve(localAabDir, finalAabName));
 
-  ok("APK and AAB copying initiated in background (and copied locally)");
+  ok("APK and AAB copied to OneDrive and local releases directory");
 } catch {
   console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");
 }

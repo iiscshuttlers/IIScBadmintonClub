@@ -88,7 +88,7 @@ export const ANDROID = [
   {n:"picture_in_picture", d:"Native PiP window for the umpire screen while multitasking."},
   {n:"motion_tracking", d:"Accelerometer-based intensity classifier: idle / walking / running / smash_sprint."},
   {n:"home_screen_widget", d:"AppWidgetProvider showing live score, pushed from the score engine."},
-  {n:"gymkhana_geofence", d:"50m geofence around the club; auto welcome notification on entry."},
+
   {n:"qs_tile_umpire", d:"Quick Settings tile that deep-links straight into Umpire mode."},
 ];
   

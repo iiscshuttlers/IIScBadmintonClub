@@ -44,8 +44,8 @@ import { Badges } from "@/components/player-profile/PlayerProfileWidgets";
 import { PlayerPhotosSection } from "@/components/player-profile/PlayerPhotosSection";
 
 import { useTheme } from "@/contexts/ThemeContext";
-import { ChallengeModal } from "@/components/ChallengeModal";
 import {
+
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -783,12 +783,6 @@ export default function PlayerProfile() {
         </TeaserOverlay>
       </motion.div>
 
-      <ChallengeModal
-        isOpen={isChallengeModalOpen}
-        onClose={() => setIsChallengeModalOpen(false)}
-        targetPlayer={player}
-        currentUser={ownPlayerProfile}
-      />
 
 
     </div>

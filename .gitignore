@@ -2,10 +2,6 @@ node_modules
 dist
 .local
 .git_old
-node_modules
-dist
-.local
-.git_old
 .npm-global
 *.log
 .DS_Store
@@ -15,8 +11,11 @@ client/scripts/serviceAccountKey.json
 # Large generated files
 backups/
 all_items.txt
-*.csvI I S c S h u t t l e r s . a p k  
- I I S c S h u t t l e r s . a a b  
+*.csv
+releases/
+*.apk
+*.aab
+supabase/.temp/
 
 # Sensitive keys and variables
 .env

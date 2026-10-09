@@ -111,9 +111,13 @@ export interface CareerHighlight {
 export interface PlayerSlim {
   id: string;
   full_name: string;
-  avatar_url: string;
+  avatar_url?: string;
   gender?: string | null;
   is_guest?: boolean | null;
+  email?: string | null;
+  iisc_email?: string | null;
+  nickname?: string | null;
+  _isSuggested?: boolean;
 }
 
 // === For leaderboard views ===

@@ -65,20 +65,13 @@ import {
 } from "recharts";
 
 import { usePlayerPersonal, type PersonalMatch, type MotionMatch } from "@/hooks/usePlayerPersonal";
-import { useHealthData } from "@/hooks/useHealthData";
-import { useSleepData } from "@/hooks/useSleepData";
 import { useTrainingLoad } from "@/hooks/useTrainingLoad";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { useClubBenchmarks } from "@/hooks/useClubBenchmarks";
 import { usePlayerMatches } from "@/hooks/usePlayerMatches";
-import { SelfMotionTracker } from "@/components/player/SelfMotionTracker";
-import { RallyBreakdown } from "@/components/player/RallyBreakdown";
-import { PathTracingEntry } from "@/components/pathTracing/PathTracingEntry";
-import type { MatchSource } from "@/services/pathTracingService";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard as FeedMatchCard } from "@/components/feed/MatchCard";
 import { shareMatch } from "@/lib/shareMatch";
-import { MatchAnalyticsSection } from "@/components/feed/MatchAnalyticsSection";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { fetchPlayer } from "@/services/playerService";
@@ -789,8 +782,10 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
     motionMatches.forEach(m => ids.add(m.matchId));
     return Array.from(ids);
   }, [matches, motionMatches]);
-  const { healthData, refetch: refetchHealth } = useHealthData(allMatchIds, playerId);
-  const { sleepData, refetch: refetchSleep } = useSleepData(playerId);
+  const healthData: any[] = [];
+  const refetchHealth = async () => {};
+  const sleepData: any[] = [];
+  const refetchSleep = async () => {};
   const { data: trainingLoad } = useTrainingLoad(playerId);
   const { data: clubBenchmarks } = useClubBenchmarks();
   const [isSelfTracking, setIsSelfTracking] = useState(false);
@@ -1271,9 +1266,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
               </button>
             </div>
           )}
-          {isSelfTracking && playerId && (
-            <SelfMotionTracker userId={playerId} onSaved={() => setIsSelfTracking(false)} />
-          )}
+
 
           {isCurrentUser && (
             <div className="mb-6 mt-4 flex flex-col gap-4">
@@ -1285,11 +1278,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
             </div>
           )}
 
-          {selectedMatchId && selectedMatchId !== "all" && (
-            <div className="mb-6">
-              <MatchAnalyticsSection matchId={selectedMatchId} />
-            </div>
-          )}
+
 
           <>
             {/* Accelerometer Motion Data */}
@@ -1980,30 +1969,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
             </div>
           ) : (
             (() => {
-              const effectiveId = selectedRallyMatchId || motionMatches[0].matchId;
-              const selected = motionMatches.find(m => m.matchId === effectiveId) ?? motionMatches[0];
-              const matchSource = selected.source as MatchSource;
-              return (
-                <>
-                  <div className="flex items-center gap-3 bg-white dark:bg-slate-800/80 rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Match:</span>
-                    <select
-                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      value={effectiveId}
-                      onChange={(e) => setSelectedRallyMatchId(e.target.value)}
-                    >
-                      {motionMatches.map(m => (
-                        <option key={m.matchId} value={m.matchId}>
-                          {m.tournamentName || "Practice Session"} • {m.scoredAt ? new Date(m.scoredAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown Date"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <RallyBreakdown matchId={selected.matchId} matchSource={matchSource} />
-                  <PathTracingEntry matchId={selected.matchId} matchSource={matchSource} userId={isCurrentUser ? (playerId ?? null) : null} sessionTimestamp={selected.scoredAt} />
-                </>
-              );
+              return null;
             })()
           )}
         </div>

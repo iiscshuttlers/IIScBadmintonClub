@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
+import { TieUmpireConsole } from "./TieUmpireConsole";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -28,6 +29,7 @@ export interface TournamentMatchForUmpire {
   points_to_win: number;
   best_of_sets: number;
   golden_point: number;
+  tie_id?: string | null;
 }
 
 interface Props {
@@ -84,6 +86,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [rescheduleAt, setRescheduleAt] = useState("");
   const [rescheduleCourt, setRescheduleCourt] = useState("");
   const [savingReschedule, setSavingReschedule] = useState(false);
+  const [activeTieForConsole, setActiveTieForConsole] = useState<{ tie: any; tournament: any } | null>(null);
 
   const openReschedule = (m: TournamentMatchForUmpire) => {
     setRescheduleAt(toLocalDateTimeInput(m.scheduled_at));
@@ -548,7 +551,8 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   <div className="space-y-2">
                     {roundMatches.map((m) => {
                       const isLive = m.status === "in_progress";
-                      const noPlayers = !m.team1_label || !m.team2_label || m.team1_label === "TBD" || m.team2_label === "TBD";
+                      const isDoubles = m.category.includes('D') || m.category.includes('Doubles');
+                      const noPlayers = !m.team1_label || !m.team2_label || m.team1_label === "TBD" || m.team2_label === "TBD" || !m.player1_id || (isDoubles && !m.player3_id);
 
                       return (
                         <button
@@ -745,6 +749,30 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}
             </button>
 
+            {/* Team Tie Lineup & Reveal Console */}
+            {selectedMatch.tie_id && (
+              <button
+                onClick={async () => {
+                  const { data: tieData } = await supabase
+                    .from('tournament_ties')
+                    .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name)')
+                    .eq('id', selectedMatch.tie_id)
+                    .single();
+                  const { data: tourData } = await supabase
+                    .from('tournaments')
+                    .select('*')
+                    .eq('id', selectedMatch.tournament_id)
+                    .single();
+                  if (tieData) {
+                    setActiveTieForConsole({ tie: tieData, tournament: tourData });
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl border border-primary/40 bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider transition hover:bg-primary/20 flex items-center justify-center gap-2"
+              >
+                <Eye className="w-4 h-4" /> Team Lineup &amp; Reveal Console
+              </button>
+            )}
+
             {/* A no-show is discovered at the court, so the umpire needs to be
                 able to record it without finding an admin. Distinct from the
                 Retire flow, which is for a match that has already started. */}
@@ -864,6 +892,29 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                 className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition disabled:opacity-50">
                 Cancel
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Team Tie Lineup & Reveal Console Modal */}
+        {activeTieForConsole && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 my-8 space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-xs font-black uppercase text-slate-400">Match Official Desk</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTieForConsole(null)}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <TieUmpireConsole
+                tie={activeTieForConsole.tie}
+                tournament={activeTieForConsole.tournament}
+                onClose={() => setActiveTieForConsole(null)}
+              />
             </div>
           </div>
         )}

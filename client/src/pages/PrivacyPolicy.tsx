@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
               <li><strong>Player profile:</strong> Gender, skill level, preferred racket, and other optional sports-related fields you choose to fill in.</li>
               <li><strong>Match data:</strong> Scores, results, and ELO ratings from matches you log or participate in.</li>
               <li><strong>Device push token:</strong> To send you match confirmations, challenge notifications, and club announcements. You can opt out at any time in Settings.</li>
-              <li><strong>Location data:</strong> With your explicit permission, we may collect fine and background location data (via geofencing) to determine when you are near the badminton courts. You can disable this at any time in your device settings.</li>
+
               <li><strong>Usage data:</strong> Anonymous usage and diagnostic information may be collected to improve app performance and reliability.</li>
             </ul>
 
@@ -48,7 +48,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-5 space-y-2">
               <li>Display your profile, match history, and ELO ranking on the leaderboard.</li>
               <li>Send push notifications for match confirmations, challenges, and announcements (opt-out available).</li>
-              <li>Use location data (geofencing) to provide location-based features, such as notifying you when you arrive at the courts.</li>
+
               <li>Calculate and display ELO ratings and statistics.</li>
               <li>Enable club features: Find & Lost board, buddy system, polls, and live scores.</li>
               <li>Allow admins to manage club operations and review disputes.</li>

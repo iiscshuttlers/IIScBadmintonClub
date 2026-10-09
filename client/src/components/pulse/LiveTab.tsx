@@ -27,6 +27,7 @@ import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
+import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
 import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
 import { MatchSection } from "@/components/pulse/MatchSection";
 import { MatchCard } from "@/components/feed/MatchCard";
@@ -40,7 +41,7 @@ export function LiveTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches">("subtab", "matches");
+  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
   
   useEffect(() => {
@@ -231,6 +232,7 @@ export function LiveTab() {
           { id: "polls", label: "Polls", icon: ListChecks },
           { id: "schedule", label: "Schedule", icon: Calendar },
           { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
+          { id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" },
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
         ].map((tab: any) => (
@@ -652,12 +654,16 @@ export function LiveTab() {
       {/* 4. Brackets */}
       {!loading && activeSubTab === "brackets" && activeTournamentId && (
         <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-
           <LiveBracketsSection tournamentId={activeTournamentId} showBrackets={true} />
         </div>
       )}
 
-
+      {/* 5. Points Table / Standings */}
+      {!loading && activeSubTab === "standings" && activeTournamentId && (
+        <div className="mb-6">
+          <TeamStandingsTable tournamentId={activeTournamentId} />
+        </div>
+      )}
 
       {(isUmpire || isAdmin) && activeSubTab === "umpire" && (
         <div className="mb-6">

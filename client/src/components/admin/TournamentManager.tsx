@@ -10,16 +10,18 @@ import { generateSingleElimBracket, planDraw, entryRoundLabel, findWalkoverMatch
 import { syncBracketNames } from "@/lib/bracketSync";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
+import { TeamBracketTab } from "./TeamBracketTab";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
-  ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer
+  ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { getDepartmentAcronym } from "@/data/departments";
 import { exportToImage, exportToPDF } from "@/utils/exportUtils";
+import { TeamsTab } from "@/components/admin/TeamsTab";
 
 // ── CSV helpers ────────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ interface Tournament {
   name: string;
   tournament_type: string;
   bracket_format: string;
+  format_family: 'OPEN_EVENT' | 'TEAM';
   categories: string[];
   status: string;
   start_date: string | null;
@@ -78,6 +81,10 @@ interface Tournament {
   created_at: string;
   show_participants?: boolean | null;
   show_brackets?: boolean | null;
+  counts_for_elo?: boolean;
+  ignore_gender_rules?: boolean;
+  play_dead_rubbers?: boolean;
+  tie_format_config?: any;
 }
 
 interface Participant {
@@ -189,7 +196,7 @@ export function TournamentManager() {
   const { session, isMainAdmin } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const SUB_TABS = ["setup", "participants", "bracket", "archive"] as const;
+  const SUB_TABS = ["setup", "participants", "teams", "bracket", "archive"] as const;
   type SubTab = typeof SUB_TABS[number];
 
   const getHashSubTab = (): SubTab => {
@@ -210,24 +217,39 @@ export function TournamentManager() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const loadTournaments = useCallback(async () => {
-    setLoading(true);
+  const loadTournaments = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     const { data } = await supabase
       .from("tournaments")
       .select("*")
       .order("created_at", { ascending: false });
     
     // Show all tournaments including deleted ones so admins can restore/trash them properly
-    const allTournaments = data as Tournament[] ?? [];
+    const allTournaments = (data as Tournament[]) ?? [];
     setTournaments(allTournaments);
     
-    if (allTournaments.length && !selected) {
-      setSelected(allTournaments[0]);
-    }
-    setLoading(false);
-  }, [selected]);
+    setSelected((prev) => {
+      if (!prev && allTournaments.length) {
+        const savedId = localStorage.getItem("admin_selected_tournament_id");
+        const savedT = allTournaments.find(t => t.id === savedId);
+        return savedT || allTournaments[0];
+      }
+      if (prev) {
+        const updated = allTournaments.find(t => t.id === prev.id);
+        return updated || prev;
+      }
+      return null;
+    });
+    if (isInitial) setLoading(false);
+  }, []);
 
-  useEffect(() => { loadTournaments(); }, [loadTournaments]);
+  useEffect(() => { loadTournaments(true); }, [loadTournaments]);
+
+  useEffect(() => {
+    if (selected?.id) {
+      localStorage.setItem("admin_selected_tournament_id", selected.id);
+    }
+  }, [selected?.id]);
 
   useEffect(() => {
     const onHashChange = () => setActiveTab(getHashSubTab());
@@ -235,16 +257,19 @@ export function TournamentManager() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const createTournament = async () => {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const createTournament = async (formatFamily: "OPEN_EVENT" | "TEAM") => {
+    setShowCreateModal(false);
     setCreating(true);
     const { data, error } = await supabase
       .from("tournaments")
-      .insert({ name: "New Tournament", created_by: session?.user?.id, year: new Date().getFullYear() })
+      .insert({ name: "New Tournament", created_by: session?.user?.id, year: new Date().getFullYear(), format_family: formatFamily })
       .select()
       .single();
     if (error) { toast.error(error.message); setCreating(false); return; }
     toast.success("Tournament created");
-    await loadTournaments();
+    await loadTournaments(false);
     setSelected(data as Tournament);
     setTab("setup");
     setCreating(false);
@@ -284,7 +309,7 @@ export function TournamentManager() {
             {selected && <StatusChip status={selected.status} />}
           </div>
           <button
-            onClick={createTournament}
+            onClick={() => setShowCreateModal(true)}
             disabled={creating}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition disabled:opacity-50"
           >
@@ -292,16 +317,58 @@ export function TournamentManager() {
             New Tournament
           </button>
         </div>
+
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-lg font-black text-slate-800 dark:text-foreground">Create New Tournament</h2>
+                <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-sm text-slate-500 mb-2">Select the format for your new tournament. This determines the features and structure available.</p>
+                
+                <button 
+                  onClick={() => createTournament("OPEN_EVENT")}
+                  className="w-full text-left p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 hover:border-primary dark:hover:border-primary transition-colors flex gap-4 group"
+                >
+                  <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg group-hover:bg-primary/10 transition-colors">
+                    <Users className="w-6 h-6 text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200">Open Event (Individual)</h3>
+                    <p className="text-xs text-slate-500 mt-1">Standard tournament with individual participants or pairs (MS, MD, XD, etc).</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => createTournament("TEAM")}
+                  className="w-full text-left p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 hover:border-[var(--info)] dark:hover:border-[var(--info)] transition-colors flex gap-4 group"
+                >
+                  <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg group-hover:bg-[var(--info)]/10 transition-colors">
+                    <Trophy className="w-6 h-6 text-slate-600 dark:text-slate-400 group-hover:text-[var(--info)] transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200">Team Event</h3>
+                    <p className="text-xs text-slate-500 mt-1">Collegiate-style event where teams compete in ties consisting of multiple rubbers.</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {selected && (
         <>
           {/* Tabs */}
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-            {(["setup", "participants", "bracket", "archive"] as const).map((tab) => (
+            {(["setup", selected?.format_family === "TEAM" ? "teams" : "participants", "bracket", "archive"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setTab(tab)}
+                onClick={() => setTab(tab as SubTab)}
                 className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
                   activeTab === tab
                     ? "bg-primary text-primary-foreground shadow"
@@ -316,19 +383,24 @@ export function TournamentManager() {
           {activeTab === "setup" && (
             <SetupTab
               tournament={selected}
-              onSaved={(t) => { setSelected(t); loadTournaments(); }}
+              onSaved={(t) => {
+                setSelected(t);
+                setTournaments((prev) => prev.map((item) => (item.id === t.id ? t : item)));
+              }}
               isMasterAdmin={isMainAdmin}
-              onDelete={() => { setSelected(null); loadTournaments(); }}
+              onDelete={() => { setSelected(null); loadTournaments(false); }}
             />
           )}
-          {activeTab === "participants" && (
-            <ParticipantsTab tournament={selected} />
+          {activeTab === "participants" && <ParticipantsTab tournament={selected} />}
+          {activeTab === "teams" && <TeamsTab tournament={selected} />}
+          {activeTab === "bracket" && selected?.format_family === "TEAM" && (
+            <TeamBracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
-          {activeTab === "bracket" && (
+          {activeTab === "bracket" && selected?.format_family !== "TEAM" && (
             <BracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
           {activeTab === "archive" && (
-            <ArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments()} />
+            <ArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
           )}
         </>
       )}
@@ -358,14 +430,34 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
   const { recordAction } = useAdminHistory();
   const { confirm } = useConfirm();
 
+  const [draggedRubberIndex, setDraggedRubberIndex] = useState<number | null>(null);
+
+  const [isDirty, setIsDirty] = useState(false);
+  const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => { setForm({ ...tournament }); }, [tournament.id]);
 
-  const upd = <K extends keyof Tournament>(k: K, v: Tournament[K]) => setForm((p) => ({ ...p, [k]: v }));
+  const upd = <K extends keyof Tournament>(k: K, v: Tournament[K]) => {
+    setForm((p) => ({ ...p, [k]: v }));
+    setIsDirty(true);
+  };
 
-  const save = async () => {
+  useEffect(() => {
+    if (!isDirty) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      save(true);
+    }, 1500);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [form, isDirty]);
+
+  const save = async (isAutosave = false) => {
     if (form.start_date && form.end_date) {
       if (new Date(form.start_date) > new Date(form.end_date)) {
-        toast.error("Start date cannot be after the end date.");
+        if (!isAutosave) toast.error("Start date cannot be after the end date.");
         return;
       }
     }
@@ -378,13 +470,26 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     if (rest.end_date === "") rest.end_date = null;
     if (rest.form_close_date === "") rest.form_close_date = null;
 
+    if (rest.format_family !== "TEAM") {
+      rest.tie_format_config = null;
+    }
+
     const { data, error } = await supabase.from("tournaments").update(rest).eq("id", id).select().single();
-    if (error) { toast.error(error.message); setSaving(false); return; }
-    await supabase.from("admin_logs").insert({
-      admin_email: session?.user?.email ?? "admin",
-      action: `Updated tournament "${form.name}" (${form.status})`,
-    });
-    toast.success("Saved");
+    if (error) { 
+      if (!isAutosave) toast.error(error.message); 
+      setSaving(false); 
+      return; 
+    }
+    
+    if (!isAutosave) {
+      await supabase.from("admin_logs").insert({
+        admin_email: session?.user?.email ?? "admin",
+        action: `Updated tournament "${form.name}" (${form.status})`,
+      });
+      toast.success("Saved");
+    }
+    
+    setIsDirty(false);
     onSaved(data as Tournament);
     setSaving(false);
   };
@@ -428,6 +533,84 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     toast.success("Tournament sent to Trash");
     if (onDelete) onDelete();
     setSaving(false);
+  };
+
+  const autoLabelRubbers = (config: any[]) => {
+    const totals: Record<string, number> = {};
+    config.forEach(r => {
+      const cat = r.category || 'MS';
+      totals[cat] = (totals[cat] || 0) + 1;
+    });
+
+    const counts: Record<string, number> = {};
+    return config.map((r, idx) => {
+      const cat = r.category || 'MS';
+      counts[cat] = (counts[cat] || 0) + 1;
+      const isDefaultLabel = !r.label || /^Rubber \d+$/.test(r.label) || /^[A-Z]{2}\s*\d*$/.test(r.label) || /^[A-Z]{2}$/.test(r.label);
+      if (isDefaultLabel) {
+        r.label = totals[cat] === 1 ? cat : `${cat} ${counts[cat]}`;
+      }
+      r.order = idx + 1;
+      return r;
+    });
+  };
+
+  const categoriesCount = CATEGORIES.reduce((acc, cat) => {
+    acc[cat] = (form.tie_format_config || []).filter((r: any) => r.category === cat).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const addOfCategory = (cat: string) => {
+    const newConfig = [...(form.tie_format_config || [])];
+    newConfig.push({ order: newConfig.length + 1, label: '', category: cat, points: 1 });
+    upd("tie_format_config", autoLabelRubbers(newConfig));
+  };
+
+  const removeLastOfCategory = (cat: string) => {
+    const newConfig = [...(form.tie_format_config || [])];
+    // Polyfill for findLastIndex
+    let index = -1;
+    for (let i = newConfig.length - 1; i >= 0; i--) {
+      if (newConfig[i].category === cat) {
+        index = i;
+        break;
+      }
+    }
+    if (index !== -1) {
+      newConfig.splice(index, 1);
+      upd("tie_format_config", autoLabelRubbers(newConfig));
+    }
+  };
+
+  const moveRubber = (index: number, direction: -1 | 1) => {
+    const newConfig = [...(form.tie_format_config || [])];
+    if (index + direction < 0 || index + direction >= newConfig.length) return;
+    const temp = newConfig[index];
+    newConfig[index] = newConfig[index + direction];
+    newConfig[index + direction] = temp;
+    upd("tie_format_config", autoLabelRubbers(newConfig));
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedRubberIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedRubberIndex === null || draggedRubberIndex === dropIndex) return;
+
+    const newConfig = [...(form.tie_format_config || [])];
+    const item = newConfig.splice(draggedRubberIndex, 1)[0];
+    newConfig.splice(dropIndex, 0, item);
+    
+    upd("tie_format_config", autoLabelRubbers(newConfig));
+    setDraggedRubberIndex(null);
   };
 
   return (
@@ -504,13 +687,18 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
             <input value={form.name} onChange={(e) => upd("name", e.target.value)} className={inputCls} placeholder="e.g. INVICTA 2026" />
           </div>
           <div>
-            <label className={labelCls}>Tournament Type</label>
+            <label className={labelCls}>Visibility Type</label>
             <select value={form.tournament_type} onChange={(e) => upd("tournament_type", e.target.value)} className={inputCls}>
-              <option value="open">Open Tournament</option>
+              <option value="open">Open (Public)</option>
               <option value="invitational">Invitational</option>
-              <option value="internal">Internal</option>
-              <option value="team">Team Tournament</option>
+              <option value="internal">Internal Only</option>
             </select>
+          </div>
+          <div>
+            <label className={labelCls}>Format Family</label>
+            <div className="flex items-center h-10 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400">
+              {form.format_family === 'TEAM' ? 'Team Event (Ties/Rubbers)' : 'Open Event (Individual)'}
+            </div>
           </div>
           <div>
             <label className={labelCls}>Venue</label>
@@ -528,7 +716,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
             <label className={labelCls}>Categories</label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => {
-                const active = form.categories.includes(cat);
+                const active = form.categories?.includes(cat);
                 return (
                   <button key={cat} type="button"
                     onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...form.categories, cat])}
@@ -538,7 +726,157 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 );
               })}
             </div>
+            {form.format_family === 'TEAM' && <p className="text-xs text-slate-500 mt-2">Team Events typically use all standard categories. These act as placeholders for the tie rubbers.</p>}
           </div>
+
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Event Rules</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={form.counts_for_elo ?? true}
+                  onChange={(e) => upd("counts_for_elo", e.target.checked)}
+                  className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+                />
+                <div>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Count for ELO</span>
+                  <span className="text-xs text-muted-foreground block">Matches will update players' personal and category ELO. Uncheck for casual tournaments.</span>
+                </div>
+              </label>
+
+              {form.format_family === 'TEAM' && (
+                <>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={form.ignore_gender_rules ?? false}
+                      onChange={(e) => upd("ignore_gender_rules", e.target.checked)}
+                      className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Ignore Gender Rules</span>
+                      <span className="text-xs text-muted-foreground block">Allow any player to play any rubber (e.g. women in MS).</span>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={form.play_dead_rubbers ?? true}
+                      onChange={(e) => upd("play_dead_rubbers", e.target.checked)}
+                      className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Play Dead Rubbers</span>
+                      <span className="text-xs text-muted-foreground block">Play all remaining rubbers even if the tie is already won.</span>
+                    </div>
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
+
+          {form.format_family === 'TEAM' && (
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Tie Format / Rubbers</label>
+              <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <p className="text-xs text-muted-foreground mb-3">Quickly add or remove rubbers to build the default order of play for a tie.</p>
+                
+                <div className="flex flex-wrap gap-4 mb-6">
+                  {CATEGORIES.map(cat => (
+                    <div key={cat} className="flex flex-col items-center">
+                      <span className="text-[10px] font-black text-muted-foreground mb-1">{cat}</span>
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-1 border border-slate-200 dark:border-slate-700/50">
+                        <button 
+                          onClick={() => removeLastOfCategory(cat)} 
+                          disabled={!categoriesCount[cat]} 
+                          className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-700 shadow-sm disabled:opacity-30 disabled:shadow-none transition-all hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="w-6 text-center text-sm font-black text-slate-800 dark:text-slate-200">
+                          {categoriesCount[cat] || 0}
+                        </span>
+                        <button 
+                          onClick={() => addOfCategory(cat)} 
+                          className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  {(form.tie_format_config || []).map((rubber: any, i: number) => (
+                  <div 
+                    key={i} 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, i)}
+                    onDragOver={(e) => handleDragOver(e, i)}
+                    onDrop={(e) => handleDrop(e, i)}
+                    className={`flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0 group transition-all cursor-move ${
+                      draggedRubberIndex === i ? 'opacity-50 scale-[0.98]' : ''
+                    }`}
+                  >
+                    <div className="flex flex-col items-center pr-2 border-r border-slate-200 dark:border-slate-700 cursor-move text-slate-300 hover:text-primary transition-colors">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 w-4 text-center">#{i+1}</span>
+                    <input 
+                      className={`${inputCls} !w-24 !py-1`} 
+                      placeholder="Label (e.g. MS1)" 
+                      value={rubber.label || ''} 
+                      onChange={(e) => {
+                        const newConfig = [...(form.tie_format_config || [])];
+                        newConfig[i].label = e.target.value;
+                        upd("tie_format_config", newConfig);
+                      }}
+                    />
+                    <select 
+                      className={`${inputCls} !w-20 !py-1`}
+                      value={rubber.category || 'MS'}
+                      onChange={(e) => {
+                        const newConfig = [...(form.tie_format_config || [])];
+                        newConfig[i].category = e.target.value;
+                        upd("tie_format_config", autoLabelRubbers(newConfig));
+                      }}
+                    >
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Pts:</span>
+                      <input 
+                        type="number" 
+                        className={`${inputCls} !w-16 !py-1`} 
+                        value={rubber.points ?? 1} 
+                        onChange={(e) => {
+                          const newConfig = [...(form.tie_format_config || [])];
+                          newConfig[i].points = parseInt(e.target.value) || 0;
+                          upd("tie_format_config", newConfig);
+                        }}
+                      />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newConfig = [...(form.tie_format_config || [])];
+                        newConfig.splice(i, 1);
+                        upd("tie_format_config", autoLabelRubbers(newConfig));
+                      }}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                      title="Remove Rubber"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className={labelCls}>Eligibility</label>
             <input value={form.eligibility ?? ""} onChange={(e) => upd("eligibility", e.target.value)} className={inputCls} placeholder="All IISc Members" />
@@ -615,10 +953,10 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
             </button>
           )}
         </div>
-        <button onClick={save} disabled={saving}
+        <button onClick={() => save(false)} disabled={saving || !isDirty}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground font-black transition shadow-lg">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save Details
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (isDirty ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4" />)}
+          {saving ? "Saving..." : (isDirty ? "Save Details" : "Saved")}
         </button>
       </div>
 
@@ -678,7 +1016,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const [partnerSearch, setPartnerSearch] = useState<Record<string, string>>({});
   const getHashCat = () => {
     const parts = window.location.hash.replace("#", "").split("/");
-    return parts[2] || tournament.categories[0] || "";
+    return parts[2] || (tournament.categories || [])[0] || "";
   };
   const [activeCat, setActiveCat] = useState<string>(getHashCat());
 
@@ -686,7 +1024,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     const handleHash = () => {
       const parts = window.location.hash.replace("#", "").split("/");
       if (parts[1] === "participants") {
-         setActiveCat(parts[2] || tournament.categories[0] || "");
+         setActiveCat(parts[2] || (tournament.categories || [])[0] || "");
       }
     };
     window.addEventListener("hashchange", handleHash);
@@ -814,7 +1152,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     if (playersData) setAdminPlayers(playersData);
 
     const grouped: Record<string, Participant[]> = {};
-    for (const cat of tournament.categories) grouped[cat] = [];
+    for (const cat of (tournament.categories || [])) grouped[cat] = [];
     for (const p of (data ?? []) as Participant[]) {
       if (!grouped[p.category]) grouped[p.category] = [];
       grouped[p.category].push(p);
@@ -1413,7 +1751,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
       )}
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {tournament.categories.map((cat) => (
+        {(tournament.categories || []).map((cat) => (
           <button
             key={cat}
             onClick={() => setTabCat(cat)}
@@ -1428,7 +1766,14 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
         ))}
       </div>
 
-      {tournament.categories.includes(activeCat) && (() => {
+      {(!tournament.categories || tournament.categories.length === 0) && (
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+          <p className="text-sm font-bold text-slate-500">No categories selected for this tournament yet.</p>
+          <p className="text-xs text-slate-400 mt-1">Go to the Setup tab to select categories first.</p>
+        </div>
+      )}
+
+      {(tournament.categories || []).includes(activeCat) && (() => {
         const cat = activeCat;
         const allParts = participants[cat] ?? [];
         const statusFilt = filterStatus[cat] || "all";
@@ -1465,8 +1810,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
         return (
           <div key={cat} className={cardCls}>
             <div className="space-y-3">
-              <div className="flex items-center justify-between px-1 mb-2">
-                  <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row flex-wrap sm:items-center justify-between gap-3 px-1 mb-2">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1492,7 +1837,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     </select>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => checkDuplicates(cat, parts, doubles)}
                       className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[var(--warning)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
@@ -2028,10 +2373,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [activeCategory, setActiveCategory] = useState(() => {
     const hash = window.location.hash.replace("#", "");
     const parts = hash.split("/");
+    const cats = tournament.categories || [];
     if (parts[1] === "bracket" && parts[2]) {
-      return tournament.categories.includes(parts[2]) ? parts[2] : (tournament.categories[0] ?? "");
+      return cats.includes(parts[2]) ? parts[2] : (cats[0] ?? "");
     }
-    return tournament.categories[0] ?? "";
+    return cats[0] ?? "";
   });
   const [showRules, setShowRules] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "visual">(() => {
@@ -2083,8 +2429,9 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const parts = hash.split("/");
+      const cats = tournament.categories || [];
       if (parts[1] === "bracket") {
-        if (parts[2] && tournament.categories.includes(parts[2])) setActiveCategory(parts[2]);
+        if (parts[2] && cats.includes(parts[2])) setActiveCategory(parts[2]);
         if (parts[3] === "list" || parts[3] === "visual") setViewMode(parts[3] as "list" | "visual");
       }
     };
@@ -2670,7 +3017,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       {/* Category tabs + batch */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {tournament.categories.map((cat) => (
+          {(tournament.categories || []).map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
               className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"}`}>
               {cat}
