@@ -772,7 +772,7 @@ export function LiveTab() {
               </div>
             </div>
           ) : activeTournamentId ? (
-            <TeamStandingsTable tournamentId={activeTournamentId} />
+            <TeamStandingsTable tournamentId={activeTournamentId} tournament={activeTournament} />
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
               <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
