@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useTeamStandings } from "@/hooks/useTeamStandings";
 import { Loader2, Trophy, ArrowUpDown, ArrowUp, ArrowDown, Layers, ShieldCheck, Info } from "lucide-react";
+import { TeamRosterModal } from "@/components/events/TeamRosterModal";
 
 interface Props {
   tournamentId?: string;
@@ -15,6 +16,13 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2 }: Props
   const [selectedPool, setSelectedPool] = useState<string>("ALL");
   const [sortKey, setSortKey] = useState<SortColumn>("tie_points");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>("desc");
+  const [rosterTeam, setRosterTeam] = useState<{
+    id: string;
+    name: string;
+    short_name?: string | null;
+    pool?: string | null;
+    captain_id?: string | null;
+  } | null>(null);
 
   // Distinct pools
   const pools = useMemo(() => {
@@ -105,7 +113,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2 }: Props
             Tournament Points Table
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Click column headers to sort by Points, Wins, Rubber Diff, Set Diff, or Points Diff.
+            Click column headers to sort. Click any team name to view the complete squad roster.
           </p>
         </div>
 
@@ -232,14 +240,26 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2 }: Props
                         <div className="w-1.5 h-6 rounded-full bg-emerald-500 shrink-0" title="Qualifies for Playoffs" />
                       )}
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span>{team.team_name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setRosterTeam({
+                            id: team.team_id,
+                            name: team.team_name,
+                            short_name: team.short_name,
+                            pool: team.pool,
+                          })}
+                          className="group flex items-center gap-2 text-left focus:outline-hidden"
+                          title="Click to view complete team roster"
+                        >
+                          <span className="font-bold text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors underline-offset-4 group-hover:underline cursor-pointer">
+                            {team.team_name}
+                          </span>
                           {team.short_name && (
-                            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                               {team.short_name}
                             </span>
                           )}
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </td>
@@ -324,6 +344,14 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2 }: Props
           <span>Tie Points: Win = 2, Draw = 1, Loss = 0</span>
         </div>
       </div>
+
+      {/* Team Roster Popup Modal */}
+      <TeamRosterModal
+        isOpen={!!rosterTeam}
+        onClose={() => setRosterTeam(null)}
+        team={rosterTeam}
+        tournamentId={tournamentId}
+      />
     </div>
   );
 }
