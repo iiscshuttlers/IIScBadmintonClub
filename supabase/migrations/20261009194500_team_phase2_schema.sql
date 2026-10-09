@@ -1,3 +1,13 @@
+-- Helper function to check if the current user is an admin or master_admin
+CREATE OR REPLACE FUNCTION is_admin_or_master() RETURNS boolean 
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM players p 
+        WHERE p.id = auth.uid() 
+        AND p.role IN ('admin', 'master_admin')
+    );
+$$;
+
 -- Migration: Team Tournaments Phase 2 Schema & RLS Policies
 -- 1. Fix RLS on `tournament_ties` so managers and admins can create/update/delete ties
 DROP POLICY IF EXISTS "Managers and admins can insert ties" ON tournament_ties;
