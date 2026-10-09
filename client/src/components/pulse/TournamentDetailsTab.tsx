@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, FileText, Upload, AlertCircle, X, Download, Loader2, Info, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Upload, AlertCircle, X, Download, Loader2, Info, Users, Shield } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
+import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
 
 interface TournamentDetailsTabProps {
   tournament: any;
@@ -82,12 +83,14 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
     }
   };
 
-  return (
+    const isTeamEvent = tournament?.format_family === "TEAM" || tournament?.type === "team";
+
+    return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pb-2 mb-6">
         {[
           { id: "info", label: "Info & Notices", icon: Info },
-          { id: "participants", label: "Participants", icon: Users },
+          { id: "participants", label: isTeamEvent ? "Teams" : "Participants", icon: isTeamEvent ? Shield : Users },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -218,15 +221,24 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
           </motion.div>
         )}
 
-        {/* Players Section */}
+        {/* Teams / Participants Section */}
         {activeTab === "participants" && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 animate-in fade-in slide-in-from-bottom-4">
-            <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-6">Participants</h3>
-            <LivePlayersSection 
-              tournamentId={tournament?.id} 
-              categories={tournament?.categories || []} 
-              showParticipants={tournament?.show_participants} 
-            />
+            <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-6">
+              {isTeamEvent ? "Teams" : "Participants"}
+            </h3>
+            {isTeamEvent ? (
+              <LiveTeamsSection
+                tournamentId={tournament?.id}
+                showParticipants={tournament?.show_participants}
+              />
+            ) : (
+              <LivePlayersSection 
+                tournamentId={tournament?.id} 
+                categories={tournament?.categories || []} 
+                showParticipants={tournament?.show_participants} 
+              />
+            )}
           </div>
         )}
 
