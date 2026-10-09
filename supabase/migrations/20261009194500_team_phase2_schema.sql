@@ -89,28 +89,86 @@ FOR INSERT WITH CHECK (
     )
 );
 
+-- Helper functions to parse badminton sets and points from score string e.g. "21-18, 19-21, 21-15"
+CREATE OR REPLACE FUNCTION get_match_sets_won(p_score text, p_side int)
+RETURNS int LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+    v_clean text;
+    v_set text;
+    v_parts text[];
+    s1 int := 0;
+    s2 int := 0;
+    pts1 int;
+    pts2 int;
+BEGIN
+    IF p_score IS NULL OR trim(p_score) = '' THEN
+        RETURN 0;
+    END IF;
+    v_clean := trim(split_part(p_score, '[', 1));
+    FOREACH v_set IN ARRAY string_to_array(v_clean, ',') LOOP
+        v_parts := string_to_array(trim(v_set), '-');
+        IF array_length(v_parts, 1) = 2 THEN
+            BEGIN
+                pts1 := trim(v_parts[1])::int;
+                pts2 := trim(v_parts[2])::int;
+                IF pts1 > pts2 THEN
+                    s1 := s1 + 1;
+                ELSIF pts2 > pts1 THEN
+                    s2 := s2 + 1;
+                END IF;
+            EXCEPTION WHEN OTHERS THEN
+                -- ignore malformed set tokens
+            END;
+        END IF;
+    END LOOP;
+    IF p_side = 1 THEN RETURN s1; ELSE RETURN s2; END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_match_points_won(p_score text, p_side int)
+RETURNS int LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+    v_clean text;
+    v_set text;
+    v_parts text[];
+    p1 int := 0;
+    p2 int := 0;
+    pts1 int;
+    pts2 int;
+BEGIN
+    IF p_score IS NULL OR trim(p_score) = '' THEN
+        RETURN 0;
+    END IF;
+    v_clean := trim(split_part(p_score, '[', 1));
+    FOREACH v_set IN ARRAY string_to_array(v_clean, ',') LOOP
+        v_parts := string_to_array(trim(v_set), '-');
+        IF array_length(v_parts, 1) = 2 THEN
+            BEGIN
+                pts1 := trim(v_parts[1])::int;
+                pts2 := trim(v_parts[2])::int;
+                p1 := p1 + pts1;
+                p2 := p2 + pts2;
+            EXCEPTION WHEN OTHERS THEN
+                -- ignore malformed set tokens
+            END;
+        END IF;
+    END LOOP;
+    IF p_side = 1 THEN RETURN p1; ELSE RETURN p2; END IF;
+END;
+$$;
+
 -- 5. Enhanced `tournament_team_standings` View with sets and points calculations
 CREATE OR REPLACE VIEW tournament_team_standings WITH (security_invoker = on) AS
 WITH tie_matches_agg AS (
     SELECT 
         m.tie_id,
-        m.winner_side,
-        -- Sets won per side
-        COALESCE(
-            (CASE WHEN m.set1_team1_points > m.set1_team2_points THEN 1 ELSE 0 END) +
-            (CASE WHEN m.set2_team1_points > m.set2_team2_points THEN 1 ELSE 0 END) +
-            (CASE WHEN m.set3_team1_points > m.set3_team2_points THEN 1 ELSE 0 END), 0
-        ) as sets_a,
-        COALESCE(
-            (CASE WHEN m.set1_team2_points > m.set1_team1_points THEN 1 ELSE 0 END) +
-            (CASE WHEN m.set2_team2_points > m.set2_team1_points THEN 1 ELSE 0 END) +
-            (CASE WHEN m.set3_team2_points > m.set3_team1_points THEN 1 ELSE 0 END), 0
-        ) as sets_b,
-        -- Points won per side
-        (COALESCE(m.set1_team1_points, 0) + COALESCE(m.set2_team1_points, 0) + COALESCE(m.set3_team1_points, 0)) as points_a,
-        (COALESCE(m.set1_team2_points, 0) + COALESCE(m.set2_team2_points, 0) + COALESCE(m.set3_team2_points, 0)) as points_b
+        COALESCE(SUM(get_match_sets_won(m.score, 1)), 0) as sets_a,
+        COALESCE(SUM(get_match_sets_won(m.score, 2)), 0) as sets_b,
+        COALESCE(SUM(get_match_points_won(m.score, 1)), 0) as points_a,
+        COALESCE(SUM(get_match_points_won(m.score, 2)), 0) as points_b
     FROM tournament_matches m
     WHERE m.tie_id IS NOT NULL AND m.status = 'completed'
+    GROUP BY m.tie_id
 ),
 tie_stats_per_team AS (
     SELECT
@@ -125,17 +183,16 @@ tie_stats_per_team AS (
         CASE WHEN tie.team_a_id = t.id THEN tie.score_team_a WHEN tie.team_b_id = t.id THEN tie.score_team_b ELSE 0 END as rubbers_for,
         CASE WHEN tie.team_a_id = t.id THEN tie.score_team_b WHEN tie.team_b_id = t.id THEN tie.score_team_a ELSE 0 END as rubbers_against,
         -- Sets for & against in this tie
-        COALESCE(SUM(CASE WHEN tie.team_a_id = t.id THEN tma.sets_a WHEN tie.team_b_id = t.id THEN tma.sets_b ELSE 0 END), 0) as sets_for,
-        COALESCE(SUM(CASE WHEN tie.team_a_id = t.id THEN tma.sets_b WHEN tie.team_b_id = t.id THEN tma.sets_a ELSE 0 END), 0) as sets_against,
+        CASE WHEN tie.team_a_id = t.id THEN COALESCE(tma.sets_a, 0) WHEN tie.team_b_id = t.id THEN COALESCE(tma.sets_b, 0) ELSE 0 END as sets_for,
+        CASE WHEN tie.team_a_id = t.id THEN COALESCE(tma.sets_b, 0) WHEN tie.team_b_id = t.id THEN COALESCE(tma.sets_a, 0) ELSE 0 END as sets_against,
         -- Points for & against in this tie
-        COALESCE(SUM(CASE WHEN tie.team_a_id = t.id THEN tma.points_a WHEN tie.team_b_id = t.id THEN tma.points_b ELSE 0 END), 0) as points_for,
-        COALESCE(SUM(CASE WHEN tie.team_a_id = t.id THEN tma.points_b WHEN tie.team_b_id = t.id THEN tma.points_a ELSE 0 END), 0) as points_against
+        CASE WHEN tie.team_a_id = t.id THEN COALESCE(tma.points_a, 0) WHEN tie.team_b_id = t.id THEN COALESCE(tma.points_b, 0) ELSE 0 END as points_for,
+        CASE WHEN tie.team_a_id = t.id THEN COALESCE(tma.points_b, 0) WHEN tie.team_b_id = t.id THEN COALESCE(tma.points_a, 0) ELSE 0 END as points_against
     FROM tournament_teams t
     LEFT JOIN tournament_ties tie 
         ON (tie.team_a_id = t.id OR tie.team_b_id = t.id) 
         AND tie.stage = 'POOL'
     LEFT JOIN tie_matches_agg tma ON tma.tie_id = tie.id
-    GROUP BY t.tournament_id, t.id, t.name, t.pool, tie.id, tie.state, tie.winner_team_id, tie.team_a_id, tie.team_b_id, tie.score_team_a, tie.score_team_b
 ),
 team_summary AS (
     SELECT
