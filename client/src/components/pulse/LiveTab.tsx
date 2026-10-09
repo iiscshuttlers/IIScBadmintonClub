@@ -723,7 +723,7 @@ export function LiveTab() {
       {/* 3. Polls */}
       {!loading && activeSubTab === "polls" && (
         <div className="mb-6">
-          <PollsSection />
+          <PollsSection tournamentId={activeTournamentId} />
         </div>
       )}
 

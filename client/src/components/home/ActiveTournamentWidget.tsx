@@ -634,7 +634,7 @@ export function ActiveTournamentWidget() {
             className="overflow-hidden"
           >
             <div className="border-t border-slate-200/50 dark:border-slate-800 p-4 sm:p-5">
-              <PollsSection />
+              <PollsSection tournamentId={tournament?.id} />
               
               <div className="mt-4 flex justify-center">
                 <button

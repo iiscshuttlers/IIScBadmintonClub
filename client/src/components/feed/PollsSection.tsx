@@ -23,8 +23,19 @@ export interface Poll {
   start_date?: string;
   end_date?: string;
   results_revealed?: boolean;
+  tournament_id?: string;
 }
 
+export const AUGUST_2026_TOURNAMENT_ID = "62c5341c-df12-4511-9253-a9a0e9546667";
+
+export const belongsToTournament = (poll: Poll, targetTournamentId?: string): boolean => {
+  if (!targetTournamentId) return true;
+  if (poll.tournament_id) {
+    return poll.tournament_id === targetTournamentId;
+  }
+  // Legacy polls without tournament_id were created for the August 2026 tournament
+  return targetTournamentId === AUGUST_2026_TOURNAMENT_ID;
+};
 
 const isPollVisible = (poll: Poll) => {
   if (poll.is_archived) return false;
@@ -162,7 +173,15 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
   );
 }
 
-function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
+function CreatePollForm({ 
+  onCreated, 
+  onCancel, 
+  tournamentId 
+}: { 
+  onCreated: () => void; 
+  onCancel: () => void; 
+  tournamentId?: string;
+}) {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [saving, setSaving] = useState(false);
@@ -185,6 +204,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
       options: validOptions.map(text => ({ id: crypto.randomUUID(), text, votes: [] })),
       created_at: new Date().toISOString(),
       is_active: true,
+      tournament_id: tournamentId,
     };
 
     const { data: existing } = await supabase.from("site_data").select("value").eq("key", "polls").maybeSingle();
@@ -272,7 +292,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
   );
 }
 
-export function PollsSection() {
+export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
   const { profile, session, isMasterAdmin } = useAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
@@ -359,8 +379,12 @@ export function PollsSection() {
     }
   };
 
+  const scopedPolls = polls.filter(p => belongsToTournament(p, tournamentId));
+  const visiblePolls = scopedPolls.filter(isPollVisible);
+  const archivedPolls = scopedPolls.filter(p => p.is_archived);
+
   if (loading) return null;
-  if (!isMasterAdmin && polls.filter(isPollVisible).length === 0) return null;
+  if (!isMasterAdmin && visiblePolls.length === 0 && !tournamentId) return null;
 
   return (
     <div className="space-y-4">
@@ -378,6 +402,7 @@ export function PollsSection() {
         {showCreate && isMasterAdmin && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <CreatePollForm
+              tournamentId={tournamentId}
               onCreated={() => { setShowCreate(false); fetchPolls(); }}
               onCancel={() => setShowCreate(false)}
             />
@@ -385,20 +410,34 @@ export function PollsSection() {
         )}
       </AnimatePresence>
 
-      {polls.filter(isPollVisible).map((poll) => (
+      {visiblePolls.map((poll) => (
         <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <PollCard poll={poll} onVote={handleVote} onArchive={isMasterAdmin ? handleArchive : undefined} onDelete={isMasterAdmin ? handleDelete : undefined} onNotify={isMasterAdmin ? handleNotify : undefined} onToggleReveal={isMasterAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isMasterAdmin} />
         </motion.div>
       ))}
 
-      {isMasterAdmin && polls.filter(p => p.is_archived).length > 0 && (
+      {visiblePolls.length === 0 && (!isMasterAdmin || archivedPolls.length === 0) && !showCreate && (
+        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+          <div className="w-16 h-16 bg-violet-50 dark:bg-violet-950/40 rounded-full flex items-center justify-center mx-auto mb-4 border border-violet-200 dark:border-violet-800/50">
+            <BarChart2 className="w-8 h-8 text-violet-500" />
+          </div>
+          <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-1">
+            No Polls for This Tournament
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            There are currently no active community polls for this tournament.
+          </p>
+        </div>
+      )}
+
+      {isMasterAdmin && archivedPolls.length > 0 && (
         <details className="mt-8 group border border-slate-200 dark:border-slate-800 rounded-2xl bg-white/50 dark:bg-slate-900/50">
           <summary className="flex items-center gap-2 p-4 cursor-pointer list-none outline-none">
             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex-1">Archived Polls</h3>
             <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div className="p-4 pt-0 space-y-4">
-            {polls.filter(p => p.is_archived).map(poll => (
+            {archivedPolls.map(poll => (
               <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isMasterAdmin ? handleArchive : undefined} onDelete={isMasterAdmin ? handleDelete : undefined} onNotify={isMasterAdmin ? handleNotify : undefined} onToggleReveal={isMasterAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isMasterAdmin} />
             ))}
           </div>
