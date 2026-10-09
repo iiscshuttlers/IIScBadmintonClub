@@ -171,20 +171,36 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                   <HelpCircle className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs p-3 space-y-1.5 text-xs">
-                <p className="font-bold text-slate-100 mb-1 border-b border-slate-700/60 pb-1">Points Table Rules & Columns</p>
-                <div className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-1 text-[11px]">
-                  <span className="font-bold text-primary">P</span><span>Matches / Ties Played</span>
-                  <span className="font-bold text-emerald-400">W</span><span>Ties Won (+{winPoints} pts)</span>
-                  <span className="font-bold text-slate-400">D</span><span>Ties Drawn (+{drawPoints} pts)</span>
-                  <span className="font-bold text-rose-400">L</span><span>Ties Lost (+{lossPoints} pts)</span>
-                  <span className="font-bold text-slate-300">R (+/-)</span><span>Rubber Net Diff (For - Against)</span>
-                  <span className="font-bold text-slate-300">S (+/-)</span><span>Sets Net Diff (For - Against)</span>
-                  <span className="font-bold text-slate-300">PTS (+/-)</span><span>Match Points Net Diff</span>
-                  <span className="font-bold text-amber-400">PTS</span><span>Total Standing Points</span>
+              <TooltipContent 
+                side="right" 
+                sideOffset={8}
+                className="max-w-xs p-3.5 space-y-2.5 text-xs bg-slate-950/95 backdrop-blur-md text-slate-100 border border-slate-700/80 shadow-2xl rounded-2xl z-50"
+              >
+                <div className="flex items-center gap-1.5 font-black text-amber-400 text-xs border-b border-slate-750 pb-1.5 border-slate-800">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Points Table Rules & Columns</span>
                 </div>
-                <div className="pt-1.5 border-t border-slate-700/60 text-[10px] text-slate-300">
-                  {qualifyingText}
+                <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px] font-medium">
+                  <span className="font-black text-sky-400">P</span>
+                  <span className="text-slate-200">Matches / Ties Played</span>
+                  <span className="font-black text-emerald-400">W</span>
+                  <span className="text-slate-200">Ties Won <span className="text-emerald-400 font-bold">(+{winPoints} pts)</span></span>
+                  <span className="font-black text-slate-400">D</span>
+                  <span className="text-slate-200">Ties Drawn <span className="text-slate-400 font-bold">(+{drawPoints} pts)</span></span>
+                  <span className="font-black text-rose-400">L</span>
+                  <span className="text-slate-200">Ties Lost <span className="text-rose-400 font-bold">(+{lossPoints} pts)</span></span>
+                  <span className="font-black text-cyan-300">R (+/-)</span>
+                  <span className="text-slate-200">Rubber Net Diff <span className="text-slate-400 text-[10px]">(For - Against)</span></span>
+                  <span className="font-black text-indigo-300">S (+/-)</span>
+                  <span className="text-slate-200">Sets Net Diff <span className="text-slate-400 text-[10px]">(For - Against)</span></span>
+                  <span className="font-black text-violet-300">PTS (+/-)</span>
+                  <span className="text-slate-200">Match Points Net Diff</span>
+                  <span className="font-black text-lime-400">PTS</span>
+                  <span className="text-lime-300 font-bold">Total Standing Points</span>
+                </div>
+                <div className="pt-2 border-t border-slate-800 flex items-center gap-2 text-[11px] font-medium text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span>{qualifyingText}</span>
                 </div>
               </TooltipContent>
             </Tooltip>
