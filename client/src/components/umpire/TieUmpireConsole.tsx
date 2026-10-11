@@ -34,6 +34,28 @@ interface Props {
   onClose?: () => void;
 }
 
+// Consistent distinctive colors for playing order badges (#1, #2, #3, ...)
+// Both teams proposing the same number get the same color badge for easy matching!
+const ORDER_COLOR_MAP: Record<number, { bg: string; text: string; border: string }> = {
+  1: { bg: 'bg-emerald-500/15 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/30' },
+  2: { bg: 'bg-sky-500/15 dark:bg-sky-500/20', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-500/30' },
+  3: { bg: 'bg-violet-500/15 dark:bg-violet-500/20', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-500/30' },
+  4: { bg: 'bg-amber-500/15 dark:bg-amber-500/20', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-500/30' },
+  5: { bg: 'bg-rose-500/15 dark:bg-rose-500/20', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-500/30' },
+  6: { bg: 'bg-teal-500/15 dark:bg-teal-500/20', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-500/30' },
+  7: { bg: 'bg-indigo-500/15 dark:bg-indigo-500/20', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-500/30' },
+  8: { bg: 'bg-fuchsia-500/15 dark:bg-fuchsia-500/20', text: 'text-fuchsia-700 dark:text-fuchsia-300', border: 'border-fuchsia-500/30' },
+};
+
+function getPlayingOrderColor(orderNum?: number | null) {
+  if (!orderNum) return { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-700' };
+  return ORDER_COLOR_MAP[orderNum] || {
+    bg: 'bg-cyan-500/15 dark:bg-cyan-500/20',
+    text: 'text-cyan-700 dark:text-cyan-300',
+    border: 'border-cyan-500/30'
+  };
+}
+
 export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   const { confirm } = useConfirm();
   const queryClient = useQueryClient();
@@ -817,14 +839,22 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
                     {/* Proposed order comparison */}
                     <div className="hidden sm:flex items-center gap-1.5 text-xs ml-1">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-bold">
-                        {tie.team_a?.short_name || 'A'}: #{item?.orderA}
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-mono font-bold">
-                        {tie.team_b?.short_name || 'B'}: #{item?.orderB}
-                      </span>
+                      {(() => {
+                        const colorA = getPlayingOrderColor(item?.orderA);
+                        const colorB = getPlayingOrderColor(item?.orderB);
+                        return (
+                          <>
+                            <span className={`px-2.5 py-0.5 rounded-full font-mono font-black border text-[11px] shadow-2xs ${colorA.bg} ${colorA.text} ${colorA.border}`}>
+                              {tie.team_a?.short_name || 'A'}: #{item?.orderA}
+                            </span>
+                            <span className={`px-2.5 py-0.5 rounded-full font-mono font-black border text-[11px] shadow-2xs ${colorB.bg} ${colorB.text} ${colorB.border}`}>
+                              {tie.team_b?.short_name || 'B'}: #{item?.orderB}
+                            </span>
+                          </>
+                        );
+                      })()}
                       {item?.isDiscrepant && (
-                        <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 dark:bg-amber-950/50 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-full">
                           Differs
                         </span>
                       )}
@@ -884,9 +914,24 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                   )}
 
                   {/* Proposed order summary */}
-                  <span className="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">
-                    (Proposed: {tie.team_a?.short_name || 'A'} #{item.orderA} / {tie.team_b?.short_name || 'B'} #{item.orderB})
-                  </span>
+                  <div className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono ml-2">
+                    <span className="text-slate-400">Proposed:</span>
+                    {(() => {
+                      const colorA = getPlayingOrderColor(item.orderA);
+                      const colorB = getPlayingOrderColor(item.orderB);
+                      return (
+                        <>
+                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${colorA.bg} ${colorA.text} ${colorA.border}`}>
+                            {tie.team_a?.short_name || 'A'} #{item.orderA}
+                          </span>
+                          <span className="text-slate-400">/</span>
+                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${colorB.bg} ${colorB.text} ${colorB.border}`}>
+                            {tie.team_b?.short_name || 'B'} #{item.orderB}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -930,7 +975,14 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-slate-500">{tie.team_a?.name || "Team A"}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">Side A (Proposed #{item.orderA})</span>
+                    {(() => {
+                      const colorA = getPlayingOrderColor(item.orderA);
+                      return (
+                        <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-md border ${colorA.bg} ${colorA.text} ${colorA.border}`}>
+                          Proposed #{item.orderA}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   <div className="space-y-1">
@@ -967,7 +1019,14 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-slate-500">{tie.team_b?.name || "Team B"}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">Side B (Proposed #{item.orderB})</span>
+                    {(() => {
+                      const colorB = getPlayingOrderColor(item.orderB);
+                      return (
+                        <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-md border ${colorB.bg} ${colorB.text} ${colorB.border}`}>
+                          Proposed #{item.orderB}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   <div className="space-y-1">

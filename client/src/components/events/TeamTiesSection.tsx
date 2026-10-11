@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +20,7 @@ import {
   Swords,
   AlertCircle,
   Crown,
+  ShieldCheck,
   Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,8 +47,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     team: any;
     side: 'A' | 'B';
     members: any[];
+    onBehalf?: boolean;
   } | null>(null);
   const [expandedTieId, setExpandedTieId] = useState<string | null>(null);
+  const [overrideLoading, setOverrideLoading] = useState<'A' | 'B' | null>(null);
 
   // Fetch current user's team membership and captain status
   const { data: userTeamData } = useQuery({
@@ -175,7 +179,39 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     );
   }
 
-  const isUserOfficial = isAdmin || isUmpire || (tournament?.created_by === session?.user?.id);
+  // Assigned organiser/referee/umpire for this tournament (per-tournament officials).
+  const { data: isAssignedOfficial = false } = useQuery({
+    queryKey: ['tts_is_assigned_official', tournamentId, session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return false;
+      const { data } = await supabase
+        .from('tournament_officials')
+        .select('role')
+        .eq('tournament_id', tournamentId)
+        .eq('user_id', session.user.id)
+        .in('role', ['ORGANIZER', 'REFEREE', 'UMPIRE']);
+      return !!data && data.length > 0;
+    },
+    enabled: !!session?.user?.id && !!tournamentId,
+  });
+
+  const isUserOfficial = isAdmin || isUmpire || isAssignedOfficial || (tournament?.created_by === session?.user?.id);
+
+  // Official override: enter & lock a team's lineup on behalf of an absent captain.
+  const openOverrideLineup = async (tie: any, side: 'A' | 'B') => {
+    const teamId = side === 'A' ? tie.team_a_id : tie.team_b_id;
+    const team = side === 'A' ? tie.team_a : tie.team_b;
+    if (!teamId) { toast.error('No team assigned to this side yet.'); return; }
+    setOverrideLoading(side);
+    const { data: members, error } = await supabase
+      .from('tournament_team_members')
+      .select('*, players(*)')
+      .eq('team_id', teamId)
+      .eq('status', 'ACTIVE');
+    setOverrideLoading(null);
+    if (error) { toast.error(error.message || 'Could not load the team roster.'); return; }
+    setActiveCaptainLineupTie({ tie, team, side, members: members || [], onBehalf: true });
+  };
 
   return (
     <div className="space-y-6">
@@ -369,6 +405,32 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                         <Lock className="w-3.5 h-3.5" />
                         {isMySideLocked ? "View My Lineup" : "Submit Lineup & Order"}
                       </Button>
+                    )}
+
+                    {/* Official override: enter/lock a lineup for an absent captain */}
+                    {isUserOfficial && tie.state !== 'COMPLETED' && !isBothLocked && (
+                      <div className="w-full flex flex-wrap items-center justify-end gap-1.5 mt-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-0.5">On behalf:</span>
+                        {(['A', 'B'] as const).map((s) => {
+                          const locked = s === 'A' ? tie.lineup_locked_a : tie.lineup_locked_b;
+                          // Skip the side the current user already handles as its captain.
+                          if (locked || (canSubmitLineup && s === mySide)) return null;
+                          const t = s === 'A' ? tie.team_a : tie.team_b;
+                          return (
+                            <Button
+                              key={s}
+                              size="sm"
+                              variant="outline"
+                              disabled={overrideLoading === s}
+                              onClick={() => openOverrideLineup(tie, s)}
+                              className="rounded-lg font-bold text-[11px] h-7 px-2.5 flex items-center gap-1.5 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                            >
+                              {overrideLoading === s ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+                              Enter {t?.short_name || t?.name || `Side ${s}`}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 )}
@@ -615,7 +677,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
           <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <div className="flex items-center gap-2.5">
-                <Crown className="w-5 h-5 text-amber-500" />
+                {activeCaptainLineupTie.onBehalf ? <ShieldCheck className="w-5 h-5 text-amber-500" /> : <Crown className="w-5 h-5 text-amber-500" />}
                 <div>
                   <h3 className="font-black text-sm text-slate-900 dark:text-white">
                     Submit Team Lineup &amp; Playing Order · {activeCaptainLineupTie.tie.tie_code}
@@ -635,6 +697,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
               </button>
             </div>
             <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              {activeCaptainLineupTie.onBehalf && (
+                <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5">
+                  <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                    Official override — you're entering and locking this lineup on behalf of {activeCaptainLineupTie.team?.name || "the team"}. This action is recorded.
+                  </p>
+                </div>
+              )}
               <TeamLineupBuilder
                 tie={activeCaptainLineupTie.tie}
                 team={activeCaptainLineupTie.team}
