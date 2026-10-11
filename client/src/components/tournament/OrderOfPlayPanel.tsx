@@ -52,13 +52,50 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
       .neq("status", "completed")
       .order("round", { ascending: true })
       .order("match_number", { ascending: true });
+
     if (error) {
       if (!silent) toast.error(error.message);
       setLoadError(true);
-    } else {
-      setLoadError(false);
-      setMatches((data as any) ?? []);
+      setLoading(false);
+      return;
     }
+
+    let matchRows = (data as any) ?? [];
+
+    // If no individual matches exist (e.g. Team tournament with ties), load ties as schedule items
+    if (matchRows.length === 0) {
+      const { data: tiesData } = await supabase
+        .from("tournament_ties")
+        .select(`
+          id, tie_code, stage, round_name, round_number, state, scheduled_at,
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+        `)
+        .eq("tournament_id", tournament.id)
+        .neq("state", "COMPLETED")
+        .order("round_number", { ascending: true });
+
+      if (tiesData && tiesData.length > 0) {
+        matchRows = tiesData.map((t: any) => ({
+          id: t.id,
+          match_code: t.tie_code,
+          category: t.stage || "TEAM",
+          round_name: t.round_name || `Round ${t.round_number || 1}`,
+          round: t.round_number || 1,
+          match_number: 1,
+          team1_label: t.team_a?.short_name || t.team_a?.name || "TBD",
+          team2_label: t.team_b?.short_name || t.team_b?.name || "TBD",
+          player1_id: t.team_a ? "assigned" : null,
+          court_number: null,
+          scheduled_at: t.scheduled_at,
+          status: t.state === "IN_PROGRESS" ? "in_progress" : "scheduled",
+          tie_id: t.id,
+        }));
+      }
+    }
+
+    setLoadError(false);
+    setMatches(matchRows);
     setLoading(false);
   }, [tournament.id]);
 
@@ -92,15 +129,42 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     const e = editFor(m);
     const iso = localDateTimeInputToIso(e.time);
     setSavingId(m.id);
-    const { error } = await supabase
-      .from("tournament_matches")
-      .update({
-        court_number: e.court.trim() || null,
-        scheduled_at: iso,
-        status: "scheduled",
-        reminder_sent: false,
-      } as any)
-      .eq("id", m.id);
+
+    // If this row represents a tie (where id is a tie_id and no tournament_matches rows exist)
+    const isTieItem = m.tie_id === m.id;
+    let error: any = null;
+
+    if (isTieItem) {
+      const res = await supabase
+        .from("tournament_ties")
+        .update({
+          scheduled_at: iso,
+        })
+        .eq("id", m.id);
+      error = res.error;
+
+      if (!error && (e.court.trim() || iso)) {
+        await supabase
+          .from("tournament_matches")
+          .update({
+            ...(e.court.trim() ? { court_number: e.court.trim() } : {}),
+            ...(iso ? { scheduled_at: iso } : {}),
+          })
+          .eq("tie_id", m.id);
+      }
+    } else {
+      const res = await supabase
+        .from("tournament_matches")
+        .update({
+          court_number: e.court.trim() || null,
+          scheduled_at: iso,
+          status: "scheduled",
+          reminder_sent: false,
+        } as any)
+        .eq("id", m.id);
+      error = res.error;
+    }
+
     setSavingId(null);
     if (error) return toast.error(error.message || "Could not save");
     toast.success(`${m.match_code} scheduled`);
