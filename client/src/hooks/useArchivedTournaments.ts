@@ -13,7 +13,7 @@ export function useArchivedTournaments() {
       try {
         const { data: tournaments, error: tError } = await supabase
           .from("tournaments")
-          .select("id, name, description, start_date, end_date, archived_at, created_at, tournament_type")
+          .select("id, name, description, start_date, end_date, archived_at, created_at, tournament_type, counts_for_elo")
           .eq("status", "archived")
           .order("created_at", { ascending: false });
 
@@ -99,6 +99,8 @@ export function useArchivedTournaments() {
             subtitle: "Official Results",
             description: t.description || "Tournament completed.",
             type: (t.tournament_type as any) || "open",
+            tournament_type: (t.tournament_type as any) || "open",
+            counts_for_elo: (t as any).counts_for_elo,
             startDate: t.start_date || t.end_date || t.archived_at || t.created_at || new Date().toISOString(),
             status: "archived",
             winners,

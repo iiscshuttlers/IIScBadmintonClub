@@ -14,7 +14,8 @@ import {
   ListChecks,
   FileText,
   Calendar,
-  Bell
+  Bell,
+  Swords
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveMatches } from "@/hooks/useLiveMatches";
@@ -28,6 +29,7 @@ import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
 import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
+import { TeamTiesSection } from "@/components/events/TeamTiesSection";
 import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
 import { MatchSection } from "@/components/pulse/MatchSection";
 import { MatchCard } from "@/components/feed/MatchCard";
@@ -36,12 +38,18 @@ import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
 import { shareMatch } from "@/lib/shareMatch";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { OrganizerDashboard } from "@/components/events/OrganizerDashboard";
+import { LayoutDashboard } from "lucide-react";
+import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
+import { RankedBadge } from "@/components/tournament/RankedBadge";
+import { ThemeScope } from "@/components/tournament/ThemeScope";
+import { getEventFamily } from "@/lib/tournamentTheme";
 
 export function LiveTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings">("subtab", "matches");
+  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings" | "ties" | "organizer">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
 
@@ -103,6 +111,10 @@ export function LiveTab() {
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
 
+  const initialTournamentId = typeof window !== "undefined"
+    ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
+    : "all";
+
   const {
     loading,
     matches,
@@ -120,7 +132,7 @@ export function LiveTab() {
     setTournamentFilter,
     searchQuery,
     setSearchQuery
-  } = useFeedMatches(ownProfile, 2000);
+  } = useFeedMatches(ownProfile, 2000, initialTournamentId);
 
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
@@ -245,7 +257,7 @@ export function LiveTab() {
   }
 
   return (
-    <div className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
+    <ThemeScope family={getEventFamily(activeTournament || {})} className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
       {activeTournament && (
         <div className="text-center mb-4 mt-0">
           <div className="flex flex-wrap items-center justify-center gap-2">
@@ -273,12 +285,20 @@ export function LiveTab() {
           {activeTournament.subtitle && (
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
           )}
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+            <EventTypeBadge
+              tournament_type={activeTournament.tournament_type}
+              format_family={activeTournament.format_family}
+            />
+            <RankedBadge ranked={activeTournament.counts_for_elo} />
+          </div>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
         {[
           { id: "details", label: "Details", icon: FileText },
+          ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords, activeClass: "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-600/20 scale-105 font-black", inactiveClass: "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600/20 border border-indigo-600/20", iconClass: "text-indigo-600" }] : []),
           { id: "matches", label: "Matches", icon: Activity },
           { id: "polls", label: "Polls", icon: ListChecks },
           { id: "schedule", label: "Schedule", icon: Calendar },
@@ -286,6 +306,14 @@ export function LiveTab() {
           ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
+          ...((isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) ? [{ 
+            id: "organizer", 
+            label: "Organizer", 
+            icon: LayoutDashboard,
+            activeClass: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-600/20 scale-105 font-black",
+            inactiveClass: "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/20 border border-emerald-600/20",
+            iconClass: "text-emerald-600"
+          }] : []),
         ].map((tab: any) => (
           <button
             key={tab.id}
@@ -328,6 +356,12 @@ export function LiveTab() {
             </div>
           )}
 
+          {activeSubTab === "matches" && activeTournament?.format_family === "TEAM" && activeTournamentId && (
+            <div className="mb-6">
+              <TeamTiesSection tournamentId={activeTournamentId} tournament={activeTournament} />
+            </div>
+          )}
+
           <div className="mb-3 relative w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -343,7 +377,23 @@ export function LiveTab() {
             <div className="flex w-full sm:flex-1 relative">
               <select
                 value={tournamentFilter}
-                onChange={(e) => setTournamentFilter(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTournamentFilter(val);
+                  if (val !== "all") {
+                    const match = tournaments.find(t => t.id === val);
+                    if (match) {
+                      setActiveTournament(match);
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("id", val);
+                      window.history.replaceState({}, "", url.toString());
+                    }
+                  } else {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("id");
+                    window.history.replaceState({}, "", url.toString());
+                  }
+                }}
                 className="appearance-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
               >
                 <option value="all">All Tournaments</option>
@@ -690,16 +740,37 @@ export function LiveTab() {
               )}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
-              <div className="w-24 h-24 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8 p-6">
+              <div className="w-20 h-20 mx-auto bg-slate-50 dark:bg-slate-800/80 rounded-3xl flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-800">
+                {activeTournament?.format_family === "TEAM" ? (
+                  <Swords className="w-9 h-9 text-primary" />
+                ) : (
+                  <Trophy className="w-9 h-9 text-slate-300 dark:text-muted-foreground" />
+                )}
               </div>
               <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">
-                No matches yet
+                {activeTournament?.format_family === "TEAM"
+                  ? "Team Tournament Fixtures"
+                  : "No matches yet"}
               </h3>
-              <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-                No matches found matching your filters.
+              <p className="text-muted-foreground font-medium max-w-md mx-auto text-xs sm:text-sm leading-relaxed">
+                {activeTournament?.format_family === "TEAM"
+                  ? "In team tournaments, fixtures and rubbers are organized as team ties. Head-to-head ties, line-ups, and scores are tracked under the Ties & Lineups tab."
+                  : timeFilter !== "all"
+                    ? "No matches found for this time filter. Switch time filter to 'All Time' or view the Schedule tab to see unscheduled matches."
+                    : "No matches found matching your filters. Unscheduled bracket matches will appear once assigned or when filtering by All Time."}
               </p>
+              {activeTournament?.format_family === "TEAM" && (
+                <div className="mt-5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubTab("ties")}
+                    className="px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-primary/90 transition shadow-sm inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <Swords className="w-4 h-4" /> Switch to Ties &amp; Lineups
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -785,14 +856,50 @@ export function LiveTab() {
         </div>
       )}
 
+      {/* 6. Team Ties & Lineups */}
+      {!loading && activeSubTab === "ties" && (
+        <div className="mb-6">
+          {activeTournamentId ? (
+            <TeamTiesSection tournamentId={activeTournamentId} tournament={activeTournament} />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+              <Swords className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Team Tournament Selected</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Select an active team tournament to view fixtures, playing orders, and lineups.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {(isUmpire || isAdmin) && activeSubTab === "umpire" && (
         <div className="mb-6">
           <UmpireTab />
         </div>
       )}
 
+      {(isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) && activeSubTab === "organizer" && (
+        <div className="mb-6">
+          {activeTournamentId ? (
+            <OrganizerDashboard 
+              tournamentId={activeTournamentId} 
+              tournament={activeTournament} 
+            />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+              <LayoutDashboard className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Selected</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Select an active tournament to view the Organizer command dashboard.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
 
-    </div>
+
+    </ThemeScope>
   );
 }

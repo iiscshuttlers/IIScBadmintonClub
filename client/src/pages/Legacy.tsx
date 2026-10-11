@@ -31,6 +31,7 @@ import { motion } from "framer-motion";
 import { lazy, Suspense } from "react";
 const VideoPlayerModal = lazy(() => import("@/components/VideoPlayerModal").then(mod => ({ default: mod.VideoPlayerModal })));
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { useLocation } from "wouter";
 import { fetchRemoteGalleryImages, saveRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
 import { GalleryUploader } from "@/components/admin/GalleryUploader";
@@ -101,6 +102,7 @@ export default function Legacy() {
 
   const queryClient = useQueryClient();
   const { session, isAdmin, profile } = useAuth();
+  const { confirm } = useConfirm();
   const [, setLocation] = useLocation();
 
   const initialFilter = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("filter") : null;
@@ -1210,7 +1212,13 @@ export default function Legacy() {
                         className="flex items-center gap-1.5 text-foreground/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (confirm("Remove this photo from the gallery?")) {
+                          const ok = await confirm({
+                            title: "Remove Photo?",
+                            description: "Are you sure you want to remove this photo from the gallery?",
+                            confirmLabel: "Remove",
+                            confirmVariant: "danger"
+                          });
+                          if (ok) {
                             try {
                               await deleteRemoteGalleryImage(item.path);
                               toast.success("Photo removed from gallery");
@@ -1273,7 +1281,13 @@ export default function Legacy() {
                 className="text-red-400 hover:text-red-300 font-bold transition flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
                 disabled={selectedPaths.size === 0 || isDeleting}
                 onClick={async () => {
-                  if (confirm(`Delete ${selectedPaths.size} images permanently?`)) {
+                  const ok = await confirm({
+                    title: "Delete Images?",
+                    description: `Are you sure you want to permanently delete ${selectedPaths.size} selected images? This cannot be undone.`,
+                    confirmLabel: "Delete Images",
+                    confirmVariant: "danger"
+                  });
+                  if (ok) {
                     setIsDeleting(true);
                     try {
                       await deleteRemoteGalleryImages(Array.from(selectedPaths));

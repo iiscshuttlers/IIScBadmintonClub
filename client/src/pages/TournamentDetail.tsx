@@ -26,6 +26,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getTournaments } from "@/lib/tournaments";
 import { Loader2 } from "lucide-react";
 import { TournamentArchiveBrackets } from "@/components/events/TournamentSection";
+import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
+import { RankedBadge } from "@/components/tournament/RankedBadge";
+import { ThemeScope } from "@/components/tournament/ThemeScope";
+import { getEventFamily } from "@/lib/tournamentTheme";
 
 const PODIUM_CONFIGS = [
   {
@@ -94,7 +98,9 @@ export default function TournamentDetail() {
         id: sb.id,
         slug: sb.slug,
         status: sb.status,
-        type: sb.subtitle as any,
+        type: ((sb as any).tournament_type ?? sb.subtitle) as any,
+        format_family: (sb as any).format_family,
+        counts_for_elo: (sb as any).counts_for_elo,
         startDate: sb.startDate,
         name: sb.name,
         subtitle: "Official Results",
@@ -140,17 +146,18 @@ export default function TournamentDetail() {
       : tournament.type === "team"
         ? "Team Event"
         : "Special Event";
-  const typeColor =
-    tournament.type === "open"
-      ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
-      : tournament.type === "team"
-        ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-        : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400";
+  const family = getEventFamily({ tournament_type: tournament.type as string, format_family: (tournament as any).format_family });
+  const heroGradient =
+    family === "team"
+      ? "from-teal-800 via-emerald-700 to-emerald-500"
+      : "from-violet-800 via-violet-700 to-indigo-500";
+  const ranked = (tournament as any).counts_for_elo;
 
   return (
+    <ThemeScope family={family}>
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
+      <section className={`bg-gradient-to-tr ${heroGradient} text-on-accent py-6 relative overflow-hidden`}>
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
@@ -205,11 +212,11 @@ export default function TournamentDetail() {
                 {/* Status + description */}
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${typeColor}`}
-                    >
-                      {typeLabel}
-                    </span>
+                    <EventTypeBadge
+                      tournament_type={tournament.type as string}
+                      format_family={(tournament as any).format_family}
+                    />
+                    {ranked != null && <RankedBadge ranked={ranked} />}
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-muted-foreground dark:bg-slate-700 dark:text-slate-300">
                       ✓ Completed
                     </span>
@@ -478,5 +485,6 @@ export default function TournamentDetail() {
         </div>
       </section>
     </div>
+    </ThemeScope>
   );
 }

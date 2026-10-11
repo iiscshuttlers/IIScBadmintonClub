@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Mic, Activity, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { StringTuner } from "@/lib/StringTuner";
 import { InfoModal } from "@/components/InfoModal";
 
@@ -39,11 +40,11 @@ export function AcousticTensionAnalyzer() {
         setFrequency(null);
       } catch (err: any) {
         if (err.message === "SECURE_CONTEXT_REQUIRED") {
-          alert("Microphone access requires a secure HTTPS connection or the Android App.");
+          toast.error("Microphone access requires a secure HTTPS connection or the Android App.");
         } else if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-          alert("Microphone access was denied. Please allow microphone access in your browser settings.");
+          toast.error("Microphone access was denied. Please allow microphone access in your browser settings.");
         } else {
-          alert("Failed to access microphone for acoustic tension reading.");
+          toast.error("Failed to access microphone for acoustic tension reading.");
         }
       }
     }

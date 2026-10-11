@@ -135,30 +135,16 @@ export function usePlayerPersonal(playerId: string | undefined) {
         };
       });
 
-      const matchIds = matches.map((m) => m.id);
       let motion: MotionSummary | null = null;
       let motionMatches: MotionMatch[] = [];
       let sensorAnalytics: SensorAnalytics[] = [];
-      
-      // Query tournament motion/sensors if the player has any matches
-      let tMotionRows: any[] = [];
-      let tSensorRows: any[] = [];
-      if (matchIds.length > 0) {
-        const [mRes, sRes] = await Promise.all([
-          supabase.from("match_motion_stats").select("*").eq("match_source", "tournament").in("match_id", matchIds).then(res => res),
-          supabase.from("match_sensor_analytics").select("*").eq("match_source", "tournament").in("match_id", matchIds).then(res => res)
-        ]);
-        if (mRes.data) tMotionRows = mRes.data;
-        if (sRes.data) tSensorRows = sRes.data;
-      }
 
-      // Also query self-tracked practice motion/sensors for this player
-      const [pMRes, pSRes] = await Promise.all([
-        supabase.from("match_motion_stats").select("*").eq("match_source", "practice").eq("recorded_by", playerId).then(res => res),
-        supabase.from("match_sensor_analytics").select("*").eq("match_source", "practice").eq("player_id", playerId).then(res => res)
-      ]);
-      const pMotionRows = pMRes.data || [];
-      const pSensorRows = pSRes.data || [];
+      // Motion/sensor analytics tables (match_motion_stats, match_sensor_analytics)
+      // were retired, so there is no phone/watch sensor data to load.
+      const tMotionRows: any[] = [];
+      const tSensorRows: any[] = [];
+      const pMotionRows: any[] = [];
+      const pSensorRows: any[] = [];
 
       const motionRows = [...tMotionRows, ...pMotionRows];
       const sensorRows = [...tSensorRows, ...pSensorRows];

@@ -100,6 +100,8 @@ export default function Navigation() {
     userEmail,
     userAvatar,
     pendingActionCount,
+    myTeamId,
+    teamActionCount,
   } = useNavigationAuth();
   const { theme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin, profile } = useAuth();
@@ -280,7 +282,7 @@ export default function Navigation() {
                   href={link.href === "/pulse" ? getPulseHref() : link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
-                  badge={link.href === "/pulse" ? (liveEventCount > 0 ? liveEventCount : (hasUnreadAnnouncements ? -1 : undefined)) : undefined}
+                  badge={link.href === "/pulse" ? (teamActionCount > 0 ? teamActionCount : (liveEventCount > 0 ? liveEventCount : (hasUnreadAnnouncements ? -1 : undefined))) : undefined}
                 />
               ))}
             </div>
@@ -565,11 +567,15 @@ export default function Navigation() {
                   <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
-                    {hasUnreadAnnouncements && (
+                    {teamActionCount > 0 ? (
+                      <span title="Action required for your team" className="absolute top-1 right-1.5 flex items-center justify-center">
+                        <span className="w-2.5 h-2.5 bg-amber-400 rounded-full border border-white dark:border-slate-950 animate-pulse" />
+                      </span>
+                    ) : hasUnreadAnnouncements ? (
                       <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
                         <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
                       </span>
-                    )}
+                    ) : null}
                   </button>
                 </a>
 

@@ -776,7 +776,18 @@ export function UmpireEngine({
             </p>
           </div>
 
-          <div className="flex flex-row items-center justify-center gap-2 max-w-xs mx-auto">
+          <div className="flex flex-row items-center justify-center gap-2 max-w-sm mx-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setDirectSetsText(match.setsHistory.join(","));
+                setDirectWinner(match.winner || null);
+                setIsDirectScoreOpen(true);
+              }}
+              className="flex-1 px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-wider border border-slate-700/80 flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
+            >
+              <Edit2 className="w-3.5 h-3.5 text-primary" /> Edit Score
+            </button>
             <button disabled={isSaving} onClick={saveMatchToProfile} className={`flex-1 px-3 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${hasSaved ? "bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-[var(--success)] border border-[color-mix(in_srgb,var(--success)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_25%,transparent)]" : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.25)]"}`}>
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? "Saving..." : hasSaved ? "Save Again" : "Save Result"}
             </button>
@@ -787,7 +798,7 @@ export function UmpireEngine({
             }} className="flex-1 px-3 py-2.5 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] rounded-xl font-bold text-[10px] uppercase tracking-wider border border-[color-mix(in_srgb,var(--info)_20%,transparent)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <RefreshCw className="w-3.5 h-3.5" /> Push Score
             </button>
-            <button disabled={isSaving} onClick={() => handleClose()} className="flex-1 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
+            <button disabled={isSaving} onClick={() => handleClose()} className="px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <X className="w-3.5 h-3.5 text-rose-400" /> Close
             </button>
           </div>

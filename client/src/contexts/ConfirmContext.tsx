@@ -3,9 +3,13 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ConfirmOptions {
   title: string;
-  description: string;
+  description?: string;
+  message?: string;
   confirmLabel?: string;
+  confirmText?: string;
+  cancelLabel?: string;
   confirmVariant?: "primary" | "danger";
+  confirmColor?: string;
 }
 
 interface ConfirmContextType {
@@ -44,9 +48,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         <ConfirmDialog
           open={open}
           title={options.title}
-          description={options.description}
-          confirmLabel={options.confirmLabel}
-          confirmVariant={options.confirmVariant}
+          description={options.description || options.message || ""}
+          confirmLabel={options.confirmLabel || options.confirmText || "Confirm"}
+          cancelLabel={options.cancelLabel || "Cancel"}
+          confirmVariant={options.confirmVariant || (options.confirmColor?.includes("red") ? "danger" : "primary")}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />

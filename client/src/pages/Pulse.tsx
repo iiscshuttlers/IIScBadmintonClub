@@ -22,6 +22,8 @@ import { LiveTab } from "@/components/pulse/LiveTab";
 import { AnnouncementsTab } from "@/components/pulse/AnnouncementsTab";
 import { EventsTab } from "@/components/pulse/EventsTab";
 import { DirectoryWrapper } from "@/components/players-directory/DirectoryWrapper";
+import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
+import { RankedBadge } from "@/components/tournament/RankedBadge";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -144,12 +146,6 @@ export default function Pulse() {
     ),
   ].sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""));
 
-  const getTypeLabel = (type: string) => {
-    if (type === "open") return "Open Tournament";
-    if (type === "team") return "Team Event";
-    if (type === "special") return "Special Event";
-    return type;
-  };
 
   const renderCard = (item: any | ArchivedTournament, liveMode = false) => {
     const isUpcoming = item.status === "draft";
@@ -176,17 +172,13 @@ export default function Pulse() {
               </span>
             )}
 
-            <span
-              className={`px-1.5 py-0.5 rounded border text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 truncate ${
-                item.type === "open"
-                  ? "bg-primary/5 border-primary/20 text-primary dark:bg-primary/10 dark:border-primary/30 dark:text-primary"
-                  : item.type === "team"
-                    ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-400"
-                    : "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:border-fuchsia-800/50 dark:text-fuchsia-400"
-              }`}
-            >
-              {getTypeLabel(item.type)}
-            </span>
+            <EventTypeBadge
+              tournament_type={item.tournament_type ?? item.type}
+              format_family={item.format_family}
+              className="shrink-0"
+            />
+
+            <RankedBadge ranked={item.counts_for_elo} compact className="shrink-0" />
 
             <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-muted-foreground dark:text-muted-foreground shrink-0 ml-auto pl-1 truncate">
               <Calendar className="w-3 h-3 shrink-0" />

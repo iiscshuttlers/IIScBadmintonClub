@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { EditVideoModal } from "./EditVideoModal";
 import { VideoPlayerModal } from "./VideoPlayerModal";
@@ -65,6 +66,7 @@ export function MatchCard({
   const p2 = match.player2;
   const isP1Winner = match.winner_id === p1?.id || match.winner_id === match.partner1?.id;
   const { isAdmin } = useAuth();
+  const { confirm } = useConfirm();
   const matchAlerts = useUserMatchAlerts(currentUser?.id);
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
@@ -243,7 +245,13 @@ export function MatchCard({
   const deleteMatch = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure you want to permanently delete this match?")) return;
+    const ok = await confirm({
+      title: "Delete Match?",
+      description: "Are you sure you want to permanently delete this match record?",
+      confirmLabel: "Delete",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
     const tableName = match.is_friendly === false ? "tournament_matches" : "matches";
     const { error } = await supabase.from(tableName).delete().eq("id", match.id);
     if (error) {

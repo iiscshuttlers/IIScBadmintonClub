@@ -35,11 +35,14 @@ export interface GeneratedTie {
 
 export type PoolAssignmentMethod = 'SEEDED_SNAKE' | 'RANDOM' | 'MANUAL';
 
+export type PlayoffFormat = 'KNOCKOUT' | 'CHAMPIONSHIP_POOL' | 'CHAMPIONSHIP_POOL_PLUS_FINAL';
+
 export interface PoolConfig {
   numPools: number;
   assignmentMethod: PoolAssignmentMethod;
   manualAssignments?: Record<string, string>; // teamId -> pool letter ('A', 'B', etc.)
-  advancingPerPool: number; // 1 or 2 teams advancing to knockouts
+  advancingPerPool: number; // 1, 2, 3, 4 teams advancing
+  playoffFormat?: PlayoffFormat;
   includeThirdPlaceMatch: boolean;
 }
 
@@ -313,6 +316,78 @@ export function generatePoolAndPlayoffTournament(
   const playoffTies: GeneratedTie[] = [];
   const startPlayoffRound = maxPoolRound + 1;
 
+  // 1. Championship Pool Format (Super League Round Robin between Qualifiers)
+  if (poolConfig.playoffFormat === 'CHAMPIONSHIP_POOL' || poolConfig.playoffFormat === 'CHAMPIONSHIP_POOL_PLUS_FINAL') {
+    const qualifierTeams: TeamParticipant[] = [];
+    const poolLetters = Array.from({ length: poolConfig.numPools }, (_, i) => String.fromCharCode(65 + i));
+    
+    poolLetters.forEach(p => {
+      for (let rank = 1; rank <= poolConfig.advancingPerPool; rank++) {
+        qualifierTeams.push({
+          id: `QUAL_${p}_${rank}`,
+          name: `Pool ${p} ${rank === 1 ? 'Winner' : rank === 2 ? 'Runner-up' : rank === 3 ? '3rd Place' : `${rank}th Place`}`,
+          short_name: `${p}${rank}`,
+          pool: 'SUPER'
+        });
+      }
+    });
+
+    const champFixtures = generateRoundRobinFixtures(qualifierTeams, 'SUPER', startPlayoffRound);
+    let maxChampRound = startPlayoffRound;
+
+    champFixtures.forEach((f, idx) => {
+      const origT1 = qualifierTeams.find(q => q.id === f.team_a_id);
+      const origT2 = qualifierTeams.find(q => q.id === f.team_b_id);
+      const roundIdx = f.round_number - startPlayoffRound + 1;
+
+      f.tie_code = `CHAMP_R${roundIdx}_${String(idx + 1).padStart(2, '0')}`;
+      f.stage = 'KNOCKOUT';
+      f.round_name = `Championship Stage - Round ${roundIdx}`;
+      f.team_a_id = null;
+      f.team_b_id = null;
+      f.team_a_label = origT1?.name || `Qualifier ${idx * 2 + 1}`;
+      f.team_b_label = origT2?.name || `Qualifier ${idx * 2 + 2}`;
+      if (f.round_number > maxChampRound) maxChampRound = f.round_number;
+      playoffTies.push(f);
+    });
+
+    if (poolConfig.playoffFormat === 'CHAMPIONSHIP_POOL_PLUS_FINAL') {
+      const finalTie: GeneratedTie = {
+        tie_code: 'FINAL',
+        stage: 'KNOCKOUT',
+        round_name: 'Championship Grand Final',
+        round_number: maxChampRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Championship Pool 1st Place',
+        team_b_label: 'Championship Pool 2nd Place',
+        state: 'SCHEDULED'
+      };
+      playoffTies.push(finalTie);
+
+      if (poolConfig.includeThirdPlaceMatch) {
+        playoffTies.push({
+          tie_code: '3RD_PLACE',
+          stage: 'KNOCKOUT',
+          round_name: '3rd Place Playoff',
+          round_number: maxChampRound + 1,
+          team_a_id: null,
+          team_b_id: null,
+          team_a_label: 'Championship Pool 3rd Place',
+          team_b_label: 'Championship Pool 4th Place',
+          state: 'SCHEDULED'
+        });
+      }
+    }
+
+    return {
+      poolTies,
+      playoffTies,
+      allTies: [...poolTies, ...playoffTies]
+    };
+  }
+
+  // 2. Knockout Playoffs
   if (poolConfig.numPools === 1) {
     // 1 Pool
     if (poolConfig.advancingPerPool === 2) {
@@ -328,6 +403,33 @@ export function generatePoolAndPlayoffTournament(
         team_b_label: 'Pool A 2nd Place',
         state: 'SCHEDULED'
       });
+    } else if (poolConfig.advancingPerPool === 3) {
+      // 2nd vs 3rd play-in, winner plays 1st
+      const playin: GeneratedTie = {
+        tie_code: 'PLAYIN_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Play-in Semifinal (2nd vs 3rd)',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A 2nd Place',
+        team_b_label: 'Pool A 3rd Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'B'
+      };
+      const finalTie: GeneratedTie = {
+        tie_code: 'FINAL',
+        stage: 'KNOCKOUT',
+        round_name: 'Championship Final',
+        round_number: startPlayoffRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A 1st Place (Bye)',
+        team_b_label: 'Winner of Play-in',
+        state: 'SCHEDULED'
+      };
+      playoffTies.push(playin, finalTie);
     } else if (poolConfig.advancingPerPool >= 4) {
       // Semifinals (1 vs 4, 2 vs 3) -> Final
       const sf1: GeneratedTie = {
@@ -388,62 +490,274 @@ export function generatePoolAndPlayoffTournament(
       }
     }
   } else if (poolConfig.numPools === 2) {
-    // 2 Pools: Top 2 from each -> Semifinals (A1 vs B2, B1 vs A2) -> Final
-    const sf1: GeneratedTie = {
-      tie_code: 'SF_01',
-      stage: 'KNOCKOUT',
-      round_name: 'Semifinal 1',
-      round_number: startPlayoffRound,
-      team_a_id: null,
-      team_b_id: null,
-      team_a_label: 'Pool A Winner (1st)',
-      team_b_label: 'Pool B Runner-up (2nd)',
-      state: 'SCHEDULED',
-      advances_to_tie_code: 'FINAL',
-      advances_to_slot: 'A'
-    };
-    const sf2: GeneratedTie = {
-      tie_code: 'SF_02',
-      stage: 'KNOCKOUT',
-      round_name: 'Semifinal 2',
-      round_number: startPlayoffRound,
-      team_a_id: null,
-      team_b_id: null,
-      team_a_label: 'Pool B Winner (1st)',
-      team_b_label: 'Pool A Runner-up (2nd)',
-      state: 'SCHEDULED',
-      advances_to_tie_code: 'FINAL',
-      advances_to_slot: 'B'
-    };
-    const finalTie: GeneratedTie = {
-      tie_code: 'FINAL',
-      stage: 'KNOCKOUT',
-      round_name: 'Championship Final',
-      round_number: startPlayoffRound + 1,
-      team_a_id: null,
-      team_b_id: null,
-      team_a_label: 'Winner of SF 1',
-      team_b_label: 'Winner of SF 2',
-      state: 'SCHEDULED'
-    };
-    playoffTies.push(sf1, sf2, finalTie);
-
-    if (poolConfig.includeThirdPlaceMatch) {
-      sf1.loser_advances_to_tie_code = '3RD_PLACE';
-      sf1.loser_advances_to_slot = 'A';
-      sf2.loser_advances_to_tie_code = '3RD_PLACE';
-      sf2.loser_advances_to_slot = 'B';
+    if (poolConfig.advancingPerPool === 1) {
+      // Top 1 from each -> Direct Final
       playoffTies.push({
-        tie_code: '3RD_PLACE',
+        tie_code: 'FINAL',
         stage: 'KNOCKOUT',
-        round_name: '3rd Place Playoff',
+        round_name: 'Championship Final',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Winner (1st)',
+        team_b_label: 'Pool B Winner (1st)',
+        state: 'SCHEDULED'
+      });
+    } else if (poolConfig.advancingPerPool === 2) {
+      // 2 Pools: Top 2 from each -> Semifinals (A1 vs B2, B1 vs A2) -> Final
+      const sf1: GeneratedTie = {
+        tie_code: 'SF_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 1',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Winner (1st)',
+        team_b_label: 'Pool B Runner-up (2nd)',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'A'
+      };
+      const sf2: GeneratedTie = {
+        tie_code: 'SF_02',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 2',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool B Winner (1st)',
+        team_b_label: 'Pool A Runner-up (2nd)',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'B'
+      };
+      const finalTie: GeneratedTie = {
+        tie_code: 'FINAL',
+        stage: 'KNOCKOUT',
+        round_name: 'Championship Final',
         round_number: startPlayoffRound + 1,
         team_a_id: null,
         team_b_id: null,
-        team_a_label: 'Loser of SF 1',
-        team_b_label: 'Loser of SF 2',
+        team_a_label: 'Winner of SF 1',
+        team_b_label: 'Winner of SF 2',
         state: 'SCHEDULED'
-      });
+      };
+      playoffTies.push(sf1, sf2, finalTie);
+
+      if (poolConfig.includeThirdPlaceMatch) {
+        sf1.loser_advances_to_tie_code = '3RD_PLACE';
+        sf1.loser_advances_to_slot = 'A';
+        sf2.loser_advances_to_tie_code = '3RD_PLACE';
+        sf2.loser_advances_to_slot = 'B';
+        playoffTies.push({
+          tie_code: '3RD_PLACE',
+          stage: 'KNOCKOUT',
+          round_name: '3rd Place Playoff',
+          round_number: startPlayoffRound + 1,
+          team_a_id: null,
+          team_b_id: null,
+          team_a_label: 'Loser of SF 1',
+          team_b_label: 'Loser of SF 2',
+          state: 'SCHEDULED'
+        });
+      }
+    } else if (poolConfig.advancingPerPool === 3) {
+      // 6 Teams (Olympic / BWF): Top 3 from Pool A & B
+      // Play-in 1: A2 vs B3 -> advances to SF2 against B1
+      // Play-in 2: B2 vs A3 -> advances to SF1 against A1
+      const playin1: GeneratedTie = {
+        tie_code: 'PLAYIN_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Play-in Elimination 1 (A2 vs B3)',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Runner-up (2nd)',
+        team_b_label: 'Pool B 3rd Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_02',
+        advances_to_slot: 'B'
+      };
+      const playin2: GeneratedTie = {
+        tie_code: 'PLAYIN_02',
+        stage: 'KNOCKOUT',
+        round_name: 'Play-in Elimination 2 (B2 vs A3)',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool B Runner-up (2nd)',
+        team_b_label: 'Pool A 3rd Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_01',
+        advances_to_slot: 'B'
+      };
+
+      const sf1: GeneratedTie = {
+        tie_code: 'SF_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 1',
+        round_number: startPlayoffRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Winner (1st, Bye)',
+        team_b_label: 'Winner of Play-in 2 (B2/A3)',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'A'
+      };
+      const sf2: GeneratedTie = {
+        tie_code: 'SF_02',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 2',
+        round_number: startPlayoffRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool B Winner (1st, Bye)',
+        team_b_label: 'Winner of Play-in 1 (A2/B3)',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'B'
+      };
+      const finalTie: GeneratedTie = {
+        tie_code: 'FINAL',
+        stage: 'KNOCKOUT',
+        round_name: 'Championship Final',
+        round_number: startPlayoffRound + 2,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Winner of SF 1',
+        team_b_label: 'Winner of SF 2',
+        state: 'SCHEDULED'
+      };
+      playoffTies.push(playin1, playin2, sf1, sf2, finalTie);
+
+      if (poolConfig.includeThirdPlaceMatch) {
+        sf1.loser_advances_to_tie_code = '3RD_PLACE';
+        sf1.loser_advances_to_slot = 'A';
+        sf2.loser_advances_to_tie_code = '3RD_PLACE';
+        sf2.loser_advances_to_slot = 'B';
+        playoffTies.push({
+          tie_code: '3RD_PLACE',
+          stage: 'KNOCKOUT',
+          round_name: '3rd Place Playoff',
+          round_number: startPlayoffRound + 2,
+          team_a_id: null,
+          team_b_id: null,
+          team_a_label: 'Loser of SF 1',
+          team_b_label: 'Loser of SF 2',
+          state: 'SCHEDULED'
+        });
+      }
+    } else if (poolConfig.advancingPerPool >= 4) {
+      // 8 Teams from 2 Pools -> Quarterfinals
+      const qf1: GeneratedTie = {
+        tie_code: 'QF_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Quarterfinal 1',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Winner (1st)',
+        team_b_label: 'Pool B 4th Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_01',
+        advances_to_slot: 'A'
+      };
+      const qf2: GeneratedTie = {
+        tie_code: 'QF_02',
+        stage: 'KNOCKOUT',
+        round_name: 'Quarterfinal 2',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool B Runner-up (2nd)',
+        team_b_label: 'Pool A 3rd Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_01',
+        advances_to_slot: 'B'
+      };
+      const qf3: GeneratedTie = {
+        tie_code: 'QF_03',
+        stage: 'KNOCKOUT',
+        round_name: 'Quarterfinal 3',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool B Winner (1st)',
+        team_b_label: 'Pool A 4th Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_02',
+        advances_to_slot: 'A'
+      };
+      const qf4: GeneratedTie = {
+        tie_code: 'QF_04',
+        stage: 'KNOCKOUT',
+        round_name: 'Quarterfinal 4',
+        round_number: startPlayoffRound,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Pool A Runner-up (2nd)',
+        team_b_label: 'Pool B 3rd Place',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'SF_02',
+        advances_to_slot: 'B'
+      };
+      const sf1: GeneratedTie = {
+        tie_code: 'SF_01',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 1',
+        round_number: startPlayoffRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Winner of QF 1',
+        team_b_label: 'Winner of QF 2',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'A'
+      };
+      const sf2: GeneratedTie = {
+        tie_code: 'SF_02',
+        stage: 'KNOCKOUT',
+        round_name: 'Semifinal 2',
+        round_number: startPlayoffRound + 1,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Winner of QF 3',
+        team_b_label: 'Winner of QF 4',
+        state: 'SCHEDULED',
+        advances_to_tie_code: 'FINAL',
+        advances_to_slot: 'B'
+      };
+      const finalTie: GeneratedTie = {
+        tie_code: 'FINAL',
+        stage: 'KNOCKOUT',
+        round_name: 'Championship Final',
+        round_number: startPlayoffRound + 2,
+        team_a_id: null,
+        team_b_id: null,
+        team_a_label: 'Winner of SF 1',
+        team_b_label: 'Winner of SF 2',
+        state: 'SCHEDULED'
+      };
+      playoffTies.push(qf1, qf2, qf3, qf4, sf1, sf2, finalTie);
+
+      if (poolConfig.includeThirdPlaceMatch) {
+        sf1.loser_advances_to_tie_code = '3RD_PLACE';
+        sf1.loser_advances_to_slot = 'A';
+        sf2.loser_advances_to_tie_code = '3RD_PLACE';
+        sf2.loser_advances_to_slot = 'B';
+        playoffTies.push({
+          tie_code: '3RD_PLACE',
+          stage: 'KNOCKOUT',
+          round_name: '3rd Place Playoff',
+          round_number: startPlayoffRound + 2,
+          team_a_id: null,
+          team_b_id: null,
+          team_a_label: 'Loser of SF 1',
+          team_b_label: 'Loser of SF 2',
+          state: 'SCHEDULED'
+        });
+      }
     }
   } else if (poolConfig.numPools >= 3) {
     // 3 or 4 Pools -> Quarterfinals (or Semifinals if top 1)

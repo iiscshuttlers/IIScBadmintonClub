@@ -8,6 +8,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { supabase } from "@/lib/supabase";
 
 /* ── Types ─────────────────────────────────────────────────────── */
@@ -63,6 +64,7 @@ export function AdminHistoryProvider({
   children: React.ReactNode;
 }) {
   const { session, isAdmin } = useAuth();
+  const { confirm } = useConfirm();
   const [undoStack, setUndoStack] = useState<HistoryEntry[]>([]);
   const [redoStack, setRedoStack] = useState<HistoryEntry[]>([]);
   const [recycleBinCount, setRecycleBinCount] = useState(0);
@@ -276,7 +278,13 @@ export function AdminHistoryProvider({
 
   const revertAction = useCallback(async (action: HistoryEntry) => {
     if (busy.current) return;
-    if (!confirm(`Are you sure you want to revert this specific action: "${action.label}"?\n\nCaution: If newer actions modified the same record, this may overwrite them.`)) return;
+    const ok = await confirm({
+      title: "Revert Specific Action?",
+      description: `Are you sure you want to revert "${action.label}"? Caution: If newer actions modified the same record, this may overwrite them.`,
+      confirmLabel: "Revert Action",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
     
     busy.current = true;
     try {

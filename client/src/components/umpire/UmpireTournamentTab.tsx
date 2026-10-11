@@ -87,6 +87,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [rescheduleCourt, setRescheduleCourt] = useState("");
   const [savingReschedule, setSavingReschedule] = useState(false);
   const [activeTieForConsole, setActiveTieForConsole] = useState<{ tie: any; tournament: any } | null>(null);
+  const [pendingTies, setPendingTies] = useState<any[]>([]);
 
   const openReschedule = (m: TournamentMatchForUmpire) => {
     setRescheduleAt(toLocalDateTimeInput(m.scheduled_at));
@@ -231,9 +232,27 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
     });
 
     setAllMatches(enriched);
-    // Keep an open match-detail screen in step with the refreshed data, so a
-    // renamed team updates in front of the umpire instead of going stale.
     setSelectedMatch((prev) => (prev ? enriched.find((m) => m.id === prev.id) ?? prev : prev));
+
+    // Fetch team ties needing official attention (unrevealed or pending lineups)
+    try {
+      const { data: tiesData } = await supabase
+        .from("tournament_ties" as any)
+        .select(`
+          *,
+          tournament:tournaments(name),
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+        `)
+        .in("tournament_id", tournamentIds)
+        .neq("state", "COMPLETED")
+        .order("created_at", { ascending: true });
+
+      setPendingTies(tiesData || []);
+    } catch (tieErr) {
+      console.warn("Could not load pending ties for umpire tab", tieErr);
+    }
+
     setLoading(false);
   }, []);
 
@@ -280,10 +299,12 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   );
 
   if (!allMatches.length) return (
-    <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-      <Swords className="w-12 h-12 text-muted-foreground" />
-      <p className="text-muted-foreground font-bold">No tournament matches need umpiring right now.</p>
-      <p className="text-muted-foreground text-sm">Matches appear here when an active tournament has scheduled or in-progress matches.</p>
+    <div className="flex items-center justify-center gap-3 py-6 px-4 rounded-xl bg-slate-950/40 border border-slate-800/60 text-center sm:text-left">
+      <Swords className="w-5 h-5 text-slate-500 shrink-0" />
+      <div>
+        <p className="text-xs font-bold text-slate-300">No tournament matches need umpiring right now.</p>
+        <p className="text-[11px] text-slate-500">Matches appear here when scheduled or in-progress matches exist in the active tournament.</p>
+      </div>
     </div>
   );
 
@@ -328,6 +349,60 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
     return (
       <div className="space-y-4">
+        {/* Team Ties Requiring Attention */}
+        {pendingTies.length > 0 && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-800/80 border border-amber-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flag className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-black text-amber-200 uppercase tracking-wider">
+                  Team Ties Requiring Umpire Attention ({pendingTies.length})
+                </h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {pendingTies.map((tie) => {
+                const bothLocked = tie.lineup_locked_a && tie.lineup_locked_b;
+                const revealed = tie.lineup_revealed;
+
+                return (
+                  <div 
+                    key={tie.id} 
+                    className="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-slate-100 flex items-center gap-1.5">
+                        <span className="font-mono text-primary">{tie.tie_code}</span>
+                        <span>{tie.team_a?.short_name || 'Team A'} vs {tie.team_b?.short_name || 'Team B'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                          bothLocked ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'
+                        }`}>
+                          {bothLocked ? 'Lineups Ready' : 'Lineups Incomplete'}
+                        </span>
+                        {bothLocked && !revealed && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">
+                            Awaiting Reveal
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setActiveTieForConsole({ tie, tournament: tie.tournament })}
+                      className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1 transition"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Arbiter Desk
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {allMatches.some((m) => m.status === "scheduled" && m.scheduled_at) && (
           <div className="mb-6 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -898,23 +973,26 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
         {/* Team Tie Lineup & Reveal Console Modal */}
         {activeTieForConsole && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 my-8 space-y-4">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-xs font-black uppercase text-slate-400">Match Official Desk</span>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+              <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <span className="text-xs font-black uppercase text-slate-400 tracking-wider">Match Official Desk · Tie Arbiter</span>
                 <button
                   type="button"
                   onClick={() => setActiveTieForConsole(null)}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  aria-label="Close"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <TieUmpireConsole
-                tie={activeTieForConsole.tie}
-                tournament={activeTieForConsole.tournament}
-                onClose={() => setActiveTieForConsole(null)}
-              />
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+                <TieUmpireConsole
+                  tie={activeTieForConsole.tie}
+                  tournament={activeTieForConsole.tournament}
+                  onClose={() => setActiveTieForConsole(null)}
+                />
+              </div>
             </div>
           </div>
         )}

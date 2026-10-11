@@ -84,7 +84,9 @@ export async function fetchFeedMatches(
     .in("status", ["scheduled", "in_progress"])
     .neq("tournaments.status", "deleted");
 
-  if (tournamentFilter !== "all") {
+  const isTournamentSpecific = !!tournamentFilter && tournamentFilter !== "all";
+
+  if (isTournamentSpecific) {
     friendlyQuery = friendlyQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // Don't fetch friendly matches for a specific tournament
     tourneyCompletedQuery = tourneyCompletedQuery.eq("tournament_id", tournamentFilter);
     tourneyUpcomingQuery = tourneyUpcomingQuery.eq("tournament_id", tournamentFilter);
@@ -132,7 +134,7 @@ export async function fetchFeedMatches(
       { data: completedData, error: completedError },
       { data: upcomingData, error: upcomingError }
     ] = await Promise.all([
-      friendlyQuery.order("created_at", { ascending: false }).limit(limit),
+      isTournamentSpecific ? Promise.resolve({ data: [], error: null }) : friendlyQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyCompletedQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyUpcomingQuery.order("scheduled_at", { ascending: true }).limit(limit)
     ]);
@@ -143,6 +145,7 @@ export async function fetchFeedMatches(
   
     const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
       .filter((m: any) => {
+        if (isTournamentSpecific && m.tournament_id !== tournamentFilter) return false;
         const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
         const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
         return hasTeam1 && hasTeam2;

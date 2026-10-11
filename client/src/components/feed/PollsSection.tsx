@@ -5,6 +5,7 @@ import { BarChart2, CheckCircle2, Plus, Trash2, Save, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 export interface PollOption {
   id: string;
@@ -294,6 +295,7 @@ function CreatePollForm({
 
 export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
   const { profile, session, isMasterAdmin } = useAuth();
+  const { confirm } = useConfirm();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -355,7 +357,13 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
   };
 
   const handleDelete = async (pollId: string) => {
-    if (!confirm("Are you sure you want to delete this poll?")) return;
+    const ok = await confirm({
+      title: "Delete Poll?",
+      description: "Are you sure you want to permanently delete this poll?",
+      confirmLabel: "Delete Poll",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
     const updated = polls.filter(p => p.id !== pollId);
     setPolls(updated);
     await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
@@ -363,7 +371,13 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
   };
 
   const handleNotify = async (poll: Poll) => {
-    if (!confirm("Send a push notification to all users about this poll?")) return;
+    const ok = await confirm({
+      title: "Broadcast Notification?",
+      description: `Send a push notification to all users about "${poll.question}"?`,
+      confirmLabel: "Send Broadcast",
+      confirmVariant: "primary"
+    });
+    if (!ok) return;
     toast.info("Sending push notification...");
     try {
       await supabase.functions.invoke("send-announcement", {

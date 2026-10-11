@@ -155,7 +155,7 @@ export function ResolveGuestsModal({
     const initialGuests = guestProfiles || [];
 
     // Ensure we have registered players for matching
-    let registered = (allPlayers || []).filter(p => !p.is_guest);
+    let registered: any[] = (allPlayers || []).filter(p => !p.is_guest);
     if (registered.length === 0) {
       const { data: dbPlayers } = await supabase
         .from("players")

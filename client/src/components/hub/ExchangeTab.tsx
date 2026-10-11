@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { supabase } from "@/lib/supabase";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +36,7 @@ interface Listing {
 export default function ExchangeTab() {
   const [, setLocation] = useLocation();
   const { session } = useAuth();
+  const { confirm } = useConfirm();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -171,7 +173,13 @@ export default function ExchangeTab() {
 
   const deleteListing = async (id: string) => {
     setMenuOpenId(null);
-    if (!confirm("Delete this listing permanently?")) return;
+    const ok = await confirm({
+      title: "Delete Listing?",
+      description: "Are you sure you want to permanently delete this marketplace listing?",
+      confirmLabel: "Delete Listing",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
     setBusyId(id);
     const listing = listings.find(l => l.id === id);
     const { error } = await supabase.from('marketplace_listings').delete().eq('id', id);

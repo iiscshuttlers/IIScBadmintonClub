@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MapPin,
   User,
@@ -6,13 +6,9 @@ import {
   Users,
   Heart,
   Instagram,
-  UserPlus,
-  UserCheck,
-  Swords,
 } from "lucide-react";
 import type { PlayerProfileType } from "@/types";
 import { getEloTier } from "@/lib/tiers";
-import { useSocialActions } from "@/hooks/useSocial";
 
 interface PlayerActionBarProps {
   player: PlayerProfileType;
@@ -37,34 +33,6 @@ export function PlayerActionBar({
   setIsChallengeModalOpen,
   eloRank,
 }: PlayerActionBarProps) {
-  const { handleToggleFollow, handleBuddyAction } = useSocialActions();
-
-  const isFollowing = ownPlayerProfile?.following?.includes(player.id) ?? false;
-  
-  const buddyStatus = useMemo(() => {
-    if (!ownPlayerProfile || !player) return null;
-    const isBuddy = ownPlayerProfile.buddies?.includes(player.id) || player.buddies?.includes(ownPlayerProfile.id);
-    if (isBuddy) return 'accepted';
-    
-    // Check if I sent request
-    if (ownPlayerProfile.buddyRequests?.includes(player.id)) return 'sent';
-    
-    // Check if they sent request
-    if (player.buddyRequests?.includes(ownPlayerProfile.id)) return 'received';
-    
-    return null;
-  }, [ownPlayerProfile, player]);
-
-  const onToggleFollow = () => {
-    if (!player.id || !ownPlayerProfile) return;
-    handleToggleFollow({ targetId: player.id, targetName: player.fullName });
-  };
-
-  const onBuddyAction = (action: 'send' | 'cancel' | 'accept' | 'remove') => {
-    if (!player.id || !ownPlayerProfile) return;
-    handleBuddyAction({ playerId: player.id, action, receiverName: player.fullName });
-  };
-
   return (
     <div className="flex flex-col gap-5 w-full lg:w-2/3">
       {/* Instagram link */}

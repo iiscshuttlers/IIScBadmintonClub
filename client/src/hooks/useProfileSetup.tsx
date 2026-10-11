@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { playerService } from "@/services/playerService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { optimizeImage } from "@/lib/imageUtils";
 import { withTimeout } from "@/lib/authUtils";
 import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
@@ -22,6 +23,7 @@ export function useProfileSetup() {
   const { id: paramId } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
   const { session, profile: authProfile, isInitializing, isAdmin } = useAuth();
+  const { confirm } = useConfirm();
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const profileLoadedRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
@@ -220,7 +222,13 @@ export function useProfileSetup() {
   }, [isInitializing, session, paramId]);
 
   const handleSignOut = async () => {
-    if (confirm("Are you sure you want to sign out?")) {
+    const ok = await confirm({
+      title: "Sign Out?",
+      description: "Are you sure you want to sign out of your account?",
+      confirmLabel: "Sign Out",
+      confirmVariant: "danger"
+    });
+    if (ok) {
       await supabase.auth.signOut();
       setLocation("/join");
     }

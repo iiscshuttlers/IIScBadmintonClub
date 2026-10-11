@@ -137,7 +137,6 @@ export function formatPlayerData(data: any) {
     isApproved: data.is_approved,
     role: data.role ?? 'player',
     buddies: data.buddies || [],
-    buddyRequests: data.buddy_requests || [],
     elo_rating: data.elo_rating,
     singles_elo: data.singles_elo,
     doubles_elo: data.doubles_elo,

@@ -184,7 +184,6 @@ export interface PlayerProfileType {
   isApproved?: boolean;
   role?: 'master_admin' | 'admin' | 'umpire' | 'player';
   buddies?: string[];
-  buddyRequests?: string[];
   singles_record?: string;
   doubles_record?: string;
   mixed_record?: string;

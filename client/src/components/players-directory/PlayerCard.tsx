@@ -90,11 +90,7 @@ interface PlayerCardProps {
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
   onLogMatch?: (id: string) => void;
-  onBuddyAction?: (id: string, action: 'send'|'cancel'|'accept'|'remove') => void;
   onToggleFollow?: (id: string) => void;
-  isBuddy?: boolean;
-  hasSentRequest?: boolean;
-  hasReceivedRequest?: boolean;
   isFollowing?: boolean;
   currentUserName?: string;
   currentUserId?: string;
@@ -110,11 +106,7 @@ export function PlayerCard({
   onDelete,
   onEdit,
   onLogMatch,
-  onBuddyAction,
   onToggleFollow,
-  isBuddy = false,
-  hasSentRequest = false,
-  hasReceivedRequest = false,
   isFollowing = false,
   currentUserName,
   currentUserId,
@@ -427,51 +419,10 @@ export function PlayerCard({
         </div>
         
         {/* ACTION BUTTONS */}
-        {isPersonalView && !isOwn && (onBuddyAction || onToggleFollow) && (
+        {isPersonalView && !isOwn && onToggleFollow && (
           <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
-            {/* Row 1: Social actions (buddy + follow) — full-width pills */}
+            {/* Row 1: Follow action — full-width pill */}
             <div className="flex gap-2">
-              {onBuddyAction && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isBuddy) {
-                      if (confirm("Are you sure you want to remove this buddy?")) {
-                        onBuddyAction(player.id, 'remove');
-                      }
-                    } else if (hasReceivedRequest) {
-                      onBuddyAction(player.id, 'accept');
-                    } else if (hasSentRequest) {
-                      if (confirm("Are you sure you want to cancel the buddy request?")) {
-                        onBuddyAction(player.id, 'cancel');
-                      }
-                    } else {
-                      onBuddyAction(player.id, 'send');
-                    }
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
-                    isBuddy
-                      ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800/50"
-                      : hasReceivedRequest
-                      ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/50"
-                      : hasSentRequest
-                      ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
-                      : "text-muted-foreground dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20"
-                  }`}
-                  title={isBuddy ? "Remove Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
-                >
-                  {isBuddy ? (
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 8v-1c0-2.66 5.33-4 8-4s8 1.34 8 4v1H3z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                  )}
-                  <span>{isBuddy ? "Buddy" : hasReceivedRequest ? "Accept" : hasSentRequest ? "Pending" : "Add Buddy"}</span>
-                </button>
-              )}
               {onToggleFollow && (
                 <button
                   onClick={(e) => {

@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
-import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX, ChevronDown, ChevronUp, Clock, Hash } from "lucide-react";
+import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX, ChevronDown, ChevronUp, Clock, Hash, Search, Filter, CheckCircle2, User, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
@@ -13,6 +13,7 @@ import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTournamentTab";
 import { toast } from "sonner";
 import { recoverMatchFromTournamentRow, splitSets } from "@/lib/umpire/resumeRecovery";
+import { RecentMatchCard, type RecentMatchData } from "./RecentMatchCard";
 
 const SETUP_STORAGE_KEY = "umpire_setup_matches_v1";
 
@@ -273,6 +274,15 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
     }
 
     setActiveMatches(prev => {
+      // If this match is already in activeMatches, switch to it
+      const existingIdx = prev.findIndex(item => ('id' in item && 'id' in m && item.id === m.id));
+      if (existingIdx !== -1) {
+        // Replace existing with the newly passed state (e.g. edit state) and switch tab
+        const updated = [...prev];
+        updated[existingIdx] = m;
+        setActiveMatchIndex(existingIdx);
+        return updated;
+      }
       setActiveMatchIndex(prev.length);
       return [...prev, m];
     });
@@ -280,55 +290,59 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
 
   const showNewMatch = activeMatches.length === 0 || activeMatchIndex === -1;
   const currentMatch = activeMatches[activeMatchIndex];
-  const isTournamentMatch = currentMatch && 'id' in currentMatch && 'match_code' in currentMatch;
+  const isEditMatch = Boolean(currentMatch && 'is_edit_mode' in currentMatch && (currentMatch as any).is_edit_mode);
+  const isTournamentMatch = !isEditMatch && Boolean(currentMatch && 'id' in currentMatch && 'match_code' in currentMatch);
+
 
   return (
     <div className="w-full max-w-5xl mx-auto p-2 sm:p-4 space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-2">
-        {activeMatches.map((m, idx) => {
-          let mLabel = `Match ${idx + 1}`;
-          if ('category' in m) {
-            const num = ('match_code' in m && m.match_code) ? m.match_code : ('matchNumber' in m && m.matchNumber) ? m.matchNumber : `${idx + 1}`;
-            mLabel = `${m.category} ${num}`;
-          }
-          return (
-            <button
-              key={('id' in m ? m.id : idx)}
-              onClick={() => setActiveMatchIndex(idx)}
-              className={`whitespace-nowrap px-4 py-2 rounded-t-xl text-sm font-bold transition-all border-b-2 ${
-                activeMatchIndex === idx
-                  ? "bg-slate-800 border-primary text-primary"
-                  : "bg-slate-900/50 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {mLabel}
-                <div 
-                  onClick={(e) => { e.stopPropagation(); removeMatch(idx); }}
-                  className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition"
-                >
-                  <span className="text-xs">×</span>
+      {/* Tabs - Only show when there are in-progress or queued active matches */}
+      {activeMatches.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-2">
+          {activeMatches.map((m, idx) => {
+            let mLabel = `Match ${idx + 1}`;
+            if ('category' in m) {
+              const num = ('match_code' in m && m.match_code) ? m.match_code : ('matchNumber' in m && m.matchNumber) ? m.matchNumber : `${idx + 1}`;
+              mLabel = `${m.category} ${num}`;
+            }
+            return (
+              <button
+                key={('id' in m ? m.id : idx)}
+                onClick={() => setActiveMatchIndex(idx)}
+                className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+                  activeMatchIndex === idx
+                    ? "bg-primary text-slate-950 border-primary shadow-sm shadow-primary/20"
+                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>{mLabel}</span>
+                  <div 
+                    onClick={(e) => { e.stopPropagation(); removeMatch(idx); }}
+                    className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-black/20 text-current transition"
+                  >
+                    <span className="text-xs">×</span>
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
-        <button
-          onClick={() => {
-            try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
-            resetUmpireStore();
-            setActiveMatchIndex(-1);
-          }}
-          className={`whitespace-nowrap px-4 py-2 rounded-t-xl text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${
-            showNewMatch
-              ? "bg-slate-800 border-primary text-primary"
-              : "bg-slate-900/50 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-          }`}
-        >
-          <span className="text-lg leading-none">+</span> New Match
-        </button>
-      </div>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => {
+              try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+              resetUmpireStore();
+              setActiveMatchIndex(-1);
+            }}
+            className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 ${
+              showNewMatch
+                ? "bg-slate-800 border-slate-700 text-white shadow-xs"
+                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+            }`}
+          >
+            <span className="text-sm leading-none">+</span> New Match
+          </button>
+        </div>
+      )}
 
       {!showNewMatch && currentMatch && (
         <div className="relative border border-slate-700 rounded-[2rem] overflow-hidden bg-slate-900 shadow-xl">
@@ -347,53 +361,87 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
 
       {showNewMatch && (
         <div className="space-y-6">
-          <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-            <h2 className="text-xl font-black text-foreground mb-5">Start New Match</h2>
-            <div className="mb-6 flex gap-3">
-              <button
-                onClick={() => startMatch({
-                  id: crypto.randomUUID(),
-                  is_edit_mode: false,
-                })}
-                className="px-5 py-3 rounded-xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform flex items-center gap-2"
-              >
-                <Swords className="w-5 h-5" /> Start Friendly Match
-              </button>
+          {/* Umpire Hub Compact Header & Actions */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-wider">
+                    <Swords className="w-3 h-3" />
+                    Umpire Desk
+                  </span>
+                  <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                    Start or Officiate Match
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Launch a friendly scrimmage with BWF scoring rules or pick assigned tournament matches.
+                </p>
+              </div>
+
+              {/* Start Friendly Match Button */}
+              <div className="shrink-0">
+                <button
+                  onClick={() => startMatch({
+                    id: crypto.randomUUID(),
+                    is_edit_mode: false,
+                  })}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-slate-950 font-black text-xs shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Swords className="w-3.5 h-3.5 text-slate-950" />
+                  Start Friendly Match
+                </button>
+              </div>
             </div>
-            
+
+            {/* Tournament Matches Section */}
             {hasActiveTournament && canRunTournament && (
-              <>
-                <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
+              <div className="mt-4 pt-3.5 border-t border-slate-800/80">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                  <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider">Tournament Matches</h3>
+                </div>
                 <UmpireTournamentTab onStartMatch={startMatch} />
-              </>
+              </div>
             )}
 
-            {/* Show reason why tournament umpiring is unavailable */}
+            {/* Informative banner when tournament umpiring is unavailable */}
             {!canRunTournament && (
-              <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-800/50 p-4 flex gap-3 items-start">
+              <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 flex gap-3 items-start">
                 {!hasActiveTournament ? (
                   <>
-                    <CalendarX className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                    <CalendarX className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-slate-300">No Active Tournament</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Tournament umpiring is only available when an official tournament is in progress. Check back when one is scheduled.</p>
+                      <p className="text-xs font-bold text-slate-300">No Active Tournament Scheduled</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Official tournament fixtures and line-ups appear automatically when a tournament is underway. You can always score friendly matches above.
+                      </p>
                     </div>
                   </>
                 ) : (
                   <>
                     <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-amber-300">Umpire Access Required</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Tournament match umpiring requires the <span className="text-amber-400 font-semibold">Umpire</span> or <span className="text-amber-400 font-semibold">Admin</span> role. Contact an admin to get access.</p>
+                      <p className="text-xs font-bold text-amber-300">Umpire Role Required for Tournament Fixtures</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        You are currently signed in without the official Umpire or Admin credential. Contact the club desk to unlock tournament scorekeeping.
+                      </p>
                     </div>
                   </>
                 )}
               </div>
             )}
           </div>
-          {hasActiveTournament && canRunTournament && (
+
+          {/* Recent Submissions Log */}
+          {hasActiveTournament && canRunTournament ? (
             <RecentUmpireMatches
               isTournament={true}
+              onEdit={startMatch}
+            />
+          ) : (
+            <RecentUmpireMatches
+              isTournament={false}
               onEdit={startMatch}
             />
           )}
@@ -427,57 +475,95 @@ type RecentMatch = {
 
 function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditState) => void, isTournament: boolean }) {
   const { profile, isAdmin } = useAuth();
-  const [recent, setRecent] = useState<RecentMatch[]>([]);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [recent, setRecent] = useState<RecentMatchData[]>([]);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const [filterFormat, setFilterFormat] = useState<string>("ALL");
+  const [filterScoredByMe, setFilterScoredByMe] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState<number>(8);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!profile?.id) return;
     const fetchRecent = async () => {
-      let data;
+      let data: any[] = [];
       if (isTournament) {
         let query = supabase
           .from("tournament_matches")
-          .select("id, match_code, player1_id, player2_id, team1_partner_id:player3_id, team2_partner_id:player4_id, winner_id, score, sets_history, round:round_name, category, created_at:scored_at, team1_label, team2_label, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!tournament_matches_player3_id_fkey(full_name, gender), partner2:players!tournament_matches_player4_id_fkey(full_name, gender)")
+          .select(`
+            id, 
+            match_code, 
+            rubber_label,
+            rubber_order,
+            court_number,
+            player1_id, 
+            player2_id, 
+            team1_partner_id:player3_id, 
+            team2_partner_id:player4_id, 
+            winner_id, 
+            winner_side,
+            score, 
+            sets_history, 
+            round:round_name, 
+            category, 
+            created_at:scored_at,
+            scored_at, 
+            scored_by,
+            team1_label, 
+            team2_label, 
+            player1:players!player1_id(full_name, gender), 
+            player2:players!player2_id(full_name, gender), 
+            partner1:players!player3_id(full_name, gender), 
+            partner2:players!player4_id(full_name, gender),
+            tie:tournament_ties(
+              id,
+              tie_code,
+              team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+              team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+            )
+          `)
           .eq("status", "completed")
           .order("scored_at", { ascending: false });
+
         if (isAdmin) {
           query = query.limit(500);
         } else {
-          query = query.eq("scored_by", profile.id).limit(100);
+          query = query.limit(100);
         }
         const res = await query;
         if (res.error) {
+          console.error("Failed to load tournament submissions:", res.error);
           if (intervalRef.current) clearInterval(intervalRef.current);
           return;
         }
-        data = res.data?.map(m => ({ ...m, is_friendly: false, is_tournament_match: true }));
+        data = res.data?.map(m => ({ ...m, is_friendly: false, is_tournament_match: true })) || [];
       } else {
         let query = supabase
           .from("matches")
           .select("*, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!team1_partner_id(full_name, gender), partner2:players!team2_partner_id(full_name, gender)")
-          .eq("is_friendly", true)
+          .in("status", ["confirmed", "pending"])
           .order("created_at", { ascending: false });
+
         if (isAdmin) {
           query = query.limit(500);
         } else {
-          query = query.eq("submitted_by", profile.id).limit(100);
+          query = query.limit(100);
         }
         const res = await query;
         if (res.error) {
+          console.error("Failed to load friendly match submissions:", res.error);
           if (intervalRef.current) clearInterval(intervalRef.current);
           return;
         }
-        data = res.data;
+        data = res.data || [];
       }
       if (data) setRecent(data as any);
     };
+
     fetchRecent();
-    intervalRef.current = setInterval(fetchRecent, 30000);
+    intervalRef.current = setInterval(fetchRecent, 15000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -485,164 +571,184 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
 
   if (recent.length === 0) return null;
 
+  // Filter pipeline
+  const filteredMatches = recent.filter(m => {
+    const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
+    if (isByeMatch) return false;
+
+    // Filter by Scored By Me
+    if (filterScoredByMe && profile?.id && m.scored_by !== profile.id) {
+      return false;
+    }
+
+    // Resolve Category
+    const p1g = m.player1?.gender?.toLowerCase();
+    const p2g = m.player2?.gender?.toLowerCase();
+    const p3g = m.partner1?.gender?.toLowerCase();
+    const p4g = m.partner2?.gender?.toLowerCase();
+
+    let matchFormat = (m.category || "").toUpperCase();
+    if (matchFormat === "DOUBLES" || (!matchFormat && (m.partner1 || m.partner2))) {
+      const t1HasM = p1g === "male" || p3g === "male";
+      const t1HasF = p1g === "female" || p3g === "female";
+      const t2HasM = p2g === "male" || p4g === "male";
+      const t2HasF = p2g === "female" || p4g === "female";
+      if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
+      else if (p1g === "female" && p3g === "female") matchFormat = "WD";
+      else matchFormat = "MD";
+    } else if (matchFormat === "SINGLES" || !matchFormat) {
+      if (p1g === "female" || p2g === "female") matchFormat = "WS";
+      else matchFormat = "MS";
+    }
+
+    if (filterFormat !== "ALL" && matchFormat !== filterFormat) return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const p1Name = m.player1?.full_name?.toLowerCase() || "";
+      const p2Name = m.player2?.full_name?.toLowerCase() || "";
+      const p3Name = m.partner1?.full_name?.toLowerCase() || "";
+      const p4Name = m.partner2?.full_name?.toLowerCase() || "";
+      const t1Label = m.team1_label?.toLowerCase() || "";
+      const t2Label = m.team2_label?.toLowerCase() || "";
+      const mCode = m.match_code?.toLowerCase() || "";
+      const teamAName = m.tie?.team_a?.name?.toLowerCase() || "";
+      const teamBName = m.tie?.team_b?.name?.toLowerCase() || "";
+
+      if (
+        !p1Name.includes(q) && 
+        !p2Name.includes(q) && 
+        !p3Name.includes(q) && 
+        !p4Name.includes(q) && 
+        !t1Label.includes(q) && 
+        !t2Label.includes(q) &&
+        !mCode.includes(q) &&
+        !teamAName.includes(q) &&
+        !teamBName.includes(q)
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  const displayedMatches = filteredMatches.slice(0, visibleCount);
+
   return (
-    <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
+    <div className="bg-slate-900 rounded-[2rem] p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+      {/* Header Bar */}
       <div 
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 cursor-pointer select-none"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-2">
-          <h3 className="text-xl font-black text-foreground">Recent Submissions</h3>
-          <div className="p-1 rounded-full hover:bg-slate-800 transition text-slate-400">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-foreground flex items-center gap-2">
+              Recent Submissions
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60 font-mono">
+                {filteredMatches.length}
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Live score submissions with a 10-minute edit grace period and scorecard review.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="p-1.5 rounded-full hover:bg-slate-800 transition text-slate-400">
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </div>
         </div>
-        {isExpanded && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="text"
-              placeholder="Search matches..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-slate-900/50 text-white text-xs rounded-xl border border-slate-700 px-3 py-2 outline-none focus:border-primary w-full sm:w-48"
-            />
-            <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar">
-              {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilterFormat(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
-                    filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
+      </div>
+
+      {/* Filter and Search Bar (Kept accessible when expanded) */}
+      {isExpanded && (
+        <div className="pt-2 border-t border-slate-800/80 space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search player, team, code, rubber..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-950/60 text-white text-xs rounded-xl border border-slate-800 pl-9 pr-3 py-2 outline-none focus:border-primary transition"
+              />
+            </div>
+
+            {/* Filter Toggle: All vs Scored By Me */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFilterScoredByMe(!filterScoredByMe)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                  filterScoredByMe
+                    ? "bg-primary text-slate-950 border-primary font-black shadow-xs"
+                    : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>My Submissions Only</span>
+              </button>
+
+              {/* Category Pills */}
+              <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800 overflow-x-auto hide-scrollbar">
+                {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilterFormat(f)}
+                    className={`px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+                      filterFormat === f 
+                        ? "bg-primary text-slate-950 shadow-xs" 
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </div>
-      
-      {isExpanded && (
-        <div className="space-y-3 mt-4">
-          {recent.filter(m => {
-          const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
-          if (isByeMatch) return false;
 
-          const p1g = m.player1?.gender?.toLowerCase();
-          const p2g = m.player2?.gender?.toLowerCase();
-          const p3g = m.partner1?.gender?.toLowerCase();
-          const p4g = m.partner2?.gender?.toLowerCase();
-
-          let matchFormat = m.category;
-          if (m.category === "Doubles") {
-            const t1HasM = p1g === "male" || p3g === "male";
-            const t1HasF = p1g === "female" || p3g === "female";
-            const t2HasM = p2g === "male" || p4g === "male";
-            const t2HasF = p2g === "female" || p4g === "female";
-            
-            if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
-            else if (p1g === "male" && p3g === "male" && p2g === "male" && p4g === "male") matchFormat = "MD";
-            else if (p1g === "female" && p3g === "female" && p2g === "female" && p4g === "female") matchFormat = "WD";
-          } else if (m.category === "Singles") {
-            if (p1g === "male" && p2g === "male") matchFormat = "MS";
-            else if (p1g === "female" && p2g === "female") matchFormat = "WS";
-          }
-          
-          if (filterFormat !== "ALL" && matchFormat !== filterFormat) return false;
-
-          if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase().trim();
-            const p1Name = m.player1?.full_name?.toLowerCase() || "";
-            const p2Name = m.player2?.full_name?.toLowerCase() || "";
-            const p3Name = m.partner1?.full_name?.toLowerCase() || "";
-            const p4Name = m.partner2?.full_name?.toLowerCase() || "";
-            const t1Label = m.team1_label?.toLowerCase() || "";
-            const t2Label = m.team2_label?.toLowerCase() || "";
-            if (!p1Name.includes(q) && !p2Name.includes(q) && !p3Name.includes(q) && !p4Name.includes(q) && !t1Label.includes(q) && !t2Label.includes(q)) {
-              return false;
-            }
-          }
-
-          return true;
-        }).map(m => {
-          const team1Won = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-          const team2Won = m.winner_id === m.player2_id || m.winner_id === m.team2_partner_id;
-          
-          const p1g = m.player1?.gender?.toLowerCase();
-          const p2g = m.player2?.gender?.toLowerCase();
-          const p3g = m.partner1?.gender?.toLowerCase();
-          const p4g = m.partner2?.gender?.toLowerCase();
-
-          let matchFormat = m.category;
-          if (m.category === "Doubles") {
-            const t1HasM = p1g === "male" || p3g === "male";
-            const t1HasF = p1g === "female" || p3g === "female";
-            const t2HasM = p2g === "male" || p4g === "male";
-            const t2HasF = p2g === "female" || p4g === "female";
-            
-            if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
-            else if (p1g === "male" && p3g === "male" && p2g === "male" && p4g === "male") matchFormat = "MD";
-            else if (p1g === "female" && p3g === "female" && p2g === "female" && p4g === "female") matchFormat = "WD";
-          } else if (m.category === "Singles") {
-            if (p1g === "male" && p2g === "male") matchFormat = "MS";
-            else if (p1g === "female" && p2g === "female") matchFormat = "WS";
-          }
-
-          return (
-            <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800 rounded-xl gap-4">
-              <div className="flex flex-col gap-1">
-                <p className="text-slate-300 font-bold text-sm flex items-center gap-2 flex-wrap">
-                  <span className={team1Won ? "text-amber-400" : ""}>
-                    {resolveTeamName(m.player1, m.partner1, m.team1_label)}
-                  </span>
-                  <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
-                  <span className={team2Won ? "text-amber-400" : ""}>
-                    {resolveTeamName(m.player2, m.partner2, m.team2_label)}
-                  </span>
-                </p>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  {matchFormat && (
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-800/50 shrink-0">
-                      {matchFormat}
-                    </span>
-                  )}
-                  {m.match_code && (
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-800/50 shrink-0">
-                      {m.match_code}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-700/50 shrink-0">
-                    <Clock className="w-3 h-3 text-slate-500" />
-                    {format(new Date(m.created_at || new Date()), "MMM d, h:mm a")}
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <BeautifulScoreDisplay score={m.score} />
-                </div>
-              </div>
-              {(() => {
-                const isEditable = isAdmin || (Date.now() - new Date(m.created_at || new Date()).getTime() <= 10 * 60 * 1000);
-                return isEditable ? (
-                  <button 
-                    onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-on-accent text-xs font-bold rounded-lg transition-colors shrink-0"
-                  >
-                    Edit Score
-                  </button>
-                ) : (
-                  <button 
-                    disabled
-                    className="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed text-xs font-bold rounded-lg shrink-0"
-                    title="Editing is locked after 10 minutes"
-                  >
-                    Locked
-                  </button>
-                );
-              })()}
+          {/* Results Grid */}
+          {filteredMatches.length === 0 ? (
+            <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/30">
+              <Filter className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-400">No submissions matching criteria</p>
+              <p className="text-xs text-slate-500 mt-1">Try resetting category or search filters.</p>
             </div>
-          );
-        })}
+          ) : (
+            <div className="grid grid-cols-1 gap-3.5 pt-1">
+              {displayedMatches.map(m => (
+                <RecentMatchCard
+                  key={m.id}
+                  match={m}
+                  isAdmin={isAdmin}
+                  currentUserId={profile?.id}
+                  onEdit={onEdit}
+                />
+              ))}
+
+              {/* Load More Button if results exceed initial page */}
+              {filteredMatches.length > visibleCount && (
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(prev => prev + 8)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+                  >
+                    Load More Submissions ({filteredMatches.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

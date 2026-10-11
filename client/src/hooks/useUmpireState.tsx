@@ -14,6 +14,7 @@ import { usePlayers, usePlayerBuddies } from "@/hooks/usePlayers";
 import { computeAddPoint, computeDeductPoint, computeForceEndSet, computeEditSet } from "@/lib/umpire/umpireMutations";
 import { useUmpireHelpers } from "@/hooks/useUmpireHelpers";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 export interface UmpireStateProps {
   userId: string;
@@ -39,11 +40,8 @@ export function useUmpireState({
   onMatchSaved
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
-  // isAdmin above is a hardcoded master-admin EMAIL check, not the role, so it
-  // misses ordinary admins entirely. isUmpire is role-based (admin,
-  // master_admin or umpire) and is what should exempt someone from the buddy
-  // requirement below — officiating is their job, including for strangers.
   const { isUmpire: isRoleUmpire } = useAuth();
+  const { confirm } = useConfirm();
   // Use Zustand store instead
   const {
     match: storeMatch, setMatch, updateMatch: storeUpdateMatch,
@@ -244,8 +242,13 @@ export function useUmpireState({
   useEffect(() => {
     if (!storeMatch) {
       setMatch(match);
+      if (initialMatchState && 'is_edit_mode' in initialMatchState && initialMatchState.is_edit_mode) {
+        setDirectSetsText(match.setsHistory.join(","));
+        setDirectWinner(match.winner || null);
+        setIsDirectScoreOpen(true);
+      }
     }
-  }, [storeMatch, setMatch, match]);
+  }, [storeMatch, setMatch, match, initialMatchState, setDirectSetsText, setDirectWinner, setIsDirectScoreOpen]);
 
   useEffect(() => {
     if (!match.id || match.status === "finished") return;
@@ -508,9 +511,15 @@ export function useUmpireState({
       toast.success(`Set ${index + 1} deleted!`);
     };
 
-    const reopenSet = (index: number) => {
+    const reopenSet = async (index: number) => {
       if (index < 0 || index >= match.setsHistory.length) return;
-      if (!confirm(`Are you sure you want to reopen Set ${index + 1}? All sets after this will be deleted.`)) return;
+      const ok = await confirm({
+        title: `Reopen Set ${index + 1}?`,
+        description: `Are you sure you want to reopen Set ${index + 1}? All sets after this will be deleted.`,
+        confirmLabel: "Reopen Set",
+        confirmVariant: "danger"
+      });
+      if (!ok) return;
       
       const history = [...match.setsHistory];
       const setToReopen = history[index];
@@ -913,14 +922,31 @@ export function useUmpireState({
         MatchService.flushLiveMatches().catch(console.error);
         if (match.status === "finished") {
           toast.warning("Result not saved — match left live so you can finish saving it", {
-            duration: 8000,
+            duration: 6000,
           });
+
+          // Also record in app notifications bell menu
+          if (userId) {
+            const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
+            const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
+            supabase.from("notifications").insert({
+              user_id: userId,
+              title: "⚠️ Match Result Unsaved",
+              message: `${t1Name} vs ${t2Name}: Score completed but not submitted yet. Return to umpire desk to save.`,
+              type: "ping",
+              link: "/hub?tab=umpire",
+              is_read: false,
+            }).then(() => {
+              window.dispatchEvent(new Event("notifications_changed"));
+            }).catch(console.error);
+          }
         } else {
           toast("Match left live — resume it from the match list", { icon: "📡" });
         }
       }
       onClose();
     };
+
   
     // ── Helpers ────────────────────────────────────────────────────────────────
     const currentGameNum = match.t1.games + match.t2.games + 1;

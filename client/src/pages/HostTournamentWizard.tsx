@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
-import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2 } from 'lucide-react';
+import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -18,6 +18,60 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
     {children}
   </motion.div>
 );
+
+/**
+ * Ranked / casual selector. Ranked (ELO-affecting) events are admin-only; a
+ * non-admin host sees a locked "casual" explainer. Mirrors the DB ranked-gate.
+ */
+function RankedToggle({
+  isAdmin,
+  countsForElo,
+  setCountsForElo,
+  team,
+}: {
+  isAdmin: boolean;
+  countsForElo: boolean;
+  setCountsForElo: (v: boolean) => void;
+  team?: boolean;
+}) {
+  if (!isAdmin) {
+    return (
+      <div className="flex items-start gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
+        <Circle className="w-5 h-5 mt-0.5 text-slate-400 shrink-0" />
+        <div>
+          <div className="font-bold text-slate-800 dark:text-slate-200">Casual event — won't affect ELO</div>
+          <div className="text-xs text-slate-500">
+            Only club admins can create ranked tournaments. Your event runs as a casual tournament and
+            won't change any player's ELO, win/loss record or stats.
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <label
+      className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+        countsForElo
+          ? 'border-amber-300 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10'
+          : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={countsForElo}
+        onChange={(e) => setCountsForElo(e.target.checked)}
+        className="w-5 h-5 accent-amber-500"
+      />
+      <Star className={`w-5 h-5 shrink-0 ${countsForElo ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
+      <div>
+        <div className="font-bold text-slate-800 dark:text-slate-200">Ranked — count for ELO</div>
+        <div className="text-xs text-slate-500">
+          {team ? 'Team rubbers' : 'Matches'} update players' personal and category ELO. Uncheck for a casual event.
+        </div>
+      </div>
+    </label>
+  );
+}
 
 export default function HostTournamentWizard() {
   usePageMeta({
@@ -37,6 +91,8 @@ export default function HostTournamentWizard() {
   const [step, setStep] = useState(() => loadState('step', 1));
   const [name, setName] = useState(() => loadState('name', ''));
   const [location, setLocation] = useState(() => loadState('location', ''));
+  const [startDate, setStartDate] = useState(() => loadState('startDate', ''));
+  const [endDate, setEndDate] = useState(() => loadState('endDate', ''));
   const [formatFamily, setFormatFamily] = useState<'TEAM' | 'OPEN_EVENT'>(() => loadState('formatFamily', 'TEAM'));
   const [format, setFormat] = useState(() => loadState('format', 'standard'));
   const [lineupEntry, setLineupEntry] = useState<'CAPTAINS' | 'HOST'>(() => loadState('lineupEntry', 'CAPTAINS'));
@@ -49,6 +105,10 @@ export default function HostTournamentWizard() {
   const [teamRosterMax, setTeamRosterMax] = useState<number>(() => loadState('teamRosterMax', 10));
   const [tiePointsWin, setTiePointsWin] = useState<number>(() => loadState('tiePointsWin', 2));
   const [tiePointsDraw, setTiePointsDraw] = useState<number>(() => loadState('tiePointsDraw', 1));
+  const [maxRubbersPerMale, setMaxRubbersPerMale] = useState<number>(() => loadState('maxRubbersPerMale', 2));
+  const [maxRubbersPerFemale, setMaxRubbersPerFemale] = useState<number>(() => loadState('maxRubbersPerFemale', 2));
+  const [allowSameDisciplineRepeat, setAllowSameDisciplineRepeat] = useState<boolean>(() => loadState('allowSameDisciplineRepeat', false));
+  const [allowSameEventRepeatInDecider, setAllowSameEventRepeatInDecider] = useState<boolean>(() => loadState('allowSameEventRepeatInDecider', false));
 
   const [file, setFile] = useState<File | null>(null);
   const [parsedTeams, setParsedTeams] = useState<number>(0);
@@ -60,6 +120,8 @@ export default function HostTournamentWizard() {
     localStorage.setItem('wizard_step', JSON.stringify(step));
     localStorage.setItem('wizard_name', JSON.stringify(name));
     localStorage.setItem('wizard_location', JSON.stringify(location));
+    localStorage.setItem('wizard_startDate', JSON.stringify(startDate));
+    localStorage.setItem('wizard_endDate', JSON.stringify(endDate));
     localStorage.setItem('wizard_formatFamily', JSON.stringify(formatFamily));
     localStorage.setItem('wizard_format', JSON.stringify(format));
     localStorage.setItem('wizard_lineupEntry', JSON.stringify(lineupEntry));
@@ -72,7 +134,12 @@ export default function HostTournamentWizard() {
     localStorage.setItem('wizard_teamRosterMax', JSON.stringify(teamRosterMax));
     localStorage.setItem('wizard_tiePointsWin', JSON.stringify(tiePointsWin));
     localStorage.setItem('wizard_tiePointsDraw', JSON.stringify(tiePointsDraw));
-  }, [step, name, location, formatFamily, format, lineupEntry, countsForElo, ignoreGenderRules, playDeadRubbers, customRubbers, teamRosterMin, teamRosterMax, tiePointsWin, tiePointsDraw]);
+    localStorage.setItem('wizard_maxRubbersPerMale', JSON.stringify(maxRubbersPerMale));
+    localStorage.setItem('wizard_maxRubbersPerFemale', JSON.stringify(maxRubbersPerFemale));
+    localStorage.setItem('wizard_allowSameDisciplineRepeat', JSON.stringify(allowSameDisciplineRepeat));
+    localStorage.setItem('wizard_allowSameEventRepeatInDecider', JSON.stringify(allowSameEventRepeatInDecider));
+  }, [step, name, location, startDate, endDate, formatFamily, format, lineupEntry, countsForElo, ignoreGenderRules, playDeadRubbers, customRubbers, teamRosterMin, teamRosterMax, tiePointsWin, tiePointsDraw, maxRubbersPerMale, maxRubbersPerFemale, allowSameDisciplineRepeat, allowSameEventRepeatInDecider]);
+
 
   const parseCsvText = (text: string, filename: string) => {
     const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
@@ -137,6 +204,8 @@ export default function HostTournamentWizard() {
       const payload: any = {
         name,
         venue: location,
+        start_date: startDate || new Date().toISOString().split('T')[0],
+        end_date: endDate || null,
         tournament_type: formatFamily === 'TEAM' ? 'team' : 'open',
         bracket_format: 'single_elimination',
         status: 'draft',
@@ -144,14 +213,16 @@ export default function HostTournamentWizard() {
         year: new Date().getFullYear(),
         categories: ['MS', 'WS', 'MD', 'WD', 'XD'],
         description: `Format: ${formatFamily === 'TEAM' ? (format === 'standard' ? 'BWF Standard' : 'Custom Format') : 'Open Event'}`,
-        format_family: formatFamily
+        format_family: formatFamily,
+        // Ranked events are admin-only; self-hosted tournaments are always
+        // casual. The DB ranked-gate trigger enforces this server-side too.
+        counts_for_elo: isAdmin ? countsForElo : false,
       };
 
       if (formatFamily === 'TEAM') {
-        payload.counts_for_elo = countsForElo;
         payload.ignore_gender_rules = ignoreGenderRules;
         payload.play_dead_rubbers = playDeadRubbers;
-        payload.max_rubbers_per_player = 2; // Fixed for now, can be added to config later
+        payload.max_rubbers_per_player = Math.max(maxRubbersPerMale, maxRubbersPerFemale);
         
         if (format === 'standard') {
           payload.team_roster_min = 4;
@@ -166,6 +237,10 @@ export default function HostTournamentWizard() {
               { order: 4, label: 'WD1', category: 'WD', points: 1, best_of_sets: 3, points_to_win: 21 },
               { order: 5, label: 'XD1', category: 'XD', points: 1, best_of_sets: 3, points_to_win: 21 }
             ],
+            max_rubbers_per_male: maxRubbersPerMale,
+            max_rubbers_per_female: maxRubbersPerFemale,
+            allow_same_discipline_repeat: allowSameDisciplineRepeat,
+            allow_same_event_repeat_in_decider: allowSameEventRepeatInDecider,
             play_dead_rubbers: playDeadRubbers,
             draw_allowed: false
           };
@@ -176,6 +251,10 @@ export default function HostTournamentWizard() {
           payload.tie_points_draw = tiePointsDraw;
           payload.tie_format_config = {
             rubbers: customRubbers,
+            max_rubbers_per_male: maxRubbersPerMale,
+            max_rubbers_per_female: maxRubbersPerFemale,
+            allow_same_discipline_repeat: allowSameDisciplineRepeat,
+            allow_same_event_repeat_in_decider: allowSameEventRepeatInDecider,
             play_dead_rubbers: playDeadRubbers,
             draw_allowed: true // Or calculate based on points
           };
@@ -187,11 +266,16 @@ export default function HostTournamentWizard() {
       if (error) throw error;
       
       // Cleanup
-      ['wizard_step', 'wizard_name', 'wizard_location', 'wizard_formatFamily', 'wizard_format', 'wizard_lineupEntry', 'wizard_countsForElo', 'wizard_ignoreGenderRules', 'wizard_playDeadRubbers', 'wizard_customRubbers', 'wizard_teamRosterMin', 'wizard_teamRosterMax', 'wizard_tiePointsWin', 'wizard_tiePointsDraw']
+      ['wizard_step', 'wizard_name', 'wizard_location', 'wizard_startDate', 'wizard_endDate', 'wizard_formatFamily', 'wizard_format', 'wizard_lineupEntry', 'wizard_countsForElo', 'wizard_ignoreGenderRules', 'wizard_playDeadRubbers', 'wizard_customRubbers', 'wizard_teamRosterMin', 'wizard_teamRosterMax', 'wizard_tiePointsWin', 'wizard_tiePointsDraw', 'wizard_maxRubbersPerMale', 'wizard_maxRubbersPerFemale', 'wizard_allowSameDisciplineRepeat', 'wizard_allowSameEventRepeatInDecider']
         .forEach(k => localStorage.removeItem(k));
+
         
       toast.success("Tournament created successfully!");
-      navigate('/admin');
+      if (data?.id) {
+        navigate(`/tournament-setup/${data.id}`);
+      } else {
+        navigate('/admin');
+      }
       
     } catch (error: any) {
       console.error(error);
@@ -241,14 +325,34 @@ export default function HostTournamentWizard() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Location *</label>
+                    <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Location / Venue *</label>
                     <input 
                       type="text"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition"
-                      placeholder="Arena Name"
+                      placeholder="e.g. Gymkhana Badminton Hall"
                       value={location}
                       onChange={e => setLocation(e.target.value)}
                     />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Start Date</label>
+                      <input 
+                        type="date"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition text-sm"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">End Date (optional)</label>
+                      <input 
+                        type="date"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition text-sm"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div className="pt-2">
                     <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-3">Tournament Type *</label>
@@ -288,13 +392,7 @@ export default function HostTournamentWizard() {
 
                 <div className="mt-8 space-y-4">
                   <h3 className="font-bold text-slate-800 dark:text-slate-200">Event Rules</h3>
-                  <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <input type="checkbox" checked={countsForElo} onChange={e => setCountsForElo(e.target.checked)} className="w-5 h-5 accent-primary" />
-                    <div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200">Count for ELO</div>
-                      <div className="text-xs text-slate-500">Matches will update players' personal and category ELO. Uncheck for casual tournaments.</div>
-                    </div>
-                  </label>
+                  <RankedToggle isAdmin={isAdmin} countsForElo={countsForElo} setCountsForElo={setCountsForElo} />
                 </div>
               </PageTransition>
             )}
@@ -331,18 +429,21 @@ export default function HostTournamentWizard() {
                     setTiePointsWin={setTiePointsWin}
                     tiePointsDraw={tiePointsDraw}
                     setTiePointsDraw={setTiePointsDraw}
+                    maxRubbersPerMale={maxRubbersPerMale}
+                    setMaxRubbersPerMale={setMaxRubbersPerMale}
+                    maxRubbersPerFemale={maxRubbersPerFemale}
+                    setMaxRubbersPerFemale={setMaxRubbersPerFemale}
+                    allowSameDisciplineRepeat={allowSameDisciplineRepeat}
+                    setAllowSameDisciplineRepeat={setAllowSameDisciplineRepeat}
+                    allowSameEventRepeatInDecider={allowSameEventRepeatInDecider}
+                    setAllowSameEventRepeatInDecider={setAllowSameEventRepeatInDecider}
+                    ignoreGenderRules={ignoreGenderRules}
                   />
                 )}
                 
                 <div className="mt-8 space-y-4">
                   <h3 className="font-bold text-slate-800 dark:text-slate-200">Event Rules</h3>
-                  <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <input type="checkbox" checked={countsForElo} onChange={e => setCountsForElo(e.target.checked)} className="w-5 h-5 accent-primary" />
-                    <div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200">Count for ELO</div>
-                      <div className="text-xs text-slate-500">Team rubbers will update players' personal and category ELO.</div>
-                    </div>
-                  </label>
+                  <RankedToggle isAdmin={isAdmin} countsForElo={countsForElo} setCountsForElo={setCountsForElo} team />
                   <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <input type="checkbox" checked={ignoreGenderRules} onChange={e => setIgnoreGenderRules(e.target.checked)} className="w-5 h-5 accent-primary" />
                     <div>
@@ -384,12 +485,24 @@ export default function HostTournamentWizard() {
                   )}
                   
                   <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-black shadow-md hover:scale-105 transition-transform"
-                  >
-                    {file ? 'Change File' : 'Browse Files'}
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-black shadow-md hover:scale-105 transition-transform"
+                    >
+                      {file ? 'Change File' : 'Browse Files'}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setFile(null);
+                        setParsedTeams(0);
+                        setStep(4);
+                      }}
+                      className="px-5 py-3 rounded-xl font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-sm"
+                    >
+                      Skip CSV &amp; add manually in dashboard →
+                    </button>
+                  </div>
                 </div>
               </PageTransition>
             )}

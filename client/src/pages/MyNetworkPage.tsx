@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePlayers, useBuddyRequests } from "@/hooks/usePlayers";
+import { usePlayers } from "@/hooks/usePlayers";
 import { PageSkeleton } from "@/components/layout/PageSkeleton";
 import { PlayerCard } from "@/components/players-directory/PlayerCard";
 import type { Player } from "@/components/players-directory/PlayerCard";
@@ -14,18 +14,10 @@ export default function MyNetworkPage() {
 
   const { profile: ownProfile } = useAuth();
   const { data: allPlayers = [], isLoading } = usePlayers();
-  const { data: buddyRequestsRaw = [] } = useBuddyRequests(ownProfile?.id);
 
   const myBuddyIds = useMemo(() => {
-    const accepted = new Set<string>();
-    buddyRequestsRaw.forEach((req: any) => {
-      if (req.status === "accepted") {
-        const otherPlayerId = req.sender_id === ownProfile?.id ? req.receiver_id : req.sender_id;
-        accepted.add(otherPlayerId);
-      }
-    });
-    return accepted;
-  }, [buddyRequestsRaw, ownProfile?.id]);
+    return new Set<string>(((ownProfile as any)?.buddies as string[] | undefined) || []);
+  }, [ownProfile]);
 
   const myBuddies = useMemo(() => {
     return allPlayers.filter((p: Player) => myBuddyIds.has(p.id));

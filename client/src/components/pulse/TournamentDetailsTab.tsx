@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, FileText, Upload, AlertCircle, X, Download, Loader2, Info, Users, Shield } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
+import { toast } from "sonner";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
 
@@ -24,6 +26,7 @@ const fadeUp = {
 
 export function TournamentDetailsTab({ tournament, playerName }: TournamentDetailsTabProps) {
   const { isAdmin } = useAuth();
+  const { confirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<"info" | "participants">("info");
   
   // Notices State
@@ -72,14 +75,22 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
   };
 
   const handleDeleteFile = async (fileName: string) => {
-    if (!window.confirm("Delete this notice?")) return;
+    const ok = await confirm({
+      title: "Delete Notice?",
+      description: `Are you sure you want to delete notice "${fileName}"?`,
+      confirmLabel: "Delete",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
+
     try {
       const folder = tournament?.id || "legacy";
       const { error } = await supabase.storage.from(NOTICES_BUCKET).remove([`${folder}/${fileName}`]);
       if (error) throw error;
+      toast.success("Notice deleted");
       await fetchNotices();
     } catch (err: any) {
-      alert("Failed to delete notice");
+      toast.error("Failed to delete notice");
     }
   };
 

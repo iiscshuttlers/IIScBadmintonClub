@@ -1,26 +1,33 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchFeedMatches } from "@/services/matchService";
 
-export function useFeedMatches(ownProfile: any, initialLimit = 100) {
+export function useFeedMatches(ownProfile: any, initialLimit = 100, initialTournament = "all") {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(initialLimit);
-  const [tournamentFilter, setTournamentFilter] = useState<string>("all");
+  const [tournamentFilter, setTournamentFilter] = useState<string>(initialTournament);
   const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
 
+  const activeReqIdRef = useRef(0);
+
   const fetchFeed = useCallback(
     async (silent = false) => {
+      const reqId = ++activeReqIdRef.current;
       if (!silent) setLoading(true);
       try {
         const data = await fetchFeedMatches(limitCount, categoryFilter, timeFilter, tournamentFilter);
-        if (data) {
+        if (reqId === activeReqIdRef.current && data) {
           setMatches(data);
         }
       } catch (err) {
-        console.warn("Error fetching feed:", err);
+        if (reqId === activeReqIdRef.current) {
+          console.warn("Error fetching feed:", err);
+        }
       } finally {
-        if (!silent) setLoading(false);
+        if (reqId === activeReqIdRef.current && !silent) {
+          setLoading(false);
+        }
       }
     },
     [limitCount, categoryFilter, timeFilter, tournamentFilter],
@@ -51,9 +58,13 @@ export function useFeedMatches(ownProfile: any, initialLimit = 100) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const displayMatches = useMemo(() => {
-    if (!searchQuery.trim()) return matches;
+    let list = matches;
+    if (tournamentFilter && tournamentFilter !== "all") {
+      list = list.filter((m) => m.tournament_id === tournamentFilter);
+    }
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase().trim();
-    return matches.filter((m) => {
+    return list.filter((m) => {
       const p1Name = m.player1?.full_name?.toLowerCase() || "";
       const p2Name = m.player2?.full_name?.toLowerCase() || "";
       const p3Name = m.player3?.full_name?.toLowerCase() || m.partner1?.full_name?.toLowerCase() || "";
@@ -78,11 +89,11 @@ export function useFeedMatches(ownProfile: any, initialLimit = 100) {
         mCategory.includes(q)
       );
     });
-  }, [matches, searchQuery]);
+  }, [matches, tournamentFilter, searchQuery]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
-    matches.forEach((m) => {
+    displayMatches.forEach((m) => {
       const h = new Date(m.created_at).getHours();
       hours[h]++;
     });
@@ -91,31 +102,31 @@ export function useFeedMatches(ownProfile: any, initialLimit = 100) {
     const evening =
       hours.slice(17, 24).reduce((a, b) => a + b, 0) +
       hours.slice(0, 5).reduce((a, b) => a + b, 0);
-    const total = matches.length || 1;
+    const total = displayMatches.length || 1;
     return {
       morning: (morning / total) * 100,
       afternoon: (afternoon / total) * 100,
       evening: (evening / total) * 100,
       isPeak: Math.max(morning, afternoon, evening),
     };
-  }, [matches]);
+  }, [displayMatches]);
 
   const matchOfTheDayId = useMemo(() => {
-    if (!matches || matches.length === 0) return null;
-    const recentMatches = matches.filter(
+    if (!displayMatches || displayMatches.length === 0) return null;
+    const recentMatches = displayMatches.filter(
       (m) => new Date(m.created_at).getTime() > Date.now() - 48 * 60 * 60 * 1000,
     );
-    if (recentMatches.length === 0) return matches[0].id;
+    if (recentMatches.length === 0) return displayMatches[0].id;
     return recentMatches.reduce((best, m) => {
       const combinedElo = (m.player1?.elo_rating || 0) + (m.player2?.elo_rating || 0);
       const bestElo = (best.player1?.elo_rating || 0) + (best.player2?.elo_rating || 0);
       return combinedElo > bestElo ? m : best;
     }, recentMatches[0]).id;
-  }, [matches]);
+  }, [displayMatches]);
 
   const weeklyRecap = useMemo(() => {
-    if (!matches || matches.length === 0) return null;
-    const lastWeekMatches = matches.filter(
+    if (!displayMatches || displayMatches.length === 0) return null;
+    const lastWeekMatches = displayMatches.filter(
       (m) => new Date(m.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
     );
     if (lastWeekMatches.length === 0) return null;

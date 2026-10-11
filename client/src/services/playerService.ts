@@ -62,16 +62,6 @@ export const playerService = {
     return data;
   },
 
-  async getBuddyRequests(profileId: string) {
-    const { data, error } = await supabase
-      .from("buddy_requests")
-      .select("id, status, sender_id, receiver_id")
-      .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`);
-
-    if (error) throw error;
-    return data;
-  },
-
   async getPendingMatches(profileId: string) {
     const fullRes = await supabase
       .from("matches")
@@ -91,37 +81,6 @@ export const playerService = {
     
     if (fallbackRes.error) throw fallbackRes.error;
     return fallbackRes.data || [];
-  },
-
-  async sendBuddyRequest(senderId: string, receiverId: string) {
-    const { error } = await supabase.from("buddy_requests").insert({
-      sender_id: senderId,
-      receiver_id: receiverId,
-    });
-    if (error) throw error;
-  },
-
-  async cancelBuddyRequest(senderId: string, receiverId: string) {
-    const { error } = await supabase.from("buddy_requests")
-      .delete()
-      .eq("sender_id", senderId)
-      .eq("receiver_id", receiverId);
-    if (error) throw error;
-  },
-
-  async acceptBuddyRequest(senderId: string, receiverId: string) {
-    const { error } = await supabase.from("buddy_requests")
-      .update({ status: "accepted" })
-      .eq("sender_id", senderId)
-      .eq("receiver_id", receiverId);
-    if (error) throw error;
-  },
-
-  async removeBuddy(p1: string, p2: string) {
-    const { error } = await supabase.from("buddy_requests")
-      .delete()
-      .or(`and(sender_id.eq.${p1},receiver_id.eq.${p2}),and(sender_id.eq.${p2},receiver_id.eq.${p1})`);
-    if (error) throw error;
   },
 
   async updateFollowing(userId: string, newFollowingIds: string[]) {
@@ -265,7 +224,6 @@ export function formatPlayerData(data: any): import("@/types").PlayerProfileType
     isApproved: data.is_approved,
     role: data.role ?? 'player',
     buddies: data.buddies || [],
-    buddyRequests: data.buddy_requests || [],
     elo_rating: data.elo_rating,
     singles_elo: data.singles_elo,
     doubles_elo: data.doubles_elo,

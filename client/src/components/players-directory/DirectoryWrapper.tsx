@@ -279,9 +279,6 @@ export function DirectoryWrapper() {
         categoryFilter={categoryFilter}
         setCategoryFilter={setCategoryFilter}
         allDepartments={allDepartments}
-        myBuddyIds={new Set(profile?.buddies || [])}
-        myBuddyRequests={{ received: new Set(), sent: new Set() }}
-        handleBuddyAction={() => {}}
         followingIds={new Set()}
         handleToggleFollow={() => {}}
         isPersonalView={false}

@@ -50,6 +50,8 @@ export async function getTournaments() {
       form_status: tr.form_status,
       form_close_date: tr.form_close_date,
       tournament_type: tr.tournament_type,
+      format_family: tr.format_family,
+      counts_for_elo: tr.counts_for_elo,
       bracket_format: tr.bracket_format,
       archived_at: tr.archived_at,
       created_by: tr.created_by,

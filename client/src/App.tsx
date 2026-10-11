@@ -82,6 +82,8 @@ const HostTournamentWizard = lazy(() => import("./pages/HostTournamentWizard"));
 
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 const TournamentTeamHub = lazy(() => import("./pages/TournamentTeamHub"));
+const JoinTeamByLink = lazy(() => import("./pages/JoinTeamByLink"));
+const TournamentSetupChecklist = lazy(() => import("./pages/TournamentSetupChecklist"));
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -142,6 +144,18 @@ function AppRoutes() {
             <ProtectedRoute>
               <ErrorBoundary fallback={<PageErrorFallback />}>
                 <TournamentTeamHub />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          </Route>
+          <Route path="/join-team/:token">
+            <ErrorBoundary fallback={<PageErrorFallback />}>
+              <JoinTeamByLink />
+            </ErrorBoundary>
+          </Route>
+          <Route path="/tournament-setup/:id">
+            <ProtectedRoute>
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <TournamentSetupChecklist />
               </ErrorBoundary>
             </ProtectedRoute>
           </Route>

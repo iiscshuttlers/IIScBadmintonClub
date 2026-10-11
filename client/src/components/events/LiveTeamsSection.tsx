@@ -8,11 +8,16 @@ import {
   Award, 
   Search, 
   Loader2, 
-  Layers
+  Layers,
+  ExternalLink,
+  Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
+import { useTeamModal } from "@/contexts/TeamModalContext";
+import { calculateMinRosterRequirements, RosterRequirementResult } from "@/lib/teamLineupRules";
+
 
 export type MemberRole = "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN" | "PLAYER";
 
@@ -70,11 +75,14 @@ function getRoleRank(role: MemberRole): number {
 }
 
 export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSectionProps) {
+  const { openTeamModal } = useTeamModal();
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
+  const [rosterRequirements, setRosterRequirements] = useState<RosterRequirementResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPool, setSelectedPool] = useState<string>("ALL");
+
 
   useEffect(() => {
     if (!tournamentId) {
@@ -87,6 +95,13 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
     async function loadTeamsAndMembers() {
       setLoading(true);
       try {
+        // 0. Fetch tournament config for dynamic roster calculation
+        const { data: tourneyData } = await supabase
+          .from("tournaments")
+          .select("id, tie_format_config, max_rubbers_per_player, team_roster_min, ignore_gender_rules")
+          .eq("id", tournamentId)
+          .maybeSingle();
+
         // 1. Fetch teams
         const { data: rawTeams, error: teamsError } = await supabase
           .from("tournament_teams")
@@ -94,6 +109,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
           .eq("tournament_id", tournamentId)
           .neq("status", "DELETED")
           .order("name", { ascending: true });
+
 
         if (teamsError) throw teamsError;
         const validTeams = rawTeams || [];
@@ -191,6 +207,25 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
         });
 
         if (isMounted) {
+          if (tourneyData) {
+            const rawFormat = tourneyData.tie_format_config;
+            let currentRubbers: any[] = [];
+            if (Array.isArray(rawFormat)) currentRubbers = rawFormat;
+            else if (rawFormat?.rubbers && Array.isArray(rawFormat.rubbers)) currentRubbers = rawFormat.rubbers;
+
+            const rulesObj = typeof rawFormat === 'object' && !Array.isArray(rawFormat) ? rawFormat : {};
+            if (currentRubbers.length > 0) {
+              const req = calculateMinRosterRequirements(currentRubbers, {
+                max_rubbers_per_male: rulesObj.max_rubbers_per_male ?? tourneyData.max_rubbers_per_player ?? 2,
+                max_rubbers_per_female: rulesObj.max_rubbers_per_female ?? tourneyData.max_rubbers_per_player ?? 2,
+                allow_same_discipline_repeat: rulesObj.allow_same_discipline_repeat ?? false,
+                ignore_gender_rules: tourneyData.ignore_gender_rules,
+                team_roster_min: tourneyData.team_roster_min
+              });
+              setRosterRequirements(req);
+            }
+          }
+
           setTeams(assembled);
           // By default, expand the first team for immediate feedback
           if (assembled.length > 0) {
@@ -198,6 +233,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
           }
           setLoading(false);
         }
+
       } catch (err) {
         console.error("Failed to load tournament teams:", err);
         if (isMounted) setLoading(false);
@@ -418,8 +454,16 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-black text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
+                        <h4 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openTeamModal({ id: team.id, name: team.name, short_name: team.short_name, pool: team.pool, captain_id: team.captain_id, tournament_id: team.tournament_id });
+                          }}
+                          className="font-black text-base sm:text-lg text-slate-900 dark:text-white leading-tight hover:text-primary transition-colors cursor-pointer hover:underline underline-offset-2 flex items-center gap-1.5 group"
+                          title="Click to view full team roster and live/upcoming/completed matches"
+                        >
                           {team.name}
+                          <ExternalLink className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
                         </h4>
                         {team.short_name && (
                           <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -455,16 +499,40 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                   {/* Right: Squad Stats & Chevron */}
                   <div className="flex items-center gap-2.5 shrink-0">
                     <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-500">
-                      <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {team.members.length} players
+                      <span className={`px-2.5 py-1 rounded-full ${
+                        rosterRequirements && team.members.length < rosterRequirements.minTotalPlayers
+                          ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      }`}>
+                        {team.members.length}{rosterRequirements ? `/${rosterRequirements.minTotalPlayers}` : ''} players
                       </span>
-                      <span className="px-2 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40 text-[11px]">
-                        ♂ {mCount}
+                      <span className={`px-2 py-1 rounded-full text-[11px] border ${
+                        rosterRequirements && mCount < rosterRequirements.minMalePlayers
+                          ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800"
+                          : "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/40"
+                      }`}>
+                        ♂ {mCount}{rosterRequirements ? `/${rosterRequirements.minMalePlayers}` : ''}
                       </span>
-                      <span className="px-2 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 text-[11px]">
-                        ♀ {fCount}
+                      <span className={`px-2 py-1 rounded-full text-[11px] border ${
+                        rosterRequirements && fCount < rosterRequirements.minFemalePlayers
+                          ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800"
+                          : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40"
+                      }`}>
+                        ♀ {fCount}{rosterRequirements ? `/${rosterRequirements.minFemalePlayers}` : ''}
                       </span>
+                      {rosterRequirements && (
+                        (fCount < rosterRequirements.minFemalePlayers) ? (
+                          <span className="text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                            Needs {rosterRequirements.minFemalePlayers - fCount}♀
+                          </span>
+                        ) : (mCount < rosterRequirements.minMalePlayers) ? (
+                          <span className="text-[10px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+                            Needs {rosterRequirements.minMalePlayers - mCount}♂
+                          </span>
+                        ) : null
+                      )}
                     </div>
+
 
                     <div className={`p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${
                       isExpanded ? "rotate-180 bg-primary/10 text-primary" : ""
@@ -486,6 +554,13 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                       className="overflow-hidden border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/40"
                     >
                       <div className="p-4 sm:p-5 space-y-2.5">
+                        <button
+                          type="button"
+                          onClick={() => openTeamModal({ id: team.id, name: team.name, short_name: team.short_name, pool: team.pool, captain_id: team.captain_id, tournament_id: team.tournament_id })}
+                          className="w-full mb-3 py-2 px-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black flex items-center justify-center gap-1.5 transition-colors border border-primary/20 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View Team Roster & Schedule (Live · Upcoming · Completed)
+                        </button>
                         {team.members.length === 0 ? (
                           <div className="text-center py-6 text-xs text-slate-400 font-semibold">
                             No players assigned to this team yet.

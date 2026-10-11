@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   TeamParticipant, 
   PoolAssignmentMethod, 
+  PlayoffFormat,
   generateDirectKnockoutBracket, 
   generatePoolAndPlayoffTournament,
   assignTeamsToPools
@@ -36,11 +37,16 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
     return init;
   });
   const [advancingPerPool, setAdvancingPerPool] = useState<number>(2);
+  const [playoffFormat, setPlayoffFormat] = useState<PlayoffFormat>('KNOCKOUT');
   const [includeThirdPlace, setIncludeThirdPlace] = useState<boolean>(true);
 
   // Tie Decider Rules (for ties ending 3-3)
-  const [deciderRule, setDeciderRule] = useState<'SET_DIFF' | 'POINT_DIFF' | 'TOTAL_POINTS' | 'SPECIFIC_RUBBER' | 'GOLDEN_MATCH'>('SET_DIFF');
+  const [deciderRule, setDeciderRule] = useState<'SET_DIFF' | 'POINT_DIFF' | 'TOTAL_POINTS' | 'SPECIFIC_RUBBER' | 'GOLDEN_MATCH' | 'EXTRA_DECIDER_RUBBER'>('EXTRA_DECIDER_RUBBER');
   const [specificRubberOrder, setSpecificRubberOrder] = useState<number>(1);
+  const [deciderCategory, setDeciderCategory] = useState<string>('XD');
+  const [deciderLabel, setDeciderLabel] = useState<string>('XD 2');
+  const [deciderSets, setDeciderSets] = useState<number>(1);
+  const [deciderPoints, setDeciderPoints] = useState<number>(21);
   const [drawAllowedInPools, setDrawAllowedInPools] = useState<boolean>(true);
   const [standingsSortPriority, setStandingsSortPriority] = useState<'STANDARD' | 'SETS_FIRST' | 'WINS_FIRST'>('STANDARD');
   
@@ -84,6 +90,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
           assignmentMethod,
           manualAssignments,
           advancingPerPool: format === 'PURE_LEAGUE' ? 0 : advancingPerPool,
+          playoffFormat: format === 'PURE_LEAGUE' ? undefined : playoffFormat,
           includeThirdPlaceMatch: includeThirdPlace
         };
 
@@ -103,6 +110,15 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
         rubbers,
         decider_rule: deciderRule,
         specific_decider_rubber_order: deciderRule === 'SPECIFIC_RUBBER' ? specificRubberOrder : undefined,
+        extra_decider_rubber: (deciderRule === 'EXTRA_DECIDER_RUBBER' || deciderRule === 'GOLDEN_MATCH') ? {
+          enabled: true,
+          category: deciderCategory,
+          label: deciderLabel,
+          best_of_sets: deciderSets,
+          points_to_win: deciderPoints
+        } : { enabled: false },
+        advancing_per_pool: advancingPerPool,
+        playoff_format: playoffFormat,
         draw_allowed_in_pools: drawAllowedInPools,
         tie_points_win: winPoints,
         tie_points_draw: drawPoints,
@@ -126,11 +142,11 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
   const poolLetters = Array.from({ length: numPools }, (_, i) => String.fromCharCode(65 + i));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 my-8 space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
         
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        {/* Header (fixed at top) */}
+        <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
           <div>
             <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Trophy className="w-6 h-6 text-primary" />
@@ -142,12 +158,14 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
           </div>
           <button 
             onClick={onClose} 
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Scrollable Modal Content */}
+        <div className="overflow-y-auto flex-1 min-h-0 space-y-6 py-4 pr-1">
         {/* 1. Format Selection */}
         <div className="space-y-3">
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -262,29 +280,53 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
             )}
 
             {format === 'POOLS_AND_PLAYOFFS' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-700">
-                <div>
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
-                    Advancing Teams per Pool
-                  </label>
-                  <select
-                    value={advancingPerPool}
-                    onChange={(e) => setAdvancingPerPool(parseInt(e.target.value))}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
-                  >
-                    <option value={1}>Top 1 per pool (Pool Winners only)</option>
-                    <option value={2}>Top 2 per pool (Winner & Runner-up)</option>
-                    {numPools === 1 && <option value={4}>Top 4 teams (Semifinals)</option>}
-                  </select>
+              <div className="space-y-4 pt-2 border-t border-slate-200 dark:border-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                      Advancing Teams per Pool
+                    </label>
+                    <select
+                      value={advancingPerPool}
+                      onChange={(e) => setAdvancingPerPool(parseInt(e.target.value))}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                    >
+                      <option value={1}>Top 1 per pool (Pool Winners only)</option>
+                      <option value={2}>Top 2 per pool (Winner &amp; Runner-up)</option>
+                      <option value={3}>Top 3 per pool (1st, 2nd &amp; 3rd Place)</option>
+                      <option value={4}>Top 4 per pool (Top 4 teams)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                      Playoff Stage Format
+                    </label>
+                    <select
+                      value={playoffFormat}
+                      onChange={(e) => setPlayoffFormat(e.target.value as any)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                    >
+                      <option value="KNOCKOUT">
+                        Knockout Bracket (with Byes/Play-ins if 6 teams)
+                      </option>
+                      <option value="CHAMPIONSHIP_POOL">
+                        Championship Pool (Round-Robin among all {numPools * advancingPerPool} qualifiers)
+                      </option>
+                      <option value="CHAMPIONSHIP_POOL_PLUS_FINAL">
+                        Championship Pool + Grand Final (Round-Robin then 1st vs 2nd)
+                      </option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-6">
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     id="include3rd"
                     checked={includeThirdPlace}
                     onChange={(e) => setIncludeThirdPlace(e.target.checked)}
-                    className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary"
+                    className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary cursor-pointer"
                   />
                   <label htmlFor="include3rd" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                     Include 3rd Place Match (Bronze Playoff)
@@ -315,7 +357,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
         <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
           <h3 className="text-sm font-black flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-primary" />
-            Tiebreaker & Decider Settings (e.g. 3-3 in a 6-rubber tie)
+            Tiebreaker &amp; Decider Settings (e.g. 3-3 in a 6-rubber tie)
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -328,10 +370,11 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                 onChange={(e) => setDeciderRule(e.target.value as any)}
                 className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
               >
+                <option value="EXTRA_DECIDER_RUBBER">Sudden-Death Extra Decider Rubber (e.g. XD2, MS2 - Unlocked ONLY on tie)</option>
                 <option value="SET_DIFF">Net Set Difference across Rubbers</option>
                 <option value="POINT_DIFF">Net Point Difference (Pts +/-)</option>
                 <option value="TOTAL_POINTS">Total Match Points Won</option>
-                <option value="SPECIFIC_RUBBER">Winner of Designated Rubber (e.g. WS/XD)</option>
+                <option value="SPECIFIC_RUBBER">Winner of Pre-selected Rubber (e.g. WS/XD)</option>
                 <option value="GOLDEN_MATCH">Additional Golden Match (Extra Rubber)</option>
               </select>
             </div>
@@ -352,6 +395,69 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {(deciderRule === 'EXTRA_DECIDER_RUBBER' || deciderRule === 'GOLDEN_MATCH') && (
+              <div className="sm:col-span-2 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                    Conditional Tiebreaker Decider Configuration (e.g. 3-3 Tie)
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Category</label>
+                    <select
+                      value={deciderCategory}
+                      onChange={(e) => setDeciderCategory(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    >
+                      <option value="XD">XD (Mixed Doubles)</option>
+                      <option value="MS">MS (Men's Singles)</option>
+                      <option value="WS">WS (Women's Singles)</option>
+                      <option value="MD">MD (Men's Doubles)</option>
+                      <option value="WD">WD (Women's Doubles)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Rubber Label</label>
+                    <input
+                      type="text"
+                      value={deciderLabel}
+                      onChange={(e) => setDeciderLabel(e.target.value)}
+                      placeholder="e.g. XD 2 or MS 2"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Sets Format</label>
+                    <select
+                      value={deciderSets}
+                      onChange={(e) => setDeciderSets(parseInt(e.target.value))}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    >
+                      <option value={1}>1 Set (Sudden Death)</option>
+                      <option value={3}>Best of 3 Sets</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Points to Win</label>
+                    <select
+                      value={deciderPoints}
+                      onChange={(e) => setDeciderPoints(parseInt(e.target.value))}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    >
+                      <option value={11}>11 Points (Sprint)</option>
+                      <option value={15}>15 Points</option>
+                      <option value={21}>21 Points (Standard)</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  ⚡ <strong>Lineup Submission:</strong> Captains will submit the lineup for this extra decider rubber <em>only after the tie occurs</em> (if scores are level). Both captains submit independently and referee/umpire authorizes the reveal.
+                </p>
               </div>
             )}
 
@@ -419,9 +525,10 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
             </div>
           )}
         </div>
+        </div>
 
-        {/* Footer Actions */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        {/* Footer Actions (fixed at bottom) */}
+        <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
           <Button variant="outline" onClick={onClose} disabled={generating} className="rounded-xl font-bold">
             Cancel
           </Button>

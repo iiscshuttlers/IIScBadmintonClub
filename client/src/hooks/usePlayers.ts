@@ -35,14 +35,6 @@ export function useFollowers(profileId?: string) {
   });
 }
 
-export function useBuddyRequests(profileId?: string) {
-  return useQuery({
-    queryKey: ["players", "buddy_requests", profileId],
-    queryFn: () => profileId ? playerService.getBuddyRequests(profileId) : Promise.resolve([]),
-    enabled: !!profileId,
-  });
-}
-
 export function usePendingMatches(profileId?: string) {
   return useQuery({
     queryKey: ["matches", "pending", profileId],

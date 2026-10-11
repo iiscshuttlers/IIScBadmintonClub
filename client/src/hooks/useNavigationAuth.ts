@@ -34,6 +34,8 @@ export function useNavigationAuth() {
   } = useAuth();
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
   const [pendingActionCount, setPendingActionCount] = useState(0);
+  const [myTeamId, setMyTeamId] = useState<string | null>(null);
+  const [teamActionCount, setTeamActionCount] = useState(0);
 
   useEffect(() => {
     const accounts = readSavedAccounts();
@@ -88,6 +90,36 @@ export function useNavigationAuth() {
         if (count != null) {
           setPendingActionCount(count);
         }
+
+        // Fetch user's team membership and pending lineup actions
+        const { data: memberTeam } = await supabase
+          .from("tournament_team_members" as any)
+          .select("team_id, role, team:tournament_teams(id, captain_id)")
+          .eq("player_id", profile.id)
+          .eq("status", "ACTIVE")
+          .limit(1)
+          .maybeSingle();
+
+        if (memberTeam?.team_id) {
+          setMyTeamId(memberTeam.team_id);
+          const isCap = memberTeam.role === "CAPTAIN" || (memberTeam.team as any)?.captain_id === profile.id;
+          if (isCap) {
+            // Count ties for this team where lineup is not locked
+            const { count: pendingLineups } = await supabase
+              .from("tournament_ties" as any)
+              .select("*", { count: "exact", head: true })
+              .or(`team_a_id.eq.${memberTeam.team_id},team_b_id.eq.${memberTeam.team_id}`)
+              .neq("state", "COMPLETED")
+              .or(`and(team_a_id.eq.${memberTeam.team_id},lineup_locked_a.eq.false),and(team_b_id.eq.${memberTeam.team_id},lineup_locked_b.eq.false)`);
+
+            setTeamActionCount(pendingLineups || 0);
+          } else {
+            setTeamActionCount(0);
+          }
+        } else {
+          setMyTeamId(null);
+          setTeamActionCount(0);
+        }
       } catch {
         if (intervalId) clearInterval(intervalId);
       }
@@ -128,5 +160,7 @@ export function useNavigationAuth() {
     userEmail: session?.user?.email ?? "",
     userAvatar: profile?.avatar_url ?? null,
     pendingActionCount,
+    myTeamId,
+    teamActionCount,
   };
 }

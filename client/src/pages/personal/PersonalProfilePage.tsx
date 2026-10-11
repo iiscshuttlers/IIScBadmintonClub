@@ -92,11 +92,7 @@ export default function PersonalProfilePage() {
     try {
       const { error } = await supabase.from("players").update({ status: newStatus } as any).eq("id", profile.id);
       if (error) throw error;
-      if (newStatus === "playing" && session?.user?.id) {
-        const now = new Date();
-        await supabase.from("court_visits").insert({ user_id: session.user.id, visited_at: now.toISOString(), day_of_week: now.getDay(), hour: now.getHours() });
-      }
-      
+
       // Notify buddies
       if (newStatus === "playing" || newStatus === "looking") {
         supabase.functions.invoke("notify-social", {

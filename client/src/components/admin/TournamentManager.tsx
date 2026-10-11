@@ -15,13 +15,22 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck
 } from "lucide-react";
+import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { getDepartmentAcronym } from "@/data/departments";
 import { exportToImage, exportToPDF } from "@/utils/exportUtils";
 import { TeamsTab } from "@/components/admin/TeamsTab";
+import { TeamTournamentManager } from "@/components/admin/TeamTournamentManager";
+import { OverflowTabs } from "@/components/tournament/OverflowTabs";
+import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
+import { RankedBadge } from "@/components/tournament/RankedBadge";
+import { LifecycleStepper } from "@/components/tournament/LifecycleStepper";
+import { ThemeScope } from "@/components/tournament/ThemeScope";
+import { getTournamentTheme, getEventFamily } from "@/lib/tournamentTheme";
+import { calculateMinRosterRequirements } from "@/lib/teamLineupRules";
 
 // ── CSV helpers ────────────────────────────────────────────────────────────────
 
@@ -196,7 +205,7 @@ export function TournamentManager() {
   const { session, isMainAdmin } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const SUB_TABS = ["setup", "participants", "teams", "bracket", "archive"] as const;
+  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "officials", "archive"] as const;
   type SubTab = typeof SUB_TABS[number];
 
   const getHashSubTab = (): SubTab => {
@@ -229,6 +238,12 @@ export function TournamentManager() {
     setTournaments(allTournaments);
     
     setSelected((prev) => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlId = searchParams.get("id");
+      if (urlId && allTournaments.length) {
+        const matchUrl = allTournaments.find(t => t.id === urlId);
+        if (matchUrl) return matchUrl;
+      }
       if (!prev && allTournaments.length) {
         const savedId = localStorage.getItem("admin_selected_tournament_id");
         const savedT = allTournaments.find(t => t.id === savedId);
@@ -244,6 +259,23 @@ export function TournamentManager() {
   }, []);
 
   useEffect(() => { loadTournaments(true); }, [loadTournaments]);
+
+  // Synchronize when URL search ?id= changes
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlId = searchParams.get("id");
+      if (urlId && tournaments.length) {
+        const match = tournaments.find(t => t.id === urlId);
+        if (match && match.id !== selected?.id) {
+          setSelected(match);
+        }
+      }
+    };
+    handleUrlChange();
+    window.addEventListener("popstate", handleUrlChange);
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, [tournaments, selected?.id]);
 
   useEffect(() => {
     if (selected?.id) {
@@ -281,9 +313,44 @@ export function TournamentManager() {
     <div className="space-y-5">
       {/* Tournament selector */}
       <div className={cardCls}>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Trophy className="w-5 h-5 text-[var(--warning)] shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
+            </div>
+            
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <div className="relative flex-1 min-w-0 max-w-md">
+                <select
+                  value={selected?.id ?? ""}
+                  onChange={(e) => {
+                    const t = tournaments.find((t) => t.id === e.target.value);
+                    if (t) { 
+                      setSelected(t); 
+                      setTab("setup"); 
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("id", t.id);
+                      window.history.replaceState({}, '', url.toString());
+                    }
+                  }}
+                  className="w-full text-sm font-black text-slate-800 dark:text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-8 appearance-none outline-none focus:ring-2 focus:ring-primary/40 truncate cursor-pointer transition-all"
+                >
+                  {tournaments.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      {t.name} [{t.status}]
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+              </div>
+
+              {selected && (
+                <div className="shrink-0 hidden xs:block">
+                  <StatusChip status={selected.status} />
+                </div>
+              )}
+            </div>
+
             <InfoModal
               title="TOURNAMENT MANAGER"
               items={[
@@ -292,31 +359,40 @@ export function TournamentManager() {
                 { badge: "BYES", title: "Manual Entry Rounds", desc: "By default the draw's spare slots become byes for the top seeds, one each. On the Participants tab you can pin any player's first-match round instead — a second bye costs 3 slots, so the counter above the list shows what's left." }
               ]}
             />
-            <select
-              value={selected?.id ?? ""}
-              onChange={(e) => {
-                const t = tournaments.find((t) => t.id === e.target.value);
-                if (t) { setSelected(t); setTab("setup"); }
-              }}
-              className="text-sm font-black text-slate-800 dark:text-foreground bg-transparent border-none outline-none cursor-pointer"
-            >
-              {tournaments.map((t) => (
-                <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                  {t.name} [{t.status}]
-                </option>
-              ))}
-            </select>
-            {selected && <StatusChip status={selected.status} />}
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            disabled={creating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition disabled:opacity-50"
-          >
-            {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-            New Tournament
-          </button>
+
+          <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+            {selected && (
+              <div className="block xs:hidden">
+                <StatusChip status={selected.status} />
+              </div>
+            )}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={creating}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black transition disabled:opacity-50 shrink-0 ml-auto sm:ml-0 shadow-sm"
+            >
+              {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              <span>New Tournament</span>
+            </button>
+          </div>
         </div>
+
+        {selected && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <EventTypeBadge
+              tournament_type={selected.tournament_type}
+              format_family={selected.format_family}
+            />
+            <RankedBadge ranked={selected.counts_for_elo} />
+            <div className="ml-auto">
+              <LifecycleStepper
+                status={selected.status}
+                accentBg={getTournamentTheme(selected).tokens.bg}
+              />
+            </div>
+          </div>
+        )}
 
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
@@ -364,22 +440,33 @@ export function TournamentManager() {
       {selected && (
         <>
           {/* Tabs */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-            {(["setup", selected?.format_family === "TEAM" ? "teams" : "participants", "bracket", "archive"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setTab(tab as SubTab)}
-                className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
-                  activeTab === tab
-                    ? "bg-primary text-primary-foreground shadow"
-                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
+          <OverflowTabs
+            activeId={activeTab}
+            onChange={(id) => setTab(id as SubTab)}
+            activeClassName={`${getTournamentTheme(selected).tokens.bg} text-white shadow-md`}
+            tabs={(selected?.format_family === "TEAM"
+              ? [
+                  { id: "setup", label: "Setup", icon: Settings2 },
+                  { id: "teams", label: "Teams", icon: Users },
+                  { id: "fixtures", label: "Schedule Tie", icon: CalendarDays },
+                  { id: "bracket", label: "Bracket & Pools", icon: Swords },
+                  { id: "officials", label: "Officials", icon: ShieldCheck },
+                  { id: "archive", label: "Archive", icon: Archive }
+                ]
+              : [
+                  { id: "setup", label: "Setup", icon: Settings2 },
+                  { id: "participants", label: "Participants", icon: Users },
+                  { id: "bracket", label: "Bracket", icon: Swords },
+                  { id: "officials", label: "Officials", icon: ShieldCheck },
+                  { id: "archive", label: "Archive", icon: Archive }
+                ]
+            ).map((tab) => {
+              const IconComp = tab.icon;
+              return { id: tab.id, label: tab.label, icon: <IconComp className="w-4 h-4 shrink-0" /> };
+            })}
+          />
 
+          <ThemeScope family={getEventFamily(selected)} className="mt-5 space-y-5">
           {activeTab === "setup" && (
             <SetupTab
               tournament={selected}
@@ -393,15 +480,20 @@ export function TournamentManager() {
           )}
           {activeTab === "participants" && <ParticipantsTab tournament={selected} />}
           {activeTab === "teams" && <TeamsTab tournament={selected} />}
+          {activeTab === "fixtures" && selected?.format_family === "TEAM" && (
+            <TeamTournamentManager tournamentId={selected.id} />
+          )}
           {activeTab === "bracket" && selected?.format_family === "TEAM" && (
             <TeamBracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
           {activeTab === "bracket" && selected?.format_family !== "TEAM" && (
             <BracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
+          {activeTab === "officials" && <TournamentOfficialsPanel tournament={selected} />}
           {activeTab === "archive" && (
             <ArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
           )}
+          </ThemeScope>
         </>
       )}
 
@@ -515,7 +607,13 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
 
   const deleteDraft = async () => {
     if (form.status !== "draft") return;
-    if (!confirm("Are you sure you want to send this draft tournament to the trash?")) return;
+    const ok = await confirm({
+      title: "Trash Draft Tournament",
+      description: "Are you sure you want to send this draft tournament to the trash?",
+      confirmLabel: "Send to Trash",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     setSaving(true);
     const afterState = { ...tournament, status: "deleted" };
     const { error } = await supabase.from("tournaments").update({ status: "deleted" }).eq("id", tournament.id);
@@ -555,19 +653,36 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     });
   };
 
+  const getRubbersList = (config: any): any[] => {
+    if (!config) return [];
+    if (Array.isArray(config)) return config;
+    if (Array.isArray(config.rubbers)) return config.rubbers;
+    return [];
+  };
+
+  const updateRubbersList = (newRubbers: any[]) => {
+    if (form.tie_format_config && typeof form.tie_format_config === 'object' && !Array.isArray(form.tie_format_config)) {
+      upd("tie_format_config", { ...form.tie_format_config, rubbers: newRubbers });
+    } else {
+      upd("tie_format_config", newRubbers);
+    }
+  };
+
   const categoriesCount = CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = (form.tie_format_config || []).filter((r: any) => r.category === cat).length;
+    acc[cat] = getRubbersList(form.tie_format_config).filter((r: any) => r.category === cat).length;
     return acc;
   }, {} as Record<string, number>);
 
   const addOfCategory = (cat: string) => {
-    const newConfig = [...(form.tie_format_config || [])];
+    const list = getRubbersList(form.tie_format_config);
+    const newConfig = [...list];
     newConfig.push({ order: newConfig.length + 1, label: '', category: cat, points: 1 });
-    upd("tie_format_config", autoLabelRubbers(newConfig));
+    updateRubbersList(autoLabelRubbers(newConfig));
   };
 
   const removeLastOfCategory = (cat: string) => {
-    const newConfig = [...(form.tie_format_config || [])];
+    const list = getRubbersList(form.tie_format_config);
+    const newConfig = [...list];
     // Polyfill for findLastIndex
     let index = -1;
     for (let i = newConfig.length - 1; i >= 0; i--) {
@@ -578,17 +693,18 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     }
     if (index !== -1) {
       newConfig.splice(index, 1);
-      upd("tie_format_config", autoLabelRubbers(newConfig));
+      updateRubbersList(autoLabelRubbers(newConfig));
     }
   };
 
   const moveRubber = (index: number, direction: -1 | 1) => {
-    const newConfig = [...(form.tie_format_config || [])];
+    const list = getRubbersList(form.tie_format_config);
+    const newConfig = [...list];
     if (index + direction < 0 || index + direction >= newConfig.length) return;
     const temp = newConfig[index];
     newConfig[index] = newConfig[index + direction];
     newConfig[index + direction] = temp;
-    upd("tie_format_config", autoLabelRubbers(newConfig));
+    updateRubbersList(autoLabelRubbers(newConfig));
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -605,13 +721,15 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     e.preventDefault();
     if (draggedRubberIndex === null || draggedRubberIndex === dropIndex) return;
 
-    const newConfig = [...(form.tie_format_config || [])];
+    const list = getRubbersList(form.tie_format_config);
+    const newConfig = [...list];
     const item = newConfig.splice(draggedRubberIndex, 1)[0];
     newConfig.splice(dropIndex, 0, item);
     
-    upd("tie_format_config", autoLabelRubbers(newConfig));
+    updateRubbersList(autoLabelRubbers(newConfig));
     setDraggedRubberIndex(null);
   };
+
 
   return (
     <div className="space-y-5">
@@ -810,7 +928,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 </div>
 
                 <div className="space-y-2">
-                  {(form.tie_format_config || []).map((rubber: any, i: number) => (
+                  {getRubbersList(form.tie_format_config).map((rubber: any, i: number) => (
                   <div 
                     key={i} 
                     draggable
@@ -830,18 +948,18 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                       placeholder="Label (e.g. MS1)" 
                       value={rubber.label || ''} 
                       onChange={(e) => {
-                        const newConfig = [...(form.tie_format_config || [])];
+                        const newConfig = [...getRubbersList(form.tie_format_config)];
                         newConfig[i].label = e.target.value;
-                        upd("tie_format_config", newConfig);
+                        updateRubbersList(newConfig);
                       }}
                     />
                     <select 
                       className={`${inputCls} !w-20 !py-1`}
                       value={rubber.category || 'MS'}
                       onChange={(e) => {
-                        const newConfig = [...(form.tie_format_config || [])];
+                        const newConfig = [...getRubbersList(form.tie_format_config)];
                         newConfig[i].category = e.target.value;
-                        upd("tie_format_config", autoLabelRubbers(newConfig));
+                        updateRubbersList(autoLabelRubbers(newConfig));
                       }}
                     >
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -853,17 +971,17 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                         className={`${inputCls} !w-16 !py-1`} 
                         value={rubber.points ?? 1} 
                         onChange={(e) => {
-                          const newConfig = [...(form.tie_format_config || [])];
+                          const newConfig = [...getRubbersList(form.tie_format_config)];
                           newConfig[i].points = parseInt(e.target.value) || 0;
-                          upd("tie_format_config", newConfig);
+                          updateRubbersList(newConfig);
                         }}
                       />
                     </div>
                     <button 
                       onClick={() => {
-                        const newConfig = [...(form.tie_format_config || [])];
+                        const newConfig = [...getRubbersList(form.tie_format_config)];
                         newConfig.splice(i, 1);
-                        upd("tie_format_config", autoLabelRubbers(newConfig));
+                        updateRubbersList(autoLabelRubbers(newConfig));
                       }}
                       className="p-1.5 text-red-500 hover:bg-red-50 rounded"
                       title="Remove Rubber"
@@ -876,6 +994,150 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
               </div>
             </div>
           )}
+
+          {form.format_family === 'TEAM' && (() => {
+            const currentRubbers = getRubbersList(form.tie_format_config);
+            const rulesObj = typeof form.tie_format_config === 'object' && !Array.isArray(form.tie_format_config) ? form.tie_format_config : {};
+            const maxMale = rulesObj.max_rubbers_per_male ?? form.max_rubbers_per_player ?? 2;
+            const maxFemale = rulesObj.max_rubbers_per_female ?? form.max_rubbers_per_player ?? 2;
+            const allowSameDiscipline = rulesObj.allow_same_discipline_repeat ?? false;
+            const allowDeciderRepeat = rulesObj.allow_repeat_in_decider ?? true;
+            const allowSameEventDecider = rulesObj.allow_same_event_repeat_in_decider ?? false;
+
+            const rosterReq = calculateMinRosterRequirements(currentRubbers, {
+              max_rubbers_per_male: maxMale,
+              max_rubbers_per_female: maxFemale,
+              allow_same_discipline_repeat: allowSameDiscipline,
+              ignore_gender_rules: form.ignore_gender_rules
+            });
+
+            const updateRule = (key: string, value: any) => {
+              const currentObj = typeof form.tie_format_config === 'object' && !Array.isArray(form.tie_format_config)
+                ? { ...form.tie_format_config }
+                : { rubbers: currentRubbers };
+              currentObj[key] = value;
+              upd("tie_format_config", currentObj);
+            };
+
+            return (
+              <div className="sm:col-span-2 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/60 dark:bg-slate-900/40 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <div>
+                    <h4 className="font-black text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-primary" />
+                      Player Repetition &amp; Lineup Restrictions
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Configure different caps for male and female players and prevent same-discipline conflicts.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                    <span>Dynamic Roster Minimum:</span>
+                    <span className="font-black text-sm">{rosterReq.minTotalPlayers} players</span>
+                    <span className="text-[11px] font-medium text-slate-500">
+                      ({rosterReq.minMalePlayers}♂, {rosterReq.minFemalePlayers}♀)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+                  {/* Max rubbers for Male players */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Max Rubbers per Male Player
+                    </label>
+                    <select
+                      className={inputCls}
+                      value={maxMale}
+                      onChange={(e) => updateRule('max_rubbers_per_male', parseInt(e.target.value) || 2)}
+                    >
+                      <option value={1}>1 rubber only (No repeats)</option>
+                      <option value={2}>At most 2 rubbers (Standard)</option>
+                      <option value={3}>At most 3 rubbers</option>
+                      <option value={4}>Unlimited / 4 rubbers</option>
+                    </select>
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
+                      Requires at least {rosterReq.minMalePlayers} male players for {rosterReq.totalMaleSlots} male slot{rosterReq.totalMaleSlots !== 1 ? 's' : ''}.
+                    </span>
+                  </div>
+
+                  {/* Max rubbers for Female players */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Max Rubbers per Female Player
+                    </label>
+                    <select
+                      className={inputCls}
+                      value={maxFemale}
+                      onChange={(e) => updateRule('max_rubbers_per_female', parseInt(e.target.value) || 2)}
+                    >
+                      <option value={1}>1 rubber only (No repeats)</option>
+                      <option value={2}>At most 2 rubbers (Standard)</option>
+                      <option value={3}>At most 3 rubbers (Flexible)</option>
+                      <option value={4}>Unlimited / 4 rubbers</option>
+                    </select>
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
+                      Requires at least {rosterReq.minFemalePlayers} female players for {rosterReq.totalFemaleSlots} female slot{rosterReq.totalFemaleSlots !== 1 ? 's' : ''}.
+                    </span>
+                  </div>
+
+                  {/* Manual Squad Size Floor Override */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      Minimum Squad Size Required
+                    </label>
+                    <input
+                      type="number"
+                      min={rosterReq.minTotalPlayers}
+                      className={inputCls}
+                      value={form.team_roster_min || rosterReq.minTotalPlayers}
+                      onChange={(e) => upd("team_roster_min", parseInt(e.target.value) || rosterReq.minTotalPlayers)}
+                    />
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
+                      Math minimum is {rosterReq.minTotalPlayers}. You can set a higher team threshold.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Specific Rule Toggles */}
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-200 dark:border-slate-800">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!allowSameDiscipline}
+                      onChange={(e) => updateRule('allow_same_discipline_repeat', !e.target.checked)}
+                      className="w-4 h-4 accent-primary rounded mt-0.5"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                        Disallow Same-Discipline Repeats
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        A player who played MS1 cannot play MS2 (or WS1/WS2).
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowSameEventDecider}
+                      onChange={(e) => updateRule('allow_same_event_repeat_in_decider', e.target.checked)}
+                      className="w-4 h-4 accent-primary rounded mt-0.5"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                        Allow Same Event Player in Decider
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        If tie has a decider (e.g. XD2), allow players who already played regular XD1.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            );
+          })()}
 
           <div>
             <label className={labelCls}>Eligibility</label>
@@ -1647,7 +1909,13 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
       const msg = onlyCat
         ? `This will delete existing bracket matches for ${onlyCat} and regenerate. Continue?`
         : "This will delete existing bracket matches and regenerate. Continue?";
-      if (!confirm(msg)) return;
+      const ok = await confirm({
+        title: "Regenerate Bracket",
+        description: msg,
+        confirmLabel: "Regenerate",
+        confirmVariant: "danger",
+      });
+      if (!ok) return;
       if (onlyCat) {
         await supabase.from("tournament_matches").delete().eq("tournament_id", tournament.id).eq("category", onlyCat);
       } else {
@@ -2365,6 +2633,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 // ── Bracket Tab ────────────────────────────────────────────────────────────────
 
 function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isMasterAdmin: boolean }) {
+  const { confirm } = useConfirm();
   const { data: allPlayers } = usePlayers();
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [roundRules, setRoundRules] = useState<RoundRule[]>([]);
@@ -2474,7 +2743,13 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
 
   const undoTournamentMatch = async (id: string) => {
-    if (!confirm("Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and revert ELO for all players.")) return;
+    const ok = await confirm({
+      title: "Undo Tournament Match",
+      description: "Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and revert ELO for all players.",
+      confirmLabel: "Undo Match",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     setActingOn(id);
     try {
       const { error } = await supabase.rpc("undo_tournament_match", { p_match_id: id });
@@ -3076,7 +3351,13 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             <button 
             disabled={isSyncing}
             onClick={async () => {
-              if (!confirm("This will synchronize Round 1 bracket match names with the latest Participants list. Continue?")) return;
+              const ok = await confirm({
+                title: "Sync Bracket Names",
+                description: "This will synchronize Round 1 bracket match names with the latest Participants list. Continue?",
+                confirmLabel: "Sync Names",
+                confirmVariant: "primary",
+              });
+              if (!ok) return;
               setIsSyncing(true);
               try {
                 let result;
@@ -3427,7 +3708,13 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
                           {m.status !== "scheduled" && (
                             <button onClick={async () => {
-                              if (!confirm("Reset this match to Scheduled? This wipes score and status.")) return;
+                              const ok = await confirm({
+                                title: "Reset Match",
+                                description: "Reset this match to Scheduled? This wipes score and status.",
+                                confirmLabel: "Reset",
+                                confirmVariant: "danger",
+                              });
+                              if (!ok) return;
                               setActingOn(m.id);
                               const prev = { status: m.status, score: m.score, sets_history: m.sets_history, winner_side: m.winner_side };
                               const { error } = await supabase.from("tournament_matches").update({ status: "scheduled", score: null, sets_history: [], winner_side: null }).eq("id", m.id);
@@ -3457,7 +3744,13 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               onChange={async (e) => {
                                 const newStatus = e.target.value;
                                 if (newStatus === m.status) return;
-                                if (!confirm(`Force change to ${newStatus.toUpperCase()}?`)) return;
+                                const ok = await confirm({
+                                  title: "Change Match Status",
+                                  description: `Force change to ${newStatus.toUpperCase()}?`,
+                                  confirmLabel: "Change Status",
+                                  confirmVariant: "primary",
+                                });
+                                if (!ok) return;
                                 setActingOn(m.id);
                                 const prev = { status: m.status };
                                 const { error } = await supabase.from("tournament_matches").update({ status: newStatus }).eq("id", m.id);
@@ -3803,6 +4096,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
   isMasterAdmin: boolean;
   onArchived: () => void;
 }) {
+  const { confirm } = useConfirm();
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [archiving, setArchiving] = useState(false);
@@ -3814,7 +4108,13 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
   }, [tournament.id]);
 
   const archive = async () => {
-    if (!confirm(`Archive "${tournament.name}"? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: "Archive Tournament",
+      description: `Archive "${tournament.name}"? This cannot be undone.`,
+      confirmLabel: "Archive",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     setArchiving(true);
     const { error } = await supabase.rpc("archive_tournament", { p_tournament_id: tournament.id });
     if (error) { toast.error(error.message); setArchiving(false); return; }
@@ -3852,7 +4152,13 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
           </span>
           {isMasterAdmin && (
             <button onClick={async () => {
-              if (!confirm(`Unarchive "${tournament.name}"?`)) return;
+              const ok = await confirm({
+                title: "Unarchive Tournament",
+                description: `Unarchive "${tournament.name}"?`,
+                confirmLabel: "Unarchive",
+                confirmVariant: "primary",
+              });
+              if (!ok) return;
               setArchiving(true);
               const { error } = await supabase.from("tournaments").update({ status: "completed", archived_at: null }).eq("id", tournament.id);
               if (error) { toast.error(error.message); setArchiving(false); return; }

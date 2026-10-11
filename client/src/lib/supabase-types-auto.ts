@@ -1073,6 +1073,76 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          audience: string
+          body: string
+          channels: string[]
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          recipient_ids: string[]
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          title: string
+          tournament_id: string | null
+        }
+        Insert: {
+          audience?: string
+          body: string
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          recipient_ids?: string[]
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          title: string
+          tournament_id?: string | null
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channels?: string[]
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          recipient_ids?: string[]
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_notifications_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sent_fan_notifications: {
         Row: {
           created_at: string | null
@@ -1117,11 +1187,122 @@ export type Database = {
         }
         Relationships: []
       }
+      tie_lineup_audits: {
+        Row: {
+          action_type: string
+          authorized_by: string | null
+          both_captains_agreed: boolean
+          created_at: string | null
+          id: string
+          original_player_id: string | null
+          reason: string | null
+          referee_id: string
+          replacement_player_id: string | null
+          rubber_order: number | null
+          tie_id: string
+        }
+        Insert: {
+          action_type: string
+          authorized_by?: string | null
+          both_captains_agreed?: boolean
+          created_at?: string | null
+          id?: string
+          original_player_id?: string | null
+          reason?: string | null
+          referee_id: string
+          replacement_player_id?: string | null
+          rubber_order?: number | null
+          tie_id: string
+        }
+        Update: {
+          action_type?: string
+          authorized_by?: string | null
+          both_captains_agreed?: boolean
+          created_at?: string | null
+          id?: string
+          original_player_id?: string | null
+          reason?: string | null
+          referee_id?: string
+          replacement_player_id?: string | null
+          rubber_order?: number | null
+          tie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tie_lineup_audits_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_original_player_id_fkey"
+            columns: ["original_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_original_player_id_fkey"
+            columns: ["original_player_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_replacement_player_id_fkey"
+            columns: ["replacement_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_replacement_player_id_fkey"
+            columns: ["replacement_player_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineup_audits_tie_id_fkey"
+            columns: ["tie_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_ties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tie_lineups: {
         Row: {
           id: string
+          is_decider: boolean
+          is_revealed: boolean | null
           player1_id: string
           player2_id: string | null
+          proposed_playing_order: number | null
+          revealed_at: string | null
+          revealed_by: string | null
           rubber_order: number
           side: string
           submitted_by: string
@@ -1130,8 +1311,13 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_decider?: boolean
+          is_revealed?: boolean | null
           player1_id: string
           player2_id?: string | null
+          proposed_playing_order?: number | null
+          revealed_at?: string | null
+          revealed_by?: string | null
           rubber_order: number
           side: string
           submitted_by: string
@@ -1140,8 +1326,13 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_decider?: boolean
+          is_revealed?: boolean | null
           player1_id?: string
           player2_id?: string | null
+          proposed_playing_order?: number | null
+          revealed_at?: string | null
+          revealed_by?: string | null
           rubber_order?: number
           side?: string
           submitted_by?: string
@@ -1173,6 +1364,20 @@ export type Database = {
           {
             foreignKeyName: "tie_lineups_player2_id_fkey"
             columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_revealed_by_fkey"
+            columns: ["revealed_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tie_lineups_revealed_by_fkey"
+            columns: ["revealed_by"]
             isOneToOne: false
             referencedRelation: "search_players_view"
             referencedColumns: ["id"]
@@ -1213,6 +1418,7 @@ export type Database = {
           ended_at: string | null
           golden_point: number | null
           id: string
+          is_decider_tiebreaker: boolean
           locked: boolean | null
           match_code: string
           match_number: number
@@ -1220,8 +1426,11 @@ export type Database = {
           player2_id: string | null
           player3_id: string | null
           player4_id: string | null
+          playing_order: number | null
           points_to_win: number | null
           reminder_sent: boolean | null
+          revealed_at: string | null
+          revealed_by: string | null
           round: number
           round_name: string
           rubber_label: string | null
@@ -1254,6 +1463,7 @@ export type Database = {
           ended_at?: string | null
           golden_point?: number | null
           id?: string
+          is_decider_tiebreaker?: boolean
           locked?: boolean | null
           match_code: string
           match_number: number
@@ -1261,8 +1471,11 @@ export type Database = {
           player2_id?: string | null
           player3_id?: string | null
           player4_id?: string | null
+          playing_order?: number | null
           points_to_win?: number | null
           reminder_sent?: boolean | null
+          revealed_at?: string | null
+          revealed_by?: string | null
           round: number
           round_name: string
           rubber_label?: string | null
@@ -1295,6 +1508,7 @@ export type Database = {
           ended_at?: string | null
           golden_point?: number | null
           id?: string
+          is_decider_tiebreaker?: boolean
           locked?: boolean | null
           match_code?: string
           match_number?: number
@@ -1302,8 +1516,11 @@ export type Database = {
           player2_id?: string | null
           player3_id?: string | null
           player4_id?: string | null
+          playing_order?: number | null
           points_to_win?: number | null
           reminder_sent?: boolean | null
+          revealed_at?: string | null
+          revealed_by?: string | null
           round?: number
           round_name?: string
           rubber_label?: string | null
@@ -1382,6 +1599,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tournament_matches_revealed_by_fkey"
+            columns: ["revealed_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_revealed_by_fkey"
+            columns: ["revealed_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_matches_scored_by_fkey"
             columns: ["scored_by"]
             isOneToOne: false
@@ -1433,6 +1664,69 @@ export type Database = {
           {
             foreignKeyName: "tournament_matches_winner_id_fkey"
             columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_officials: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          role: string
+          tournament_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role: string
+          tournament_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: string
+          tournament_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_officials_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_officials_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_officials_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_officials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_officials_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "search_players_view"
             referencedColumns: ["id"]
@@ -1643,6 +1937,8 @@ export type Database = {
           captain_id: string
           created_at: string | null
           id: string
+          invite_token: string | null
+          invite_token_enabled: boolean
           logo_url: string | null
           name: string
           pool: string | null
@@ -1655,6 +1951,8 @@ export type Database = {
           captain_id: string
           created_at?: string | null
           id?: string
+          invite_token?: string | null
+          invite_token_enabled?: boolean
           logo_url?: string | null
           name: string
           pool?: string | null
@@ -1667,6 +1965,8 @@ export type Database = {
           captain_id?: string
           created_at?: string | null
           id?: string
+          invite_token?: string | null
+          invite_token_enabled?: boolean
           logo_url?: string | null
           name?: string
           pool?: string | null
@@ -1704,6 +2004,8 @@ export type Database = {
           advances_to_slot: string | null
           advances_to_tie: string | null
           created_at: string | null
+          decider_status: string | null
+          has_decider_rubber: boolean
           id: string
           lineup_deadline: string | null
           lineup_locked_a: boolean
@@ -1730,6 +2032,8 @@ export type Database = {
           advances_to_slot?: string | null
           advances_to_tie?: string | null
           created_at?: string | null
+          decider_status?: string | null
+          has_decider_rubber?: boolean
           id?: string
           lineup_deadline?: string | null
           lineup_locked_a?: boolean
@@ -1756,6 +2060,8 @@ export type Database = {
           advances_to_slot?: string | null
           advances_to_tie?: string | null
           created_at?: string | null
+          decider_status?: string | null
+          has_decider_rubber?: boolean
           id?: string
           lineup_deadline?: string | null
           lineup_locked_a?: boolean
@@ -2165,9 +2471,16 @@ export type Database = {
           drawn: number | null
           lost: number | null
           played: number | null
+          points_against: number | null
+          points_diff: number | null
+          points_for: number | null
           pool: string | null
           rubbers_against: number | null
+          rubbers_diff: number | null
           rubbers_for: number | null
+          sets_against: number | null
+          sets_diff: number | null
+          sets_for: number | null
           team_id: string | null
           team_name: string | null
           tie_points: number | null
@@ -2192,6 +2505,16 @@ export type Database = {
       }
       accept_friendly_match: {
         Args: { confirmer_id: string; match_uuid: string }
+        Returns: Json
+      }
+      add_decider_rubber_to_tie: {
+        Args: {
+          p_best_of_sets?: number
+          p_category?: string
+          p_label?: string
+          p_points_to_win?: number
+          p_tie_id: string
+        }
         Returns: Json
       }
       admin_approve_players:
@@ -2308,12 +2631,111 @@ export type Database = {
         Returns: undefined
       }
       cleanup_stale_push_tokens: { Args: never; Returns: undefined }
+      complete_match: {
+        Args: {
+          p_game1_s1: number
+          p_game1_s2: number
+          p_game2_s1: number
+          p_game2_s2: number
+          p_game3_s1?: number
+          p_game3_s2?: number
+          p_match_id: string
+          p_umpire_id: string
+          p_winner_id: string
+        }
+        Returns: undefined
+      }
       confirm_friendly_match: {
         Args: { confirmer_id: string; match_uuid: string }
         Returns: Json
       }
       create_guest_player: {
         Args: { p_full_name: string; p_gender?: string }
+        Returns: {
+          achievements: string[] | null
+          apparel: string | null
+          avatar_url: string | null
+          bio: string | null
+          buddies: string[] | null
+          career_highlights: Json | null
+          coach: string | null
+          contact_number: string | null
+          created_at: string
+          created_by: string | null
+          current_racket: string | null
+          current_ranking: number | null
+          default_match_reminder_mins: number | null
+          deleted_at: string | null
+          department: string | null
+          dominant_hand: string | null
+          doubles_elo: number | null
+          doubles_matches_played: number | null
+          doubles_record: string | null
+          elo_rating: number | null
+          email: string | null
+          favorite_format: string | null
+          favorite_idol: string | null
+          favorite_shot: string | null
+          followers: string[] | null
+          following: string[] | null
+          frequent_partners: Json | null
+          full_name: string
+          gender: string | null
+          height: string | null
+          highest_ranking: number | null
+          home_state: string | null
+          id: string
+          iisc_email: string | null
+          instagram: string | null
+          is_approved: boolean | null
+          is_guest: boolean
+          is_looking_to_play: boolean | null
+          is_retired: boolean | null
+          joined_year: number | null
+          mixed_elo: number | null
+          mixed_matches_played: number | null
+          mixed_record: string | null
+          nationality: string | null
+          nickname: string | null
+          playing_level: string | null
+          playing_style: string | null
+          pref_notify_buddy_status: boolean | null
+          pref_notify_point: boolean
+          pref_notify_serve: boolean
+          pref_notify_smash: boolean
+          pref_notify_victory: boolean
+          pref_notify_whistle: boolean
+          pref_receive_email: boolean
+          pref_receive_push: boolean
+          quote: string | null
+          racket_details: Json | null
+          recent_form: string[] | null
+          recent_matches: Json | null
+          role: string | null
+          shoes: string | null
+          singles_elo: number | null
+          singles_matches_played: number | null
+          singles_record: string | null
+          sr_number: string | null
+          started_playing_year: number | null
+          stats: Json | null
+          total_friendly_matches: number | null
+          tournament_doubles_elo: number | null
+          tournament_elo: number | null
+          tournament_history: string[] | null
+          tournament_mixed_elo: number | null
+          tournament_singles_elo: number | null
+          win_loss_record: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "players"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_guest_player_with_email: {
+        Args: { p_email: string; p_full_name: string }
         Returns: {
           achievements: string[] | null
           apparel: string | null
@@ -2425,9 +2847,37 @@ export type Database = {
         Args: { p_match_id: string; p_match_source: string }
         Returns: undefined
       }
+      emergency_modify_lineup:
+        | {
+            Args: {
+              p_new_player_id: string
+              p_pos: number
+              p_reason: string
+              p_rubber_order: number
+              p_side: string
+              p_tie_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_both_captains_agreed?: boolean
+              p_new_player_id: string
+              p_pos: number
+              p_reason: string
+              p_rubber_order: number
+              p_side: string
+              p_tie_id: string
+            }
+            Returns: boolean
+          }
       fulfill_marketplace_request: {
         Args: { claimer_id: string; claimer_name: string; listing_uuid: string }
         Returns: undefined
+      }
+      generate_new_team_invite_token: {
+        Args: { p_team_id: string }
+        Returns: string
       }
       get_court_popularity: {
         Args: never
@@ -2446,7 +2896,16 @@ export type Database = {
         Returns: number
       }
       get_match_dominance: { Args: { p_sets: string[] }; Returns: number }
+      get_match_points_won: {
+        Args: { p_score: string; p_side: number }
+        Returns: number
+      }
+      get_match_sets_won: {
+        Args: { p_score: string; p_side: number }
+        Returns: number
+      }
       get_set_multiplier: { Args: { p_sets: string[] }; Returns: number }
+      get_team_by_invite_token: { Args: { p_token: string }; Returns: Json }
       get_venue_active_count: { Args: never; Returns: number }
       get_venue_hourly_pattern: {
         Args: { days_back?: number }
@@ -2464,6 +2923,7 @@ export type Database = {
         Returns: string
       }
       is_active_team_member: { Args: { t_team_id: string }; Returns: boolean }
+      is_admin_or_master: { Args: never; Returns: boolean }
       is_authorized_for_analytics: {
         Args: {
           p_auth_uid: string
@@ -2476,6 +2936,11 @@ export type Database = {
       is_team_captain: { Args: { t_team_id: string }; Returns: boolean }
       is_team_staff: { Args: { t_team_id: string }; Returns: boolean }
       is_tournament_manager: { Args: { t_id: string }; Returns: boolean }
+      is_tournament_official: {
+        Args: { p_role?: string; t_id: string }
+        Returns: boolean
+      }
+      join_team_by_token: { Args: { p_token: string }; Returns: Json }
       link_label_to_player: {
         Args: { p_label: string; p_partner_id?: string; p_player_id: string }
         Returns: number
@@ -2484,9 +2949,17 @@ export type Database = {
         Args: { p_side: string; p_tie_id: string }
         Returns: boolean
       }
+      merge_guest_player: {
+        Args: { guest_id: string; real_id: string }
+        Returns: undefined
+      }
       pick_team_label: {
         Args: { p_rebuilt: string; p_stored: string }
         Returns: string
+      }
+      populate_playoff_qualifiers_from_standings: {
+        Args: { p_tournament_id: string }
+        Returns: number
       }
       process_tournament_bracket_progression: {
         Args: { p_match_id: string; p_winner_id: string }
@@ -2537,6 +3010,11 @@ export type Database = {
         Args: { p_accept: boolean; p_member_id: string }
         Returns: boolean
       }
+      reveal_decider_rubber: { Args: { p_tie_id: string }; Returns: Json }
+      reveal_tie_lineup: {
+        Args: { p_rubber_order?: number; p_tie_id: string }
+        Returns: boolean
+      }
       save_tie_lineup: {
         Args: { p_assignments: Json; p_side: string; p_tie_id: string }
         Returns: boolean
@@ -2550,6 +3028,10 @@ export type Database = {
         Args: { p_id: string; p_role: string }
         Returns: undefined
       }
+      set_tie_playing_order: {
+        Args: { p_playing_orders: Json; p_reason?: string; p_tie_id: string }
+        Returns: boolean
+      }
       set_tie_result: {
         Args: { p_note: string; p_tie_id: string; p_winner_team_id: string }
         Returns: boolean
@@ -2561,6 +3043,15 @@ export type Database = {
       soft_delete_player:
         | { Args: { admin_email: string; player_id: string }; Returns: boolean }
         | { Args: { target_player_id: string }; Returns: undefined }
+      submit_decider_lineup: {
+        Args: {
+          p_player1_id: string
+          p_player2_id?: string
+          p_side: string
+          p_tie_id: string
+        }
+        Returns: Json
+      }
       submit_friendly_match:
         | {
             Args: {
@@ -2600,6 +3091,10 @@ export type Database = {
       toggle_buddy: { Args: { p_target_id: string }; Returns: undefined }
       toggle_follow: { Args: { p_target_id: string }; Returns: undefined }
       toggle_match_kudos: { Args: { p_match_id: string }; Returns: undefined }
+      toggle_team_invite_token: {
+        Args: { p_enabled: boolean; p_team_id: string }
+        Returns: boolean
+      }
       transfer_umpire_duty: {
         Args: { p_match_id: string; p_new_umpire_id: string }
         Returns: undefined

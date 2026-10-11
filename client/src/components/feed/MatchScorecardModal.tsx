@@ -29,9 +29,6 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
   // team*_label too. See lib/teamNames.
   const partner1 = match.partner1 ?? resolveTeamMembers(match.player1, match.partner1, match.team1_label)[1] ?? null;
   const partner2 = match.partner2 ?? resolveTeamMembers(match.player2, match.partner2, match.team2_label)[1] ?? null;
-  const isDoubles = !!partner1 || !!partner2;
-  const isP1Winner = match.winner_id === p1?.id || match.winner_id === partner1?.id;
-
   // Parse set scores from match_score e.g. "21-15, 19-21, 21-18"
   const rawScore = match.match_score || match.score || "";
   const sets = rawScore.split(",").map((s: string) => s.trim()).filter(Boolean).map((s: string) => {
@@ -41,6 +38,11 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
     }
     return null;
   }).filter(Boolean);
+
+  const isP1Winner = 
+    match.winner_side === 1 || 
+    (match.winner_id && (match.winner_id === p1?.id || match.winner_id === partner1?.id)) ||
+    (match.winner_side === undefined && sets.filter((s: any) => s.p1 > s.p2).length > sets.filter((s: any) => s.p2 > s.p1).length);
 
   const isPlayerInMatch = currentUser && (
     match.player1_id === currentUser.id ||
@@ -195,9 +197,9 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
               {sets.length > 0 && (
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden">
                   <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    <span>{p1?.full_name?.split(" ")[0]}</span>
+                    <span>{p1?.full_name?.split(" ")[0] || match.team1_label?.split(" ")[0] || "Team 1"}</span>
                     <span>Set</span>
-                    <span>{p2?.full_name?.split(" ")[0]}</span>
+                    <span>{p2?.full_name?.split(" ")[0] || match.team2_label?.split(" ")[0] || "Team 2"}</span>
                   </div>
                   {sets.map((s: any, i: number) => {
                     const p1Won = s.p1 > s.p2;

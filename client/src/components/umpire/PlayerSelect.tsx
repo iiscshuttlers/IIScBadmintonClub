@@ -9,18 +9,22 @@ export function PlayerSelect({
   players,
   placeholder,
   fallbackName,
+  disabledPlayerIds,
 }: {
   value: string;
   onChange: (v: string) => void;
   players: Player[];
   placeholder?: string;
   fallbackName?: string;
+  disabledPlayerIds?: string[] | Set<string>;
 }) {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listboxRef = useRef<HTMLDivElement>(null);
+
+  const disabledSet = disabledPlayerIds instanceof Set ? disabledPlayerIds : new Set(disabledPlayerIds || []);
 
   useEffect(() => {
     if (value) {
@@ -88,6 +92,9 @@ export function PlayerSelect({
       e.preventDefault();
       if (activeIndex >= 0 && activeIndex < filtered.length) {
         const selected = filtered[activeIndex];
+        if (disabledSet.has(selected.id)) {
+          return;
+        }
         onChange(selected.id);
         setSearch(selected.full_name);
         setIsOpen(false);
@@ -112,7 +119,11 @@ export function PlayerSelect({
         className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground truncate"
       />
       {isOpen && (
-        <div ref={listboxRef} className="absolute z-60 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-56 overflow-y-auto">
+        <div 
+          ref={listboxRef} 
+          className="absolute z-[100] left-0 right-0 w-full mt-1 bg-slate-850 dark:bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto overscroll-contain visible-scrollbar touch-pan-y"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {filtered.length === 0 ? (
             <div
               className={`p-3 text-sm font-bold cursor-pointer text-primary ${activeIndex === 0 ? "bg-primary/80/50" : "hover:bg-primary/80/30"}`}
@@ -121,28 +132,56 @@ export function PlayerSelect({
               Use "{search}" as Guest
             </div>
           ) : (
-            filtered.map((p, idx) => (
-              <div
-                key={p.id}
-                onClick={() => { onChange(p.id); setSearch(p.full_name); setIsOpen(false); }}
-                className={`p-2.5 text-sm font-bold cursor-pointer transition-colors border-b border-slate-700/40 last:border-0 ${activeIndex === idx ? "bg-primary/20 text-primary" : "hover:bg-primary/80/30 text-slate-200"}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate">{p.full_name}</span>
-                  {p._isSuggested && (
-                    <span className="shrink-0 text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
-                      Suggested Match
+            filtered.map((p, idx) => {
+              const isAlreadyAdded = disabledSet.has(p.id);
+
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    if (isAlreadyAdded) return;
+                    onChange(p.id);
+                    setSearch(p.full_name);
+                    setIsOpen(false);
+                  }}
+                  className={`p-2.5 text-sm font-bold transition-colors border-b border-slate-700/40 last:border-0 ${
+                    isAlreadyAdded
+                      ? "cursor-not-allowed opacity-60 bg-slate-800/80"
+                      : activeIndex === idx
+                      ? "bg-primary/20 text-primary cursor-pointer"
+                      : "hover:bg-primary/80/30 text-slate-200 cursor-pointer"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`truncate ${isAlreadyAdded ? "line-through text-slate-400 font-semibold" : ""}`}>
+                      {p.full_name}
                     </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isAlreadyAdded && (
+                        <span className="text-[10px] font-bold text-amber-400/90 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                          Already in team
+                        </span>
+                      )}
+                      {p._isSuggested && !isAlreadyAdded && (
+                        <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
+                          Suggested Match
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {p.iisc_email && (
+                    <div className={`text-[11px] font-mono truncate mt-0.5 ${isAlreadyAdded ? "line-through text-slate-500" : "text-emerald-400/90"}`}>
+                      IISc: {p.iisc_email}
+                    </div>
+                  )}
+                  {p.email && p.email !== p.iisc_email && (
+                    <div className={`text-[11px] font-mono truncate mt-0.5 ${isAlreadyAdded ? "line-through text-slate-500" : "text-slate-400"}`}>
+                      {p.email}
+                    </div>
                   )}
                 </div>
-                {(p.iisc_email || p.email) && (
-                  <div className="text-[11px] font-normal text-slate-400 truncate mt-0.5">
-                    {p.iisc_email && <span className="text-emerald-400/90 mr-2">IISc: {p.iisc_email}</span>}
-                    {p.email && p.iisc_email !== p.email && <span>{p.email}</span>}
-                  </div>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

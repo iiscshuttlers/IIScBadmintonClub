@@ -222,9 +222,11 @@ All return the affected row(s) and raise descriptive exceptions the client maps 
 | `set_member_role(member_id, role)` | captain | `PLAYER`/`VICE_CAPTAIN` |
 | `create_ties(t_id, ties jsonb)` | manager | Bulk-insert fixtures generated client-side (7.1); validates teams belong to the tournament; creates rubber rows (7.2) |
 | `open_tie_lineups(tie_id)` | manager (or scheduler job) | `SCHEDULED → AWAITING_LINEUPS` |
-| `save_tie_lineup(tie_id, side, assignments jsonb)` | team staff of `side` | Upsert draft into `tie_lineups`; full validation but does not lock |
-| `lock_tie_lineup(tie_id, side)` | team staff of `side` | Re-validates, sets lock flag; if both locked, runs reveal (7.3) |
-| `admin_replace_rubber_player(match_id, slot, player_id)` | manager | Allowed only before rubber `started_at`; audit-logged |
+| `save_tie_lineup(tie_id, side, assignments jsonb)` | team staff of `side` | Upsert draft into `tie_lineups`; saves proposed playing order and players; does not lock |
+| `lock_tie_lineup(tie_id, side)` | team staff of `side` | Re-validates, sets lock flag; if both locked, updates state to `AWAITING_REVEAL` (does NOT auto-reveal) |
+| `reveal_tie_lineup(tie_id, rubber_order int)` | referee / umpire / manager | Manual reveal of all (`rubber_order = NULL`) or single rubber; writes lineups to `tournament_matches`, sets `IN_PROGRESS`, records timestamp & official |
+| `set_tie_playing_order(tie_id, playing_orders jsonb, reason text)` | referee / umpire / manager | Evaluates proposed orders from both teams, modifies/resolves differences, sets official rubber playing order; audit-logged |
+| `emergency_modify_lineup(tie_id, side, rubber_order, pos, new_player_id, reason, both_captains_agreed)` | referee / umpire / manager | Extreme conditions substitution; requires verification that BOTH captains agreed (`both_captains_agreed = true`); audit-logged |
 | `set_tie_result(tie_id, kind, winner_team_id, note)` | manager | Walkover/forfeit/knockout-draw decision; writes `result_type`, completes tie, triggers advancement |
 | `update_tie_format(t_id, config jsonb)` | manager | Rejected once any tie exists |
 
@@ -236,7 +238,7 @@ All return the affected row(s) and raise descriptive exceptions the client maps 
 4. A player appears in at most `max_rubbers_per_player` rubbers (and optionally at most one per category).
 5. Gender rule: MS/MD all male, WS/WD all female, XD one of each. **[verify `players.gender` exists and how
    `useUmpireHelpers.getGender` derives it]**; skip the rule if the event sets `ignore_gender_rules` **[decision]**.
-6. Row-lock the tie (`SELECT … FOR UPDATE`) so two captains locking at the same moment cannot both skip the reveal.
+6. When both captains lock lineups, tie transitions to `AWAITING_REVEAL`. Lineups remain secret until official reveal.
 
 ## 7. Tie Lifecycle and Computation
 
@@ -252,15 +254,58 @@ All return the affected row(s) and raise descriptive exceptions the client maps 
 `create_ties` (and `generate_tie_rubbers` internally) inserts one `tournament_matches` row per configured rubber
 with null players and `tie_id`/`rubber_order` set, so the schedule and Umpire list can show them immediately.
 
-### 7.3 Reveal
+### 7.3 Lineup Reveal, Playing Order Arbitration & Emergency Substitutions
 
-When both lock flags are true: copy `tie_lineups` into `tournament_matches` (side A → player1/2, side B →
-player3/4, per the verified convention), set `state = IN_PROGRESS`, set `lineups_revealed_at`, notify both teams
-and assigned umpires. Idempotent.
+1. **Manual Official Reveal (Never Automatic)**:
+   - When both captains lock lineups, secret lineups are NOT automatically written or revealed to opponents/spectators.
+   - The match official (Referee, Organizer, or assigned Umpire) must open the Lineup Console and trigger the reveal.
+   - The official has the choice to **Reveal All Rubbers** at once or **Reveal an Individual Rubber** (e.g. for sequential court schedules).
+   - Once revealed, player IDs are populated into `tournament_matches`, `is_revealed = true`, and the tie transitions to `IN_PROGRESS`.
+   - The system records `revealed_at` timestamp and `revealed_by` (official who performed the reveal) both on the rubber rows and in the audit log.
+
+2. **Playing Order Comparison & Arbitration**:
+   - Both teams submit a proposed playing order (sequence of rubbers) alongside their player assignments.
+   - The official console compares Team A's proposed playing order against Team B's proposed playing order side-by-side.
+   - If both teams proposed identical orders, the order is marked as agreed.
+   - If there is any difference between the two teams' proposed orders, the console alerts the official to the discrepancy.
+   - The referee/organizer/umpire modifies and confirms the final official playing order via `set_tie_playing_order`.
+   - The finalized playing order and team lineups are displayed to all spectators, captains, and players on the Pulse page in the dedicated Team Ties section.
+
+3. **Emergency Player Substitutions with Dual Captain Agreement**:
+   - In extreme conditions (injury, acute illness, medical emergency), an official can substitute a player.
+   - **Both captains must agree**: the substitution requires explicit confirmation that both Captain of Team A and Captain of Team B have consented (`both_captains_agreed = true`).
+   - A mandatory reason must be recorded.
+   - An immutable audit trail in `tie_lineup_audits` logs: original player, replacement player, authorized official, timestamp, captain consent verification, and reason.
+   - Prominent notification badges on the Pulse page and match cards inform players and spectators:
+     *"⚠️ Emergency Substitution: [Original Player] replaced by [Replacement Player] | Authorized by [Official] (Both captains agreed: [Reason])"*.
 
 Deadline handling: a scheduled job (pg_cron or the existing edge-function pattern, **[verify what scheduler
 `match-notifier` uses]**) at `lineup_deadline` notifies the manager of any unlocked side; auto-forfeit is NOT
 automatic in v1, the manager uses `set_tie_result`.
+
+### 7.3.1 Flexible Pool Advancement & Playoff Structures
+- **Advancing Teams per Pool**: Organizers can configure arbitrary advancement: Top 1, Top 2, Top 3, Top 4.
+- **Stage 2 Formats**:
+  1. **Knockout Bracket**:
+     - 4 teams: Semifinals -> Finals.
+     - 6 teams (Top 3 from 2 pools): Olympic/BWF format with Play-in 1 (A2 vs B3) and Play-in 2 (B2 vs A3), where pool winners (A1, B1) receive Byes straight into Semifinals!
+     - 8 teams: Quarterfinals -> Semifinals -> Finals.
+  2. **Championship Pool (Super Round Robin)**: Qualifiers from each pool advance into a unified Championship Pool playing round-robin fixtures.
+  3. **Championship Pool + Grand Final**: Round robin among qualifiers followed by a Grand Final between 1st and 2nd place.
+- **Dynamic Progression**: `populate_playoff_qualifiers_from_standings` automatically routes qualifiers from pool standings into playoff ties, play-ins, or super round fixtures.
+
+### 7.3.2 Conditional Tiebreaker / Sudden-Death Decider Rubbers (e.g. XD2, MS2)
+- **Concept**: A decider rubber (e.g. `XD 2`, `MS 2`, `Golden Decider`) is configured or dynamically introduced by the organizer. It is activated **only if the tie ends in a draw** (e.g. 3-3 in a 6-rubber tie).
+- **Delayed Lineup Submission**: Captains do NOT submit this rubber during the initial secret lineup. It is only unlocked once the tie is drawn.
+- **Lineup Workflow**:
+  1. Once score reaches a draw or organizer activates the decider:
+     - Captains receive an urgent interactive card in `TeamLineupBuilder`: *"Tiebreaker Decider Lineup: [Rubber Label]"*.
+     - Captain selects Player 1 (and Partner if doubles) and clicks "Submit & Lock Decider Lineup".
+  2. When both captains lock their decider nomination, the tie transitions to `AWAITING_REVEAL`.
+  3. The match official clicks **"Reveal Decider Match"** in `TieUmpireConsole`.
+  4. The decider match is played (e.g. single set sprint or 3 sets). The winner earns the deciding tie point (e.g. 4-3) and advances the team.
+- **Editable Settings**: Tournament managers can edit advancement cutoffs, playoff formats, decider rules, decider rubber parameters (category, label, sets, points), and points systems at any time via the "Edit Settings" modal in the bracket manager without wiping fixtures.
+
 
 ### 7.4 Completion trigger
 
@@ -417,3 +462,7 @@ Each phase is independently shippable, and `OPEN_EVENT` behaviour stays identica
 4. **Draws:** Drawn ties are allowed and can be resolved by set difference, point difference, or an extra tie-breaker rubber depending on the tie format configuration. These tie-breaker resolution options will be explicitly added to the **setup wizard and admin settings inside the tournament**.
 5. **Dead Rubbers:** Dead rubbers get played by default (so players still get match experience), meaning `play_dead_rubbers = true`.
 6. **Deadlines:** Lineup deadlines do NOT auto-forfeit. The system simply awaits manager action to manually submit the lineup or forfeit the team.
+7. **Official Lineup Reveal:** Lineups are NOT revealed automatically upon captains locking. Reveal must be performed by a referee, umpire, or tournament organizer, with options to reveal all rubbers at once or reveal an individual rubber. Reveal metadata (`revealed_at`, `revealed_by`) is logged and displayed.
+8. **Playing Order Arbitration:** Both teams submit proposed playing orders. Umpires/referees/organizers compare them side-by-side, arbitrate any discrepancies, and confirm the official playing order, which is rendered dynamically on Pulse.
+9. **Emergency Substitutions:** Match officials can replace a player in extreme conditions provided BOTH captains formally agree. Full audit logs (original player, replacement player, authorized official, timestamp, reason, dual-captain agreement) are captured and displayed to players and spectators.
+

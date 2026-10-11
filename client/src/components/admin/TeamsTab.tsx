@@ -739,6 +739,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                                  value={selectedPlayerId}
                                  onChange={(v) => setSelectedPlayerId(v)}
                                  players={allPlayers ?? []}
+                                  disabledPlayerIds={(teamMembers[team.id] || []).map((m: any) => m.player_id)}
                                  placeholder="Search player or type guest name..."
                                />
                              </div>

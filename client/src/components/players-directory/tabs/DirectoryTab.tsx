@@ -49,9 +49,6 @@ interface DirectoryTabProps {
   allDepartments: string[];
 
   // Network/Buddy props
-  myBuddyIds: Set<string>;
-  myBuddyRequests: { received: Set<string>; sent: Set<string> };
-  handleBuddyAction: (playerId: string, action: 'send'|'cancel'|'accept'|'remove') => void;
   followingIds: Set<string>;
   handleToggleFollow: (id: string) => void;
   isPersonalView?: boolean;
@@ -89,9 +86,6 @@ export function DirectoryTab({
   departmentFilter,
   setDepartmentFilter,
   allDepartments,
-  myBuddyIds,
-  myBuddyRequests,
-  handleBuddyAction,
   followingIds,
   handleToggleFollow,
   isPersonalView = false,
@@ -236,10 +230,6 @@ export function DirectoryTab({
                     setSelectedOpponentId(player.id);
                     setIsLogMatchOpen(true);
                   }}
-                  isBuddy={myBuddyIds.has(player.id)}
-                  hasReceivedRequest={myBuddyRequests.received.has(player.id)}
-                  hasSentRequest={myBuddyRequests.sent.has(player.id)}
-                  onBuddyAction={handleBuddyAction}
                   isFollowing={followingIds.has(player.id)}
                   onToggleFollow={handleToggleFollow}
                   currentUserName={ownProfile?.full_name}
@@ -334,10 +324,6 @@ export function DirectoryTab({
                         }
                       : undefined
                   }
-                  isBuddy={myBuddyIds.has(player.id)}
-                  hasReceivedRequest={myBuddyRequests.received.has(player.id)}
-                  hasSentRequest={myBuddyRequests.sent.has(player.id)}
-                  onBuddyAction={ownProfile ? handleBuddyAction : undefined}
                   isFollowing={followingIds.has(player.id)}
                   onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                   currentUserName={ownProfile?.full_name}

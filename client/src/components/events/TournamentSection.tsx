@@ -26,6 +26,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
@@ -102,6 +103,7 @@ export interface TournamentSectionProps {
 export function TournamentSection({ liveEvents, upcomingEvents, completedEvents, renderCard }: TournamentSectionProps) {
   const [, setLocation] = useLocation();
   const { session, isUmpire, profile } = useAuth();
+  const { confirm } = useConfirm();
   const [isAdmin, setIsAdmin] = useState(isAdminEmail(session?.user?.email));
   const [playerName, setPlayerName] = useState<string | null>(null);
   const [config, setConfig] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
@@ -284,7 +286,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   };
 
   const handleDeleteFile = async (fileName: string) => {
-    if (!confirm("Are you sure you want to delete this notice?")) return;
+    const ok = await confirm({
+      title: "Delete Notice?",
+      description: `Are you sure you want to delete notice "${fileName}"?`,
+      confirmLabel: "Delete",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
     try {
       const folder = liveTournament?.id || "legacy";
       const { error } = await supabase.storage

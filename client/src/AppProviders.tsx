@@ -9,6 +9,7 @@ import { AppUpdateProvider } from "./hooks/useAppUpdate";
 import { AppModeProvider } from "./contexts/AppModeContext";
 import { RealtimeProvider } from "./providers/RealtimeProvider";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
+import { TeamModalProvider } from "./contexts/TeamModalContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,9 +34,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <AppUpdateProvider>
             <AppModeProvider>
               <ConfirmProvider>
-                <RealtimeProvider>
-                  {children}
-                </RealtimeProvider>
+                <TeamModalProvider>
+                  <RealtimeProvider>
+                    {children}
+                  </RealtimeProvider>
+                </TeamModalProvider>
               </ConfirmProvider>
             </AppModeProvider>
           </AppUpdateProvider>

@@ -2,6 +2,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { useEffect, useState, useMemo } from "react";
 import { useHashTab } from "@/hooks/useHashTab";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { motion, AnimatePresence } from "framer-motion";
@@ -88,6 +89,7 @@ export default function PlayerProfile() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { session: authSession, signOut } = useAuth();
+  const { confirm } = useConfirm();
   const { theme } = useTheme();
 
   // Load active tab from hash
@@ -318,11 +320,16 @@ export default function PlayerProfile() {
     }
   };
 
-  const handleReport = () => {
-    if (confirm("Report this user for inappropriate content or behavior?")) {
-      window.location.href = `mailto:iiscbadmintonclub@gmail.com?subject=Report User ID: ${player?.id}&body=I would like to report the user ${player?.fullName} for the following reason:%0D%0A%0D%0A[Please type your reason here]`;
-      toast.success("Opened email client to send report.");
-    }
+  const handleReport = async () => {
+    const ok = await confirm({
+      title: "Report User?",
+      description: "Report this user for inappropriate content or behavior?",
+      confirmLabel: "Report",
+      confirmVariant: "danger"
+    });
+    if (!ok) return;
+    window.location.href = `mailto:iiscbadmintonclub@gmail.com?subject=Report User ID: ${player?.id}&body=I would like to report the user ${player?.fullName} for the following reason:%0D%0A%0D%0A[Please type your reason here]`;
+    toast.success("Opened email client to send report.");
   };
 
   const handleWrapped = async (year: number) => {
