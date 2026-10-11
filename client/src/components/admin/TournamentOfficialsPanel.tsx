@@ -38,7 +38,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
     setLoading(true);
     const [offRes, plRes] = await Promise.all([
       supabase
-        .from("tournament_officials" as any)
+        .from("tournament_officials")
         .select("id, role, user_id, user:players!tournament_officials_user_id_fkey(id, full_name, avatar_url)")
         .eq("tournament_id", tournament.id)
         .order("created_at", { ascending: true }),
@@ -71,7 +71,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("tournament_officials" as any).insert({
+    const { error } = await supabase.from("tournament_officials").insert({
       tournament_id: tournament.id,
       user_id: selectedPlayer,
       role,
@@ -95,7 +95,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
       confirmVariant: "danger",
     });
     if (!ok) return;
-    const { error } = await supabase.from("tournament_officials" as any).delete().eq("id", o.id);
+    const { error } = await supabase.from("tournament_officials").delete().eq("id", o.id);
     if (error) {
       toast.error(error.message || "Could not remove official");
       return;

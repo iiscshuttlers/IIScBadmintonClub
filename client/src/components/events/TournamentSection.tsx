@@ -18,6 +18,7 @@ import {
   Radio,
   LayoutList,
   Tv2,
+  Gavel,
   Archive,
   ChevronDown,
   ChevronUp,
@@ -28,6 +29,8 @@ import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
+import { RegisterModal } from "@/components/tournament/RegisterModal";
+import { RefereeDashboard } from "@/components/tournament/RefereeDashboard";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
@@ -114,13 +117,15 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const [viewStatus, setViewStatus] = useState<string>(initialTab);
   const [activeTid, setActiveTid] = useState<string | null>(searchParams.get("tid"));
   const [showDetails, setShowDetails] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [isTournamentOfficial, setIsTournamentOfficial] = useState(false);
   const [allTournaments, setAllTournaments] = useState<SupabaseTournament[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useHashTab(
-    ["notices", "players", "schedule", "broadcast", "brackets", "standings", "past", "umpire"] as const,
+    ["notices", "players", "schedule", "broadcast", "brackets", "standings", "past", "umpire", "referee"] as const,
     "brackets",
   );
   const mountedRef = useRef(true);
@@ -227,6 +232,26 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
     : null;
 
   // Tournament bracket data now comes from Supabase tournament_matches (see LiveBracketsSection)
+
+  // Is the current user an assigned organiser/referee for this event? (gates the Referee tab)
+  useEffect(() => {
+    let cancelled = false;
+    const tid = liveTournament?.id;
+    const pid = profile?.id;
+    if (!tid || !pid) { setIsTournamentOfficial(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("tournament_officials" as any)
+        .select("role")
+        .eq("tournament_id", tid)
+        .eq("user_id", pid)
+        .in("role", ["ORGANIZER", "REFEREE"]);
+      if (!cancelled) setIsTournamentOfficial(!!data && data.length > 0);
+    })();
+    return () => { cancelled = true; };
+  }, [liveTournament?.id, profile?.id]);
+
+  const canReferee = isAdmin || isTournamentOfficial;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -366,6 +391,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const hasForm = !!displayFormUrl && status !== "disabled";
   const formClosed = status === "closed";
   const isAuthRequired = !!liveTournament?.require_app_registration && !session;
+  // Logged-in + in-app registration → open the in-app form instead of the external link.
+  const useInAppReg = !!liveTournament?.require_app_registration && !!session;
   
   const badge =
     status === "open"
@@ -518,6 +545,18 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   >
                     {ctaLabel} <ArrowRight className="w-5 h-5" />
                   </button>
+                ) : useInAppReg ? (
+                  <button
+                    onClick={() => !formClosed && setShowRegister(true)}
+                    disabled={formClosed}
+                    className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
+                      formClosed
+                        ? "bg-slate-600 text-on-accent opacity-70 cursor-not-allowed"
+                        : "bg-primary hover:bg-primary text-primary-foreground"
+                    }`}
+                  >
+                    {ctaLabel} <ArrowRight className="w-5 h-5" />
+                  </button>
                 ) : (
                   <a
                     href={displayFormUrl ?? "#"}
@@ -545,6 +584,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             { id: "broadcast", label: "Live Broadcast", icon: Radio },
             { id: "brackets", label: "Brackets", icon: LayoutList },
             { id: "standings", label: "Standings", icon: Trophy },
+            ...(canReferee ? [{ id: "referee", label: "Referee", icon: Gavel }] : []),
             ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ].map((tab) => (
             <button
@@ -717,6 +757,21 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
           </div>
         )}
 
+        {activeTab === "referee" && canReferee && liveTournament && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+            <RefereeDashboard
+              tournament={{
+                id: liveTournament.id,
+                name: liveTournament.name,
+                slug: liveTournament.slug,
+                tournament_type: liveTournament.tournament_type,
+                format_family: (liveTournament as any).format_family,
+                counts_for_elo: (liveTournament as any).counts_for_elo,
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === "umpire" && (isUmpire || isAdmin) && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
             <UmpireTab tournamentOnly={true} />
@@ -792,6 +847,21 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
           </div>
         )}
       </div>
+
+      {liveTournament && showRegister && (
+        <RegisterModal
+          open={showRegister}
+          onClose={() => setShowRegister(false)}
+          tournament={{
+            id: liveTournament.id,
+            name: liveTournament.name,
+            categories: liveTournament.categories,
+            tournament_type: liveTournament.tournament_type,
+            format_family: (liveTournament as any).format_family,
+            counts_for_elo: (liveTournament as any).counts_for_elo,
+          }}
+        />
+      )}
     </section>
   );
 }

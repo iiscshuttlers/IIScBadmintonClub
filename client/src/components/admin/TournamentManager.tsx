@@ -15,7 +15,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList
 } from "lucide-react";
 import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
 import { InfoModal } from "@/components/InfoModal";
@@ -29,6 +29,8 @@ import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { LifecycleStepper } from "@/components/tournament/LifecycleStepper";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
+import { SendReminderSheet } from "@/components/tournament/SendReminderSheet";
+import { TournamentRegistrationsPanel } from "@/components/admin/TournamentRegistrationsPanel";
 import { getTournamentTheme, getEventFamily } from "@/lib/tournamentTheme";
 import { calculateMinRosterRequirements } from "@/lib/teamLineupRules";
 
@@ -205,7 +207,7 @@ export function TournamentManager() {
   const { session, isMainAdmin } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "officials", "archive"] as const;
+  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "officials", "registrations", "archive"] as const;
   type SubTab = typeof SUB_TABS[number];
 
   const getHashSubTab = (): SubTab => {
@@ -290,6 +292,7 @@ export function TournamentManager() {
   }, []);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showNotify, setShowNotify] = useState(false);
 
   const createTournament = async (formatFamily: "OPEN_EVENT" | "TEAM") => {
     setShowCreateModal(false);
@@ -385,13 +388,30 @@ export function TournamentManager() {
               format_family={selected.format_family}
             />
             <RankedBadge ranked={selected.counts_for_elo} />
-            <div className="ml-auto">
+            <button
+              onClick={() => setShowNotify(true)}
+              className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition shrink-0"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span>Notify</span>
+            </button>
+            <div>
               <LifecycleStepper
                 status={selected.status}
                 accentBg={getTournamentTheme(selected).tokens.bg}
               />
             </div>
           </div>
+        )}
+
+        {selected && showNotify && (
+          <ThemeScope family={getEventFamily(selected)}>
+            <SendReminderSheet
+              open={showNotify}
+              onClose={() => setShowNotify(false)}
+              tournament={{ id: selected.id, name: (selected as any).name, slug: (selected as any).slug }}
+            />
+          </ThemeScope>
         )}
 
         {showCreateModal && (
@@ -451,6 +471,7 @@ export function TournamentManager() {
                   { id: "fixtures", label: "Schedule Tie", icon: CalendarDays },
                   { id: "bracket", label: "Bracket & Pools", icon: Swords },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
+                  ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
                   { id: "archive", label: "Archive", icon: Archive }
                 ]
               : [
@@ -458,6 +479,7 @@ export function TournamentManager() {
                   { id: "participants", label: "Participants", icon: Users },
                   { id: "bracket", label: "Bracket", icon: Swords },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
+                  ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
                   { id: "archive", label: "Archive", icon: Archive }
                 ]
             ).map((tab) => {
@@ -490,6 +512,7 @@ export function TournamentManager() {
             <BracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
           {activeTab === "officials" && <TournamentOfficialsPanel tournament={selected} />}
+          {activeTab === "registrations" && <TournamentRegistrationsPanel tournament={selected} />}
           {activeTab === "archive" && (
             <ArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
           )}
@@ -1180,6 +1203,24 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
               className={inputCls} 
             />
           </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
+              <ClipboardList className="w-4 h-4 text-primary" /> In-app Registration
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Let signed-in players register & pick categories inside the app (reviewed in the Registrations tab). Overrides the external form link.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => upd("require_app_registration" as any, !(form as any).require_app_registration)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${(form as any).require_app_registration ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(form as any).require_app_registration ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
         </div>
 
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">

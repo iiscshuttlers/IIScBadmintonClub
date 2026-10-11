@@ -15,7 +15,9 @@ import {
   FileText,
   Calendar,
   Bell,
-  Swords
+  Swords,
+  Gavel,
+  ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveMatches } from "@/hooks/useLiveMatches";
@@ -43,13 +45,15 @@ import { LayoutDashboard } from "lucide-react";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
+import { RefereeDashboard } from "@/components/tournament/RefereeDashboard";
+import { RegisterModal } from "@/components/tournament/RegisterModal";
 import { getEventFamily } from "@/lib/tournamentTheme";
 
 export function LiveTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings" | "ties" | "organizer">("subtab", "matches");
+  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings" | "ties" | "organizer" | "referee">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
 
@@ -110,6 +114,26 @@ export function LiveTab() {
   const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL");
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
+  // Is the viewer an assigned organiser/referee for the active tournament? (gates the Referee tab)
+  const [isLiveOfficial, setIsLiveOfficial] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const pid = ownProfile?.id;
+    if (!activeTournamentId || !pid) { setIsLiveOfficial(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("tournament_officials" as any)
+        .select("role")
+        .eq("tournament_id", activeTournamentId)
+        .eq("user_id", pid)
+        .in("role", ["ORGANIZER", "REFEREE"]);
+      if (!cancelled) setIsLiveOfficial(!!data && data.length > 0);
+    })();
+    return () => { cancelled = true; };
+  }, [activeTournamentId, ownProfile?.id]);
+  const canReferee = isAdmin || isLiveOfficial;
 
   const initialTournamentId = typeof window !== "undefined"
     ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
@@ -292,7 +316,30 @@ export function LiveTab() {
             />
             <RankedBadge ranked={activeTournament.counts_for_elo} />
           </div>
+          {activeTournament.require_app_registration && activeTournament.status !== "completed" && session && (
+            <button
+              onClick={() => setShowRegister(true)}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
+            >
+              <ClipboardList className="w-4 h-4" /> Register for this event
+            </button>
+          )}
         </div>
+      )}
+
+      {activeTournament && showRegister && (
+        <RegisterModal
+          open={showRegister}
+          onClose={() => setShowRegister(false)}
+          tournament={{
+            id: activeTournament.id,
+            name: activeTournament.name,
+            categories: activeTournament.categories,
+            tournament_type: activeTournament.tournament_type,
+            format_family: activeTournament.format_family,
+            counts_for_elo: activeTournament.counts_for_elo,
+          }}
+        />
       )}
 
       <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
@@ -306,7 +353,15 @@ export function LiveTab() {
           ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
-          ...((isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) ? [{ 
+          ...(canReferee ? [{
+            id: "referee",
+            label: "Referee",
+            icon: Gavel,
+            activeClass: "bg-rose-600 text-white shadow-md ring-2 ring-rose-600/20 scale-105 font-black",
+            inactiveClass: "bg-rose-600/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600/20 border border-rose-600/20",
+            iconClass: "text-rose-600"
+          }] : []),
+          ...((isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) ? [{
             id: "organizer", 
             label: "Organizer", 
             icon: LayoutDashboard,
@@ -876,6 +931,22 @@ export function LiveTab() {
       {(isUmpire || isAdmin) && activeSubTab === "umpire" && (
         <div className="mb-6">
           <UmpireTab />
+        </div>
+      )}
+
+      {canReferee && activeSubTab === "referee" && (
+        <div className="mb-6">
+          {activeTournamentId ? (
+            <RefereeDashboard tournament={activeTournament} />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+              <Gavel className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Selected</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Select an active tournament to oversee its matches.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
