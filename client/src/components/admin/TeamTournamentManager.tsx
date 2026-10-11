@@ -364,49 +364,86 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-bold text-lg">Scheduled Ties ({ties?.length || 0})</h2>
             {tiesLoading ? <Loader2 className="animate-spin text-primary" /> : (
-              ties?.map((tie: any) => (
-                <div key={tie.id} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                  <div>
-                    <div className="text-xs font-black text-primary uppercase tracking-wider mb-1">{tie.tie_code}</div>
-                    <div className="font-black text-lg flex items-center gap-2 flex-wrap">
-                      <ClickableTeamName team={{ id: tie.team_a_id, name: tie.team_a?.name || 'TBD', short_name: tie.team_a?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
-                      <span className="text-slate-400 font-normal mx-1">vs</span>
-                      <ClickableTeamName team={{ id: tie.team_b_id, name: tie.team_b?.name || 'TBD', short_name: tie.team_b?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
-                    </div>
-                    <div className="text-sm font-black text-slate-500 mt-0.5">{tie.score_team_a} - {tie.score_team_b}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-xs font-black px-2.5 py-1 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-lg">
-                      {tie.state}
-                    </div>
-                    {tie.state !== 'COMPLETED' && tie.team_a_id && tie.team_b_id && (
-                      <div className="relative">
-                        <select
-                          className="text-xs font-bold appearance-none pl-3 pr-7 py-1.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer shadow-xs transition-all"
-                          onChange={async (e) => {
-                            const val = e.target.value;
-                            if (val) {
-                              e.target.value = "";
-                              const ok = await confirm({
-                                title: "Force Resolve Tie?",
-                                description: "Are you sure you want to manually force resolve this tie? This overrides normal match scoring.",
-                                confirmLabel: "Force Resolve",
-                                confirmVariant: "danger"
-                              });
-                              if (ok) resolveTie.mutate({ tieId: tie.id, winnerId: val });
-                            }
-                          }}
-                        >
-                          <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Force Win...</option>
-                          <option value={tie.team_a_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_a?.short_name || 'Team A'}</option>
-                          <option value={tie.team_b_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_b?.short_name || 'Team B'}</option>
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
+              ties?.map((tie: any) => {
+                const isLive = tie.state === 'IN_PROGRESS';
+                const isCompleted = tie.state === 'COMPLETED';
+
+                return (
+                  <div 
+                    key={tie.id} 
+                    className={`rounded-2xl p-4 sm:p-5 border transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      isLive 
+                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/40 ring-1 ring-rose-500/20' 
+                        : isCompleted
+                        ? 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/60 opacity-85'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-primary/40'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-black text-primary uppercase tracking-wider">{tie.tie_code}</span>
+                        {tie.stage && (
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            · {tie.stage}
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <div className="font-black text-lg flex items-center gap-2 flex-wrap">
+                        <ClickableTeamName team={{ id: tie.team_a_id, name: tie.team_a?.name || 'TBD', short_name: tie.team_a?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
+                        <span className="text-slate-400 font-normal mx-1">vs</span>
+                        <ClickableTeamName team={{ id: tie.team_b_id, name: tie.team_b?.name || 'TBD', short_name: tie.team_b?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
+                      </div>
+                      <div className="text-sm font-black text-slate-500 mt-0.5">
+                        {tie.score_team_a ?? 0} - {tie.score_team_b ?? 0}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {isLive ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl shadow-xs animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                          LIVE ON COURT
+                        </span>
+                      ) : isCompleted ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-xl shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                          COMPLETED
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 rounded-xl shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-sky-400 shrink-0" />
+                          UPCOMING
+                        </span>
+                      )}
+
+                      {!isCompleted && tie.team_a_id && tie.team_b_id && (
+                        <div className="relative">
+                          <select
+                            className="text-xs font-bold appearance-none pl-3 pr-7 py-1.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer shadow-xs transition-all"
+                            onChange={async (e) => {
+                              const val = e.target.value;
+                              if (val) {
+                                e.target.value = "";
+                                const ok = await confirm({
+                                  title: "Force Resolve Tie?",
+                                  description: "Are you sure you want to manually force resolve this tie? This overrides normal match scoring.",
+                                  confirmLabel: "Force Resolve",
+                                  confirmVariant: "danger"
+                                });
+                                if (ok) resolveTie.mutate({ tieId: tie.id, winnerId: val });
+                              }
+                            }}
+                          >
+                            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Force Win...</option>
+                            <option value={tie.team_a_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_a?.short_name || 'Team A'}</option>
+                            <option value={tie.team_b_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_b?.short_name || 'Team B'}</option>
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
