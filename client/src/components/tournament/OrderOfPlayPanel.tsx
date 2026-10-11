@@ -28,6 +28,7 @@ interface MatchRow {
   court_number: string | null;
   scheduled_at: string | null;
   status: string;
+  tie_id?: string | null;
 }
 
 interface OrderOfPlayProps extends TournamentThemeInput {
@@ -46,7 +47,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     if (!silent) setLoading(true);
     const { data, error } = await supabase
       .from("tournament_matches")
-      .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, court_number, scheduled_at, status")
+      .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, court_number, scheduled_at, status, tie_id")
       .eq("tournament_id", tournament.id)
       .neq("status", "completed")
       .order("round", { ascending: true })
@@ -107,9 +108,16 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     load(true);
   };
 
-  // Unscheduled = live/scheduled matches missing a court or a time, with real players.
+  // Unscheduled = live/scheduled matches missing a court or a time, with competitors assigned.
   const unscheduled = useMemo(
-    () => matches.filter((m) => inCat(m) && m.status !== "completed" && (!m.court_number || !m.scheduled_at) && !!m.player1_id),
+    () =>
+      matches.filter(
+        (m) =>
+          inCat(m) &&
+          m.status !== "completed" &&
+          (!m.court_number || !m.scheduled_at) &&
+          (!!m.player1_id || !!m.team1_label || !!m.tie_id),
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [matches, category],
   );

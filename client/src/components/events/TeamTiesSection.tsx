@@ -86,7 +86,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
       // Fetch active roster for this team
       const { data: members } = await supabase
         .from('tournament_team_members')
-        .select('*, players(*)')
+        .select('*, players!tournament_team_members_player_id_fkey(*)')
         .eq('team_id', team.id)
         .eq('status', 'ACTIVE');
 
@@ -158,6 +158,23 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     refetchInterval: 5000
   });
 
+  // Assigned organiser/referee/umpire for this tournament (per-tournament officials).
+  // Declared before any early return so hook order stays stable.
+  const { data: isAssignedOfficial = false } = useQuery({
+    queryKey: ['tts_is_assigned_official', tournamentId, session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return false;
+      const { data } = await supabase
+        .from('tournament_officials')
+        .select('role')
+        .eq('tournament_id', tournamentId)
+        .eq('user_id', session.user.id)
+        .in('role', ['ORGANIZER', 'REFEREE', 'UMPIRE']);
+      return !!data && data.length > 0;
+    },
+    enabled: !!session?.user?.id && !!tournamentId,
+  });
+
   if (tiesLoading || matchesLoading) {
     return (
       <div className="py-12 text-center">
@@ -179,22 +196,6 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     );
   }
 
-  // Assigned organiser/referee/umpire for this tournament (per-tournament officials).
-  const { data: isAssignedOfficial = false } = useQuery({
-    queryKey: ['tts_is_assigned_official', tournamentId, session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return false;
-      const { data } = await supabase
-        .from('tournament_officials')
-        .select('role')
-        .eq('tournament_id', tournamentId)
-        .eq('user_id', session.user.id)
-        .in('role', ['ORGANIZER', 'REFEREE', 'UMPIRE']);
-      return !!data && data.length > 0;
-    },
-    enabled: !!session?.user?.id && !!tournamentId,
-  });
-
   const isUserOfficial = isAdmin || isUmpire || isAssignedOfficial || (tournament?.created_by === session?.user?.id);
 
   // Official override: enter & lock a team's lineup on behalf of an absent captain.
@@ -205,7 +206,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     setOverrideLoading(side);
     const { data: members, error } = await supabase
       .from('tournament_team_members')
-      .select('*, players(*)')
+      .select('*, players!tournament_team_members_player_id_fkey(*)')
       .eq('team_id', teamId)
       .eq('status', 'ACTIVE');
     setOverrideLoading(null);

@@ -54,5 +54,8 @@
       "Bash(node -e \"const p=require\\('./package.json'\\);const d={...p.dependencies,...p.devDependencies};for\\(const k of Object.keys\\(d\\)\\)if\\(/testing-library|jsdom|vitest/.test\\(k\\)\\)console.log\\(k,d[k]\\)\")",
       "Bash(git checkout *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "code-review-graph"
+  ]
 }
