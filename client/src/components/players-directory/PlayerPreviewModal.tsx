@@ -127,21 +127,21 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
       >
         {/* Banner with gradient accent */}
         <div className={`h-24 w-full bg-gradient-to-r ${tier.color} p-4 flex items-start justify-between relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]" />
-          
-          {/* Subtle Decorative Pattern */}
-          <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none" />
+          {/* Subtle frosted sheen & glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/35" />
+          <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/20 blur-xl pointer-events-none" />
 
-          <div className="relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-black uppercase tracking-wider shadow-sm">
+          {/* Tier Pill */}
+          <div className="relative z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
             <span>{tier.icon}</span>
-            <span>{tier.name}</span>
-            <span className="opacity-60">·</span>
-            <span>{elo} Elo</span>
+            <span className="font-extrabold">{tier.name}</span>
+            <span className="opacity-40">·</span>
+            <span className="font-black tracking-normal">{elo} ELO</span>
           </div>
 
           <button
             onClick={onClose}
-            className="relative z-10 p-1.5 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white/90 hover:text-white transition-all cursor-pointer backdrop-blur-md"
+            className="relative z-10 p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 hover:text-white transition-all cursor-pointer backdrop-blur-md border border-white/10"
             aria-label="Close popup"
           >
             <X className="w-4 h-4" />
@@ -152,7 +152,7 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
         <div className="px-5 pb-5 pt-0 relative flex-1 flex flex-col">
           {/* Avatar Floating over banner */}
           <div className="flex justify-between items-end -mt-10 mb-3">
-            <div className="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shadow-lg overflow-hidden flex items-center justify-center font-black text-xl text-slate-700 dark:text-slate-200 shrink-0">
+            <div className={`w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shadow-xl overflow-hidden flex items-center justify-center font-black text-xl text-slate-700 dark:text-slate-200 shrink-0 ring-2 ${tier.border}/40`}>
               {playerData?.avatar_url ? (
                 <img 
                   src={playerData.avatar_url} 
@@ -200,16 +200,16 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
               </div>
 
               {/* Stat Chips Grid */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2.5 mb-3.5">
                 {/* Win / Loss Record */}
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <Trophy className="w-3 h-3 text-amber-500" /> Match Record
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> Match Record
                   </span>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="font-black text-sm text-slate-800 dark:text-slate-200">{winLoss}</span>
+                  <div className="flex items-baseline gap-1.5 mt-1.5">
+                    <span className="font-black text-sm text-slate-800 dark:text-slate-100">{winLoss}</span>
                     {winPct !== null && (
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
                         ({winPct}%)
                       </span>
                     )}
@@ -217,14 +217,14 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
                 </div>
 
                 {/* Level / Style */}
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-primary" /> Level & Style
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-primary shrink-0" /> Level & Style
                   </span>
-                  <span className="font-bold text-xs text-slate-700 dark:text-slate-300 mt-1 truncate">
+                  <span className="font-black text-xs text-slate-800 dark:text-slate-200 mt-1.5 truncate">
                     {playerData?.playing_level || "Club Member"}
                   </span>
-                  <span className="text-[10px] text-slate-400 truncate">
+                  <span className="text-[11px] font-medium text-slate-400 truncate">
                     {playerData?.playing_style || "All-Round"}
                   </span>
                 </div>
@@ -232,22 +232,22 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
 
               {/* Elo Ratings Breakdown if available */}
               {(playerData?.singles_elo || playerData?.doubles_elo || playerData?.mixed_elo) && (
-                <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 mb-4 flex items-center justify-between text-center divide-x divide-slate-200 dark:divide-slate-800">
+                <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 mb-3.5 flex items-center justify-between text-center divide-x divide-slate-200 dark:divide-slate-800 shadow-2xs">
                   <div className="flex-1 px-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Singles</span>
-                    <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                    <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">Singles</span>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-100">
                       {playerData.singles_elo || "—"}
                     </span>
                   </div>
                   <div className="flex-1 px-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Doubles</span>
-                    <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                    <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">Doubles</span>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-100">
                       {playerData.doubles_elo || "—"}
                     </span>
                   </div>
                   <div className="flex-1 px-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Mixed</span>
-                    <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                    <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">Mixed</span>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-100">
                       {playerData.mixed_elo || "—"}
                     </span>
                   </div>
@@ -258,7 +258,7 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
               {playerData?.current_racket && (
                 <div className="mb-4 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400 px-1 truncate">
                   <Swords className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                  <span className="truncate">Racket: <strong className="text-slate-700 dark:text-slate-300">{playerData.current_racket}</strong></span>
+                  <span className="truncate">Racket: <strong className="text-slate-700 dark:text-slate-200">{playerData.current_racket}</strong></span>
                 </div>
               )}
             </>
@@ -268,7 +268,7 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
           <button
             type="button"
             onClick={handleOpenFullProfile}
-            className="w-full mt-auto py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full mt-auto py-2.5 px-4 rounded-xl bg-primary hover:brightness-110 active:scale-[0.98] text-primary-foreground font-black text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-primary/20 transition-all cursor-pointer"
           >
             <span>Open Full Public Profile</span>
             <ExternalLink className="w-3.5 h-3.5" />
