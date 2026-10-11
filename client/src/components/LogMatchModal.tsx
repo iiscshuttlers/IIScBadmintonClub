@@ -331,7 +331,7 @@ export default function LogMatchModal({
           .from("matches").select("id").eq("submitted_by", currentUser.id)
           .eq("status", "pending").order("created_at", { ascending: false }).limit(1);
         if (latestMatches?.length === 1)
-          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatches[0].id);
+          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" } as any).eq("id", latestMatches[0].id);
       }
 
       const involvesGuest = [opponentId, partnerId, opponentPartnerId]

@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
 import { useTeamModal } from "@/contexts/TeamModalContext";
+import { usePlayerModal } from "@/contexts/PlayerModalContext";
 import { calculateMinRosterRequirements, RosterRequirementResult } from "@/lib/teamLineupRules";
 
 
@@ -76,6 +77,7 @@ function getRoleRank(role: MemberRole): number {
 
 export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSectionProps) {
   const { openTeamModal } = useTeamModal();
+  const { openPlayerModal } = usePlayerModal();
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [rosterRequirements, setRosterRequirements] = useState<RosterRequirementResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -208,7 +210,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
 
         if (isMounted) {
           if (tourneyData) {
-            const rawFormat = tourneyData.tie_format_config;
+            const rawFormat: any = tourneyData.tie_format_config;
             let currentRubbers: any[] = [];
             if (Array.isArray(rawFormat)) currentRubbers = rawFormat;
             else if (rawFormat?.rubbers && Array.isArray(rawFormat.rubbers)) currentRubbers = rawFormat.rubbers;
@@ -480,17 +482,31 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                       {/* Captain & Manager preview line when collapsed */}
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
                         {manager && (
-                          <span className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPlayerModal(manager.player.id || manager.player_id);
+                            }}
+                            className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                          >
                             <Briefcase className="w-3 h-3" />
                             Mgr: {manager.player.full_name}
-                          </span>
+                          </button>
                         )}
                         {manager && captain && <span>·</span>}
                         {captain && (
-                          <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPlayerModal(captain.player.id || captain.player_id);
+                            }}
+                            className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+                          >
                             <Crown className="w-3 h-3 fill-current" />
                             Capt: {captain.player.full_name}
-                          </span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -575,17 +591,19 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                             return (
                               <div
                                 key={member.id}
-                                className={`p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-all duration-150 ${
+                                onClick={() => openPlayerModal(member.player.id || member.player_id)}
+                                className={`p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-all duration-150 cursor-pointer hover:shadow-md hover:scale-[1.005] active:scale-[0.99] ${
                                   isManager
-                                    ? "bg-gradient-to-r from-purple-500/15 via-purple-500/5 to-transparent border-2 border-purple-400 dark:border-purple-500/60 shadow-xs"
+                                    ? "bg-gradient-to-r from-purple-500/15 via-purple-500/5 to-transparent border-2 border-purple-400 dark:border-purple-500/60 shadow-xs hover:border-purple-500"
                                     : isCaptain
-                                    ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-xs"
+                                    ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-xs hover:border-amber-500"
                                     : isViceCaptain
-                                    ? "bg-gradient-to-r from-indigo-500/15 via-indigo-500/5 to-transparent border-2 border-indigo-400 dark:border-indigo-500/60 shadow-xs"
+                                    ? "bg-gradient-to-r from-indigo-500/15 via-indigo-500/5 to-transparent border-2 border-indigo-400 dark:border-indigo-500/60 shadow-xs hover:border-indigo-500"
                                     : isFemale
                                     ? "bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300"
                                     : "bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 hover:border-sky-300"
                                 }`}
+                                title="Click to view player stats & profile"
                               >
                                 {/* Left: Avatar & Member Info */}
                                 <div className="flex items-center gap-3 min-w-0">

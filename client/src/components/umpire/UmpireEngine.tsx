@@ -208,7 +208,7 @@ export function UmpireEngine({
     const sens = sensorStatsRef.current;
     if (stats.count === 0) return;
     try {
-      await supabase.from("match_motion_stats").upsert({
+      await supabase.from("match_motion_stats" as any).upsert({
         match_id: matchId,
         match_source: matchSource,
         sample_count: stats.count,
@@ -239,7 +239,7 @@ export function UmpireEngine({
         shInt = sh.length ? sh.reduce((a,b)=>a+b,0)/sh.length : 0;
       }
 
-      await supabase.from("match_sensor_analytics").upsert({
+      await supabase.from("match_sensor_analytics" as any).upsert({
         match_id: matchId,
         match_source: matchSource,
         player_id: userId,
@@ -276,7 +276,7 @@ export function UmpireEngine({
       // Reconcile rallies already inserted under a pending id (friendly matches
       // with no dbId yet when tracking started) to the real match id.
       if (matchSource === "friendly" && pendingMatchIdRef.current && pendingMatchIdRef.current !== matchId) {
-        const { error: reconcileErr } = await supabase.from("match_rally_stats")
+        const { error: reconcileErr } = await supabase.from("match_rally_stats" as any)
           .update({ match_id: matchId })
           .eq("match_id", pendingMatchIdRef.current)
           .eq("match_source", "friendly");
@@ -420,7 +420,7 @@ export function UmpireEngine({
       }
       const matchId = stableId || pendingMatchIdRef.current;
       rallyCountRef.current += 1;
-      supabase.from("match_rally_stats").insert({
+      supabase.from("match_rally_stats" as any).insert({
         match_id: matchId,
         match_source: matchSource,
         game_num: entry.gameNum,

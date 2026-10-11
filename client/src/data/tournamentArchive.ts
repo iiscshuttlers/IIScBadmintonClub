@@ -14,6 +14,10 @@ export type ArchivedTournament = {
   slug: string;
   status: TournamentStatus;
   type: TournamentType;
+  /** Raw DB tournament_type ("open" | "team") for dynamically-loaded archives. */
+  tournament_type?: string;
+  /** Whether the tournament counted toward ELO/ranking. */
+  counts_for_elo?: boolean;
   /** ISO date string or year string e.g. "2026-05-09" or "2026" */
   startDate: string;
   name: string;

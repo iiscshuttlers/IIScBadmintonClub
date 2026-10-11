@@ -7,8 +7,10 @@ import { Users, Plus, Trash2, ChevronDown, ChevronRight, Edit, Loader2, Upload }
 
 import { usePlayers } from "@/hooks/usePlayers";
 import { ResolveGuestsModal } from "./ResolveGuestsModal";
+import { usePlayerModal } from "@/contexts/PlayerModalContext";
 
 export function TeamsTab({ tournament }: { tournament: any }) {
+  const { openPlayerModal } = usePlayerModal();
   const [teams, setTeams] = useState<any[]>([]);
   const { data: allPlayers, refetch: refetchPlayers } = usePlayers();
   const [loading, setLoading] = useState(true);
@@ -351,7 +353,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
             errorMessages.add(`Failed to create guest profile for ${email}.`);
             continue;
           }
-          player = { id: newGuest.id };
+          player = { id: newGuest.id, is_guest: true };
         }
 
         let teamId = teamCache[teamName];
@@ -620,7 +622,21 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground font-bold flex items-center gap-1 pl-6">
-                      Captain: <span className="text-slate-600 dark:text-slate-400">{team.captain?.full_name || "Unassigned"}</span>
+                      Captain:{" "}
+                      {team.captain_id && team.captain?.full_name ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPlayerModal(team.captain_id);
+                          }}
+                          className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors hover:underline text-left cursor-pointer"
+                        >
+                          {team.captain.full_name}
+                        </button>
+                      ) : (
+                        <span className="text-slate-400">Unassigned</span>
+                      )}
                     </p>
                   </div>
                   
@@ -674,10 +690,17 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                                {teamMembers[team.id].map(member => (
                                  <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors">
                                    <td className="px-3 py-2.5">
-                                     <div className="flex flex-col">
-                                       <span className="font-bold text-slate-700 dark:text-slate-200 text-xs truncate max-w-[140px]">{member.player?.full_name}</span>
+                                     <button
+                                       type="button"
+                                       onClick={() => openPlayerModal(member.player_id)}
+                                       className="flex flex-col text-left group/player cursor-pointer hover:opacity-80 transition"
+                                       title="View player profile"
+                                     >
+                                       <span className="font-bold text-slate-700 dark:text-slate-200 group-hover/player:text-primary dark:group-hover/player:text-primary transition-colors text-xs truncate max-w-[140px]">
+                                         {member.player?.full_name || "Unknown Player"}
+                                       </span>
                                        {member.player?.is_guest && <span className="text-[8px] uppercase font-black tracking-widest text-slate-400 mt-0.5">Guest</span>}
-                                     </div>
+                                     </button>
                                    </td>
                                    <td className="px-2 py-2.5 w-28">
                                      <select 

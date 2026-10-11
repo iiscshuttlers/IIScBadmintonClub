@@ -34,8 +34,10 @@ import { ClickableTeamName } from '@/contexts/TeamModalContext';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { PlayerMatchBanner } from '@/components/events/PlayerMatchBanner';
 import { getBaseShareUrl } from '@/lib/utils';
+import { usePlayerModal } from '@/contexts/PlayerModalContext';
 
 export default function TournamentTeamHub({ params }: { params?: { id: string } }) {
+  const { openPlayerModal } = usePlayerModal();
   const routeParams = useParams<{ id: string }>();
   const teamId = params?.id || routeParams?.id;
   const { session } = useAuth();
@@ -60,7 +62,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         .eq('id', teamId)
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!teamId
   });
@@ -163,7 +165,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         title: "Remove Team Member",
         message: "Are you sure you want to remove this player from the team?",
         confirmText: "Remove Player",
-        variant: "destructive"
+        confirmVariant: "danger"
       });
       if (!ok) return;
 
@@ -508,8 +510,12 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                     key={m.id} 
                     className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 flex items-center justify-between gap-3 shadow-xs"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0">
+                    <div 
+                      onClick={() => openPlayerModal(m.player_id)}
+                      className="flex items-center gap-3 min-w-0 cursor-pointer group/player hover:opacity-80 transition"
+                      title="View player profile"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 group-hover/player:ring-2 group-hover/player:ring-primary/40 transition">
                         {m.players?.avatar_url ? (
                           <img src={m.players.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -518,7 +524,9 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-sm flex items-center gap-1.5 truncate">
-                          <span className="truncate">{m.players?.full_name || m.players?.display_name || 'Player'}</span>
+                          <span className="truncate group-hover/player:text-primary transition-colors">
+                            {m.players?.full_name || m.players?.display_name || 'Player'}
+                          </span>
                           {isMe && <span className="text-[10px] text-primary font-bold">(You)</span>}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">

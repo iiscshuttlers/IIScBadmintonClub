@@ -63,7 +63,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
     if (!profile?.id) return;
     setLoading(true);
     const { data } = await supabase
-      .from("tournament_registrations" as any)
+      .from("tournament_registrations")
       .select("id, status, categories")
       .eq("tournament_id", tournament.id)
       .eq("player_id", profile.id)
@@ -114,7 +114,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
     };
     // Upsert so re-registering after a withdrawal/rejection reuses the unique row.
     const { error } = await supabase
-      .from("tournament_registrations" as any)
+      .from("tournament_registrations")
       .upsert(row as any, { onConflict: "tournament_id,player_id" });
     setSubmitting(false);
     if (error) return toast.error(error.message || "Could not register");
@@ -127,7 +127,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
     if (!existing) return;
     setSubmitting(true);
     const { error } = await supabase
-      .from("tournament_registrations" as any)
+      .from("tournament_registrations")
       .update({ status: "withdrawn" })
       .eq("id", existing.id);
     setSubmitting(false);
@@ -199,6 +199,11 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
                       <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Categories {allCats.length === 0 && <span className="normal-case font-medium text-muted-foreground">— none set by organiser</span>}
                       </p>
+                      {allCats.length === 0 && (
+                        <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                          The organiser hasn't published categories for this event yet. Check back soon or contact them to register.
+                        </div>
+                      )}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {allCats.map((c) => {
                           const active = cats.includes(c);
@@ -269,7 +274,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
             {showForm && (
               <button
                 onClick={submit}
-                disabled={submitting || loading}
+                disabled={submitting || loading || cats.length === 0}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

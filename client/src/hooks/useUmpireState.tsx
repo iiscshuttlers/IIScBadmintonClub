@@ -938,7 +938,7 @@ export function useUmpireState({
               is_read: false,
             }).then(() => {
               window.dispatchEvent(new Event("notifications_changed"));
-            }).catch(console.error);
+            }, console.error);
           }
         } else {
           toast("Match left live — resume it from the match list", { icon: "📡" });

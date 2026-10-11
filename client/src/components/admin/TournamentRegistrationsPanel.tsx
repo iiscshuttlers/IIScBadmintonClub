@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Loader2, ClipboardList, Check, X, Clock, CheckCircle2, XCircle,
-  Phone, Receipt, MessageSquare, Users2,
+  Phone, Receipt, MessageSquare, Users2, RefreshCw,
 } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -40,6 +40,7 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
   const { profile, isAdmin } = useAuth();
   const [rows, setRows] = useState<RegRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<Status | "all">("pending");
   const [actingId, setActingId] = useState<string | null>(null);
 
@@ -48,15 +49,18 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("tournament_registrations" as any)
+      .from("tournament_registrations")
       .select("id, status, full_name, email, phone, categories, partner_names, transaction_id, message, created_at, player:players!tournament_registrations_player_id_fkey(id, full_name, avatar_url)")
       .eq("tournament_id", tournament.id)
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Failed to load registrations", error);
       toast.error("Could not load registrations");
+      setLoadError(true);
+    } else {
+      setLoadError(false);
+      setRows((data as any) ?? []);
     }
-    setRows((data as any) ?? []);
     setLoading(false);
   }, [tournament.id]);
 
@@ -73,7 +77,7 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
   const review = async (row: RegRow, status: "approved" | "rejected") => {
     setActingId(row.id);
     const { error } = await supabase
-      .from("tournament_registrations" as any)
+      .from("tournament_registrations")
       .update({ status, reviewed_by: profile?.id ?? null, reviewed_at: new Date().toISOString() })
       .eq("id", row.id);
     setActingId(null);
@@ -138,6 +142,13 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-slate-600 dark:text-slate-300 font-bold">Couldn't load registrations.</p>
+            <button onClick={load} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </button>
           </div>
         ) : shown.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">No {filter === "all" ? "" : filter} registrations yet.</p>

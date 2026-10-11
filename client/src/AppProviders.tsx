@@ -10,6 +10,7 @@ import { AppModeProvider } from "./contexts/AppModeContext";
 import { RealtimeProvider } from "./providers/RealtimeProvider";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { TeamModalProvider } from "./contexts/TeamModalContext";
+import { PlayerModalProvider } from "./contexts/PlayerModalContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,9 +36,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <AppModeProvider>
               <ConfirmProvider>
                 <TeamModalProvider>
-                  <RealtimeProvider>
-                    {children}
-                  </RealtimeProvider>
+                  <PlayerModalProvider>
+                    <RealtimeProvider>
+                      {children}
+                    </RealtimeProvider>
+                  </PlayerModalProvider>
                 </TeamModalProvider>
               </ConfirmProvider>
             </AppModeProvider>

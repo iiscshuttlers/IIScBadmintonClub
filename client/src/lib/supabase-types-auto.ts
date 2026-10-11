@@ -1805,6 +1805,96 @@ export type Database = {
           },
         ]
       }
+      tournament_registrations: {
+        Row: {
+          categories: string[]
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          message: string | null
+          partner_names: string | null
+          phone: string | null
+          player_id: string
+          receipt_path: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tournament_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          categories?: string[]
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          partner_names?: string | null
+          phone?: string | null
+          player_id: string
+          receipt_path?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tournament_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          categories?: string[]
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          partner_names?: string | null
+          phone?: string | null
+          player_id?: string
+          receipt_path?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tournament_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_round_rules: {
         Row: {
           best_of_sets: number

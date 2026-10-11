@@ -136,6 +136,9 @@ export function SendReminderSheet({
   }, [presetMins, customAt]);
 
   const isImmediate = presetMins === 0;
+  const scheduleValid = presetMins !== -1 || !isNaN(scheduledAt.getTime());
+  const ready =
+    !!title.trim() && !!body.trim() && channels.length > 0 && recipients.length > 0 && scheduleValid;
 
   const send = async () => {
     if (!title.trim()) return toast.error("Add a title");
@@ -369,12 +372,16 @@ export function SendReminderSheet({
 
         {/* Footer */}
         <div className="px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
-          <span className="text-xs text-muted-foreground min-w-0 truncate">
-            {recipients.length} {recipients.length === 1 ? "recipient" : "recipients"} · {channels.length} {channels.length === 1 ? "channel" : "channels"}
+          <span className={`text-xs min-w-0 truncate ${recipients.length === 0 && !loading ? "text-amber-600 font-bold" : "text-muted-foreground"}`}>
+            {loading
+              ? "Loading recipients…"
+              : recipients.length === 0
+                ? "No recipients for this audience"
+                : `${recipients.length} ${recipients.length === 1 ? "recipient" : "recipients"} · ${channels.length} ${channels.length === 1 ? "channel" : "channels"}`}
           </span>
           <button
             onClick={send}
-            disabled={sending || loading}
+            disabled={sending || loading || !ready}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition disabled:opacity-50 shrink-0"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

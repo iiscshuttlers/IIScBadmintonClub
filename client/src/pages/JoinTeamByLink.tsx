@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function JoinTeamByLink() {
-  const [, params] = useRoute('/join-team/:token');
+  const [, params] = useRoute<{ token: string }>('/join-team/:token');
   const token = params?.token;
   const { session } = useAuth();
   const [, navigate] = useLocation();

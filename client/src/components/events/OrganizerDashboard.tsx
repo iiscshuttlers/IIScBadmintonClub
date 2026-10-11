@@ -582,8 +582,9 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
 
       {/* Tie Umpire Console Modal / Sheet */}
       {selectedTieForConsole && (
-        <TieUmpireConsole 
-          tie={selectedTieForConsole} 
+        <TieUmpireConsole
+          tie={selectedTieForConsole}
+          tournament={tournament}
           onClose={() => {
             setSelectedTieForConsole(null);
             handleRefreshAll();

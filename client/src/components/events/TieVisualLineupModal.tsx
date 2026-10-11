@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useTeamModal } from '@/contexts/TeamModalContext';
+import { usePlayerModal } from '@/contexts/PlayerModalContext';
 
 interface Props {
   isOpen: boolean;
@@ -29,6 +30,7 @@ interface Props {
 
 export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props) {
   const { openTeamModal } = useTeamModal();
+  const { openPlayerModal } = usePlayerModal();
   const [viewMode, setViewMode] = useState<'court' | 'list'>('court');
 
   // 1. Fetch rubber matches for this tie
@@ -340,32 +342,50 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                           {rubberRevealed ? (
                             <div className="space-y-1.5 min-w-0">
                               {/* Player 1 */}
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs shrink-0">
-                                  {rubber.player1?.avatar_url ? (
-                                    <img src={rubber.player1.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
-                                  ) : (
-                                    rubber.player1?.full_name?.charAt(0) || 'A'
-                                  )}
-                                </div>
-                                <span className="font-bold text-sm text-slate-100 truncate">
-                                  {rubber.player1?.full_name || 'Pending'}
-                                </span>
-                              </div>
-                              {/* Player 2 if doubles */}
-                              {isDoubles && (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs shrink-0">
-                                    {rubber.player2?.avatar_url ? (
-                                      <img src={rubber.player2.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
+                              {rubber.player1 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openPlayerModal(rubber.player1.id)}
+                                  className="flex items-center gap-2 group/p text-left cursor-pointer hover:opacity-80 transition"
+                                  title="View player profile"
+                                >
+                                  <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs shrink-0 group-hover/p:ring-2 group-hover/p:ring-primary/40">
+                                    {rubber.player1?.avatar_url ? (
+                                      <img src={rubber.player1.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
                                     ) : (
-                                      rubber.player2?.full_name?.charAt(0) || 'A'
+                                      rubber.player1?.full_name?.charAt(0) || 'A'
                                     )}
                                   </div>
-                                  <span className="font-bold text-sm text-slate-100 truncate">
-                                    {rubber.player2?.full_name || 'Pending'}
+                                  <span className="font-bold text-sm text-slate-100 group-hover/p:text-primary transition-colors truncate">
+                                    {rubber.player1?.full_name || 'Pending'}
                                   </span>
-                                </div>
+                                </button>
+                              ) : (
+                                <span className="font-bold text-sm text-slate-400">Pending</span>
+                              )}
+                              {/* Player 2 if doubles */}
+                              {isDoubles && (
+                                rubber.player2 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openPlayerModal(rubber.player2.id)}
+                                    className="flex items-center gap-2 group/p text-left cursor-pointer hover:opacity-80 transition"
+                                    title="View player profile"
+                                  >
+                                    <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs shrink-0 group-hover/p:ring-2 group-hover/p:ring-primary/40">
+                                      {rubber.player2?.avatar_url ? (
+                                        <img src={rubber.player2.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
+                                      ) : (
+                                        rubber.player2?.full_name?.charAt(0) || 'A'
+                                      )}
+                                    </div>
+                                    <span className="font-bold text-sm text-slate-100 group-hover/p:text-primary transition-colors truncate">
+                                      {rubber.player2?.full_name || 'Pending'}
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <span className="font-bold text-sm text-slate-400">Pending</span>
+                                )
                               )}
                             </div>
                           ) : (
@@ -397,32 +417,50 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                           {rubberRevealed ? (
                             <div className="space-y-1.5 min-w-0">
                               {/* Player 3 */}
-                              <div className="flex items-center justify-end gap-2">
-                                <span className="font-bold text-sm text-slate-100 truncate">
-                                  {rubber.player3?.full_name || 'Pending'}
-                                </span>
-                                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shrink-0">
-                                  {rubber.player3?.avatar_url ? (
-                                    <img src={rubber.player3.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
-                                  ) : (
-                                    rubber.player3?.full_name?.charAt(0) || 'B'
-                                  )}
-                                </div>
-                              </div>
-                              {/* Player 4 if doubles */}
-                              {isDoubles && (
-                                <div className="flex items-center justify-end gap-2">
-                                  <span className="font-bold text-sm text-slate-100 truncate">
-                                    {rubber.player4?.full_name || 'Pending'}
+                              {rubber.player3 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openPlayerModal(rubber.player3.id)}
+                                  className="flex items-center justify-end gap-2 group/p text-right cursor-pointer hover:opacity-80 transition w-full"
+                                  title="View player profile"
+                                >
+                                  <span className="font-bold text-sm text-slate-100 group-hover/p:text-primary transition-colors truncate">
+                                    {rubber.player3?.full_name || 'Pending'}
                                   </span>
-                                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shrink-0">
-                                    {rubber.player4?.avatar_url ? (
-                                      <img src={rubber.player4.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
+                                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shrink-0 group-hover/p:ring-2 group-hover/p:ring-primary/40">
+                                    {rubber.player3?.avatar_url ? (
+                                      <img src={rubber.player3.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
                                     ) : (
-                                      rubber.player4?.full_name?.charAt(0) || 'B'
+                                      rubber.player3?.full_name?.charAt(0) || 'B'
                                     )}
                                   </div>
-                                </div>
+                                </button>
+                              ) : (
+                                <span className="font-bold text-sm text-slate-400">Pending</span>
+                              )}
+                              {/* Player 4 if doubles */}
+                              {isDoubles && (
+                                rubber.player4 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openPlayerModal(rubber.player4.id)}
+                                    className="flex items-center justify-end gap-2 group/p text-right cursor-pointer hover:opacity-80 transition w-full"
+                                    title="View player profile"
+                                  >
+                                    <span className="font-bold text-sm text-slate-100 group-hover/p:text-primary transition-colors truncate">
+                                      {rubber.player4?.full_name || 'Pending'}
+                                    </span>
+                                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shrink-0 group-hover/p:ring-2 group-hover/p:ring-primary/40">
+                                      {rubber.player4?.avatar_url ? (
+                                        <img src={rubber.player4.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
+                                      ) : (
+                                        rubber.player4?.full_name?.charAt(0) || 'B'
+                                      )}
+                                    </div>
+                                  </button>
+                                ) : (
+                                  <span className="font-bold text-sm text-slate-400">Pending</span>
+                                )
                               )}
                             </div>
                           ) : (

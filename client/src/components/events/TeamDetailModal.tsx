@@ -17,6 +17,7 @@ import {
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
+import { usePlayerModal } from "@/contexts/PlayerModalContext";
 
 export interface TeamDetailModalProps {
   isOpen: boolean;
@@ -95,6 +96,7 @@ export function TeamDetailModal({
   tournamentId,
   initialTab = "roster" 
 }: TeamDetailModalProps) {
+  const { openPlayerModal } = usePlayerModal();
   const [activeTab, setActiveTab] = useState<"roster" | "matches">(initialTab);
   const [members, setMembers] = useState<TeamMemberItem[]>([]);
   const [ties, setTies] = useState<TeamTieItem[]>([]);
@@ -466,13 +468,15 @@ export function TeamDetailModal({
                   return (
                     <div
                       key={member.id}
-                      className={`relative p-3.5 rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 ${
+                      onClick={() => openPlayerModal(member.player.id || member.player_id)}
+                      className={`relative p-3.5 rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer hover:shadow-md hover:scale-[1.008] active:scale-[0.99] ${
                         isCaptain
-                          ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-sm"
+                          ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-sm hover:border-amber-500"
                           : isFemale
-                          ? "bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300"
-                          : "bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 hover:border-sky-300"
+                          ? "bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700"
+                          : "bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700"
                       }`}
+                      title="Click to view player stats & profile"
                     >
                       {/* Left: Avatar & Info */}
                       <div className="flex items-center gap-3.5 min-w-0">
@@ -496,7 +500,7 @@ export function TeamDetailModal({
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
                               {member.player.full_name}
                             </span>
                             {isCaptain && (

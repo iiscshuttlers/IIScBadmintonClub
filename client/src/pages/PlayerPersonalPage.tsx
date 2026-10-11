@@ -818,8 +818,8 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
     if (!ok) return;
     try {
       const [healthRes, sleepRes] = await Promise.all([
-        supabase.from("match_health_data").delete().eq("player_id", playerId),
-        supabase.from("player_sleep_data").delete().eq("player_id", playerId),
+        supabase.from("match_health_data" as any).delete().eq("player_id", playerId),
+        supabase.from("player_sleep_data" as any).delete().eq("player_id", playerId),
       ]);
       if (healthRes.error || sleepRes.error) {
         console.error("Error deleting health data", healthRes.error, sleepRes.error);
@@ -862,7 +862,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
       let syncedNights = 0;
       for (const s of sessions) {
         const sleepDate = new Date(s.endTime).toISOString().split("T")[0];
-        const { error: sleepErr } = await supabase.from("player_sleep_data").upsert({
+        const { error: sleepErr } = await supabase.from("player_sleep_data" as any).upsert({
           player_id: playerId,
           sleep_date: sleepDate,
           total_minutes: s.totalMinutes,
@@ -1009,7 +1009,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
             });
             const t = hrVals.length;
 
-            const { error: healthErr } = await supabase.from("match_health_data").upsert({
+            const { error: healthErr } = await supabase.from("match_health_data" as any).upsert({
               match_id: m.matchId,
               match_source: m.source,
               player_id: playerId,

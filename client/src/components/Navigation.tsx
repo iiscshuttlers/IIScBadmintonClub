@@ -71,6 +71,7 @@ const getPulseHref = () => {
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
+  { href: "/tournaments", label: "Tournaments" },
   { href: "/legacy", label: "Legacy" },
   { href: "/hub", label: "Hub" },
 ];

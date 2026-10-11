@@ -28,6 +28,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const [officials, setOfficials] = useState<OfficialRow[]>([]);
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [role, setRole] = useState<OfficialRole>("UMPIRE");
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [saving, setSaving] = useState(false);
@@ -51,8 +52,11 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
     if (offRes.error) {
       console.error("Failed to load officials", offRes.error);
       toast.error("Could not load officials");
+      setLoadError(true);
+    } else {
+      setLoadError(false);
+      setOfficials((offRes.data as any) ?? []);
     }
-    setOfficials((offRes.data as any) ?? []);
     setPlayers((plRes.data as any) ?? []);
     setLoading(false);
   }, [tournament.id]);
@@ -180,6 +184,13 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-8">
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load officials.</p>
+            <button onClick={load} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">
+              Retry
+            </button>
           </div>
         ) : (
           <div className="space-y-5">

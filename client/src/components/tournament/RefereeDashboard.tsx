@@ -48,6 +48,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>("attention");
   const [category, setCategory] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -63,8 +64,13 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
       .eq("tournament_id", tournament.id)
       .order("round", { ascending: true })
       .order("match_number", { ascending: true });
-    if (error && !silent) toast.error(error.message);
-    setMatches((data as any) ?? []);
+    if (error) {
+      if (!silent) toast.error(error.message);
+      setLoadError(true);
+    } else {
+      setLoadError(false);
+      setMatches((data as any) ?? []);
+    }
     setLoading(false);
     setRefreshing(false);
   }, [tournament.id]);
@@ -267,6 +273,17 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
       <div className={cardCls}>
         {loading ? (
           <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin" /></div>
+        ) : loadError ? (
+          <div className="text-center py-10">
+            <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+            <p className="text-sm text-slate-600 dark:text-slate-300 font-bold">Couldn't load matches</p>
+            <button
+              onClick={() => load()}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-10">
             <Swords className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />

@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function TournamentSetupChecklist() {
-  const [, params] = useRoute('/tournament-setup/:id');
+  const [, params] = useRoute<{ id: string }>('/tournament-setup/:id');
   const tournamentId = params?.id;
   const [, navigate] = useLocation();
 

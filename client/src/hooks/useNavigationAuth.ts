@@ -92,13 +92,13 @@ export function useNavigationAuth() {
         }
 
         // Fetch user's team membership and pending lineup actions
-        const { data: memberTeam } = await supabase
+        const { data: memberTeam } = (await supabase
           .from("tournament_team_members" as any)
           .select("team_id, role, team:tournament_teams(id, captain_id)")
           .eq("player_id", profile.id)
           .eq("status", "ACTIVE")
           .limit(1)
-          .maybeSingle();
+          .maybeSingle()) as { data: any };
 
         if (memberTeam?.team_id) {
           setMyTeamId(memberTeam.team_id);

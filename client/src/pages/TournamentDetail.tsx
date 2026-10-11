@@ -25,7 +25,7 @@ import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
 import { getTournaments } from "@/lib/tournaments";
 import { Loader2 } from "lucide-react";
-import { TournamentArchiveBrackets } from "@/components/events/TournamentSection";
+import { TournamentArchiveBrackets } from "@/components/events/TournamentArchiveBrackets";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";

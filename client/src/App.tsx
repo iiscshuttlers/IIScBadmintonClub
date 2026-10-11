@@ -56,6 +56,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Hub = lazy(() => import("./pages/Hub"));
 const Legacy = lazy(() => import("./pages/Legacy"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
+const TournamentsHub = lazy(() => import("./pages/TournamentsHub"));
 const Pulse = lazy(() => import("./pages/Pulse"));
 
 
@@ -140,6 +141,7 @@ function AppRoutes() {
           <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#champions`; return null; }} />
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
+          <Route path="/tournaments" component={TournamentsHub} />
           <Route path="/team-hub/:id">
             <ProtectedRoute>
               <ErrorBoundary fallback={<PageErrorFallback />}>

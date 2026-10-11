@@ -535,8 +535,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   const deciderMatch = tieMatches.find((m: any) => m.is_decider_tiebreaker);
   const deciderMatchParam = deciderMatch ? { rubber_order: deciderMatch.rubber_order, category: deciderMatch.category } : undefined;
 
-  const validationA = validateLineupAssignments(assignmentsA, rubbers, teamAMembers, rulesConfig, deciderMatchParam);
-  const validationB = validateLineupAssignments(assignmentsB, rubbers, teamBMembers, rulesConfig, deciderMatchParam);
+  const validationA = validateLineupAssignments(assignmentsA, rubbers, teamAMembers as any, rulesConfig, deciderMatchParam);
+  const validationB = validateLineupAssignments(assignmentsB, rubbers, teamBMembers as any, rulesConfig, deciderMatchParam);
   const totalRuleViolations = validationA.errors.length + validationB.errors.length;
 
   // Sort rubbers for display by their current match playing order
