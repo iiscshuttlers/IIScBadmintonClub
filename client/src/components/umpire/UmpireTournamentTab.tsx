@@ -16,6 +16,8 @@ export interface TournamentMatchForUmpire {
   category: string;
   match_code: string;
   round_name: string;
+  round?: number;
+  match_number?: number;
   player1_id: string | null;
   player3_id: string | null;
   team1_label: string | null;

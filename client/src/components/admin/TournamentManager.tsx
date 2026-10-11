@@ -2697,7 +2697,6 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     }
     return cats[0] ?? "";
   });
-  const [showRules, setShowRules] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "visual">(() => {
     const hash = window.location.hash.replace("#", "");
     const parts = hash.split("/");
@@ -3389,10 +3388,6 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
           {/* Row 3: Admin Actions (flex-wrap for responsiveness) */}
           <div className="flex flex-wrap gap-2 w-full">
-            <button onClick={() => setShowRules((v) => !v)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground dark:text-slate-300 hover:border-primary transition min-w-[120px]">
-              <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules
-            </button>
             <button onClick={() => { setShowBulkSchedule(true); setBulkPreview([]); setBulkText(""); }}
               className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--info)] dark:border-[var(--info)] text-xs font-black text-[var(--info)] dark:text-[var(--info)] hover:bg-blue-50 dark:hover:bg-[var(--info)]/30 transition min-w-[120px]">
               <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
@@ -3455,74 +3450,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         </div>
       </div>
 
-      {/* Round rules panel */}
-      {showRules && (
-        <div className={cardCls}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-black text-slate-800 dark:text-foreground text-sm">Round Scoring Rules — {activeCategory}</h3>
-            <button
-              onClick={async () => {
-                const p = toast.loading("Saving all round rules...");
-                await Promise.all(rounds.map(async (round) => {
-                  const rule = roundRules.find((r) => r.category === activeCategory && r.round === round) ?? {
-                    category: activeCategory, round,
-                    round_name: categoryMatches.find((m) => m.round === round)?.round_name ?? null,
-                    points_to_win: 21, best_of_sets: 3, golden_point: 30,
-                  };
-                  const ptw = parseInt((document.getElementById(`rule-${activeCategory}-${round}-points_to_win`) as HTMLInputElement)?.value || "21");
-                  const bos = parseInt((document.getElementById(`rule-${activeCategory}-${round}-best_of_sets`) as HTMLInputElement)?.value || "3");
-                  const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
-                  await saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
-                }));
-                toast.success("Saved all round rules!", { id: p });
-                load();
-              }}
-              className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black transition shadow-sm"
-            >
-              Save All
-            </button>
-          </div>
-          <div className="space-y-2">
-            {rounds.map((round) => {
-              const rule = roundRules.find((r) => r.category === activeCategory && r.round === round) ?? {
-                category: activeCategory, round,
-                round_name: categoryMatches.find((m) => m.round === round)?.round_name ?? null,
-                points_to_win: 21, best_of_sets: 3, golden_point: 30,
-              };
-              return (
-                <div key={round} className="grid grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-2 items-end mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                  <div>
-                    <label className={labelCls}>Round</label>
-                    <div className="text-sm font-bold text-muted-foreground dark:text-slate-300 py-2 truncate">{rule.round_name ?? `R${round}`}</div>
-                  </div>
-                  {(["points_to_win", "best_of_sets", "golden_point"] as const).map((field) => (
-                    <div key={field}>
-                      <label className={labelCls}>{field.replace(/_/g, " ")}</label>
-                      <input type="number" min={1}
-                        id={`rule-${activeCategory}-${round}-${field}`}
-                        defaultValue={rule[field]}
-                        className={inputCls} />
-                    </div>
-                  ))}
-                  <div>
-                    <button
-                      onClick={() => {
-                        const ptw = parseInt((document.getElementById(`rule-${activeCategory}-${round}-points_to_win`) as HTMLInputElement)?.value || "21");
-                        const bos = parseInt((document.getElementById(`rule-${activeCategory}-${round}-best_of_sets`) as HTMLInputElement)?.value || "3");
-                        const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
-                        saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
-                      }}
-                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition shadow-sm mb-[1px]"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Round scoring rules now live in the dedicated "Scoring Rules" console tab. */}
 
       {/* Visual bracket */}
       {viewMode === "visual" && (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Users, Calendar, Plus, Trophy, Loader2, ChevronDown, X, Award, Check } from 'lucide-react';
+import { Users, Calendar, Plus, Trophy, Loader2, ChevronDown, X, Award, Check, CalendarClock, MapPin, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/contexts/ConfirmContext';
@@ -24,6 +24,11 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   const [stage, setStage] = useState('POOL');
   const [advancesTo, setAdvancesTo] = useState('');
   const [advancesSlot, setAdvancesSlot] = useState('');
+  const [scheduledAtInput, setScheduledAtInput] = useState('');
+  const [courtInput, setCourtInput] = useState('');
+
+  // Tie Schedule Editing State
+  const [editingScheduleTie, setEditingScheduleTie] = useState<{ tieId: string; court: string; at: string } | null>(null);
 
   // Resolve Tie with Scores Modal State
   const [resolvingTie, setResolvingTie] = useState<{
@@ -93,7 +98,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
 
   const createTie = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('create_tie', {
+      const { data: newTieId, error } = await supabase.rpc('create_tie', {
         p_tournament_id: tournamentId,
         p_tie_code: tieCode,
         p_team_a_id: teamA || null,
@@ -103,6 +108,32 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
         p_advances_to_slot: advancesSlot || null
       });
       if (error) throw error;
+
+      if (newTieId && (scheduledAtInput || courtInput)) {
+        let isoAt: string | null = null;
+        if (scheduledAtInput) {
+          const d = new Date(scheduledAtInput);
+          if (!isNaN(d.getTime())) isoAt = d.toISOString();
+        }
+
+        if (isoAt) {
+          await supabase
+            .from('tournament_ties')
+            .update({ scheduled_at: isoAt })
+            .eq('id', newTieId);
+        }
+
+        if (courtInput || isoAt) {
+          const updates: Record<string, any> = {};
+          if (courtInput) updates.court_number = courtInput;
+          if (isoAt) updates.scheduled_at = isoAt;
+
+          await supabase
+            .from('tournament_matches')
+            .update(updates)
+            .eq('tie_id', newTieId);
+        }
+      }
     },
     onSuccess: () => {
       toast.success('Tie scheduled successfully!');
@@ -111,6 +142,42 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
       setTeamB('');
       setAdvancesTo('');
       setAdvancesSlot('');
+      setScheduledAtInput('');
+      setCourtInput('');
+      queryClient.invalidateQueries({ queryKey: ['tournament_ties', tournamentId] });
+    },
+    onError: (err: any) => toast.error(err.message)
+  });
+
+  const saveTieSchedule = useMutation({
+    mutationFn: async () => {
+      if (!editingScheduleTie) return;
+      let isoAt: string | null = null;
+      if (editingScheduleTie.at) {
+        const d = new Date(editingScheduleTie.at);
+        if (!isNaN(d.getTime())) isoAt = d.toISOString();
+      }
+
+      const { error: tieErr } = await supabase
+        .from('tournament_ties')
+        .update({ scheduled_at: isoAt })
+        .eq('id', editingScheduleTie.tieId);
+      if (tieErr) throw tieErr;
+
+      if (editingScheduleTie.court || isoAt) {
+        const updates: Record<string, any> = {};
+        if (editingScheduleTie.court) updates.court_number = editingScheduleTie.court;
+        if (isoAt) updates.scheduled_at = isoAt;
+
+        await supabase
+          .from('tournament_matches')
+          .update(updates)
+          .eq('tie_id', editingScheduleTie.tieId);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Tie schedule updated successfully!');
+      setEditingScheduleTie(null);
       queryClient.invalidateQueries({ queryKey: ['tournament_ties', tournamentId] });
     },
     onError: (err: any) => toast.error(err.message)
@@ -136,7 +203,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
       if (Object.keys(updatePayload).length > 0) {
         await supabase
           .from('tournament_ties')
-          .update(updatePayload)
+          .update(updatePayload as any)
           .eq('id', tieId);
       }
 
@@ -159,7 +226,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
         const slotField = currentTie.advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
         await supabase
           .from('tournament_ties')
-          .update({ [slotField]: winnerId })
+          .update({ [slotField]: winnerId } as any)
           .eq('id', currentTie.advances_to_tie);
       }
 
@@ -169,7 +236,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           const loserSlotField = currentTie.loser_advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
           await supabase
             .from('tournament_ties')
-            .update({ [loserSlotField]: loserId })
+            .update({ [loserSlotField]: loserId } as any)
             .eq('id', currentTie.loser_advances_to_tie);
         }
       }
@@ -416,7 +483,31 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                     </div>
                   )}
                 </div>
-              )}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                    <MapPin className="w-3.5 h-3.5 inline mr-1 text-primary" /> Court (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. C1, C2"
+                    value={courtInput}
+                    onChange={(e) => setCourtInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all shadow-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                    <Clock className="w-3.5 h-3.5 inline mr-1 text-primary" /> Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={scheduledAtInput}
+                    onChange={(e) => setScheduledAtInput(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-xs font-bold transition-all shadow-xs"
+                  />
+                </div>
+              </div>
 
               <button
                 type="button"

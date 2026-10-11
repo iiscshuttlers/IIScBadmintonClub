@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Trophy, Swords, Trash2, Calendar, Edit3, CheckCircle2, AlertCircle, Loader2, Layers, Filter, Eye, X, Settings2, Radio, Clock, ShieldCheck, GitFork, LayoutList } from 'lucide-react';
+import { Trophy, Swords, Trash2, Calendar, Edit3, CheckCircle2, AlertCircle, Loader2, Layers, Filter, Eye, X, Settings2, Radio, Clock, ShieldCheck, GitFork, LayoutList, CalendarClock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { useTeamModal } from '@/contexts/TeamModalContext';
@@ -25,6 +25,10 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
   const [poolFilter, setPoolFilter] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'list' | 'visual'>('list');
 
+  // Tie Scheduling state
+  const [editingScheduleTie, setEditingScheduleTie] = useState<{ tieId: string; court: string; at: string } | null>(null);
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: tData }, { data: tieData }] = await Promise.all([
@@ -41,6 +45,43 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
   }, [tournament.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const saveTieSchedule = async () => {
+    if (!editingScheduleTie) return;
+    setSavingSchedule(true);
+    let isoAt: string | null = null;
+    if (editingScheduleTie.at) {
+      const d = new Date(editingScheduleTie.at);
+      if (!isNaN(d.getTime())) isoAt = d.toISOString();
+    }
+
+    // 1. Update tie scheduled_at
+    const { error: tieErr } = await supabase
+      .from('tournament_ties')
+      .update({ scheduled_at: isoAt })
+      .eq('id', editingScheduleTie.tieId);
+
+    // 2. Also update all rubbers under this tie if court or time was provided
+    if (editingScheduleTie.court || isoAt) {
+      const rubberUpdates: Record<string, any> = {};
+      if (editingScheduleTie.court) rubberUpdates.court_number = editingScheduleTie.court;
+      if (isoAt) rubberUpdates.scheduled_at = isoAt;
+
+      await supabase
+        .from('tournament_matches')
+        .update(rubberUpdates)
+        .eq('tie_id', editingScheduleTie.tieId);
+    }
+
+    setSavingSchedule(false);
+    if (tieErr) {
+      toast.error(tieErr.message);
+    } else {
+      toast.success("Tie schedule saved!");
+      setEditingScheduleTie(null);
+      await load();
+    }
+  };
 
   const handleGenerate = async ({
     format,
@@ -674,22 +715,113 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                 </div>
 
                 {/* Footer Action Buttons */}
-                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTieForVisual(tie)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
-                  >
-                    <Swords className="w-3.5 h-3.5 text-primary" /> Visual Lineup
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTieForConsole(tie)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-slate-950 hover:opacity-90 transition-all shadow-xs"
-                  >
-                    <Eye className="w-3.5 h-3.5" /> Umpire Reveal &amp; Lineup
-                  </button>
+                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {tie.scheduled_at && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl">
+                        <Clock className="w-3 h-3 text-primary" />
+                        {new Date(tie.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
+                        {new Date(tie.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        let localAt = "";
+                        if (tie.scheduled_at) {
+                          const d = new Date(tie.scheduled_at);
+                          const pad = (n: number) => n.toString().padStart(2, '0');
+                          localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                        }
+                        setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: "", at: localAt });
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                    >
+                      <CalendarClock className="w-3.5 h-3.5 text-primary" /> Schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTieForVisual(tie)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+                    >
+                      <Swords className="w-3.5 h-3.5 text-primary" /> Visual Lineup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTieForConsole(tie)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-slate-950 hover:opacity-90 transition-all shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Umpire Reveal &amp; Lineup
+                    </button>
+                  </div>
                 </div>
+
+                {/* Inline Schedule Editor */}
+                {editingScheduleTie?.tieId === tie.id && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <CalendarClock className="w-3.5 h-3.5 text-primary" /> Assign Tie Schedule &amp; Court
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingScheduleTie(null)}
+                        className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                          <MapPin className="w-3 h-3 inline mr-1 text-primary" /> Court (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. C1, C2, Court 1"
+                          value={editingScheduleTie.court}
+                          onChange={(e) => setEditingScheduleTie(prev => prev ? { ...prev, court: e.target.value } : null)}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                          <Clock className="w-3 h-3 inline mr-1 text-primary" /> Date &amp; Time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={editingScheduleTie.at}
+                          onChange={(e) => setEditingScheduleTie(prev => prev ? { ...prev, at: e.target.value } : null)}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingScheduleTie(null)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveTieSchedule}
+                        disabled={savingSchedule}
+                        className="px-4 py-1.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                      >
+                        {savingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        Save Schedule
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

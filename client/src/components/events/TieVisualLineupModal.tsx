@@ -165,8 +165,11 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
           <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             {/* Team A */}
             <div 
-              onClick={() => tie.team_a && openTeamModal(tie.team_a)}
-              className="flex items-center gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/40 transition"
+              onClick={() => {
+                const teamData = tie.team_a?.id ? tie.team_a : tie.team_a_id ? { id: tie.team_a_id, name: tie.team_a?.name || 'Team A', short_name: tie.team_a?.short_name, logo_url: tie.team_a?.logo_url, tournament_id: tie.tournament_id || tournament?.id } : null;
+                if (teamData) openTeamModal(teamData);
+              }}
+              className="flex items-center gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition"
               title="Click to view Team A roster and matches"
             >
               {tie.team_a?.logo_url ? (
@@ -177,7 +180,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 </div>
               )}
               <div className="min-w-0">
-                <h3 className="font-black text-base sm:text-lg group-hover:text-primary transition-colors truncate">
+                <h3 className="font-black text-base sm:text-lg text-emerald-400 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_a?.name || "Team A"}
                 </h3>
                 <span className="text-xs text-slate-400 uppercase font-bold">
@@ -198,12 +201,15 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
 
             {/* Team B */}
             <div 
-              onClick={() => tie.team_b && openTeamModal(tie.team_b)}
-              className="flex items-center justify-end gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/40 transition text-right"
+              onClick={() => {
+                const teamData = tie.team_b?.id ? tie.team_b : tie.team_b_id ? { id: tie.team_b_id, name: tie.team_b?.name || 'Team B', short_name: tie.team_b?.short_name, logo_url: tie.team_b?.logo_url, tournament_id: tie.tournament_id || tournament?.id } : null;
+                if (teamData) openTeamModal(teamData);
+              }}
+              className="flex items-center justify-end gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition text-right"
               title="Click to view Team B roster and matches"
             >
               <div className="min-w-0">
-                <h3 className="font-black text-base sm:text-lg group-hover:text-primary transition-colors truncate">
+                <h3 className="font-black text-base sm:text-lg text-slate-100 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_b?.name || "Team B"}
                 </h3>
                 <span className="text-xs text-slate-400 uppercase font-bold">
