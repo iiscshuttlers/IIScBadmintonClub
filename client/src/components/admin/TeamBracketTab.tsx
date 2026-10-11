@@ -31,8 +31,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       supabase.from("tournament_teams").select("*").eq("tournament_id", tournament.id).eq("status", "ACTIVE").order("seed"),
       supabase.from("tournament_ties").select(`
         *,
-        team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name, logo_url),
-        team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name, logo_url)
+        team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
+        team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
       `).eq("tournament_id", tournament.id).order("round_number").order("tie_code")
     ]);
     setTeams(tData ?? []);
@@ -564,29 +564,39 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4 my-2">
                   {/* Team A */}
                   <div 
-                    onClick={() => tie.team_a && openTeamModal(tie.team_a)}
-                    className="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0"
+                    onClick={() => {
+                      if (tie.team_a?.id || tie.team_a_id) {
+                        openTeamModal({
+                          id: tie.team_a?.id || tie.team_a_id,
+                          name: tie.team_a?.name || 'Team A',
+                          short_name: tie.team_a?.short_name,
+                          logo_url: tie.team_a?.logo_url,
+                          tournament_id: tournament.id,
+                        });
+                      }
+                    }}
+                    className="flex items-center gap-2.5 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0"
                     title="Click to view team players and match schedule"
                   >
                     {tie.team_a?.logo_url ? (
-                      <img src={tie.team_a.logo_url} alt="" className="w-10 h-10 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                      <img src={tie.team_a.logo_url} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
                     ) : (
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-inner">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center truncate">
                         {tie.team_a?.short_name || 'A'}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
                           {tie.team_a?.name || "TBD / BYE"}
                         </span>
                         {tie.team_a?.short_name && (
-                          <span className="text-[10px] font-bold text-slate-400">
+                          <span className="text-[10px] font-bold text-slate-400 shrink-0">
                             ({tie.team_a.short_name})
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline">
+                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline block truncate">
                         View Squad & Matches →
                       </span>
                     </div>
@@ -598,7 +608,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                   </div>
 
                   {/* VS Badge Center */}
-                  <div className="hidden sm:flex flex-col items-center justify-center px-2">
+                  <div className="hidden sm:flex flex-col items-center justify-center px-1 shrink-0">
                     <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 dark:border-slate-700">
                       VS
                     </span>
@@ -606,8 +616,18 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
 
                   {/* Team B */}
                   <div 
-                    onClick={() => tie.team_b && openTeamModal(tie.team_b)}
-                    className="flex items-center justify-start sm:justify-end gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0 sm:text-right"
+                    onClick={() => {
+                      if (tie.team_b?.id || tie.team_b_id) {
+                        openTeamModal({
+                          id: tie.team_b?.id || tie.team_b_id,
+                          name: tie.team_b?.name || 'Team B',
+                          short_name: tie.team_b?.short_name,
+                          logo_url: tie.team_b?.logo_url,
+                          tournament_id: tournament.id,
+                        });
+                      }
+                    }}
+                    className="flex items-center justify-start sm:justify-end gap-2.5 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0 sm:text-right"
                     title="Click to view team players and match schedule"
                   >
                     {tie.score_team_b > 0 && (
@@ -616,24 +636,24 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                       </span>
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center sm:justify-end gap-1.5 flex-wrap">
+                      <div className="flex items-center sm:justify-end gap-1.5 min-w-0">
                         <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
                           {tie.team_b?.name || "TBD / BYE"}
                         </span>
                         {tie.team_b?.short_name && (
-                          <span className="text-[10px] font-bold text-slate-400">
+                          <span className="text-[10px] font-bold text-slate-400 shrink-0">
                             ({tie.team_b.short_name})
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline">
+                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline block truncate">
                         View Squad & Matches →
                       </span>
                     </div>
                     {tie.team_b?.logo_url ? (
-                      <img src={tie.team_b.logo_url} alt="" className="w-10 h-10 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                      <img src={tie.team_b.logo_url} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
                     ) : (
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-inner">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center truncate">
                         {tie.team_b?.short_name || 'B'}
                       </div>
                     )}
