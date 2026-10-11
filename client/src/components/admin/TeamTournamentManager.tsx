@@ -51,7 +51,18 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
     queryFn: async () => {
       const { data, error } = await supabase.from('tournament_ties').select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name)').eq('tournament_id', tournamentId);
       if (error) throw error;
-      return data || [];
+      const list = data || [];
+      const priority = (state: string) => {
+        if (state === 'IN_PROGRESS') return 0;
+        if (state === 'COMPLETED') return 2;
+        return 1; // SCHEDULED, AWAITING_LINEUPS, AWAITING_REVEAL, etc.
+      };
+      return list.sort((a: any, b: any) => {
+        const pA = priority(a.state);
+        const pB = priority(b.state);
+        if (pA !== pB) return pA - pB;
+        return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
+      });
     }
   });
 

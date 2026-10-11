@@ -15,7 +15,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge
 } from "lucide-react";
 import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
 import { InfoModal } from "@/components/InfoModal";
@@ -32,6 +32,7 @@ import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { SendReminderSheet } from "@/components/tournament/SendReminderSheet";
 import { TournamentRegistrationsPanel } from "@/components/admin/TournamentRegistrationsPanel";
 import { OrderOfPlayPanel } from "@/components/tournament/OrderOfPlayPanel";
+import { ScoringRulesPanel } from "@/components/tournament/ScoringRulesPanel";
 import { getTournamentTheme, getEventFamily } from "@/lib/tournamentTheme";
 import { calculateMinRosterRequirements } from "@/lib/teamLineupRules";
 
@@ -208,7 +209,7 @@ export function TournamentManager() {
   const { session, isMainAdmin } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "schedule", "officials", "registrations", "archive"] as const;
+  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "schedule", "rules", "officials", "registrations", "archive"] as const;
   type SubTab = typeof SUB_TABS[number];
 
   const getHashSubTab = (): SubTab => {
@@ -472,6 +473,7 @@ export function TournamentManager() {
                   { id: "fixtures", label: "Schedule Tie", icon: CalendarDays },
                   { id: "bracket", label: "Bracket & Pools", icon: Swords },
                   { id: "schedule", label: "Order of Play", icon: CalendarClock },
+                  { id: "rules", label: "Scoring Rules", icon: Gauge },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
                   ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
                   { id: "archive", label: "Archive", icon: Archive }
@@ -481,6 +483,7 @@ export function TournamentManager() {
                   { id: "participants", label: "Participants", icon: Users },
                   { id: "bracket", label: "Bracket", icon: Swords },
                   { id: "schedule", label: "Order of Play", icon: CalendarClock },
+                  { id: "rules", label: "Scoring Rules", icon: Gauge },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
                   ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
                   { id: "archive", label: "Archive", icon: Archive }
@@ -515,6 +518,7 @@ export function TournamentManager() {
             <BracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
           )}
           {activeTab === "schedule" && <OrderOfPlayPanel tournament={selected as any} />}
+          {activeTab === "rules" && <ScoringRulesPanel tournament={selected as any} />}
           {activeTab === "officials" && <TournamentOfficialsPanel tournament={selected} />}
           {activeTab === "registrations" && <TournamentRegistrationsPanel tournament={selected} />}
           {activeTab === "archive" && (
@@ -3529,7 +3533,16 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
       {/* Match cards by round */}
       {viewMode === "list" && [...rounds].reverse().map((round) => {
-        const roundMatches = categoryMatches.filter((m) => m.round === round);
+        const roundMatches = categoryMatches
+          .filter((m) => m.round === round)
+          .sort((a, b) => {
+            const p = (s: string) => {
+              if (s === "in_progress" || s === "IN_PROGRESS") return 0;
+              if (s === "completed" || s === "COMPLETED" || s === "walkover") return 2;
+              return 1;
+            };
+            return p(a.status) - p(b.status);
+          });
         const roundName = roundMatches[0]?.round_name ?? `Round ${round}`;
         return (
           <details key={round} className="group mb-6">

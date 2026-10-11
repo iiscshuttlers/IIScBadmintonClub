@@ -52,8 +52,17 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
         .order('playing_order', { ascending: true, nullsFirst: false });
       if (error) throw error;
 
-      // Sort by playing_order if present, else rubber_order
+      // Sort by status priority (Live -> Upcoming -> Completed), then by playing_order / rubber_order
+      const statusPriority = (status: string) => {
+        if (status === 'in_progress') return 0;
+        if (status === 'completed' || status === 'walkover') return 2;
+        return 1;
+      };
+
       return (data || []).sort((a: any, b: any) => {
+        const pA = statusPriority(a.status);
+        const pB = statusPriority(b.status);
+        if (pA !== pB) return pA - pB;
         const orderA = a.playing_order ?? a.rubber_order ?? 99;
         const orderB = b.playing_order ?? b.rubber_order ?? 99;
         return orderA - orderB;

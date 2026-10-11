@@ -220,11 +220,24 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
   }, [ties]);
 
   const filteredTies = useMemo(() => {
-    return ties.filter(t => {
+    const list = ties.filter(t => {
       if (stageFilter === 'POOL' && t.stage !== 'POOL') return false;
       if (stageFilter === 'KNOCKOUT' && t.stage !== 'KNOCKOUT') return false;
       if (poolFilter !== 'ALL' && t.stage === 'POOL' && !t.tie_code.startsWith(`POOL_${poolFilter}_`)) return false;
       return true;
+    });
+
+    const priority = (state: string) => {
+      if (state === 'IN_PROGRESS') return 0;
+      if (state === 'COMPLETED') return 2;
+      return 1;
+    };
+
+    return list.sort((a, b) => {
+      const pA = priority(a.state);
+      const pB = priority(b.state);
+      if (pA !== pB) return pA - pB;
+      return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
     });
   }, [ties, stageFilter, poolFilter]);
 

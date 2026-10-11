@@ -197,7 +197,18 @@ export function TeamDetailModal({
           .or(`team_a_id.eq.${team!.id},team_b_id.eq.${team!.id}`)
           .order("created_at", { ascending: true });
 
-        const formattedTies: TeamTieItem[] = (rawTies || []) as any;
+        const priority = (state: string) => {
+          if (state === 'IN_PROGRESS') return 0;
+          if (state === 'COMPLETED') return 2;
+          return 1;
+        };
+
+        const formattedTies: TeamTieItem[] = ((rawTies || []) as any).sort((a: any, b: any) => {
+          const pA = priority(a.state);
+          const pB = priority(b.state);
+          if (pA !== pB) return pA - pB;
+          return a.tie_code.localeCompare(b.tie_code);
+        });
 
         // Fetch rubbers for these ties if any exist
         if (formattedTies.length > 0) {

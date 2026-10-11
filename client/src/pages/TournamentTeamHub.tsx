@@ -76,8 +76,18 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)')
         .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
         .order('created_at', { ascending: true });
-      if (error) throw error;
-      return (data || []) as any[];
+      const list = (data || []) as any[];
+      const priority = (state: string) => {
+        if (state === 'IN_PROGRESS') return 0;
+        if (state === 'COMPLETED') return 2;
+        return 1;
+      };
+      return list.sort((a: any, b: any) => {
+        const pA = priority(a.state);
+        const pB = priority(b.state);
+        if (pA !== pB) return pA - pB;
+        return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
+      });
     },
     enabled: !!teamId
   });

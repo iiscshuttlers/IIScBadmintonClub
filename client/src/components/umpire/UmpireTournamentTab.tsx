@@ -231,6 +231,18 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       };
     });
 
+    enriched.sort((a, b) => {
+      const priority = (s: string) => {
+        if (s === "in_progress") return 0;
+        if (s === "completed" || s === "walkover") return 2;
+        return 1;
+      };
+      const pA = priority(a.status);
+      const pB = priority(b.status);
+      if (pA !== pB) return pA - pB;
+      return (a.round || 1) - (b.round || 1) || (a.match_number || 1) - (b.match_number || 1);
+    });
+
     setAllMatches(enriched);
     setSelectedMatch((prev) => (prev ? enriched.find((m) => m.id === prev.id) ?? prev : prev));
 

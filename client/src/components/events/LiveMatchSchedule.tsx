@@ -183,10 +183,26 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                   <h2 className="text-xl text-slate-600">Match Schedule - {date}</h2>
                 </div>
 
-                {Object.entries(categoriesGroup).map(([cat, dayMatches]) => {
+                {Object.entries(categoriesGroup).map(([cat, rawDayMatches]) => {
                   const catCls = CAT_COLORS[cat] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
                   const boxCls = CAT_BOX_COLORS[cat] ?? "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900";
                   
+                  const priority = (s: string) => {
+                    if (s === "in_progress") return 0;
+                    if (s === "completed" || s === "walkover") return 2;
+                    return 1;
+                  };
+
+                  const dayMatches = [...rawDayMatches].sort((a, b) => {
+                    const pA = priority(a.status);
+                    const pB = priority(b.status);
+                    if (pA !== pB) return pA - pB;
+                    if (a.scheduled_at && b.scheduled_at) {
+                      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+                    }
+                    return 0;
+                  });
+
                   return (
                     <div key={cat} className="space-y-3">
                       <h5 className={`text-xs font-black uppercase tracking-widest px-3 py-1 rounded-lg border w-max ${catCls}`}>
