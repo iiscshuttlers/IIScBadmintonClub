@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Users, Calendar, Plus, Trophy, Loader2, ChevronDown } from 'lucide-react';
+import { Users, Calendar, Plus, Trophy, Loader2, ChevronDown, X, Award, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/contexts/ConfirmContext';
@@ -24,6 +24,14 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   const [stage, setStage] = useState('POOL');
   const [advancesTo, setAdvancesTo] = useState('');
   const [advancesSlot, setAdvancesSlot] = useState('');
+
+  // Resolve Tie with Scores Modal State
+  const [resolvingTie, setResolvingTie] = useState<{
+    tie: any;
+    winnerId: string;
+    scoreA: string;
+    scoreB: string;
+  } | null>(null);
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['tournament_teams', tournamentId],
@@ -98,19 +106,69 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   });
 
   const resolveTie = useMutation({
-    mutationFn: async ({ tieId, winnerId }: { tieId: string, winnerId: string }) => {
+    mutationFn: async ({
+      tieId,
+      winnerId,
+      scoreA,
+      scoreB,
+    }: {
+      tieId: string;
+      winnerId: string;
+      scoreA?: number | null;
+      scoreB?: number | null;
+    }) => {
+      // 1. If scores provided, update tie score columns
+      const updatePayload: Record<string, any> = {};
+      if (scoreA !== undefined && scoreA !== null) updatePayload.score_team_a = scoreA;
+      if (scoreB !== undefined && scoreB !== null) updatePayload.score_team_b = scoreB;
+
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase
+          .from('tournament_ties')
+          .update(updatePayload)
+          .eq('id', tieId);
+      }
+
+      // 2. Resolve tie via set_tie_result RPC
       const { error } = await supabase.rpc('set_tie_result', {
         p_tie_id: tieId,
         p_winner_team_id: winnerId,
-        p_note: 'Resolved by manager'
+        p_note: 'Resolved by manager',
       });
       if (error) throw error;
+
+      // 3. Handle bracket progression if advances_to_tie is configured
+      const { data: currentTie } = await supabase
+        .from('tournament_ties')
+        .select('*')
+        .eq('id', tieId)
+        .single();
+
+      if (currentTie?.advances_to_tie && currentTie?.advances_to_slot) {
+        const slotField = currentTie.advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
+        await supabase
+          .from('tournament_ties')
+          .update({ [slotField]: winnerId })
+          .eq('id', currentTie.advances_to_tie);
+      }
+
+      if (currentTie?.loser_advances_to_tie && currentTie?.loser_advances_to_slot) {
+        const loserId = winnerId === currentTie.team_a_id ? currentTie.team_b_id : currentTie.team_a_id;
+        if (loserId) {
+          const loserSlotField = currentTie.loser_advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
+          await supabase
+            .from('tournament_ties')
+            .update({ [loserSlotField]: loserId })
+            .eq('id', currentTie.loser_advances_to_tie);
+        }
+      }
     },
     onSuccess: () => {
-      toast.success("Tie resolved manually");
+      toast.success("Tie resolved successfully");
+      setResolvingTie(null);
       queryClient.invalidateQueries({ queryKey: ['tournament_ties'] });
     },
-    onError: (err: any) => toast.error(err.message)
+    onError: (err: any) => toast.error(err.message),
   });
 
   return (
@@ -419,23 +477,27 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                         <div className="relative">
                           <select
                             className="text-xs font-bold appearance-none pl-3 pr-7 py-1.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer shadow-xs transition-all"
-                            onChange={async (e) => {
+                            value=""
+                            onChange={(e) => {
                               const val = e.target.value;
                               if (val) {
                                 e.target.value = "";
-                                const ok = await confirm({
-                                  title: "Force Resolve Tie?",
-                                  description: "Are you sure you want to manually force resolve this tie? This overrides normal match scoring.",
-                                  confirmLabel: "Force Resolve",
-                                  confirmVariant: "danger"
+                                setResolvingTie({
+                                  tie,
+                                  winnerId: val,
+                                  scoreA: tie.score_team_a ? String(tie.score_team_a) : '',
+                                  scoreB: tie.score_team_b ? String(tie.score_team_b) : '',
                                 });
-                                if (ok) resolveTie.mutate({ tieId: tie.id, winnerId: val });
                               }
                             }}
                           >
                             <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Force Win...</option>
-                            <option value={tie.team_a_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_a?.short_name || 'Team A'}</option>
-                            <option value={tie.team_b_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{tie.team_b?.short_name || 'Team B'}</option>
+                            <option value={tie.team_a_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                              {tie.team_a?.short_name || tie.team_a?.name || 'Team A'}
+                            </option>
+                            <option value={tie.team_b_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                              {tie.team_b?.short_name || tie.team_b?.name || 'Team B'}
+                            </option>
                           </select>
                           <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
                         </div>
@@ -445,6 +507,129 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Resolve Tie with Optional Scores Modal */}
+      {resolvingTie && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setResolvingTie(null)}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900 dark:text-slate-100 leading-tight">
+                    Resolve Tie: {resolvingTie.tie?.tie_code}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Assign winner and optionally enter tie scores
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResolvingTie(null)}
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Selected Winner Banner */}
+            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 mb-4">
+              <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                Winner Selected
+              </div>
+              <div className="font-black text-sm text-emerald-900 dark:text-emerald-200 mt-0.5">
+                {resolvingTie.winnerId === resolvingTie.tie?.team_a_id
+                  ? resolvingTie.tie?.team_a?.name || 'Team A'
+                  : resolvingTie.tie?.team_b?.name || 'Team B'}
+              </div>
+            </div>
+
+            {/* Optional Score Inputs */}
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Tie Score (Optional)
+                </label>
+                <span className="text-[11px] text-slate-400">Can leave blank</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
+                <div>
+                  <label className="text-[11px] font-black text-slate-600 dark:text-slate-400 block mb-1 truncate">
+                    {resolvingTie.tie?.team_a?.short_name || 'Team A'} Rubbers Won
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 3"
+                    value={resolvingTie.scoreA}
+                    onChange={(e) => setResolvingTie((prev) => prev ? { ...prev, scoreA: e.target.value } : null)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-black text-slate-600 dark:text-slate-400 block mb-1 truncate">
+                    {resolvingTie.tie?.team_b?.short_name || 'Team B'} Rubbers Won
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 1"
+                    value={resolvingTie.scoreB}
+                    onChange={(e) => setResolvingTie((prev) => prev ? { ...prev, scoreB: e.target.value } : null)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setResolvingTie(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={resolveTie.isPending}
+                onClick={() => {
+                  const sA = resolvingTie.scoreA.trim() !== '' ? Number(resolvingTie.scoreA) : null;
+                  const sB = resolvingTie.scoreB.trim() !== '' ? Number(resolvingTie.scoreB) : null;
+                  resolveTie.mutate({
+                    tieId: resolvingTie.tie.id,
+                    winnerId: resolvingTie.winnerId,
+                    scoreA: sA,
+                    scoreB: sB,
+                  });
+                }}
+                className="px-5 py-2.5 rounded-xl bg-primary hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition disabled:opacity-50"
+              >
+                {resolveTie.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+                <span>Confirm Result</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
