@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, BellOff, Loader2, Trash2 } from "lucide-react";
+import { BellOff, Loader2, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -74,19 +75,14 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] p-4 lg:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => window.history.back()}
-            className="w-10 h-10 bg-white/90 hover:bg-white text-slate-700 dark:bg-slate-800/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            My Subscriptions
-          </h1>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505]">
+      <PageHeader
+        compact
+        align="left"
+        title="My Subscriptions"
+        onBack={() => window.history.back()}
+      />
+      <div className="max-w-2xl mx-auto space-y-6 px-4 lg:px-8 pb-10">
 
         {loading ? (
           <div className="flex justify-center py-20">
