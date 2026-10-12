@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { fetchSiteData } from "@/lib/siteData";
 import { TournamentStandingsTab } from "@/components/events/TournamentStandingsTab";
 import { PageSkeleton } from "@/components/layout/PageSkeleton";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Trophy, Clock } from "lucide-react";
 
 export default function TournamentStandingsPage() {
@@ -52,18 +53,17 @@ export default function TournamentStandingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-foreground flex items-center gap-3">
-          <Trophy className="w-8 h-8 text-amber-500" />
-          Tournament Standings
-        </h1>
-        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
-          Rankings based purely on confirmed tournament matches.
-        </p>
+    <div className="min-h-screen pb-24 lg:pb-8">
+      <PageHeader
+        badge="Rankings"
+        badgeIcon={<Trophy className="w-3.5 h-3.5" />}
+        title="Tournament Standings"
+        subtitle="Rankings based purely on confirmed tournament matches."
+        align="left"
+      />
+      <div className="container mx-auto px-4 py-6 max-w-5xl">
+        <TournamentStandingsTab matches={tournamentMatches} players={players} />
       </div>
-
-      <TournamentStandingsTab matches={tournamentMatches} players={players} />
     </div>
   );
 }
