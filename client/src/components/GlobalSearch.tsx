@@ -318,7 +318,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-colors group text-left"
                     >
                       {r.avatar ? (
-                        <img src={r.avatar} className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
+                        <img src={r.avatar} alt="" loading="lazy" decoding="async" className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
                           {iconFor(r.type)}

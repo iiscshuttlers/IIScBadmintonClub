@@ -84,7 +84,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {photos.map((photo, i) => (
           <button key={i} onClick={() => setLightboxIndex(i)} className="group relative aspect-square overflow-hidden rounded-2xl block bg-slate-100 dark:bg-slate-800 shadow-sm text-left">
-            <img src={photo.url} alt={photo.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <img src={photo.url} alt={photo.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
               <p className="text-foreground text-xs font-bold truncate">{photo.title}</p>

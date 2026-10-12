@@ -356,7 +356,7 @@ export default function ExchangeTab() {
                   {/* Image Area */}
                   <div className="h-48 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center shrink-0">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                      <img src={item.image_url} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
                     )}
