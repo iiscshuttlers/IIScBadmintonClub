@@ -50,17 +50,17 @@ export default function Pulse() {
     try {
       const hash = window.location.hash.replace("#", "");
       if (hash.startsWith("directory")) return "directory";
-      if (hash.startsWith("events")) return "events";
+      if (hash.startsWith("calendar") || hash.startsWith("events")) return "calendar";
       if (hash.startsWith("feed")) return "feed";
       if (hash.startsWith("live")) return "live";
     } catch { /* ignore */ }
     // No hash → restore from localStorage
-    const saved = navGet("pulse_tab") as "live" | "feed" | "events" | "directory" | null;
+    const saved = navGet("pulse_tab") as "live" | "feed" | "calendar" | "directory" | null;
     if (saved) return saved;
     return "live";
   };
 
-  const [pulseTab, setPulseTabState] = useState<"live" | "feed" | "events" | "directory">(getPulseTab);
+  const [pulseTab, setPulseTabState] = useState<"live" | "feed" | "calendar" | "directory">(getPulseTab);
 
   useEffect(() => {
     const onHashChange = () => setPulseTabState(getPulseTab());
@@ -74,7 +74,7 @@ export default function Pulse() {
 
   const DIR_PARAMS = ["dir_q", "dir_sort", "dir_level", "dir_dept", "dir_tourn", "dir_cat", "dir_view"];
 
-  const setPulseTab = (tab: "live" | "feed" | "events" | "directory") => {
+  const setPulseTab = (tab: "live" | "feed" | "calendar" | "directory") => {
     setPulseTabState(tab);
     navSet("pulse_tab", tab); // persist across refresh
     try {
@@ -248,8 +248,10 @@ export default function Pulse() {
             <InfoModal
               title="PULSE"
               items={[
-                { badge: "LIVE", title: "Live Matches", desc: "View real-time scores and matches in progress." },
-                { badge: "EVENTS", title: "Tournaments", desc: "Browse upcoming and past tournaments." }
+                { badge: "LIVE", title: "Live Matches", desc: "View real-time scores and matches currently in progress." },
+                { badge: "FEED", title: "Feed & Polls", desc: "Club announcements, polls, and discussions." },
+                { badge: "CALENDAR", title: "Court Schedule", desc: "View daily court schedules and booking slots." },
+                { badge: "DIRECTORY", title: "Players Directory", desc: "Explore club members and connect with players." }
               ]}
               triggerClassName="text-white hover:text-lime-200"
             />
@@ -261,7 +263,7 @@ export default function Pulse() {
             Action & Updates
           </h1>
           <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
-            Live matches, upcoming tournaments, and club announcements.
+            Live matches, announcements, court calendars, and player directory.
           </p>
 
           <div className="mt-6 w-full flex justify-center mb-2 px-2">
@@ -269,7 +271,7 @@ export default function Pulse() {
               {[
                 { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-rose-400 shadow-md scale-100" },
                 { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-sky-400 shadow-md scale-100" },
-                { id: "events", label: "Events", icon: <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
+                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
                 { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-fuchsia-400 shadow-md scale-100" },
               ].map((tab) => (
                 <button
@@ -291,14 +293,7 @@ export default function Pulse() {
 
       {pulseTab === "live" && <LiveTab />}
       {pulseTab === "feed" && <AnnouncementsTab />}
-      {pulseTab === "events" && (
-        <EventsTab 
-          liveEvents={live} 
-          upcomingEvents={upcoming} 
-          completedEvents={completed} 
-          renderCard={renderCard} 
-        />
-      )}
+      {pulseTab === "calendar" && <EventsTab />}
       {pulseTab === "directory" && (
         clubSettings?.showPlayerDirectory || isAdmin ? (
           <DirectoryWrapper />

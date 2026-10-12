@@ -112,11 +112,22 @@ function PersonalModeRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  const [location] = useLocation();
+
   return (
     <ErrorBoundary fallback={<PageErrorFallback />}>
       <Suspense fallback={<PageSkeleton />}>
-        <Switch>
-          <Route path="/" component={Home} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.split("/")[1] || "root"}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="w-full"
+          >
+            <Switch>
+              <Route path="/" component={Home} />
           <Route path="/pulse">
             <GuestGate feature="Pulse">
               <Pulse />
@@ -168,7 +179,10 @@ function AppRoutes() {
             </ProtectedRoute>
           </Route>
           <Route path="/join" component={Join} />
-          <Route path="/auth" component={Join} />
+          <Route path="/auth" component={() => {
+            window.location.replace(`${import.meta.env.BASE_URL}join${window.location.search}${window.location.hash}`);
+            return null;
+          }} />
           <Route path="/player/:id">
             <GuestGate feature="Player Profile">
               <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -277,6 +291,8 @@ function AppRoutes() {
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
+          </motion.div>
+        </AnimatePresence>
       </Suspense>
     </ErrorBoundary>
   );

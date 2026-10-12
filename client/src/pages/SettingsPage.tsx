@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   ArrowLeft,
   User,
@@ -19,15 +20,22 @@ import {
   Zap,
   LogOut,
   ChevronRight,
-  BellRing
+  BellRing,
+  Sun,
+  Moon,
+  Palette,
+  Check,
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
 
+import { PageHeader } from "@/components/ui/PageHeader";
+
 export default function SettingsPage() {
   const [, setLocation] = useLocation();
   const { profile, isMasterAdmin, viewAsRole, setViewAsRole, signOut } = useAuth();
+  const { theme, toggleTheme, accent, setAccent } = useTheme();
   const { savedAccounts, switchAccount } = useNavigationAuth();
   const { setMode } = useAppMode();
   const [signOutDialog, setSignOutDialog] = useState(false);
@@ -139,12 +147,14 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 pt-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        <div className="mb-6 flex items-center gap-3">
-          <SettingsIcon className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+      <PageHeader
+        badge="Preferences"
+        badgeIcon={<SettingsIcon className="w-3.5 h-3.5" />}
+        title="Settings & Appearance"
+        subtitle="Manage your profile, notification alerts, display modes, and theme accents."
+      />
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6">
 
         <div className="space-y-6">
           {/* Profile Section */}
@@ -173,6 +183,81 @@ export default function SettingsPage() {
                   <button key={item.label} onClick={item.onClick} className="w-full text-left">{content}</button>
                 );
               })}
+            </div>
+          </section>
+
+          {/* S4.3 APPEARANCE & ACCENT THEME */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5">
+              <Sun className="w-3.5 h-3.5 text-primary" /> Appearance & Theme
+            </h2>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">Display Mode</label>
+                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1">
+                  <button
+                    onClick={() => { if (theme === "dark") toggleTheme?.(); }}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
+                      theme === "light"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                        : "text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200"
+                    )}
+                  >
+                    <Sun className="w-4 h-4 text-amber-500" /> Light
+                  </button>
+                  <button
+                    onClick={() => { if (theme === "light") toggleTheme?.(); }}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all",
+                      theme === "dark"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                        : "text-muted-foreground hover:text-slate-900 dark:hover:text-slate-200"
+                    )}
+                  >
+                    <Moon className="w-4 h-4 text-indigo-400" /> Dark
+                  </button>
+                </div>
+              </div>
+
+              {setAccent && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Palette className="w-3.5 h-3.5 text-primary" /> Accent Color
+                    </label>
+                    <span className="text-[11px] font-semibold text-primary capitalize">{accent}</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: "emerald", label: "Lime & Emerald", color: "bg-emerald-500" },
+                      { id: "violet", label: "Electric Violet", color: "bg-violet-500" },
+                      { id: "rose", label: "Neon Rose", color: "bg-rose-500" },
+                      { id: "amber", label: "Solar Amber", color: "bg-amber-500" },
+                      { id: "blue", label: "Cobalt Blue", color: "bg-blue-500" },
+                      { id: "cyberpunk", label: "Cyberpunk", color: "bg-gradient-to-r from-pink-500 to-cyan-400" },
+                    ].map((acc) => {
+                      const isActive = accent === acc.id;
+                      return (
+                        <button
+                          key={acc.id}
+                          onClick={() => setAccent(acc.id as any)}
+                          className={cn(
+                            "flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold border transition text-left",
+                            isActive
+                              ? "bg-slate-100 dark:bg-slate-800 border-primary ring-1 ring-primary/40 text-slate-900 dark:text-white"
+                              : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
+                          )}
+                        >
+                          <span className={cn("w-3.5 h-3.5 rounded-full shrink-0 shadow-sm", acc.color)} />
+                          <span className="truncate flex-1">{acc.label}</span>
+                          {isActive && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

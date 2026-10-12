@@ -88,7 +88,7 @@ export function NoticeBoard() {
               iconClass,
               badgeClass,
               icon: Trophy,
-              link: `/pulse#events`,
+              link: `/tournaments`,
             });
           });
         }
@@ -137,7 +137,7 @@ export function NoticeBoard() {
               iconClass,
               badgeClass,
               icon: Swords,
-              link: `/pulse#feed-matches`,
+              link: `/pulse#feed`,
             });
           });
         }
@@ -166,7 +166,7 @@ export function NoticeBoard() {
                 ? "bg-rose-500/15 text-rose-700 dark:bg-rose-400/20 dark:text-rose-300 ring-1 ring-inset ring-rose-500/20 dark:ring-rose-400/20"
                 : "bg-teal-500/15 text-teal-700 dark:bg-teal-400/20 dark:text-teal-300 ring-1 ring-inset ring-teal-500/20 dark:ring-teal-400/20",
               icon: Search,
-              link: "/hub#find-lost",
+              link: "/club?tab=lost-found",
             });
           });
         }
@@ -192,7 +192,7 @@ export function NoticeBoard() {
               iconClass: "text-violet-600 dark:text-violet-400",
               badgeClass: "bg-violet-500/15 text-violet-700 dark:bg-violet-400/20 dark:text-violet-300 ring-1 ring-inset ring-violet-500/20 dark:ring-violet-400/20",
               icon: ShoppingBag,
-              link: "/hub#marketplace",
+              link: "/club?tab=buy-sell",
             });
           });
         }

@@ -35,6 +35,8 @@ import type { ConvenerData } from "@/components/admin/ConvenerEditor";
 import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
 import { HostTournamentCta } from "@/components/home/HostTournamentCta";
 import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
+import { NoticeBoard } from "@/components/home/NoticeBoard";
+import { HomePersonalDashboard } from "@/components/home/HomePersonalDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -174,8 +176,14 @@ export default function Home() {
             
             <HomeAnnouncementBar isAdmin={isAdmin} />
 
+            <HomePersonalDashboard />
+
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
               <ActiveTournamentWidget />
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
+              <NoticeBoard />
             </motion.div>
 
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
