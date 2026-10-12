@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
@@ -49,7 +50,11 @@ import { RefereeDashboard } from "@/components/tournament/RefereeDashboard";
 import { RegisterModal } from "@/components/tournament/RegisterModal";
 import { getEventFamily } from "@/lib/tournamentTheme";
 
-export function LiveTab() {
+export interface LiveTabProps {
+  embedded?: boolean;
+}
+
+export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
@@ -283,39 +288,67 @@ export function LiveTab() {
   return (
     <ThemeScope family={getEventFamily(activeTournament || {})} className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
       {activeTournament && (
-        <div className="text-center mb-4 mt-0">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
-              {activeTournament.name}
-            </h1>
-            {tournaments.length > 1 && (
-              <div className="relative inline-block ml-1">
-                <select
-                  value={activeTournament.id}
-                  onChange={(e) => handleSelectTournament(e.target.value)}
-                  className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
-                  title="Switch Tournament"
+        <div className={`text-center mb-4 ${embedded ? "mt-2" : "mt-0"}`}>
+          {!embedded ? (
+            <>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <motion.h1
+                  layoutId={activeTournament?.id ? `tourn-title-${activeTournament.id}` : undefined}
+                  className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white"
+                  style={{ fontFamily: "Playfair Display, serif" }}
                 >
-                  {tournaments.map((t: any) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.format_family === "TEAM" ? "Team" : "Open"}{t.status ? `, ${t.status}` : ""})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  {activeTournament.name}
+                </motion.h1>
+                {tournaments.length > 1 && (
+                  <div className="relative inline-block ml-1">
+                    <select
+                      value={activeTournament.id}
+                      onChange={(e) => handleSelectTournament(e.target.value)}
+                      className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                      title="Switch Tournament"
+                    >
+                      {tournaments.map((t: any) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({t.format_family === "TEAM" ? "Team" : "Open"}{t.status ? `, ${t.status}` : ""})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {activeTournament.subtitle && (
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
+              {activeTournament.subtitle && (
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
+              )}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                <EventTypeBadge
+                  tournament_type={activeTournament.tournament_type}
+                  format_family={activeTournament.format_family}
+                />
+                <RankedBadge ranked={activeTournament.counts_for_elo} />
+              </div>
+            </>
+          ) : (
+            tournaments.length > 1 && (
+              <div className="flex justify-center mb-2">
+                <div className="relative inline-block">
+                  <select
+                    value={activeTournament.id}
+                    onChange={(e) => handleSelectTournament(e.target.value)}
+                    className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                    title="Switch Tournament"
+                  >
+                    {tournaments.map((t: any) => (
+                      <option key={t.id} value={t.id}>
+                        Switch to: {t.name} ({t.format_family === "TEAM" ? "Team" : "Open"}{t.status ? `, ${t.status}` : ""})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+            )
           )}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-            <EventTypeBadge
-              tournament_type={activeTournament.tournament_type}
-              format_family={activeTournament.format_family}
-            />
-            <RankedBadge ranked={activeTournament.counts_for_elo} />
-          </div>
           {activeTournament.require_app_registration && activeTournament.status !== "completed" && session && (
             <button
               onClick={() => setShowRegister(true)}

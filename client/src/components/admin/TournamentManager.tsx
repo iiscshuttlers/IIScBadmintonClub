@@ -384,20 +384,22 @@ export function TournamentManager() {
         </div>
 
         {selected && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-            <EventTypeBadge
-              tournament_type={selected.tournament_type}
-              format_family={selected.format_family}
-            />
-            <RankedBadge ranked={selected.counts_for_elo} />
-            <button
-              onClick={() => setShowNotify(true)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition shrink-0"
-            >
-              <Bell className="w-3.5 h-3.5" />
-              <span>Notify</span>
-            </button>
-            <div>
+          <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-between gap-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <EventTypeBadge
+                tournament_type={selected.tournament_type}
+                format_family={selected.format_family}
+              />
+              <RankedBadge ranked={selected.counts_for_elo} />
+              <button
+                onClick={() => setShowNotify(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition shrink-0"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                <span>Notify</span>
+              </button>
+            </div>
+            <div className="flex items-center justify-center w-full sm:w-auto pt-1 sm:pt-0">
               <LifecycleStepper
                 status={selected.status}
                 accentBg={getTournamentTheme(selected).tokens.bg}
