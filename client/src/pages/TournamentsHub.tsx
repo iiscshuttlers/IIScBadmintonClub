@@ -189,7 +189,7 @@ export default function TournamentsHub() {
 
   const handleRegisterClick = (t: any) => {
     if (!isAuthed) {
-      navigate("/auth");
+      navigate("/join");
       return;
     }
     setRegisterFor(t);
@@ -255,7 +255,7 @@ export default function TournamentsHub() {
           {/* Phase C: Host & Manage CTAs in Header */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <button
-              onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/auth")}
+              onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs sm:text-sm hover:bg-primary/90 transition shadow-lg hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" /> Host a tournament
@@ -482,7 +482,7 @@ export default function TournamentsHub() {
                 : "Try clearing search keywords or active filters to see all events."
             }
             actionLabel={visible.length === 0 ? "Host the first tournament" : undefined}
-            onAction={visible.length === 0 ? () => navigate(isAuthed ? "/host-tournament/new" : "/auth") : undefined}
+            onAction={visible.length === 0 ? () => navigate(isAuthed ? "/host-tournament/new" : "/join") : undefined}
           />
         ) : status === "all" ? (
           /* Phase E: Grouped Layout (Live now, Upcoming, Past) with Motion Stagger */

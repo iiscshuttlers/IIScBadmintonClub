@@ -20,6 +20,55 @@ has an obvious next step · motion/craft consistent everywhere · a11y + perf ar
 
 ---
 
+## S0 — Concrete issues found in a deep scan (fix these first; mostly quick)
+
+Real defects/frictions located in the code, highest-value first:
+
+### S0.1 🐞 Dead `/auth` route — broken primary CTAs
+[TournamentsHub.tsx](../client/src/pages/TournamentsHub.tsx) calls `navigate("/auth")` in
+**3 places** (lines ~192, 258, 485 — sign-in gate, Host CTA, empty-state action), but there
+is **no `/auth` route** in [App.tsx](../client/src/App.tsx). The real auth surface is
+**`/join`** ([Join.tsx](../client/src/pages/Join.tsx): WelcomeView/SignInView/SignUpView/Otp).
+→ **Fix:** replace `/auth` with `/join` (and audit app-wide:
+`grep -rn 'navigate("/auth")\|href="/auth"' client/src`). A primary CTA that 404s is a silent
+funnel leak. *(This is in code we just shipped — fix in this branch.)*
+
+### S0.2 Pulse "Events" tab overlaps Tournaments
+Pulse has tabs **live / feed / events / directory** ([Pulse.tsx](../client/src/pages/Pulse.tsx)),
+and `EventsTab` overlaps the dedicated **/tournaments** hub. Three doors to tournaments
+(Pulse→Live, Pulse→Events, /tournaments) blur the model.
+→ **Plan:** make `/tournaments` canonical for discovery; Pulse "Events" either links into it
+or is retired; Pulse keeps **live/feed/directory** (its "now" identity). Decide one.
+
+### S0.3 Home is static, not personalized
+[Home.tsx](../client/src/pages/Home.tsx) (503 lines) is hero + quick-links + about/mission —
+no live scores, no "your next match", no "your tournaments". For a logged-in member the
+landing page should be a **dashboard** (see S3.5), reusing `useLiveScoresFor`,
+`useMyTournamentRoles`, `AvatarStack`, `AnimatedScoreNumber`, `FeaturedTournamentHero`
+patterns we already built.
+
+### S0.4 Monster files (maintainability → UX risk)
+Several files are far past a safe size and concentrate risk + slow iteration:
+| File | Lines |
+|---|---|
+| admin/TournamentManager.tsx | **4208** |
+| about/CourtScheduleSection.tsx | 2593 |
+| pages/PlayerPersonalPage.tsx | 2579 |
+| umpire/UmpireEngine.tsx | 1405 |
+| tournament/BracketVisual.tsx | 1402 |
+| events/LiveScoreSection.tsx | 1370 |
+| pages/Legacy.tsx | 1328 |
+→ **Plan:** stage extractions (split tabs/sections into child components + hooks). Start with
+`TournamentManager` (it's the biggest and most-edited). Not a rewrite — mechanical splits with
+tests of behavior parity. Ties into S1 (shared primitives shrink these).
+
+### S0.5 Redirect sprawl → canonical links (see S2.1)
+9 redirect-only routes; make in-app links canonical, keep redirects as back-compat.
+
+**Do S0.1 immediately** (it's a shipped bug), then fold S0.2–S0.4 into the phases below.
+
+---
+
 ## S1 — Design-system foundation (do first; everything inherits it)
 
 The tournament surfaces now have `StatusChip`, `SEMANTIC`, `ThemeScope`, `motion.ts`,
