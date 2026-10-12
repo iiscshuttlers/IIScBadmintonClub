@@ -35,6 +35,7 @@ import { useConfirm } from '@/contexts/ConfirmContext';
 import { PlayerMatchBanner } from '@/components/events/PlayerMatchBanner';
 import { getBaseShareUrl } from '@/lib/utils';
 import { usePlayerModal } from '@/contexts/PlayerModalContext';
+import { TeamLogo } from '@/components/events/TeamLogo';
 
 export default function TournamentTeamHub({ params }: { params?: { id: string } }) {
   const { openPlayerModal } = usePlayerModal();
@@ -57,14 +58,19 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
     queryKey: ['team', teamId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('tournament_teams' as any)
-        .select('*, tournaments(*)')
-        .eq('id', teamId)
-        .single();
-      if (error) throw error;
+        .from('tournament_teams')
+        .select('*, tournaments!tournament_teams_tournament_id_fkey(*)')
+        .eq('id', teamId!)
+        .maybeSingle();
+      if (error) {
+        console.error('Error fetching team:', error);
+        throw error;
+      }
       return data as any;
     },
-    enabled: !!teamId
+    enabled: !!teamId,
+    staleTime: 30000,
+    retry: 1
   });
 
   // 2. Fetch team ties
@@ -72,10 +78,14 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
     queryKey: ['my_ties', teamId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('tournament_ties' as any)
+        .from('tournament_ties')
         .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)')
         .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
         .order('created_at', { ascending: true });
+      if (error) {
+        console.error('Error fetching ties:', error);
+        return [];
+      }
       const list = (data || []) as any[];
       const priority = (state: string) => {
         if (state === 'IN_PROGRESS') return 0;
@@ -89,21 +99,74 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
       });
     },
-    enabled: !!teamId
+    enabled: !!teamId,
+    staleTime: 10000
   });
 
-  // 3. Fetch team members with player profiles
+  // 3. Fetch team members with player profiles (and ensure captain is included)
   const { data: members = [], isLoading: membersLoading } = useQuery({
-    queryKey: ['team_members', teamId],
+    queryKey: ['team_members', teamId, team?.captain_id],
     queryFn: async () => {
+      // Fetch with resilient foreign key relation
+      let rawMembers: any[] = [];
       const { data, error } = await supabase
-        .from('tournament_team_members' as any)
-        .select('*, players(*)')
-        .eq('team_id', teamId);
-      if (error) throw error;
-      return (data || []) as any[];
+        .from('tournament_team_members')
+        .select('*, player:players!player_id(*)')
+        .eq('team_id', teamId!);
+
+      if (error) {
+        // Fallback to explicit FK name if needed
+        const fallback = await supabase
+          .from('tournament_team_members')
+          .select('*, players:players!tournament_team_members_player_id_fkey(*)')
+          .eq('team_id', teamId!);
+        if (fallback.error) {
+          console.error('Error fetching members:', fallback.error);
+        } else {
+          rawMembers = fallback.data || [];
+        }
+      } else {
+        rawMembers = data || [];
+      }
+
+      // Normalize each member to have both .players and .player populated
+      const list: any[] = rawMembers.map((m: any) => {
+        const p = m.player || m.players;
+        return {
+          ...m,
+          player: p,
+          players: p
+        };
+      });
+
+      // If captain is designated on team but not present in tournament_team_members, fetch and prepend captain
+      const captainId = team?.captain_id;
+      if (captainId && !list.some((m: any) => m.player_id === captainId)) {
+        const { data: captainPlayer } = await supabase
+          .from('players')
+          .select('*')
+          .eq('id', captainId)
+          .maybeSingle();
+
+        if (captainPlayer) {
+          list.unshift({
+            id: `captain-${captainPlayer.id}`,
+            team_id: teamId,
+            player_id: captainPlayer.id,
+            role: 'CAPTAIN',
+            status: 'ACTIVE',
+            is_captain: true,
+            player: captainPlayer,
+            players: captainPlayer
+          });
+        }
+      }
+
+      return list;
     },
-    enabled: !!teamId
+    enabled: !!teamId,
+    staleTime: 10000,
+    retry: 1
   });
 
   // 4. Fetch search suggestions for invite (search across all registered profiles in app/website)
@@ -244,7 +307,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
     toast.success('Official join link copied to clipboard!');
   };
 
-  if (teamLoading || membersLoading) {
+  if (teamLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-8">
         <Loader2 className="animate-spin w-10 h-10 text-primary mb-4" />
@@ -277,9 +340,12 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
             >
               <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
             </button>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-primary/20">
-              {team.short_name || team.name?.substring(0, 3).toUpperCase()}
-            </div>
+            <TeamLogo 
+              name={team.name} 
+              shortName={team.short_name} 
+              logoUrl={team.logo_url} 
+              size="lg" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight">{team.name}</h1>
@@ -338,10 +404,10 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 const el = document.getElementById(`tie-${upcomingTieWithPendingLineup.id}`);
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:text-slate-950 font-black shadow-md shadow-amber-600/30 whitespace-nowrap"
+              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 border border-amber-400 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer text-xs sm:text-sm"
             >
               Submit Lineup Now
-              <ChevronRight className="w-4 h-4 ml-1" />
+              <ChevronRight className="w-4 h-4 ml-1 stroke-[3]" />
             </Button>
           </div>
         )}
@@ -391,7 +457,8 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
               </div>
             </div>
             {isCaptain && (
-              <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Captain Controls Enabled
               </span>
             )}
@@ -399,7 +466,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
           {/* Captain Shareable Link Card */}
           {isCaptain && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/50 space-y-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/85 dark:border-indigo-800/70 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <LinkIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -412,24 +479,24 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                   size="sm" 
                   onClick={() => regenerateTokenMutation.mutate()}
                   disabled={regenerateTokenMutation.isPending}
-                  className="h-8 text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
+                  className="h-8 text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-white dark:hover:bg-indigo-900/50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 mr-1 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
                   Reset Link
                 </Button>
               </div>
-              <p className="text-xs text-indigo-900/70 dark:text-indigo-300/70">
+              <p className="text-xs text-indigo-900/80 dark:text-indigo-200/80">
                 Share this link with your teammates. Anyone with this link can immediately join your team roster without waiting for manual approval.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input 
                   readOnly 
                   value={team.invite_token ? getPublicShareUrl() : 'Generating link...'} 
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white/80 dark:bg-slate-900 text-xs font-mono text-slate-700 dark:text-slate-300 select-all focus:outline-none"
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-900 text-xs font-mono text-slate-800 dark:text-slate-200 select-all focus:outline-none"
                 />
                 <Button 
                   onClick={copyInviteLink} 
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 sm:w-auto"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs h-9 px-4 rounded-xl shadow-md shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <Copy className="w-3.5 h-3.5 mr-1.5" />
                   Copy Link
@@ -511,6 +578,15 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Active Squad ({activeMembers.length})
             </label>
+            {membersLoading ? (
+              <div className="py-8 flex items-center justify-center gap-2 text-slate-400 text-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" /> Loading roster...
+              </div>
+            ) : activeMembers.length === 0 ? (
+              <div className="py-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+                No active players in roster yet.
+              </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {activeMembers.map((m: any) => {
                 const isThisPlayerCaptain = m.player_id === team.captain_id || m.role === 'CAPTAIN';
@@ -518,11 +594,11 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 return (
                   <div 
                     key={m.id} 
-                    className="p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 flex items-center justify-between gap-3 shadow-xs"
+                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition"
                   >
                     <div 
                       onClick={() => openPlayerModal(m.player_id)}
-                      className="flex items-center gap-3 min-w-0 cursor-pointer group/player hover:opacity-80 transition"
+                      className="flex items-center gap-3 min-w-0 cursor-pointer group/player hover:opacity-90 transition"
                       title="View player profile"
                     >
                       <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 group-hover/player:ring-2 group-hover/player:ring-primary/40 transition">
@@ -534,19 +610,28 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-sm flex items-center gap-1.5 truncate">
-                          <span className="truncate group-hover/player:text-primary transition-colors">
+                          <span className="truncate group-hover/player:text-primary transition-colors text-slate-900 dark:text-slate-100">
                             {m.players?.full_name || m.players?.display_name || 'Player'}
                           </span>
                           {isMe && <span className="text-[10px] text-primary font-bold">(You)</span>}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {isThisPlayerCaptain ? (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                              <Shield className="w-3 h-3 text-amber-500" /> Captain
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30">
+                              <Shield className="w-3 h-3 text-amber-500 fill-amber-500/30" /> Captain
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                               Player
+                            </span>
+                          )}
+                          {m.players?.gender && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              m.players.gender === 'Female' || m.players.gender === 'F'
+                                ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                                : 'bg-sky-500/15 text-sky-500 border border-sky-500/30'
+                            }`}>
+                              {m.players.gender === 'Female' || m.players.gender === 'F' ? '♀ Female' : '♂ Male'}
                             </span>
                           )}
                         </div>
@@ -559,7 +644,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                         size="sm" 
                         onClick={() => removeMember.mutate(m.id)}
                         disabled={removeMember.isPending}
-                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-8 px-2 text-xs"
+                        className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-950/40 h-8 px-2.5 text-xs font-bold rounded-xl cursor-pointer"
                       >
                         <UserMinus className="w-3.5 h-3.5 mr-1" />
                         Remove
@@ -569,6 +654,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 );
               })}
             </div>
+            )}
           </div>
 
           {/* Invited / Pending Members */}
@@ -636,7 +722,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
           ) : (
             <div className="space-y-6">
               {/* Tie Selector Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex items-center gap-2.5 overflow-x-auto pb-2.5 scrollbar-none">
                 {ties.map((tie: any) => {
                   const isTeamA = tie.team_a_id === teamId;
                   const opponentObj = isTeamA ? tie.team_b : tie.team_a;
@@ -647,18 +733,27 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                     <button
                       key={tie.id}
                       onClick={() => setActiveTieTab(tie.id)}
-                      className={`px-4 py-2.5 rounded-2xl border text-xs font-black tracking-tight transition flex items-center gap-2 shrink-0 ${
+                      className={`px-4 py-2.5 rounded-2xl border text-xs font-black tracking-tight transition-all duration-200 flex items-center gap-2.5 shrink-0 shadow-xs cursor-pointer ${
                         isSelected 
-                          ? 'bg-slate-900 text-white border-slate-900 dark:bg-primary dark:text-slate-950 dark:border-primary shadow-md shadow-slate-900/20 dark:shadow-primary/30 ring-2 ring-primary/40' 
-                          : 'bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          ? 'bg-primary text-slate-950 border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50 scale-[1.02]' 
+                          : 'bg-slate-900/90 text-slate-100 hover:text-white border-slate-700/80 hover:border-slate-500 hover:bg-slate-800'
                       }`}
                     >
-                      <span className="font-mono text-xs">{tie.tie_code}</span>
-                      <span>vs {opponentObj?.short_name || opponentObj?.name || 'TBD'}</span>
+                      <span className={`font-mono text-[11px] px-1.5 py-0.5 rounded-md font-bold ${
+                        isSelected 
+                          ? 'bg-slate-950/15 text-slate-950' 
+                          : 'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}>
+                        {tie.tie_code}
+                      </span>
+                      <span className="font-bold">
+                        <span className={isSelected ? 'text-slate-950/70 font-semibold' : 'text-slate-400 font-semibold'}>vs</span>{' '}
+                        {opponentObj?.short_name || opponentObj?.name || 'TBD'}
+                      </span>
                       {isLocked ? (
-                        <CheckCircle2 className={`w-3.5 h-3.5 ${isSelected ? 'text-emerald-400 dark:text-emerald-950' : 'text-emerald-500'}`} />
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-slate-950' : 'text-emerald-400'}`} />
                       ) : (
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${isSelected ? 'bg-amber-400 dark:bg-amber-950' : 'bg-amber-400'}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 animate-pulse ${isSelected ? 'bg-slate-950' : 'bg-amber-400'}`} />
                       )}
                     </button>
                   );

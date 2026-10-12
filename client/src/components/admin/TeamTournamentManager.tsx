@@ -36,7 +36,53 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
     winnerId: string;
     scoreA: string;
     scoreB: string;
+    rubberScores: Record<string, { winnerSide: number; score: string }>;
   } | null>(null);
+
+  // Fetch individual rubber matches for the tie currently being resolved
+  const { data: resolvingTieMatches = [], isLoading: resolvingTieMatchesLoading } = useQuery({
+    queryKey: ['resolving_tie_matches', resolvingTie?.tie?.id],
+    queryFn: async () => {
+      if (!resolvingTie?.tie?.id) return [];
+      const { data, error } = await supabase
+        .from('tournament_matches')
+        .select(`
+          *,
+          player1:players!tournament_matches_player1_id_fkey(id, full_name),
+          player2:players!tournament_matches_player2_id_fkey(id, full_name),
+          player3:players!tournament_matches_player3_id_fkey(id, full_name),
+          player4:players!tournament_matches_player4_id_fkey(id, full_name)
+        `)
+        .eq('tie_id', resolvingTie.tie.id)
+        .order('rubber_order', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!resolvingTie?.tie?.id,
+  });
+
+  // When resolvingTieMatches loads or changes, populate default rubberScores if not already set
+  React.useEffect(() => {
+    if (resolvingTie && resolvingTieMatches.length > 0) {
+      setResolvingTie((prev) => {
+        if (!prev) return null;
+        // If rubberScores is already populated for this tie, keep current user edits
+        if (Object.keys(prev.rubberScores).length > 0) return prev;
+
+        const initialRubbers: Record<string, { winnerSide: number; score: string }> = {};
+        resolvingTieMatches.forEach((m: any) => {
+          initialRubbers[m.id] = {
+            winnerSide: m.winner_side || 0,
+            score: m.score || '',
+          };
+        });
+        return {
+          ...prev,
+          rubberScores: initialRubbers,
+        };
+      });
+    }
+  }, [resolvingTieMatches, resolvingTie?.tie?.id]);
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['tournament_teams', tournamentId],
@@ -54,7 +100,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   const { data: ties, isLoading: tiesLoading } = useQuery({
     queryKey: ['tournament_ties', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('tournament_ties').select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name)').eq('tournament_id', tournamentId);
+      const { data, error } = await supabase.from('tournament_ties').select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name), matches:tournament_matches(id, status, court_number)').eq('tournament_id', tournamentId);
       if (error) throw error;
       const list = data || [];
       const priority = (state: string) => {
@@ -130,7 +176,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
 
           await supabase
             .from('tournament_matches')
-            .update(updates)
+            .update(updates as any)
             .eq('tie_id', newTieId);
         }
       }
@@ -171,7 +217,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
 
         await supabase
           .from('tournament_matches')
-          .update(updates)
+          .update(updates as any)
           .eq('tie_id', editingScheduleTie.tieId);
       }
     },
@@ -189,13 +235,41 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
       winnerId,
       scoreA,
       scoreB,
+      rubberScores,
     }: {
       tieId: string;
       winnerId: string;
       scoreA?: number | null;
       scoreB?: number | null;
+      rubberScores?: Record<string, { winnerSide: number; score: string }>;
     }) => {
-      // 1. If scores provided, update tie score columns
+      // 1. If individual rubber scores are provided, update each tournament_match row
+      if (rubberScores && Object.keys(rubberScores).length > 0) {
+        for (const [matchId, rData] of Object.entries(rubberScores)) {
+          const matchUpdate: Record<string, any> = {};
+          if (rData.score !== undefined && rData.score !== null) {
+            matchUpdate.score = rData.score.trim() || null;
+          }
+          if (rData.winnerSide === 1 || rData.winnerSide === 2) {
+            matchUpdate.winner_side = rData.winnerSide;
+            matchUpdate.status = 'completed';
+          } else if (rData.winnerSide === 0) {
+            // Keep existing winner_side or unmark if empty
+            if (rData.score.trim()) {
+              matchUpdate.status = 'completed';
+            }
+          }
+
+          if (Object.keys(matchUpdate).length > 0) {
+            await supabase
+              .from('tournament_matches')
+              .update(matchUpdate as any)
+              .eq('id', matchId);
+          }
+        }
+      }
+
+      // 2. If tie scores provided, update tie score columns
       const updatePayload: Record<string, any> = {};
       if (scoreA !== undefined && scoreA !== null) updatePayload.score_team_a = scoreA;
       if (scoreB !== undefined && scoreB !== null) updatePayload.score_team_b = scoreB;
@@ -207,7 +281,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           .eq('id', tieId);
       }
 
-      // 2. Resolve tie via set_tie_result RPC
+      // 3. Resolve tie via set_tie_result RPC
       const { error } = await supabase.rpc('set_tie_result', {
         p_tie_id: tieId,
         p_winner_team_id: winnerId,
@@ -245,6 +319,8 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
       toast.success("Tie resolved successfully");
       setResolvingTie(null);
       queryClient.invalidateQueries({ queryKey: ['tournament_ties'] });
+      queryClient.invalidateQueries({ queryKey: ['resolving_tie_matches'] });
+      queryClient.invalidateQueries({ queryKey: ['tie_matches'] });
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -527,8 +603,11 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
             <h2 className="font-bold text-lg">Scheduled Ties ({ties?.length || 0})</h2>
             {tiesLoading ? <Loader2 className="animate-spin text-primary" /> : (
               ties?.map((tie: any) => {
-                const isLive = tie.state === 'IN_PROGRESS';
+                const courtNumber = tie.matches?.find((m: any) => m.court_number)?.court_number || tie.court_number || null;
+                const hasLiveMatch = tie.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+                const hasScores = (tie.score_team_a > 0 || tie.score_team_b > 0);
                 const isCompleted = tie.state === 'COMPLETED';
+                const isLive = tie.state === 'IN_PROGRESS' && (hasLiveMatch || hasScores);
 
                 return (
                   <React.Fragment key={tie.id}>
@@ -542,11 +621,17 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                     }`}
                   >
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-xs font-black text-primary uppercase tracking-wider">{tie.tie_code}</span>
                         {tie.stage && (
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             · {tie.stage}
+                          </span>
+                        )}
+                        {courtNumber && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                            <MapPin className="w-3 h-3 text-primary" />
+                            {courtNumber.toUpperCase().startsWith('COURT') || courtNumber.toUpperCase().startsWith('C') ? courtNumber : `Court ${courtNumber}`}
                           </span>
                         )}
                       </div>
@@ -573,11 +658,11 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 rounded-xl shadow-xs">
                           <span className="w-2 h-2 rounded-full bg-sky-400 shrink-0" />
-                          UPCOMING
+                          {tie.state === 'IN_PROGRESS' ? 'UPCOMING' : (tie.state || 'UPCOMING')}
                         </span>
                       )}
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {tie.scheduled_at && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl">
                             <Clock className="w-3 h-3 text-primary" />
@@ -594,7 +679,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                               const pad = (n: number) => n.toString().padStart(2, '0');
                               localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
                             }
-                            setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: "", at: localAt });
+                            setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: courtNumber || "", at: localAt });
                           }}
                           className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition"
                         >
@@ -602,33 +687,24 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                         </button>
                       </div>
 
-                      {!isCompleted && tie.team_a_id && tie.team_b_id && (
-                        <div className="relative">
-                          <select
-                            className="text-xs font-bold appearance-none pl-3 pr-7 py-1.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer shadow-xs transition-all"
-                            value=""
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val) {
-                                e.target.value = "";
-                                setResolvingTie({
-                                  tie,
-                                  winnerId: val,
-                                  scoreA: tie.score_team_a ? String(tie.score_team_a) : '',
-                                  scoreB: tie.score_team_b ? String(tie.score_team_b) : '',
-                                });
-                              }
+                      {tie.team_a_id && tie.team_b_id && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setResolvingTie({
+                                tie,
+                                winnerId: tie.winner_team_id || tie.team_a_id,
+                                scoreA: tie.score_team_a ? String(tie.score_team_a) : '',
+                                scoreB: tie.score_team_b ? String(tie.score_team_b) : '',
+                                rubberScores: {},
+                              });
                             }}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition"
                           >
-                            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Force Win...</option>
-                            <option value={tie.team_a_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                              {tie.team_a?.short_name || tie.team_a?.name || 'Team A'}
-                            </option>
-                            <option value={tie.team_b_id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                              {tie.team_b?.short_name || tie.team_b?.name || 'Team B'}
-                            </option>
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
+                            <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            {isCompleted ? 'Edit Scores' : 'Enter Scores / Resolve'}
+                          </button>
                         </div>
                       )}
                     </div>
@@ -711,7 +787,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           onClick={() => setResolvingTie(null)}
         >
           <div 
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 relative overflow-hidden"
+            className="w-full max-w-xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -738,25 +814,201 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
               </button>
             </div>
 
-            {/* Selected Winner Banner */}
-            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 mb-4">
-              <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                Winner Selected
+            {/* Scrollable Body */}
+            <div className="overflow-y-auto flex-1 pr-1 -mr-1 space-y-4">
+              {/* Winner Selector Banner */}
+              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                    Tie Winner
+                  </div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    Click to switch if needed
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setResolvingTie(prev => prev ? { ...prev, winnerId: prev.tie.team_a_id } : null)}
+                    className={`py-1.5 px-3 rounded-xl text-xs font-black truncate transition border ${
+                      resolvingTie.winnerId === resolvingTie.tie?.team_a_id
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                    }`}
+                  >
+                    🏆 {resolvingTie.tie?.team_a?.name || 'Team A'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResolvingTie(prev => prev ? { ...prev, winnerId: prev.tie.team_b_id } : null)}
+                    className={`py-1.5 px-3 rounded-xl text-xs font-black truncate transition border ${
+                      resolvingTie.winnerId === resolvingTie.tie?.team_b_id
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                    }`}
+                  >
+                    🏆 {resolvingTie.tie?.team_b?.name || 'Team B'}
+                  </button>
+                </div>
               </div>
-              <div className="font-black text-sm text-emerald-900 dark:text-emerald-200 mt-0.5">
-                {resolvingTie.winnerId === resolvingTie.tie?.team_a_id
-                  ? resolvingTie.tie?.team_a?.name || 'Team A'
-                  : resolvingTie.tie?.team_b?.name || 'Team B'}
-              </div>
-            </div>
 
-            {/* Optional Score Inputs */}
+            {/* Individual Rubber Scores Section */}
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Tie Score (Optional)
+                  Individual Rubber Scores (Optional)
                 </label>
-                <span className="text-[11px] text-slate-400">Can leave blank</span>
+                <span className="text-[11px] text-slate-400">
+                  {resolvingTieMatches.length > 0 ? `${resolvingTieMatches.length} Rubbers` : 'No rubbers found'}
+                </span>
+              </div>
+
+              {resolvingTieMatchesLoading ? (
+                <div className="flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs text-slate-400">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading rubbers...
+                </div>
+              ) : resolvingTieMatches.length > 0 ? (
+                <div className="space-y-2.5 max-h-[38vh] overflow-y-auto pr-1">
+                  {resolvingTieMatches.map((m: any, idx: number) => {
+                    const rData = resolvingTie.rubberScores[m.id] || { winnerSide: m.winner_side || 0, score: m.score || '' };
+                    
+                    const side1Player = m.player1?.full_name ? (m.player3?.full_name ? `${m.player1.full_name} & ${m.player3.full_name}` : m.player1.full_name) : (resolvingTie.tie?.team_a?.short_name || 'Team A');
+                    const side2Player = m.player2?.full_name ? (m.player4?.full_name ? `${m.player2.full_name} & ${m.player4.full_name}` : m.player2.full_name) : (resolvingTie.tie?.team_b?.short_name || 'Team B');
+
+                    const handleRubberChange = (newWinnerSide: number, newScore: string) => {
+                      setResolvingTie((prev) => {
+                        if (!prev) return null;
+                        const updated = {
+                          ...prev.rubberScores,
+                          [m.id]: { winnerSide: newWinnerSide, score: newScore }
+                        };
+
+                        // Auto-calculate rubbers won based on rubber winners
+                        let countA = 0;
+                        let countB = 0;
+                        let anyWinnerSelected = false;
+
+                        resolvingTieMatches.forEach((rm: any) => {
+                          const state = updated[rm.id];
+                          if (state) {
+                            if (state.winnerSide === 1) {
+                              countA++;
+                              anyWinnerSelected = true;
+                            } else if (state.winnerSide === 2) {
+                              countB++;
+                              anyWinnerSelected = true;
+                            }
+                          }
+                        });
+
+                        // Only auto-update overall score if user actually selected rubber winners
+                        const nextScoreA = anyWinnerSelected ? String(countA) : prev.scoreA;
+                        const nextScoreB = anyWinnerSelected ? String(countB) : prev.scoreB;
+
+                        // Optionally auto-update winnerId if clear leader
+                        let nextWinnerId = prev.winnerId;
+                        if (anyWinnerSelected && countA !== countB) {
+                          nextWinnerId = countA > countB ? prev.tie.team_a_id : prev.tie.team_b_id;
+                        }
+
+                        return {
+                          ...prev,
+                          rubberScores: updated,
+                          scoreA: nextScoreA,
+                          scoreB: nextScoreB,
+                          winnerId: nextWinnerId,
+                        };
+                      });
+                    };
+
+                    return (
+                      <div
+                        key={m.id}
+                        className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 space-y-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 font-black">
+                            <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-mono text-[11px]">
+                              #{m.rubber_order ?? (idx + 1)}
+                            </span>
+                            <span className="text-slate-800 dark:text-slate-200">
+                              {m.rubber_label || m.category || `Rubber ${idx + 1}`}
+                            </span>
+                          </div>
+                          {m.category && (
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              {m.category}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Players Side 1 vs Side 2 */}
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 grid grid-cols-2 gap-2">
+                          <span className="truncate" title={side1Player}>
+                            <strong className="text-slate-700 dark:text-slate-300">
+                              {resolvingTie.tie?.team_a?.short_name || 'Team A'}:
+                            </strong> {side1Player}
+                          </span>
+                          <span className="truncate text-right" title={side2Player}>
+                            <strong className="text-slate-700 dark:text-slate-300">
+                              {resolvingTie.tie?.team_b?.short_name || 'Team B'}:
+                            </strong> {side2Player}
+                          </span>
+                        </div>
+
+                        {/* Winner Toggle & Score Input */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {/* Rubber Winner Button Group */}
+                          <div className="flex items-center rounded-xl bg-slate-200/60 dark:bg-slate-800/80 p-0.5 border border-slate-200 dark:border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleRubberChange(rData.winnerSide === 1 ? 0 : 1, rData.score)}
+                              className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-black truncate transition ${
+                                rData.winnerSide === 1
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                              }`}
+                              title={resolvingTie.tie?.team_a?.name || 'Team A'}
+                            >
+                              ✓ {resolvingTie.tie?.team_a?.short_name || 'Team A'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRubberChange(rData.winnerSide === 2 ? 0 : 2, rData.score)}
+                              className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-black truncate transition ${
+                                rData.winnerSide === 2
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                              }`}
+                              title={resolvingTie.tie?.team_b?.name || 'Team B'}
+                            >
+                              ✓ {resolvingTie.tie?.team_b?.short_name || 'Team B'}
+                            </button>
+                          </div>
+
+                          {/* Rubber Score text input */}
+                          <input
+                            type="text"
+                            placeholder="Score (e.g. 21-18, 21-19)"
+                            value={rData.score}
+                            onChange={(e) => handleRubberChange(rData.winnerSide, e.target.value)}
+                            className="w-full px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-[11px] placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-primary/40"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Optional Tie Score Inputs */}
+            <div className="space-y-3 mb-5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Total Rubbers Won (Tie Score)
+                </label>
+                <span className="text-[11px] text-slate-400">Auto-calculated or override</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
@@ -789,9 +1041,11 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                 </div>
               </div>
             </div>
+            {/* End Scrollable Body */}
+            </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-2">
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
               <button
                 type="button"
                 onClick={() => setResolvingTie(null)}
@@ -811,6 +1065,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                     winnerId: resolvingTie.winnerId,
                     scoreA: sA,
                     scoreB: sB,
+                    rubberScores: resolvingTie.rubberScores,
                   });
                 }}
                 className="px-5 py-2.5 rounded-xl bg-primary hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition disabled:opacity-50"

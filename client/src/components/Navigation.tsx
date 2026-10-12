@@ -73,7 +73,7 @@ const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
   { href: "/tournaments", label: "Tournaments" },
   { href: "/legacy", label: "Legacy" },
-  { href: "/hub", label: "Hub" },
+  { href: "/club", label: "Club" },
 ];
 
 // ModeToggle removed
@@ -584,10 +584,10 @@ export default function Navigation() {
 
 
 
-              <Link href="/hub" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/hub") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+              <Link href="/club" className="flex-1 min-w-0">
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                   <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                  <span className="text-[11px] font-semibold">Hub</span>
+                  <span className="text-[11px] font-semibold">Club</span>
                 </button>
               </Link>
               

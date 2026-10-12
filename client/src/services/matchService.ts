@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { MATCH_SELECT_WITH_PLAYERS } from '@/types';
 import type { MatchWithPlayers } from '@/types';
 
-export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<MatchWithPlayers[]> {
+export async function fetchPlayerMatches(playerId: string, limit = 200): Promise<MatchWithPlayers[]> {
   const filter = `player1_id.eq.${playerId},player2_id.eq.${playerId},team1_partner_id.eq.${playerId},team2_partner_id.eq.${playerId}`;
   const { data: friendlyData, error: friendlyError } = await supabase
     .from("matches")
@@ -17,7 +17,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
   const { data: tournamentData, error: tourneyError } = await supabase
     .from("tournament_matches")
-    .select(`*, tournaments!inner(status), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
+    .select(`*, tournaments!inner(status, counts_for_elo), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
     .in("status", ["completed", "scheduled", "in_progress", "walkover"])
     .neq("tournaments.status", "deleted")
     .or(tFilter)
@@ -33,7 +33,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<
     })
     .map((m: any) => ({
     ...m,
-    is_friendly: false,
+    is_friendly: false, counts_for_elo: m.tournaments?.counts_for_elo,
     team1_partner_id: m.player3_id,
     team2_partner_id: m.player4_id,
   }));
@@ -74,13 +74,13 @@ export async function fetchFeedMatches(
 
   let tourneyCompletedQuery = supabase
     .from("tournament_matches")
-    .select(`*, tournaments!inner(status), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
+    .select(`*, tournaments!inner(status, counts_for_elo), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
     .eq("status", "completed")
     .neq("tournaments.status", "deleted");
 
   let tourneyUpcomingQuery = supabase
     .from("tournament_matches")
-    .select(`*, tournaments!inner(status), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
+    .select(`*, tournaments!inner(status, counts_for_elo), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
     .in("status", ["scheduled", "in_progress"])
     .neq("tournaments.status", "deleted");
 
@@ -152,7 +152,7 @@ export async function fetchFeedMatches(
       })
       .map((m: any) => ({
         ...m,
-        is_friendly: false,
+        is_friendly: false, counts_for_elo: m.tournaments?.counts_for_elo,
         team1_partner_id: m.player3_id,
         team2_partner_id: m.player4_id,
       }));

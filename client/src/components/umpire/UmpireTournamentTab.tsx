@@ -36,6 +36,8 @@ export interface TournamentMatchForUmpire {
 
 interface Props {
   onStartMatch: (match: TournamentMatchForUmpire) => void;
+  tournamentId?: string;
+  tournament?: any;
 }
 
 const CAT_LABELS: Record<string, string> = {
@@ -68,7 +70,7 @@ const CAT_BOX_COLORS_DARK: Record<string, string> = {
   GD: "bg-fuchsia-900/20 border-fuchsia-900/40 hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/20",
 };
 
-export function UmpireTournamentTab({ onStartMatch }: Props) {
+export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: Props) {
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<"format" | "match" | "confirm">("format");
@@ -195,10 +197,17 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   // without flashing the spinner or surfacing a toast for a transient blip.
   const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
-    const { data: tournaments } = await supabase
+    let tournamentsQuery = supabase
       .from("tournaments")
-      .select("id, name")
-      .eq("status", "active");
+      .select("id, name");
+
+    if (tournamentId) {
+      tournamentsQuery = tournamentsQuery.eq("id", tournamentId);
+    } else {
+      tournamentsQuery = tournamentsQuery.eq("status", "active");
+    }
+
+    const { data: tournaments } = await tournamentsQuery;
 
     if (!tournaments?.length) { setLoading(false); return; }
 
@@ -268,7 +277,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
     }
 
     setLoading(false);
-  }, []);
+  }, [tournamentId]);
 
   useEffect(() => { load(); }, [load]);
 

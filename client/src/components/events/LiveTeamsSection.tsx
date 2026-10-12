@@ -18,6 +18,7 @@ import { resolveMemberGender } from "@/components/events/TeamRosterModal";
 import { useTeamModal } from "@/contexts/TeamModalContext";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
 import { calculateMinRosterRequirements, RosterRequirementResult } from "@/lib/teamLineupRules";
+import { TeamLogo } from "@/components/events/TeamLogo";
 
 
 export type MemberRole = "MANAGER" | "CAPTAIN" | "VICE_CAPTAIN" | "PLAYER";
@@ -450,9 +451,11 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                 >
                   {/* Left: Team Name & Details */}
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 text-primary flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
-                      <Shield className="w-5 h-5" />
-                    </div>
+                    <TeamLogo
+                      name={team.name}
+                      shortName={team.short_name}
+                      size="md"
+                    />
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

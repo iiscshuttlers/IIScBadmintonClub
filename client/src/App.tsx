@@ -132,11 +132,13 @@ function AppRoutes() {
           </Route>
           <Route path="/tv/:matchId" component={TvScoreboard} />
 
-          <Route path="/hub">
-            <GuestGate feature="Hub">
+          <Route path="/club">
+            <GuestGate feature="Club">
               <Hub />
             </GuestGate>
           </Route>
+          {/* Back-compat: old /hub links (push notifications, bookmarks) → /club, preserving tab/hash */}
+          <Route path="/hub" component={() => { window.location.replace(`${import.meta.env.BASE_URL}club${window.location.search}${window.location.hash}`); return null; }} />
           <Route path="/legacy" component={Legacy} />
           <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#champions`; return null; }} />
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
@@ -191,10 +193,10 @@ function AppRoutes() {
             </GuestGate>
           </Route>
           {/* Keep legacy exchange/marketplace for redirects if needed */}
-          <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}hub?tab=exchange`; return null; }} />
-          <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}hub?tab=exchange`; return null; }} />
-          <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}hub?tab=exchange&sub=lost-found`; return null; }} />
-          <Route path="/umpire" component={() => { window.location.href=`${import.meta.env.BASE_URL}hub?tab=my_matches`; return null; }} />
+          <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
+          <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
+          <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange&sub=lost-found`; return null; }} />
+          <Route path="/umpire" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=my_matches`; return null; }} />
           <Route path="/feed/announcements" component={() => { window.location.href=`${import.meta.env.BASE_URL}pulse#announcements`; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />

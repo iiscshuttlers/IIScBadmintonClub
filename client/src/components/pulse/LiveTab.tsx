@@ -930,7 +930,7 @@ export function LiveTab() {
 
       {(isUmpire || isAdmin) && activeSubTab === "umpire" && (
         <div className="mb-6">
-          <UmpireTab />
+          <UmpireTab tournamentId={activeTournament?.id} tournament={activeTournament} />
         </div>
       )}
 

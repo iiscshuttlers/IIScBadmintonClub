@@ -13,7 +13,7 @@ const quickLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/pulse", label: "Pulse", icon: Calendar },
   { href: "/legacy", label: "Legacy", icon: Trophy },
-  { href: "/hub", label: "Hub", icon: Bell },
+  { href: "/club", label: "Club", icon: Bell },
   { href: "/join", label: "Join Us", icon: Mail },
 ];
 

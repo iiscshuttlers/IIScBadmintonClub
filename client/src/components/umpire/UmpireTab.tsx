@@ -17,13 +17,21 @@ import { RecentMatchCard, type RecentMatchData } from "./RecentMatchCard";
 
 const SETUP_STORAGE_KEY = "umpire_setup_matches_v1";
 
-export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean }) {
+export function UmpireTab({ 
+  tournamentOnly = false,
+  tournamentId,
+  tournament
+}: { 
+  tournamentOnly?: boolean;
+  tournamentId?: string;
+  tournament?: any;
+}) {
   const { session, isUmpire, profile } = useAuth();
   // Only master_admin, admin, and umpire roles can run tournament matches
   const hasElevatedRole = isUmpire && (
     profile?.role === 'master_admin' || profile?.role === 'admin' || profile?.role === 'umpire'
   );
-  const [hasActiveTournament, setHasActiveTournament] = useState(false);
+  const [hasActiveTournament, setHasActiveTournament] = useState(Boolean(tournamentId));
   // canRunTournament = elevated role + active tournament exists
   const canRunTournament = hasElevatedRole && hasActiveTournament;
   const [activeMatches, setActiveMatches] = useState<(BwfMatchState | MatchEditState | TournamentMatchForUmpire)[]>(() => {
@@ -71,14 +79,26 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
     } catch {}
   }, [activeMatches]);
 
+  const [resolvedTournamentId, setResolvedTournamentId] = useState<string | undefined>(tournamentId);
+
   // Check if there's an active tournament
   useEffect(() => {
+    if (tournamentId) {
+      setResolvedTournamentId(tournamentId);
+      setHasActiveTournament(true);
+      return;
+    }
     supabase
       .from("tournaments")
-      .select("id", { count: "exact", head: true })
+      .select("id")
       .eq("status", "active")
-      .then(({ count }) => setHasActiveTournament((count ?? 0) > 0));
-  }, []);
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setHasActiveTournament(Boolean(data?.id));
+        setResolvedTournamentId(data?.id);
+      });
+  }, [tournamentId]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -401,7 +421,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
                   <Trophy className="w-3.5 h-3.5 text-amber-400" />
                   <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider">Tournament Matches</h3>
                 </div>
-                <UmpireTournamentTab onStartMatch={startMatch} />
+                <UmpireTournamentTab onStartMatch={startMatch} tournamentId={resolvedTournamentId} tournament={tournament} />
               </div>
             )}
 
@@ -437,6 +457,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
           {hasActiveTournament && canRunTournament ? (
             <RecentUmpireMatches
               isTournament={true}
+              tournamentId={resolvedTournamentId}
               onEdit={startMatch}
             />
           ) : (
@@ -473,7 +494,15 @@ type RecentMatch = {
   match_code?: string | null;
 };
 
-function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditState) => void, isTournament: boolean }) {
+function RecentUmpireMatches({ 
+  onEdit, 
+  isTournament,
+  tournamentId
+}: { 
+  onEdit: (m: MatchEditState) => void;
+  isTournament: boolean;
+  tournamentId?: string;
+}) {
   const { profile, isAdmin } = useAuth();
   const [recent, setRecent] = useState<RecentMatchData[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -521,11 +550,16 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
               id,
               tie_code,
               team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-              team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+              team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)
             )
           `)
-          .eq("status", "completed")
-          .order("scored_at", { ascending: false });
+          .in("status", ["completed", "walkover"]);
+
+        if (tournamentId) {
+          query = query.eq("tournament_id", tournamentId);
+        }
+
+        query = query.order("created_at", { ascending: false });
 
         if (isAdmin) {
           query = query.limit(500);
@@ -538,7 +572,12 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           if (intervalRef.current) clearInterval(intervalRef.current);
           return;
         }
-        data = res.data?.map(m => ({ ...m, is_friendly: false, is_tournament_match: true })) || [];
+        data = res.data?.map(m => ({ 
+          ...m, 
+          created_at: m.scored_at || m.created_at || new Date().toISOString(),
+          is_friendly: false, 
+          is_tournament_match: true 
+        })) || [];
       } else {
         let query = supabase
           .from("matches")
@@ -567,7 +606,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [profile?.id, isAdmin, isTournament]);
+  }, [profile?.id, isAdmin, isTournament, tournamentId]);
 
   if (recent.length === 0) return null;
 

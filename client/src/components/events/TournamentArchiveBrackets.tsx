@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, LayoutList, Tv2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -29,37 +29,52 @@ interface PastMatch {
 export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: string }) {
   const [matches, setMatches] = useState<PastMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "bracket">("list");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     // Supabase will throw 400 if we pass a non-UUID string to a UUID column
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tournamentId);
-
     if (!isUUID) {
       setMatches([]);
+      setLoadError(false);
       setLoading(false);
       return;
     }
-
-    supabase
+    setLoading(true);
+    const { data, error } = await supabase
       .from("tournament_matches")
       .select("id,category,match_code,round,round_name,match_number,team1_label,team2_label,winner_side,score,sets_history,status")
       .eq("tournament_id", tournamentId)
       .order("round")
-      .order("match_number")
-      .then(({ data }) => {
-        const loadedMatches = (data as PastMatch[]) ?? [];
-        setMatches(loadedMatches);
-        if (loadedMatches.length > 0) {
-          const cats = [...new Set(loadedMatches.map((m: any) => m.category))];
-          if (cats.length > 0) setActiveCategory(cats[0]);
-        }
-        setLoading(false);
-      });
+      .order("match_number");
+    if (error) {
+      setLoadError(true);
+    } else {
+      setLoadError(false);
+      const loadedMatches = (data as PastMatch[]) ?? [];
+      setMatches(loadedMatches);
+      if (loadedMatches.length > 0) {
+        const cats = [...new Set(loadedMatches.map((m: any) => m.category))];
+        if (cats.length > 0) setActiveCategory(cats[0]);
+      }
+    }
+    setLoading(false);
   }, [tournamentId]);
 
+  useEffect(() => { load(); }, [load]);
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+
+  if (loadError) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 text-center">
+        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load the results.</p>
+        <button onClick={load} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">Retry</button>
+      </div>
+    );
+  }
 
   const categories = [...new Set(matches.map((m) => m.category))];
 

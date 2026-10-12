@@ -23,6 +23,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
   const [selectedTieForVisual, setSelectedTieForVisual] = useState<any | null>(null);
   const [stageFilter, setStageFilter] = useState<'ALL' | 'POOL' | 'KNOCKOUT'>('ALL');
   const [poolFilter, setPoolFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED'>('ALL');
   const [viewMode, setViewMode] = useState<'list' | 'visual'>('list');
 
   // Tie Scheduling state
@@ -36,7 +37,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       supabase.from("tournament_ties").select(`
         *,
         team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
-        team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
+        team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url),
+        matches:tournament_matches(id, status, court_number, rubber_order, match_code)
       `).eq("tournament_id", tournament.id).order("round_number").order("tie_code")
     ]);
     setTeams(tData ?? []);
@@ -62,14 +64,14 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       .eq('id', editingScheduleTie.tieId);
 
     // 2. Also update all rubbers under this tie if court or time was provided
-    if (editingScheduleTie.court || isoAt) {
+    if (editingScheduleTie.court !== undefined || isoAt) {
       const rubberUpdates: Record<string, any> = {};
-      if (editingScheduleTie.court) rubberUpdates.court_number = editingScheduleTie.court;
+      if (editingScheduleTie.court !== undefined) rubberUpdates.court_number = editingScheduleTie.court.trim() || null;
       if (isoAt) rubberUpdates.scheduled_at = isoAt;
 
       await supabase
         .from('tournament_matches')
-        .update(rubberUpdates)
+        .update(rubberUpdates as any)
         .eq('tie_id', editingScheduleTie.tieId);
     }
 
@@ -260,27 +262,64 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
     return Array.from(s).sort();
   }, [ties]);
 
+  // Helper to check if a tie is truly scheduled:
+  // Requires both court assignment AND date/time (scheduled_at)
+  const isTieScheduled = (t: any) => {
+    const court = t.matches?.find((m: any) => m.court_number)?.court_number || t.court_number || t.court || null;
+    const hasCourt = !!court && court.toString().trim() !== '';
+    const hasDateTime = !!t.scheduled_at;
+    return hasCourt && hasDateTime;
+  };
+
+  // Helper to determine if tie is currently live
+  const isTieLive = (t: any) => {
+    const hasLiveMatch = t.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+    const hasScores = (t.score_team_a > 0 || t.score_team_b > 0);
+    return t.state === 'IN_PROGRESS' && (hasLiveMatch || hasScores);
+  };
+
   const filteredTies = useMemo(() => {
     const list = ties.filter(t => {
       if (stageFilter === 'POOL' && t.stage !== 'POOL') return false;
       if (stageFilter === 'KNOCKOUT' && t.stage !== 'KNOCKOUT') return false;
       if (poolFilter !== 'ALL' && t.stage === 'POOL' && !t.tie_code.startsWith(`POOL_${poolFilter}_`)) return false;
+      
+      const live = isTieLive(t);
+      const scheduled = isTieScheduled(t);
+
+      if (statusFilter === 'LIVE' && !live) return false;
+      if (statusFilter === 'SCHEDULED' && (!scheduled || live || t.state === 'COMPLETED')) return false;
+      if (statusFilter === 'UNSCHEDULED' && (scheduled || live || t.state === 'COMPLETED')) return false;
+
       return true;
     });
 
-    const priority = (state: string) => {
-      if (state === 'IN_PROGRESS') return 0;
-      if (state === 'COMPLETED') return 2;
-      return 1;
+    // Priority sorting:
+    // 0: Live matches first
+    // 1: Scheduled matches (assigned court + time + date)
+    // 2: Not scheduled / pending matches
+    // 3: Completed matches
+    const getTiePriority = (t: any) => {
+      if (isTieLive(t)) return 0;
+      if (t.state === 'COMPLETED') return 3;
+      if (isTieScheduled(t)) return 1;
+      return 2; // Unscheduled
     };
 
     return list.sort((a, b) => {
-      const pA = priority(a.state);
-      const pB = priority(b.state);
+      const pA = getTiePriority(a);
+      const pB = getTiePriority(b);
       if (pA !== pB) return pA - pB;
+
+      // If both are scheduled, sort chronologically by scheduled_at
+      if (pA === 1 && pB === 1 && a.scheduled_at && b.scheduled_at) {
+        const timeDiff = new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+        if (timeDiff !== 0) return timeDiff;
+      }
+
       return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
     });
-  }, [ties, stageFilter, poolFilter]);
+  }, [ties, stageFilter, poolFilter, statusFilter]);
 
   const knockoutTies = useMemo(() => {
     return ties.filter(t => t.stage === 'KNOCKOUT');
@@ -330,6 +369,11 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
           ? `${tie.score_team_a} - ${tie.score_team_b}`
           : null;
 
+        const tieCourtNumber = tie.matches?.find((m: any) => m.court_number)?.court_number || null;
+        const hasLiveMatch = tie.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+        const hasScoresOrLineups = (tie.score_team_a > 0 || tie.score_team_b > 0) || (tie.lineup_locked_a && tie.lineup_locked_b);
+        const isTieTrulyLive = tie.state === 'IN_PROGRESS' && (hasLiveMatch || hasScoresOrLineups);
+
         matches.push({
           id: tie.id,
           match_code: tie.tie_code,
@@ -341,8 +385,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
           winner_side: winnerSide,
           score: scoreString,
           sets_history: null,
-          status: tie.state === 'COMPLETED' ? 'completed' : tie.state === 'IN_PROGRESS' ? 'live' : 'scheduled',
-          court_number: null
+          status: tie.state === 'COMPLETED' ? 'completed' : isTieTrulyLive ? 'live' : 'scheduled',
+          court_number: tieCourtNumber
         });
       });
     });
@@ -418,88 +462,134 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
 
       {/* Filter Bar (If ties exist) */}
       {ties.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          {/* Stage Filter */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-primary" /> Stage
-            </span>
-            {(['ALL', 'POOL', 'KNOCKOUT'] as const).map(s => (
+        <div className="flex flex-col gap-3 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          {/* Top Row: Status / Scheduling Filter + View Mode Toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Status Filter (All, Live, Scheduled, Unscheduled) */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <CalendarClock className="w-3.5 h-3.5 text-primary" /> Schedule
+              </span>
+              {(
+                [
+                  { id: 'ALL', label: 'All', count: ties.length },
+                  { id: 'LIVE', label: 'Live', count: ties.filter(isTieLive).length, isLivePill: true },
+                  { id: 'SCHEDULED', label: 'Scheduled', count: ties.filter(t => isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
+                  { id: 'UNSCHEDULED', label: 'Unscheduled', count: ties.filter(t => !isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
+                ] as const
+              ).map(({ id, label, count, isLivePill }: any) => {
+                const isActive = statusFilter === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setStatusFilter(id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 ${
+                      isActive
+                        ? isLivePill
+                          ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-[1.02]'
+                          : 'bg-primary text-slate-950 shadow-md shadow-primary/20 scale-[1.02]'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {isLivePill && (
+                      <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white animate-ping' : 'bg-rose-500'}`} />
+                    )}
+                    <span>{label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isActive ? 'bg-black/20 text-current' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* View Mode Toggle (Visual Tree vs List) */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 self-start sm:self-auto">
               <button
-                key={s}
-                onClick={() => setStageFilter(s)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-150 ${
-                  stageFilter === s
-                    ? 'bg-primary text-slate-950 shadow-md shadow-primary/20 scale-[1.02]'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                type="button"
+                onClick={() => {
+                  setViewMode('visual');
+                  if (stageFilter === 'POOL') setStageFilter('KNOCKOUT');
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  viewMode === 'visual'
+                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
-                {s === 'ALL' ? 'All Ties' : s === 'POOL' ? 'Pool Stage' : 'Playoffs / Knockouts'}
+                <GitFork className="w-3.5 h-3.5" />
+                <span>Visual Tree</span>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span>List View</span>
+              </button>
+            </div>
           </div>
 
-          {/* Pool Filter */}
-          {distinctPools.length > 0 && stageFilter !== 'KNOCKOUT' && (
-            <div className="flex items-center gap-1.5 flex-wrap pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+          {/* Secondary Row: Stage Filter & Pool Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+            {/* Stage Filter */}
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
-                <Layers className="w-3.5 h-3.5 text-sky-400" /> Pool
+                <Filter className="w-3.5 h-3.5 text-primary" /> Stage
               </span>
-              <button
-                onClick={() => setPoolFilter('ALL')}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                  poolFilter === 'ALL'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                All
-              </button>
-              {distinctPools.map(p => (
+              {(['ALL', 'POOL', 'KNOCKOUT'] as const).map(s => (
                 <button
-                  key={p}
-                  onClick={() => setPoolFilter(p)}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                    poolFilter === p
+                  key={s}
+                  onClick={() => setStageFilter(s)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                    stageFilter === s
+                      ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {s === 'ALL' ? 'All Stages' : s === 'POOL' ? 'Pool Stage' : 'Playoffs / Knockouts'}
+                </button>
+              ))}
+            </div>
+
+            {/* Pool Filter */}
+            {distinctPools.length > 0 && stageFilter !== 'KNOCKOUT' && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                  <Layers className="w-3.5 h-3.5 text-sky-400" /> Pool
+                </span>
+                <button
+                  onClick={() => setPoolFilter('ALL')}
+                  className={`px-2 py-1 rounded-xl text-xs font-bold transition-all ${
+                    poolFilter === 'ALL'
                       ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
-                  Pool {p}
+                  All
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* View Mode Toggle (Visual Tree vs List) */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setViewMode('visual');
-                if (stageFilter === 'POOL') setStageFilter('KNOCKOUT');
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                viewMode === 'visual'
-                  ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <GitFork className="w-3.5 h-3.5" />
-              <span>Visual Tree</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                viewMode === 'list'
-                  ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              <span>List View</span>
-            </button>
+                {distinctPools.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPoolFilter(p)}
+                    className={`px-2 py-1 rounded-xl text-xs font-bold transition-all ${
+                      poolFilter === p
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Pool {p}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -549,9 +639,18 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       ) : viewMode === 'list' && (
         <div className="grid grid-cols-1 gap-3.5">
           {filteredTies.map((tie) => {
-            const isLive = tie.state === 'IN_PROGRESS';
-            const isCompleted = tie.state === 'COMPLETED';
+            // Find assigned court number from tie or its rubbers
+            const courtNumber = tie.matches?.find((m: any) => m.court_number)?.court_number || tie.court_number || null;
+            
+            // A tie is ONLY truly live on court if:
+            // 1. Matches have been started (status is in_progress / live), OR
+            // 2. Tie state is IN_PROGRESS AND teams are actually active (scores entered, or lineups locked/revealed)
+            const hasLiveMatch = tie.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+            const hasScores = (tie.score_team_a > 0 || tie.score_team_b > 0);
             const isBothLocked = tie.lineup_locked_a && tie.lineup_locked_b;
+            const isCompleted = tie.state === 'COMPLETED';
+
+            const isLive = tie.state === 'IN_PROGRESS' && (hasLiveMatch || hasScores);
 
             return (
               <div 
@@ -578,6 +677,12 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                       {tie.round_name || 'Fixture'}
                     </span>
+                    {courtNumber && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shadow-2xs">
+                        <MapPin className="w-3 h-3 text-primary" />
+                        {courtNumber.toUpperCase().startsWith('COURT') || courtNumber.toUpperCase().startsWith('C') ? courtNumber : `Court ${courtNumber}`}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
@@ -607,9 +712,19 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                         ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                         : isCompleted
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                        : isTieScheduled(tie)
+                        ? 'bg-sky-500/10 text-sky-500 border border-sky-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700/60'
                     }`}>
-                      {isLive ? '🔴 LIVE ON COURT' : isBothLocked && !isCompleted ? 'AWAITING REVEAL' : tie.state}
+                      {isLive 
+                        ? '🔴 LIVE ON COURT' 
+                        : isBothLocked && !isCompleted 
+                        ? 'AWAITING REVEAL' 
+                        : isCompleted
+                        ? 'COMPLETED'
+                        : isTieScheduled(tie)
+                        ? 'SCHEDULED'
+                        : 'UNSCHEDULED'}
                     </span>
                   </div>
                 </div>
@@ -617,7 +732,9 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                 {/* Matchup Layout: Team A vs Team B */}
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4 my-2">
                   {/* Team A */}
-                  <div 
+                  {/* Team A Box Card */}
+                  <button 
+                    type="button"
                     onClick={() => {
                       if (tie.team_a?.id || tie.team_a_id) {
                         openTeamModal({
@@ -629,37 +746,40 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                         });
                       }
                     }}
-                    className="flex items-center gap-2.5 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0"
+                    className="w-full flex items-center justify-between gap-2.5 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-primary/40 active:scale-[0.99] cursor-pointer group transition text-left min-w-0"
                     title="Click to view team players and match schedule"
                   >
-                    {tie.team_a?.logo_url ? (
-                      <img src={tie.team_a.logo_url} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center truncate">
-                        {tie.team_a?.short_name || 'A'}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
-                          {tie.team_a?.name || "TBD / BYE"}
-                        </span>
-                        {tie.team_a?.short_name && (
-                          <span className="text-[10px] font-bold text-slate-400 shrink-0">
-                            ({tie.team_a.short_name})
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {tie.team_a?.logo_url ? (
+                        <img src={tie.team_a.logo_url} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center">
+                          {tie.team_a?.short_name || 'A'}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-black text-sm text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate block">
+                            {tie.team_a?.name || "TBD / BYE"}
                           </span>
-                        )}
+                          {tie.team_a?.short_name && (
+                            <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                              ({tie.team_a.short_name})
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors flex items-center gap-0.5 truncate mt-0.5">
+                          <span>View Squad</span>
+                          <span className="text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
                       </div>
-                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline block truncate">
-                        View Squad & Matches →
-                      </span>
                     </div>
                     {tie.score_team_a > 0 && (
-                      <span className="font-mono text-base font-black px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">
+                      <span className="font-mono text-base font-black px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0 ml-1">
                         {tie.score_team_a}
                       </span>
                     )}
-                  </div>
+                  </button>
 
                   {/* VS Badge Center */}
                   <div className="hidden sm:flex flex-col items-center justify-center px-1 shrink-0">
@@ -668,8 +788,9 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                     </span>
                   </div>
 
-                  {/* Team B */}
-                  <div 
+                  {/* Team B Box Card */}
+                  <button 
+                    type="button"
                     onClick={() => {
                       if (tie.team_b?.id || tie.team_b_id) {
                         openTeamModal({
@@ -681,47 +802,71 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                         });
                       }
                     }}
-                    className="flex items-center justify-start sm:justify-end gap-2.5 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition min-w-0 sm:text-right"
+                    className="w-full flex items-center justify-between gap-2.5 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-primary/40 active:scale-[0.99] cursor-pointer group transition text-left min-w-0"
                     title="Click to view team players and match schedule"
                   >
                     {tie.score_team_b > 0 && (
-                      <span className="font-mono text-base font-black px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0 order-last sm:order-first">
+                      <span className="font-mono text-base font-black px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0 mr-1">
                         {tie.score_team_b}
                       </span>
                     )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center sm:justify-end gap-1.5 min-w-0">
-                        <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
-                          {tie.team_b?.name || "TBD / BYE"}
-                        </span>
-                        {tie.team_b?.short_name && (
-                          <span className="text-[10px] font-bold text-slate-400 shrink-0">
-                            ({tie.team_b.short_name})
+                    <div className="flex items-center sm:justify-end gap-2.5 min-w-0 flex-1 sm:text-right">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center sm:justify-end gap-1.5 min-w-0">
+                          <span className="font-black text-sm text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate block">
+                            {tie.team_b?.name || "TBD / BYE"}
                           </span>
-                        )}
+                          {tie.team_b?.short_name && (
+                            <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                              ({tie.team_b.short_name})
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors flex items-center sm:justify-end gap-0.5 truncate mt-0.5">
+                          <span>View Squad</span>
+                          <span className="text-slate-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </span>
                       </div>
-                      <span className="text-[11px] font-bold text-slate-400 group-hover:underline block truncate">
-                        View Squad & Matches →
-                      </span>
+                      {tie.team_b?.logo_url ? (
+                        <img src={tie.team_b.logo_url} alt="" className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center">
+                          {tie.team_b?.short_name || 'B'}
+                        </div>
+                      )}
                     </div>
-                    {tie.team_b?.logo_url ? (
-                      <img src={tie.team_b.logo_url} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-inner px-1 text-center truncate">
-                        {tie.team_b?.short_name || 'B'}
-                      </div>
-                    )}
-                  </div>
+                  </button>
                 </div>
 
                 {/* Footer Action Buttons */}
                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    {tie.scheduled_at && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl">
-                        <Clock className="w-3 h-3 text-primary" />
-                        {new Date(tie.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
-                        {new Date(tie.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {tie.scheduled_at ? (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/90 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-2xs">
+                        <Clock className="w-3.5 h-3.5 text-primary" />
+                        <span>
+                          {new Date(tie.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                        <span className="text-slate-400 font-normal">•</span>
+                        <span>
+                          {new Date(tie.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
+                        <Clock className="w-3.5 h-3.5 text-amber-500" />
+                        Time & Date not set
+                      </span>
+                    )}
+                    {courtNumber ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-xl border border-primary/20">
+                        <MapPin className="w-3 h-3 text-primary" />
+                        {courtNumber.toUpperCase().startsWith('COURT') || courtNumber.toUpperCase().startsWith('C') ? courtNumber : `Court ${courtNumber}`}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
+                        <MapPin className="w-3 h-3 text-amber-500" />
+                        Court not assigned
                       </span>
                     )}
                   </div>
@@ -736,7 +881,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                           const pad = (n: number) => n.toString().padStart(2, '0');
                           localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
                         }
-                        setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: "", at: localAt });
+                        setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: courtNumber || "", at: localAt });
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
                     >

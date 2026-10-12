@@ -166,25 +166,41 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
             {/* Team A */}
             <div 
               onClick={() => {
-                const teamData = tie.team_a?.id ? tie.team_a : tie.team_a_id ? { id: tie.team_a_id, name: tie.team_a?.name || 'Team A', short_name: tie.team_a?.short_name, logo_url: tie.team_a?.logo_url, tournament_id: tie.tournament_id || tournament?.id } : null;
-                if (teamData) openTeamModal(teamData);
+                const teamData = {
+                  id: tie.team_a?.id || tie.team_a_id,
+                  name: tie.team_a?.name || 'Team A',
+                  short_name: tie.team_a?.short_name,
+                  logo_url: tie.team_a?.logo_url,
+                  tournament_id: tie.tournament_id || tournament?.id
+                };
+                if (teamData.id) openTeamModal(teamData, 'roster');
               }}
               className="flex items-center gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition"
               title="Click to view Team A roster and matches"
+              role="button"
+              tabIndex={0}
             >
               {tie.team_a?.logo_url ? (
-                <img src={tie.team_a.logo_url} alt="" className="w-12 h-12 rounded-2xl object-cover border border-slate-700 shrink-0" />
+                <div className="relative shrink-0">
+                  <img 
+                    src={tie.team_a.logo_url} 
+                    alt={tie.team_a?.name || "Team A"} 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all duration-200" 
+                  />
+                </div>
               ) : (
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-black text-lg text-white shrink-0 shadow-inner">
-                  {tie.team_a?.short_name || 'A'}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center font-black text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 border border-white/20 transition-all duration-200">
+                  {tie.team_a?.short_name ? tie.team_a.short_name.slice(0, 4) : 'A'}
                 </div>
               )}
               <div className="min-w-0">
                 <h3 className="font-black text-base sm:text-lg text-emerald-400 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_a?.name || "Team A"}
                 </h3>
-                <span className="text-xs text-slate-400 uppercase font-bold">
-                  {tie.team_a?.short_name || "Side A"}
+                <span className="text-xs text-slate-400 uppercase font-bold flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
+                  <span>{tie.team_a?.short_name || "Side A"}</span>
+                  <span>•</span>
+                  <span>View Squad →</span>
                 </span>
               </div>
             </div>
@@ -202,25 +218,41 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
             {/* Team B */}
             <div 
               onClick={() => {
-                const teamData = tie.team_b?.id ? tie.team_b : tie.team_b_id ? { id: tie.team_b_id, name: tie.team_b?.name || 'Team B', short_name: tie.team_b?.short_name, logo_url: tie.team_b?.logo_url, tournament_id: tie.tournament_id || tournament?.id } : null;
-                if (teamData) openTeamModal(teamData);
+                const teamData = {
+                  id: tie.team_b?.id || tie.team_b_id,
+                  name: tie.team_b?.name || 'Team B',
+                  short_name: tie.team_b?.short_name,
+                  logo_url: tie.team_b?.logo_url,
+                  tournament_id: tie.tournament_id || tournament?.id
+                };
+                if (teamData.id) openTeamModal(teamData, 'roster');
               }}
               className="flex items-center justify-end gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition text-right"
               title="Click to view Team B roster and matches"
+              role="button"
+              tabIndex={0}
             >
               <div className="min-w-0">
                 <h3 className="font-black text-base sm:text-lg text-slate-100 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_b?.name || "Team B"}
                 </h3>
-                <span className="text-xs text-slate-400 uppercase font-bold">
-                  {tie.team_b?.short_name || "Side B"}
+                <span className="text-xs text-slate-400 uppercase font-bold flex items-center justify-end gap-1 group-hover:text-slate-200 transition-colors">
+                  <span>← View Squad</span>
+                  <span>•</span>
+                  <span>{tie.team_b?.short_name || "Side B"}</span>
                 </span>
               </div>
               {tie.team_b?.logo_url ? (
-                <img src={tie.team_b.logo_url} alt="" className="w-12 h-12 rounded-2xl object-cover border border-slate-700 shrink-0" />
+                <div className="relative shrink-0">
+                  <img 
+                    src={tie.team_b.logo_url} 
+                    alt={tie.team_b?.name || "Team B"} 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-200" 
+                  />
+                </div>
               ) : (
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-600 to-rose-700 flex items-center justify-center font-black text-lg text-white shrink-0 shadow-inner">
-                  {tie.team_b?.short_name || 'B'}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 via-purple-600 to-pink-600 flex items-center justify-center font-black text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 border border-white/20 transition-all duration-200">
+                  {tie.team_b?.short_name ? tie.team_b.short_name.slice(0, 4) : 'B'}
                 </div>
               )}
             </div>

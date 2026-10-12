@@ -29,10 +29,12 @@ interface MatchRow {
   scheduled_at: string | null;
   status: string;
   tie_id?: string | null;
+  is_tie?: boolean;
 }
 
 interface OrderOfPlayProps extends TournamentThemeInput {
   id: string;
+  format_family?: string;
 }
 
 export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps }) {
@@ -40,62 +42,74 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [category, setCategory] = useState("ALL");
+  const [viewScope, setViewScope] = useState<"ALL" | "TIES" | "RUBBERS">("ALL");
   const [edits, setEdits] = useState<Record<string, { court: string; time: string }>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
-    const { data, error } = await supabase
-      .from("tournament_matches")
-      .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, court_number, scheduled_at, status, tie_id")
-      .eq("tournament_id", tournament.id)
-      .neq("status", "completed")
-      .order("round", { ascending: true })
-      .order("match_number", { ascending: true });
 
-    if (error) {
-      if (!silent) toast.error(error.message);
+    const [matchesRes, tiesRes] = await Promise.all([
+      supabase
+        .from("tournament_matches")
+        .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, court_number, scheduled_at, status, tie_id")
+        .eq("tournament_id", tournament.id)
+        .neq("status", "completed")
+        .order("round", { ascending: true })
+        .order("match_number", { ascending: true }),
+      supabase
+        .from("tournament_ties")
+        .select(`
+          id, tie_code, stage, round_name, round_number, state, scheduled_at,
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+          team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)
+        `)
+        .eq("tournament_id", tournament.id)
+        .neq("state", "COMPLETED")
+        .order("round_number", { ascending: true })
+    ]);
+
+    if (matchesRes.error && tiesRes.error) {
+      if (!silent) toast.error(matchesRes.error.message || tiesRes.error.message);
       setLoadError(true);
       setLoading(false);
       return;
     }
 
-    let matchRows = (data as any) ?? [];
+    const matchRows: MatchRow[] = ((matchesRes.data as any) ?? []).map((m: any) => ({
+      ...m,
+      is_tie: false,
+    }));
 
-    // If no individual matches exist (e.g. Team tournament with ties), load ties as schedule items
-    if (matchRows.length === 0) {
-      const { data: tiesData } = await supabase
-        .from("tournament_ties")
-        .select(`
-          id, tie_code, stage, round_name, round_number, state, scheduled_at,
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
-        `)
-        .eq("tournament_id", tournament.id)
-        .neq("state", "COMPLETED")
-        .order("round_number", { ascending: true });
+    // Also map ties as schedule items
+    const tieRows: MatchRow[] = ((tiesRes.data as any) ?? []).map((t: any) => {
+      // Find if any rubbers under this tie already have a court assigned
+      const rubbersForTie = matchRows.filter((m) => m.tie_id === t.id);
+      const rubberCourt = rubbersForTie.find((r) => !!r.court_number)?.court_number || null;
 
-      if (tiesData && tiesData.length > 0) {
-        matchRows = tiesData.map((t: any) => ({
-          id: t.id,
-          match_code: t.tie_code,
-          category: t.stage || "TEAM",
-          round_name: t.round_name || `Round ${t.round_number || 1}`,
-          round: t.round_number || 1,
-          match_number: 1,
-          team1_label: t.team_a?.short_name || t.team_a?.name || "TBD",
-          team2_label: t.team_b?.short_name || t.team_b?.name || "TBD",
-          player1_id: t.team_a ? "assigned" : null,
-          court_number: null,
-          scheduled_at: t.scheduled_at,
-          status: t.state === "IN_PROGRESS" ? "in_progress" : "scheduled",
-          tie_id: t.id,
-        }));
-      }
-    }
+      return {
+        id: t.id,
+        match_code: t.tie_code,
+        category: t.stage || "TEAM TIE",
+        round_name: t.round_name || `Round ${t.round_number || 1}`,
+        round: t.round_number || 1,
+        match_number: 1,
+        team1_label: t.team_a?.short_name || t.team_a?.name || "TBD",
+        team2_label: t.team_b?.short_name || t.team_b?.name || "TBD",
+        player1_id: t.team_a ? "assigned" : null,
+        court_number: rubberCourt,
+        scheduled_at: t.scheduled_at,
+        status: t.state === "IN_PROGRESS" ? "in_progress" : "scheduled",
+        tie_id: t.id,
+        is_tie: true,
+      };
+    });
+
+    // Combine ties and rubbers
+    const combined = [...tieRows, ...matchRows];
 
     setLoadError(false);
-    setMatches(matchRows);
+    setMatches(combined);
     setLoading(false);
   }, [tournament.id]);
 
@@ -105,12 +119,21 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     const channel = supabase
       .channel(`oop_matches_${tournament.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_ties", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [tournament.id, load]);
 
   const categories = useMemo(() => Array.from(new Set(matches.map((m) => m.category))).sort(), [matches]);
-  const inCat = (m: MatchRow) => category === "ALL" || m.category === category;
+
+  const hasTies = useMemo(() => matches.some((m) => m.is_tie), [matches]);
+  const hasRubbers = useMemo(() => matches.some((m) => !m.is_tie), [matches]);
+
+  const inCat = (m: MatchRow) => {
+    if (viewScope === "TIES" && !m.is_tie) return false;
+    if (viewScope === "RUBBERS" && m.is_tie) return false;
+    return category === "ALL" || m.category === category;
+  };
 
   const editFor = (m: MatchRow) =>
     edits[m.id] ?? { court: m.court_number ?? "", time: toLocalDateTimeInput(m.scheduled_at) };
@@ -130,11 +153,10 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     const iso = localDateTimeInputToIso(e.time);
     setSavingId(m.id);
 
-    // If this row represents a tie (where id is a tie_id and no tournament_matches rows exist)
-    const isTieItem = m.tie_id === m.id;
     let error: any = null;
 
-    if (isTieItem) {
+    if (m.is_tie) {
+      // 1. Update the tie's scheduled_at
       const res = await supabase
         .from("tournament_ties")
         .update({
@@ -143,13 +165,14 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
         .eq("id", m.id);
       error = res.error;
 
+      // 2. Also propagate court and scheduled_at to all rubbers under this tie
       if (!error && (e.court.trim() || iso)) {
         await supabase
           .from("tournament_matches")
           .update({
             ...(e.court.trim() ? { court_number: e.court.trim() } : {}),
             ...(iso ? { scheduled_at: iso } : {}),
-          })
+          } as any)
           .eq("tie_id", m.id);
       }
     } else {
@@ -167,7 +190,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
 
     setSavingId(null);
     if (error) return toast.error(error.message || "Could not save");
-    toast.success(`${m.match_code} scheduled`);
+    toast.success(`${m.is_tie ? "Tie " : ""}${m.match_code} scheduled`);
     setEdits((prev) => { const n = { ...prev }; delete n[m.id]; return n; });
     load(true);
   };
@@ -209,6 +232,11 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
       <div key={m.id} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{m.match_code}</span>
+          {m.is_tie && (
+            <span className="text-[10px] font-black tracking-wider uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">
+              Team Tie
+            </span>
+          )}
           <span className="text-[11px] font-bold text-slate-500">{CAT_LABELS[m.category] ?? m.category}</span>
           <span className="text-[11px] text-muted-foreground">· {m.round_name}</span>
           {live && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-black text-rose-600"><Radio className="w-3 h-3 animate-pulse" /> Live</span>}
@@ -264,13 +292,41 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           <h3 className="text-base font-black text-slate-800 dark:text-foreground">Order of Play</h3>
           <p className="text-xs text-muted-foreground">Assign courts and times, and see what's running on each court.</p>
         </div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className={fieldCls}>
-          <option value="ALL">All categories</option>
-          {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
-        </select>
-        <button onClick={() => load(true)} className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition shrink-0" title="Refresh">
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {hasTies && hasRubbers && (
+            <div className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setViewScope("ALL")}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "ALL" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewScope("TIES")}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "TIES" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Ties
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewScope("RUBBERS")}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "RUBBERS" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Rubbers
+              </button>
+            </div>
+          )}
+
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={fieldCls}>
+            <option value="ALL">All categories</option>
+            {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
+          </select>
+          <button onClick={() => load(true)} className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition shrink-0" title="Refresh">
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {loading ? (

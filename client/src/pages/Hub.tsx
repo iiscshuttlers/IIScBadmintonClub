@@ -64,7 +64,7 @@ export default function Hub() {
             />
           </div>
           <h1 className="text-3xl md:text-4xl font-black mb-2 text-white" style={{ fontFamily: "Playfair Display, serif" }}>
-            Club Hub
+            Club
           </h1>
           <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
             Courts, contacts, and platform info — all in one place.

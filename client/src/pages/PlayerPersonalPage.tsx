@@ -97,7 +97,7 @@ import { useAppMode } from "@/contexts/AppModeContext";
 const MAIN_TABS = ["Home", "Matches", "Stats", "Training"] as const;
 type MainTab = (typeof MAIN_TABS)[number];
 
-const FORMAT_TABS = ["Singles", "Doubles", "Mixed Doubles"] as const;
+const FORMAT_TABS = ["All", "Singles", "Doubles", "Mixed Doubles"] as const;
 type FormatTab = (typeof FORMAT_TABS)[number];
 
 const STATUS_CONFIG = [
@@ -615,10 +615,10 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
               <h2 className="text-base font-bold text-foreground">Recent Matches</h2>
             </div>
             <button
-              onClick={() => setLocation(`/player/${player.id}/personal/stats/match`)}
-              className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary transition-all hover:gap-1.5"
+              onClick={() => setLocation(`/player/${player.id}/personal/matches`)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-all hover:gap-1.5"
             >
-              View stats <ArrowUpRight className="h-3.5 w-3.5" />
+              View all matches <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
 
@@ -692,6 +692,8 @@ function PersonalMatchCardItem({ match, currentUser }: { match: any; currentUser
 }
 
 function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, currentUser }: { matches: PersonalMatch[]; fullMatches: any[]; formatTab: FormatTab; setFormatTab: (tab: FormatTab) => void; currentUser: any }) {
+  const [matchTypeFilter, setMatchTypeFilter] = useState<"ALL" | "TOURNAMENT" | "FRIENDLY">("ALL");
+
   const getGroup = (c?: string) => {
     const cat = (c || "").toUpperCase();
     if (cat === "MS" || cat === "WS" || cat.includes("SINGLES")) return "Singles";
@@ -710,9 +712,8 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
     return isTeam1 ? isTeam1Winner : !isTeam1Winner;
   };
 
-  const filtered = fullMatches.filter((m) => getGroup(m.category) === formatTab);
-
   const stats = useMemo(() => {
+    const all = fullMatches;
     const singles = fullMatches.filter((m) => getGroup(m.category) === "Singles");
     const doubles = fullMatches.filter((m) => getGroup(m.category) === "Doubles");
     const mixedDoubles = fullMatches.filter((m) => getGroup(m.category) === "Mixed Doubles");
@@ -724,16 +725,31 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
     };
 
     return {
+      "All": { count: all.length, winRate: calcWinRate(all), icon: Sigma, color: "primary", label: "All Matches" },
       "Singles": { count: singles.length, winRate: calcWinRate(singles), icon: Swords, color: "blue", label: "Singles" },
       "Doubles": { count: doubles.length, winRate: calcWinRate(doubles), icon: Users, color: "green", label: "Doubles" },
       "Mixed Doubles": { count: mixedDoubles.length, winRate: calcWinRate(mixedDoubles), icon: Trophy, color: "amber", label: "Mixed" },
     };
   }, [fullMatches, currentUser]);
 
+  const filtered = useMemo(() => {
+    return fullMatches.filter((m) => {
+      // Format filter
+      if (formatTab !== "All" && getGroup(m.category) !== formatTab) return false;
+
+      // Type filter
+      if (matchTypeFilter === "TOURNAMENT" && m.is_friendly !== false) return false;
+      if (matchTypeFilter === "FRIENDLY" && m.is_friendly === false) return false;
+
+      return true;
+    });
+  }, [fullMatches, formatTab, matchTypeFilter]);
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        {(["Singles", "Doubles", "Mixed Doubles"] as FormatTab[]).map((tab) => {
+      {/* Format Categories */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {(["All", "Singles", "Doubles", "Mixed Doubles"] as FormatTab[]).map((tab) => {
           const s = stats[tab];
           const Icon = s.icon;
           const isSelected = formatTab === tab;
@@ -742,31 +758,54 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
             <button
               key={tab}
               onClick={() => setFormatTab(tab)}
-              className={`text-left transition-all bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border p-4 ${
+              className={`text-left transition-all bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border p-3.5 sm:p-4 cursor-pointer ${
                 isSelected 
-                  ? "border-amber-400 dark:border-amber-500 ring-1 ring-amber-400 dark:ring-amber-500 scale-[1.02]" 
+                  ? "border-amber-400 dark:border-amber-500 ring-2 ring-amber-400/50 dark:ring-amber-500/50 scale-[1.02]" 
                   : "border-slate-100 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
               }`}
             >
               <Icon className={`w-5 h-5 mb-2 ${
-                s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-500" : "text-amber-500"
+                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-500" : "text-amber-500"
               }`} />
               <div className="text-sm font-black text-slate-800 dark:text-slate-100">{s.count}</div>
               <div className="text-[10px] font-bold text-muted-foreground">{s.label}</div>
               <div className={`text-xs font-bold mt-1 ${
-                s.color === "blue" ? "text-[var(--series-a)] dark:text-[var(--series-a)]" : s.color === "green" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
               }`}>{s.winRate}% win</div>
             </button>
           );
         })}
       </div>
 
+      {/* Match Type Pills Filter */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+          {(["ALL", "TOURNAMENT", "FRIENDLY"] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setMatchTypeFilter(type)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                matchTypeFilter === type
+                  ? "bg-white dark:bg-slate-700 text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {type === "ALL" ? "All Types" : type === "TOURNAMENT" ? "Tournaments" : "Friendlies"}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs font-semibold text-muted-foreground">
+          Showing {filtered.length} match{filtered.length === 1 ? "" : "es"}
+        </div>
+      </div>
+
+      {/* Match Cards Feed */}
       <div className="space-y-3">
         {filtered.length > 0 ? (
           filtered.map((m) => <PersonalMatchCardItem key={m.id} match={m} currentUser={currentUser} />)
         ) : (
           <div className="p-8 text-center text-sm text-muted-foreground italic bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-            No {formatTab.toLowerCase()} tournament matches yet
+            No matches found for the selected filters
           </div>
         )}
       </div>
@@ -774,7 +813,7 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
   );
 }
 
-function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorAnalytics, playerId, isCurrentUser, currentSubTab }: { matches: PersonalMatch[]; motionSummary: any; motionMatches: MotionMatch[]; workRate: number; sensorAnalytics: any[]; playerId?: string; isCurrentUser?: boolean; currentSubTab: "Match Stats" | "Phone" | "Watch Data" | "Rallies" }) {
+function StatsSection({ matches, fullMatches = [], player, motionSummary, motionMatches, workRate, sensorAnalytics, playerId, isCurrentUser, currentSubTab }: { matches: PersonalMatch[]; fullMatches?: any[]; player?: any; motionSummary: any; motionMatches: MotionMatch[]; workRate: number; sensorAnalytics: any[]; playerId?: string; isCurrentUser?: boolean; currentSubTab: "Match Stats" | "Phone" | "Watch Data" | "Rallies" }) {
   const [, setLocation] = useLocation();
   const { confirm } = useConfirm();
   const allMatchIds = useMemo(() => {
@@ -1195,24 +1234,150 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
       </div>
 
       {currentSubTab === "Match Stats" && (
-        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Singles</div>
-              <div className="text-2xl font-black text-[var(--series-a)]">{stats.singles.winRate}%</div>
-              <div className="text-xs text-muted-foreground">{stats.singles.count} matches</div>
-            </div>
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Doubles</div>
-              <div className="text-2xl font-black text-green-500">{stats.doubles.winRate}%</div>
-              <div className="text-xs text-muted-foreground">{stats.doubles.count} matches</div>
-            </div>
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Mixed</div>
-              <div className="text-2xl font-black text-amber-500">{stats.mixedDoubles.winRate}%</div>
-              <div className="text-xs text-muted-foreground">{stats.mixedDoubles.count} matches</div>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {/* Category Win Rate Cards */}
+          <div>
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Performance by Discipline</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Singles</span>
+                  <Swords className="w-3.5 h-3.5 text-[var(--series-a)]" />
+                </div>
+                <div className="text-2xl font-black text-[var(--series-a)]">{stats.singles.winRate}%</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{stats.singles.count} matches</div>
+              </div>
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Doubles</span>
+                  <Users className="w-3.5 h-3.5 text-green-500" />
+                </div>
+                <div className="text-2xl font-black text-green-500">{stats.doubles.winRate}%</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{stats.doubles.count} matches</div>
+              </div>
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Mixed</span>
+                  <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                </div>
+                <div className="text-2xl font-black text-amber-500">{stats.mixedDoubles.winRate}%</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{stats.mixedDoubles.count} matches</div>
+              </div>
             </div>
           </div>
+
+          {/* Detailed Performance Metrics */}
+          {(() => {
+            const getGroup = (c?: string) => {
+              const cat = (c || "").toUpperCase();
+              if (cat === "MS" || cat === "WS" || cat.includes("SINGLES")) return "Singles";
+              if (cat === "MD" || cat === "WD" || (cat.includes("DOUBLES") && !cat.includes("MIXED"))) return "Doubles";
+              if (cat === "XD" || cat.includes("MIXED")) return "Mixed Doubles";
+              return "Singles";
+            };
+
+            const isWin = (m: any) => {
+              if (typeof m.won === "boolean") return m.won;
+              const pId = playerId;
+              if (!pId) return false;
+              const isTeam1 = m.player1_id === pId || m.team1_partner_id === pId || m.player1?.id === pId;
+              if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
+              const isTeam1Winner = m.winner_side ? m.winner_side === 1 : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id || m.winner_id === m.player1?.id);
+              return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+            };
+
+            const matchesToUse = fullMatches && fullMatches.length > 0 ? fullMatches : matches;
+            const total = matchesToUse.length;
+            const wins = matchesToUse.filter(isWin).length;
+            const losses = total - wins;
+            const tourneyMatches = matchesToUse.filter((m: any) => m.is_friendly === false);
+            const friendlyMatches = matchesToUse.filter((m: any) => m.is_friendly !== false);
+
+            let straightSets = 0;
+            let decidersPlayed = 0;
+            let decidersWon = 0;
+
+            matchesToUse.forEach((m: any) => {
+              const won = isWin(m);
+              const scoreStr = m.match_score || m.score || "";
+              if (!scoreStr) return;
+              const sets = scoreStr.split(/,| /).map((s: string) => s.trim()).filter(Boolean);
+              if (sets.length === 2 && won) {
+                straightSets++;
+              } else if (sets.length >= 3) {
+                decidersPlayed++;
+                if (won) decidersWon++;
+              }
+            });
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Total Record</div>
+                    <div className="text-xl font-black text-slate-800 dark:text-slate-100">
+                      {wins}W - {losses}L
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{total ? Math.round((wins / total) * 100) : 0}% win rate</div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Straight Sets</div>
+                    <div className="text-xl font-black text-emerald-500">
+                      {straightSets}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">2-0 sweeps</div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">3-Set Clutch</div>
+                    <div className="text-xl font-black text-amber-500">
+                      {decidersPlayed > 0 ? `${Math.round((decidersWon / decidersPlayed) * 100)}%` : "—"}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{decidersWon} of {decidersPlayed} deciders</div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Tourney vs Club</div>
+                    <div className="text-xl font-black text-primary">
+                      {tourneyMatches.length} / {friendlyMatches.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Tourneys / Friendlies</div>
+                  </div>
+                </div>
+
+                {/* Rating & Elo Summary */}
+                {player && (
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-primary" />
+                        <h4 className="text-sm font-bold text-foreground">Rating & Elo Skill Breakdown</h4>
+                      </div>
+                      <span className="text-xs font-black px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                        Overall {Math.round(player.elo_rating ?? 1200)}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase">Singles Elo</div>
+                        <div className="text-lg font-black text-foreground mt-1">{Math.round(player.singles_elo ?? player.elo_rating ?? 1200)}</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase">Doubles Elo</div>
+                        <div className="text-lg font-black text-foreground mt-1">{Math.round(player.doubles_elo ?? player.elo_rating ?? 1200)}</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase">Mixed Elo</div>
+                        <div className="text-lg font-black text-foreground mt-1">{Math.round(player.mixed_elo ?? player.elo_rating ?? 1200)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           
           {motionMatches.length > 0 && <MotionAnalyticsPanels motionMatches={motionMatches} />}
         </div>
@@ -2133,7 +2298,7 @@ export default function PlayerPersonalPage() {
   const { id } = useParams<{ id: string }>();
   const [location, setLocation] = useLocation();
   const [player, setPlayer] = useState<any | null>(null);
-  const [formatTab, setFormatTab] = useState<FormatTab>("Singles");
+  const [formatTab, setFormatTab] = useState<FormatTab>("All");
 
   // Derive active tab from location
   let activeTab: MainTab = "Home";
@@ -2381,7 +2546,7 @@ export default function PlayerPersonalPage() {
         {/* Content Sections */}
         {activeTab === "Home" && <HomeSection player={player} matches={matches} fullMatches={fullMatches} currentUser={profile} />}
         {activeTab === "Matches" && <MatchesSection matches={matches} fullMatches={fullMatches} formatTab={formatTab} setFormatTab={setFormatTab} currentUser={profile} />}
-        {activeTab === "Stats" && <StatsSection matches={matches} motionSummary={motionSummary} motionMatches={motionMatches} workRate={workRate} sensorAnalytics={sensorAnalytics} playerId={id} isCurrentUser={profile?.id === player?.id} currentSubTab={subTab} />}
+        {activeTab === "Stats" && <StatsSection matches={matches} fullMatches={fullMatches} player={player} motionSummary={motionSummary} motionMatches={motionMatches} workRate={workRate} sensorAnalytics={sensorAnalytics} playerId={id} isCurrentUser={profile?.id === player?.id} currentSubTab={subTab} />}
         {activeTab === "Training" && <TrainingSection />}
       </div>
 

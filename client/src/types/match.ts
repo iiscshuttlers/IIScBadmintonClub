@@ -21,6 +21,8 @@ export interface MatchRow {
   is_friendly: boolean;
   tournament_slug: string | null;
   scheduled_at?: string | null;
+  /** Ranked flag from the match's tournament; false = unranked (treated as a friendly/casual match). */
+  counts_for_elo?: boolean | null;
 }
 
 export interface MatchWithPlayers extends MatchRow {

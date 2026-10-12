@@ -19,7 +19,7 @@ export function usePlayerMatches(playerId: string | undefined) {
     setError(null);
     try {
       const [allMatches, pending] = await Promise.all([
-        fetchPlayerMatches(playerId, 100),
+        fetchPlayerMatches(playerId, 200),
         fetchPendingMatchesForPlayer(playerId)
       ]);
       setMatches(allMatches);

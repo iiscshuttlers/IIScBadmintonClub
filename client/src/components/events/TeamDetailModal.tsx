@@ -18,6 +18,7 @@ import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
+import { TeamLogo } from "@/components/events/TeamLogo";
 
 export interface TeamDetailModalProps {
   isOpen: boolean;
@@ -321,17 +322,12 @@ export function TeamDetailModal({
         <div className="p-5 pb-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
-              {team.logo_url ? (
-                <img 
-                  src={team.logo_url} 
-                  alt={team.name} 
-                  className="w-13 h-13 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0" 
-                />
-              ) : (
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary border border-primary/30 flex items-center justify-center shrink-0 shadow-inner">
-                  <Shield className="w-7 h-7" />
-                </div>
-              )}
+              <TeamLogo
+                name={team.name}
+                shortName={team.short_name}
+                logoUrl={team.logo_url}
+                size="lg"
+              />
               
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

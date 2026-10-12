@@ -16,6 +16,7 @@ import {
   Shield, 
   LogIn
 } from 'lucide-react';
+import { TeamLogo } from '@/components/events/TeamLogo';
 
 export default function JoinTeamByLink() {
   const [, params] = useRoute<{ token: string }>('/join-team/:token');
@@ -118,8 +119,12 @@ export default function JoinTeamByLink() {
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-primary to-indigo-600 text-white flex items-center justify-center font-black text-3xl shadow-lg shadow-primary/30 mx-auto mb-5">
-          {teamInfo.short_name || teamInfo.team_name.substring(0, 3).toUpperCase()}
+        <div className="flex justify-center mb-5">
+          <TeamLogo
+            name={teamInfo.team_name}
+            shortName={teamInfo.short_name}
+            size="xl"
+          />
         </div>
 
         <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mb-3">

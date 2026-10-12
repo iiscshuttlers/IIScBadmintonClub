@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Lock, Save, Loader2, ArrowUp, ArrowDown, Send, CheckCircle2, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { Lock, Save, Loader2, ArrowUp, ArrowDown, Send, CheckCircle2, ShieldAlert, AlertTriangle, GripVertical } from 'lucide-react';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { validateLineupAssignments, getPlayerEligibilityForRubber } from '@/lib/teamLineupRules';
 
@@ -32,6 +32,10 @@ export function TeamLineupBuilder({
   const [orderedRubbers, setOrderedRubbers] = useState<any[]>(defaultRubbers);
   const [assignments, setAssignments] = useState<Record<number, { player1_id: string; player2_id: string }>>({});
   const [submissionCount, setSubmissionCount] = useState<number>(0);
+
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Fetch existing lineups
   const { data: existingLineups = [], isLoading } = useQuery({
@@ -133,6 +137,16 @@ export function TeamLineupBuilder({
     copy[index] = copy[targetIndex];
     copy[targetIndex] = item;
     setOrderedRubbers(copy);
+  };
+
+  const reorderRubberToIndex = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex >= orderedRubbers.length || toIndex >= orderedRubbers.length) return;
+
+    const updated = [...orderedRubbers];
+    const [movedItem] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, movedItem);
+    setOrderedRubbers(updated);
   };
 
   const updateAssignment = (order: number, pos: 1 | 2, playerId: string) => {
@@ -252,7 +266,7 @@ export function TeamLineupBuilder({
             Team {side} Lineup &amp; Proposed Playing Order
           </h3>
           <p className="text-xs text-slate-500">
-            Assign players and use arrows to propose the order of play. Once locked, the referee/organizer/umpire will review orders and reveal.
+            Assign players and drag rows or use arrows to propose the order of play. Once locked, the referee/organizer/umpire will review orders and reveal.
           </p>
         </div>
 
@@ -299,27 +313,75 @@ export function TeamLineupBuilder({
         </div>
       )}
 
-      {/* Rubber List with Order Arrows */}
+      {/* Rubber List with Order Arrows & Drag Handle */}
       <div className="space-y-2.5">
         {orderedRubbers.map((rubber, index) => {
           const isDoubles = rubber.category.includes('D') || rubber.category.includes('Doubles');
           const assign = assignments[rubber.order] || { player1_id: '', player2_id: '' };
           const isThisRevealed = existingLineups.find((l: any) => l.rubber_order === rubber.order)?.is_revealed;
           const isRowDisabled = !isCaptain || isThisRevealed || isMySideLocked;
+          const isBeingDragged = draggedIndex === index;
+          const isOver = dragOverIndex === index;
 
           return (
             <div 
               key={rubber.order} 
+              draggable={!isRowDisabled}
+              onDragStart={(e) => {
+                if (isRowDisabled) return;
+                setDraggedIndex(index);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', index.toString());
+              }}
+              onDragOver={(e) => {
+                if (isRowDisabled) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverIndex !== index) {
+                  setDragOverIndex(index);
+                }
+              }}
+              onDragLeave={() => {
+                if (dragOverIndex === index) {
+                  setDragOverIndex(null);
+                }
+              }}
+              onDrop={(e) => {
+                if (isRowDisabled) return;
+                e.preventDefault();
+                const sourceIndex = draggedIndex ?? parseInt(e.dataTransfer.getData('text/plain'), 10);
+                if (!isNaN(sourceIndex) && sourceIndex !== index) {
+                  reorderRubberToIndex(sourceIndex, index);
+                }
+                setDraggedIndex(null);
+                setDragOverIndex(null);
+              }}
+              onDragEnd={() => {
+                setDraggedIndex(null);
+                setDragOverIndex(null);
+              }}
               className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border transition-all ${
-                isThisRevealed 
-                  ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/20' 
-                  : isMySideLocked
-                    ? 'border-slate-200 dark:border-slate-800 opacity-90'
-                    : 'border-slate-200 dark:border-slate-800'
+                isBeingDragged
+                  ? 'opacity-40 border-dashed border-primary ring-2 ring-primary/40 scale-[0.99]'
+                  : isOver
+                    ? 'border-primary ring-2 ring-primary/60 bg-primary/5 dark:bg-primary/10 shadow-lg'
+                    : isThisRevealed 
+                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/20' 
+                      : isMySideLocked
+                        ? 'border-slate-200 dark:border-slate-800 opacity-90'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              {/* Proposed Order Indicator & Reorder Arrows */}
+              {/* Drag Handle, Proposed Order Indicator & Reorder Arrows */}
               <div className="flex items-center gap-2">
+                {!isRowDisabled && (
+                  <div 
+                    className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    title="Drag to reorder match priority"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
+                )}
                 <div className="flex flex-col items-center justify-center w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-xs font-black">
                   #{index + 1}
                 </div>
