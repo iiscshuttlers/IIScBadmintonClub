@@ -21,75 +21,15 @@ import {
   CalendarRange,
   Trophy
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { fetchSiteData } from "@/lib/siteData";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { CourtReservation, BookingDisplayItem } from "./courtSchedule.types";
+import { DAY_START_MINUTES, DAY_END_MINUTES, TOTAL_MINUTES, formatTime12h, timeStrToMinutes } from "./courtSchedule.utils";
+import { useCourtScheduleData } from "./useCourtScheduleData";
 
-type Holiday = {
-  date: string;
-  name: string;
-};
-
-export interface CourtReservation {
-  id: string;
-  tournament_name: string;
-  department?: string;
-  date: string; // YYYY-MM-DD
-  courts: string[]; // ["1", "2", "3"]
-  start_time: string; // "09:00"
-  end_time: string; // "13:00"
-  created_at?: string;
-}
-
-interface ScheduledMatch {
-  id: string;
-  tournament_id: string;
-  match_code: string;
-  category: string;
-  court_number: string | null;
-  scheduled_at: string | null;
-  status: string;
-  team1_label: string | null;
-  team2_label: string | null;
-  tournament_name?: string;
-}
-
-export interface BookingDisplayItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  department?: string;
-  courts?: string[];
-  date?: string;
-  startTimeStr: string;
-  endTimeStr: string;
-  leftPercent: number;
-  widthPercent: number;
-  isManual?: boolean;
-}
-
-// Operating Hours: 6:00 AM to 10:20 PM
-const DAY_START_MINUTES = 6 * 60; // 360 mins (6:00 AM)
-const DAY_END_MINUTES = 22 * 60 + 20; // 1340 mins (10:20 PM)
-const TOTAL_MINUTES = DAY_END_MINUTES - DAY_START_MINUTES; // 980 mins
-
-// Convert "09:00" to "9 AM", "13:00" to "1 PM", "19:00" to "7 PM", "22:20" to "10:20 PM"
-function formatTime12h(timeStr: string): string {
-  if (!timeStr) return "";
-  if (timeStr.toLowerCase().includes("am") || timeStr.toLowerCase().includes("pm")) {
-    return timeStr;
-  }
-  const parts = timeStr.split(":");
-  const h = parseInt(parts[0], 10);
-  const m = parseInt(parts[1] || "0", 10);
-  if (isNaN(h)) return timeStr;
-  const ampm = h >= 12 ? "PM" : "AM";
-  const formattedH = h % 12 === 0 ? 12 : h % 12;
-  return m === 0 ? `${formattedH} ${ampm}` : `${formattedH}:${String(m).padStart(2, "0")} ${ampm}`;
-}
+export type { CourtReservation, BookingDisplayItem };
 
 export function CourtScheduleSection() {
   const { isAdmin, isMasterAdmin } = useAuth();
@@ -158,18 +98,8 @@ export function CourtScheduleSection() {
     }
   };
 
-  // Matches from tournament_matches
-  const [matches, setMatches] = useState<ScheduledMatch[]>([]);
-
-  // Custom Reservations from site_data
-  const [reservations, setReservations] = useState<CourtReservation[]>([]);
-
-  // Fetch Gymkhana Holidays
-  const { data: holidays = [] } = useQuery<Holiday[]>({
-    queryKey: ["holidays"],
-    queryFn: () => fetchSiteData<Holiday[]>("holidays", "holidays.json"),
-    staleTime: 300_000,
-  });
+  // Court schedule data layer (matches, reservations, holidays + realtime).
+  const { matches, reservations, setReservations, holidays } = useCourtScheduleData(selectedDate);
 
   const currentHoliday = useMemo(() => {
     return holidays.find((h) => h.date === selectedDate) || null;
@@ -369,109 +299,6 @@ export function CourtScheduleSection() {
 
     return groups;
   }, [reservations, holidays, timelineFilter]);
-
-  // Fetch reservations from site_data
-  const fetchReservations = async () => {
-    try {
-      const { data } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "court_reservations")
-        .maybeSingle();
-
-      if (data?.value && Array.isArray(data.value)) {
-        setReservations(data.value as unknown as CourtReservation[]);
-      } else {
-        setReservations([]);
-      }
-    } catch (err) {
-      console.error("Failed to fetch reservations:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchReservations();
-
-    const channel = supabase
-      .channel("court-reservations-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_data",
-          filter: "key=eq.court_reservations",
-        },
-        () => {
-          fetchReservations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Fetch matches scheduled for the selected date
-  useEffect(() => {
-    let isCancelled = false;
-
-    const fetchMatches = async () => {
-      try {
-        const startOfDay = `${selectedDate}T00:00:00.000Z`;
-        const endOfDay = `${selectedDate}T23:59:59.999Z`;
-
-        const { data: matchData } = await supabase
-          .from("tournament_matches")
-          .select(`
-            id,
-            tournament_id,
-            match_code,
-            category,
-            court_number,
-            scheduled_at,
-            status,
-            team1_label,
-            team2_label,
-            tournaments (
-              id,
-              name,
-              tournament_type
-            )
-          `)
-          .gte("scheduled_at", startOfDay)
-          .lte("scheduled_at", endOfDay)
-          .not("court_number", "is", null);
-
-        if (!isCancelled && matchData) {
-          const formatted: ScheduledMatch[] = matchData.map((m: any) => ({
-            id: m.id,
-            tournament_id: m.tournament_id,
-            match_code: m.match_code,
-            category: m.category,
-            court_number: String(m.court_number || "").replace(/[^0-9]/g, ""),
-            scheduled_at: m.scheduled_at,
-            status: m.status,
-            team1_label: m.team1_label,
-            team2_label: m.team2_label,
-            tournament_name: m.tournaments?.name || "Tournament",
-          }));
-          setMatches(formatted);
-        }
-      } catch (err) {
-        console.error("Failed to load court matches:", err);
-      }
-    };
-
-    fetchMatches();
-  }, [selectedDate]);
-
-  // Helper to parse "HH:mm" into minutes from 6:00 AM
-  const timeStrToMinutes = (timeStr: string) => {
-    const [h, m] = timeStr.split(":").map(Number);
-    return (h || 0) * 60 + (m || 0);
-  };
 
   // Compute all booked segments for a court on the selected date
   const getCourtBookings = (courtNum: number): BookingDisplayItem[] => {
