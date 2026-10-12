@@ -21,6 +21,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Button } from "@/components/ui/button";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
@@ -607,30 +608,39 @@ export default function Legacy() {
       >
         <div className="flex justify-center w-full px-2">
           <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
-              <a
-                href="#champions"
-                onClick={() => setActiveTab("champions")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
                   activeTab === "champions"
                     ? "bg-slate-900 text-amber-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
-              </a>
-              <a
-                href={`#${activeTab === "champions" ? "albums" : activeTab}`}
-                onClick={() => {
-                  if (activeTab === "champions") setActiveTab("albums");
-                }}
-                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                <a href="#champions" onClick={() => setActiveTab("champions")}>
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
                   activeTab !== "champions"
                     ? "bg-slate-900 text-blue-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
-              </a>
+                <a
+                  href={`#${activeTab === "champions" ? "albums" : activeTab}`}
+                  onClick={() => {
+                    if (activeTab === "champions") setActiveTab("albums");
+                  }}
+                >
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
+                </a>
+              </Button>
             </div>
           </div>
       </PageHeader>
