@@ -203,13 +203,6 @@ export default function TournamentsHub() {
     { key: "completed", label: "Completed", count: counts.completed },
   ];
 
-  const pill = (active: boolean) =>
-    `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
-      active
-        ? "bg-primary text-slate-950 shadow-xs"
-        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-    }`;
-
   // Detail view: a tournament is selected (?id=…)
   if (selectedId) {
     return (
@@ -256,16 +249,17 @@ export default function TournamentsHub() {
           {/* Phase C: Host & Manage CTAs in Header */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Button
+              variant="heroSolid"
+              size="hero"
               onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
-              className="h-auto px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs sm:text-sm hover:bg-primary/90 transition shadow-lg hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" /> Host a tournament
             </Button>
             {isAuthed && (
               <Button
-                variant="ghost"
+                variant="heroGhost"
+                size="hero"
                 onClick={() => navigate("/host-tournament")}
-                className="h-auto px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 dark:hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/15 transition backdrop-blur-md"
               >
                 <FolderKanban className="w-4 h-4" /> My hosted tournaments
               </Button>
@@ -411,7 +405,7 @@ export default function TournamentsHub() {
             {/* Status pills */}
             <div className="flex flex-wrap gap-2">
               {STATUS_TABS.map((s) => (
-                <button key={s.key} onClick={() => setStatus(s.key)} className={pill(status === s.key)}>
+                <Button key={s.key} size="pill" variant={status === s.key ? "pillActive" : "pillMuted"} onClick={() => setStatus(s.key)}>
                   {s.label}
                   <span
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
@@ -422,7 +416,7 @@ export default function TournamentsHub() {
                   >
                     {s.count}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -447,15 +441,15 @@ export default function TournamentsHub() {
               <SlidersHorizontal className="w-3.5 h-3.5" /> Filter
             </span>
             {([["all", "All types"], ["open", "Individual"], ["team", "Team"]] as [TypeFilter, string][]).map(([k, label]) => (
-              <button key={k} onClick={() => setType(k)} className={pill(type === k)}>
+              <Button key={k} size="pill" variant={type === k ? "pillActive" : "pillMuted"} onClick={() => setType(k)}>
                 {label}
-              </button>
+              </Button>
             ))}
             <span className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
             {([["all", "Any"], ["ranked", "★ Ranked"], ["casual", "Casual"]] as [RankedFilter, string][]).map(([k, label]) => (
-              <button key={k} onClick={() => setRanked(k)} className={pill(ranked === k)}>
+              <Button key={k} size="pill" variant={ranked === k ? "pillActive" : "pillMuted"} onClick={() => setRanked(k)}>
                 {label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
