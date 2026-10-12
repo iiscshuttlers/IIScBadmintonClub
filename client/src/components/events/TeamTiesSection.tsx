@@ -367,8 +367,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             ).map(({ id, label, count, isLivePill }: any) => {
               const isActive = statusFilter === id;
               return (
-                <button
+                <Button
                   key={id}
+                  size="pill"
+                  variant="tab"
                   onClick={() => setStatusFilter(id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 ${
                     isActive
@@ -387,7 +389,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   }`}>
                     {count}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>

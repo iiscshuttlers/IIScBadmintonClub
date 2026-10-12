@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button } from "@/components/ui/button";
 import { supabase } from '@/lib/supabase';
 import { Trophy, Swords, Trash2, Calendar, Edit3, CheckCircle2, AlertCircle, Loader2, Layers, Filter, Eye, X, Settings2, Radio, Clock, ShieldCheck, GitFork, LayoutList, CalendarClock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
@@ -480,8 +481,10 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
               ).map(({ id, label, count, isLivePill }: any) => {
                 const isActive = statusFilter === id;
                 return (
-                  <button
+                  <Button
                     key={id}
+                    size="pill"
+                    variant="tab"
                     onClick={() => setStatusFilter(id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 ${
                       isActive
@@ -500,15 +503,17 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                     }`}>
                       {count}
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
             {/* View Mode Toggle (Visual Tree vs List) */}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700/80 shrink-0 self-start sm:self-auto">
-              <button
+              <Button
                 type="button"
+                size="pill"
+                variant="tab"
                 onClick={() => {
                   setViewMode('visual');
                   if (stageFilter === 'POOL') setStageFilter('KNOCKOUT');
@@ -521,9 +526,11 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
               >
                 <GitFork className="w-3.5 h-3.5" />
                 <span>Visual Tree</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="pill"
+                variant="tab"
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                   viewMode === 'list'
@@ -533,7 +540,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
               >
                 <LayoutList className="w-3.5 h-3.5" />
                 <span>List View</span>
-              </button>
+              </Button>
             </div>
           </div>
 
