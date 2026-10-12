@@ -34,6 +34,7 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl }: VideoPlayerModal
         >
           <button
             onClick={onClose}
+            aria-label="Close video"
             className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-10"
           >
             <X className="w-5 h-5" />

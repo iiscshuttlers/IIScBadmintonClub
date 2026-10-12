@@ -80,6 +80,7 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
             </div>
             <button
               onClick={onClose}
+              aria-label="Close"
               className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-muted-foreground hover:bg-slate-300 dark:hover:bg-slate-700 transition"
             >
               <X className="w-4 h-4" />

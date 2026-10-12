@@ -296,7 +296,7 @@ export function ResolveGuestsModal({
                 Auto-Link All ({matchedCandidatesCount})
               </button>
             )}
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full">
+            <button onClick={onClose} aria-label="Close" className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full">
               <X className="w-5 h-5" />
             </button>
           </div>
