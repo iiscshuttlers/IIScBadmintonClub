@@ -93,6 +93,7 @@ export function CourtBookingModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />

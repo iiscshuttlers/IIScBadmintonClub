@@ -283,7 +283,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               placeholder="Search players, teams, matches, events…"
               className="flex-1 bg-transparent text-slate-800 dark:text-foreground placeholder-slate-400 text-sm outline-none"
             />
-            <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button onClick={onClose} aria-label="Close search" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>

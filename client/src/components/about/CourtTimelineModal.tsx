@@ -79,6 +79,7 @@ export function CourtTimelineModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close timeline"
             className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
             title="Close timeline"
           >
