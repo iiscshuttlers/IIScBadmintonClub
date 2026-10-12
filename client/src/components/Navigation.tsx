@@ -36,7 +36,6 @@ import {
   Calendar,
   AlertTriangle,
   Award,
-  Swords,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -287,16 +286,8 @@ export default function Navigation() {
                   isActive={isActive(link.href)}
                   badge={
                     link.href === "/pulse"
-                      ? teamActionCount > 0
-                        ? teamActionCount
-                        : liveEventCount > 0
-                        ? liveEventCount
-                        : hasUnreadAnnouncements
+                      ? hasUnreadAnnouncements
                         ? -1
-                        : undefined
-                      : link.href === "/tournaments"
-                      ? liveEventCount > 0
-                        ? liveEventCount
                         : undefined
                       : undefined
                   }
@@ -399,22 +390,6 @@ export default function Navigation() {
 
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
           <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
-
-            <button
-              onClick={() => {
-                if (!isLoggedIn) {
-                  sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
-                  setLocation("/join");
-                  return;
-                }
-                window.dispatchEvent(new CustomEvent("openLogMatchModal"));
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-primary text-slate-950 hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer border border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="Record a match"
-            >
-              <Swords className="w-3.5 h-3.5" />
-              Record Match
-            </button>
 
             <Link href="/host-tournament">
               <button
@@ -617,11 +592,7 @@ export default function Navigation() {
                   <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
-                    {teamActionCount > 0 ? (
-                      <span title="Action required for your team" className="absolute top-1 right-1.5 flex items-center justify-center">
-                        <span className="w-2.5 h-2.5 bg-amber-400 rounded-full border border-white dark:border-slate-950 animate-pulse" />
-                      </span>
-                    ) : hasUnreadAnnouncements ? (
+                    {hasUnreadAnnouncements ? (
                       <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
                         <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
                       </span>
@@ -637,11 +608,6 @@ export default function Navigation() {
                 <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                   <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Events</span>
-                  {liveEventCount > 0 && (
-                    <span title="Tournaments in progress" className="absolute top-1 right-1.5 flex items-center justify-center">
-                      <span className="w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
-                    </span>
-                  )}
                 </button>
               </Link>
 

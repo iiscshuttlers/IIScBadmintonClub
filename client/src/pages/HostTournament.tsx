@@ -28,6 +28,7 @@ export default function HostTournament() {
         .from('tournaments')
         .select('*')
         .eq('created_by', session.user.id)
+        .neq('status', 'deleted')
         .order('created_at', { ascending: false });
       
       setTournaments(data || []);

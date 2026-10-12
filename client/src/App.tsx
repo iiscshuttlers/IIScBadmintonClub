@@ -42,7 +42,6 @@ import { UpdateDialog } from "./components/layout/UpdateDialog";
 import { PageSkeleton } from "./components/layout/PageSkeleton";
 import { PageErrorFallback } from "./components/layout/PageErrorFallback";
 import { BackToTop } from "./components/layout/BackToTop";
-import { FloatingRecordMatchButton } from "./components/layout/FloatingRecordMatchButton";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { RoutePersistence } from "./components/layout/RoutePersistence";
@@ -546,7 +545,6 @@ function AppContent() {
                 {!location.startsWith("/tv") && <Footer />}
               </div>
               <BackToTop />
-              <FloatingRecordMatchButton />
             </Router>
             <Toaster />
             <MatchAlert />

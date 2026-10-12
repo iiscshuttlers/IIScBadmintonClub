@@ -12,6 +12,9 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-destructive text-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        // Alias of destructive, kept for existing call sites using variant="danger".
+        danger:
+          "bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-500/30",
         outline:
           "border bg-transparent shadow-xs hover:bg-accent dark:bg-transparent dark:border-input dark:hover:bg-input/50",
         secondary:

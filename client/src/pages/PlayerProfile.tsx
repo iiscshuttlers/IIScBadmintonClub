@@ -53,6 +53,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 // Extracted Hooks & Components
 import { TeaserOverlay } from "@/components/TeaserOverlay";
@@ -696,26 +697,31 @@ export default function PlayerProfile() {
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
                       {m.submitted_by === player.id ? (
-                        <button
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => handleWithdrawMatch(m.id)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-xl transition"
+                          className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                         >
                           Withdraw
-                        </button>
+                        </Button>
                       ) : (
                         <>
-                          <button
+                          <Button
+                            size="sm"
                             onClick={() => handleConfirmMatch(m.id)}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-xs font-black rounded-xl transition"
+                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                           >
                             Confirm
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleRejectMatch(m.id)}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-foreground text-xs font-black rounded-xl transition"
+                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                           >
                             Reject
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>

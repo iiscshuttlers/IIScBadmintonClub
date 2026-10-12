@@ -11,6 +11,22 @@ import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTourname
 import { getTournaments } from "@/lib/tournaments";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Describe the opposing side of a match relative to the current player.
+ * Works for singles and doubles: the player may be on team 1 (player1_id /
+ * team1_partner_id) or team 2 (player2_id / team2_partner_id). We show the
+ * *other* team's members — never the player's own partner.
+ */
+function describeOpponent(m: any, myId: string | null): string {
+  if (!m || !myId) return "Club Match";
+  const onTeam1 = m.player1_id === myId || m.team1_partner_id === myId;
+  const opponents = (onTeam1 ? [m.player2, m.partner2] : [m.player1, m.partner1])
+    .filter(Boolean)
+    .map((p: any) => (p.full_name || "").split(" ")[0])
+    .filter(Boolean);
+  return opponents.length ? `vs ${opponents.join(" & ")}` : "Club Match";
+}
+
 export function HomePersonalDashboard() {
   const [, setLocation] = useLocation();
   const { session, profile } = useAuth();
@@ -107,9 +123,9 @@ export function HomePersonalDashboard() {
           ) : (
             <div>
               <p className="text-xs font-bold text-slate-200">No pending matches</p>
-              <Link href="/club">
+              <Link href="/pulse#directory">
                 <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
-                  Find hitting partners in Club →
+                  Find hitting partners in Directory →
                 </span>
               </Link>
             </div>
@@ -158,12 +174,10 @@ export function HomePersonalDashboard() {
           {recentMatch ? (
             <div>
               <p className="text-xs font-bold text-white truncate">
-                {recentMatch.player1_id === myPlayerId
-                  ? (recentMatch.player2?.full_name ? `vs ${recentMatch.player2.full_name}` : "Club Match")
-                  : (recentMatch.player1?.full_name ? `vs ${recentMatch.player1.full_name}` : "Club Match")}
+                {describeOpponent(recentMatch, myPlayerId)}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-                {recentMatch.match_score || "Finished"}
+                {recentMatch.match_score || (recentMatch as any).score || "Finished"}
               </p>
             </div>
           ) : (
