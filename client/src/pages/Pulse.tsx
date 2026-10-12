@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Calendar, Trophy, Users, Radio, Medal, ArrowRight, Clock, Info, Timer, Award, GraduationCap, Star, Activity, type LucideIcon,
 } from "lucide-react";
@@ -274,17 +275,19 @@ export default function Pulse() {
                 { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
                 { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-fuchsia-400 shadow-md scale-100" },
               ].map((tab) => (
-                <button
+                <Button
                   key={tab.id}
+                  variant="tab"
+                  size="tab"
                   onClick={() => setPulseTab(tab.id as any)}
-                  className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  className={
                     pulseTab === tab.id
                       ? tab.activeClass
                       : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
-                  }`}
+                  }
                 >
                   {tab.icon} {tab.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

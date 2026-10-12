@@ -25,6 +25,8 @@ const buttonVariants = cva(
         pillActive: "bg-primary text-slate-950 shadow-xs hover:bg-primary/90",
         pillMuted:
           "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
+        // Segmented-tab shape only; dynamic per-tab colors supplied via className.
+        tab: "",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -36,6 +38,7 @@ const buttonVariants = cva(
         // Shape-only sizes paired with the hero*/pill* variants above:
         hero: "h-auto gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black hover:scale-105",
         pill: "h-auto gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black",
+        tab: "h-auto flex-auto sm:flex-initial gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black",
       },
     },
     defaultVariants: {

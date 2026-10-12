@@ -1,4 +1,5 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Button } from "@/components/ui/button";
 import { Info, MapPin, ShieldCheck, MonitorPlay } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { ContactSection } from "@/components/about/ContactSection";
@@ -65,17 +66,19 @@ export default function Hub() {
                 { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-blue-400 shadow-md scale-100" },
                 { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-indigo-400 shadow-md scale-100" },
               ].map(({ id, label, icon, activeClass }) => (
-                <button
+                <Button
                   key={id}
+                  variant="tab"
+                  size="tab"
                   onClick={() => handleTabChange(id)}
-                  className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  className={
                     activeTab === id
                       ? activeClass
                       : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
-                  }`}
+                  }
                 >
                   {icon} {label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
