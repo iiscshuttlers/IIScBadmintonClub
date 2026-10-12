@@ -144,6 +144,10 @@ function AppRoutes() {
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/tournaments" component={TournamentsHub} />
+          <Route path="/tournaments/:id" component={({ params }: { params: { id: string } }) => {
+            window.location.replace(`${import.meta.env.BASE_URL}tournaments?id=${encodeURIComponent(params.id)}`);
+            return null;
+          }} />
           <Route path="/team-hub/:id">
             <ProtectedRoute>
               <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -164,6 +168,7 @@ function AppRoutes() {
             </ProtectedRoute>
           </Route>
           <Route path="/join" component={Join} />
+          <Route path="/auth" component={Join} />
           <Route path="/player/:id">
             <GuestGate feature="Player Profile">
               <ErrorBoundary fallback={<PageErrorFallback />}>

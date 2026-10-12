@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 export async function getTournaments() {
   const { data, error } = await supabase
     .from("tournaments")
-    .select("*, tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label)")
+    .select("*, tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label), tournament_participants(count)")
     .neq("status", "deleted")
     .order("created_at", { ascending: false });
   
@@ -33,6 +33,23 @@ export async function getTournaments() {
     }
 
     const tr = t as any;
+    const participantCount = Array.isArray(tr.tournament_participants) && tr.tournament_participants.length > 0
+      ? (tr.tournament_participants[0]?.count ?? 0)
+      : 0;
+
+    // Collect participant preview names from matches or winner labels if available
+    const previewAvatars: Array<{ name: string }> = [];
+    const seenNames = new Set<string>();
+    (tr.tournament_matches || []).forEach((m: any) => {
+      [m.team1_label, m.team2_label].filter(Boolean).forEach((name: string) => {
+        const clean = name.trim();
+        if (clean && !seenNames.has(clean) && previewAvatars.length < 5) {
+          seenNames.add(clean);
+          previewAvatars.push({ name: clean });
+        }
+      });
+    });
+
     return {
       id: tr.id,
       slug: tr.slug || tr.id,
@@ -55,6 +72,9 @@ export async function getTournaments() {
       bracket_format: tr.bracket_format,
       archived_at: tr.archived_at,
       created_by: tr.created_by,
+      require_app_registration: tr.require_app_registration,
+      participant_count: participantCount,
+      sample_participants: previewAvatars,
       winners,
     };
   });
