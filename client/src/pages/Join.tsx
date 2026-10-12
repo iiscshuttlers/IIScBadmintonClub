@@ -45,6 +45,19 @@ export default function Join() {
         </div>
 
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/10 backdrop-blur-sm">
+          {/* Contextual Reason Banner */}
+          {(() => {
+            const params = new URLSearchParams(window.location.search);
+            const reason = params.get("reason");
+            if (!reason) return null;
+            return (
+              <div className="mb-5 flex items-center gap-2.5 px-4 py-3 bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-2xl text-slate-800 dark:text-slate-200 text-xs font-bold animate-in fade-in">
+                <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                <span>{decodeURIComponent(reason)}</span>
+              </div>
+            );
+          })()}
+
           {/* Inactivity logout notice */}
           {auth.inactivityLogout && (
             <div className="mb-5 flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700 rounded-xl text-amber-800 dark:text-amber-300 text-sm font-medium">
