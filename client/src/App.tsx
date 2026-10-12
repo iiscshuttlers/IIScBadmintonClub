@@ -255,16 +255,14 @@ function AppRoutes() {
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
-          {/* Personal Mode Routes (Brainy-style navigation) */}
+          {/* Personal Mode (kept as a distinct product). `/personal` is the account page. */}
           <Route path="/personal"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
-          <Route path="/personal/me"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
-          <Route path="/personal/player/:id">
-            <PersonalModeRoute>
-              <ErrorBoundary fallback={<PageErrorFallback />}>
-                <PlayerProfile />
-              </ErrorBoundary>
-            </PersonalModeRoute>
-          </Route>
+          {/* Deduped aliases — canonical: /personal (account) and /player/:id (profile). */}
+          <Route path="/personal/me" component={() => { window.location.replace(`${import.meta.env.BASE_URL}personal`); return null; }} />
+          <Route path="/personal/player/:id" component={({ params }: { params: { id: string } }) => {
+            window.location.replace(`${import.meta.env.BASE_URL}player/${encodeURIComponent(params.id)}`);
+            return null;
+          }} />
           
           <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 

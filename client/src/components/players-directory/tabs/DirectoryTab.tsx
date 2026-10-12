@@ -217,8 +217,7 @@ export function DirectoryTab({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recommended.map((player) => (
               <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => {
-                if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
-                else setLocation(`/player/${player.id}`);
+                setLocation(`/player/${player.id}`);
               }}>
                 <PlayerCard
                   player={player}
@@ -307,8 +306,7 @@ export function DirectoryTab({
                 variants={itemVariants}
                 className="group h-full cursor-pointer"
                 onClick={() => {
-                  if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
-                  else setLocation(`/player/${player.id}`);
+                  setLocation(`/player/${player.id}`);
                 }}
               >
                 <PlayerCard

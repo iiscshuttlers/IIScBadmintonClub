@@ -220,11 +220,7 @@ export function PlayerCard({
     >
       <Card
         onClick={() => {
-          if (window.location.pathname.startsWith("/personal")) {
-            setLocation(`/personal/player/${player.id}`);
-          } else {
-            setLocation(`/player/${player.id}`);
-          }
+          setLocation(`/player/${player.id}`);
         }}
         className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
         hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
