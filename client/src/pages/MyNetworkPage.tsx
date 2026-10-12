@@ -5,6 +5,8 @@ import { usePlayers } from "@/hooks/usePlayers";
 import { PageSkeleton } from "@/components/layout/PageSkeleton";
 import { PlayerCard } from "@/components/players-directory/PlayerCard";
 import type { Player } from "@/components/players-directory/PlayerCard";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Users } from "lucide-react";
 
 export default function MyNetworkPage() {
   usePageMeta({
@@ -28,14 +30,15 @@ export default function MyNetworkPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">My Network</h1>
-        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
-          {myBuddies.length} {myBuddies.length === 1 ? "buddy" : "buddies"}
-        </p>
-      </div>
-
+    <div className="min-h-screen pb-24 lg:pb-8">
+      <PageHeader
+        badge="Connections"
+        badgeIcon={<Users className="w-3.5 h-3.5" />}
+        title="My Network"
+        subtitle={`${myBuddies.length} ${myBuddies.length === 1 ? "buddy" : "buddies"}`}
+        align="left"
+      />
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
       {myBuddies.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground dark:text-muted-foreground">
@@ -49,6 +52,7 @@ export default function MyNetworkPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
