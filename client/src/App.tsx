@@ -42,6 +42,7 @@ import { UpdateDialog } from "./components/layout/UpdateDialog";
 import { PageSkeleton } from "./components/layout/PageSkeleton";
 import { PageErrorFallback } from "./components/layout/PageErrorFallback";
 import { BackToTop } from "./components/layout/BackToTop";
+import { FloatingRecordMatchButton } from "./components/layout/FloatingRecordMatchButton";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { RoutePersistence } from "./components/layout/RoutePersistence";
@@ -89,6 +90,7 @@ const TournamentSetupChecklist = lazy(() => import("./pages/TournamentSetupCheck
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
+const OfficiatePage = lazy(() => import("./pages/OfficiatePage"));
 
 
 const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
@@ -215,7 +217,8 @@ function AppRoutes() {
           <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
           <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
           <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange&sub=lost-found`; return null; }} />
-          <Route path="/umpire" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=my_matches`; return null; }} />
+          <Route path="/umpire" component={OfficiatePage} />
+          <Route path="/officiate" component={OfficiatePage} />
           <Route path="/feed/announcements" component={() => { window.location.href=`${import.meta.env.BASE_URL}pulse#announcements`; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
@@ -543,6 +546,7 @@ function AppContent() {
                 {!location.startsWith("/tv") && <Footer />}
               </div>
               <BackToTop />
+              <FloatingRecordMatchButton />
             </Router>
             <Toaster />
             <MatchAlert />

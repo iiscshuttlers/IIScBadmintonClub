@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Lock, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Lock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ChangePassword() {
   usePageMeta({ title: "Change Password" });
@@ -55,24 +56,17 @@ export default function ChangePassword() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-12 sm:pt-20 pb-12 px-4">
       <div className="max-w-md w-full mx-auto">
-        <button
-          onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/")}
-          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to home
-        </button>
-
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center mb-6">
-            <Lock className="w-6 h-6 text-primary dark:text-primary" />
-          </div>
-          
-          <h1 className="text-2xl font-black text-foreground dark:text-foreground mb-2">
-            Change Password
-          </h1>
-          <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-8">
-            Create a new, strong password to secure your account.
-          </p>
+          <PageHeader
+            variant="card"
+            backTo="/settings"
+            backLabel="Back to settings"
+            badge="Security"
+            badgeIcon={<Lock className="w-3.5 h-3.5" />}
+            title="Change Password"
+            subtitle="Create a new, strong password to secure your account."
+            align="left"
+          />
 
           {success ? (
             <div className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/30 dark:border-primary/80/30">

@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "sonner";
 import { Trash2, AlertTriangle, ShieldCheck, Loader2, LogOut } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const CONSEQUENCES = [
   "Your player profile and match history will be permanently deleted",
@@ -134,16 +135,17 @@ export default function DeleteAccount() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
       <div className="container mx-auto px-4 max-w-xl py-12">
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          {/* Header */}
-          <div className="bg-rose-50 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/40 px-6 py-5 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
-              <Trash2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="font-black text-foreground dark:text-foreground">Delete My Account</h1>
-              <p className="text-xs text-muted-foreground dark:text-muted-foreground">{session.user.email}</p>
-            </div>
-          </div>
+          <PageHeader
+            variant="card"
+            backTo="/settings"
+            backLabel="Back to Settings"
+            badge="Irreversible"
+            badgeIcon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
+            title="Delete My Account"
+            subtitle={session.user.email}
+            align="left"
+            className="px-6 pt-5 pb-3 border-b border-rose-100 dark:border-rose-900/40"
+          />
 
           <div className="p-6 space-y-6">
             {step === "confirm" && (

@@ -21,6 +21,8 @@ interface PageHeaderProps {
   backLabel?: string;
   /** Tighter, borderless header for account/utility pages. */
   compact?: boolean;
+  /** Card variant to be placed inside a content card container. */
+  variant?: "default" | "card";
 }
 
 /**
@@ -41,8 +43,10 @@ export function PageHeader({
   onBack,
   backLabel = "Back",
   compact = false,
+  variant = "default",
 }: PageHeaderProps) {
-  const isCenter = align === "center" && !compact;
+  const isCard = variant === "card";
+  const isCenter = align === "center" && !compact && !isCard;
 
   const backLink = (onBack || backTo) ? (
     onBack ? (
@@ -65,14 +69,16 @@ export function PageHeader({
     <header
       className={cn(
         "relative",
-        compact
+        isCard
+          ? "py-4 px-1 border-b border-slate-100 dark:border-slate-800/80 mb-6 bg-transparent"
+          : compact
           ? "py-5 sm:py-6"
           : "py-8 sm:py-12 border-b border-slate-200 dark:border-slate-800/80 bg-gradient-to-b from-slate-100/60 dark:from-slate-900/40 to-transparent",
         isCenter ? "text-center" : "text-left",
         className
       )}
     >
-      <div className="container mx-auto px-4 max-w-5xl">
+      <div className={cn("max-w-5xl", isCard ? "w-full px-0" : "container mx-auto px-4")}>
         {backLink}
         {badge && (
           <div

@@ -400,6 +400,22 @@ export default function Navigation() {
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
           <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
 
+            <button
+              onClick={() => {
+                if (!isLoggedIn) {
+                  sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
+                  setLocation("/join");
+                  return;
+                }
+                window.dispatchEvent(new CustomEvent("openLogMatchModal"));
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-primary text-slate-950 hover:bg-primary/90 active:scale-95 transition-all shadow-sm cursor-pointer border border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Record a match"
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Record Match
+            </button>
+
             <Link href="/host-tournament">
               <button
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary dark:text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 transition-colors shadow-sm border border-primary/20"

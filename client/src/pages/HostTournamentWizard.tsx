@@ -302,10 +302,18 @@ export default function HostTournamentWizard() {
         <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6">Create Tournament</h1>
         
         {/* Stepper */}
-        <div className="flex gap-2 mb-8">
-          {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
-          ))}
+        <div className="space-y-2 mb-8">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map(s => (
+              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
+            ))}
+          </div>
+          <div className="grid grid-cols-4 text-[10px] sm:text-xs font-bold text-muted-foreground">
+            <span className={step >= 1 ? "text-primary font-black" : ""}>1. Details</span>
+            <span className={step >= 2 ? "text-primary font-black text-center" : "text-center"}>2. Rules</span>
+            <span className={step >= 3 ? "text-primary font-black text-center" : "text-center"}>3. Roster</span>
+            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Publish</span>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl relative min-h-[400px] flex flex-col">
