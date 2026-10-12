@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 416,
+    "versionName": "4.16",
+    "date": "2026-10-12T22:28:17.026Z",
+    "changes": [
+      "- fix: hide deleted tournaments, remove record-match button, fix dashboard"
+    ]
+  },
+  {
     "versionCode": 415,
     "versionName": "4.15",
     "date": "2026-10-12T21:28:37.149Z",
