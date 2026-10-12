@@ -7,6 +7,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "sonner";
 import { Trash2, AlertTriangle, ShieldCheck, Loader2, LogOut } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/button";
 
 const CONSEQUENCES = [
   "Your player profile and match history will be permanently deleted",
@@ -37,9 +38,9 @@ export default function DeleteAccount() {
             <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               To delete your account through the app, please sign in first.
             </p>
-            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl transition">
+            <Button onClick={() => navigate("/join")} className="w-full py-6 font-bold text-base">
               Sign In to Delete
-            </button>
+            </Button>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
               <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-2">
                 Can't sign in? You can also request account deletion by emailing us:
@@ -123,9 +124,9 @@ export default function DeleteAccount() {
           <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
             Your data has been removed. We're sorry to see you go.
           </p>
-          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold transition">
+          <Button onClick={() => navigate("/")} className="w-full py-6 font-bold text-base">
             Go to Home
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -179,14 +180,22 @@ export default function DeleteAccount() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={() => window.history.back()}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                    className="flex-1 py-3"
+                  >
                     Cancel
-                  </button>
-                  <button onClick={() => setStep("final")}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-on-accent font-bold text-sm transition shadow-md shadow-rose-500/20">
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setStep("final")}
+                    className="flex-1 py-3"
+                  >
                     Continue
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -208,18 +217,25 @@ export default function DeleteAccount() {
                 />
 
                 <div className="flex gap-3">
-                  <button onClick={() => setStep("confirm")} disabled={loading}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep("confirm")}
+                    disabled={loading}
+                    className="flex-1 py-3"
+                  >
                     Back
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
                     onClick={handleDelete}
                     disabled={loading || confirmText.trim().toLowerCase() !== "delete my account"}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-on-accent font-bold text-sm transition flex items-center justify-center gap-2"
+                    className="flex-1 py-3 flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     {loading ? "Deleting…" : "Delete Forever"}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}

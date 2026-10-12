@@ -81,12 +81,14 @@ export default function OfficiatePage() {
       <div className="container mx-auto px-4 max-w-5xl pt-6">
         {activeMatch ? (
           <div className="space-y-4">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setActiveMatch(null)}
-              className="inline-flex items-center gap-1.5 text-xs font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors cursor-pointer"
+              className="gap-1.5 text-xs font-black"
             >
               <ArrowLeft className="w-4 h-4" /> Back to matches list
-            </button>
+            </Button>
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 p-2 sm:p-4">
               <UmpireEngine
                 userId={session.user.id}

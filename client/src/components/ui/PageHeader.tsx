@@ -21,6 +21,8 @@ interface PageHeaderProps {
   backLabel?: string;
   /** Tighter, borderless header for account/utility pages. */
   compact?: boolean;
+  /** Optional action or button rendered in the header */
+  action?: React.ReactNode;
   /** Card variant to be placed inside a content card container. */
   variant?: "default" | "card";
 }
@@ -43,6 +45,7 @@ export function PageHeader({
   onBack,
   backLabel = "Back",
   compact = false,
+  action,
   variant = "default",
 }: PageHeaderProps) {
   const isCard = variant === "card";
@@ -80,41 +83,51 @@ export function PageHeader({
     >
       <div className={cn("max-w-5xl", isCard ? "w-full px-0" : "container mx-auto px-4")}>
         {backLink}
-        {badge && (
-          <div
-            className={cn(
-              "inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-wider mb-3",
-              isCenter && "mx-auto"
+        <div className={cn(action ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" : "")}>
+          <div>
+            {badge && (
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-wider mb-3",
+                  isCenter && "mx-auto"
+                )}
+              >
+                {badgeIcon}
+                <span>{badge}</span>
+              </div>
             )}
-          >
-            {badgeIcon}
-            <span>{badge}</span>
+
+            <h1
+              className={cn(
+                "font-black tracking-tight text-slate-900 dark:text-white mb-2.5 flex items-center gap-2.5",
+                compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl md:text-5xl",
+                isCenter && "justify-center"
+              )}
+              style={{ fontFamily: "Outfit, Inter, sans-serif" }}
+            >
+              {icon}
+              {title}
+            </h1>
+
+            {subtitle && (
+              <p
+                className={cn(
+                  "text-slate-600 dark:text-slate-400 text-sm sm:text-base font-medium max-w-2xl",
+                  isCenter && "mx-auto",
+                  children ? "mb-6" : ""
+                )}
+              >
+                {subtitle}
+              </p>
+            )}
           </div>
-        )}
 
-        <h1
-          className={cn(
-            "font-black tracking-tight text-slate-900 dark:text-white mb-2.5 flex items-center gap-2.5",
-            compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl md:text-5xl",
-            isCenter && "justify-center"
+          {action && (
+            <div className="flex items-center gap-2 sm:self-center shrink-0">
+              {action}
+            </div>
           )}
-          style={{ fontFamily: "Outfit, Inter, sans-serif" }}
-        >
-          {icon}
-          {title}
-        </h1>
-
-        {subtitle && (
-          <p
-            className={cn(
-              "text-slate-600 dark:text-slate-400 text-sm sm:text-base font-medium max-w-2xl",
-              isCenter && "mx-auto",
-              children ? "mb-6" : ""
-            )}
-          >
-            {subtitle}
-          </p>
-        )}
+        </div>
 
         {children && (
           <div

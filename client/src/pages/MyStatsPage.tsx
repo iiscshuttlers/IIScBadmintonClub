@@ -9,6 +9,9 @@ import { EloChart } from "@/components/player-profile/EloChart";
 import { AchievementBadges } from "@/components/player-profile/AchievementBadges";
 import { usePlayers } from "@/hooks/usePlayers";
 
+import { PageHeader } from "@/components/ui/PageHeader";
+import { BarChart3 } from "lucide-react";
+
 export default function MyStatsPage() {
   usePageMeta({
     title: "My Stats",
@@ -72,38 +75,39 @@ export default function MyStatsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
-          {(["ALL", "FRIENDLY", "TOURNAMENT"] as const).map(type => (
-            <button
-              key={type}
-              onClick={() => setMatchTypeFilter(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${matchTypeFilter === type ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              {type === "ALL" ? "OVERALL" : type}
-            </button>
-          ))}
-        </div>
-        <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
-          {(["ALL", "SINGLES", "DOUBLES", "MIXED"] as const).map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${categoryFilter === cat ? 'bg-white dark:bg-slate-700 text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              {cat === "ALL" ? "ALL CATS" : cat}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+      <PageHeader
+        badge="Analytics"
+        badgeIcon={<BarChart3 className="w-3.5 h-3.5 text-primary" />}
+        title="Detailed Analytics"
+        subtitle="Your badminton performance trends, ELO progression, and achievement badges."
+      />
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold mb-1">Detailed Analytics</h1>
-        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
-          Your performance analytics and achievement badges
-        </p>
-      </div>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
+            {(["ALL", "FRIENDLY", "TOURNAMENT"] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => setMatchTypeFilter(type)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${matchTypeFilter === type ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {type === "ALL" ? "OVERALL" : type}
+              </button>
+            ))}
+          </div>
+          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
+            {(["ALL", "SINGLES", "DOUBLES", "MIXED"] as const).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${categoryFilter === cat ? 'bg-white dark:bg-slate-700 text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {cat === "ALL" ? "ALL CATS" : cat}
+              </button>
+            ))}
+          </div>
+        </div>
 
       {/* Achievement Badges */}
       <div className="mb-8">
@@ -129,6 +133,7 @@ export default function MyStatsPage() {
         <EloChart playerId={ownProfile!.id} matches={filteredMatches} currentElo={ownProfile!.elo_rating} />
       </div>
 
+      </div>
     </div>
   );
 }
