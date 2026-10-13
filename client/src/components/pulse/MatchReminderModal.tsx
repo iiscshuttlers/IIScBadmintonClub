@@ -129,7 +129,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
         <div className="p-6 space-y-6">
           <p className="text-sm text-slate-600 dark:text-slate-400">
             {isGlobal 
-              ? "We'll send you an in-app notification, email, and push notification before your upcoming matches."
+              ? "We'll send you an in-app and push notification before your upcoming matches."
               : "Set a custom reminder for this specific match. This will override your global setting if you have one."}
           </p>
 
