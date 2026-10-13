@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { TournamentCard } from "@/components/tournament/TournamentCard";
 import { TournamentCardSkeleton } from "@/components/tournament/TournamentCardSkeleton";
 import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTournamentHero";
+import { MyMatchesStrip } from "@/components/tournament/MyMatchesStrip";
+import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { RegisterModal } from "@/components/tournament/RegisterModal";
 import { EmptyState } from "@/components/tournament/EmptyState";
 import { staggerContainer } from "@/lib/motion";
@@ -44,6 +46,7 @@ export default function TournamentsHub() {
 
   const { session, profile } = useAuth();
   const isAuthed = !!session;
+  const { myPlayerId } = useNavigationAuth();
 
   const [, navigate] = useLocation();
   const locationSearch = useSearch();
@@ -275,6 +278,14 @@ export default function TournamentsHub() {
             tournament={featuredTournament}
             liveScore={liveScores.get(featuredTournament.id)}
             onOpen={() => openTournament(featuredTournament)}
+          />
+        )}
+
+        {/* My Matches — live / upcoming / completed (tournament matches) */}
+        {isAuthed && (
+          <MyMatchesStrip
+            myPlayerId={myPlayerId}
+            className="bg-slate-900/60 rounded-3xl border border-slate-800 p-5 shadow-lg"
           />
         )}
 

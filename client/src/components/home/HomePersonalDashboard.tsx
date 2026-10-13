@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Trophy, Swords, Calendar, ArrowRight, UserCheck, Flame, Clock, Radio, Activity } from "lucide-react";
+import { Trophy, Swords, Calendar, ArrowRight, UserCheck, Flame, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { usePlayerMatches } from "@/hooks/usePlayerMatches";
 import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
 import { useLiveScoresFor } from "@/hooks/useLiveScoresFor";
 import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTournamentHero";
+import { MyMatchesStrip } from "@/components/tournament/MyMatchesStrip";
 import { getTournaments } from "@/lib/tournaments";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -33,39 +33,12 @@ export function HomePersonalDashboard() {
   const { session, profile } = useAuth();
   const { myPlayerId, userName } = useNavigationAuth();
   const [tournaments, setTournaments] = useState<any[]>([]);
-  const [myMatches, setMyMatches] = useState<any[]>([]);
 
   useEffect(() => {
     getTournaments()
       .then((data) => setTournaments(data || []))
       .catch(() => {});
   }, []);
-
-  // My tournament matches, ordered live → upcoming → completed. (#my-matches)
-  useEffect(() => {
-    if (!myPlayerId) return;
-    let cancelled = false;
-    supabase
-      .from("tournament_matches")
-      .select("id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, match_score, score, tournaments(name)")
-      .or(`player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`)
-      .order("scheduled_at", { ascending: true, nullsFirst: false })
-      .limit(50)
-      .then(({ data }: any) => { if (!cancelled) setMyMatches(data || []); });
-    return () => { cancelled = true; };
-  }, [myPlayerId]);
-
-  const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
-  const sortedMyMatches = useMemo(() => {
-    const rank = (m: any) => (LIVE_STATUSES.has(m.status) ? 0 : m.status === "completed" ? 2 : 1);
-    return [...myMatches].sort((a, b) => {
-      const ra = rank(a), rb = rank(b);
-      if (ra !== rb) return ra - rb;
-      const ta = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
-      const tb = b.scheduled_at ? new Date(b.scheduled_at).getTime() : 0;
-      return ra === 2 ? tb - ta : ta - tb;
-    }).slice(0, 4);
-  }, [myMatches]);
 
   const { matches, pendingMatches, loading: matchesLoading } = usePlayerMatches(myPlayerId || undefined);
   const { myRoles } = useMyTournamentRoles(session?.user?.id, tournaments);
@@ -222,60 +195,7 @@ export function HomePersonalDashboard() {
       </div>
 
       {/* My Matches — live / upcoming / completed */}
-      {sortedMyMatches.length > 0 && (
-        <div className="pt-3.5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wider">
-              <Swords className="w-3.5 h-3.5" /> My Matches
-            </span>
-            <Link href="/my-matches">
-              <span className="text-[11px] text-primary hover:underline font-bold cursor-pointer">View all →</span>
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {sortedMyMatches.map((m) => {
-              const isLive = LIVE_STATUSES.has(m.status);
-              const isDone = m.status === "completed";
-              return (
-                <Link key={m.id} href="/my-matches">
-                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-primary/40 transition-colors cursor-pointer">
-                    <div className="shrink-0">
-                      {isLive ? (
-                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-400 text-[9px] font-black uppercase">
-                          <Radio className="w-2.5 h-2.5 animate-pulse" /> Live
-                        </span>
-                      ) : isDone ? (
-                        <span className="px-1.5 py-0.5 rounded-md bg-slate-600/40 text-slate-300 text-[9px] font-black uppercase">Done</span>
-                      ) : (
-                        <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase">Upcoming</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white truncate">
-                        {(m.team1_label || "TBD")} <span className="text-slate-500">vs</span> {(m.team2_label || "TBD")}
-                      </p>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {m.category}{m.round_name ? ` · ${m.round_name}` : ""}
-                        {m.court_number ? ` · Court ${m.court_number}` : ""}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      {isDone ? (
-                        <span className="text-[11px] font-bold text-slate-300">{m.match_score || m.score || "Final"}</span>
-                      ) : m.scheduled_at ? (
-                        <span className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                          <Clock className="w-3 h-3" />
-                          {new Date(m.scheduled_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <MyMatchesStrip myPlayerId={myPlayerId} className="pt-3.5" />
 
       {/* Featured Tournament Card */}
       {featuredTournament && (
