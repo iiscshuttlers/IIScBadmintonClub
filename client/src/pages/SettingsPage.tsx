@@ -27,6 +27,7 @@ import {
   Check,
   Volume2,
   Vibrate,
+  ShieldBan,
 } from "lucide-react";
 import {
   getUmpireHaptics,
@@ -37,6 +38,7 @@ import {
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
+import { BlockedPlayersSection } from "@/components/settings/BlockedPlayersSection";
 
 import { PageHeader } from "@/components/ui/PageHeader";
 
@@ -248,6 +250,16 @@ export default function SettingsPage() {
             </h2>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-2">
               <UmpireFeedbackToggles />
+            </div>
+          </section>
+
+          {/* Privacy & Blocking (#29) */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5">
+              <ShieldBan className="w-3.5 h-3.5 text-rose-500" /> Blocked Players
+            </h2>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <BlockedPlayersSection myPlayerId={profile?.id} />
             </div>
           </section>
 
