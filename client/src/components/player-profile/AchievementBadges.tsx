@@ -214,21 +214,29 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
   const locked = badgeData.filter(d => !d.progress.earned);
 
   // Persisted unlock timestamps for this player (#21).
-  const { data: earnedDates } = useQuery({
+  // NOTE: the query cache is persisted to localStorage (PersistQueryClient),
+  // and a Map does not survive JSON serialization — it rehydrates as {} and
+  // crashes on .get. So cache a plain array and build the Map in-memory.
+  const { data: earnedRows } = useQuery({
     queryKey: ["player-achievements", playerId],
     enabled: !!playerId,
-    queryFn: async () => {
+    queryFn: async (): Promise<{ achievement_id: string; earned_at: string }[]> => {
       const { data, error } = await sbAch
         .from("player_achievements")
         .select("achievement_id, earned_at")
         .eq("player_id", playerId);
       if (error) throw error;
-      const map = new Map<string, string>();
-      for (const r of data || []) map.set(r.achievement_id, r.earned_at);
-      return map;
+      return (data || []) as { achievement_id: string; earned_at: string }[];
     },
     staleTime: 5 * 60 * 1000,
   });
+  const earnedDates = useMemo(() => {
+    const map = new Map<string, string>();
+    if (Array.isArray(earnedRows)) {
+      for (const r of earnedRows) map.set(r.achievement_id, r.earned_at);
+    }
+    return map;
+  }, [earnedRows]);
 
   // #21 Celebrate newly-earned badges when a user views their OWN profile.
   // Baseline of seen badges is kept per-user in localStorage; the very first

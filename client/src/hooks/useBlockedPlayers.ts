@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -10,15 +11,18 @@ const sb = supabase as any;
  * players from the directory. RLS only ever returns the caller's own rows.
  */
 export function useBlockedPlayers(myId: string | null | undefined) {
+  // NOTE: the query cache is persisted to localStorage (PersistQueryClient),
+  // and a Set does not survive JSON serialization — it rehydrates as {} and
+  // crashes on .has. So cache a plain string[] and build the Set in-memory.
   const { data } = useQuery({
     queryKey: ["blocked-players", myId],
     enabled: !!myId,
-    queryFn: async () => {
+    queryFn: async (): Promise<string[]> => {
       const { data, error } = await sb.from("user_blocks").select("blocked_id").eq("blocker_id", myId);
       if (error) throw error;
-      return new Set<string>((data || []).map((r: any) => r.blocked_id));
+      return (data || []).map((r: any) => r.blocked_id as string);
     },
     staleTime: 5 * 60 * 1000,
   });
-  return data ?? new Set<string>();
+  return useMemo(() => new Set<string>(Array.isArray(data) ? data : []), [data]);
 }
