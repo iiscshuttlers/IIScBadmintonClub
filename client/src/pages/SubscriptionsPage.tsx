@@ -30,7 +30,7 @@ export default function SubscriptionsPage() {
           .eq("user_id", session!.user.id),
         supabase
           .from("user_match_notifications")
-          .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code)")
+          .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code, round_name)")
           .eq("user_id", session!.user.id)
       ]);
 
@@ -143,6 +143,11 @@ export default function SubscriptionsPage() {
                 <div className="space-y-3">
                   {matchSubs.map((sub) => {
                     const m = sub.tournament_matches;
+                    const labelKnown = (l?: string | null) => !!l && l.trim() && l.trim().toUpperCase() !== "TBD";
+                    const hasTeams = labelKnown(m?.team1_label) || labelKnown(m?.team2_label);
+                    const title = hasTeams
+                      ? `${m?.team1_label || "TBD"} vs ${m?.team2_label || "TBD"}`
+                      : [m?.round_name, m?.match_code].filter(Boolean).join(" · ") || "Upcoming match — teams to be decided";
                     return (
                       <div key={sub.match_id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50">
                         <div className="min-w-0 pr-4">
@@ -157,8 +162,11 @@ export default function SubscriptionsPage() {
                             )}
                           </div>
                           <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
-                            {m?.team1_label || "TBD"} vs {m?.team2_label || "TBD"}
+                            {title}
                           </h3>
+                          {!hasTeams && (
+                            <p className="text-[11px] text-muted-foreground">Teams decided once the bracket advances</p>
+                          )}
                           <p className="text-[11px] text-muted-foreground mt-1">
                             Alert: {sub.notify_before_mins} mins before
                           </p>
