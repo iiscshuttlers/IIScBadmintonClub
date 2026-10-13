@@ -9,6 +9,7 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { getBaseShareUrl } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useAvailablePlayers } from "@/hooks/useAvailability";
 import { useLocation } from "wouter";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -115,6 +116,10 @@ export function PlayerCard({
   activeMetric = "overall",
 }: PlayerCardProps) {
   const [, setLocation] = useLocation();
+  // "Available to play now" — auto-expiring presence (#31). Shared across all
+  // cards via the ["presence"] query cache, so this is a single request.
+  const { availableMap } = useAvailablePlayers();
+  const isAvailableNow = availableMap.has(player.id);
   // Calibration Phase
   const totalMatches = (() => {
     if (!player.win_loss_record) return 0;
@@ -279,6 +284,9 @@ export function PlayerCard({
               {((player as any).status === "looking" || player.is_looking_to_play) && (
                 <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
               )}
+              {isAvailableNow && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm" title="Available to play now" />
+              )}
             </div>
           </div>
 
@@ -298,6 +306,11 @@ export function PlayerCard({
             </div>
             
             <div className="mt-0.5 flex flex-col items-start gap-1 flex-wrap">
+              {isAvailableNow && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/15 text-success text-[9px] font-black uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Available now
+                </span>
+              )}
               {player.is_retired && (
                 <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-on-accent shadow-sm">
                   Retired

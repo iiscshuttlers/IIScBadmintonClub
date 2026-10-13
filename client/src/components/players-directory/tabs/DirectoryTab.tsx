@@ -8,6 +8,8 @@ import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useState, useEffect } from "react";
 import { navGet, navSet } from "@/lib/navMemory";
+import { useMyAvailability } from "@/hooks/useAvailability";
+import { Zap } from "lucide-react";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -109,6 +111,8 @@ export function DirectoryTab({
     return defaultVal;
   };
 
+  const { isAvailable, setAvailable, clearAvailable } = useMyAvailability(ownProfile?.id);
+
   const [viewMode, setViewModeState] = useState<any>(() => getInitialParam("dir_view", "individuals"));
 
   const setViewMode = (mode: string) => {
@@ -198,6 +202,24 @@ export function DirectoryTab({
 
       {viewMode === "individuals" ? (
         <>
+          {/* "Available to play now" self-toggle (#31) — manual, no location */}
+          {ownProfile && (
+            <div className="flex justify-center mb-6">
+              <button
+                onClick={() => (isAvailable ? clearAvailable() : setAvailable(120))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
+                  isAvailable
+                    ? "bg-success/15 text-success border border-success/30"
+                    : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${isAvailable ? "bg-success animate-pulse" : "bg-slate-400"}`} />
+                {isAvailable ? "You're available to play — tap to stop" : "I'm available to play now"}
+                <Zap className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Recommended Opponents (Matchmaking) */}
           {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">

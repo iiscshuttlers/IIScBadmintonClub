@@ -90,6 +90,13 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => jitteredInvalidate(["tie_matches"])
       )
 
+      // "Available to play now" presence — manual toggle, no location. (#31)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "player_availability" },
+        () => jitteredInvalidate(["presence"])
+      )
+
       .subscribe((status) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") {
           console.log("🟢 Connected to System Realtime");
