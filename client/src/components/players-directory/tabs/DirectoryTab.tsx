@@ -9,6 +9,7 @@ import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useState, useEffect } from "react";
 import { navGet, navSet } from "@/lib/navMemory";
 import { useMyAvailability } from "@/hooks/useAvailability";
+import { useBlockedPlayers } from "@/hooks/useBlockedPlayers";
 import { Zap } from "lucide-react";
 
 const containerVariants: Variants = {
@@ -112,6 +113,7 @@ export function DirectoryTab({
   };
 
   const { isAvailable, setAvailable, clearAvailable } = useMyAvailability(ownProfile?.id);
+  const blockedIds = useBlockedPlayers(ownProfile?.id);
 
   const [viewMode, setViewModeState] = useState<any>(() => getInitialParam("dir_view", "individuals"));
 
@@ -135,6 +137,7 @@ export function DirectoryTab({
       .filter(
         (p) =>
           p.id !== ownProfile.id &&
+          !blockedIds.has(p.id) &&
           p.status === "looking" &&
           Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 150
       )
@@ -320,6 +323,7 @@ export function DirectoryTab({
             className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
             {filteredPlayers
+              .filter(p => !blockedIds.has(p.id))
               .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
               .slice(0, visibleCount)
               .map((player) => (
