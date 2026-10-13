@@ -138,7 +138,13 @@ export default function Navigation() {
       }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    // Allow other surfaces (e.g. the personal-page sidebar) to open search.
+    const openSearch = () => setSearchOpen(true);
+    window.addEventListener("open-global-search", openSearch);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("open-global-search", openSearch);
+    };
   }, []);
 
   useEffect(() => {

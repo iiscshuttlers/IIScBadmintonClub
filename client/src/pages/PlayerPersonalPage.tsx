@@ -1024,46 +1024,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-2">
-        <button
-          onClick={() => setLocation(`/player/${playerId}/personal/stats/match`)}
-          className={cn(
-            "py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2",
-            currentSubTab === "Match Stats" ? "bg-white dark:bg-slate-700 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <BarChart3 className="w-4 h-4 hidden sm:block" /> Match
-        </button>
-        <button
-          onClick={() => setLocation(`/player/${playerId}/personal/stats/phone`)}
-          className={cn(
-            "py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2",
-            currentSubTab === "Phone" ? "bg-white dark:bg-slate-700 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <ActivitySquare className="w-4 h-4 hidden sm:block" /> Phone
-        </button>
-        <button
-          onClick={() => setLocation(`/player/${playerId}/personal/stats/watch`)}
-          className={cn(
-            "py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2",
-            currentSubTab === "Watch Data" ? "bg-white dark:bg-slate-700 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Watch className="w-4 h-4 hidden sm:block" /> Watch
-        </button>
-        <button
-          onClick={() => setLocation(`/player/${playerId}/personal/stats/rallies`)}
-          className={cn(
-            "py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2",
-            currentSubTab === "Rallies" ? "bg-white dark:bg-slate-700 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Route className="w-4 h-4 hidden sm:block" /> Rallies
-        </button>
-      </div>
-
-      {currentSubTab === "Match Stats" && (
+      {true && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {/* Category Win Rate Cards */}
           <div>
@@ -2125,25 +2086,6 @@ export default function PlayerPersonalPage() {
 
         {/* Bottom actions */}
         <div className="flex flex-col gap-2 border-t border-border pt-4 mt-4">
-          {toggleTheme && (
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
-            >
-              {theme === "dark" ? (
-                <>
-                  <Sun className="w-5 h-5" />
-                  Light Mode
-                </>
-              ) : (
-                <>
-                  <Moon className="w-5 h-5" />
-                  Dark Mode
-                </>
-              )}
-            </button>
-          )}
-
           {profile?.id && (
             <Link href={`/player/${profile.id}/personal`}>
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all w-full hover:bg-slate-100 dark:hover:bg-slate-800/60 group mt-1 cursor-pointer">
