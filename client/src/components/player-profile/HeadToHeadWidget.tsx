@@ -16,59 +16,53 @@ export function HeadToHeadWidget({
   targetUserName,
   matches,
 }: HeadToHeadProps) {
-  const stats = useMemo(() => {
+    // Which team (1 or 2) a given player id is on; 0 if not in the match.
+    // Works for friendly and tournament matches (tournament partners are
+    // mapped onto team1_partner_id/team2_partner_id upstream).
+    const teamOf = (m: any, uid: string): 0 | 1 | 2 => {
+      if (m.player1_id === uid || m.team1_partner_id === uid) return 1;
+      if (m.player2_id === uid || m.team2_partner_id === uid) return 2;
+      return 0;
+    };
+
+    // Did the given player's side win? Handles winner_side (tournament) and
+    // match_winner_id (friendly).
+    const didWin = (m: any, uid: string): boolean => {
+      const side = teamOf(m, uid);
+      if (side === 0) return false;
+      if (m.winner_side === 1 || m.winner_side === 2) return m.winner_side === side;
+      const w = m.match_winner_id || m.winner_id;
+      if (!w) return false;
+      if (side === 1) return w === m.player1_id || w === m.team1_partner_id;
+      return w === m.player2_id || w === m.team2_partner_id;
+    };
+
+    const stats = useMemo(() => {
     let wins = 0;
     let losses = 0;
     let streak = 0;
     let isWinStreak = true;
     let pointDiff = 0;
 
-    // Filter matches between these two specific players
+    // Matches where the two players were on OPPOSITE teams.
     const h2hMatches = matches
       .filter((m) => {
-        const isP1 =
-          m.player1_id === currentUserId || m.player2_id === currentUserId;
-        const isP2 =
-          m.player1_id === targetUserId || m.player2_id === targetUserId;
-        // For doubles, also check partners
-        const isTeam1 =
-          isP1 ||
-          m.team1_partner_id === currentUserId ||
-          m.team2_partner_id === currentUserId;
-        const isTeam2 =
-          isP2 ||
-          m.team1_partner_id === targetUserId ||
-          m.team2_partner_id === targetUserId;
-
-        return isTeam1 && isTeam2;
+        const mine = teamOf(m, currentUserId);
+        const theirs = teamOf(m, targetUserId);
+        return mine !== 0 && theirs !== 0 && mine !== theirs;
       })
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          new Date(b.created_at || b.scheduled_at || 0).getTime() - new Date(a.created_at || a.scheduled_at || 0).getTime(),
       );
 
     h2hMatches.forEach((m) => {
-      let myTeamWon = false;
-      if (m.match_winner_id === currentUserId) myTeamWon = true;
-      if (
-        m.team1_partner_id === currentUserId &&
-        m.match_winner_id === m.player1_id
-      )
-        myTeamWon = true;
-      if (
-        m.team2_partner_id === currentUserId &&
-        m.match_winner_id === m.player2_id
-      )
-        myTeamWon = true;
-
-      if (myTeamWon) wins++;
+      if (didWin(m, currentUserId)) wins++;
       else losses++;
 
-      // Calculate Point Differential
+      // Point Differential (friendly schema: match_score as array of sets)
       if (m.match_score && Array.isArray(m.match_score)) {
-        const isMyTeam1 =
-          m.player1_id === currentUserId ||
-          m.team1_partner_id === currentUserId;
+        const isMyTeam1 = teamOf(m, currentUserId) === 1;
         m.match_score.forEach((set: any) => {
           if (isMyTeam1) {
             pointDiff += (set.p1_score || 0) - (set.p2_score || 0);
@@ -79,22 +73,9 @@ export function HeadToHeadWidget({
       }
     });
 
-    // Calculate Streak
+    // Calculate Streak (most recent first)
     for (let i = 0; i < h2hMatches.length; i++) {
-      const m = h2hMatches[i];
-      let myTeamWon = false;
-      if (m.match_winner_id === currentUserId) myTeamWon = true;
-      if (
-        m.team1_partner_id === currentUserId &&
-        m.match_winner_id === m.player1_id
-      )
-        myTeamWon = true;
-      if (
-        m.team2_partner_id === currentUserId &&
-        m.match_winner_id === m.player2_id
-      )
-        myTeamWon = true;
-
+      const myTeamWon = didWin(h2hMatches[i], currentUserId);
       if (i === 0) {
         isWinStreak = myTeamWon;
         streak = 1;
