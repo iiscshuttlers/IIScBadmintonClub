@@ -187,6 +187,27 @@ export default defineConfig(() => {
               type: "image/png",
             },
           ],
+          // Long-press app-icon shortcuts (installed PWA / Android). (#24)
+          shortcuts: [
+            {
+              name: "Live Scores",
+              short_name: "Live",
+              url: (isGithubPages ? "/IIScBadmintonClub/" : "/") + "pulse",
+              icons: [{ src: manifestIconPath("icon-192.png"), sizes: "192x192", type: "image/png" }],
+            },
+            {
+              name: "Tournaments",
+              short_name: "Events",
+              url: (isGithubPages ? "/IIScBadmintonClub/" : "/") + "tournaments",
+              icons: [{ src: manifestIconPath("icon-192.png"), sizes: "192x192", type: "image/png" }],
+            },
+            {
+              name: "My Matches",
+              short_name: "Matches",
+              url: (isGithubPages ? "/IIScBadmintonClub/" : "/") + "my-matches",
+              icons: [{ src: manifestIconPath("icon-192.png"), sizes: "192x192", type: "image/png" }],
+            },
+          ],
         },
       }),
     ],
