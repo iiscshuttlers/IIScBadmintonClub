@@ -31,7 +31,6 @@ import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
-// import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
 import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
 import { HostTournamentCta } from "@/components/home/HostTournamentCta";
 import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
@@ -167,8 +166,6 @@ export default function Home() {
         </section>
         
 
-
-        {/* <VenueTrafficWidget /> */}
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">

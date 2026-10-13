@@ -22,8 +22,7 @@ const TABLE_TO_FEATURES: Record<string, string[]> = {
   "tournament_matches": ["Tournament Management", "Live Scoring"],
   "tournament_participants": ["Tournament Management"],
   "tournament_round_rules": ["Tournament Management", "Bracket Generation"],
-  "umpire_assignments": ["Umpire Mode"],
-  "venue_presence_events": ["Venue Tracking", "Gymkhana Geofence"]
+  "umpire_assignments": ["Umpire Mode"]
 };
 
 export function DatabaseSchemaDashboard() {
