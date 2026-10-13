@@ -2,6 +2,23 @@ import { useMemo, useEffect, useRef } from "react";
 import { Trophy, Flame, Zap, Star, Shield, Target, Award, Swords, Crown, TrendingUp, Moon, Sun, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+
+// player_achievements is new; generated types regenerate after the migration
+// is applied (npx supabase db push). Cast until then.
+const sbAch = supabase as any;
+
+function timeAgo(iso: string): string {
+  const d = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(d / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
 interface Match {
   id: string;
@@ -195,6 +212,23 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
   const earned = badgeData.filter(d => d.progress.earned);
   const locked = badgeData.filter(d => !d.progress.earned);
 
+  // Persisted unlock timestamps for this player (#21).
+  const { data: earnedDates } = useQuery({
+    queryKey: ["player-achievements", playerId],
+    enabled: !!playerId,
+    queryFn: async () => {
+      const { data, error } = await sbAch
+        .from("player_achievements")
+        .select("achievement_id, earned_at")
+        .eq("player_id", playerId);
+      if (error) throw error;
+      const map = new Map<string, string>();
+      for (const r of data || []) map.set(r.achievement_id, r.earned_at);
+      return map;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   // #21 Celebrate newly-earned badges when a user views their OWN profile.
   // Baseline of seen badges is kept per-user in localStorage; the very first
   // view seeds the baseline silently (no celebration for already-earned ones).
@@ -219,6 +253,15 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
     import("canvas-confetti")
       .then((m) => m.default({ particleCount: 120, spread: 70, origin: { y: 0.6 } }))
       .catch(() => { /* confetti is best-effort */ });
+    // Persist the unlocks (own profile only). ignoreDuplicates keeps the
+    // original earned_at if the row already exists.
+    sbAch
+      .from("player_achievements")
+      .upsert(fresh.map((id) => ({ player_id: playerId, achievement_id: id })), {
+        onConflict: "player_id,achievement_id",
+        ignoreDuplicates: true,
+      })
+      .then(() => { /* best-effort */ }, () => { /* best-effort */ });
   }, [currentUserId, playerId, matches, earned]);
 
   return (
@@ -255,7 +298,9 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
                   <Icon className="w-4 h-4 z-10 relative shrink-0" />
                   <div className="z-10 relative flex flex-col">
                     <span>{badge.label}</span>
-                    <span className="text-[9px] opacity-75 font-medium normal-case line-clamp-1">{badge.description}</span>
+                    <span className="text-[9px] opacity-75 font-medium normal-case line-clamp-1">
+                      {earnedDates?.get(badge.id) ? `Earned ${timeAgo(earnedDates.get(badge.id)!)}` : badge.description}
+                    </span>
                   </div>
                 </motion.div>
               );
