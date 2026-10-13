@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 // player_availability is new; the generated types regenerate after the
 // migration is applied (npx supabase db push). Cast until then.
@@ -63,6 +64,7 @@ export function useMyAvailability(myPlayerId: string | null | undefined) {
         return;
       }
       toast.success(`You're marked available for ${Math.round(durationMinutes / 60) || 1}h 🏸`);
+      track("availability_set", { minutes: durationMinutes });
       queryClient.invalidateQueries({ queryKey: ["presence"] });
     },
     [myPlayerId, queryClient],

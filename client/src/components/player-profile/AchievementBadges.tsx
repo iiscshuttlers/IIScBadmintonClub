@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
 
 // player_achievements is new; generated types regenerate after the migration
 // is applied (npx supabase db push). Cast until then.
@@ -249,6 +250,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
     const fresh = earnedIds.filter((id) => !prevSet.has(id));
     if (fresh.length === 0) return;
     const labels = fresh.map((id) => BADGES.find((b) => b.id === id)?.label).filter(Boolean);
+    track("achievement_unlocked", { ids: fresh });
     toast.success(`🏅 Achievement unlocked: ${labels.join(", ")}!`, { duration: 6000 });
     import("canvas-confetti")
       .then((m) => m.default({ particleCount: 120, spread: 70, origin: { y: 0.6 } }))

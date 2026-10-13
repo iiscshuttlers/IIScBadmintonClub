@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { track } from "@/lib/analytics";
 
 // user_reports / user_blocks are new tables; generated types regenerate after
 // the migration is applied (npx supabase db push). Cast until then.
@@ -68,6 +69,7 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
         await sb.from("user_blocks").upsert({ blocker_id: reporterId, blocked_id: reportedPlayerId });
       }
 
+      track("report_filed", { reason, blocked: alsoBlock });
       toast.success("Report submitted. Our team will review it.");
       onClose();
     } catch (e: any) {

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users, Trophy, Radio, Home, BarChart3, Settings, CornerDownLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { track } from "@/lib/analytics";
 
 interface SearchResult {
   type: "player" | "match" | "announcement" | "event" | "team" | "action";
@@ -289,6 +290,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   };
 
   const handleSelect = (href: string) => {
+    track("command_palette_select", { href });
     setLocation(href);
     onClose();
   };
