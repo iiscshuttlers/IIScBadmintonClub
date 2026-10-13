@@ -4,6 +4,7 @@ import { Flag, X, ShieldBan, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // user_reports / user_blocks are new tables; generated types regenerate after
 // the migration is applied (npx supabase db push). Cast until then.
@@ -30,6 +31,7 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
   const [details, setDetails] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   useEffect(() => {
     if (open) {
@@ -79,10 +81,12 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-title"
-        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+        tabIndex={-1}
+        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 dark:border-slate-800">

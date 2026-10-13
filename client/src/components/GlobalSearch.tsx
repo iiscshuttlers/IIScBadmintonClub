@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users, Trophy, Radio, Home, BarChart3, Settings, CornerDownLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface SearchResult {
   type: "player" | "match" | "announcement" | "event" | "team" | "action";
@@ -84,6 +85,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const [, setLocation] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   // Render/navigation order — groups are shown in this order.
   const TYPE_ORDER = ["action", "player", "team", "match", "announcement", "event"] as const;
@@ -322,6 +324,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.97 }}
           transition={{ duration: 0.18 }}
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search and quick actions"
           className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
