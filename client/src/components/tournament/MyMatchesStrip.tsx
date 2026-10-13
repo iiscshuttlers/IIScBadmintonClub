@@ -30,7 +30,7 @@ export function MyMatchesStrip({
     supabase
       .from("tournament_matches")
       .select(
-        "id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, match_score, score, tournaments(name)",
+        "id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, tournaments(name)",
       )
       .or(
         `player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`,
@@ -101,7 +101,7 @@ export function MyMatchesStrip({
                 </div>
                 <div className="shrink-0 text-right">
                   {isDone ? (
-                    <span className="text-[11px] font-bold text-slate-300">{m.match_score || m.score || "Final"}</span>
+                    <span className="text-[11px] font-bold text-slate-300">{m.score || "Final"}</span>
                   ) : m.scheduled_at ? (
                     <span className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
                       <Clock className="w-3 h-3" />
