@@ -1,15 +1,5 @@
 [
   "client/src/components/admin/TournamentManager.tsx|session",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|Camera",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|Link",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|Unlink",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|allPlayers",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|cardCls",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|getDepartmentAcronym",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|loading",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|participants",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|setLoading",
-  "client/src/components/admin/TournamentParticipantsTab.tsx|setParticipants",
   "client/src/components/home/NoticeBoard.tsx|tournament_slug",
   "client/src/components/players-directory/tabs/DirectoryTab.tsx|status"
 ]

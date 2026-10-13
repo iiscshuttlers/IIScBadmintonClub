@@ -11,8 +11,10 @@ import { exportToImage, exportToPDF } from "@/utils/exportUtils";
 import {
   Loader2, Save, Trophy, Users, Swords, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play,
-  Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Pencil, FileText
+  Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Pencil, FileText,
+  Link, Unlink, Camera
 } from "lucide-react";
+import { getDepartmentAcronym } from "@/data/departments";
 
 function downloadCSV(filename: string, rows: string[][]) {
   const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -108,6 +110,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<Record<string, "all" | "registered" | "external">>({});
   const [adminPlayers, setAdminPlayers] = useState<any[]>([]);
+  // Core data for this tab (grouped by category) + the full player list used for
+  // name/partner resolution. These back every handler and the bracket auto-sync.
+  const [participants, setParticipants] = useState<Record<string, Participant[]>>({});
+  const [loading, setLoading] = useState(true);
+  const allPlayers = adminPlayers;
+  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5";
   const [editingName, setEditingName] = useState<{ id: string, name1: string, name2: string } | null>(null);
   const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string }[][] } | null>(null);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
