@@ -224,6 +224,7 @@ export function SendReminderSheet({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
           >
             <X className="w-5 h-5" />

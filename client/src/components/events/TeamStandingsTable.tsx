@@ -187,8 +187,8 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                   <span className="text-slate-200">Ties Won <span className="text-emerald-400 font-bold">(+{winPoints} pts)</span></span>
                   <span className="font-black text-slate-400">D</span>
                   <span className="text-slate-200">Ties Drawn <span className="text-slate-400 font-bold">(+{drawPoints} pts)</span></span>
-                  <span className="font-black text-rose-400">L</span>
-                  <span className="text-slate-200">Ties Lost <span className="text-rose-400 font-bold">(+{lossPoints} pts)</span></span>
+                  <span className="font-black text-amber-400">L</span>
+                  <span className="text-slate-200">Ties Lost <span className="text-amber-400 font-bold">(+{lossPoints} pts)</span></span>
                   <span className="font-black text-cyan-300">R (+/-)</span>
                   <span className="text-slate-200">Rubber Net Diff <span className="text-slate-400 text-[10px]">(For - Against)</span></span>
                   <span className="font-black text-indigo-300">S (+/-)</span>
@@ -520,13 +520,13 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                   </td>
 
                   {/* L */}
-                  <td className="px-2.5 py-3.5 text-right font-medium text-rose-500">
+                  <td className="px-2.5 py-3.5 text-right font-medium text-slate-400">
                     {team.lost ?? 0}
                   </td>
 
                   {/* Rubbers Diff */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs">
-                    <span className={rDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : rDiff < 0 ? "text-rose-500 font-bold" : "text-slate-400"}>
+                    <span className={rDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : rDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
                       {rDiff > 0 ? `+${rDiff}` : rDiff}
                     </span>
                     <span className="text-[10px] text-slate-400 ml-1">
@@ -536,7 +536,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
 
                   {/* Sets Diff (Medium+ screens) */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs hidden md:table-cell">
-                    <span className={sDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : sDiff < 0 ? "text-rose-500 font-bold" : "text-slate-400"}>
+                    <span className={sDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : sDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
                       {sDiff > 0 ? `+${sDiff}` : sDiff}
                     </span>
                     <span className="text-[10px] text-slate-400 ml-1">
@@ -546,7 +546,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
 
                   {/* Points Diff (Large screens) */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs hidden lg:table-cell">
-                    <span className={pDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : pDiff < 0 ? "text-rose-500 font-bold" : "text-slate-400"}>
+                    <span className={pDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : pDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
                       {pDiff > 0 ? `+${pDiff}` : pDiff}
                     </span>
                     <span className="text-[10px] text-slate-400 ml-1">

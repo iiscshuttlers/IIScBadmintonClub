@@ -155,7 +155,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
               <h3 className="text-base font-black text-slate-800 dark:text-foreground truncate">Register</h3>
               <p className="text-xs text-muted-foreground truncate">{tournament.name ?? "This tournament"}</p>
             </div>
-            <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
+            <button onClick={onClose} aria-label="Close" className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
               <X className="w-5 h-5" />
             </button>
           </div>

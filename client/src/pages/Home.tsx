@@ -31,10 +31,11 @@ import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
-// import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
 import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
 import { HostTournamentCta } from "@/components/home/HostTournamentCta";
 import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
+import { NoticeBoard } from "@/components/home/NoticeBoard";
+import { HomePersonalDashboard } from "@/components/home/HomePersonalDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -166,16 +167,20 @@ export default function Home() {
         
 
 
-        {/* <VenueTrafficWidget /> */}
-
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">
           <div className="container mx-auto px-4 max-w-5xl">
             
             <HomeAnnouncementBar isAdmin={isAdmin} />
 
+            <HomePersonalDashboard />
+
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
               <ActiveTournamentWidget />
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
+              <NoticeBoard />
             </motion.div>
 
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>

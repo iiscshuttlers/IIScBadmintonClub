@@ -193,7 +193,7 @@ export function LiveScoreWidget({ onClose }: Props) {
           <span className="text-muted-foreground text-xs">— {liveMatches.length} match{liveMatches.length > 1 ? "es" : ""}</span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-700 transition text-muted-foreground">
+          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg hover:bg-slate-700 transition text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         )}

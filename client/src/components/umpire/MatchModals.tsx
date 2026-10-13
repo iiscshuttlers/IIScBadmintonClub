@@ -60,7 +60,7 @@ export function DisciplineCardModal({
         <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2">
           <Flag className="w-5 h-5 text-amber-400" /> Issue Discipline Card
         </h2>
-        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-muted-foreground">
+        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-800 rounded-full text-muted-foreground">
           <X className="w-5 h-5" />
         </button>
       </div>

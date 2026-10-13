@@ -18,6 +18,7 @@ import {
   Footprints,
   Flag,
   Bell,
+  ActivitySquare,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { NotificationModal } from "@/components/events/NotificationModal";
@@ -52,6 +53,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 // Extracted Hooks & Components
 import { TeaserOverlay } from "@/components/TeaserOverlay";
@@ -59,6 +61,8 @@ import { usePlayerProfileQuery } from "@/hooks/queries/usePlayerProfileQuery";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { PlayerHeroBanner } from "@/components/player-profile/PlayerHeroBanner";
 import { PlayerActionBar } from "@/components/player-profile/PlayerActionBar";
+import { ReportPlayerModal } from "@/components/ReportPlayerModal";
+import { track } from "@/lib/analytics";
 import { ProfileOverviewTab } from "@/components/player-profile/tabs/ProfileOverviewTab";
 import { ProfileOverviewTabRight } from "@/components/player-profile/tabs/ProfileOverviewTabRight";
 import { ProfileRankingTab } from "@/components/player-profile/tabs/ProfileRankingTab";
@@ -89,6 +93,7 @@ export default function PlayerProfile() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { session: authSession, signOut } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
   const { confirm } = useConfirm();
   const { theme } = useTheme();
 
@@ -320,17 +325,7 @@ export default function PlayerProfile() {
     }
   };
 
-  const handleReport = async () => {
-    const ok = await confirm({
-      title: "Report User?",
-      description: "Report this user for inappropriate content or behavior?",
-      confirmLabel: "Report",
-      confirmVariant: "danger"
-    });
-    if (!ok) return;
-    window.location.href = `mailto:iiscbadmintonclub@gmail.com?subject=Report User ID: ${player?.id}&body=I would like to report the user ${player?.fullName} for the following reason:%0D%0A%0D%0A[Please type your reason here]`;
-    toast.success("Opened email client to send report.");
-  };
+  const handleReport = () => setReportOpen(true);
 
   const handleWrapped = async (year: number) => {
     if (!player) return;
@@ -488,6 +483,7 @@ export default function PlayerProfile() {
                     }
                     setIsSubscribed(true);
                     setSubMins(mins);
+                    track("player_subscribed", { mins });
                     toast.success(`Subscribed to ${player.fullName}!`);
                   }}
                   isSubscribed={isSubscribed}
@@ -502,6 +498,7 @@ export default function PlayerProfile() {
                       return;
                     }
                     setIsSubscribed(false);
+                    track("player_unsubscribed");
                     toast.success(`Unsubscribed from ${player.fullName}'s matches.`);
                   }}
                 />
@@ -577,11 +574,23 @@ export default function PlayerProfile() {
               </>
             )}
             {currentUser && currentUser.id === player.userId && (
-              <Link href="/profile/setup">
-                <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10">
-                  <Settings className="w-4 h-4 md:w-5 md:h-5" />
-                </button>
-              </Link>
+              <>
+                <Link href={`/player/${player.id}/personal`}>
+                  <button
+                    className="px-3 md:px-4 py-2 md:py-2.5 h-10 md:h-12 bg-primary hover:bg-primary/90 text-slate-950 font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
+                    title="Switch to Personal Training & Analytics Dashboard"
+                  >
+                    <ActivitySquare className="w-4 h-4" />
+                    <span className="hidden sm:inline">Personal Space</span>
+                    <span className="sm:hidden">Space</span>
+                  </button>
+                </Link>
+                <Link href="/profile/setup">
+                  <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10" title="Profile Settings">
+                    <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                </Link>
+              </>
             )}
             {currentUser && currentUser.id === player.userId && (
               <button
@@ -613,17 +622,30 @@ export default function PlayerProfile() {
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center gap-2 md:gap-6 w-full md:min-w-max">
-              {["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"].map((tab) => (
+              {[
+                "OVERVIEW",
+                "RANKING",
+                "STATS",
+                "MATCHES",
+                "PHOTOS",
+                ...(currentUser && currentUser.id === player.userId ? ["TRAINING"] : [])
+              ].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab as any)}
+                  onClick={() => {
+                    if (tab === "TRAINING") {
+                      setLocation(`/player/${player.id}/personal`);
+                    } else {
+                      setActiveTab(tab as any);
+                    }
+                  }}
                   className={`flex-auto md:flex-none min-w-[100px] py-3 md:py-4 text-[11px] md:text-sm font-black tracking-widest uppercase transition-colors relative text-center ${
                     activeTab === tab
                       ? "text-amber-600 dark:text-amber-400"
                       : "text-muted-foreground hover:text-foreground dark:hover:text-slate-300"
                   }`}
                 >
-                  {tab}
+                  {tab === "TRAINING" ? "⚡ TRAINING" : tab}
                   {activeTab === tab && (
                     <motion.div
                       layoutId="profileTabIndicator"
@@ -670,26 +692,31 @@ export default function PlayerProfile() {
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
                       {m.submitted_by === player.id ? (
-                        <button
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => handleWithdrawMatch(m.id)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-xl transition"
+                          className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                         >
                           Withdraw
-                        </button>
+                        </Button>
                       ) : (
                         <>
-                          <button
+                          <Button
+                            size="sm"
                             onClick={() => handleConfirmMatch(m.id)}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-xs font-black rounded-xl transition"
+                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                           >
                             Confirm
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleRejectMatch(m.id)}
-                            className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-foreground text-xs font-black rounded-xl transition"
+                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
                           >
                             Reject
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -790,7 +817,15 @@ export default function PlayerProfile() {
         </TeaserOverlay>
       </motion.div>
 
-
+      {player && (
+        <ReportPlayerModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          reportedPlayerId={player.id}
+          reportedPlayerName={player.fullName}
+          reporterId={authSession?.user?.id}
+        />
+      )}
 
     </div>
   );

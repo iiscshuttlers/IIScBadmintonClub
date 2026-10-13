@@ -18,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function TournamentSetupChecklist() {
   const [, params] = useRoute<{ id: string }>('/tournament-setup/:id');
@@ -166,44 +167,23 @@ export default function TournamentSetupChecklist() {
   const completedCount = steps.filter(s => s.done).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-10 px-4 sm:px-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        
-        {/* Success Banner */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-950/60 rounded-2xl text-emerald-600 dark:text-emerald-400 shrink-0">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Tournament Created Successfully
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-                  {tournament?.name || 'New Tournament'}
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  {isTeam ? 'Team Tournament' : 'Open Knockout Tournament'} · {tournament?.venue || 'Campus Badminton Courts'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:items-end gap-1 shrink-0">
-              <span className="text-xs font-bold text-slate-400">Launch Readiness</span>
-              <div className="flex items-center gap-2">
-                <div className="w-24 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-primary h-full rounded-full transition-all"
-                    style={{ width: `${(completedCount / steps.length) * 100}%` }}
-                  />
-                </div>
-                <span className="text-xs font-mono font-bold text-primary">{completedCount}/{steps.length}</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
+      <PageHeader
+        backTo="/tournaments"
+        backLabel="Tournaments"
+        badge="Launch Checklist"
+        badgeIcon={<Sparkles className="w-3.5 h-3.5 text-primary" />}
+        title={tournament?.name || 'Tournament Launch Checklist'}
+        subtitle={`${isTeam ? 'Team Tournament' : 'Open Knockout Tournament'} · ${tournament?.venue || 'Campus Badminton Courts'}`}
+        action={
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-bold text-slate-400">Readiness:</span>
+            <span className="text-xs font-mono font-bold text-primary">{completedCount}/{steps.length}</span>
           </div>
-        </div>
+        }
+      />
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
 
         {/* Guided Steps Card */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">

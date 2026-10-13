@@ -56,6 +56,7 @@ export function EditVideoModal({ isOpen, onClose, matchId, tableName, initialUrl
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close"
               className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground transition-colors"
             >
               <X className="w-5 h-5" />

@@ -27,6 +27,12 @@ export default function ProfileSetup() {
 
   if (!setup.session) return null; // Wait for redirect
 
+  const onboardingTabs = [
+    { id: "basic", label: "1. Identity", icon: UserCircle, desc: "Name & Contact" },
+    { id: "badminton", label: "2. Game & Level", icon: Activity, desc: "Level & Style" },
+    { id: "status", label: "3. Status & Club", icon: Settings, desc: "Affiliation" },
+  ];
+
   const allTabs = [
     { id: "basic", label: "Basic Info", icon: UserCircle },
     { id: "status", label: "Account Status", icon: Settings },
@@ -36,7 +42,7 @@ export default function ProfileSetup() {
     { id: "media", label: "Media Showcase", icon: Video },
   ];
 
-  const tabs = setup.isEditing ? allTabs : allTabs.filter(t => t.id === "basic");
+  const tabs = setup.isEditing ? allTabs : onboardingTabs;
 
   const tabOrder = tabs.map((t) => t.id);
   const currentIndex = tabOrder.indexOf(setup.activeTab);
@@ -48,11 +54,41 @@ export default function ProfileSetup() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 sm:py-12 px-4 sm:px-6 lg:px-6">
       <div className="max-w-3xl mx-auto">
         {!setup.isEditing && (
-          <div className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm">
-            <h3 className="text-amber-800 dark:text-amber-300 font-bold text-sm sm:text-base">Account Created!</h3>
-            <p className="text-amber-700 dark:text-amber-400/80 text-sm mt-1">
-              Your email is registered, but you must complete your basic profile details before entering the club.
-            </p>
+          <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-muted-foreground">
+              <span>Onboarding Progress</span>
+              <span className="text-primary">Step {Math.max(1, currentIndex + 1)} of 3</span>
+            </div>
+            {/* Step progress bar */}
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-primary h-full transition-all duration-300 rounded-full"
+                style={{ width: `${((Math.max(0, currentIndex) + 1) / 3) * 100}%` }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {onboardingTabs.map((t, idx) => {
+                const isCompleted = currentIndex > idx;
+                const isCurrent = currentIndex === idx;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setup.setActiveTab(t.id as any)}
+                    className={`text-left text-xs p-2 rounded-xl transition-all ${
+                      isCurrent
+                        ? "bg-primary/10 border border-primary/30 text-primary font-bold"
+                        : isCompleted
+                        ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                        : "text-muted-foreground opacity-60"
+                    }`}
+                  >
+                    <div className="font-bold truncate">{t.label}</div>
+                    <div className="text-[10px] text-muted-foreground truncate hidden sm:block">{t.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

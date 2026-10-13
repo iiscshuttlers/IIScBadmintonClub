@@ -5,6 +5,7 @@
  * weekly challenges, notification queue, public API, and DB health.
  */
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import {
   Circle, TrendingUp, Zap, Bell, Globe, ShieldCheck,
@@ -535,8 +536,10 @@ export function AdminFeaturesPanel() {
       {/* Sub-nav */}
       <div className="flex flex-wrap gap-2">
         {sections.map((s) => (
-          <button
+          <Button
             key={s.id}
+            size="pill"
+            variant="tab"
             onClick={() => setSection(s.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
               section === s.id
@@ -545,7 +548,7 @@ export function AdminFeaturesPanel() {
             }`}
           >
             {s.icon} {s.label}
-          </button>
+          </Button>
         ))}
       </div>
 

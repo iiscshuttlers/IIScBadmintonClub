@@ -9,6 +9,7 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { getBaseShareUrl } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useAvailablePlayers } from "@/hooks/useAvailability";
 import { useLocation } from "wouter";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -115,6 +116,10 @@ export function PlayerCard({
   activeMetric = "overall",
 }: PlayerCardProps) {
   const [, setLocation] = useLocation();
+  // "Available to play now" — auto-expiring presence (#31). Shared across all
+  // cards via the ["presence"] query cache, so this is a single request.
+  const { availableMap } = useAvailablePlayers();
+  const isAvailableNow = availableMap.has(player.id);
   // Calibration Phase
   const totalMatches = (() => {
     if (!player.win_loss_record) return 0;
@@ -220,11 +225,7 @@ export function PlayerCard({
     >
       <Card
         onClick={() => {
-          if (window.location.pathname.startsWith("/personal")) {
-            setLocation(`/personal/player/${player.id}`);
-          } else {
-            setLocation(`/player/${player.id}`);
-          }
+          setLocation(`/player/${player.id}`);
         }}
         className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
         hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
@@ -276,13 +277,14 @@ export function PlayerCard({
                 {getDepartmentAcronym(player.department)}
               </div>
               
-              {/* Status Dot */}
-              {(player as any).status === "playing" && (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-              )}
-              {((player as any).status === "looking" || player.is_looking_to_play) && (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-              )}
+              {/* Status Dot — green means "available to play now" (the toggle),
+                  amber means currently in a match. No dot otherwise, so a green
+                  dot can only ever mean available. */}
+              {isAvailableNow ? (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="Available to play now" />
+              ) : (player as any).status === "playing" ? (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="In a match" />
+              ) : null}
             </div>
           </div>
 
@@ -302,6 +304,11 @@ export function PlayerCard({
             </div>
             
             <div className="mt-0.5 flex flex-col items-start gap-1 flex-wrap">
+              {isAvailableNow && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/15 text-success text-[9px] font-black uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Available now
+                </span>
+              )}
               {player.is_retired && (
                 <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-on-accent shadow-sm">
                   Retired

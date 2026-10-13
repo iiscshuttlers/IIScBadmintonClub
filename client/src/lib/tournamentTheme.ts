@@ -93,13 +93,56 @@ export const FAMILY_CSS_VARS: Record<EventFamily, Record<string, string>> = {
     // violet-600
     "--primary": "#7c3aed",
     "--primary-foreground": "#ffffff",
+    "--family-glow": "rgba(124, 58, 237, 0.15)",
   },
   team: {
     // emerald-600
     "--primary": "#059669",
     "--primary-foreground": "#ffffff",
+    "--family-glow": "rgba(5, 150, 105, 0.15)",
   },
 };
+
+/**
+ * Single source of truth for semantic tournament states.
+ * Colors signal meaning strictly:
+ * - brand: lime (--primary) for actions / "do this"
+ * - live: rose-500 exclusively for in-progress action
+ * - pending: amber-500 for awaiting reveal or needs-attention
+ * - success: emerald-500 for completed results or team family
+ * - neutral: slate-500 for archived, casual, or default
+ */
+export const SEMANTIC = {
+  brand: {
+    text: "text-primary",
+    bg: "bg-primary text-slate-950",
+    border: "border-primary/30",
+  },
+  live: {
+    text: "text-rose-500 dark:text-rose-400",
+    bg: "bg-rose-500 text-white",
+    bgSoft: "bg-rose-500/15 text-rose-300",
+    border: "border-rose-500/30",
+  },
+  pending: {
+    text: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-500 text-slate-950",
+    bgSoft: "bg-amber-500/15 text-amber-300",
+    border: "border-amber-500/30",
+  },
+  success: {
+    text: "text-emerald-500 dark:text-emerald-400",
+    bg: "bg-emerald-500 text-white",
+    bgSoft: "bg-emerald-500/15 text-emerald-300",
+    border: "border-emerald-500/30",
+  },
+  neutral: {
+    text: "text-slate-400 dark:text-slate-500",
+    bg: "bg-slate-700 text-slate-200",
+    bgSoft: "bg-slate-800 text-slate-400",
+    border: "border-slate-700/60",
+  },
+} as const;
 
 /** Ranked-state tokens (colour-blind-safe: always paired with icon + label). */
 export const RANKED_TOKENS = {

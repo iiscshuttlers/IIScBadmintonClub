@@ -390,12 +390,12 @@ export default function FindLost() {
           <h1 className="text-xl font-black mb-1">Lost something on court?</h1>
           <p className="text-slate-300 text-xs leading-snug">Post lost or found items at IISc courts. Get real-time notifications when someone replies.</p>
           {session && (
-            <button
+            <Button
               onClick={openNewPost}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-on-accent text-sm font-bold shadow-lg shadow-indigo-900/40 transition"
+              className="mt-3 bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/40"
             >
               <Plus className="w-3.5 h-3.5" /> Post Item
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -408,11 +408,9 @@ export default function FindLost() {
             <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
               You must be logged in to see or post items in this section.
             </p>
-            <button 
-              onClick={() => setLocation('/join')}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-6 h-11 transition">
+            <Button onClick={() => setLocation('/join')} className="rounded-xl px-6 h-11">
               Sign In / Join
-            </button>
+            </Button>
           </div>
         ) : (
           <>
@@ -429,9 +427,9 @@ export default function FindLost() {
                 <h3 className="font-black text-slate-800 dark:text-foreground">
                   {editingId ? "Edit Post" : "New Post"}
                 </h3>
-                <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition">
+                <Button variant="ghost" size="icon" onClick={() => { setShowForm(false); setEditingId(null); }} aria-label="Close form" className="text-muted-foreground hover:text-foreground">
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Type toggle */}
@@ -574,20 +572,24 @@ export default function FindLost() {
         {/* Filters */}
         <div className="flex flex-wrap gap-2 items-center">
           {(["all", "lost", "found"] as const).map((f) => (
-            <button
+            <Button
               key={f}
+              size="pill"
+              variant={filter === f ? "pillActive" : "pillMuted"}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition ${filter === f ? "bg-indigo-600 text-on-accent shadow-md" : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}`}
+              className={filter === f ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}
             >
               {f === "all" ? "All" : f === "lost" ? "Lost" : "Found"}
-            </button>
+            </Button>
           ))}
-          <button
+          <Button
+            size="pill"
+            variant={showResolved ? "pillActive" : "pillMuted"}
             onClick={() => setShowResolved((v) => !v)}
-            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold transition ${showResolved ? "bg-indigo-600 text-white" : "bg-white dark:bg-slate-900 text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
+            className={`ml-auto ${showResolved ? "bg-indigo-600 text-white" : "border border-slate-200 dark:border-slate-700"}`}
           >
             {showResolved ? "Show Active" : "Show Resolved"}
-          </button>
+          </Button>
         </div>
 
         {/* Posts */}
@@ -762,12 +764,14 @@ export default function FindLost() {
                                 )}
                               </span>
                               {(post.claimed_by_id === profile?.id || isOwn || isAdmin) && (
-                                <button
+                                <Button
+                                  variant="ghost"
+                                  size="pill"
                                   onClick={() => unclaimItem(post)}
-                                  className="flex items-center gap-1 text-[10px] font-bold text-rose-500 hover:text-rose-600 transition px-1"
+                                  className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1 text-[10px]"
                                 >
                                   <RotateCcw className="w-3 h-3" /> Undo {post.type === 'lost' ? 'Find' : 'Claim'}
-                                </button>
+                                </Button>
                               )}
                             </div>
                           )}
@@ -775,22 +779,24 @@ export default function FindLost() {
                       ) : (
                         <>
                           {(isOwn || isAdmin) && (
-                            <button
+                            <Button
+                              size="pill"
                               onClick={() => resolve(post)}
                               title="Mark as resolved"
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 hover:bg-teal-200 dark:hover:bg-teal-900/60 transition w-full justify-center"
+                              className="bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 hover:bg-teal-200 dark:hover:bg-teal-900/60 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
                             >
                               <CheckCircle className="w-4 h-4" /> Mark as Resolved
-                            </button>
+                            </Button>
                           )}
                           {!isOwn && session && claimingPostId !== post.id && (
-                            <button
+                            <Button
+                              size="pill"
                               onClick={() => setClaimingPostId(post.id)}
                               title={post.type === "lost" ? "I found this item!" : "Claim this item"}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition w-full justify-center"
+                              className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
                             >
                               <CheckCircle className="w-4 h-4" /> {post.type === "lost" ? "I found this!" : "Claim"}
-                            </button>
+                            </Button>
                           )}
                           {!isOwn && session && claimingPostId === post.id && (
                             <div className="flex flex-col gap-1.5 items-end mt-1 w-full max-w-[140px]">
@@ -817,14 +823,15 @@ export default function FindLost() {
                                   </div>
                                 </>
                               ) : (
-                                <button
+                                <Button
+                                  size="pill"
                                   onClick={() => claimItem(post, undefined, claimContactInput)}
-                                  className="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition w-full text-center mt-1"
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white w-full text-center mt-1 px-3 py-1.5 rounded-lg text-[10px]"
                                 >
                                   Confirm Claim
-                                </button>
+                                </Button>
                               )}
-                              <button onClick={() => setClaimingPostId(null)} className="text-[10px] text-muted-foreground hover:underline px-1 py-0.5 mt-0.5">Cancel</button>
+                              <Button variant="ghost" size="pill" onClick={() => setClaimingPostId(null)} className="text-[10px] text-muted-foreground px-1 py-0.5 mt-0.5">Cancel</Button>
                             </div>
                           )}
                         </>
@@ -832,39 +839,46 @@ export default function FindLost() {
 
                       {(isOwn || isAdmin) && (
                         <div className="flex gap-2 justify-end w-full mt-0.5">
-                          <button
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={() => editPost(post)}
-                            title="Edit post"
-                            className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition shrink-0"
+                            aria-label="Edit post"
+                            className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 shrink-0"
                           >
                             <Edit2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                           
                           {pendingDelete === post.id ? (
                             <div className="flex gap-1 bg-rose-50 dark:bg-rose-900/20 p-1 rounded-xl shrink-0">
-                              <button
+                              <Button
+                                size="icon"
                                 onClick={() => deletePost(post)}
-                                title="Confirm delete"
-                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-rose-500 text-on-accent hover:bg-rose-600 transition"
+                                aria-label="Confirm delete"
+                                className="w-6 h-6 rounded-lg bg-rose-500 text-white hover:bg-rose-600"
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 onClick={() => setPendingDelete(null)}
-                                title="Cancel"
-                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                                aria-label="Cancel delete"
+                                className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 text-muted-foreground hover:bg-slate-300 dark:hover:bg-slate-600"
                               >
                                 <X className="w-3.5 h-3.5" />
-                              </button>
+                              </Button>
                             </div>
                           ) : (
-                            <button
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               onClick={() => setPendingDelete(post.id)}
-                              title="Delete post"
-                              className="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition shrink-0"
+                              aria-label="Delete post"
+                              className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 shrink-0"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       )}

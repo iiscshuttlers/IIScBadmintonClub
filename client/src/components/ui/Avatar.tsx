@@ -36,7 +36,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
       )}
     >
       {src ? (
-        <img src={src} alt={name ?? "avatar"} className="w-full h-full object-cover" />
+        <img src={src} alt={name ?? "avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
       ) : (
         <span>{initials}</span>
       )}

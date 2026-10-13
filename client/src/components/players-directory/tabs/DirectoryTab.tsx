@@ -8,6 +8,9 @@ import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useState, useEffect } from "react";
 import { navGet, navSet } from "@/lib/navMemory";
+import { useMyAvailability, useAvailablePlayers } from "@/hooks/useAvailability";
+import { useBlockedPlayers } from "@/hooks/useBlockedPlayers";
+import { Zap } from "lucide-react";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -109,6 +112,11 @@ export function DirectoryTab({
     return defaultVal;
   };
 
+  const { isAvailable, setAvailable, clearAvailable } = useMyAvailability(ownProfile?.id);
+  const blockedIds = useBlockedPlayers(ownProfile?.id);
+  const { availableMap } = useAvailablePlayers();
+  const [availableOnly, setAvailableOnly] = useState(false);
+
   const [viewMode, setViewModeState] = useState<any>(() => getInitialParam("dir_view", "individuals"));
 
   const setViewMode = (mode: string) => {
@@ -131,7 +139,8 @@ export function DirectoryTab({
       .filter(
         (p) =>
           p.id !== ownProfile.id &&
-          p.status === "looking" &&
+          !blockedIds.has(p.id) &&
+          p.is_looking_to_play === true &&
           Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 150
       )
       .slice(0, 4);
@@ -198,8 +207,43 @@ export function DirectoryTab({
 
       {viewMode === "individuals" ? (
         <>
+          {/* Availability: self-toggle (#31) + "ready to play" filter */}
+          <div className="flex flex-wrap justify-center items-center gap-2 mb-6">
+            {ownProfile && (
+              <button
+                onClick={() => (isAvailable ? clearAvailable() : setAvailable(120))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
+                  isAvailable
+                    ? "bg-success/15 text-success border border-success/30"
+                    : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${isAvailable ? "bg-success animate-pulse" : "bg-slate-400"}`} />
+                {isAvailable ? "You're available to play — tap to stop" : "I'm available to play now"}
+                <Zap className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={() => setAvailableOnly((v) => !v)}
+              aria-pressed={availableOnly}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
+                availableOnly
+                  ? "bg-success text-white border border-success"
+                  : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${availableOnly ? "bg-white animate-pulse" : "bg-success"}`} />
+              Ready to play now
+              {availableMap.size > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${availableOnly ? "bg-white/20" : "bg-success/20 text-success"}`}>
+                  {availableMap.size}
+                </span>
+              )}
+            </button>
+          </div>
+
           {/* Recommended Opponents (Matchmaking) */}
-          {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
+          {!loading && ownProfile && recommended.length > 0 && !availableOnly && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
@@ -217,8 +261,7 @@ export function DirectoryTab({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recommended.map((player) => (
               <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => {
-                if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
-                else setLocation(`/player/${player.id}`);
+                setLocation(`/player/${player.id}`);
               }}>
                 <PlayerCard
                   player={player}
@@ -299,6 +342,8 @@ export function DirectoryTab({
             className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
             {filteredPlayers
+              .filter(p => !blockedIds.has(p.id))
+              .filter(p => !availableOnly || availableMap.has(p.id))
               .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
               .slice(0, visibleCount)
               .map((player) => (
@@ -307,8 +352,7 @@ export function DirectoryTab({
                 variants={itemVariants}
                 className="group h-full cursor-pointer"
                 onClick={() => {
-                  if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
-                  else setLocation(`/player/${player.id}`);
+                  setLocation(`/player/${player.id}`);
                 }}
               >
                 <PlayerCard

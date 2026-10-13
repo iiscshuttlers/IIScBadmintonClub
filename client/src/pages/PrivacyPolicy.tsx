@@ -1,6 +1,7 @@
 import { Link } from "wouter";
-import { ArrowLeft, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function PrivacyPolicy() {
   usePageMeta({ title: "Privacy Policy", description: "Privacy Policy for the IISc Badminton Club platform" });
@@ -8,22 +9,17 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans pb-24 pt-4 lg:pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'}>
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary dark:text-primary hover:text-primary dark:hover:text-primary/70 transition-colors cursor-pointer mb-6">
-              <ArrowLeft className="w-4 h-4" /> Back to Home
-            </span>
-          </button>
-        
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-foreground dark:text-foreground">Privacy Policy</h1>
-              <p className="text-muted-foreground dark:text-muted-foreground mt-1">Effective Date: June 15, 2026 · Last Updated: September 2026</p>
-            </div>
-          </div>
+          <PageHeader
+            variant="card"
+            backTo="/"
+            backLabel="Back to Home"
+            badge="Legal & Trust"
+            badgeIcon={<Shield className="w-3.5 h-3.5" />}
+            title="Privacy Policy"
+            subtitle="Effective Date: June 15, 2026 · Last Updated: September 2026"
+            align="left"
+          />
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-muted-foreground dark:text-slate-300">
             <p>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, Save, Clock, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { track } from '@/lib/analytics';
 
 interface MatchReminderModalProps {
   isOpen: boolean;
@@ -70,6 +71,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
           .eq("id", userId);
         
         if (error) throw error;
+        track(enabled ? "match_reminder_set" : "match_reminder_cleared", { scope: "global", mins: enabled ? parsedMins : null });
         toast.success(enabled ? `Global reminders set for ${parsedMins} minutes before match` : "Global match reminders disabled");
       } else {
         if (enabled) {
@@ -82,6 +84,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
               sent_at: null // reset sent status
             }, { onConflict: 'match_id,user_id' });
           if (error) throw error;
+          track("match_reminder_set", { scope: "match", mins: parsedMins });
           toast.success(`Reminder set for ${parsedMins} minutes before this match`);
         } else {
           // Disable -> delete record
@@ -119,6 +122,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -128,7 +132,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
         <div className="p-6 space-y-6">
           <p className="text-sm text-slate-600 dark:text-slate-400">
             {isGlobal 
-              ? "We'll send you an in-app notification, email, and push notification before your upcoming matches."
+              ? "We'll send you an in-app and push notification before your upcoming matches."
               : "Set a custom reminder for this specific match. This will override your global setting if you have one."}
           </p>
 

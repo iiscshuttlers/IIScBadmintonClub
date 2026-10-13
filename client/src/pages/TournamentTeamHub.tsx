@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { TeamLineupBuilder } from '@/components/admin/TeamLineupBuilder';
 import { TeamStandingsTable } from '@/components/events/TeamStandingsTable';
 import { ClickableTeamName } from '@/contexts/TeamModalContext';
@@ -330,45 +331,21 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm backdrop-blur-md bg-white/90 dark:bg-slate-900/90">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/pulse')}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition"
-              title="Back"
-            >
-              <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-            </button>
-            <TeamLogo 
-              name={team.name} 
-              shortName={team.short_name} 
-              logoUrl={team.logo_url} 
-              size="lg" 
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">{team.name}</h1>
-                {isCaptain && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                    <Shield className="w-3 h-3 text-amber-500" /> Captain
-                  </span>
-                )}
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                {team.tournaments?.name || 'Tournament Team'} · {activeMembers.length} active player{activeMembers.length === 1 ? '' : 's'}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Roster Indicator */}
+      <PageHeader
+        backTo="/pulse"
+        backLabel="Back to Tournaments"
+        badge={isCaptain ? "Captain Hub" : "Team Hub"}
+        badgeIcon={<Shield className="w-3.5 h-3.5 text-primary" />}
+        title={team.name}
+        subtitle={`${team.tournaments?.name || 'Tournament Team'} · ${activeMembers.length} active player${activeMembers.length === 1 ? '' : 's'}`}
+        action={
           <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-fit">
             <Users className="w-4 h-4 text-primary" />
             <span>Roster: {activeMembers.length}/{maxRoster}</span>
             <span className={`w-2 h-2 rounded-full ${activeMembers.length >= 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-8">
         

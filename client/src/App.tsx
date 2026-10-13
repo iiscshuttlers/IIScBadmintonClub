@@ -89,6 +89,7 @@ const TournamentSetupChecklist = lazy(() => import("./pages/TournamentSetupCheck
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
+const OfficiatePage = lazy(() => import("./pages/OfficiatePage"));
 
 
 const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
@@ -112,11 +113,22 @@ function PersonalModeRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  const [location] = useLocation();
+
   return (
     <ErrorBoundary fallback={<PageErrorFallback />}>
       <Suspense fallback={<PageSkeleton />}>
-        <Switch>
-          <Route path="/" component={Home} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.split("/")[1] || "root"}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="w-full"
+          >
+            <Switch>
+              <Route path="/" component={Home} />
           <Route path="/pulse">
             <GuestGate feature="Pulse">
               <Pulse />
@@ -144,6 +156,10 @@ function AppRoutes() {
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/tournaments" component={TournamentsHub} />
+          <Route path="/tournaments/:id" component={({ params }: { params: { id: string } }) => {
+            window.location.replace(`${import.meta.env.BASE_URL}tournaments?id=${encodeURIComponent(params.id)}`);
+            return null;
+          }} />
           <Route path="/team-hub/:id">
             <ProtectedRoute>
               <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -164,6 +180,10 @@ function AppRoutes() {
             </ProtectedRoute>
           </Route>
           <Route path="/join" component={Join} />
+          <Route path="/auth" component={() => {
+            window.location.replace(`${import.meta.env.BASE_URL}join${window.location.search}${window.location.hash}`);
+            return null;
+          }} />
           <Route path="/player/:id">
             <GuestGate feature="Player Profile">
               <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -196,7 +216,8 @@ function AppRoutes() {
           <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
           <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
           <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange&sub=lost-found`; return null; }} />
-          <Route path="/umpire" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=my_matches`; return null; }} />
+          <Route path="/umpire" component={OfficiatePage} />
+          <Route path="/officiate" component={OfficiatePage} />
           <Route path="/feed/announcements" component={() => { window.location.href=`${import.meta.env.BASE_URL}pulse#announcements`; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
@@ -236,16 +257,14 @@ function AppRoutes() {
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
-          {/* Personal Mode Routes (Brainy-style navigation) */}
+          {/* Personal Mode (kept as a distinct product). `/personal` is the account page. */}
           <Route path="/personal"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
-          <Route path="/personal/me"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
-          <Route path="/personal/player/:id">
-            <PersonalModeRoute>
-              <ErrorBoundary fallback={<PageErrorFallback />}>
-                <PlayerProfile />
-              </ErrorBoundary>
-            </PersonalModeRoute>
-          </Route>
+          {/* Deduped aliases — canonical: /personal (account) and /player/:id (profile). */}
+          <Route path="/personal/me" component={() => { window.location.replace(`${import.meta.env.BASE_URL}personal`); return null; }} />
+          <Route path="/personal/player/:id" component={({ params }: { params: { id: string } }) => {
+            window.location.replace(`${import.meta.env.BASE_URL}player/${encodeURIComponent(params.id)}`);
+            return null;
+          }} />
           
           <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 
@@ -272,6 +291,8 @@ function AppRoutes() {
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
+          </motion.div>
+        </AnimatePresence>
       </Suspense>
     </ErrorBoundary>
   );
@@ -506,7 +527,7 @@ function AppContent() {
               <GlobalAuthGuard />
               <OnboardingTour />
               <ScrollProgress />
-              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
+              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${location.startsWith("/tv") ? "" : "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0"} ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"

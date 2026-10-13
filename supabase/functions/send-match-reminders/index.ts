@@ -9,6 +9,10 @@ const FIREBASE_SERVICE_ACCOUNT = Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+// How long after a reminder's trigger time we may still fire it. Should be >=
+// the cron interval so a reminder is never missed between runs.
+const CATCHUP_WINDOW_MS = 15 * 60 * 1000;
+
 interface ServiceAccount {
   project_id: string;
   client_email: string;
@@ -55,7 +59,8 @@ async function sendFcmNotification(
   title: string,
   body: string,
   projectId: string,
-  accessToken: string
+  accessToken: string,
+  link = "/my-matches",
 ) {
   if (!accessToken) return;
   await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
@@ -68,21 +73,23 @@ async function sendFcmNotification(
       message: {
         token,
         notification: { title, body },
-        data: { type: "match_reminder", action: "view_match" },
-        android: {
-          priority: "high",
-          notification: { channel_id: "notify_point" }
-        },
+        data: { type: "match_reminder", action: "view_match", link },
+        android: { priority: "high", notification: { channel_id: "notify_point" } },
         webpush: {
           headers: { Urgency: "high" },
-          notification: {
-            icon: "icon-192.png",
-            badge: "icon-192.png",
-          },
+          notification: { icon: "icon-192.png", badge: "icon-192.png" },
         },
         apns: { headers: { "apns-priority": "10" } },
       },
     }),
+  });
+}
+
+function istTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -91,190 +98,189 @@ serve(async () => {
     const accessToken = await getFirebaseAccessToken();
     let serviceAccount: ServiceAccount | null = null;
     if (FIREBASE_SERVICE_ACCOUNT) {
-      try { serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT); } catch(e){}
+      try { serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT); } catch (_e) { /* ignore */ }
     }
+    const canPush = !!(accessToken && serviceAccount);
 
-    // Get all upcoming scheduled/pending matches with scheduled_at in the future (within next 24 hours to limit data)
+    const now = Date.now();
+
+    // Upcoming TOURNAMENT matches within the next 24h that have a scheduled time
+    // and have not started yet. (The app logs tournament matches only.)
     const { data: upcomingMatches, error: matchesError } = await supabase
-      .from("matches")
-      .select("id, scheduled_at, player1_id, player2_id, team1_partner_id, team2_partner_id, category, team1_label, team2_label")
+      .from("tournament_matches")
+      .select("id, scheduled_at, player1_id, player2_id, player3_id, player4_id, category, team1_label, team2_label, court_number, status")
       .in("status", ["scheduled", "pending"])
       .not("scheduled_at", "is", null)
-      .gt("scheduled_at", new Date().toISOString())
-      .lt("scheduled_at", new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+      .gt("scheduled_at", new Date(now).toISOString())
+      .lt("scheduled_at", new Date(now + 24 * 60 * 60 * 1000).toISOString());
 
     if (matchesError) throw matchesError;
 
     let sentCount = 0;
 
+    // Deliver one reminder: in-app row (always) + push (pref-gated). Tracks
+    // which users were already handled for this match in this run so a user who
+    // is both a participant and a subscriber is never notified twice.
+    const deliver = async (
+      userId: string,
+      title: string,
+      body: string,
+      type: string,
+      notifiedThisMatch: Set<string>,
+    ) => {
+      if (notifiedThisMatch.has(userId)) return false;
+      notifiedThisMatch.add(userId);
+
+      // In-app notification (baseline channel — always recorded)
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title,
+        message: body,
+        type,
+        link: "/my-matches",
+      });
+
+      // Push — respects the user's master push toggle + category pref
+      if (canPush) {
+        const { pushTokens } = await getNotificationTargets(supabase, [userId], "pref_notify_smash");
+        const uniqueTokens = Array.from(new Set((pushTokens || []).map((t: any) => t.token)));
+        for (const token of uniqueTokens) {
+          await sendFcmNotification(token as string, title, body, serviceAccount!.project_id, accessToken, "/my-matches");
+        }
+      }
+      return true;
+    };
+
     for (const match of (upcomingMatches || [])) {
       const matchTime = new Date(match.scheduled_at).getTime();
-      const now = Date.now();
-      
-      const players = [match.player1_id, match.player2_id, match.team1_partner_id, match.team2_partner_id].filter(Boolean);
+      const isDue = (leadMins: number) => {
+        const triggerTime = matchTime - leadMins * 60 * 1000;
+        return now >= triggerTime && now - triggerTime < CATCHUP_WINDOW_MS;
+      };
+      const notifiedThisMatch = new Set<string>();
+      const vs = `${match.team1_label || "Team 1"} vs ${match.team2_label || "Team 2"}`;
+      const timeStr = istTime(match.scheduled_at);
+      const courtStr = match.court_number ? ` on Court ${match.court_number}` : "";
 
-      for (const playerId of players) {
-        // Fetch per-match override
-        let remindMins: number | null = null;
+      const participantIds = [match.player1_id, match.player2_id, match.player3_id, match.player4_id].filter(Boolean) as string[];
 
-        const { data: matchReminders } = await supabase
+      // ── 1. Participants — reminder about YOUR OWN match ──
+      for (const playerId of participantIds) {
+        // Per-match override wins; else the player's global default.
+        const { data: override } = await supabase
           .from("match_reminders")
           .select("remind_before_mins, sent_at")
           .eq("match_id", match.id)
           .eq("user_id", playerId)
           .maybeSingle();
 
-        if (matchReminders) {
-          if (matchReminders.sent_at) continue; // Already sent
-          remindMins = matchReminders.remind_before_mins;
+        let leadMins: number | null = null;
+        if (override) {
+          if (override.sent_at) continue; // already sent
+          leadMins = override.remind_before_mins;
         } else {
-          // Fetch global default
           const { data: profile } = await supabase
             .from("players")
             .select("default_match_reminder_mins")
             .eq("id", playerId)
             .maybeSingle();
-            
-          if (profile && profile.default_match_reminder_mins) {
-            remindMins = profile.default_match_reminder_mins;
-            
-            // Check if we already logged this global reminder as sent in match_reminders
-            const { data: existingLog } = await supabase
-              .from("match_reminders")
-              .select("sent_at")
-              .eq("match_id", match.id)
-              .eq("user_id", playerId)
-              .maybeSingle();
-              
-            if (existingLog && existingLog.sent_at) {
-               continue;
-            }
-          }
+          if (profile?.default_match_reminder_mins) leadMins = profile.default_match_reminder_mins;
         }
 
-        if (remindMins !== null) {
-          const triggerTime = matchTime - (remindMins * 60 * 1000);
-          
-          // If the trigger time is in the past (or within the last 15 minutes), send it!
-          if (now >= triggerTime && (now - triggerTime) < 15 * 60 * 1000) {
-            
-            // Format match time for user explicitly in IST to avoid confusion
-            const dateObj = new Date(match.scheduled_at);
-            const timeStr = dateObj.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
-            
-            const title = "🏸 Upcoming Match Reminder";
-            const body = `You have a match scheduled at ${timeStr} IST. Get ready!`;
-
-            // Insert In-App Notification
-            await supabase.from("notifications").insert({
-              user_id: playerId,
-              title: title,
-              message: body,
-              type: "match_reminder",
-              link: "/my-matches"
-            });
-
-            // Send Push via preferences
-            if (accessToken && serviceAccount) {
-              const { pushTokens } = await getNotificationTargets(supabase, [playerId], "pref_notify_smash");
-
-              if (pushTokens && pushTokens.length > 0) {
-                const uniqueTokens = Array.from(new Set(pushTokens.map((t: any) => t.token)));
-                for (const token of uniqueTokens) {
-                  await sendFcmNotification(token as string, title, body, serviceAccount.project_id, accessToken);
-                }
-              }
-            }
-
-            // Send Email Notification by triggering existing match-notifier or inserting into queue
-            // (Assuming existing logic or email provider setup is handled by another process, 
-            // but we'll log it for now as SMTP usually goes through pg_net or another webhook)
-            console.log(`Sending email reminder to user ${playerId} about match at ${timeStr} IST`);
-
-            // Mark as sent
-            await supabase.from("match_reminders").upsert({
-              match_id: match.id,
-              user_id: playerId,
-              remind_before_mins: remindMins,
-              sent_at: new Date().toISOString()
-            }, { onConflict: "match_id,user_id" });
-
-            sentCount++;
-          }
+        if (leadMins !== null && isDue(leadMins)) {
+          const ok = await deliver(
+            playerId,
+            "🏸 Your match is coming up",
+            `${vs} at ${timeStr} IST${courtStr}. Get ready!`,
+            "match_reminder",
+            notifiedThisMatch,
+          );
+          if (ok) sentCount++;
+          // Mark sent so it never repeats, regardless of override/default source.
+          await supabase.from("match_reminders").upsert(
+            { match_id: match.id, user_id: playerId, remind_before_mins: leadMins, sent_at: new Date().toISOString() },
+            { onConflict: "match_id,user_id" },
+          );
         }
       }
-      
-      // Now process "Friends" match notifications from user_match_notifications table
-      const { data: friendAlerts } = await supabase
+
+      // ── 2. Player subscribers — someone you follow is about to play ──
+      if (participantIds.length > 0) {
+        const { data: playerSubs } = await supabase
+          .from("user_player_subscriptions")
+          .select("user_id, player_id, notify_before_mins, players!user_player_subscriptions_player_id_fkey(full_name)")
+          .in("player_id", participantIds);
+
+        for (const sub of (playerSubs || [])) {
+          // Don't ping someone about their own match here — handled above.
+          if (participantIds.includes(sub.user_id)) continue;
+          if (!isDue(sub.notify_before_mins)) continue;
+
+          const { data: already } = await supabase
+            .from("sent_fan_notifications")
+            .select("user_id")
+            .eq("match_id", match.id)
+            .eq("user_id", sub.user_id)
+            .maybeSingle();
+          if (already) continue;
+
+          const who = (sub as any).players?.full_name || "A player you follow";
+          const ok = await deliver(
+            sub.user_id,
+            "🏸 A player you follow is about to play",
+            `${who} plays at ${timeStr} IST${courtStr} — ${vs}`,
+            "friend_match_reminder",
+            notifiedThisMatch,
+          );
+          if (ok) sentCount++;
+          await supabase.from("sent_fan_notifications").upsert(
+            { match_id: match.id, user_id: sub.user_id },
+            { onConflict: "user_id,match_id" },
+          );
+        }
+      }
+
+      // ── 3. Specific-match subscribers — alert for THIS match ──
+      const { data: matchSubs } = await supabase
         .from("user_match_notifications")
         .select("user_id, notify_before_mins")
         .eq("match_id", match.id);
 
-      if (friendAlerts && friendAlerts.length > 0) {
-        for (const alert of friendAlerts) {
-          
-          // Check if already sent
-          const { data: existingSent } = await supabase
-            .from("sent_fan_notifications")
-            .select("user_id")
-            .eq("match_id", match.id)
-            .eq("user_id", alert.user_id)
-            .maybeSingle();
-            
-          if (existingSent) continue;
-          
-          const triggerTime = matchTime - (alert.notify_before_mins * 60 * 1000);
-          
-          if (now >= triggerTime && (now - triggerTime) < 15 * 60 * 1000) {
-            const dateObj = new Date(match.scheduled_at);
-            const timeStr = dateObj.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
-            
-            const title = "🏸 Friend's Match Reminder";
-            const team1Name = match.team1_label || "Team 1";
-            const team2Name = match.team2_label || "Team 2";
-            const body = `${team1Name} vs ${team2Name} is starting at ${timeStr} IST!`;
+      for (const alert of (matchSubs || [])) {
+        if (participantIds.includes(alert.user_id)) continue; // own match handled above
+        if (!isDue(alert.notify_before_mins)) continue;
 
-            // Insert In-App Notification
-            await supabase.from("notifications").insert({
-              user_id: alert.user_id,
-              title: title,
-              message: body,
-              type: "friend_match_reminder",
-              link: "/my-matches" // or the appropriate link
-            });
+        const { data: already } = await supabase
+          .from("sent_fan_notifications")
+          .select("user_id")
+          .eq("match_id", match.id)
+          .eq("user_id", alert.user_id)
+          .maybeSingle();
+        if (already) continue;
 
-            // Send Push
-            if (accessToken && serviceAccount) {
-              const { pushTokens } = await getNotificationTargets(supabase, [alert.user_id], "pref_notify_smash");
-
-              if (pushTokens && pushTokens.length > 0) {
-                const uniqueTokens = Array.from(new Set(pushTokens.map((t: any) => t.token)));
-                for (const token of uniqueTokens) {
-                  await sendFcmNotification(token as string, title, body, serviceAccount.project_id, accessToken);
-                }
-              }
-            }
-            
-            // Mark as sent
-            await supabase.from("sent_fan_notifications").upsert({
-              match_id: match.id,
-              user_id: alert.user_id
-            }, { onConflict: "user_id,match_id" });
-            
-            sentCount++;
-          }
-        }
+        const ok = await deliver(
+          alert.user_id,
+          "🏸 Match starting soon",
+          `${vs} is starting at ${timeStr} IST${courtStr}!`,
+          "friend_match_reminder",
+          notifiedThisMatch,
+        );
+        if (ok) sentCount++;
+        await supabase.from("sent_fan_notifications").upsert(
+          { match_id: match.id, user_id: alert.user_id },
+          { onConflict: "user_id,match_id" },
+        );
       }
     }
 
     return new Response(JSON.stringify({ success: true, sent: sentCount }), {
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
     console.error("Error in send-match-reminders:", error);
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
   }
 });

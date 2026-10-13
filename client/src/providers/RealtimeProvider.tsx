@@ -76,6 +76,32 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => jitteredInvalidate(["tournaments"])
       )
 
+      // Live bracket advancement — team ties and their individual matches.
+      // invalidateQueries prefix-matches, so this refreshes ['tournament_ties', id]
+      // and ['tie_matches', id] for every spectator in real time. (#31)
+      // (The per-tie match rows live in the tournament_matches table; the
+      // ['tie_matches', id] query key is just a cache name.)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_ties" },
+        () => jitteredInvalidate(["tournament_ties"])
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_matches" },
+        () => {
+          jitteredInvalidate(["tie_matches"]);
+          jitteredInvalidate(["tournament_matches"]);
+        }
+      )
+
+      // "Available to play now" presence — manual toggle, no location. (#31)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "player_availability" },
+        () => jitteredInvalidate(["presence"])
+      )
+
       .subscribe((status) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") {
           console.log("🟢 Connected to System Realtime");

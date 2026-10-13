@@ -1,6 +1,25 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { Trophy, Flame, Zap, Star, Shield, Target, Award, Swords, Crown, TrendingUp, Moon, Sun, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
+
+// player_achievements is new; generated types regenerate after the migration
+// is applied (npx supabase db push). Cast until then.
+const sbAch = supabase as any;
+
+function timeAgo(iso: string): string {
+  const d = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(d / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
 
 interface Match {
   id: string;
@@ -157,9 +176,11 @@ interface Props {
   matches: Match[];
   playerId: string;
   elo: number;
+  /** When equal to playerId, newly-earned badges trigger a celebration (#21). */
+  currentUserId?: string;
 }
 
-export function AchievementBadges({ matches: allMatches, playerId, elo }: Props) {
+export function AchievementBadges({ matches: allMatches, playerId, elo, currentUserId }: Props) {
   const matches = useMemo(() => allMatches, [allMatches]);
 
   const { wins, losses } = useMemo(() => {
@@ -191,6 +212,71 @@ export function AchievementBadges({ matches: allMatches, playerId, elo }: Props)
 
   const earned = badgeData.filter(d => d.progress.earned);
   const locked = badgeData.filter(d => !d.progress.earned);
+
+  // Persisted unlock timestamps for this player (#21).
+  // NOTE: the query cache is persisted to localStorage (PersistQueryClient),
+  // and a Map does not survive JSON serialization — it rehydrates as {} and
+  // crashes on .get. So cache a plain array and build the Map in-memory.
+  const { data: earnedRows } = useQuery({
+    queryKey: ["player-achievements", playerId],
+    enabled: !!playerId,
+    queryFn: async (): Promise<{ achievement_id: string; earned_at: string }[]> => {
+      const { data, error } = await sbAch
+        .from("player_achievements")
+        .select("achievement_id, earned_at")
+        .eq("player_id", playerId);
+      if (error) throw error;
+      return (data || []) as { achievement_id: string; earned_at: string }[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const earnedDates = useMemo(() => {
+    const map = new Map<string, string>();
+    if (Array.isArray(earnedRows)) {
+      for (const r of earnedRows) map.set(r.achievement_id, r.earned_at);
+    }
+    return map;
+  }, [earnedRows]);
+
+  // #21 Celebrate newly-earned badges when a user views their OWN profile.
+  // Baseline of seen badges is kept per-user in localStorage; the very first
+  // view seeds the baseline silently (no celebration for already-earned ones).
+  const queryClient = useQueryClient();
+  const celebratedRef = useRef(false);
+  useEffect(() => {
+    if (celebratedRef.current) return;
+    if (!currentUserId || currentUserId !== playerId) return;
+    if (!matches || matches.length === 0) return; // wait for data to load
+    const earnedIds = earned.map((d) => d.badge.id).sort();
+    const key = `ach_seen_${playerId}`;
+    const hadBaseline = localStorage.getItem(key) !== null;
+    let prev: string[] = [];
+    try { prev = JSON.parse(localStorage.getItem(key) || "[]"); } catch { /* ignore */ }
+    try { localStorage.setItem(key, JSON.stringify(earnedIds)); } catch { /* ignore */ }
+    celebratedRef.current = true;
+    if (!hadBaseline) return; // first-ever view: seed silently
+    const prevSet = new Set(prev);
+    const fresh = earnedIds.filter((id) => !prevSet.has(id));
+    if (fresh.length === 0) return;
+    const labels = fresh.map((id) => BADGES.find((b) => b.id === id)?.label).filter(Boolean);
+    track("achievement_unlocked", { ids: fresh });
+    toast.success(`🏅 Achievement unlocked: ${labels.join(", ")}!`, { duration: 6000 });
+    import("canvas-confetti")
+      .then((m) => m.default({ particleCount: 120, spread: 70, origin: { y: 0.6 } }))
+      .catch(() => { /* confetti is best-effort */ });
+    // Persist the unlocks (own profile only). ignoreDuplicates keeps the
+    // original earned_at if the row already exists.
+    sbAch
+      .from("player_achievements")
+      .upsert(fresh.map((id) => ({ player_id: playerId, achievement_id: id })), {
+        onConflict: "player_id,achievement_id",
+        ignoreDuplicates: true,
+      })
+      .then(
+        () => queryClient.invalidateQueries({ queryKey: ["player-achievements", playerId] }),
+        () => { /* best-effort */ },
+      );
+  }, [currentUserId, playerId, matches, earned, queryClient]);
 
   return (
     <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl border border-slate-200 dark:border-white/8 p-6 overflow-hidden relative">
@@ -226,7 +312,9 @@ export function AchievementBadges({ matches: allMatches, playerId, elo }: Props)
                   <Icon className="w-4 h-4 z-10 relative shrink-0" />
                   <div className="z-10 relative flex flex-col">
                     <span>{badge.label}</span>
-                    <span className="text-[9px] opacity-75 font-medium normal-case line-clamp-1">{badge.description}</span>
+                    <span className="text-[9px] opacity-75 font-medium normal-case line-clamp-1">
+                      {earnedDates?.get(badge.id) ? `Earned ${timeAgo(earnedDates.get(badge.id)!)}` : badge.description}
+                    </span>
                   </div>
                 </motion.div>
               );

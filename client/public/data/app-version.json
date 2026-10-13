@@ -1,6 +1,6 @@
 {
-  "versionCode": 414,
-  "versionName": "4.14",
+  "versionCode": 416,
+  "versionName": "4.16",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- chore: remove geofencing feature and location permissions for Play policy compliance"
+  "changelog": "- fix: hide deleted tournaments, remove record-match button, fix dashboard"
 }

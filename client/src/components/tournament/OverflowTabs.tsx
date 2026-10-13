@@ -39,14 +39,10 @@ export function OverflowTabs({
 
   return (
     <div className={`relative ${className}`}>
-      {/* edge fades */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-background to-transparent" />
-
       <div
         ref={scrollerRef}
         role="tablist"
-        className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-6 px-0.5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex flex-wrap items-center justify-center gap-2 p-1"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === activeId;
@@ -57,7 +53,7 @@ export function OverflowTabs({
               role="tab"
               aria-selected={isActive}
               onClick={() => onChange(tab.id)}
-              className={`inline-flex shrink-0 snap-start items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-xs font-black transition-all sm:text-sm ${
+              className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-xs font-black transition-all sm:text-sm ${
                 isActive
                   ? activeClassName
                   : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white"

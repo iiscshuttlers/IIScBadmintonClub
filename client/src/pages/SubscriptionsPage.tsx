@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, BellOff, Loader2, Trash2 } from "lucide-react";
+import { BellOff, Loader2, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -29,7 +30,7 @@ export default function SubscriptionsPage() {
           .eq("user_id", session!.user.id),
         supabase
           .from("user_match_notifications")
-          .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code)")
+          .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code, round_name)")
           .eq("user_id", session!.user.id)
       ]);
 
@@ -74,19 +75,14 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] p-4 lg:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => window.history.back()}
-            className="w-10 h-10 bg-white/90 hover:bg-white text-slate-700 dark:bg-slate-800/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            My Subscriptions
-          </h1>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505]">
+      <PageHeader
+        compact
+        align="left"
+        title="My Subscriptions"
+        onBack={() => window.history.back()}
+      />
+      <div className="max-w-2xl mx-auto space-y-6 px-4 lg:px-8 pb-10">
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -147,6 +143,11 @@ export default function SubscriptionsPage() {
                 <div className="space-y-3">
                   {matchSubs.map((sub) => {
                     const m = sub.tournament_matches;
+                    const labelKnown = (l?: string | null) => !!l && l.trim() && l.trim().toUpperCase() !== "TBD";
+                    const hasTeams = labelKnown(m?.team1_label) || labelKnown(m?.team2_label);
+                    const title = hasTeams
+                      ? `${m?.team1_label || "TBD"} vs ${m?.team2_label || "TBD"}`
+                      : [m?.round_name, m?.match_code].filter(Boolean).join(" · ") || "Upcoming match — teams to be decided";
                     return (
                       <div key={sub.match_id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50">
                         <div className="min-w-0 pr-4">
@@ -161,8 +162,11 @@ export default function SubscriptionsPage() {
                             )}
                           </div>
                           <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
-                            {m?.team1_label || "TBD"} vs {m?.team2_label || "TBD"}
+                            {title}
                           </h3>
+                          {!hasTeams && (
+                            <p className="text-[11px] text-muted-foreground">Teams decided once the bracket advances</p>
+                          )}
                           <p className="text-[11px] text-muted-foreground mt-1">
                             Alert: {sub.notify_before_mins} mins before
                           </p>

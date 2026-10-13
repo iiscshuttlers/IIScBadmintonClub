@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -16,22 +16,53 @@ import {
   LayoutGrid,
   ListFilter,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Bell
 } from 'lucide-react';
 import { useTeamModal } from '@/contexts/TeamModalContext';
 import { usePlayerModal } from '@/contexts/PlayerModalContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { TeamSquadView } from '@/components/events/TeamSquadView';
+import { StatusChip } from '@/components/tournament/StatusChip';
+import { WatchTieButton } from '@/components/events/WatchTieButton';
+import { toast } from 'sonner';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   tie: any;
   tournament?: any;
+  viewerIsCaptainOf?: 'A' | 'B' | null;
+  viewerIsOfficial?: boolean;
+  onSubmitLineup?: (side: 'A' | 'B') => void;
+  onEnterOnBehalf?: (side: 'A' | 'B') => void;
 }
 
-export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props) {
+export function TieVisualLineupModal({
+  isOpen,
+  onClose,
+  tie,
+  tournament,
+  viewerIsCaptainOf,
+  viewerIsOfficial,
+  onSubmitLineup,
+  onEnterOnBehalf,
+}: Props) {
+  const { session, isUmpire, isAdmin } = useAuth();
   const { openTeamModal } = useTeamModal();
   const { openPlayerModal } = usePlayerModal();
-  const [viewMode, setViewMode] = useState<'court' | 'list'>('court');
+  const [viewMode, setViewMode] = useState<'court' | 'list'>(() => {
+    return (localStorage.getItem('tieViewMode') as 'court' | 'list') || 'court';
+  });
+  const [showSquads, setShowSquads] = useState<boolean>(false);
+  const [collapsedMatches, setCollapsedMatches] = useState<Record<string, boolean>>({});
+
+  const handleSetViewMode = (mode: 'court' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('tieViewMode', mode);
+  };
 
   // 1. Fetch rubber matches for this tie
   const { data: rubbers = [], isLoading: rubbersLoading } = useQuery({
@@ -117,15 +148,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 {tie.round_name || tie.stage || 'FIXTURE'}
               </span>
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
-                tie.state === 'IN_PROGRESS'
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse'
-                  : tie.state === 'COMPLETED'
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-slate-800 text-slate-300'
-              }`}>
-                {tie.state}
-              </span>
+              <StatusChip state={tie.state === 'IN_PROGRESS' ? 'live' : tie.state} />
             </div>
 
             <div className="flex items-center gap-2">
@@ -133,8 +156,8 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
               <div className="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700 text-xs">
                 <button
                   type="button"
-                  onClick={() => setViewMode('court')}
-                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                  onClick={() => handleSetViewMode('court')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     viewMode === 'court' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -142,8 +165,8 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                  onClick={() => handleSetViewMode('list')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     viewMode === 'list' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -153,7 +176,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
 
               <button
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -162,7 +185,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
           </div>
 
           {/* Teams Matchup Header */}
-          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
             {/* Team A */}
             <div 
               onClick={() => {
@@ -175,7 +198,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 };
                 if (teamData.id) openTeamModal(teamData, 'roster');
               }}
-              className="flex items-center gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition"
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer group p-1.5 sm:p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition min-w-0"
               title="Click to view Team A roster and matches"
               role="button"
               tabIndex={0}
@@ -185,34 +208,34 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                   <img 
                     src={tie.team_a.logo_url} 
                     alt={tie.team_a?.name || "Team A"} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all duration-200" 
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all duration-200" 
                   />
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center font-black text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 border border-white/20 transition-all duration-200">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center font-black text-xs sm:text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-blue-500/20 group-hover:ring-blue-500/40 border border-white/20 transition-all duration-200">
                   {tie.team_a?.short_name ? tie.team_a.short_name.slice(0, 4) : 'A'}
                 </div>
               )}
-              <div className="min-w-0">
-                <h3 className="font-black text-base sm:text-lg text-emerald-400 group-hover:underline underline-offset-2 transition-colors truncate">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h3 className="font-black text-xs sm:text-lg text-emerald-400 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_a?.name || "Team A"}
                 </h3>
-                <span className="text-xs text-slate-400 uppercase font-bold flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
-                  <span>{tie.team_a?.short_name || "Side A"}</span>
-                  <span>•</span>
-                  <span>View Squad →</span>
+                <span className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold flex items-center gap-1 group-hover:text-emerald-300 transition-colors truncate max-w-full">
+                  <span className="truncate">{tie.team_a?.short_name || "Side A"}</span>
+                  <span className="hidden xs:inline text-slate-500">•</span>
+                  <span className="hidden xs:inline whitespace-nowrap">View Squad →</span>
                 </span>
               </div>
             </div>
 
             {/* Score Center */}
-            <div className="flex flex-col items-center justify-center px-4">
-              <div className="font-mono text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+            <div className="flex flex-col items-center justify-center px-2 sm:px-4 shrink-0 min-w-[56px] sm:min-w-[72px]">
+              <div className="font-mono text-xl sm:text-3xl font-black text-white flex items-center gap-1.5 sm:gap-2 leading-none">
                 <span className="text-primary">{tie.score_team_a ?? 0}</span>
                 <span className="text-slate-500">-</span>
                 <span className="text-primary">{tie.score_team_b ?? 0}</span>
               </div>
-              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">TIE SCORE</span>
+              <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-slate-400 uppercase mt-0.5">TIE SCORE</span>
             </div>
 
             {/* Team B */}
@@ -227,19 +250,19 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 };
                 if (teamData.id) openTeamModal(teamData, 'roster');
               }}
-              className="flex items-center justify-end gap-3 cursor-pointer group p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition text-right"
+              className="flex items-center justify-end gap-2 sm:gap-3 cursor-pointer group p-1.5 sm:p-2 rounded-2xl hover:bg-slate-800/60 active:scale-95 transition text-right min-w-0"
               title="Click to view Team B roster and matches"
               role="button"
               tabIndex={0}
             >
-              <div className="min-w-0">
-                <h3 className="font-black text-base sm:text-lg text-slate-100 group-hover:underline underline-offset-2 transition-colors truncate">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h3 className="font-black text-xs sm:text-lg text-slate-100 group-hover:underline underline-offset-2 transition-colors truncate">
                   {tie.team_b?.name || "Team B"}
                 </h3>
-                <span className="text-xs text-slate-400 uppercase font-bold flex items-center justify-end gap-1 group-hover:text-slate-200 transition-colors">
-                  <span>← View Squad</span>
-                  <span>•</span>
-                  <span>{tie.team_b?.short_name || "Side B"}</span>
+                <span className="text-[10px] sm:text-xs text-slate-400 uppercase font-bold flex items-center justify-end gap-1 group-hover:text-slate-200 transition-colors truncate max-w-full">
+                  <span className="hidden xs:inline whitespace-nowrap">← View Squad</span>
+                  <span className="hidden xs:inline text-slate-500">•</span>
+                  <span className="truncate">{tie.team_b?.short_name || "Side B"}</span>
                 </span>
               </div>
               {tie.team_b?.logo_url ? (
@@ -247,11 +270,11 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                   <img 
                     src={tie.team_b.logo_url} 
                     alt={tie.team_b?.name || "Team B"} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-200" 
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white/20 shadow-lg ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-200" 
                   />
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 via-purple-600 to-pink-600 flex items-center justify-center font-black text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 border border-white/20 transition-all duration-200">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-fuchsia-600 via-purple-600 to-pink-600 flex items-center justify-center font-black text-xs sm:text-sm tracking-wider text-white shrink-0 shadow-lg ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 border border-white/20 transition-all duration-200">
                   {tie.team_b?.short_name ? tie.team_b.short_name.slice(0, 4) : 'B'}
                 </div>
               )}
@@ -261,7 +284,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
 
         {/* Secret / Lock status notice */}
         {!isRevealed ? (
-          <div className={`p-4 border-b flex items-center justify-between gap-3 text-xs ${
+          <div className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 text-xs ${
             isBothLocked
               ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
               : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
@@ -283,13 +306,46 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 }
               </span>
             </div>
-            <span className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border shrink-0 ${
-              isBothLocked
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-            }`}>
-              {isBothLocked ? "Lineups Locked" : "Lineup Pending"}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <StatusChip 
+                state={isBothLocked ? "locked" : "pending"} 
+                label={isBothLocked ? "Lineups Locked" : "Lineup Pending"} 
+              />
+              {/* Role-aware actionable next steps */}
+              {viewerIsCaptainOf && !isBothLocked && (
+                <button
+                  type="button"
+                  onClick={() => onSubmitLineup?.(viewerIsCaptainOf)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-xs animate-pulse"
+                >
+                  <Lock className="w-3.5 h-3.5" /> Submit Lineup
+                </button>
+              )}
+              {!viewerIsCaptainOf && viewerIsOfficial && !isBothLocked && (
+                <div className="flex items-center gap-1.5">
+                  {!tie.lineup_locked_a && (
+                    <button
+                      type="button"
+                      onClick={() => onEnterOnBehalf?.('A')}
+                      className="px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[11px] font-bold transition cursor-pointer"
+                    >
+                      Enter {tie.team_a?.short_name || 'Side A'}
+                    </button>
+                  )}
+                  {!tie.lineup_locked_b && (
+                    <button
+                      type="button"
+                      onClick={() => onEnterOnBehalf?.('B')}
+                      className="px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[11px] font-bold transition cursor-pointer"
+                    >
+                      Enter {tie.team_b?.short_name || 'Side B'}
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* Persistent Watcher Toggle */}
+              <WatchTieButton tieId={tie.id} compact={true} />
+            </div>
           </div>
         ) : (!tie.lineup_locked_a || !tie.lineup_locked_b) ? (
           <div className="p-3 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 flex items-center justify-between gap-3 text-xs">
@@ -304,32 +360,132 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                 }
               </span>
             </div>
+            <div className="flex items-center gap-2">
+              <StatusChip state="pending" label="Pending" compact={true} />
+              <WatchTieButton tieId={tie.id} compact={true} />
+            </div>
           </div>
         ) : null}
 
         {/* Scrollable Court Rubbers Body */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+          {/* Collapsible Squads reference tray */}
+          <div className="bg-slate-950/40 rounded-2xl border border-slate-800/80 p-3">
+            <button
+              type="button"
+              onClick={() => setShowSquads(!showSquads)}
+              className="w-full flex items-center justify-between text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-primary" />
+                <span>Squad Rosters &amp; Bench</span>
+              </span>
+              <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                <span>{showSquads ? "Hide Squads" : "View Squads"}</span>
+                {showSquads ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </span>
+            </button>
+            {showSquads && (
+              <div className="mt-3 pt-3 border-t border-slate-800">
+                <TeamSquadView tie={tie} rubbers={rubbers} tournament={tournament} />
+              </div>
+            )}
+          </div>
+
           {rubbersLoading ? (
             <div className="py-16 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-              <p className="text-xs text-slate-400 mt-2 font-bold">Loading visual court lineup...</p>
+              <p className="text-xs text-slate-400 mt-2 font-bold">Loading match lineup...</p>
             </div>
           ) : rubbers.length === 0 ? (
-            <div className="py-16 text-center bg-slate-800/40 rounded-2xl border border-dashed border-slate-800">
-              <Swords className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-              <p className="font-bold text-sm text-slate-300">No rubbers configured for this tie</p>
+            <div className="py-12 px-4 text-center bg-slate-800/40 rounded-3xl border border-dashed border-slate-800 flex flex-col items-center justify-center">
+              <Swords className="w-10 h-10 text-slate-500 mb-2" />
+              <p className="font-bold text-sm text-slate-200">No matches announced yet for this tie</p>
+              <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                Lineup pairings are revealed officially once captains submit their playing order and match play begins.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+                {viewerIsCaptainOf && (
+                  <button
+                    type="button"
+                    onClick={() => onSubmitLineup?.(viewerIsCaptainOf)}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-xs font-black text-slate-950 flex items-center gap-1.5 transition cursor-pointer shadow-md"
+                  >
+                    <Lock className="w-3.5 h-3.5" /> Submit your lineup
+                  </button>
+                )}
+                {!viewerIsCaptainOf && viewerIsOfficial && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onEnterOnBehalf?.('A')}
+                      className="px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold transition cursor-pointer"
+                    >
+                      Enter {tie.team_a?.short_name || 'Side A'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onEnterOnBehalf?.('B')}
+                      className="px-3 py-1.5 rounded-xl border border-amber-500/40 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-xs font-bold transition cursor-pointer"
+                    >
+                      Enter {tie.team_b?.short_name || 'Side B'}
+                    </button>
+                  </>
+                )}
+                <WatchTieButton tieId={tie.id} />
+              </div>
             </div>
           ) : (
             <div className={viewMode === 'court' ? "grid grid-cols-1 gap-4" : "space-y-3"}>
+              {/* Table header for compact list view */}
+              {viewMode === 'list' && (
+                <div className="flex items-center gap-2 sm:gap-3 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  <span className="w-12 shrink-0">Cat</span>
+                  <span className="flex-1 text-right truncate">Side A</span>
+                  <span className="w-14 text-center shrink-0">Score</span>
+                  <span className="flex-1 text-left truncate">Side B</span>
+                  <span className="w-20 text-right shrink-0">Status</span>
+                </div>
+              )}
               {rubbers.map((rubber: any, idx: number) => {
                 const isDoubles = rubber.category.includes('D');
                 const isDecider = rubber.is_decider_tiebreaker || rubber.match_code?.includes('DECIDER');
                 const rubberRevealed = rubber.is_revealed || !!rubber.player1_id;
+                const isCompleted = rubber.status === 'completed' || rubber.status === 'walkover';
+                const isCollapsed = isCompleted && (collapsedMatches[rubber.id || idx] ?? true);
 
                 const s1 = rubber.set1_team1 !== null ? `${rubber.set1_team1}-${rubber.set1_team2}` : null;
                 const s2 = rubber.set2_team1 !== null ? `${rubber.set2_team1}-${rubber.set2_team2}` : null;
                 const s3 = rubber.set3_team1 !== null ? `${rubber.set3_team1}-${rubber.set3_team2}` : null;
                 const scoreString = [s1, s2, s3].filter(Boolean).join("  •  ");
+
+                if (viewMode === 'list') {
+                  const aNames = rubberRevealed
+                    ? [rubber.player1?.full_name, isDoubles ? rubber.player2?.full_name : null].filter(Boolean).join(' / ') || 'Pending'
+                    : 'Secret lineup';
+                  const bNames = rubberRevealed
+                    ? [rubber.player3?.full_name, isDoubles ? rubber.player4?.full_name : null].filter(Boolean).join(' / ') || 'Pending'
+                    : 'Secret lineup';
+                  return (
+                    <div
+                      key={rubber.id || idx}
+                      className="flex items-center gap-2 sm:gap-3 px-3 sm:px-3.5 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition text-sm"
+                    >
+                      <span className="font-black text-[10px] px-2 py-0.5 rounded-lg bg-primary text-slate-950 shrink-0">
+                        {rubber.category}
+                      </span>
+                      {rubber.playing_order && (
+                        <span className="hidden sm:inline text-[10px] font-bold text-cyan-400 shrink-0">#{rubber.playing_order}</span>
+                      )}
+                      <span className="flex-1 min-w-0 text-right truncate font-bold text-slate-100">{aNames}</span>
+                      <span className="font-mono text-xs font-black text-primary shrink-0 px-1.5 whitespace-nowrap">
+                        {scoreString || 'vs'}
+                      </span>
+                      <span className="flex-1 min-w-0 text-left truncate font-bold text-slate-100">{bNames}</span>
+                      <StatusChip state={rubber.status} compact={true} />
+                    </div>
+                  );
+                }
 
                 return (
                   <div
@@ -349,38 +505,40 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
                           {rubber.category}
                         </span>
                         <span className="font-bold text-slate-200">
-                          {rubber.rubber_label || `Rubber #${rubber.rubber_order}`}
+                          {rubber.rubber_label || `Match ${rubber.rubber_order || (idx + 1)}`}
                         </span>
                         {rubber.playing_order && (
                           <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded-full border border-cyan-800/50">
-                            Court Match #{rubber.playing_order}
+                            Match #{rubber.playing_order}
                           </span>
                         )}
                         {isDecider && (
                           <span className="text-[10px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-800/50">
-                            Extra Decider Rubber
+                            Decider
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {rubber.status === 'live' || rubber.status === 'in_progress' ? (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-500 text-white animate-pulse">
-                            <Radio className="w-3 h-3" /> ON COURT LIVE
-                          </span>
-                        ) : rubber.status === 'completed' ? (
-                          <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            COMPLETED
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-slate-400">
-                            SCHEDULED
-                          </span>
+                        <StatusChip state={rubber.status} compact={true} />
+                        {isCompleted && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const key = rubber.id || idx;
+                              setCollapsedMatches(prev => ({ ...prev, [key]: !isCollapsed }));
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                            title={isCollapsed ? "Expand match details" : "Collapse match details"}
+                          >
+                            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                          </button>
                         )}
                       </div>
                     </div>
 
-                    {/* Head-to-Head Visual Court Body */}
+                    {/* Head-to-Head Visual Court Body (hidden if completed and collapsed) */}
+                    {!isCollapsed && (
                     <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-950/40 via-slate-900/20 to-slate-950/40">
                       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
                         
@@ -520,6 +678,7 @@ export function TieVisualLineupModal({ isOpen, onClose, tie, tournament }: Props
 
                       </div>
                     </div>
+                    )}
 
                     {/* Revealer / Timestamp info footer if revealed */}
                     {rubber.revealed_at && rubber.revealer && (

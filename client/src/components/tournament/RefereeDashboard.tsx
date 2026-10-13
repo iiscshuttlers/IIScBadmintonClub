@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
@@ -341,8 +342,10 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
-              <button
+              <Button
                 key={f.key}
+                size="pill"
+                variant="tab"
                 onClick={() => setFilter(f.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
                   active ? "bg-primary text-primary-foreground" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -350,7 +353,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
               >
                 {f.label}
                 <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>{f.count}</span>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -64,7 +64,7 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
             <Calendar className="w-5 h-5 text-indigo-400" />
             <h3 className="font-black text-white text-base">Holiday Calendar</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition">
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition">
             <X className="w-4 h-4" />
           </button>
         </div>

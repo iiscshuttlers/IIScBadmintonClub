@@ -2,16 +2,49 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users } from "lucide-react";
+import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users, Trophy, Radio, Home, BarChart3, Settings, CornerDownLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { track } from "@/lib/analytics";
+import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 
 interface SearchResult {
-  type: "player" | "match" | "announcement" | "event" | "team";
+  type: "player" | "match" | "announcement" | "event" | "team" | "action";
   id: string;
   title: string;
   subtitle?: string;
   avatar?: string;
   href: string;
+}
+
+// Quick navigation commands — always available, filtered by the query. (#20)
+const ACTIONS: { id: string; title: string; subtitle: string; href: string; keywords: string }[] = [
+  { id: "a-home", title: "Home", subtitle: "Go to the home page", href: "/", keywords: "home start" },
+  { id: "a-live", title: "Live Scores", subtitle: "Pulse — live matches & feed", href: "/pulse#live", keywords: "live scores pulse feed now" },
+  { id: "a-tournaments", title: "Tournaments", subtitle: "Browse & register for events", href: "/tournaments", keywords: "tournaments events draws compete" },
+  { id: "a-matches", title: "My Matches", subtitle: "Your match history & pending", href: "/my-matches", keywords: "my matches history pending results" },
+  { id: "a-directory", title: "Players Directory", subtitle: "Find club members", href: "/pulse#directory", keywords: "directory players members find partner" },
+  { id: "a-stats", title: "My Stats", subtitle: "Your personal stats", href: "/__my_stats__", keywords: "stats personal profile rating elo" },
+  { id: "a-host", title: "Host a Tournament", subtitle: "Create a new event", href: "/host-tournament", keywords: "host create tournament organize new" },
+  { id: "a-settings", title: "Settings", subtitle: "Appearance, notifications, account", href: "/settings", keywords: "settings preferences theme accent notifications account" },
+];
+
+function actionIcon(id: string) {
+  if (id === "a-home") return <Home className="w-4 h-4 shrink-0 text-primary" />;
+  if (id === "a-live") return <Radio className="w-4 h-4 shrink-0 text-rose-500" />;
+  if (id === "a-tournaments" || id === "a-host") return <Trophy className="w-4 h-4 shrink-0 text-amber-500" />;
+  if (id === "a-matches") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
+  if (id === "a-directory") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
+  if (id === "a-stats") return <BarChart3 className="w-4 h-4 shrink-0 text-emerald-500" />;
+  return <Settings className="w-4 h-4 shrink-0 text-slate-400" />;
+}
+
+function matchingActions(q: string): SearchResult[] {
+  const lq = q.trim().toLowerCase();
+  const list = !lq
+    ? ACTIONS
+    : ACTIONS.filter((a) => a.title.toLowerCase().includes(lq) || a.keywords.includes(lq));
+  return list.map((a) => ({ type: "action" as const, id: a.id, title: a.title, subtitle: a.subtitle, href: a.href }));
 }
 
 function fuzzyMatch(term: string, target: string | null | undefined): boolean {
@@ -50,31 +83,55 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [, setLocation] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
+  const { myPlayerId } = useNavigationAuth();
 
-  // Focus input when opened
+  // Render/navigation order — groups are shown in this order.
+  const TYPE_ORDER = ["action", "player", "team", "match", "announcement", "event"] as const;
+  const ordered = TYPE_ORDER.flatMap((t) => results.filter((r) => r.type === t));
+
+  // Focus input when opened; seed with default quick actions.
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
       setQuery("");
-      setResults([]);
+      setResults(matchingActions(""));
+      setActiveIndex(0);
     }
   }, [open]);
 
-  // Keyboard shortcut: Escape closes
+  // Keep the highlighted row in range as results change.
   useEffect(() => {
+    setActiveIndex((i) => Math.min(i, Math.max(0, ordered.length - 1)));
+  }, [ordered.length]);
+
+  // Keyboard: Esc closes, ↑/↓ move, Enter selects the highlighted row.
+  useEffect(() => {
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => (ordered.length ? (i + 1) % ordered.length : 0));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => (ordered.length ? (i - 1 + ordered.length) % ordered.length : 0));
+      } else if (e.key === "Enter") {
+        const sel = ordered[activeIndex];
+        if (sel) { e.preventDefault(); handleSelect(sel.href); }
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open, onClose, ordered, activeIndex]);
 
   const search = useCallback(async (q: string) => {
     if (!q.trim() || q.length < 2) {
-      setResults([]);
+      setResults(matchingActions(q));
       setLoading(false);
       return;
     }
@@ -217,7 +274,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         }
       }
 
-      setResults([...playerResults, ...matchResults, ...teamResults, ...annList, ...eventList]);
+      setResults([...matchingActions(q), ...playerResults, ...matchResults, ...teamResults, ...annList, ...eventList]);
     } catch (e) {
       console.error("Search error:", e);
     } finally {
@@ -227,20 +284,32 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
   const handleChange = (val: string) => {
     setQuery(val);
+    setActiveIndex(0);
+    // Show matching quick actions instantly; debounce the DB search.
+    setResults((prev) => [...matchingActions(val), ...prev.filter((r) => r.type !== "action")]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(val), 280);
   };
 
   const handleSelect = (href: string) => {
-    setLocation(href);
+    track("command_palette_select", { href });
+    // "My Stats" resolves to the signed-in user's own personal page.
+    const resolved =
+      href === "/__my_stats__"
+        ? myPlayerId
+          ? `/player/${myPlayerId}/personal`
+          : "/my-matches"
+        : href;
+    setLocation(resolved);
     onClose();
   };
 
-  const iconFor = (type: SearchResult["type"]) => {
-    if (type === "player") return <User className="w-4 h-4 shrink-0 text-primary" />;
-    if (type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
-    if (type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
-    if (type === "team") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
+  const iconFor = (r: SearchResult) => {
+    if (r.type === "action") return actionIcon(r.id);
+    if (r.type === "player") return <User className="w-4 h-4 shrink-0 text-primary" />;
+    if (r.type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
+    if (r.type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
+    if (r.type === "team") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
     return <Megaphone className="w-4 h-4 shrink-0 text-amber-500" />;
   };
 
@@ -266,6 +335,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.97 }}
           transition={{ duration: 0.18 }}
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search and quick actions"
           className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
@@ -283,7 +356,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               placeholder="Search players, teams, matches, events…"
               className="flex-1 bg-transparent text-slate-800 dark:text-foreground placeholder-slate-400 text-sm outline-none"
             />
-            <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button onClick={onClose} aria-label="Close search" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -295,46 +368,47 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                 No results for "<span className="font-bold text-muted-foreground dark:text-slate-300">{query}</span>"
               </div>
             )}
-            {results.length === 0 && query.length < 2 && (
-              <div className="py-8 text-center text-muted-foreground text-xs">
-                Type at least 2 characters to search
-              </div>
-            )}
 
-            {/* Group by type */}
-            {(["player", "team", "match", "announcement", "event"] as const).map((type) => {
+            {/* Group by type (actions first) */}
+            {(["action", "player", "team", "match", "announcement", "event"] as const).map((type) => {
               const group = results.filter((r) => r.type === type);
               if (!group.length) return null;
-              const labels = { player: "Players", team: "Teams", match: "Matches", announcement: "Announcements", event: "Events" };
+              const labels = { action: query ? "Jump to" : "Quick actions", player: "Players", team: "Teams", match: "Matches", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
                   <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-slate-50/80 dark:bg-slate-800/50">
                     {labels[type]}
                   </div>
-                  {group.map((r) => (
+                  {group.map((r) => {
+                    const isActive = ordered[activeIndex]?.id === r.id && ordered[activeIndex]?.type === r.type;
+                    return (
                     <button
-                      key={r.id}
+                      key={`${r.type}-${r.id}`}
+                      onMouseEnter={() => setActiveIndex(ordered.findIndex((o) => o.id === r.id && o.type === r.type))}
                       onClick={() => handleSelect(r.href)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-colors group text-left"
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors group text-left ${isActive ? "bg-primary/10 dark:bg-primary/20" : "hover:bg-primary/10 dark:hover:bg-primary/20"}`}
                     >
                       {r.avatar ? (
-                        <img src={r.avatar} className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
+                        <img src={r.avatar} alt="" loading="lazy" decoding="async" className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                          {iconFor(r.type)}
+                          {iconFor(r)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">
+                        <div className={`text-sm font-bold truncate transition-colors ${isActive ? "text-primary" : "text-slate-800 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary"}`}>
                           {r.title}
                         </div>
                         {r.subtitle && (
                           <div className="text-[11px] text-muted-foreground truncate">{r.subtitle}</div>
                         )}
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                      {isActive
+                        ? <CornerDownLeft className="w-4 h-4 text-primary shrink-0" />
+                        : <ArrowRight className="w-4 h-4 text-slate-300 dark:text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })}
@@ -342,6 +416,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
           {/* Footer hint */}
           <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[11px] text-muted-foreground">
+            <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> navigate</span>
             <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">↵</kbd> select</span>
             <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> close</span>
             <span className="ml-auto"><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd> to open</span>

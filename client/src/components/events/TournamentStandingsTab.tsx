@@ -315,7 +315,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
                       <td className="p-2 sm:p-4 text-center font-bold text-slate-700 dark:text-slate-300">
                         <span className="text-emerald-600 dark:text-emerald-500">{stat.wins}</span>
                         <span className="opacity-50 mx-1">-</span>
-                        <span className="text-rose-600 dark:text-rose-500">{stat.losses}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{stat.losses}</span>
                       </td>
                       <td className="p-2 sm:p-4 text-center font-bold text-slate-700 dark:text-slate-300">
                         {stat.played > 0 ? ((stat.wins / stat.played) * 100).toFixed(1) + "%" : "0%"}

@@ -21,6 +21,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Button } from "@/components/ui/button";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
@@ -39,6 +40,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -597,53 +599,51 @@ export default function Legacy() {
 
   return (
     <div className="min-h-screen font-sans">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/80 px-3 py-1 rounded-full text-xs font-semibold mb-3">
-            <Trophy className="w-3.5 h-3.5 text-amber-300" />
-            Club Legends
-          </div>
-          <h1
-            className="text-3xl md:text-4xl font-black mb-2 text-white"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Legacy
-          </h1>
-          <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
-            Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories.
-          </p>
-          <div className="mt-6 flex justify-center w-full px-2">
-            <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
-              <a
-                href="#champions"
-                onClick={() => setActiveTab("champions")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+      {/* Standardized Hero Section (S1) */}
+      <PageHeader
+        badge="Club Legends"
+        badgeIcon={<Trophy className="w-3.5 h-3.5 text-amber-300" />}
+        title="Legacy"
+        subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
+      >
+        <div className="flex justify-center w-full px-2">
+          <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
                   activeTab === "champions"
                     ? "bg-slate-900 text-amber-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
-              </a>
-              <a
-                href={`#${activeTab === "champions" ? "albums" : activeTab}`}
-                onClick={() => {
-                  if (activeTab === "champions") setActiveTab("albums");
-                }}
-                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                <a href="#champions" onClick={() => setActiveTab("champions")}>
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
                   activeTab !== "champions"
                     ? "bg-slate-900 text-blue-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
-              </a>
+                <a
+                  href={`#${activeTab === "champions" ? "albums" : activeTab}`}
+                  onClick={() => {
+                    if (activeTab === "champions") setActiveTab("albums");
+                  }}
+                >
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
+                </a>
+              </Button>
             </div>
           </div>
-        </div>
-      </section>
+      </PageHeader>
 
       {activeTab === "champions" && <WinnersWallSection />}
 

@@ -99,7 +99,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                 <Swords className="w-5 h-5 text-primary" />
                 <h2 className="font-black text-slate-800 dark:text-foreground text-base">Match Scorecard</h2>
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>

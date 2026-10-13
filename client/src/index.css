@@ -666,13 +666,42 @@ html {
 }
 
 /* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
-/* Oversized data numerals — tabular so digits don't jitter as they animate */
+/* Oversized data numerals & hero titles — tabular so digits don't jitter as they animate */
 .text-display {
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.045em;
   font-variant-numeric: tabular-nums;
   line-height: 0.95;
+}
+
+/* Named typography scale roles (P2.2) */
+.text-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.text-heading {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.text-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.01em;
+  color: var(--muted-foreground);
 }
 
 /* Hairline top-light on dark cards for that premium sheen */
@@ -848,14 +877,6 @@ html {
 }
 
 /* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
-/* Oversized data numerals — tabular so digits don't jitter as they animate */
-.text-display {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  font-variant-numeric: tabular-nums;
-  line-height: 0.95;
-}
 
 /* Hairline top-light on dark cards for that premium sheen */
 .sheen {
@@ -1025,14 +1046,6 @@ html {
 }
 
 /* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
-/* Oversized data numerals — tabular so digits don't jitter as they animate */
-.text-display {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  font-variant-numeric: tabular-nums;
-  line-height: 0.95;
-}
 
 /* Hairline top-light on dark cards for that premium sheen */
 .sheen {
@@ -1200,5 +1213,17 @@ html.dark .visible-scrollbar::-webkit-scrollbar-thumb {
 }
 html.dark .visible-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(148, 163, 184, 0.9);
+}
+
+/* W6: Blanket prefers-reduced-motion safety net for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

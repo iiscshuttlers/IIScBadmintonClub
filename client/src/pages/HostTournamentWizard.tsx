@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { TeamFormatConfigPanel, RubberConfig } from '@/components/admin/TeamFormatConfigPanel';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -302,10 +304,18 @@ export default function HostTournamentWizard() {
         <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6">Create Tournament</h1>
         
         {/* Stepper */}
-        <div className="flex gap-2 mb-8">
-          {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
-          ))}
+        <div className="space-y-2 mb-8">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map(s => (
+              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
+            ))}
+          </div>
+          <div className="grid grid-cols-4 text-[10px] sm:text-xs font-bold text-muted-foreground">
+            <span className={step >= 1 ? "text-primary font-black" : ""}>1. Details</span>
+            <span className={step >= 2 ? "text-primary font-black text-center" : "text-center"}>2. Rules</span>
+            <span className={step >= 3 ? "text-primary font-black text-center" : "text-center"}>3. Roster</span>
+            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Publish</span>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl relative min-h-[400px] flex flex-col">
@@ -541,23 +551,26 @@ export default function HostTournamentWizard() {
 
           <div className="mt-auto pt-8 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50">
             {step > 1 ? (
-              <button 
+              <Button 
+                type="button"
+                variant="ghost"
                 onClick={() => setStep(step - 1)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="gap-2 px-5 py-2.5 font-bold"
               >
                 <ChevronLeft className="w-5 h-5" /> Back
-              </button>
+              </Button>
             ) : <div />}
             
-            <button 
+            <Button 
+              type="button"
               onClick={handleNext}
               disabled={isPublishing || (step === 1 && !isStep1Valid)}
-              className="flex items-center gap-2 px-8 py-3 rounded-xl font-black bg-primary text-slate-950 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30"
+              className="gap-2 px-8 py-3 font-black shadow-lg shadow-primary/30"
             >
               {isPublishing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
               {step === 4 ? 'Publish' : 'Continue'} 
               {step !== 4 && <ChevronRight className="w-5 h-5" />}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

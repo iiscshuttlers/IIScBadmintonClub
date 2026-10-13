@@ -23,7 +23,24 @@ export function TeamLineupBuilder({
 }) {
   const { confirm } = useConfirm();
   const queryClient = useQueryClient();
-  const rawFormatConfig = team.tournaments?.tie_format_config;
+
+  // Fetch tournament tie_format_config fallback if team.tournaments is absent or incomplete
+  const tournamentId = team?.tournament_id || team?.tournaments?.id || tie?.tournament_id;
+  const { data: tourneyData } = useQuery({
+    queryKey: ['lineup_tourney_config', tournamentId],
+    queryFn: async () => {
+      if (!tournamentId) return null;
+      const { data } = await supabase
+        .from('tournaments')
+        .select('id, tie_format_config, max_rubbers_per_player, ignore_gender_rules')
+        .eq('id', tournamentId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!tournamentId && !team?.tournaments?.tie_format_config
+  });
+
+  const rawFormatConfig = team?.tournaments?.tie_format_config || tourneyData?.tie_format_config;
   let defaultRubbers: any[] = [];
   if (Array.isArray(rawFormatConfig)) defaultRubbers = rawFormatConfig;
   else if (rawFormatConfig?.rubbers && Array.isArray(rawFormatConfig.rubbers)) defaultRubbers = rawFormatConfig.rubbers;
@@ -97,7 +114,7 @@ export function TeamLineupBuilder({
     if (defaultRubbers.length > 0) {
       setOrderedRubbers(defaultRubbers.filter((r: any) => !r.is_decider_tiebreaker && (!deciderMatch || r.order !== deciderMatch.rubber_order)));
     }
-  }, [defaultRubbers.length, deciderMatch?.id]);
+  }, [JSON.stringify(defaultRubbers), deciderMatch?.id]);
 
   const submitDeciderLineup = useMutation({
     mutationFn: async () => {
@@ -465,7 +482,7 @@ export function TeamLineupBuilder({
                     onChange={e => updateAssignment(rubber.order, 2, e.target.value)}
                     disabled={isRowDisabled}
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Player 2 (Partner)</option>
+                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Player 2</option>
                     {activeMembers.map(m => {
                       const stats = validationResult.playerAppearanceCounts[m.player_id];
                       const count = stats?.total || 0;
@@ -515,6 +532,14 @@ export function TeamLineupBuilder({
             </div>
           );
         })}
+        {orderedRubbers.length === 0 ? (
+          <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-slate-500">
+            <p className="font-bold text-sm text-slate-700 dark:text-slate-300">No rubbers configured for this tie yet</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Please define the tie format (e.g. MS, WS, MD, XD) in tournament settings or create rubber matches first.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* Validation Rule Violations Alert */}
@@ -676,7 +701,7 @@ export function TeamLineupBuilder({
                       onChange={(e) => setDeciderPlayer2(e.target.value)}
                       disabled={!isCaptain || isDeciderRevealed || !!deciderLineup}
                     >
-                      <option value="">Select Player 2 (Partner)</option>
+                      <option value="">Select Player 2</option>
                       {activeMembers.map(m => {
                         const gender = m.players?.gender || 'M';
                         const name = m.players?.display_name || m.players?.full_name || 'Player';

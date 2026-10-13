@@ -78,6 +78,15 @@ export function useJoinAuth() {
   }, []);
 
   useEffect(() => {
+    // Check if return_url was provided in query string and save to sessionStorage
+    const params = new URLSearchParams(window.location.search);
+    const returnUrlParam = params.get("return_url");
+    if (returnUrlParam) {
+      sessionStorage.setItem("return_url", returnUrlParam);
+    }
+  }, []);
+
+  useEffect(() => {
     if (isInitializing) return;
     if (!session) return;
     if (showBiometricPrompt) return; // Prevent redirect while prompt is open

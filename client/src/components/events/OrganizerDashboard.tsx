@@ -366,16 +366,16 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
             onClick={() => handleCardClick('MISSING_LINEUPS')}
             className={`p-4 rounded-2xl border transition text-left cursor-pointer group hover:scale-[1.02] active:scale-[0.99] ${
               selectedBottleneck === 'MISSING_LINEUPS'
-                ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-950/40 text-white shadow-lg'
+                ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-950/40 text-white shadow-lg'
                 : tiesWithMissingLineups.length > 0 
-                ? 'bg-rose-950/20 border-rose-900/40 text-white hover:border-rose-700' 
+                ? 'bg-amber-950/20 border-amber-900/40 text-white hover:border-amber-700' 
                 : 'bg-slate-900 border-slate-800 text-white hover:border-slate-700'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-400 group-hover:text-rose-300 transition-colors">Missing Lineups</span>
+              <span className="text-xs font-bold text-slate-400 group-hover:text-amber-300 transition-colors">Missing Lineups</span>
               <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                tiesWithMissingLineups.length > 0 ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-400'
+                tiesWithMissingLineups.length > 0 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
               }`}>
                 {tiesWithMissingLineups.length}
               </span>
@@ -384,7 +384,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
               <span>{tiesWithMissingLineups.length} Ties</span>
               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
             </p>
-            <p className="text-xs text-rose-300/80 mt-1 font-medium">
+            <p className="text-xs text-amber-300/80 mt-1 font-medium">
               {missingLineupsStats.totalMissingTeams} {missingLineupsStats.totalMissingTeams === 1 ? 'team lineup' : 'team lineups'} missing across {tiesWithMissingLineups.length} ties
             </p>
           </button>
@@ -579,7 +579,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold ${
                         lockedA 
                           ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/50' 
-                          : 'bg-rose-950/40 text-rose-300 border border-rose-800/50'
+                          : 'bg-amber-950/40 text-amber-300 border border-amber-800/50'
                       }`}>
                         {lockedA ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                         {tie.team_a?.short_name || 'Team A'}: {lockedA ? 'Locked' : 'Pending'}
@@ -588,7 +588,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold ${
                         lockedB 
                           ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/50' 
-                          : 'bg-rose-950/40 text-rose-300 border border-rose-800/50'
+                          : 'bg-amber-950/40 text-amber-300 border border-amber-800/50'
                       }`}>
                         {lockedB ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                         {tie.team_b?.short_name || 'Team B'}: {lockedB ? 'Locked' : 'Pending'}
@@ -707,7 +707,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
               ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
               : isFullyReady
                 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+                : 'bg-amber-500/15 text-amber-300 border-amber-500/30';
 
             return (
               <div 
@@ -777,7 +777,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                       <span className="text-[10px] text-slate-400 ml-1 font-mono">({activeMales}♂,{activeFemales}♀)</span>
                     </span>
                     {femaleDeficit > 0 ? (
-                      <span className="text-xs font-bold text-rose-400">
+                      <span className="text-xs font-bold text-amber-400">
                         (Needs {femaleDeficit}♀)
                       </span>
                     ) : maleDeficit > 0 ? (
@@ -804,7 +804,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                           ? 'bg-amber-400'
                           : isReady 
                             ? 'bg-emerald-500' 
-                            : 'bg-rose-500'
+                            : 'bg-amber-500'
                       }`}
                       style={{ width: `${pct}%` }}
                     />
@@ -830,9 +830,9 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
             <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-3 bg-slate-950/50 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className={`p-2.5 rounded-xl border ${
-                  selectedBottleneck === 'MISSING_LINEUPS' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                  selectedBottleneck === 'MISSING_LINEUPS' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                   selectedBottleneck === 'AWAITING_REVEAL' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  selectedBottleneck === 'LIVE_TIES' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                  selectedBottleneck === 'LIVE_TIES' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
                   'bg-sky-500/10 text-sky-400 border-sky-500/20'
                 }`}>
                   <AlertTriangle className="w-5 h-5" />
@@ -946,7 +946,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                             <span className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 ${
                               lockedA 
                                 ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' 
-                                : 'bg-rose-950/60 text-rose-300 border border-rose-800/60'
+                                : 'bg-amber-950/60 text-amber-300 border border-amber-800/60'
                             }`}>
                               <span>{lockedA ? '✓' : '⚠️'}</span>
                               <span>{tie.team_a?.short_name || tie.team_a?.name || 'Team A'}: {lockedA ? 'Locked' : 'Lineup Missing'}</span>
@@ -954,7 +954,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
                             <span className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 ${
                               lockedB 
                                 ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' 
-                                : 'bg-rose-950/60 text-rose-300 border border-rose-800/60'
+                                : 'bg-amber-950/60 text-amber-300 border border-amber-800/60'
                             }`}>
                               <span>{lockedB ? '✓' : '⚠️'}</span>
                               <span>{tie.team_b?.short_name || tie.team_b?.name || 'Team B'}: {lockedB ? 'Locked' : 'Lineup Missing'}</span>

@@ -40,7 +40,7 @@ export function ProfileRankingTab({
           currentUserId={authSession.user.id}
           targetUserId={player.userId}
           targetUserName={player.fullName || ""}
-          matches={liveMatches.filter((m) => m.status === "confirmed")}
+          matches={liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed")}
         />
       )}
 

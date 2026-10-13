@@ -35,6 +35,7 @@ import {
   BellRing,
   Calendar,
   AlertTriangle,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -137,7 +138,13 @@ export default function Navigation() {
       }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    // Allow other surfaces (e.g. the personal-page sidebar) to open search.
+    const openSearch = () => setSearchOpen(true);
+    window.addEventListener("open-global-search", openSearch);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("open-global-search", openSearch);
+    };
   }, []);
 
   useEffect(() => {
@@ -150,7 +157,7 @@ export default function Navigation() {
   useEffect(() => {
     getTournaments()
       .then((data: any[]) => {
-        const count = data.filter((e: any) => e.status === "live").length;
+        const count = data.filter((e: any) => e.status === "live" || e.status === "active").length;
         setLiveEventCount(count);
       })
       .catch(() => {});
@@ -283,7 +290,13 @@ export default function Navigation() {
                   href={link.href === "/pulse" ? getPulseHref() : link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
-                  badge={link.href === "/pulse" ? (teamActionCount > 0 ? teamActionCount : (liveEventCount > 0 ? liveEventCount : (hasUnreadAnnouncements ? -1 : undefined))) : undefined}
+                  badge={
+                    link.href === "/pulse"
+                      ? hasUnreadAnnouncements
+                        ? -1
+                        : undefined
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -384,6 +397,15 @@ export default function Navigation() {
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
           <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
 
+            <Link href="/host-tournament">
+              <button
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary dark:text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 transition-colors shadow-sm border border-primary/20"
+                aria-label="Host Tournament"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Host
+              </button>
+            </Link>
             <button
               onClick={() => setShowHolidays(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 transition-colors shadow-sm border border-emerald-100 dark:border-emerald-900/50"
@@ -492,7 +514,15 @@ export default function Navigation() {
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
-
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-foreground font-bold text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setLocation("/host-tournament");
+                      }}
+                    >
+                      <Plus className="h-4 w-4 text-primary" /> Host Tournament
+                    </button>
 
                     {myPlayerId && (
                       <>
@@ -568,11 +598,7 @@ export default function Navigation() {
                   <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
-                    {teamActionCount > 0 ? (
-                      <span title="Action required for your team" className="absolute top-1 right-1.5 flex items-center justify-center">
-                        <span className="w-2.5 h-2.5 bg-amber-400 rounded-full border border-white dark:border-slate-950 animate-pulse" />
-                      </span>
-                    ) : hasUnreadAnnouncements ? (
+                    {hasUnreadAnnouncements ? (
                       <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
                         <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
                       </span>
@@ -584,6 +610,13 @@ export default function Navigation() {
 
 
 
+              <Link href="/tournaments" className="flex-1 min-w-0">
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <span className="text-[11px] font-semibold">Events</span>
+                </button>
+              </Link>
+
               <Link href="/club" className="flex-1 min-w-0">
                 <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                   <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
@@ -593,13 +626,15 @@ export default function Navigation() {
               
               <Link href="/legacy" className="flex-1 min-w-0">
                 <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                  <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <Award strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Legacy</span>
                 </button>
               </Link>
 
             <button
               onClick={() => setIsOpen(!isOpen)}
+              aria-expanded={isOpen}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
               className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
             >
               {isOpen ? <X className="w-5 h-5 mb-0.5" /> : <Menu className="w-5 h-5 mb-0.5" />}

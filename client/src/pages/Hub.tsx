@@ -1,4 +1,5 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Button } from "@/components/ui/button";
 import { Info, MapPin, ShieldCheck, MonitorPlay } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { ContactSection } from "@/components/about/ContactSection";
@@ -8,6 +9,7 @@ import { safeReplaceState, safePushState, safeGetSearchParams } from "@/lib/navU
 import ExchangeTab from "@/components/hub/ExchangeTab";
 import FindLost from "@/pages/FindLost";
 import { Store, Search } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function Hub() {
   usePageMeta({
@@ -48,56 +50,40 @@ export default function Hub() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
-      <div className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(132,204,22,0.15),transparent)] pointer-events-none" />
-        <div className="absolute inset-0 hero-pattern opacity-50" />
-
-        <div className="container mx-auto px-4 max-w-4xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-3 text-white/80">
-            <ShieldCheck className="w-3.5 h-3.5 text-lime-300" /> Club Info
-            <InfoModal
-              title="ABOUT THE CLUB"
-              items={[
-                { badge: "HELP", title: "Support", desc: "If you have issues with the app, check the FAQ or contact the admins here." }
-              ]}
-              triggerClassName="text-white hover:text-lime-200"
-            />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-2 text-white" style={{ fontFamily: "Playfair Display, serif" }}>
-            Club
-          </h1>
-          <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
-            Courts, contacts, and platform info — all in one place.
-          </p>
-
-          {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
-          <div className="mt-6 flex justify-center w-full px-2">
-            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
-              {/* unified grid/flex for all screens */}
-              <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
-                {[
-                  { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-orange-400 shadow-md scale-100" },
-                  { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-emerald-400 shadow-md scale-100" },
-                  { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-blue-400 shadow-md scale-100" },
-                  { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-indigo-400 shadow-md scale-100" },
-                ].map(({ id, label, icon, activeClass }) => (
-                  <button
-                    key={id}
-                    onClick={() => handleTabChange(id)}
-                    className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                      activeTab === id
-                        ? activeClass
-                        : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
-                    }`}
-                  >
-                    {icon} {label}
-                  </button>
-                ))}
-              </div>
+      <PageHeader
+        badge="Club Info"
+        badgeIcon={<ShieldCheck className="w-3.5 h-3.5 text-lime-300" />}
+        title="Club"
+        subtitle="Courts, contacts, and platform info — all in one place."
+      >
+        {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
+        <div className="flex justify-center w-full px-2">
+          <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+            <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
+              {[
+                { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-orange-400 shadow-md scale-100" },
+                { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-emerald-400 shadow-md scale-100" },
+                { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-blue-400 shadow-md scale-100" },
+                { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-indigo-400 shadow-md scale-100" },
+              ].map(({ id, label, icon, activeClass }) => (
+                <Button
+                  key={id}
+                  variant="tab"
+                  size="tab"
+                  onClick={() => handleTabChange(id)}
+                  className={
+                    activeTab === id
+                      ? activeClass
+                      : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                  }
+                >
+                  {icon} {label}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="container mx-auto px-4 max-w-4xl pt-6">
         {activeTab === "contact" && <ContactSection />}

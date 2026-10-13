@@ -150,26 +150,60 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
         <p className="text-sm text-red-500 font-medium">{auth.errorMsg}</p>
       )}
 
-      <div>
-        <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input required type="email" value={auth.email} onChange={e => auth.setEmail(e.target.value)} placeholder="your@email.com" className={`${inputClass} pl-10`} />
-        </div>
-      </div>
-      <div>
-        <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Password</label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input required type={auth.showPwd ? "text" : "password"} value={auth.password} onChange={e => auth.setPassword(e.target.value)} placeholder="Your password" className={`${inputClass} pl-10 pr-10`} />
-          <button type="button" onClick={() => auth.setShowPwd(!auth.showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-            {auth.showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
-        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
-      </Button>
+      {(() => {
+        const isEmailValid = !auth.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(auth.email);
+        const isPasswordValid = !auth.password || auth.password.length >= 6;
+        const canSubmit = auth.email && auth.password && isEmailValid && isPasswordValid;
+
+        return (
+          <>
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  required
+                  type="email"
+                  value={auth.email}
+                  onChange={e => auth.setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className={`${inputClass} pl-10 ${!isEmailValid ? "border-rose-500 focus:ring-rose-500" : ""}`}
+                />
+              </div>
+              {!isEmailValid && (
+                <p className="text-[11px] text-rose-500 mt-1 font-medium">Please enter a valid email address.</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  required
+                  type={auth.showPwd ? "text" : "password"}
+                  value={auth.password}
+                  onChange={e => auth.setPassword(e.target.value)}
+                  placeholder="Your password"
+                  className={`${inputClass} pl-10 pr-10 ${!isPasswordValid ? "border-rose-500 focus:ring-rose-500" : ""}`}
+                />
+                <button type="button" onClick={() => auth.setShowPwd(!auth.showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
+                  {auth.showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {!isPasswordValid && (
+                <p className="text-[11px] text-rose-500 mt-1 font-medium">Password must be at least 6 characters.</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              disabled={auth.loading || !canSubmit}
+              className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
+            </Button>
+          </>
+        );
+      })()}
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
@@ -204,24 +238,49 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
 
 
 export function SignUpView({ auth }: { auth: JoinAuthContext }) {
+  const isEmailValid = !auth.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(auth.email);
+  const isPasswordValid = !auth.password || auth.password.length >= 8;
+  const isMatchValid = !auth.confirm || auth.password === auth.confirm;
+  const canSubmit = auth.email && auth.password && auth.confirm && isEmailValid && isPasswordValid && isMatchValid && auth.agreedToTerms;
+
   return (
     <motion.form key="signup" onSubmit={auth.handleSignUp} className="space-y-5" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} transition={{ duration: 0.2 }}>
       <div>
         <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input required type="email" value={auth.email} onChange={e => auth.setEmail(e.target.value)} placeholder="your@email.com" className={`${inputClass} pl-10`} />
+          <input
+            required
+            type="email"
+            value={auth.email}
+            onChange={e => auth.setEmail(e.target.value)}
+            placeholder="your@email.com"
+            className={`${inputClass} pl-10 ${!isEmailValid ? "border-rose-500 focus:ring-rose-500" : ""}`}
+          />
         </div>
+        {!isEmailValid && (
+          <p className="text-[11px] text-rose-500 mt-1 font-medium">Please enter a valid email address.</p>
+        )}
       </div>
       <div>
         <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Password</label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input required type={auth.showPwd ? "text" : "password"} value={auth.password} onChange={e => auth.setPassword(e.target.value)} placeholder="Min. 8 characters" className={`${inputClass} pl-10 pr-10`} />
+          <input
+            required
+            type={auth.showPwd ? "text" : "password"}
+            value={auth.password}
+            onChange={e => auth.setPassword(e.target.value)}
+            placeholder="Min. 8 characters"
+            className={`${inputClass} pl-10 pr-10 ${!isPasswordValid ? "border-rose-500 focus:ring-rose-500" : ""}`}
+          />
           <button type="button" onClick={() => auth.setShowPwd(!auth.showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
             {auth.showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
+        {!isPasswordValid && (
+          <p className="text-[11px] text-rose-500 mt-1 font-medium">Password must be at least 8 characters.</p>
+        )}
         {auth.password && (
           <div className="mt-2.5">
             <div className="flex gap-1.5 mb-1.5">
@@ -253,8 +312,18 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
         <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Confirm Password</label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input required type={auth.showPwd ? "text" : "password"} value={auth.confirm} onChange={e => auth.setConfirm(e.target.value)} placeholder="Repeat password" className={`${inputClass} pl-10`} />
+          <input
+            required
+            type={auth.showPwd ? "text" : "password"}
+            value={auth.confirm}
+            onChange={e => auth.setConfirm(e.target.value)}
+            placeholder="Repeat password"
+            className={`${inputClass} pl-10 ${!isMatchValid ? "border-rose-500 focus:ring-rose-500" : ""}`}
+          />
         </div>
+        {!isMatchValid && (
+          <p className="text-[11px] text-rose-500 mt-1 font-medium">Passwords do not match.</p>
+        )}
       </div>
       <label className="flex items-start gap-3 cursor-pointer group">
         <input type="checkbox" checked={auth.agreedToTerms} onChange={e => auth.setAgreedToTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary accent-primary shrink-0" />
@@ -262,7 +331,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
           I agree to the <Link href="/privacy"><span className="text-primary dark:text-primary font-bold hover:underline">Privacy Policy</span></Link> and <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline">Terms of Service</span></Link>.
         </span>
       </label>
-      <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
+      <Button type="submit" disabled={auth.loading || !canSubmit} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
       </Button>
 

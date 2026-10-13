@@ -4,6 +4,7 @@ import { Trophy, Plus, MapPin, LayoutDashboard, ShieldCheck, Search, Copy, Check
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { motion } from 'framer-motion';
 
 export default function HostTournament() {
@@ -27,6 +28,7 @@ export default function HostTournament() {
         .from('tournaments')
         .select('*')
         .eq('created_by', session.user.id)
+        .neq('status', 'deleted')
         .order('created_at', { ascending: false });
       
       setTournaments(data || []);
@@ -48,26 +50,20 @@ export default function HostTournament() {
           <p className="text-xs text-muted-foreground truncate">UmpireApp Workspace</p>
         </div>
       </div>
+      <PageHeader
+        badge="Organizer"
+        badgeIcon={<Trophy className="w-3.5 h-3.5" />}
+        title="My Tournaments"
+        subtitle="Access your tournament command centers, captain lineup portals, umpire scoring, and organizer tools."
+        align="left"
+      >
+        <Link href="/host-tournament/new">
+          <button className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 dark:hover:bg-cyan-400 text-white dark:text-slate-950 px-5 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-cyan-500/30">
+            <Plus className="w-4 h-4" /> Create Tournament
+          </button>
+        </Link>
+      </PageHeader>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 flex items-center justify-center">
-                <Trophy className="w-5 h-5" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black">My Tournaments</h1>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xl">
-              Access your tournament command centers, captain lineup portals, umpire scoring, and organizer tools.
-            </p>
-          </div>
-
-          <Link href="/host-tournament/new">
-            <button className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 dark:hover:bg-cyan-400 text-white dark:text-slate-950 px-5 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-cyan-500/30">
-              <Plus className="w-4 h-4" /> Create Tournament
-            </button>
-          </Link>
-        </div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
