@@ -6,6 +6,7 @@ import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, 
 import { supabase } from "@/lib/supabase";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { track } from "@/lib/analytics";
+import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 
 interface SearchResult {
   type: "player" | "match" | "announcement" | "event" | "team" | "action";
@@ -19,11 +20,11 @@ interface SearchResult {
 // Quick navigation commands — always available, filtered by the query. (#20)
 const ACTIONS: { id: string; title: string; subtitle: string; href: string; keywords: string }[] = [
   { id: "a-home", title: "Home", subtitle: "Go to the home page", href: "/", keywords: "home start" },
-  { id: "a-live", title: "Live Scores", subtitle: "Pulse — live matches & feed", href: "/pulse", keywords: "live scores pulse feed now" },
+  { id: "a-live", title: "Live Scores", subtitle: "Pulse — live matches & feed", href: "/pulse#live", keywords: "live scores pulse feed now" },
   { id: "a-tournaments", title: "Tournaments", subtitle: "Browse & register for events", href: "/tournaments", keywords: "tournaments events draws compete" },
   { id: "a-matches", title: "My Matches", subtitle: "Your match history & pending", href: "/my-matches", keywords: "my matches history pending results" },
   { id: "a-directory", title: "Players Directory", subtitle: "Find club members", href: "/pulse#directory", keywords: "directory players members find partner" },
-  { id: "a-stats", title: "My Stats", subtitle: "Your personal stats", href: "/personal", keywords: "stats personal profile rating elo" },
+  { id: "a-stats", title: "My Stats", subtitle: "Your personal stats", href: "/__my_stats__", keywords: "stats personal profile rating elo" },
   { id: "a-host", title: "Host a Tournament", subtitle: "Create a new event", href: "/host-tournament", keywords: "host create tournament organize new" },
   { id: "a-settings", title: "Settings", subtitle: "Appearance, notifications, account", href: "/settings", keywords: "settings preferences theme accent notifications account" },
 ];
@@ -87,6 +88,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trapRef = useFocusTrap<HTMLDivElement>(open);
+  const { myPlayerId } = useNavigationAuth();
 
   // Render/navigation order — groups are shown in this order.
   const TYPE_ORDER = ["action", "player", "team", "match", "announcement", "event"] as const;
@@ -291,7 +293,14 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
   const handleSelect = (href: string) => {
     track("command_palette_select", { href });
-    setLocation(href);
+    // "My Stats" resolves to the signed-in user's own personal page.
+    const resolved =
+      href === "/__my_stats__"
+        ? myPlayerId
+          ? `/player/${myPlayerId}/personal`
+          : "/my-matches"
+        : href;
+    setLocation(resolved);
     onClose();
   };
 

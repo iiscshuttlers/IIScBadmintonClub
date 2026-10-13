@@ -244,21 +244,6 @@ export default function PersonalProfilePage() {
 
       {activeTab === "profile" && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {/* Appearance Toggle */}
-          <div className="mb-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-              <Sun className="w-4 h-4 text-amber-500" /> Appearance
-            </h3>
-            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1">
-              <button onClick={() => { if (theme === "dark") toggleTheme?.(); }} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", theme === "light" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300")}>
-                <Sun className="w-4 h-4" /> Light
-              </button>
-              <button onClick={() => { if (theme === "light") toggleTheme?.(); }} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", theme === "dark" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300")}>
-                <Moon className="w-4 h-4" /> Dark
-              </button>
-            </div>
-          </div>
-
           <div className="space-y-2 mb-8">
             {profileItems.map((item) => {
               const Icon = item.icon;

@@ -16,31 +16,6 @@ export function QuickSettingsContent() {
 
   return (
     <div className="divide-y divide-slate-100 dark:divide-slate-800">
-      {/* APPEARANCE */}
-      <div className="px-3 py-3">
-        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <Sun className="w-3 h-3" /> Appearance
-        </div>
-        <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1 mb-3">
-          <button
-            onClick={() => { if (theme === "dark") toggleTheme?.(); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              theme === "light" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
-          >
-            <Sun className="w-3.5 h-3.5" /> Light
-          </button>
-          <button
-            onClick={() => { if (theme === "light") toggleTheme?.(); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              theme === "dark" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
-          >
-            <Moon className="w-3.5 h-3.5" /> Dark
-          </button>
-        </div>
-      </div>
-
       {/* S4.3 ACCENT THEME */}
       {setAccent && (
         <div className="px-3 py-3">

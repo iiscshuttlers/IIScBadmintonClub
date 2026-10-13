@@ -9,6 +9,7 @@ export function MyMatchesTab() {
   const { profile } = useAuth();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"playing" | "umpire">("playing");
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -37,6 +38,26 @@ export function MyMatchesTab() {
     return null;
   }
 
+  // Order within a tab: live first, then upcoming, then completed. (user req)
+  const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
+  const phaseRank = (m: any) => (LIVE_STATUSES.has(m.status) ? 0 : m.status === "completed" ? 2 : 1);
+  const byPhase = (a: any, b: any) => {
+    const ra = phaseRank(a);
+    const rb = phaseRank(b);
+    if (ra !== rb) return ra - rb;
+    const ta = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
+    const tb = b.scheduled_at ? new Date(b.scheduled_at).getTime() : 0;
+    // completed: most recent first; live/upcoming: soonest first
+    return ra === 2 ? tb - ta : ta - tb;
+  };
+
+  const isMyPlaying = (m: any) =>
+    m.player1_id === profile.id || m.player2_id === profile.id || m.player3_id === profile.id || m.player4_id === profile.id;
+
+  const playingMatches = matches.filter(isMyPlaying).sort(byPhase);
+  const umpireMatches = matches.filter((m) => m.umpired_by === profile.id && !isMyPlaying(m)).sort(byPhase);
+  const visibleMatches = tab === "playing" ? playingMatches : umpireMatches;
+
   return (
     <div className="w-full max-w-3xl mx-auto pb-12">
       {loading ? (
@@ -45,15 +66,43 @@ export function MyMatchesTab() {
             <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 h-32" />
           ))}
         </div>
-      ) : matches.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-6">
-          <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-          <h3 className="text-xl font-black text-foreground mb-2">No Matches Found</h3>
-          <p className="text-muted-foreground">You do not have any tournament matches scheduled yet.</p>
-        </div>
       ) : (
-        <div className="space-y-4 mt-2">
-          {matches.map((m: any) => {
+        <>
+          {/* Playing / Umpire Duty tabs */}
+          <div className="flex gap-1.5 mb-5">
+            {([
+              { id: "playing", label: "Playing", count: playingMatches.length },
+              { id: "umpire", label: "Umpire Duty", count: umpireMatches.length },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-black transition ${
+                  tab === t.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label} <span className="opacity-70">({t.count})</span>
+              </button>
+            ))}
+          </div>
+
+          {visibleMatches.length === 0 ? (
+            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-2">
+              <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-xl font-black text-foreground mb-2">
+                {tab === "playing" ? "No matches yet" : "No umpire duties"}
+              </h3>
+              <p className="text-muted-foreground">
+                {tab === "playing"
+                  ? "You do not have any tournament matches yet."
+                  : "You're not assigned to umpire any matches."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-2">
+              {visibleMatches.map((m: any) => {
             const isUmpire = m.umpired_by === profile.id;
             
             return (
@@ -109,8 +158,10 @@ export function MyMatchesTab() {
                 </div>
               </div>
             );
-          })}
-        </div>
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

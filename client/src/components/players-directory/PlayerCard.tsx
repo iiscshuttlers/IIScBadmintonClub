@@ -277,16 +277,15 @@ export function PlayerCard({
                 {getDepartmentAcronym(player.department)}
               </div>
               
-              {/* Status Dot */}
-              {(player as any).status === "playing" && (
+              {/* Status Dot — availability (green) takes priority over the
+                  playing/looking status, so there is only ever one dot here. */}
+              {isAvailableNow ? (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="Available to play now" />
+              ) : (player as any).status === "playing" ? (
                 <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-              )}
-              {((player as any).status === "looking" || player.is_looking_to_play) && (
+              ) : ((player as any).status === "looking" || player.is_looking_to_play) ? (
                 <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-              )}
-              {isAvailableNow && (
-                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm" title="Available to play now" />
-              )}
+              ) : null}
             </div>
           </div>
 
