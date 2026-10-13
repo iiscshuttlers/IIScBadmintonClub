@@ -189,7 +189,7 @@ run("npx cap sync android", { cwd: root });
 
 /* ── 5. Build release APK & AAB ─────────────────────────────────── */
 log("Building release APK and AAB…");
-run("gradlew assembleRelease bundleRelease", {
+run(`${process.platform === "win32" ? ".\\gradlew.bat" : "./gradlew"} assembleRelease bundleRelease`, {
   cwd: resolve(root, "android"),
   shell: true,
 });
