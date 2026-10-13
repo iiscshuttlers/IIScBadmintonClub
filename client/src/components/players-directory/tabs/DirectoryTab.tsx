@@ -140,7 +140,7 @@ export function DirectoryTab({
         (p) =>
           p.id !== ownProfile.id &&
           !blockedIds.has(p.id) &&
-          p.status === "looking" &&
+          p.is_looking_to_play === true &&
           Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 150
       )
       .slice(0, 4);

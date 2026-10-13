@@ -1327,6 +1327,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
 
 function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isMasterAdmin: boolean }) {
   const { confirm } = useConfirm();
+  const { session } = useAuth();
   const { data: allPlayers } = usePlayers();
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [roundRules, setRoundRules] = useState<RoundRule[]>([]);

@@ -129,7 +129,7 @@ export function NoticeBoard() {
             fetchedItems.push({
               id: `match-${m.id}`,
               type: "match",
-              title: m.tournaments?.name || m.tournament_slug || "Match",
+              title: m.tournaments?.name || "Match",
               description,
               date: new Date(m.updated_at || m.created_at),
               badgeText,
