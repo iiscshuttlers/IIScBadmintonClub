@@ -26,6 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTournaments } from "@/lib/tournaments";
 import { Loader2 } from "lucide-react";
 import { TournamentArchiveBrackets } from "@/components/events/TournamentArchiveBrackets";
+import { UpNextPanel } from "@/components/tournament/UpNextPanel";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
@@ -335,6 +336,8 @@ export default function TournamentDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {tournament.id && <UpNextPanel tournamentId={tournament.id} />}
 
             {tournament.id && (
               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
