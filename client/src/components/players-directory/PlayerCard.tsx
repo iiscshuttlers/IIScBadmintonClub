@@ -277,14 +277,13 @@ export function PlayerCard({
                 {getDepartmentAcronym(player.department)}
               </div>
               
-              {/* Status Dot — availability (green) takes priority over the
-                  playing/looking status, so there is only ever one dot here. */}
+              {/* Status Dot — green means "available to play now" (the toggle),
+                  amber means currently in a match. No dot otherwise, so a green
+                  dot can only ever mean available. */}
               {isAvailableNow ? (
                 <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="Available to play now" />
               ) : (player as any).status === "playing" ? (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-              ) : ((player as any).status === "looking" || player.is_looking_to_play) ? (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="In a match" />
               ) : null}
             </div>
           </div>

@@ -9,6 +9,7 @@ import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
 import { useLiveScoresFor } from "@/hooks/useLiveScoresFor";
 import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTournamentHero";
 import { getTournaments } from "@/lib/tournaments";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -44,15 +45,13 @@ export function HomePersonalDashboard() {
   useEffect(() => {
     if (!myPlayerId) return;
     let cancelled = false;
-    import("@/lib/supabase").then(({ supabase }) => {
-      supabase
-        .from("tournament_matches")
-        .select("id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, match_score, score, tournaments(name)")
-        .or(`player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`)
-        .order("scheduled_at", { ascending: true, nullsFirst: false })
-        .limit(50)
-        .then(({ data }: any) => { if (!cancelled) setMyMatches(data || []); });
-    });
+    supabase
+      .from("tournament_matches")
+      .select("id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, match_score, score, tournaments(name)")
+      .or(`player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`)
+      .order("scheduled_at", { ascending: true, nullsFirst: false })
+      .limit(50)
+      .then(({ data }: any) => { if (!cancelled) setMyMatches(data || []); });
     return () => { cancelled = true; };
   }, [myPlayerId]);
 
