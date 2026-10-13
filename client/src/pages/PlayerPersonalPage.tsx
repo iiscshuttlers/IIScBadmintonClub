@@ -1986,9 +1986,11 @@ export default function PlayerPersonalPage() {
 
   useEffect(() => {
     if (!id) return;
-    // Redirect from /player/:id/personal to /player/:id/personal/home
+    // Redirect from /player/:id/personal to /player/:id/personal/home.
+    // Use replace so it doesn't leave a history entry that bounces the browser
+    // Back button straight back to /home.
     if (location === `/player/${id}/personal`) {
-      setLocation(`/player/${id}/personal/home`);
+      setLocation(`/player/${id}/personal/home`, { replace: true });
     }
     fetchPlayer(id).then(setPlayer).catch(() => {});
   }, [id, location, setLocation]);
