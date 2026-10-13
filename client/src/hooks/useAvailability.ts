@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -22,27 +22,34 @@ export interface AvailabilityRow {
 
 /** Map of player_id → availability row, for players available right now. */
 export function useAvailablePlayers() {
+  // NOTE: the query cache is persisted to localStorage (PersistQueryClient).
+  // A Map does not survive JSON serialization — it rehydrates as a plain {}
+  // and crashes on .get/.has. So we cache a plain array and build the Map
+  // in-memory (memoized) instead.
   const query = useQuery({
     queryKey: ["presence"],
-    queryFn: async () => {
+    queryFn: async (): Promise<AvailabilityRow[]> => {
       const nowIso = new Date().toISOString();
       const { data, error } = await sb
         .from("player_availability")
         .select("player_id, available_until, note")
         .gt("available_until", nowIso);
       if (error) throw error;
-      const map = new Map<string, AvailabilityRow>();
-      for (const row of data || []) map.set(row.player_id, row as AvailabilityRow);
-      return map;
+      return (data || []) as AvailabilityRow[];
     },
     // availability is time-sensitive; refetch on focus and every 2 min
     staleTime: 60 * 1000,
     refetchInterval: 2 * 60 * 1000,
   });
-  return {
-    availableMap: query.data ?? new Map<string, AvailabilityRow>(),
-    isLoading: query.isLoading,
-  };
+  const availableMap = useMemo(() => {
+    const map = new Map<string, AvailabilityRow>();
+    // Guard against a rehydrated non-array (older persisted cache shape).
+    if (Array.isArray(query.data)) {
+      for (const row of query.data) map.set(row.player_id, row);
+    }
+    return map;
+  }, [query.data]);
+  return { availableMap, isLoading: query.isLoading };
 }
 
 /** Controls for the current player's own availability. */
