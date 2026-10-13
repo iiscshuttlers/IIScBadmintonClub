@@ -8,7 +8,7 @@ import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useState, useEffect } from "react";
 import { navGet, navSet } from "@/lib/navMemory";
-import { useMyAvailability } from "@/hooks/useAvailability";
+import { useMyAvailability, useAvailablePlayers } from "@/hooks/useAvailability";
 import { useBlockedPlayers } from "@/hooks/useBlockedPlayers";
 import { Zap } from "lucide-react";
 
@@ -114,6 +114,8 @@ export function DirectoryTab({
 
   const { isAvailable, setAvailable, clearAvailable } = useMyAvailability(ownProfile?.id);
   const blockedIds = useBlockedPlayers(ownProfile?.id);
+  const { availableMap } = useAvailablePlayers();
+  const [availableOnly, setAvailableOnly] = useState(false);
 
   const [viewMode, setViewModeState] = useState<any>(() => getInitialParam("dir_view", "individuals"));
 
@@ -205,9 +207,9 @@ export function DirectoryTab({
 
       {viewMode === "individuals" ? (
         <>
-          {/* "Available to play now" self-toggle (#31) — manual, no location */}
-          {ownProfile && (
-            <div className="flex justify-center mb-6">
+          {/* Availability: self-toggle (#31) + "ready to play" filter */}
+          <div className="flex flex-wrap justify-center items-center gap-2 mb-6">
+            {ownProfile && (
               <button
                 onClick={() => (isAvailable ? clearAvailable() : setAvailable(120))}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
@@ -220,11 +222,28 @@ export function DirectoryTab({
                 {isAvailable ? "You're available to play — tap to stop" : "I'm available to play now"}
                 <Zap className="w-3.5 h-3.5" />
               </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => setAvailableOnly((v) => !v)}
+              aria-pressed={availableOnly}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
+                availableOnly
+                  ? "bg-success text-white border border-success"
+                  : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${availableOnly ? "bg-white animate-pulse" : "bg-success"}`} />
+              Ready to play now
+              {availableMap.size > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${availableOnly ? "bg-white/20" : "bg-success/20 text-success"}`}>
+                  {availableMap.size}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* Recommended Opponents (Matchmaking) */}
-          {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
+          {!loading && ownProfile && recommended.length > 0 && !availableOnly && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
@@ -324,6 +343,7 @@ export function DirectoryTab({
           >
             {filteredPlayers
               .filter(p => !blockedIds.has(p.id))
+              .filter(p => !availableOnly || availableMap.has(p.id))
               .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
               .slice(0, visibleCount)
               .map((player) => (
