@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { MotionConfig } from "framer-motion";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -30,6 +31,10 @@ const persister = createSyncStoragePersister({
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider defaultTheme="dark" switchable>
+      {/* reducedMotion="user" makes every framer-motion component respect the
+          OS "reduce motion" setting — disables transform/layout animation while
+          keeping opacity fades. Complements the CSS net in index.css. (#34) */}
+      <MotionConfig reducedMotion="user">
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <AuthProvider>
           <AppUpdateProvider>
@@ -48,6 +53,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         </AuthProvider>
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </PersistQueryClientProvider>
+      </MotionConfig>
     </ThemeProvider>
   );
 }
