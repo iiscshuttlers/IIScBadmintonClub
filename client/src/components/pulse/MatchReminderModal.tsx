@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, Save, Clock, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { track } from '@/lib/analytics';
 
 interface MatchReminderModalProps {
   isOpen: boolean;
@@ -70,6 +71,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
           .eq("id", userId);
         
         if (error) throw error;
+        track(enabled ? "match_reminder_set" : "match_reminder_cleared", { scope: "global", mins: enabled ? parsedMins : null });
         toast.success(enabled ? `Global reminders set for ${parsedMins} minutes before match` : "Global match reminders disabled");
       } else {
         if (enabled) {
@@ -82,6 +84,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
               sent_at: null // reset sent status
             }, { onConflict: 'match_id,user_id' });
           if (error) throw error;
+          track("match_reminder_set", { scope: "match", mins: parsedMins });
           toast.success(`Reminder set for ${parsedMins} minutes before this match`);
         } else {
           // Disable -> delete record

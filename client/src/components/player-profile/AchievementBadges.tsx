@@ -2,7 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { Trophy, Flame, Zap, Star, Shield, Target, Award, Swords, Crown, TrendingUp, Moon, Sun, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 
@@ -241,6 +241,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
   // #21 Celebrate newly-earned badges when a user views their OWN profile.
   // Baseline of seen badges is kept per-user in localStorage; the very first
   // view seeds the baseline silently (no celebration for already-earned ones).
+  const queryClient = useQueryClient();
   const celebratedRef = useRef(false);
   useEffect(() => {
     if (celebratedRef.current) return;
@@ -271,8 +272,11 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
         onConflict: "player_id,achievement_id",
         ignoreDuplicates: true,
       })
-      .then(() => { /* best-effort */ }, () => { /* best-effort */ });
-  }, [currentUserId, playerId, matches, earned]);
+      .then(
+        () => queryClient.invalidateQueries({ queryKey: ["player-achievements", playerId] }),
+        () => { /* best-effort */ },
+      );
+  }, [currentUserId, playerId, matches, earned, queryClient]);
 
   return (
     <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl border border-slate-200 dark:border-white/8 p-6 overflow-hidden relative">

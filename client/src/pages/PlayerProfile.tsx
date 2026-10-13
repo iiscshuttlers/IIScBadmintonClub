@@ -62,6 +62,7 @@ import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { PlayerHeroBanner } from "@/components/player-profile/PlayerHeroBanner";
 import { PlayerActionBar } from "@/components/player-profile/PlayerActionBar";
 import { ReportPlayerModal } from "@/components/ReportPlayerModal";
+import { track } from "@/lib/analytics";
 import { ProfileOverviewTab } from "@/components/player-profile/tabs/ProfileOverviewTab";
 import { ProfileOverviewTabRight } from "@/components/player-profile/tabs/ProfileOverviewTabRight";
 import { ProfileRankingTab } from "@/components/player-profile/tabs/ProfileRankingTab";
@@ -482,6 +483,7 @@ export default function PlayerProfile() {
                     }
                     setIsSubscribed(true);
                     setSubMins(mins);
+                    track("player_subscribed", { mins });
                     toast.success(`Subscribed to ${player.fullName}!`);
                   }}
                   isSubscribed={isSubscribed}
@@ -496,6 +498,7 @@ export default function PlayerProfile() {
                       return;
                     }
                     setIsSubscribed(false);
+                    track("player_unsubscribed");
                     toast.success(`Unsubscribed from ${player.fullName}'s matches.`);
                   }}
                 />
