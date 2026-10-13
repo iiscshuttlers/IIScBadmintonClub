@@ -115,6 +115,7 @@ export default function MyStatsPage() {
           matches={filteredMatches}
           playerId={ownProfile!.id}
           elo={ownProfile?.elo_rating ?? 1200}
+          currentUserId={ownProfile!.id}
         />
       </div>
 

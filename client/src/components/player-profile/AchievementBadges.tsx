@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { Trophy, Flame, Zap, Star, Shield, Target, Award, Swords, Crown, TrendingUp, Moon, Sun, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 interface Match {
   id: string;
@@ -157,9 +158,11 @@ interface Props {
   matches: Match[];
   playerId: string;
   elo: number;
+  /** When equal to playerId, newly-earned badges trigger a celebration (#21). */
+  currentUserId?: string;
 }
 
-export function AchievementBadges({ matches: allMatches, playerId, elo }: Props) {
+export function AchievementBadges({ matches: allMatches, playerId, elo, currentUserId }: Props) {
   const matches = useMemo(() => allMatches, [allMatches]);
 
   const { wins, losses } = useMemo(() => {
@@ -191,6 +194,32 @@ export function AchievementBadges({ matches: allMatches, playerId, elo }: Props)
 
   const earned = badgeData.filter(d => d.progress.earned);
   const locked = badgeData.filter(d => !d.progress.earned);
+
+  // #21 Celebrate newly-earned badges when a user views their OWN profile.
+  // Baseline of seen badges is kept per-user in localStorage; the very first
+  // view seeds the baseline silently (no celebration for already-earned ones).
+  const celebratedRef = useRef(false);
+  useEffect(() => {
+    if (celebratedRef.current) return;
+    if (!currentUserId || currentUserId !== playerId) return;
+    if (!matches || matches.length === 0) return; // wait for data to load
+    const earnedIds = earned.map((d) => d.badge.id).sort();
+    const key = `ach_seen_${playerId}`;
+    const hadBaseline = localStorage.getItem(key) !== null;
+    let prev: string[] = [];
+    try { prev = JSON.parse(localStorage.getItem(key) || "[]"); } catch { /* ignore */ }
+    try { localStorage.setItem(key, JSON.stringify(earnedIds)); } catch { /* ignore */ }
+    celebratedRef.current = true;
+    if (!hadBaseline) return; // first-ever view: seed silently
+    const prevSet = new Set(prev);
+    const fresh = earnedIds.filter((id) => !prevSet.has(id));
+    if (fresh.length === 0) return;
+    const labels = fresh.map((id) => BADGES.find((b) => b.id === id)?.label).filter(Boolean);
+    toast.success(`🏅 Achievement unlocked: ${labels.join(", ")}!`, { duration: 6000 });
+    import("canvas-confetti")
+      .then((m) => m.default({ particleCount: 120, spread: 70, origin: { y: 0.6 } }))
+      .catch(() => { /* confetti is best-effort */ });
+  }, [currentUserId, playerId, matches, earned]);
 
   return (
     <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl border border-slate-200 dark:border-white/8 p-6 overflow-hidden relative">
