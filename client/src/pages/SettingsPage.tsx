@@ -25,7 +25,15 @@ import {
   Moon,
   Palette,
   Check,
+  Volume2,
+  Vibrate,
 } from "lucide-react";
+import {
+  getUmpireHaptics,
+  getUmpireSound,
+  setUmpireHaptics,
+  setUmpireSound,
+} from "@/lib/umpire/umpireEffects";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
@@ -261,6 +269,16 @@ export default function SettingsPage() {
             </div>
           </section>
 
+          {/* Umpire feedback (#33) */}
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-primary" /> Umpire Feedback
+            </h2>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-2">
+              <UmpireFeedbackToggles />
+            </div>
+          </section>
+
           {/* View As Role */}
           {isMasterAdmin && (
             <section>
@@ -378,6 +396,62 @@ export default function SettingsPage() {
       <NotificationSettingsModal
         open={isNotificationModalOpen}
         onOpenChange={setIsNotificationModalOpen}
+      />
+    </div>
+  );
+}
+
+/** Umpire console haptics + sound toggles (#33). Backed by localStorage. */
+function UmpireFeedbackToggles() {
+  const [haptics, setHaptics] = useState(getUmpireHaptics());
+  const [sound, setSound] = useState(getUmpireSound());
+
+  const Row = ({
+    icon,
+    label,
+    desc,
+    on,
+    onToggle,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    desc: string;
+    on: boolean;
+    onToggle: () => void;
+  }) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={onToggle}
+      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition text-left"
+    >
+      <span className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-primary shrink-0">{icon}</span>
+      <span className="flex-1 min-w-0">
+        <span className="block text-sm font-bold text-slate-800 dark:text-foreground">{label}</span>
+        <span className="block text-[11px] text-muted-foreground">{desc}</span>
+      </span>
+      <span className={cn("w-10 h-6 rounded-full p-0.5 transition-colors shrink-0", on ? "bg-primary" : "bg-slate-300 dark:bg-slate-700")}>
+        <span className={cn("block w-5 h-5 rounded-full bg-white shadow transition-transform", on ? "translate-x-4" : "translate-x-0")} />
+      </span>
+    </button>
+  );
+
+  return (
+    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+      <Row
+        icon={<Vibrate className="w-4 h-4" />}
+        label="Haptics"
+        desc="Vibrate on each point, set and match win"
+        on={haptics}
+        onToggle={() => { const v = !haptics; setHaptics(v); setUmpireHaptics(v); }}
+      />
+      <Row
+        icon={<Volume2 className="w-4 h-4" />}
+        label="Sound"
+        desc="Play a cue on each point, set and match win"
+        on={sound}
+        onToggle={() => { const v = !sound; setSound(v); setUmpireSound(v); }}
       />
     </div>
   );
