@@ -61,6 +61,7 @@ import { usePlayerProfileQuery } from "@/hooks/queries/usePlayerProfileQuery";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { PlayerHeroBanner } from "@/components/player-profile/PlayerHeroBanner";
 import { PlayerActionBar } from "@/components/player-profile/PlayerActionBar";
+import { ReportPlayerModal } from "@/components/ReportPlayerModal";
 import { ProfileOverviewTab } from "@/components/player-profile/tabs/ProfileOverviewTab";
 import { ProfileOverviewTabRight } from "@/components/player-profile/tabs/ProfileOverviewTabRight";
 import { ProfileRankingTab } from "@/components/player-profile/tabs/ProfileRankingTab";
@@ -91,6 +92,7 @@ export default function PlayerProfile() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { session: authSession, signOut } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
   const { confirm } = useConfirm();
   const { theme } = useTheme();
 
@@ -322,17 +324,7 @@ export default function PlayerProfile() {
     }
   };
 
-  const handleReport = async () => {
-    const ok = await confirm({
-      title: "Report User?",
-      description: "Report this user for inappropriate content or behavior?",
-      confirmLabel: "Report",
-      confirmVariant: "danger"
-    });
-    if (!ok) return;
-    window.location.href = `mailto:iiscbadmintonclub@gmail.com?subject=Report User ID: ${player?.id}&body=I would like to report the user ${player?.fullName} for the following reason:%0D%0A%0D%0A[Please type your reason here]`;
-    toast.success("Opened email client to send report.");
-  };
+  const handleReport = () => setReportOpen(true);
 
   const handleWrapped = async (year: number) => {
     if (!player) return;
@@ -822,7 +814,15 @@ export default function PlayerProfile() {
         </TeaserOverlay>
       </motion.div>
 
-
+      {player && (
+        <ReportPlayerModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          reportedPlayerId={player.id}
+          reportedPlayerName={player.fullName}
+          reporterId={authSession?.user?.id}
+        />
+      )}
 
     </div>
   );

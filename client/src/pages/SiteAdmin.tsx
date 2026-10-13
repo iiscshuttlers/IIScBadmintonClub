@@ -51,6 +51,7 @@ import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
 import { AdminFeedbackPanel } from "@/components/admin/AdminFeedbackPanel";
+import { ModerationPanel } from "@/components/admin/ModerationPanel";
 import { TooltipRegistryPanel } from "@/components/admin/TooltipRegistryPanel";
 import { TournamentManager } from "@/components/admin/TournamentManager";
 import { RecycleBin } from "@/components/admin/RecycleBin";
@@ -100,6 +101,7 @@ type TabId =
   | "database_schema"
   | "neural_graph"
   | "convener_photos"
+  | "moderation"
   | "role_manager";
 
 interface TabGroup {
@@ -124,6 +126,7 @@ const TAB_GROUPS: TabGroup[] = [
     tabs: [
       { id: "players", label: "Players", icon: Users },
       { id: "role_manager", label: "Role Manager", icon: ShieldAlert },
+      { id: "moderation", label: "Reports", icon: ShieldAlert },
       { id: "guests", label: "Guests", icon: Ghost },
     ],
   },
@@ -505,6 +508,7 @@ function SiteAdminInner() {
             {activeTab === "guests" && <GuestPlayersPanel />}
             {activeTab === "matches" && <MatchesManager />}
             {activeTab === "disputes" && <DisputePanel />}
+            {activeTab === "moderation" && <ModerationPanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireTab />}
             {activeTab === "settings" && <AdminSettings />}
