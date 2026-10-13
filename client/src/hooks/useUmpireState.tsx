@@ -1,4 +1,4 @@
-import { playTimerEndEffect } from "@/lib/umpire/umpireEffects";
+import { playTimerEndEffect, playPointEffect, playMilestoneEffect, playMatchWonEffect } from "@/lib/umpire/umpireEffects";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { TournamentMatchForUmpire } from "@/components/umpire/UmpireTournamentTab";
 import { useUmpireStore } from "@/store/umpireStore";
@@ -564,6 +564,22 @@ export function useUmpireState({
       
       const { _changeEnds, _reason, _break, _title, ...stateUpdates } = updates as any;
       updateMatch(stateUpdates);
+
+      // ── Score-tap feedback: haptics + sound (#33) ──────────────────────────
+      const _matchWon = stateUpdates.status === "finished" || !!stateUpdates.winner;
+      const _setJustWon =
+        (stateUpdates.t1?.games ?? match.t1.games) > match.t1.games ||
+        (stateUpdates.t2?.games ?? match.t2.games) > match.t2.games;
+      const _pts = match.pointsToWin || 30;
+      const _half = Math.ceil(_pts / 2);
+      const _newT1 = stateUpdates.t1?.score ?? match.t1.score;
+      const _newT2 = stateUpdates.t2?.score ?? match.t2.score;
+      const _atHalf =
+        ((_newT1 === _half && _newT2 < _half) || (_newT2 === _half && _newT1 < _half)) &&
+        match.t1.score < _half && match.t2.score < _half;
+      if (_matchWon) playMatchWonEffect();
+      else if (_setJustWon || _atHalf) playMilestoneEffect();
+      else playPointEffect();
 
       // Check if we should auto-push score (half point or set end)
       // _changeEnds is true when a set finishes OR when reaching half point in third set.
