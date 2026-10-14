@@ -123,9 +123,23 @@ Follow-up round after the core revamp.
   consistent loading + empty states (no duplicate title header, since the shell
   top bar already shows the section name).
 
-Deferred (needs backend/product decision, not built): a push/cron delivery
-audit panel (would need a cron-run history table/RPC). Flagged for the
-maintainer.
+## Phase 7 — Delivery audit ✅
+
+Built the push/cron delivery-audit panel (was deferred in Phase 6).
+
+- Migration `supabase/migrations/20261014120000_admin_delivery_audit.sql` adds
+  two admin-only `SECURITY DEFINER` read RPCs: `admin_cron_health()` (per
+  pg_cron job: schedule, active flag, last run status/timing, 24h run/failure
+  tally — "did the job fire") and `admin_notification_delivery(days_back)`
+  (status breakdown of the `scheduled_notifications` queue — "did messages
+  send"). Both guard on `is_admin_or_master()` and degrade to empty if the
+  `cron` schema is absent (local dev).
+- `client/src/components/admin/DeliveryAuditPanel.tsx` renders both via
+  react-query plus a recent-failures list, in the shared `AdminPanel` chrome,
+  with an "apply the migration" empty state. New "Delivery Audit" tab in the
+  Developer group.
+- Needs `npx supabase db push` to activate; the panel shows a clear hint until
+  then.
 
 ## Risks / notes
 - `@ts-nocheck` on shell + 12 panels → no tsc safety; verify with the
