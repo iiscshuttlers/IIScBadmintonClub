@@ -5,6 +5,20 @@ import { supabase } from "@/lib/supabase";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
 
+// Each category/format gets its own colour so a glance tells you the discipline.
+const CATEGORY_COLOR: Record<string, string> = {
+  MS: "text-sky-400",
+  WS: "text-pink-400",
+  MD: "text-blue-400",
+  WD: "text-violet-400",
+  XD: "text-amber-400",
+  BS: "text-cyan-400",
+  GS: "text-rose-400",
+  BD: "text-teal-400",
+  GD: "text-fuchsia-400",
+};
+const catColor = (c?: string) => CATEGORY_COLOR[(c || "").toUpperCase()] || "text-slate-300";
+
 /**
  * Compact "My Matches" strip — the current player's tournament matches ordered
  * live → upcoming → completed. Shown on the Home dashboard and the Tournaments
@@ -93,26 +107,28 @@ export function MyMatchesStrip({
                   <p className="text-xs font-bold text-white truncate">
                     {m.team1_label || "TBD"} <span className="text-slate-500">vs</span> {m.team2_label || "TBD"}
                   </p>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {m.category}
-                    {m.round_name ? ` · ${m.round_name}` : ""}
-                    {m.court_number ? ` · Court ${m.court_number}` : ""}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  {isDone ? (
-                    <span className="text-[11px] font-bold text-slate-300">{m.score || "Final"}</span>
-                  ) : m.scheduled_at ? (
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                      <Clock className="w-3 h-3" />
-                      {new Date(m.scheduled_at).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  ) : null}
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] truncate">
+                      <span className={`font-black ${catColor(m.category)}`}>{m.category}</span>
+                      <span className="text-slate-400">
+                        {m.round_name ? ` · ${m.round_name}` : ""}
+                        {m.court_number ? ` · Court ${m.court_number}` : ""}
+                      </span>
+                    </p>
+                    {isDone ? (
+                      <span className="shrink-0 text-[11px] font-black text-emerald-400 whitespace-nowrap tabular-nums">{m.score || "Final"}</span>
+                    ) : m.scheduled_at ? (
+                      <span className="shrink-0 flex items-center gap-1 text-[10px] text-sky-400 font-bold whitespace-nowrap">
+                        <Clock className="w-3 h-3" />
+                        {new Date(m.scheduled_at).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </Link>

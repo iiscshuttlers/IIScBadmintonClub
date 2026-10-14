@@ -242,11 +242,11 @@ export function ActiveTournamentWidget() {
   if (!tournament && liveMatches.length === 0) return null;
 
   return (
-    <Card className="border-0 bg-emerald-50/80 dark:bg-[#061f17] backdrop-blur-md shadow-lg overflow-hidden mb-4 mt-2 ring-1 ring-emerald-500/30 dark:ring-emerald-500/40">
+    <Card className="border-0 bg-emerald-50/80 dark:bg-[#061f17] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-emerald-500/30 dark:ring-emerald-500/40">
 
       {/* Tournament header */}
       {tournament && (
-        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 px-4 py-2.5 sm:p-5 flex flex-row gap-3 items-center justify-between">
+        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 px-4 py-2 sm:p-5 flex flex-row gap-3 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
               <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -421,7 +421,7 @@ export function ActiveTournamentWidget() {
       </AnimatePresence>
 
       {/* Today's Matches & Polls */}
-      <div className={`px-3 sm:px-5 pb-3 sm:pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-3 sm:pt-4" : "pt-0"}`}>
+      <div className={`px-3 sm:px-5 pb-2.5 sm:pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-2.5 sm:pt-4" : "pt-0"}`}>
         <button
           onClick={handleToggleTodayMatches}
           className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
