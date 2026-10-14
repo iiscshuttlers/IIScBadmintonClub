@@ -1,6 +1,6 @@
 {
-  "versionCode": 419,
-  "versionName": "4.19",
+  "versionCode": 420,
+  "versionName": "4.20",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- feat(admin): shared AdminPanel chrome + adopt in review panels\n- feat(admin): sidebar + mobile drawer navigation, slim tokenized shell\n- refactor(admin): merge admin tabs into hubs (32 -> 19)\n- refactor(admin): lazy-load panels + remove dead Developer Hub tabs\n- style(profile): keep Public Profile pill on a single row\n- style(profile): compact stat cards, discipline metrics & tournaments filter\n- feat(pulse): redesign team-tie card with tappable rubber breakdown\n- style(profile): trim excessive vertical padding on personal & public profile\n- style(home): My Matches — score on 2nd row, colour by format; tighter active card\n- style(home): compact tournament/dashboard cards for mobile"
+  "changelog": "- fix(admin): move master-only tooltip off lucide icon to a wrapping span\n- docs(admin): record Phase 7 delivery-audit panel\n- feat(admin): improve navigation UX and fix token inconsistencies\n- feat(admin): delivery audit — cron-job health + notification outcomes\n- feat(admin): hardening — error boundary, a11y, lazy modal, panel polish\n- fix(admin): clarify doubles link order is cosmetic"
 }

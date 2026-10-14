@@ -1,5 +1,18 @@
 [
   {
+    "versionCode": 420,
+    "versionName": "4.20",
+    "date": "2026-10-14T12:10:25.528Z",
+    "changes": [
+      "- fix(admin): move master-only tooltip off lucide icon to a wrapping span",
+      "- docs(admin): record Phase 7 delivery-audit panel",
+      "- feat(admin): improve navigation UX and fix token inconsistencies",
+      "- feat(admin): delivery audit — cron-job health + notification outcomes",
+      "- feat(admin): hardening — error boundary, a11y, lazy modal, panel polish",
+      "- fix(admin): clarify doubles link order is cosmetic"
+    ]
+  },
+  {
     "versionCode": 419,
     "versionName": "4.19",
     "date": "2026-10-14T09:12:09.902Z",
