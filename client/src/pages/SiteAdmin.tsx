@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,44 +31,51 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import {
-  HolidayEditor,
-  PollEditor,
-  VideoEditor,
-  PlayersManager,
-  ConfigEditor,
-  MatchesManager,
-  ChangelogViewer,
-  NoticeboardManager,
-} from "@/components/admin/AdminEditors";
-import { UmpireTab } from "@/components/umpire/UmpireTab";
-import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
-import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
-import { DisputePanel } from "@/components/admin/DisputePanel";
-import { AdminSettings } from "@/components/admin/AdminSettings";
-import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
-import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
-import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
-import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
-import { AdminFeedbackPanel } from "@/components/admin/AdminFeedbackPanel";
-import { ModerationPanel } from "@/components/admin/ModerationPanel";
-import { AnalyticsPanel } from "@/components/admin/AnalyticsPanel";
-import { TooltipRegistryPanel } from "@/components/admin/TooltipRegistryPanel";
-import { TournamentManager } from "@/components/admin/TournamentManager";
-import { RecycleBin } from "@/components/admin/RecycleBin";
-import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
-import { UndoHistory } from "@/components/admin/UndoHistory";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
-import { RoleManagerPanel } from "@/components/admin/RoleManagerPanel";
+import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
+import { Database } from "lucide-react";
 
-import { AppArchitectureMap } from "@/components/admin/AppArchitectureMap";
-import { FeatureMapDashboard } from "@/components/admin/FeatureMapDashboard";
-import { DatabaseSchemaDashboard } from "@/components/admin/DatabaseSchemaDashboard";
-import { ArchitectureNeuralGraph } from "@/components/admin/ArchitectureNeuralGraph";
-import { AdminFeaturesGuide } from "@/components/admin/AdminFeaturesGuide";
-import { Database, BrainCircuit, BookOpen } from "lucide-react";
-import { HomeBannerManager } from "@/components/admin/HomeBannerManager";
+/* ── Lazy-loaded panels ─────────────────────────────────────────────
+ * Each panel is code-split so visiting /admin no longer pulls the whole
+ * admin bundle (TournamentManager, EloAuditPanel, the graph panels, …)
+ * up front. They load on demand when their tab is opened.
+ * React.lazy needs a default export, so named exports are remapped. */
+const lazyNamed = <T extends Record<string, React.ComponentType<any>>>(
+  loader: () => Promise<T>,
+  name: keyof T,
+) => lazy(() => loader().then((m) => ({ default: m[name] })));
+
+// Content editors (used as EditorComponent props, imported from real paths)
+const HolidayEditor = lazyNamed(() => import("@/components/admin/editors/HolidayEditor"), "HolidayEditor");
+const PollEditor = lazyNamed(() => import("@/components/admin/editors/PollEditor"), "PollEditor");
+const VideoEditor = lazyNamed(() => import("@/components/admin/editors/VideoEditor"), "VideoEditor");
+const ConfigEditor = lazyNamed(() => import("@/components/admin/editors/ConfigEditor"), "ConfigEditor");
+const PlayersManager = lazyNamed(() => import("@/components/admin/editors/PlayersManager"), "PlayersManager");
+const MatchesManager = lazyNamed(() => import("@/components/admin/editors/MatchesManager"), "MatchesManager");
+const ChangelogViewer = lazyNamed(() => import("@/components/admin/editors/ChangelogViewer"), "ChangelogViewer");
+const NoticeboardManager = lazyNamed(() => import("@/components/admin/NoticeboardManager"), "NoticeboardManager");
+
+// Standalone panels
+const UmpireTab = lazyNamed(() => import("@/components/umpire/UmpireTab"), "UmpireTab");
+const AdminStatsOverview = lazyNamed(() => import("@/components/admin/AdminStatsOverview"), "AdminStatsOverview");
+const DisputePanel = lazyNamed(() => import("@/components/admin/DisputePanel"), "DisputePanel");
+const AdminSettings = lazyNamed(() => import("@/components/admin/AdminSettings"), "AdminSettings");
+const AdminActivityLog = lazyNamed(() => import("@/components/admin/AdminActivityLog"), "AdminActivityLog");
+const EloAuditPanel = lazyNamed(() => import("@/components/admin/EloAuditPanel"), "EloAuditPanel");
+const AdminFeaturesPanel = lazyNamed(() => import("@/components/admin/AdminFeaturesPanel"), "AdminFeaturesPanel");
+const AdminAllFeaturesPanel = lazyNamed(() => import("@/components/admin/AdminAllFeaturesPanel"), "AdminAllFeaturesPanel");
+const AdminFeedbackPanel = lazyNamed(() => import("@/components/admin/AdminFeedbackPanel"), "AdminFeedbackPanel");
+const ModerationPanel = lazyNamed(() => import("@/components/admin/ModerationPanel"), "ModerationPanel");
+const AnalyticsPanel = lazyNamed(() => import("@/components/admin/AnalyticsPanel"), "AnalyticsPanel");
+const TournamentManager = lazyNamed(() => import("@/components/admin/TournamentManager"), "TournamentManager");
+const RecycleBin = lazyNamed(() => import("@/components/admin/RecycleBin"), "RecycleBin");
+const GuestPlayersPanel = lazyNamed(() => import("@/components/admin/GuestPlayersPanel"), "GuestPlayersPanel");
+const UndoHistory = lazyNamed(() => import("@/components/admin/UndoHistory"), "UndoHistory");
+const RoleManagerPanel = lazyNamed(() => import("@/components/admin/RoleManagerPanel"), "RoleManagerPanel");
+const HomeBannerManager = lazyNamed(() => import("@/components/admin/HomeBannerManager"), "HomeBannerManager");
+const FeatureMapDashboard = lazyNamed(() => import("@/components/admin/FeatureMapDashboard"), "FeatureMapDashboard");
+const DatabaseSchemaDashboard = lazyNamed(() => import("@/components/admin/DatabaseSchemaDashboard"), "DatabaseSchemaDashboard");
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type TabId =
@@ -93,14 +100,10 @@ type TabId =
   | "feedback"
   | "features"
   | "all_features"
-  | "features_guide"
-  | "tooltips"
   | "recycle_bin"
   | "undo_history"
-  | "architecture"
   | "feature_registry"
   | "database_schema"
-  | "neural_graph"
   | "convener_photos"
   | "moderation"
   | "analytics"
@@ -161,7 +164,6 @@ const TAB_GROUPS: TabGroup[] = [
     description: "System configuration, operations, and settings",
     tabs: [
       { id: "settings", label: "Settings", icon: Settings },
-      { id: "tooltips", label: "Tooltip Registry", icon: Megaphone },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList },
       { id: "undo_history", label: "Undo History", icon: Undo2 },
       { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
@@ -171,13 +173,10 @@ const TAB_GROUPS: TabGroup[] = [
     title: "🛠️ Developer Hub",
     description: "System architecture and codebase features",
     tabs: [
-      { id: "architecture", label: "App Architecture", icon: LayoutGrid },
-      { id: "neural_graph", label: "Architecture Graph", icon: BrainCircuit },
       { id: "feature_registry", label: "Codebase Survey", icon: FileCode2 },
       { id: "database_schema", label: "Database Schema", icon: Database },
       { id: "all_features", label: "All Features", icon: Sparkles },
       { id: "features", label: "Live Features", icon: Zap },
-      { id: "features_guide", label: "Features Guide", icon: BookOpen },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
     ],
   },
@@ -466,6 +465,13 @@ function SiteAdminInner() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
           >
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-24">
+                  <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                </div>
+              }
+            >
             {activeTab === "overview" && isAdmin && <AdminStatsOverview />}
             {activeTab === "config" && (
               <ContentEditorWrapper dbKey="site_config" emptyState={null} editorName="Landing Page Config" EditorComponent={ConfigEditor} />
@@ -521,12 +527,8 @@ function SiteAdminInner() {
             {activeTab === "changelog" && <ChangelogViewer />}
             {activeTab === "features" && <AdminFeaturesPanel />}
             {activeTab === "all_features" && <AdminAllFeaturesPanel />}
-            {activeTab === "architecture" && <AppArchitectureMap />}
             {activeTab === "feature_registry" && <FeatureMapDashboard />}
             {activeTab === "database_schema" && <DatabaseSchemaDashboard />}
-            {activeTab === "neural_graph" && <ArchitectureNeuralGraph />}
-            {activeTab === "features_guide" && <AdminFeaturesGuide />}
-            {activeTab === "tooltips" && <TooltipRegistryPanel />}
             {activeTab === "undo_history" && <UndoHistory />}
             {activeTab === "recycle_bin" && <RecycleBin />}
             {activeTab === "convener_photos" && (
@@ -537,6 +539,7 @@ function SiteAdminInner() {
                 EditorComponent={ConvenerEditor}
               />
             )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </div>
