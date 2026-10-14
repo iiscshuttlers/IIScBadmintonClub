@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { Sword, Sparkles, ChevronRight, UserCircle, PlusCircle, LogIn } from "lucide-react";
 import type { Player } from "@/components/players-directory/PlayerCard";
+import { getReturnUrl } from "@/lib/returnUrl";
 
 interface AuthBannerProps {
   session: any;
@@ -162,7 +163,7 @@ export function AuthBanner({
           </div>
           <button
             onClick={() => {
-              sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+              sessionStorage.setItem("return_url", getReturnUrl());
               setLocation("/join");
             }}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition shadow-lg shadow-primary/20 shrink-0"
