@@ -724,7 +724,7 @@ function LinkExternalSection({
                 {/* Primary player */}
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">
-                    {doublesMode ? "Player 1" : "Registered player"}
+                    {doublesMode ? "First player" : "Registered player"}
                   </p>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -776,8 +776,11 @@ function LinkExternalSection({
                 {/* Partner player (doubles only) */}
                 {doublesMode && (
                   <>
+                    <p className="text-[11px] text-muted-foreground px-1 -mt-1">
+                      Order doesn't matter — both players are credited equally for all matches.
+                    </p>
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">Player 2 (partner)</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">Second player (partner)</p>
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
