@@ -401,20 +401,20 @@ export default function TournamentsHub() {
         )}
 
         {/* Search + Filter Controls */}
-        <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-950/5 p-4 sm:p-5 space-y-3.5">
+        <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-950/5 p-3 sm:p-4 space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tournaments by name, venue or category…"
-              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
+              className="w-full pl-10 pr-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             {/* Status pills */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {STATUS_TABS.map((s) => (
                 <Button key={s.key} size="pill" variant={status === s.key ? "pillActive" : "pillMuted"} onClick={() => setStatus(s.key)}>
                   {s.label}
@@ -432,7 +432,7 @@ export default function TournamentsHub() {
             </div>
 
             {/* Sort selector */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 ml-auto">
               <span className="font-bold">Sort:</span>
               <select
                 value={sortBy}
@@ -447,7 +447,7 @@ export default function TournamentsHub() {
           </div>
 
           {/* Type and Ranked filters */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
             <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1">
               <SlidersHorizontal className="w-3.5 h-3.5" /> Filter
             </span>

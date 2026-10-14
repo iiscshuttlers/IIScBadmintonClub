@@ -1025,12 +1025,12 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
   return (
     <div className="space-y-5">
       {true && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {/* Category Win Rate Cards */}
           <div>
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Performance by Discipline</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Performance by Discipline</h3>
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase">Singles</span>
                   <Swords className="w-3.5 h-3.5 text-[var(--series-a)]" />
@@ -1038,7 +1038,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
                 <div className="text-2xl font-black text-[var(--series-a)]">{stats.singles.winRate}%</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{stats.singles.count} matches</div>
               </div>
-              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase">Doubles</span>
                   <Users className="w-3.5 h-3.5 text-green-500" />
@@ -1046,7 +1046,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
                 <div className="text-2xl font-black text-green-500">{stats.doubles.winRate}%</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{stats.doubles.count} matches</div>
               </div>
-              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+              <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase">Mixed</span>
                   <Trophy className="w-3.5 h-3.5 text-amber-500" />
@@ -1102,9 +1102,9 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
             });
 
             return (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Total Record</div>
                     <div className="text-xl font-black text-slate-800 dark:text-slate-100">
                       {wins}W - {losses}L
@@ -1112,7 +1112,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
                     <div className="text-xs text-muted-foreground mt-0.5">{total ? Math.round((wins / total) * 100) : 0}% win rate</div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Straight Sets</div>
                     <div className="text-xl font-black text-emerald-500">
                       {straightSets}
@@ -1120,7 +1120,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
                     <div className="text-xs text-muted-foreground mt-0.5">2-0 sweeps</div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">3-Set Clutch</div>
                     <div className="text-xl font-black text-amber-500">
                       {decidersPlayed > 0 ? `${Math.round((decidersWon / decidersPlayed) * 100)}%` : "—"}
@@ -1128,7 +1128,7 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
                     <div className="text-xs text-muted-foreground mt-0.5">{decidersWon} of {decidersPlayed} deciders</div>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Tourney vs Club</div>
                     <div className="text-xl font-black text-primary">
                       {tourneyMatches.length} / {friendlyMatches.length}
@@ -1139,8 +1139,8 @@ function StatsSection({ matches, fullMatches = [], player, motionSummary, motion
 
                 {/* Rating & Elo Summary */}
                 {player && (
-                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-5 shadow-md border border-slate-100 dark:border-slate-700/50">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-primary" />
                         <h4 className="text-sm font-bold text-foreground">Rating & Elo Skill Breakdown</h4>

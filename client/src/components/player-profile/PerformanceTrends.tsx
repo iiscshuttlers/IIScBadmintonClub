@@ -100,8 +100,8 @@ export function PerformanceTrends({ matches, playerId }: Props) {
   const eloTrend = data.cumulativeElo[data.cumulativeElo.length - 1];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" /> Performance Trends
         </h3>
@@ -111,9 +111,9 @@ export function PerformanceTrends({ matches, playerId }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-2.5 mb-3">
         {/* Rolling Win Rate */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Win Rate (rolling 5)</p>
           <SparkLine values={data.winRates} color="#10b981" />
           <p className="text-xs font-bold text-muted-foreground dark:text-slate-300 mt-1">
@@ -122,7 +122,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
         </div>
 
         {/* ELO Movement */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">ELO Movement</p>
           <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? "#10b981" : "#f43f5e"} />
           <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary dark:text-primary" : "text-rose-600 dark:text-rose-400"}`}>
