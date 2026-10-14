@@ -75,9 +75,17 @@ Keep, but gate behind master-admin.
     - Inbox: `InboxPanel` (sub-tabs Feedback/Reports/Disputes) merges 3 queues.
     - Database Schema gated behind master-admin (waffle filter + authState).
   - Result: **32 → 19 top-level tabs**; shell chunk 30.6 kB → 16.5 kB.
-- ⬜ **Phase 3** — Navigation/IA: persistent collapsible sidebar (desktop) +
-  bottom-sheet drawer (mobile) + fuzzy tab search. Keep `#hash` deep-linking.
-- ⬜ **Phase 4** — Visual redesign of the shell (slimmer header, consistent tokens).
+- ✅ **Phase 3** — Navigation/IA: persistent sidebar (desktop ≥lg) + slide-in
+  drawer (mobile) + live section search, extracted into an `AdminNav` component.
+  Groups renamed to Dashboard / People / Competition / Content / System /
+  Developer. `#hash` deep-linking preserved, plus a `HASH_ALIASES` map that
+  redirects old routes (config, noticeboard, feedback, disputes, all_features,
+  the deleted dev panels, …) to their new home.
+- ✅ **Phase 4** — Visual redesign: replaced the tall gradient header with a
+  slim sticky top bar (section breadcrumb + compact undo/redo), moved to design
+  tokens (`bg-background`/`bg-card`/`text-foreground`/`muted`/`border`/`primary`)
+  for consistent light+dark theming, dropped the waffle launcher and the
+  redundant header shortcut buttons.
 - ⬜ **Phase 5** — Panel polish: shared `<AdminPanel>` wrapper on high-traffic panels.
 
 ## Risks / notes
