@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+﻿import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Settings,
   BarChart2,
+  TrendingUp,
   Zap,
   Sparkles,
   Undo2,
@@ -24,6 +25,10 @@ import {
   X,
   Search,
   Database,
+  Gavel,
+  Swords,
+  Home,
+  Radio,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -61,6 +66,7 @@ const GuestPlayersPanel = lazyNamed(() => import("@/components/admin/GuestPlayer
 const UndoHistory = lazyNamed(() => import("@/components/admin/UndoHistory"), "UndoHistory");
 const RoleManagerPanel = lazyNamed(() => import("@/components/admin/RoleManagerPanel"), "RoleManagerPanel");
 const DatabaseSchemaDashboard = lazyNamed(() => import("@/components/admin/DatabaseSchemaDashboard"), "DatabaseSchemaDashboard");
+const DeliveryAuditPanel = lazyNamed(() => import("@/components/admin/DeliveryAuditPanel"), "DeliveryAuditPanel");
 // HomeBannerManager, NoticeboardManager and the content editors are now composed
 // inside ContentHub; FeatureMapDashboard + AdminAllFeaturesPanel inside FeaturesPanel.
 
@@ -85,12 +91,14 @@ type TabId =
   | "undo_history"
   | "database_schema"
   | "analytics"
+  | "delivery"
   | "role_manager";
 
 interface TabMeta {
   id: TabId;
   label: string;
   icon: any;
+  description?: string;
   /** Only master admins may see/open this tab. */
   master?: boolean;
 }
@@ -103,48 +111,49 @@ const TAB_GROUPS: TabGroup[] = [
   {
     title: "Dashboard",
     tabs: [
-      { id: "overview", label: "Statistics", icon: Activity },
-      { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
-      { id: "analytics", label: "Analytics", icon: BarChart2 },
-      { id: "inbox", label: "Inbox", icon: MessageSquare },
+      { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
+      { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
+      { id: "analytics", label: "Analytics", icon: TrendingUp, description: "Engagement, retention and usage trends" },
+      { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue" },
     ],
   },
   {
     title: "People",
     tabs: [
-      { id: "players", label: "Players", icon: Users },
-      { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true },
-      { id: "guests", label: "Guests", icon: Ghost },
+      { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
+      { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
+      { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players" },
     ],
   },
   {
     title: "Competition",
     tabs: [
-      { id: "tournament", label: "Tournaments", icon: Trophy },
-      { id: "matches", label: "Matches", icon: Trophy },
-      { id: "umpire", label: "Umpire Mode", icon: Activity },
+      { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
+      { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
+      { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials" },
     ],
   },
   {
     title: "Content",
-    tabs: [{ id: "content", label: "Content", icon: Paintbrush }],
+    tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" }],
   },
   {
     title: "System",
     tabs: [
-      { id: "settings", label: "Settings", icon: Settings },
-      { id: "activity_log", label: "Activity Log", icon: ClipboardList },
-      { id: "undo_history", label: "Undo History", icon: Undo2 },
-      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
-      { id: "changelog", label: "System Logs", icon: FileCode2 },
+      { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
+      { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
+      { id: "undo_history", label: "Undo History", icon: Undo2, description: "Browse and undo recent admin changes" },
+      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2, description: "Restore recently soft-deleted records" },
+      { id: "changelog", label: "System Logs", icon: FileCode2, description: "System change logs and deploy history" },
     ],
   },
   {
     title: "Developer",
     tabs: [
-      { id: "features_catalog", label: "Features", icon: Sparkles },
-      { id: "features", label: "Live Ops", icon: Zap },
-      { id: "database_schema", label: "Database Schema", icon: Database, master: true },
+      { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
+      { id: "features", label: "Live Ops", icon: Zap, description: "Toggle live feature flags in real time" },
+      { id: "delivery", label: "Delivery Audit", icon: Radio, description: "Cron-job health and notification delivery" },
+      { id: "database_schema", label: "Database Schema", icon: Database, master: true, description: "Inspect the live database schema" },
     ],
   },
 ];
@@ -226,9 +235,9 @@ function AdminNav({
       </div>
 
       {/* Groups */}
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-2">
         {groups.length === 0 && (
-          <p className="px-1 pt-4 text-sm text-muted-foreground">No sections match “{query}”.</p>
+          <p className="px-1 pt-4 text-sm text-muted-foreground">No sections match {`"${query}"`}.</p>
         )}
         {groups.map((group) => (
           <div key={group.title}>
@@ -257,6 +266,9 @@ function AdminNav({
                         {count}
                       </span>
                     )}
+                    {tab.master && (
+                      <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-amber-400 opacity-70" title="Master admin only" />
+                    )}
                   </button>
                 );
               })}
@@ -264,6 +276,17 @@ function AdminNav({
           </div>
         ))}
       </nav>
+
+      {/* Back to site */}
+      <div className="border-t border-border px-3 py-3">
+        <a
+          href="/"
+          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+        >
+          <Home className="h-[15px] w-[15px] shrink-0" />
+          Back to site
+        </a>
+      </div>
     </div>
   );
 }
@@ -429,6 +452,9 @@ function SiteAdminInner() {
                 <h1 className="truncate text-lg font-black leading-tight text-foreground sm:text-xl">
                   {activeMeta?.label ?? "Admin"}
                 </h1>
+                {activeMeta?.description && (
+                  <p className="truncate text-[11px] text-muted-foreground">{activeMeta.description}</p>
+                )}
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -506,6 +532,7 @@ function SiteAdminInner() {
                   {activeTab === "features" && <AdminFeaturesPanel />}
                   {activeTab === "features_catalog" && <FeaturesPanel />}
                   {activeTab === "database_schema" && <DatabaseSchemaDashboard />}
+                  {activeTab === "delivery" && <DeliveryAuditPanel />}
                   {activeTab === "undo_history" && <UndoHistory />}
                   {activeTab === "recycle_bin" && <RecycleBin />}
                 </Suspense>

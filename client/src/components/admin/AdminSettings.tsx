@@ -9,9 +9,9 @@ import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
 import { AdminLoading } from "./AdminPanel";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
 interface ClubSettings {
   maintenanceMode: boolean;
@@ -261,7 +261,7 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Power className="w-5 h-5 text-rose-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Maintenance Mode</h3>
+          <h3 className="font-black text-foreground">Maintenance Mode</h3>
           <InfoModal
             title="MAINTENANCE MODE"
             items={[
@@ -270,16 +270,16 @@ export function AdminSettings() {
             ]}
           />
         </div>
-        <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-4 p-4 bg-muted/50 rounded-xl border border-border">
           <div>
-            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Enable Maintenance Mode</p>
+            <p className="font-bold text-foreground text-sm">Enable Maintenance Mode</p>
             <p className="text-xs text-muted-foreground mt-0.5">Shows a maintenance banner and optionally blocks match logging</p>
           </div>
           <button
             onClick={() => update("maintenanceMode", !settings.maintenanceMode)}
-            className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.maintenanceMode ? "bg-rose-500" : "bg-slate-300 dark:bg-slate-600"}`}
+            className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.maintenanceMode ? "bg-rose-500" : "bg-muted"}`}
           >
-            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.maintenanceMode ? "left-6" : "left-0.5"}`} />
+            <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.maintenanceMode ? "left-6" : "left-0.5"}`} />
           </button>
         </div>
         {settings.maintenanceMode && (
@@ -307,12 +307,12 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Zap className="w-5 h-5 text-amber-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Feature Toggles</h3>
+          <h3 className="font-black text-foreground">Feature Toggles</h3>
         </div>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
+              <p className="font-bold text-foreground text-sm">Show Tournament Standings</p>
               <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
             </div>
             <div className="flex items-center gap-4">
@@ -324,23 +324,23 @@ export function AdminSettings() {
               </button>
               <button
                 onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
-                className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+                className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-emerald-500" : "bg-muted"}`}
               >
-                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
+                <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Player Directory</p>
+              <p className="font-bold text-foreground text-sm">Show Player Directory</p>
               <p className="text-xs text-muted-foreground mt-0.5">Show the searchable player directory in Pulse to all users. (Admins can always see it)</p>
             </div>
             <button
               onClick={() => update("showPlayerDirectory", !settings.showPlayerDirectory)}
-              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-emerald-500" : "bg-muted"}`}
             >
-              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showPlayerDirectory ? "left-6" : "left-0.5"}`} />
+              <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.showPlayerDirectory ? "left-6" : "left-0.5"}`} />
             </button>
           </div>
         </div>
@@ -350,19 +350,19 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-5 h-5 text-blue-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Automation & Notifications</h3>
+          <h3 className="font-black text-foreground">Automation & Notifications</h3>
         </div>
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Push on Announcements</p>
+              <p className="font-bold text-foreground text-sm">Push on Announcements</p>
               <p className="text-xs text-muted-foreground mt-0.5">Send a push notification when a new announcement is published</p>
             </div>
             <button
               onClick={() => update("matchAnnouncementPush", !settings.matchAnnouncementPush)}
-              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-emerald-500" : "bg-muted"}`}
             >
-              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.matchAnnouncementPush ? "left-6" : "left-0.5"}`} />
+              <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.matchAnnouncementPush ? "left-6" : "left-0.5"}`} />
             </button>
           </div>
 
@@ -405,7 +405,7 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Smartphone className="w-5 h-5 text-indigo-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Force App Update Prompt</h3>
+          <h3 className="font-black text-foreground">Force App Update Prompt</h3>
           <InfoModal
             title="APP UPDATE PROMPT"
             items={[
@@ -413,9 +413,9 @@ export function AdminSettings() {
             ]}
           />
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
           <div>
-            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Send Update Notification</p>
+            <p className="font-bold text-foreground text-sm">Send Update Notification</p>
             <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">Sends a push notification to all users and forces the update popup on next launch.</p>
           </div>
           <button
@@ -433,7 +433,7 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Download className="w-5 h-5 text-emerald-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Data Export</h3>
+          <h3 className="font-black text-foreground">Data Export</h3>
           <InfoModal
             title="DATA EXPORT"
             items={[
@@ -443,13 +443,13 @@ export function AdminSettings() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Players */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Players</p>
+              <p className="font-bold text-foreground text-sm">Players</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Names, ELOs, roles, etc.</p>
             </div>
             <div className="flex items-center gap-2">
-              <select id="fmt-players" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+              <select id="fmt-players" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
                  <option value="csv">CSV</option>
                  <option value="xlsx">Excel</option>
                  <option value="json">JSON</option>
@@ -467,13 +467,13 @@ export function AdminSettings() {
           </div>
 
           {/* Matches */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Matches</p>
+              <p className="font-bold text-foreground text-sm">Matches</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Scores, timestamps, umpires.</p>
             </div>
             <div className="flex items-center gap-2">
-              <select id="fmt-tournament_matches" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+              <select id="fmt-tournament_matches" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
                  <option value="csv">CSV</option>
                  <option value="xlsx">Excel</option>
                  <option value="json">JSON</option>
@@ -491,13 +491,13 @@ export function AdminSettings() {
           </div>
 
           {/* Tournaments */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Tournaments</p>
+              <p className="font-bold text-foreground text-sm">Tournaments</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">All tournament listings.</p>
             </div>
             <div className="flex items-center gap-2">
-              <select id="fmt-tournaments" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+              <select id="fmt-tournaments" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
                  <option value="csv">CSV</option>
                  <option value="xlsx">Excel</option>
                  <option value="json">JSON</option>
@@ -515,13 +515,13 @@ export function AdminSettings() {
           </div>
 
           {/* Teams */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border">
             <div>
-              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Doubles Teams</p>
+              <p className="font-bold text-foreground text-sm">Doubles Teams</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Registered teams & stats.</p>
             </div>
             <div className="flex items-center gap-2">
-              <select id="fmt-doubles_teams" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+              <select id="fmt-doubles_teams" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
                  <option value="csv">CSV</option>
                  <option value="xlsx">Excel</option>
                  <option value="json">JSON</option>
