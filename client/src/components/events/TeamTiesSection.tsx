@@ -55,6 +55,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     onBehalf?: boolean;
   } | null>(null);
   const [expandedTieId, setExpandedTieId] = useState<string | null>(null);
+  const [scoreDetailTie, setScoreDetailTie] = useState<any | null>(null);
   const [overrideLoading, setOverrideLoading] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED'>('ALL');
 
@@ -592,10 +593,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   </div>
                 )}
 
-                {/* Teams Scoreboard */}
-                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
-                  {/* Team A */}
-                  <div 
+                {/* Teams Scoreboard — Team A name·logo  |  score  |  logo·name Team B */}
+                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-3">
+                  {/* Team A — name then logo (logo sits beside the score) */}
+                  <div
                     onClick={() => {
                       const tData = {
                         id: tie.team_a?.id || tie.team_a_id,
@@ -606,56 +607,50 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       };
                       if (tData.id) openTeamModal(tData, 'roster');
                     }}
-                    className="flex items-center gap-2 sm:gap-3 min-w-0 cursor-pointer group p-1.5 sm:p-2 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
+                    className="flex items-center justify-end gap-2 sm:gap-2.5 min-w-0 text-right cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
                     title="Click to view Team A roster and matches"
                     role="button"
                     tabIndex={0}
                   >
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
+                        {tie.team_a?.name || "Team A"}
+                      </h3>
+                      <span className="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                        {tie.team_a?.short_name || "Side A"}
+                      </span>
+                    </div>
                     <TeamLogo
                       name={tie.team_a?.name || "Team A"}
                       shortName={tie.team_a?.short_name}
                       logoUrl={tie.team_a?.logo_url}
                       size="md"
                     />
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
-                        {tie.team_a?.name || "Team A"}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const tData = {
-                            id: tie.team_a?.id || tie.team_a_id,
-                            name: tie.team_a?.name || "Team A",
-                            short_name: tie.team_a?.short_name,
-                            logo_url: tie.team_a?.logo_url,
-                            tournament_id: tournamentId,
-                          };
-                          if (tData.id) openTeamModal(tData, 'roster');
-                        }}
-                        className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary uppercase tracking-wider transition-colors mt-0.5 truncate max-w-full"
-                      >
-                        <span className="truncate">{tie.team_a?.short_name || "Side A"}</span>
-                        <span className="hidden xs:inline text-slate-400">•</span>
-                        <span className="hidden xs:inline underline decoration-slate-300 dark:decoration-slate-700 underline-offset-2 hover:decoration-primary whitespace-nowrap">View Squad →</span>
-                      </button>
-                    </div>
                   </div>
 
-                  {/* Score */}
-                  <div className="px-2.5 sm:px-4 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-1.5 sm:gap-2.5 shrink-0 shadow-xs min-w-[56px] sm:min-w-[68px]">
-                    <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
-                      {tie.score_team_a ?? 0}
+                  {/* Score — tap to open rubber-by-rubber breakdown */}
+                  <button
+                    type="button"
+                    onClick={() => setScoreDetailTie(tie)}
+                    title="Tap for rubber-by-rubber scores"
+                    className="px-2.5 sm:px-4 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center shrink-0 shadow-xs min-w-[56px] sm:min-w-[68px] cursor-pointer hover:border-primary/50 hover:shadow-sm active:scale-[0.97] transition"
+                  >
+                    <span className="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                      <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
+                        {tie.score_team_a ?? 0}
+                      </span>
+                      <span className="text-slate-300 dark:text-slate-700 font-bold leading-none">-</span>
+                      <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
+                        {tie.score_team_b ?? 0}
+                      </span>
                     </span>
-                    <span className="text-slate-300 dark:text-slate-700 font-bold leading-none">:</span>
-                    <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
-                      {tie.score_team_b ?? 0}
+                    <span className="mt-0.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-primary/80 leading-none">
+                      Tap for ties
                     </span>
-                  </div>
+                  </button>
 
-                  {/* Team B */}
-                  <div 
+                  {/* Team B — logo then name (logo sits beside the score) */}
+                  <div
                     onClick={() => {
                       const tData = {
                         id: tie.team_b?.id || tie.team_b_id,
@@ -666,41 +661,25 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       };
                       if (tData.id) openTeamModal(tData, 'roster');
                     }}
-                    className="flex items-center justify-end gap-2 sm:gap-3 min-w-0 text-right cursor-pointer group p-1.5 sm:p-2 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
+                    className="flex items-center gap-2 sm:gap-2.5 min-w-0 cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
                     title="Click to view Team B roster and matches"
                     role="button"
                     tabIndex={0}
                   >
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
-                        {tie.team_b?.name || "Team B"}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const tData = {
-                            id: tie.team_b?.id || tie.team_b_id,
-                            name: tie.team_b?.name || "Team B",
-                            short_name: tie.team_b?.short_name,
-                            logo_url: tie.team_b?.logo_url,
-                            tournament_id: tournamentId,
-                          };
-                          if (tData.id) openTeamModal(tData, 'roster');
-                        }}
-                        className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary uppercase tracking-wider transition-colors mt-0.5 justify-end truncate max-w-full"
-                      >
-                        <span className="hidden xs:inline underline decoration-slate-300 dark:decoration-slate-700 underline-offset-2 hover:decoration-primary whitespace-nowrap">← View Squad</span>
-                        <span className="hidden xs:inline text-slate-400">•</span>
-                        <span className="truncate">{tie.team_b?.short_name || "Side B"}</span>
-                      </button>
-                    </div>
                     <TeamLogo
                       name={tie.team_b?.name || "Team B"}
                       shortName={tie.team_b?.short_name}
                       logoUrl={tie.team_b?.logo_url}
                       size="md"
                     />
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
+                        {tie.team_b?.name || "Team B"}
+                      </h3>
+                      <span className="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                        {tie.team_b?.short_name || "Side B"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -884,6 +863,109 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
         })
       )}
       </div>
+
+      {/* Rubber-by-rubber Score Breakdown Popup */}
+      {scoreDetailTie && (() => {
+        const tie = scoreDetailTie;
+        const rubbers = allRubberMatches
+          .filter((m: any) => m.tie_id === tie.id)
+          .sort((a: any, b: any) => {
+            const orderA = a.playing_order ?? a.rubber_order ?? 99;
+            const orderB = b.playing_order ?? b.rubber_order ?? 99;
+            return orderA - orderB;
+          });
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-in fade-in overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg max-h-[88vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+              {/* Header with team names / logos / aggregate score */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground">
+                    {tie.tie_code}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setScoreDetailTie(null)}
+                    className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className="flex items-center justify-end gap-2 min-w-0 text-right">
+                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">{tie.team_a?.name || "Team A"}</span>
+                    <TeamLogo name={tie.team_a?.name || "Team A"} shortName={tie.team_a?.short_name} logoUrl={tie.team_a?.logo_url} size="sm" />
+                  </div>
+                  <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center gap-1.5 shrink-0">
+                    <span className="font-mono text-lg font-black text-slate-900 dark:text-white leading-none">{tie.score_team_a ?? 0}</span>
+                    <span className="text-slate-400 font-bold leading-none">-</span>
+                    <span className="font-mono text-lg font-black text-slate-900 dark:text-white leading-none">{tie.score_team_b ?? 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TeamLogo name={tie.team_b?.name || "Team B"} shortName={tie.team_b?.short_name} logoUrl={tie.team_b?.logo_url} size="sm" />
+                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">{tie.team_b?.name || "Team B"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rubbers list */}
+              <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-2.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  Individual Rubbers ({rubbers.length})
+                </div>
+                {rubbers.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-slate-400 font-medium">No rubbers scheduled yet.</div>
+                ) : (
+                  rubbers.map((rubber: any, index: number) => {
+                    const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
+                    const isDoubles = rubber.category?.includes('D') || rubber.category?.includes('Doubles');
+                    const playingSeq = rubber.playing_order || index + 1;
+                    const sideAName = isRevealed
+                      ? [rubber.player1?.full_name, isDoubles ? rubber.player3?.full_name : null].filter(Boolean).join(' / ') || "TBD"
+                      : "Hidden";
+                    const sideBName = isRevealed
+                      ? [rubber.player2?.full_name, isDoubles ? rubber.player4?.full_name : null].filter(Boolean).join(' / ') || "TBD"
+                      : "Hidden";
+                    return (
+                      <div key={rubber.id} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-5 h-5 rounded-md bg-primary/10 text-primary font-mono font-black text-[10px] flex items-center justify-center shrink-0">#{playingSeq}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0">{rubber.category}</span>
+                          </div>
+                          {rubber.status === 'in_progress' ? (
+                            <StatusChip state="live" compact />
+                          ) : rubber.status === 'completed' ? (
+                            <StatusChip state="completed" compact />
+                          ) : (
+                            <StatusChip state="scheduled" compact />
+                          )}
+                        </div>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs">
+                          <span className={`text-right font-bold truncate ${isRevealed ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 italic'}`}>{sideAName}</span>
+                          <span className="font-mono font-black text-primary whitespace-nowrap px-1.5">{rubber.score || 'vs'}</span>
+                          <span className={`text-left font-bold truncate ${isRevealed ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 italic'}`}>{sideBName}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer: open full details */}
+              <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+                <Button
+                  onClick={() => { setActiveVisualTie(tie); setScoreDetailTie(null); }}
+                  className="w-full rounded-xl font-black text-xs h-9 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Swords className="w-3.5 h-3.5" /> Open Full Tie Details
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Official Console Modal */}
       {activeConsoleTie && (
