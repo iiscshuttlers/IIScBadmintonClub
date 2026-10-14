@@ -1400,8 +1400,8 @@ export default function PlayerPersonalPage() {
                       </span>
                     )}
                     <Link href={`/player/${id}`}>
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700">
-                        <User className="w-3.5 h-3.5" /> Public Profile →
+                      <button className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700">
+                        <User className="w-3.5 h-3.5 shrink-0" /> Public Profile →
                       </button>
                     </Link>
                   </div>
