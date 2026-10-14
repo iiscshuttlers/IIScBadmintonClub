@@ -285,31 +285,30 @@ export function NoticeBoard() {
                     transition={{ delay: i * 0.05 }}
                     key={item.id}
                   >
-                    <Link href={item.link} className="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative">
+                    <Link href={item.link} className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative">
                         <div className={cn("p-2.5 rounded-2xl shrink-0 flex items-center justify-center transition-all group-hover:scale-110", item.iconWrapperClass)}>
                           <Icon className={cn("w-5 h-5", item.iconClass)} />
                         </div>
-                        <div className="flex-1 min-w-0 py-0.5">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            {item.badgeText && (
-                              <span className={cn("text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md", item.badgeClass)}>
-                                {item.badgeText}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium ml-auto">
-                              <Clock className="w-3 h-3" />
-                              {item.date && !isNaN(item.date.getTime()) ? item.date.toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
-                            </span>
-                          </div>
-                          <h4 className="font-bold text-sm text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                        {/* Left column: title + subtitle */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm text-foreground mb-0.5 group-hover:text-primary transition-colors line-clamp-1">
                             {item.title}
                           </h4>
                           {item.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: item.description }} />
+                            <p className="text-xs text-muted-foreground line-clamp-1" dangerouslySetInnerHTML={{ __html: item.description }} />
                           )}
                         </div>
-                        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 bottom-4">
-                          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                        {/* Right column: badge + date */}
+                        <div className="shrink-0 flex flex-col items-end gap-1 text-right">
+                          {item.badgeText && (
+                            <span className={cn("text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md", item.badgeClass)}>
+                              {item.badgeText}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium whitespace-nowrap">
+                            <Clock className="w-3 h-3 shrink-0" />
+                            {item.date && !isNaN(item.date.getTime()) ? item.date.toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                          </span>
                         </div>
                     </Link>
                   </motion.div>

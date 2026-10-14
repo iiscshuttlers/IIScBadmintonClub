@@ -57,7 +57,7 @@ export function FeaturedTournamentHero({
   })();
 
   return (
-    <ThemeScope family={family} className="mb-6">
+    <ThemeScope family={family} className="mb-4 sm:mb-6">
       <div
         onClick={onOpen}
         role="button"
@@ -68,10 +68,10 @@ export function FeaturedTournamentHero({
             onOpen();
           }
         }}
-        className="relative overflow-hidden rounded-3xl p-5 sm:p-7 bg-slate-900 border border-slate-800 hover:border-primary/50 shadow-xl transition-all cursor-pointer group active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="relative overflow-hidden rounded-3xl p-4 sm:p-7 bg-slate-900 border border-slate-800 hover:border-primary/50 shadow-xl transition-all cursor-pointer group active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-          <div className="space-y-3 max-w-2xl">
+        <div className="relative z-10 flex flex-row items-center justify-between gap-3 sm:gap-5">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <StatusChip state={t.status} />
               {countdownText ? (
@@ -166,13 +166,15 @@ export function FeaturedTournamentHero({
             </div>
           </div>
 
-          <div className="shrink-0 self-stretch md:self-auto flex items-center justify-end">
+          <div className="shrink-0 flex items-center justify-end">
             <button
               type="button"
               aria-label={`Enter tournament hub for ${t.name}`}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs sm:text-sm hover:brightness-105 active:scale-95 transition shadow-md focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs sm:text-sm hover:brightness-105 active:scale-95 transition shadow-md focus-visible:ring-2 focus-visible:ring-primary"
             >
-              Enter Tournament Hub <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <span className="sm:hidden">Enter Hub</span>
+              <span className="hidden sm:inline">Enter Tournament Hub</span>
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
             </button>
           </div>
         </div>

@@ -67,9 +67,9 @@ export function HomePersonalDashboard() {
   );
 
   return (
-    <div className="mb-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900 to-slate-950 border border-primary/30 shadow-xl backdrop-blur-md text-white">
+    <div className="mb-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900 to-slate-950 border border-primary/30 shadow-xl backdrop-blur-md text-white">
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-800">
+      <div className="flex flex-row items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">
             🏸
@@ -97,7 +97,7 @@ export function HomePersonalDashboard() {
       </div>
 
       {/* Grid of personal highlights */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-3">
         {/* Card 1: Next / Pending Match */}
         <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-1.5">

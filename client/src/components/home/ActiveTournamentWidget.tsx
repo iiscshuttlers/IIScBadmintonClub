@@ -246,7 +246,7 @@ export function ActiveTournamentWidget() {
 
       {/* Tournament header */}
       {tournament && (
-        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 px-4 py-2.5 sm:p-5 flex flex-row gap-3 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
               <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -265,11 +265,11 @@ export function ActiveTournamentWidget() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto mt-2 sm:mt-0">
+          <div className="flex items-center gap-2 shrink-0">
             <Link href={`/tournaments`}>
-              <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 shrink-0 border border-emerald-500/50">
-                View Tournament
-                <ArrowRight className="w-4 h-4" />
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 shrink-0 border border-emerald-500/50">
+                View
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </Link>
           </div>
@@ -421,10 +421,10 @@ export function ActiveTournamentWidget() {
       </AnimatePresence>
 
       {/* Today's Matches & Polls */}
-      <div className={`px-3 sm:px-5 pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-4" : ""}`}>
+      <div className={`px-3 sm:px-5 pb-3 sm:pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-3 sm:pt-4" : "pt-0"}`}>
         <button
           onClick={handleToggleTodayMatches}
-          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
+          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
             showTodayMatches
               ? "bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30"
               : "bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60 border-indigo-900/50 hover:border-indigo-700/50"
@@ -437,7 +437,7 @@ export function ActiveTournamentWidget() {
 
         <button
           onClick={handleTogglePolls}
-          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
+          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
             showPolls
               ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-600/30"
               : "bg-violet-950/40 text-violet-300 hover:bg-violet-900/60 border-violet-900/50 hover:border-violet-700/50"
