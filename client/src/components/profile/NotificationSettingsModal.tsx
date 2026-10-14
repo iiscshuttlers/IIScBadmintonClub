@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
-import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { enableWebPush } from "@/hooks/usePushNotifications";
 
@@ -76,8 +75,8 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
   const checkPermissions = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        const { display } = await LocalNotifications.checkPermissions();
-        setPushGranted(display === "granted");
+        const { receive } = await PushNotifications.checkPermissions();
+        setPushGranted(receive === "granted");
       } else if ("Notification" in window) {
         setPushGranted(Notification.permission === "granted");
       } else {
@@ -92,13 +91,16 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     setLoading(true);
     try {
       if (Capacitor.isNativePlatform()) {
-        let permStatus = await LocalNotifications.checkPermissions();
-        if (permStatus.display === "prompt" || permStatus.display === "prompt-with-rationale") {
-          permStatus = await LocalNotifications.requestPermissions();
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
+          permStatus = await PushNotifications.requestPermissions();
         }
 
-        if (permStatus.display === "granted") {
+        if (permStatus.receive === "granted") {
           setPushGranted(true);
+          // Also flip the app-level master preference back on, so toggling push
+          // off and then re-enabling from here actually restores delivery.
+          if (!prefs.pref_receive_push) await handleTogglePref("pref_receive_push");
           await PushNotifications.register();
           toast("Notifications Enabled!", { icon: "✅" });
         } else {
@@ -125,6 +127,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
       const ok = await enableWebPush();
       setPushGranted(ok);
       if (ok) {
+        if (!prefs.pref_receive_push) await handleTogglePref("pref_receive_push");
         toast("Notifications Enabled!", { icon: "✅" });
       } else {
         toast("Couldn't Enable Notifications", {

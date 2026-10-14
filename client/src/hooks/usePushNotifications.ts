@@ -286,10 +286,16 @@ export function usePushNotifications(userId: string | undefined) {
         // 2. Create Android channels before registering
         await createAndroidChannels();
 
-        // 3. Check permissions, then register (fires "registration" → listener saves token)
-        const permStatus = await PushNotifications.checkPermissions();
+        // 3. Check permissions. On first login the status is "prompt", so request
+        //    automatically — notifications should be on by default. If the user has
+        //    explicitly denied, requestPermissions() resolves immediately with the
+        //    existing "denied" and shows no dialog, so this never nags.
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
+          permStatus = await PushNotifications.requestPermissions();
+        }
         if (permStatus.receive !== "granted") {
-          return; // Permission not granted yet (or denied). Wait for user to enable in settings.
+          return; // Denied, or dismissed. User can enable later in settings.
         }
 
         await PushNotifications.register();

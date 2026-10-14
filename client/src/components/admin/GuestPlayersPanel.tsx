@@ -512,7 +512,20 @@ function LinkExternalSection({
   const [filter, setFilter] = useState("");
   const [playerSearch, setPlayerSearch] = useState("");
   const [selectedPlayer, setSelectedPlayer] = useState<RealPlayer | null>(null);
+  // Optional second player for doubles labels (e.g. "Abhisek & Kaustav").
+  const [doublesMode, setDoublesMode] = useState(false);
+  const [partnerSearch, setPartnerSearch] = useState("");
+  const [selectedPartner, setSelectedPartner] = useState<RealPlayer | null>(null);
   const [linking, setLinking] = useState(false);
+
+  const resetSelection = () => {
+    setSelectedLabel(null);
+    setSelectedPlayer(null);
+    setPlayerSearch("");
+    setDoublesMode(false);
+    setSelectedPartner(null);
+    setPartnerSearch("");
+  };
 
   const loadLabels = useCallback(async () => {
     setLoading(true);
@@ -583,21 +596,32 @@ function LinkExternalSection({
     [realPlayers, playerSearch]
   );
 
+  const filteredPartners = useMemo(() =>
+    realPlayers
+      .filter(p => p.id !== selectedPlayer?.id)
+      .filter(p => !partnerSearch || p.full_name.toLowerCase().includes(partnerSearch.toLowerCase()))
+      .slice(0, 30),
+    [realPlayers, partnerSearch, selectedPlayer]
+  );
+
   const executeLink = async () => {
     if (!selectedLabel || !selectedPlayer) return;
+    const partnerId = doublesMode ? selectedPartner?.id ?? null : null;
     setLinking(true);
     try {
       const { data, error } = await (supabase.rpc as any)("link_label_to_player", {
         p_label: selectedLabel.label,
         p_player_id: selectedPlayer.id,
+        p_partner_id: partnerId,
       });
       if (error) throw error;
-      toast.success(`"${selectedLabel.label}" linked to "${selectedPlayer.full_name}" — ${data} slot(s) updated.`);
-      await logAction(`Linked label "${selectedLabel.label}" → "${selectedPlayer.full_name}" (${data} slots)`);
+      const names = partnerId
+        ? `"${selectedPlayer.full_name}" + "${selectedPartner!.full_name}"`
+        : `"${selectedPlayer.full_name}"`;
+      toast.success(`"${selectedLabel.label}" linked to ${names} — ${data} slot(s) updated.`);
+      await logAction(`Linked label "${selectedLabel.label}" → ${names} (${data} slots)`);
       setLabels(prev => prev.filter(l => l.label !== selectedLabel.label));
-      setSelectedLabel(null);
-      setSelectedPlayer(null);
-      setPlayerSearch("");
+      resetSelection();
     } catch (err: any) {
       toast.error(err?.message || "Failed to link");
     } finally { setLinking(false); }
@@ -649,7 +673,7 @@ function LinkExternalSection({
                 return (
                   <div
                     key={l.label}
-                    onClick={() => { setSelectedLabel(isSelected ? null : l); setSelectedPlayer(null); setPlayerSearch(""); }}
+                    onClick={() => { if (isSelected) { resetSelection(); } else { resetSelection(); setSelectedLabel(l); } }}
                     className={`flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all ${
                       isSelected
                         ? "bg-sky-50 dark:bg-sky-900/30 border-sky-400 dark:border-sky-600 shadow-md"
@@ -690,21 +714,28 @@ function LinkExternalSection({
                   {selectedPlayer ? (
                     <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-black px-3 py-1 rounded-full">
                       {selectedPlayer.full_name}
+                      {doublesMode && selectedPartner && ` + ${selectedPartner.full_name}`}
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground italic">Search for registered player →</span>
                   )}
                 </div>
 
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    value={playerSearch}
-                    onChange={e => { setPlayerSearch(e.target.value); setSelectedPlayer(null); }}
-                    placeholder="Type name to search..."
-                    autoFocus
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                {/* Primary player */}
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">
+                    {doublesMode ? "Player 1" : "Registered player"}
+                  </p>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      value={playerSearch}
+                      onChange={e => { setPlayerSearch(e.target.value); setSelectedPlayer(null); }}
+                      placeholder="Type name to search..."
+                      autoFocus
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
                 </div>
 
                 <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
@@ -728,16 +759,68 @@ function LinkExternalSection({
                   ))}
                 </div>
 
+                {/* Doubles partner toggle */}
+                <button
+                  type="button"
+                  onClick={() => { setDoublesMode(v => !v); setSelectedPartner(null); setPartnerSearch(""); }}
+                  className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-bold transition ${
+                    doublesMode
+                      ? "bg-sky-50 dark:bg-sky-900/30 border-sky-400 dark:border-sky-600 text-sky-700 dark:text-sky-300"
+                      : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-sky-300 dark:hover:border-sky-700"
+                  }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {doublesMode ? "Doubles — linking two players" : "This is a doubles pair (add 2nd player)"}
+                </button>
+
+                {/* Partner player (doubles only) */}
+                {doublesMode && (
+                  <>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">Player 2 (partner)</p>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          value={partnerSearch}
+                          onChange={e => { setPartnerSearch(e.target.value); setSelectedPartner(null); }}
+                          placeholder="Type partner name to search..."
+                          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                      {partnerSearch.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-6">Start typing to search the partner</p>
+                      ) : filteredPartners.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-6">No players found</p>
+                      ) : filteredPartners.map(p => (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelectedPartner(p)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${
+                            selectedPartner?.id === p.id
+                              ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 font-bold"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          <span className="font-bold">{p.full_name}</span>
+                          {p.department && <span className="text-xs text-muted-foreground ml-2">· {p.department}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <div className="flex gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button
-                    onClick={() => { setSelectedLabel(null); setSelectedPlayer(null); setPlayerSearch(""); }}
+                    onClick={resetSelection}
                     className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={executeLink}
-                    disabled={!selectedPlayer || linking}
+                    disabled={!selectedPlayer || (doublesMode && !selectedPartner) || linking}
                     className="flex-1 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {linking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
