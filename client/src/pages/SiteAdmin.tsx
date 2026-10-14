@@ -267,7 +267,9 @@ function AdminNav({
                       </span>
                     )}
                     {tab.master && (
-                      <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-amber-400 opacity-70" title="Master admin only" />
+                      <span title="Master admin only" className="inline-flex shrink-0">
+                        <ShieldAlert className="h-3.5 w-3.5 text-amber-400 opacity-70" aria-label="Master admin only" />
+                      </span>
                     )}
                   </button>
                 );
