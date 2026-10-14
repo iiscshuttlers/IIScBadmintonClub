@@ -1357,9 +1357,9 @@ export default function PlayerPersonalPage() {
 
       {/* Main Content Area */}
       <div className="flex-1">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 lg:pt-8 pb-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-3 lg:pt-8 pb-6">
         {/* Hero */}
-        <div className="relative overflow-hidden px-5 pt-6 pb-7 lg:px-8 lg:pt-8 mb-6">
+        <div className="relative overflow-hidden px-5 pt-3 pb-3 lg:px-8 lg:pt-8 lg:pb-7 mb-3">
           <div className="grid-texture absolute inset-0 opacity-60" />
           <div className="orb orb-volt absolute -top-24 -right-16 h-72 w-72" />
           <div className="orb orb-cyan absolute -bottom-16 left-1/4 h-44 w-44" />
