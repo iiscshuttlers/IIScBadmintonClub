@@ -86,7 +86,16 @@ Keep, but gate behind master-admin.
   tokens (`bg-background`/`bg-card`/`text-foreground`/`muted`/`border`/`primary`)
   for consistent light+dark theming, dropped the waffle launcher and the
   redundant header shortcut buttons.
-- ⬜ **Phase 5** — Panel polish: shared `<AdminPanel>` wrapper on high-traffic panels.
+- 🟡 **Phase 5** — Panel polish.
+  - ✅ Added shared chrome `client/src/components/admin/AdminPanel.tsx`:
+    `AdminPanel` (icon + title + description + actions header), `AdminLoading`
+    (standard spinner), `AdminEmptyState` (standard empty state).
+  - ✅ Adopted in the highest-traffic review panels: AnalyticsPanel,
+    ModerationPanel, AdminFeedbackPanel (all tokenized away from hardcoded
+    slate backgrounds in the process).
+  - ⬜ Follow-up candidates (larger/complex, lower marginal gain): PlayersManager,
+    MatchesManager, AdminSettings, AdminStatsOverview (already has a custom
+    skeleton + export header — leave unless we want full uniformity).
 
 ## Risks / notes
 - `@ts-nocheck` on shell + 12 panels → no tsc safety; verify with the

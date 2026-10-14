@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Flag, Check, X, ShieldBan, Loader2, Inbox } from "lucide-react";
+import { Flag, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { AdminPanel, AdminLoading, AdminEmptyState } from "./AdminPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 // user_reports is new; generated types regenerate after the migration is
@@ -58,46 +59,36 @@ export function ModerationPanel() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl bg-rose-500/15 flex items-center justify-center">
-          <Flag className="w-5 h-5 text-rose-500" />
-        </div>
-        <div>
-          <h2 className="text-lg font-black text-foreground">Reports & Moderation</h2>
-          <p className="text-sm text-muted-foreground">Review player reports and take action.</p>
-        </div>
-      </div>
-
-      <div className="flex gap-1.5">
-        {(["open", "reviewed", "dismissed", "all"] as Filter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black capitalize transition ${
-              filter === f ? "bg-primary text-primary-foreground" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
+    <AdminPanel
+      icon={Flag}
+      title="Reports & Moderation"
+      description="Review player reports and take action."
+      actions={(["open", "reviewed", "dismissed", "all"] as Filter[]).map((f) => (
+        <button
+          key={f}
+          onClick={() => setFilter(f)}
+          className={`rounded-xl px-3 py-1.5 text-xs font-black capitalize transition ${
+            filter === f
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {f}
+        </button>
+      ))}
+    >
       {isLoading ? (
-        <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+        <AdminLoading />
       ) : error ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           Couldn't load reports. (Has the trust-safety migration been applied?)
         </div>
       ) : reports.length === 0 ? (
-        <div className="py-12 flex flex-col items-center text-muted-foreground">
-          <Inbox className="w-10 h-10 mb-2 opacity-50" />
-          <p className="text-sm font-bold">No {filter === "all" ? "" : filter} reports</p>
-        </div>
+        <AdminEmptyState title={`No ${filter === "all" ? "" : filter} reports`.replace("  ", " ").trim()} />
       ) : (
         <div className="space-y-2">
           {reports.map((r: any) => (
-            <div key={r.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div key={r.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -131,6 +122,6 @@ export function ModerationPanel() {
           ))}
         </div>
       )}
-    </div>
+    </AdminPanel>
   );
 }
