@@ -23,7 +23,10 @@ import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import MatchAlert from "./components/MatchAlert";
-import LogMatchModal from "./components/LogMatchModal";
+// Lazy: the log-match modal mounts for every signed-in user but is invisible
+// until opened, so keep it (and canvas-confetti + its form deps) out of the
+// eager entry chunk.
+const LogMatchModal = lazy(() => import("./components/LogMatchModal"));
 import { useAppUpdate, AppUpdateProvider, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
@@ -548,17 +551,19 @@ function AppContent() {
             </Router>
             <Toaster />
             <MatchAlert />
-            {profile && (
-              <LogMatchModal
-                isOpen={isLogMatchOpen}
-                onClose={() => {
-                  setIsLogMatchOpen(false);
-                  setDefaultOpponentId(undefined);
-                }}
-                currentUser={profile as any}
-                onSuccess={() => setIsLogMatchOpen(false)}
-                defaultOpponentId={defaultOpponentId}
-              />
+            {profile && isLogMatchOpen && (
+              <Suspense fallback={null}>
+                <LogMatchModal
+                  isOpen={isLogMatchOpen}
+                  onClose={() => {
+                    setIsLogMatchOpen(false);
+                    setDefaultOpponentId(undefined);
+                  }}
+                  currentUser={profile as any}
+                  onSuccess={() => setIsLogMatchOpen(false)}
+                  defaultOpponentId={defaultOpponentId}
+                />
+              </Suspense>
             )}
             {isDialogOpen && updateInfo && (
               <UpdateDialog 

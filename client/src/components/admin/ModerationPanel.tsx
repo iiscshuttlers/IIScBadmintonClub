@@ -97,7 +97,7 @@ export function ModerationPanel() {
                       {REASON_LABELS[r.reason] || r.reason}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      r.status === "open" ? "bg-amber-500/15 text-amber-500" : r.status === "reviewed" ? "bg-emerald-500/15 text-emerald-500" : "bg-slate-500/15 text-slate-400"
+                      r.status === "open" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : r.status === "reviewed" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"
                     }`}>
                       {r.status}
                     </span>

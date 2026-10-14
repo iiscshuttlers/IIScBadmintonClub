@@ -97,6 +97,36 @@ Keep, but gate behind master-admin.
     MatchesManager, AdminSettings, AdminStatsOverview (already has a custom
     skeleton + export header — leave unless we want full uniformity).
 
+## Phase 6 — Hardening (reliability · perf · a11y · polish) ✅
+
+Follow-up round after the core revamp.
+
+- **Reliability** — added `AdminErrorBoundary` (`client/src/components/admin/AdminErrorBoundary.tsx`)
+  wrapping the panel switch in `SiteAdmin`, keyed by the active tab so a crash
+  in one panel shows a recoverable "Retry" card instead of blanking the shell;
+  navigating to another section clears it. (The app already has a global
+  `OfflineBanner` with Lie-Fi detection + route-level `ErrorBoundary`s, so no
+  duplicate offline UX added.)
+- **Accessibility** — mobile drawer now closes on `Escape`, carries
+  `role="dialog"` + `aria-modal` + `aria-label`; fixed a low-contrast status
+  chip in `ModerationPanel` (slate-400 → muted / amber-600 / emerald-600 with
+  dark variants).
+- **Performance** — `LogMatchModal` (mounted for every signed-in user but
+  invisible until opened; already `return null` when closed) is now
+  `React.lazy` + `Suspense`, gated on open. Eager entry chunk
+  **793 → 750 kB** (gzip 234 → 222); modal split into its own 27 kB chunk.
+  Profiling note: heavy libs (xlsx 493 kB, jspdf 386 kB, recharts 360 kB,
+  html2canvas 201 kB) are already correctly code-split into on-demand chunks;
+  the remaining weight is first-party code in the entry chunk.
+- **Panel polish (Phase 5 finish)** — `PlayersManager`, `MatchesManager`,
+  `AdminSettings` now use the shared `AdminLoading` / `AdminEmptyState` for
+  consistent loading + empty states (no duplicate title header, since the shell
+  top bar already shows the section name).
+
+Deferred (needs backend/product decision, not built): a push/cron delivery
+audit panel (would need a cron-run history table/RPC). Flagged for the
+maintainer.
+
 ## Risks / notes
 - `@ts-nocheck` on shell + 12 panels → no tsc safety; verify with the
   undefined-ref gate + live preview.

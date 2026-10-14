@@ -14,6 +14,7 @@ import { optimizeImage } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/contexts/ConfirmContext";
+import { AdminLoading, AdminEmptyState } from "../AdminPanel";
 
 export function PlayersManager() {
   const { confirm } = useConfirm();
@@ -542,11 +543,7 @@ export function PlayersManager() {
   const pending = players.filter((p) => !p.is_approved).length;
 
   if (loading)
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
+    return <AdminLoading label="Loading players…" />;
 
   return (
     <div className="space-y-4">
@@ -747,9 +744,11 @@ export function PlayersManager() {
           </div>
         )}
         {sortedAndFiltered.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground text-sm font-medium">
-            No players found.
-          </div>
+          <AdminEmptyState
+            icon={Search}
+            title="No players found"
+            description="Try a different search term or switch the filter above."
+          />
         )}
         
         {sortedAndFiltered.length > 0 && filter === "no-profile" && (

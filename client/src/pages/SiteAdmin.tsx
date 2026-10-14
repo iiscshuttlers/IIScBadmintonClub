@@ -28,6 +28,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
 
 /* ── Lazy-loaded panels ─────────────────────────────────────────────
  * Each panel is code-split so visiting /admin no longer pulls the whole
@@ -312,14 +313,18 @@ function SiteAdminInner() {
     window.dispatchEvent(new HashChangeEvent("hashchange"));
   };
 
-  // Lock body scroll while the mobile drawer is open.
+  // Lock body scroll + close on Escape while the mobile drawer is open.
   useEffect(() => {
-    if (drawerOpen) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
+    if (!drawerOpen) return;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
   }, [drawerOpen]);
 
   useEffect(() => {
@@ -457,6 +462,7 @@ function SiteAdminInner() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15 }}
               >
+                <AdminErrorBoundary panelLabel={activeMeta?.label}>
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center py-24">
@@ -503,6 +509,7 @@ function SiteAdminInner() {
                   {activeTab === "undo_history" && <UndoHistory />}
                   {activeTab === "recycle_bin" && <RecycleBin />}
                 </Suspense>
+                </AdminErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -526,6 +533,9 @@ function SiteAdminInner() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "tween", duration: 0.22 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Admin sections"
               className="fixed inset-y-0 left-0 z-[70] flex w-80 max-w-[85vw] flex-col bg-card shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between border-b border-border px-5 py-4">

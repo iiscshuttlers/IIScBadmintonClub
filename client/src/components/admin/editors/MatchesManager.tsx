@@ -9,6 +9,7 @@ import { useConfirm } from "@/contexts/ConfirmContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "../../feed/MatchCard";
 import { Capacitor } from "@capacitor/core";
+import { AdminLoading, AdminEmptyState } from "../AdminPanel";
 
 export function MatchesManager() {
   const { user } = useAuth();
@@ -363,12 +364,13 @@ export function MatchesManager() {
 
       <div className="space-y-3 mt-4">
         {loading ? (
-          <div className="py-10 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary"/></div>
+          <AdminLoading label="Loading matches…" />
         ) : matches.length === 0 ? (
-          <div className="py-10 text-center flex flex-col items-center">
-            <Activity className="w-10 h-10 text-slate-200 dark:text-muted-foreground mb-3" />
-            <p className="text-muted-foreground font-bold">No {activeTab} matches found for {activeFormat}.</p>
-          </div>
+          <AdminEmptyState
+            icon={Activity}
+            title={`No ${activeTab} matches found`}
+            description={`Nothing in the ${activeFormat} format yet.`}
+          />
         ) : matches.map((m, idx) => {
           const busy = actionId === m.id;
           return (
