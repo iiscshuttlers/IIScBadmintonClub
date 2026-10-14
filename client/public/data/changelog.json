@@ -1,5 +1,22 @@
 [
   {
+    "versionCode": 419,
+    "versionName": "4.19",
+    "date": "2026-10-14T09:12:09.902Z",
+    "changes": [
+      "- feat(admin): shared AdminPanel chrome + adopt in review panels",
+      "- feat(admin): sidebar + mobile drawer navigation, slim tokenized shell",
+      "- refactor(admin): merge admin tabs into hubs (32 -> 19)",
+      "- refactor(admin): lazy-load panels + remove dead Developer Hub tabs",
+      "- style(profile): keep Public Profile pill on a single row",
+      "- style(profile): compact stat cards, discipline metrics & tournaments filter",
+      "- feat(pulse): redesign team-tie card with tappable rubber breakdown",
+      "- style(profile): trim excessive vertical padding on personal & public profile",
+      "- style(home): My Matches — score on 2nd row, colour by format; tighter active card",
+      "- style(home): compact tournament/dashboard cards for mobile"
+    ]
+  },
+  {
     "versionCode": 418,
     "versionName": "4.18",
     "date": "2026-10-13T19:47:32.611Z",

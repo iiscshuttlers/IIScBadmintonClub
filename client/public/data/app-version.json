@@ -1,6 +1,6 @@
 {
-  "versionCode": 418,
-  "versionName": "4.18",
+  "versionCode": 419,
+  "versionName": "4.19",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- fix(release): invoke gradlew cross-platform in release script"
+  "changelog": "- feat(admin): shared AdminPanel chrome + adopt in review panels\n- feat(admin): sidebar + mobile drawer navigation, slim tokenized shell\n- refactor(admin): merge admin tabs into hubs (32 -> 19)\n- refactor(admin): lazy-load panels + remove dead Developer Hub tabs\n- style(profile): keep Public Profile pill on a single row\n- style(profile): compact stat cards, discipline metrics & tournaments filter\n- feat(pulse): redesign team-tie card with tappable rubber breakdown\n- style(profile): trim excessive vertical padding on personal & public profile\n- style(home): My Matches — score on 2nd row, colour by format; tighter active card\n- style(home): compact tournament/dashboard cards for mobile"
 }
