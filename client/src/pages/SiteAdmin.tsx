@@ -3,15 +3,10 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
-  Megaphone,
   Ghost,
-  Video,
-  CalendarDays,
   Trash2,
   Shield,
   ShieldAlert,
-  AlertTriangle,
   Users,
   Activity,
   Trophy,
@@ -26,14 +21,11 @@ import {
   FileCode2,
   ExternalLink,
   LayoutGrid,
-  UserRound,
   MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
-import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
-import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
 import { Database } from "lucide-react";
 
 /* ── Lazy-loaded panels ─────────────────────────────────────────────
@@ -46,66 +38,50 @@ const lazyNamed = <T extends Record<string, React.ComponentType<any>>>(
   name: keyof T,
 ) => lazy(() => loader().then((m) => ({ default: m[name] })));
 
-// Content editors (used as EditorComponent props, imported from real paths)
-const HolidayEditor = lazyNamed(() => import("@/components/admin/editors/HolidayEditor"), "HolidayEditor");
-const PollEditor = lazyNamed(() => import("@/components/admin/editors/PollEditor"), "PollEditor");
-const VideoEditor = lazyNamed(() => import("@/components/admin/editors/VideoEditor"), "VideoEditor");
-const ConfigEditor = lazyNamed(() => import("@/components/admin/editors/ConfigEditor"), "ConfigEditor");
+// Direct panels
 const PlayersManager = lazyNamed(() => import("@/components/admin/editors/PlayersManager"), "PlayersManager");
 const MatchesManager = lazyNamed(() => import("@/components/admin/editors/MatchesManager"), "MatchesManager");
 const ChangelogViewer = lazyNamed(() => import("@/components/admin/editors/ChangelogViewer"), "ChangelogViewer");
-const NoticeboardManager = lazyNamed(() => import("@/components/admin/NoticeboardManager"), "NoticeboardManager");
+const ContentHub = lazyNamed(() => import("@/components/admin/ContentHub"), "ContentHub");
 
 // Standalone panels
 const UmpireTab = lazyNamed(() => import("@/components/umpire/UmpireTab"), "UmpireTab");
 const AdminStatsOverview = lazyNamed(() => import("@/components/admin/AdminStatsOverview"), "AdminStatsOverview");
-const DisputePanel = lazyNamed(() => import("@/components/admin/DisputePanel"), "DisputePanel");
+const InboxPanel = lazyNamed(() => import("@/components/admin/InboxPanel"), "InboxPanel");
 const AdminSettings = lazyNamed(() => import("@/components/admin/AdminSettings"), "AdminSettings");
 const AdminActivityLog = lazyNamed(() => import("@/components/admin/AdminActivityLog"), "AdminActivityLog");
 const EloAuditPanel = lazyNamed(() => import("@/components/admin/EloAuditPanel"), "EloAuditPanel");
 const AdminFeaturesPanel = lazyNamed(() => import("@/components/admin/AdminFeaturesPanel"), "AdminFeaturesPanel");
-const AdminAllFeaturesPanel = lazyNamed(() => import("@/components/admin/AdminAllFeaturesPanel"), "AdminAllFeaturesPanel");
-const AdminFeedbackPanel = lazyNamed(() => import("@/components/admin/AdminFeedbackPanel"), "AdminFeedbackPanel");
-const ModerationPanel = lazyNamed(() => import("@/components/admin/ModerationPanel"), "ModerationPanel");
+const FeaturesPanel = lazyNamed(() => import("@/components/admin/FeaturesPanel"), "FeaturesPanel");
 const AnalyticsPanel = lazyNamed(() => import("@/components/admin/AnalyticsPanel"), "AnalyticsPanel");
-const TournamentManager = lazyNamed(() => import("@/components/admin/TournamentManager"), "TournamentManager");
 const RecycleBin = lazyNamed(() => import("@/components/admin/RecycleBin"), "RecycleBin");
 const GuestPlayersPanel = lazyNamed(() => import("@/components/admin/GuestPlayersPanel"), "GuestPlayersPanel");
 const UndoHistory = lazyNamed(() => import("@/components/admin/UndoHistory"), "UndoHistory");
 const RoleManagerPanel = lazyNamed(() => import("@/components/admin/RoleManagerPanel"), "RoleManagerPanel");
-const HomeBannerManager = lazyNamed(() => import("@/components/admin/HomeBannerManager"), "HomeBannerManager");
-const FeatureMapDashboard = lazyNamed(() => import("@/components/admin/FeatureMapDashboard"), "FeatureMapDashboard");
 const DatabaseSchemaDashboard = lazyNamed(() => import("@/components/admin/DatabaseSchemaDashboard"), "DatabaseSchemaDashboard");
+// HomeBannerManager, NoticeboardManager and the content editors are now composed
+// inside ContentHub; FeatureMapDashboard + AdminAllFeaturesPanel inside FeaturesPanel.
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type TabId =
   | "overview"
-  | "config"
-  | "noticeboard"
-  | "home_banners"
-  | "holidays"
-  | "polls"
+  | "content"
   | "tournament"
-  | "videos"
   | "players"
   | "guests"
   | "umpire"
   | "registrations"
   | "matches"
   | "changelog"
-  | "disputes"
+  | "inbox"
   | "elo_audit"
   | "settings"
   | "activity_log"
-  | "feedback"
   | "features"
-  | "all_features"
+  | "features_catalog"
   | "recycle_bin"
   | "undo_history"
-  | "feature_registry"
   | "database_schema"
-  | "convener_photos"
-  | "moderation"
   | "analytics"
   | "role_manager";
 
@@ -123,7 +99,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "overview", label: "Statistics", icon: Activity },
       { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
       { id: "analytics", label: "Analytics", icon: BarChart2 },
-      { id: "feedback", label: "User Feedback", icon: MessageSquare },
+      { id: "inbox", label: "Inbox", icon: MessageSquare },
     ],
   },
   {
@@ -132,7 +108,6 @@ const TAB_GROUPS: TabGroup[] = [
     tabs: [
       { id: "players", label: "Players", icon: Users },
       { id: "role_manager", label: "Role Manager", icon: ShieldAlert },
-      { id: "moderation", label: "Reports", icon: ShieldAlert },
       { id: "guests", label: "Guests", icon: Ghost },
     ],
   },
@@ -143,20 +118,13 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "matches", label: "Matches", icon: Trophy },
       { id: "umpire", label: "Umpire Mode", icon: Activity },
-      { id: "disputes", label: "Disputes", icon: AlertTriangle },
     ],
   },
   {
     title: "📝 Content & Media",
     description: "Manage club content, announcements, and events",
     tabs: [
-      { id: "config", label: "Landing Pages", icon: Paintbrush },
-      { id: "home_banners", label: "Home Banners", icon: Megaphone },
-      { id: "noticeboard", label: "Noticeboard", icon: Megaphone },
-      { id: "polls", label: "Community Polls", icon: Megaphone },
-      { id: "holidays", label: "Holidays", icon: Calendar },
-      { id: "videos", label: "Videos", icon: Video },
-      { id: "convener_photos", label: "Convener Photos", icon: UserRound },
+      { id: "content", label: "Content", icon: Paintbrush },
     ],
   },
   {
@@ -173,10 +141,9 @@ const TAB_GROUPS: TabGroup[] = [
     title: "🛠️ Developer Hub",
     description: "System architecture and codebase features",
     tabs: [
-      { id: "feature_registry", label: "Codebase Survey", icon: FileCode2 },
+      { id: "features_catalog", label: "Features", icon: Sparkles },
+      { id: "features", label: "Live Ops", icon: Zap },
       { id: "database_schema", label: "Database Schema", icon: Database },
-      { id: "all_features", label: "All Features", icon: Sparkles },
-      { id: "features", label: "Live Features", icon: Zap },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
     ],
   },
@@ -237,14 +204,12 @@ function SiteAdminInner() {
   const waffleRef = useRef<HTMLDivElement>(null);
   useClickOutside(waffleRef, () => setWaffleOpen(false), waffleOpen);
 
-  // Tab counts state for content editors
-  const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (isInitializing) setAuthState("loading");
     else if (session) {
       if (isMasterAdmin) setAuthState("ok");
-      else if (activeTab === "role_manager") setAuthState("denied");
+      else if (activeTab === "role_manager" || activeTab === "database_schema") setAuthState("denied");
       else if (activeTab === "umpire") setAuthState(isUmpire ? "ok" : "denied");
       else setAuthState(isAdmin ? "ok" : "denied");
     } else setAuthState("denied");
@@ -290,7 +255,7 @@ function SiteAdminInner() {
 
   const getTabCount = (tabId: string) => {
     if (tabId === "recycle_bin") return recycleBinCount > 0 ? recycleBinCount : null;
-    return tabCounts[tabId] ?? null;
+    return null;
   };
 
   return (
@@ -331,7 +296,7 @@ function SiteAdminInner() {
                           <div className="space-y-4">
                           {TAB_GROUPS.map((group) => {
                             const visibleTabs = group.tabs.filter((tab) => {
-                              if (tab.id === "role_manager") return isMasterAdmin;
+                              if (tab.id === "role_manager" || tab.id === "database_schema") return isMasterAdmin;
                               return isAdmin || tab.id === "umpire";
                             });
                             if (visibleTabs.length === 0) return null;
@@ -396,15 +361,6 @@ function SiteAdminInner() {
                     <span className="hidden lg:inline">Roles</span>
                   </button>
                 )}
-                <button
-                  onClick={() => setLocation("/tournament-admin")}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
-                  title="Open full Tournament Manager"
-                >
-                  <Trophy className="w-4 h-4" />
-                  <span className="hidden sm:inline">Tournaments</span>
-                  <ExternalLink className="w-3 h-3 opacity-60" />
-                </button>
                 <button
                   onClick={undo}
                   disabled={!canUndo}
@@ -473,72 +429,43 @@ function SiteAdminInner() {
               }
             >
             {activeTab === "overview" && isAdmin && <AdminStatsOverview />}
-            {activeTab === "config" && (
-              <ContentEditorWrapper dbKey="site_config" emptyState={null} editorName="Landing Page Config" EditorComponent={ConfigEditor} />
-            )}
-            {activeTab === "noticeboard" && (
-              <NoticeboardManager setTabCounts={setTabCounts} />
-            )}
-            {activeTab === "home_banners" && <HomeBannerManager />}
-            {activeTab === "holidays" && (
-              <ContentEditorWrapper 
-                dbKey="holidays" 
-                emptyState={[]} 
-                editorName="Holidays" 
-                EditorComponent={HolidayEditor} 
-                writeTransformer={(data) => data.filter((h: any) => h.date && h.name)}
-                setTabCount={(c) => setTabCounts(prev => prev.holidays === c ? prev : { ...prev, holidays: c })} 
-              />
-            )}
-            {activeTab === "polls" && (
-              <ContentEditorWrapper 
-                dbKey="polls" 
-                emptyState={{ polls: [] }} 
-                editorName="Polls" 
-                EditorComponent={(props: any) => <PollEditor data={props.data.polls || []} onChange={(d) => props.onChange({ polls: d })} />} 
-                writeTransformer={(data: any) => ({ polls: data.polls })}
-                setTabCount={(c) => setTabCounts(prev => prev.polls === c ? prev : { ...prev, polls: c })} 
-                countExtractor={(data: any) => data.polls?.length ?? 0}
-              />
-            )}
-            {activeTab === "tournament" && <TournamentManager />}
-            {activeTab === "videos" && (
-              <ContentEditorWrapper 
-                dbKey="videos" 
-                emptyState={[]} 
-                editorName="Videos" 
-                EditorComponent={VideoEditor} 
-                writeTransformer={(data) => data.filter((v: any) => v.title && v.videoId)}
-                setTabCount={(c) => setTabCounts(prev => prev.videos === c ? prev : { ...prev, videos: c })} 
-              />
+            {activeTab === "content" && <ContentHub />}
+            {activeTab === "tournament" && (
+              <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-slate-900 p-8 text-center shadow-sm">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+                  <Trophy className="h-7 w-7" />
+                </div>
+                <h2 className="text-xl font-black text-foreground">Tournament Manager</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Create and run tournaments, brackets, participants and results in the
+                  dedicated full-screen workspace.
+                </p>
+                <button
+                  onClick={() => setLocation("/tournament-admin")}
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition hover:bg-amber-600"
+                >
+                  <Trophy className="h-4 w-4" />
+                  Open Tournament Manager
+                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                </button>
+              </div>
             )}
             {activeTab === "players" && <PlayersManager />}
             {activeTab === "role_manager" && <RoleManagerPanel />}
             {activeTab === "guests" && <GuestPlayersPanel />}
             {activeTab === "matches" && <MatchesManager />}
-            {activeTab === "disputes" && <DisputePanel />}
-            {activeTab === "moderation" && <ModerationPanel />}
+            {activeTab === "inbox" && <InboxPanel />}
             {activeTab === "analytics" && <AnalyticsPanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireTab />}
             {activeTab === "settings" && <AdminSettings />}
-            {activeTab === "feedback" && <AdminFeedbackPanel />}
             {activeTab === "activity_log" && <AdminActivityLog />}
             {activeTab === "changelog" && <ChangelogViewer />}
             {activeTab === "features" && <AdminFeaturesPanel />}
-            {activeTab === "all_features" && <AdminAllFeaturesPanel />}
-            {activeTab === "feature_registry" && <FeatureMapDashboard />}
+            {activeTab === "features_catalog" && <FeaturesPanel />}
             {activeTab === "database_schema" && <DatabaseSchemaDashboard />}
             {activeTab === "undo_history" && <UndoHistory />}
             {activeTab === "recycle_bin" && <RecycleBin />}
-            {activeTab === "convener_photos" && (
-              <ContentEditorWrapper
-                dbKey="convener_photos"
-                emptyState={DEFAULT_CONVENER_DATA}
-                editorName="Convener Photos"
-                EditorComponent={ConvenerEditor}
-              />
-            )}
             </Suspense>
           </motion.div>
         </AnimatePresence>

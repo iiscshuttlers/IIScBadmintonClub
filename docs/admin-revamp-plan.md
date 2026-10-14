@@ -59,13 +59,22 @@ Keep, but gate behind master-admin.
   `EloAuditPanel` (~31 kB) now split into their own on-demand chunks.
   Still todo in later phases: drop `react-force-graph-2d` (after graph tab cut),
   extract nav/tab config out of the shell.
-- 🟡 **Phase 1** — Content restructure.
+- ✅ **Phase 1** — Content restructure.
   - ✅ Deletions: removed `AdminFeaturesGuide`, `ArchitectureNeuralGraph`,
     `AppArchitectureMap`, `TooltipRegistryPanel` (files, tabs, TabId union,
     render branches, lazy consts, unused icons). Dropped `react-force-graph-2d`
     from `package.json` + `pnpm-lock.yaml`. Build: 6020→5143 modules, ~44s→~9s.
-  - ⬜ Merges: 3 feature catalogs → Features; 6 content editors → Content hub;
-    3 review queues → Inbox. Tournament de-dupe. Gate Database Schema to master.
+  - ✅ Merges:
+    - Tournament de-dupe: in-admin tab is now a launcher to the canonical
+      `/tournament-admin` workspace; redundant amber header button removed;
+      `TournamentManager` no longer bundled in the admin shell.
+    - Features: `FeaturesPanel` (sub-tabs Catalog/Survey) merges the two static
+      catalogs; live-ops panel relabeled "Live Ops".
+    - Content: `ContentHub` (sub-tabs Landing/Banners/Noticeboard/Polls/
+      Holidays/Videos/Conveners) merges 7 editor tabs into 1.
+    - Inbox: `InboxPanel` (sub-tabs Feedback/Reports/Disputes) merges 3 queues.
+    - Database Schema gated behind master-admin (waffle filter + authState).
+  - Result: **32 → 19 top-level tabs**; shell chunk 30.6 kB → 16.5 kB.
 - ⬜ **Phase 3** — Navigation/IA: persistent collapsible sidebar (desktop) +
   bottom-sheet drawer (mobile) + fuzzy tab search. Keep `#hash` deep-linking.
 - ⬜ **Phase 4** — Visual redesign of the shell (slimmer header, consistent tokens).
