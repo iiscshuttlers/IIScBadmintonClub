@@ -14,6 +14,7 @@ interface Tournament {
   id: string;
   name: string;
   status: string;
+  format_family?: string | null;
 }
 
 interface LiveMatch {
@@ -69,7 +70,7 @@ export function ActiveTournamentWidget() {
         // Fetch active tournament
         const { data: tourneys } = await supabase
           .from("tournaments")
-          .select("id, name, status")
+          .select("id, name, status, format_family")
           .eq("status", "active")
           .limit(1);
 
@@ -266,6 +267,13 @@ export function ActiveTournamentWidget() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {tournament.id && tournament.format_family !== "TEAM" && (
+              <Link href={`/predict/${tournament.id}`}>
+                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer">
+                  Predict
+                </span>
+              </Link>
+            )}
             <Link href={`/tournaments`}>
               <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 shrink-0 border border-emerald-500/50">
                 View
