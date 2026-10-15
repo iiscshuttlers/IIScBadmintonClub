@@ -1,1 +1,0 @@
-import { supabase } from './client/src/lib/supabase'; async function test() { const { data } = await supabase.from('tournament_matches').select('round, round_name, match_code').limit(10); console.log(data); } test();

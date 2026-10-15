@@ -1,1 +1,0 @@
-SELECT id, player1_id, player2_id, player3_id, player4_id, category, winner_id FROM tournament_matches WHERE player1_id = player3_id OR player1_id = player4_id OR player2_id = player3_id OR player2_id = player4_id;

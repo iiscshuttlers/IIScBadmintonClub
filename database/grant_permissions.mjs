@@ -2,7 +2,7 @@ import pg from 'pg';
 import { fileURLToPath } from 'url';
 
 const { Client } = pg;
-const newDbUrl = "postgresql://postgres.htejmhsqqlfedlajqqyv:OldDB_Password_123!@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+const newDbUrl = process.env.DATABASE_URL;
 
 async function grantPermissions() {
   const client = new Client({ connectionString: newDbUrl });

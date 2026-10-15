@@ -1,6 +1,6 @@
 import pg from 'pg';
 const { Client } = pg;
-const newDbUrl = "postgresql://postgres.htejmhsqqlfedlajqqyv:OldDB_Password_123!@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+const newDbUrl = process.env.DATABASE_URL;
 
 async function patch() {
   const client = new Client({ connectionString: newDbUrl });

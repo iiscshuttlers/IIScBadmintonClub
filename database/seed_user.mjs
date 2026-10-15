@@ -1,6 +1,6 @@
 import { Client } from 'pg';
 
-const dbUrl = 'postgresql://postgres.htejmhsqqlfedlajqqyv:OldDB_Password_123!@aws-1-ap-south-1.pooler.supabase.com:5432/postgres';
+const dbUrl = process.env.DATABASE_URL;
 
 async function seed() {
   const client = new Client(dbUrl);

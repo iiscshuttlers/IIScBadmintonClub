@@ -1,1 +1,0 @@
-import { supabase } from './client/src/lib/supabase'; async function test() { const { data } = await supabase.from('players').select('id, elo_rating, singles_elo, doubles_elo, mixed_elo, gender').eq('id', '1a0b56fa-25ff-4b50-b9b1-0867f07d1b8b').maybeSingle(); console.log(data); } test();

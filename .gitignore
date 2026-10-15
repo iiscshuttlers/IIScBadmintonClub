@@ -25,3 +25,15 @@ release-key.keystore
 google-services.json
 # Added by code-review-graph
 .code-review-graph/
+
+# Local scratch: one-off scripts, logs, DB dumps, personal data. Never commit.
+_local/
+dump.sql
+data.sql
+contacts*.json
+*logcat*.txt
+scratch_backup/
+playwright-report/
+test-results/
+.pnpm-store/
+client/.env.local
