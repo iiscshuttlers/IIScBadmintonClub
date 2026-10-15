@@ -37,6 +37,7 @@ import {
 import { LoadingScreen } from "@/components/player-profile/PlayerProfileWidgets";
 import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
 import { AchievementBadges } from "@/components/player-profile/AchievementBadges";
+import { OfficiatingRecord } from "@/components/player-profile/OfficiatingRecord";
 import { WrappedCard } from "@/components/player-profile/WrappedCard";
 import { PerformanceTrends } from "@/components/player-profile/PerformanceTrends";
 import { PlayerAnalyticsWidget } from "@/components/player-profile/PlayerAnalyticsWidget";
@@ -804,6 +805,7 @@ export default function PlayerProfile() {
                   tournamentRuns={tournamentRuns}
                 />
               )}
+              {activeTab === "OVERVIEW" && (player?.id || id) && <OfficiatingRecord playerId={(player?.id || id)!} />}
               {activeTab === "STATS" && (
                 <ProfileStatsTabRight 
                   liveMatches={liveMatches}
