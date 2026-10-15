@@ -18,6 +18,7 @@ import {
   CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge
 } from "lucide-react";
 import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
+import { TournamentReportPanel } from "@/components/admin/TournamentReportPanel";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { getDepartmentAcronym } from "@/data/departments";
@@ -209,9 +210,11 @@ function getCourtColorClass(court: string) {
 
 export function TournamentManager() {
   const { session, isMainAdmin } = useAuth();
+  const { recordAction } = useAdminHistory();
+  const { confirm } = useConfirm();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "schedule", "rules", "officials", "registrations", "archive"] as const;
+  const SUB_TABS = ["setup", "participants", "teams", "fixtures", "bracket", "schedule", "rules", "officials", "registrations", "report", "archive"] as const;
   type SubTab = typeof SUB_TABS[number];
 
   const getHashSubTab = (): SubTab => {
@@ -297,6 +300,56 @@ export function TournamentManager() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNotify, setShowNotify] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"active" | "deleted" | "archived">("active");
+
+  const filteredTournaments = useMemo(() => {
+    if (statusFilter === "active") return tournaments.filter((t) => t.status !== "deleted" && t.status !== "archived");
+    if (statusFilter === "deleted") return tournaments.filter((t) => t.status === "deleted");
+    return tournaments.filter((t) => t.status === "archived");
+  }, [tournaments, statusFilter]);
+
+  useEffect(() => {
+    if (selected && filteredTournaments.some((t) => t.id === selected.id)) return;
+    setSelected(filteredTournaments[0] ?? null);
+  }, [filteredTournaments]);
+
+  const permanentlyDelete = async (tournament: Tournament) => {
+    const ok = await confirm({
+      title: "Permanently Delete Tournament",
+      description: `This will permanently delete "${tournament.name}" and all its matches, participants, teams, rules and bracket data. This action CANNOT be undone.`,
+      confirmLabel: "Delete Forever",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("tournaments").delete().eq("id", tournament.id);
+    if (error) { toast.error("Failed to permanently delete: " + error.message); return; }
+    await recordAction({
+      action_type: "delete",
+      entity_type: "tournaments",
+      entity_id: tournament.id,
+      before_state: tournament,
+      after_state: null,
+      label: `Permanently deleted tournament "${tournament.name}"`,
+    });
+    toast.success("Tournament permanently deleted");
+    await loadTournaments(false);
+    if (selected?.id === tournament.id) setSelected(null);
+  };
+
+  const restoreTournament = async (tournament: Tournament) => {
+    const { error } = await supabase.from("tournaments").update({ status: "draft" }).eq("id", tournament.id);
+    if (error) { toast.error(error.message); return; }
+    await recordAction({
+      action_type: "update",
+      entity_type: "tournaments",
+      entity_id: tournament.id,
+      before_state: tournament,
+      after_state: { ...tournament, status: "draft" },
+      label: `Restored tournament "${tournament.name}" to draft`,
+    });
+    toast.success("Tournament restored to draft");
+    await loadTournaments(false);
+  };
 
   const createTournament = async (formatFamily: "OPEN_EVENT" | "TEAM") => {
     setShowCreateModal(false);
@@ -325,16 +378,16 @@ export function TournamentManager() {
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
               <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
             </div>
-            
+
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="relative flex-1 min-w-0 max-w-md">
                 <select
                   value={selected?.id ?? ""}
                   onChange={(e) => {
                     const t = tournaments.find((t) => t.id === e.target.value);
-                    if (t) { 
-                      setSelected(t); 
-                      setTab("setup"); 
+                    if (t) {
+                      setSelected(t);
+                      setTab("setup");
                       const url = new URL(window.location.href);
                       url.searchParams.set("id", t.id);
                       window.history.replaceState({}, '', url.toString());
@@ -342,11 +395,14 @@ export function TournamentManager() {
                   }}
                   className="w-full text-sm font-black text-slate-800 dark:text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-8 appearance-none outline-none focus:ring-2 focus:ring-primary/40 truncate cursor-pointer transition-all"
                 >
-                  {tournaments.map((t) => (
+                  {filteredTournaments.map((t) => (
                     <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                      {t.name} [{t.status}]
+                      {t.name}{statusFilter !== "active" ? ` [${t.status}]` : t.status !== "draft" ? ` [${t.status}]` : ""}
                     </option>
                   ))}
+                  {filteredTournaments.length === 0 && (
+                    <option disabled value="">No {statusFilter} tournaments</option>
+                  )}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -374,6 +430,32 @@ export function TournamentManager() {
                 <StatusChip status={selected.status} />
               </div>
             )}
+
+            {/* Filter buttons */}
+            <div className="flex items-center gap-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 p-0.5">
+              {([
+                { key: "active" as const, label: "Active", count: tournaments.filter(t => t.status !== "deleted" && t.status !== "archived").length },
+                { key: "deleted" as const, label: "Deleted", count: tournaments.filter(t => t.status === "deleted").length },
+                { key: "archived" as const, label: "Archived", count: tournaments.filter(t => t.status === "archived").length },
+              ]).map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                    statusFilter === key
+                      ? key === "deleted"
+                        ? "bg-rose-500/15 text-rose-500 shadow-sm"
+                        : key === "archived"
+                        ? "bg-amber-500/15 text-amber-500 shadow-sm"
+                        : "bg-white dark:bg-slate-700 text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}{count > 0 ? ` (${count})` : ""}
+                </button>
+              ))}
+            </div>
+
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={creating}
@@ -384,6 +466,26 @@ export function TournamentManager() {
             </button>
           </div>
         </div>
+
+        {/* Actions for deleted/archived tournaments */}
+        {selected && (selected.status === "deleted" || selected.status === "archived") && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <button
+              onClick={() => restoreTournament(selected)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restore to Draft
+            </button>
+            <button
+              onClick={() => permanentlyDelete(selected)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-black transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Permanently Delete
+            </button>
+          </div>
+        )}
 
         {selected && (
           <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-between gap-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
@@ -480,6 +582,7 @@ export function TournamentManager() {
                   { id: "rules", label: "Scoring Rules", icon: Gauge },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
                   ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
+                  { id: "report", label: "Report", icon: FileText },
                   { id: "archive", label: "Archive", icon: Archive }
                 ]
               : [
@@ -490,6 +593,7 @@ export function TournamentManager() {
                   { id: "rules", label: "Scoring Rules", icon: Gauge },
                   { id: "officials", label: "Officials", icon: ShieldCheck },
                   ...((selected as any)?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
+                  { id: "report", label: "Report", icon: FileText },
                   { id: "archive", label: "Archive", icon: Archive }
                 ]
             ).map((tab) => {
@@ -525,6 +629,7 @@ export function TournamentManager() {
           {activeTab === "rules" && <ScoringRulesPanel tournament={selected as any} />}
           {activeTab === "officials" && <TournamentOfficialsPanel tournament={selected} />}
           {activeTab === "registrations" && <TournamentRegistrationsPanel tournament={selected} />}
+          {activeTab === "report" && <TournamentReportPanel tournament={selected as any} />}
           {activeTab === "archive" && (
             <TournamentArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
           )}
