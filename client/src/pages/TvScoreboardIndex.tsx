@@ -34,7 +34,7 @@ export default function TvScoreboardIndex() {
             </Link>
             <Link href="/tv/draw">
               <button className="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-2xl shadow-lg flex items-center gap-2 text-sm transition active:scale-95 cursor-pointer">
-                <Shuffle className="w-5 h-5" /> Draw Ceremony
+                <Shuffle className="w-5 h-5" /> Draw &amp; Court Display
               </button>
             </Link>
           </div>

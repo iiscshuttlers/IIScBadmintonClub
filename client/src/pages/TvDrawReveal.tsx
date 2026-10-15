@@ -43,23 +43,29 @@ function TournamentPicker() {
       </Link>
       <div className="max-w-2xl mx-auto mt-10 text-center">
         <Shuffle className="w-12 h-12 mx-auto text-amber-400" />
-        <h1 className="mt-4 text-4xl font-black">Draw Ceremony</h1>
-        <p className="mt-2 text-slate-400">Pick a tournament to reveal its draw on the big screen.</p>
+        <h1 className="mt-4 text-4xl font-black">Tournament Screens</h1>
+        <p className="mt-2 text-slate-400">Reveal the draw, or show who's next on each court with head-to-head stats.</p>
         <div className="mt-8 space-y-3 text-left">
           {isLoading && <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-500" />}
           {!isLoading && (data?.length ?? 0) === 0 && (
             <p className="text-center text-slate-500">No upcoming or active tournaments with a draw.</p>
           )}
           {data?.map((t: any) => (
-            <Link key={t.id} href={`/tv/draw/${t.id}`}>
-              <div className="cursor-pointer rounded-2xl border border-slate-800 bg-slate-900 p-5 hover:border-amber-500/60 transition-colors">
-                <div className="text-lg font-black">{t.name}</div>
-                <div className="text-sm text-slate-400 capitalize">
-                  {t.status}
-                  {t.start_date ? ` · ${new Date(t.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}
-                </div>
+            <div key={t.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+              <div className="text-lg font-black">{t.name}</div>
+              <div className="text-sm text-slate-400 capitalize">
+                {t.status}
+                {t.start_date ? ` · ${new Date(t.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}
               </div>
-            </Link>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href={`/tv/draw/${t.id}`}>
+                  <span className="inline-block cursor-pointer rounded-lg bg-amber-400 text-slate-950 px-3 py-1.5 text-sm font-black">Draw ceremony</span>
+                </Link>
+                <Link href={`/tv/next/${t.id}`}>
+                  <span className="inline-block cursor-pointer rounded-lg bg-sky-400 text-slate-950 px-3 py-1.5 text-sm font-black">Court display</span>
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       </div>
