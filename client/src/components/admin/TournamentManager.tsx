@@ -15,10 +15,11 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge, Copy
 } from "lucide-react";
 import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
 import { TournamentReportPanel } from "@/components/admin/TournamentReportPanel";
+import { cloneTournament } from "@/lib/cloneTournament";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { getDepartmentAcronym } from "@/data/departments";
@@ -367,6 +368,29 @@ export function TournamentManager() {
     setCreating(false);
   };
 
+  const handleClone = async () => {
+    if (!selected) return;
+    const ok = await confirm({
+      title: "Clone tournament?",
+      description: `Creates a new draft with ${selected.name}'s format, settings, scoring rules and officials. Participants, matches, dates and form links are not copied.`,
+      confirmLabel: "Clone",
+    });
+    if (!ok) return;
+    setCreating(true);
+    try {
+      const { tournament, warnings } = await cloneTournament(selected, session?.user?.id);
+      toast.success(`Created ${tournament.name}`);
+      if (warnings.length) toast.warning(`Couldn't copy ${warnings.join(" and ")} — set them on the new event.`);
+      await loadTournaments(false);
+      setSelected(tournament as Tournament);
+      setTab("setup");
+    } catch (e: any) {
+      toast.error(e?.message || "Clone failed");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
@@ -456,6 +480,17 @@ export function TournamentManager() {
               ))}
             </div>
 
+            {selected && (
+              <button
+                onClick={handleClone}
+                disabled={creating}
+                title="Start a new draft from this tournament's settings"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50 shrink-0"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Clone</span>
+              </button>
+            )}
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={creating}
