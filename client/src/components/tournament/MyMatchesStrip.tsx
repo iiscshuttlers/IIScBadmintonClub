@@ -4,6 +4,7 @@ import { Swords, Clock, Radio, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { matchesToEvents, shareIcs } from "@/lib/calendarExport";
+import { computeStakes, formatRange, DEFAULT_ELO_CONFIG, type Stakes } from "@/lib/eloStakes";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
 
@@ -46,7 +47,7 @@ export function MyMatchesStrip({
     supabase
       .from("tournament_matches")
       .select(
-        "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, tournaments(name)",
+        "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, player1_id, player2_id, player3_id, player4_id, tournaments(name, counts_for_elo)",
       )
       .or(
         `player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`,
@@ -74,6 +75,53 @@ export function MyMatchesStrip({
       })
       .slice(0, limit);
   }, [myMatches, limit]);
+
+  // Elo stakes for upcoming ranked matches with both sides decided.
+  const [stakes, setStakes] = useState<Record<string, Stakes>>({});
+  useEffect(() => {
+    if (!myPlayerId) return;
+    const ranked = myMatches.filter(
+      (m) => m.status !== "completed" && !LIVE_STATUSES.has(m.status) && m.tournaments?.counts_for_elo !== false && m.player1_id && m.player2_id,
+    );
+    if (ranked.length === 0) {
+      setStakes({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const ids = Array.from(new Set(ranked.flatMap((m) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean)));
+      const [{ data: players }, { count }, { data: cfgRow }] = await Promise.all([
+        supabase.from("players").select("id, tournament_elo, elo_rating").in("id", ids),
+        supabase
+          .from("tournament_matches")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "completed")
+          .or(`player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`),
+        supabase.from("site_data").select("value").eq("key", "elo_config").maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const v: any = (cfgRow as any)?.value ?? {};
+      const cfg = {
+        kNewbie: Number(v.k_factor_newbie) || DEFAULT_ELO_CONFIG.kNewbie,
+        kExperienced: Number(v.k_factor_experienced) || DEFAULT_ELO_CONFIG.kExperienced,
+        tournamentMultiplier: Number(v.tournament_multiplier) || DEFAULT_ELO_CONFIG.tournamentMultiplier,
+      };
+      const elo = new Map((players ?? []).map((p: any) => [p.id, p.tournament_elo ?? p.elo_rating ?? 1200]));
+      const e = (id?: string | null) => (id ? elo.get(id) ?? 1200 : null);
+      const out: Record<string, Stakes> = {};
+      for (const m of ranked) {
+        const onSide1 = m.player1_id === myPlayerId || m.player3_id === myPlayerId;
+        const me = myPlayerId;
+        const partner = onSide1 ? (m.player1_id === me ? m.player3_id : m.player1_id) : m.player2_id === me ? m.player4_id : m.player2_id;
+        const opps = (onSide1 ? [m.player2_id, m.player4_id] : [m.player1_id, m.player3_id]).filter(Boolean);
+        out[m.id] = computeStakes(e(me)!, e(partner), opps.map((o: string) => e(o)!), count ?? 0, cfg);
+      }
+      setStakes(out);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [myMatches, myPlayerId]);
 
   const calendarEvents = useMemo(() => matchesToEvents(myMatches), [myMatches]);
 
@@ -154,6 +202,12 @@ export function MyMatchesStrip({
                       </span>
                     ) : null}
                   </div>
+                  {!isDone && !isLive && stakes[m.id] && (
+                    <p className="text-[10px] font-bold tabular-nums text-slate-400" title="Estimated Elo change (range covers 2- and 3-game results)">
+                      Elo: win <span className="text-emerald-400">{formatRange(stakes[m.id].win)}</span> · lose{" "}
+                      <span className="text-rose-400">{formatRange(stakes[m.id].lose)}</span>
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>
