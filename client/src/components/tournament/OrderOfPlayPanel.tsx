@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
+import { findRestConflicts, playerSideLabel } from "@/lib/restConflicts";
 import {
   Loader2, CalendarClock, MapPin, Clock, Check, Swords, LayoutGrid,
   RefreshCw, AlertTriangle, Radio,
@@ -25,6 +26,9 @@ interface MatchRow {
   team1_label: string | null;
   team2_label: string | null;
   player1_id: string | null;
+  player2_id?: string | null;
+  player3_id?: string | null;
+  player4_id?: string | null;
   court_number: string | null;
   scheduled_at: string | null;
   status: string;
@@ -52,7 +56,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     const [matchesRes, tiesRes] = await Promise.all([
       supabase
         .from("tournament_matches")
-        .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, court_number, scheduled_at, status, tie_id")
+        .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, court_number, scheduled_at, status, tie_id")
         .eq("tournament_id", tournament.id)
         .neq("status", "completed")
         .order("round", { ascending: true })
@@ -222,6 +226,19 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matches, category]);
 
+  // Back-to-back: a player starting again < 45 min after their previous match.
+  // Uses pending edits so the warning appears before saving.
+  const restConflicts = useMemo(() => {
+    const effective = matches
+      .filter((m) => !m.is_tie)
+      .map((m) => {
+        const e = edits[m.id];
+        return e ? { ...m, scheduled_at: localDateTimeInputToIso(e.time) } : m;
+      });
+    return findRestConflicts(effective);
+  }, [matches, edits]);
+  const conflictCount = restConflicts.size;
+
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm";
   const fieldCls = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40";
 
@@ -246,6 +263,12 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           <span className="text-[11px] font-black text-slate-400 shrink-0">vs</span>
           <span className="text-sm font-black text-slate-800 dark:text-slate-100 truncate flex-1">{m.team2_label ?? "TBD"}</span>
         </div>
+        {restConflicts.get(m.id)?.map((c) => (
+          <p key={c.playerId} role="alert" className="mt-1.5 flex items-start gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+            {playerSideLabel(m, c.playerId)} starts only {c.gapMins} min after {c.previousCode} — little or no rest.
+          </p>
+        ))}
         {showEditor ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-1">
@@ -341,6 +364,13 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
         </div>
       ) : (
         <>
+          {conflictCount > 0 && (
+            <div role="status" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              {conflictCount} match{conflictCount === 1 ? "" : "es"} give a player under 45 min between starts. Check the highlighted rows.
+            </div>
+          )}
+
           {/* Needs scheduling */}
           <div className={cardCls}>
             <div className="flex items-center gap-2 mb-3">
