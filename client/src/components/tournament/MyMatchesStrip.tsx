@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { Swords, Clock, Radio } from "lucide-react";
+import { Swords, Clock, Radio, CalendarPlus } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { matchesToEvents, shareIcs } from "@/lib/calendarExport";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
 
@@ -44,7 +46,7 @@ export function MyMatchesStrip({
     supabase
       .from("tournament_matches")
       .select(
-        "id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, tournaments(name)",
+        "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, tournaments(name)",
       )
       .or(
         `player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`,
@@ -73,6 +75,17 @@ export function MyMatchesStrip({
       .slice(0, limit);
   }, [myMatches, limit]);
 
+  const calendarEvents = useMemo(() => matchesToEvents(myMatches), [myMatches]);
+
+  const addToCalendar = async () => {
+    try {
+      await shareIcs(calendarEvents, "my-matches", "My IISc Shuttlers matches");
+    } catch (e: any) {
+      if (e?.message?.toLowerCase?.().includes("cancel")) return; // share sheet dismissed
+      toast.error("Couldn't create the calendar file.");
+    }
+  };
+
   if (!myPlayerId || sortedMyMatches.length === 0) return null;
 
   return (
@@ -81,9 +94,21 @@ export function MyMatchesStrip({
         <span className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wider">
           <Swords className="w-3.5 h-3.5" /> My Matches
         </span>
-        <Link href="/my-matches">
-          <span className="text-[11px] text-primary hover:underline font-bold cursor-pointer">View all →</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          {calendarEvents.length > 0 && (
+            <button
+              type="button"
+              onClick={addToCalendar}
+              aria-label={`Add ${calendarEvents.length} upcoming match${calendarEvents.length === 1 ? "" : "es"} to your calendar`}
+              className="flex items-center gap-1 text-[11px] text-primary hover:underline font-bold"
+            >
+              <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
+            </button>
+          )}
+          <Link href="/my-matches">
+            <span className="text-[11px] text-primary hover:underline font-bold cursor-pointer">View all →</span>
+          </Link>
+        </div>
       </div>
       <div className="space-y-2">
         {sortedMyMatches.map((m) => {
