@@ -530,7 +530,7 @@ function AppContent() {
               <ScrollToTop />
               <RoutePersistence />
               <GlobalAuthGuard />
-              <OnboardingTour />
+              {!location.startsWith("/tv") && <OnboardingTour />}
               <ScrollProgress />
               <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${location.startsWith("/tv") ? "" : "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0"} ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}

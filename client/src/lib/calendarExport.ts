@@ -105,6 +105,13 @@ export function buildIcs(events: CalendarEvent[], calName = "IISc Shuttlers", no
 }
 
 const SITE = "https://iiscshuttlers.github.io/IIScBadmintonClub";
+
+/** "C1" / "court 1" / "1" → "Court 1". Mirrors supabase/functions/_shared/courtQueue.ts. */
+function courtLabel(raw: string): string {
+  const t = raw.trim();
+  const m = t.match(/^(?:c(?:ourt)?\s*)?(\d+)$/i);
+  return m ? `Court ${m[1]}` : t;
+}
 const UPCOMING = new Set(["scheduled", "pending", "upcoming"]);
 
 /** Minimal shape of a tournament_matches row needed for a calendar entry. */
@@ -128,7 +135,7 @@ export function matchesToEvents(matches: MatchLike[], alarmMins = 30, now = new 
     .filter((m) => new Date(m.scheduled_at!).getTime() > now.getTime() - 60 * 60_000)
     .map((m) => {
       const vs = `${m.team1_label || "TBD"} vs ${m.team2_label || "TBD"}`;
-      const where = m.court_number ? ` · Court ${m.court_number}` : "";
+      const where = m.court_number ? ` · ${courtLabel(String(m.court_number))}` : "";
       const tName = m.tournaments?.name;
       return {
         uid: `match-${m.id}@iiscshuttlers`,

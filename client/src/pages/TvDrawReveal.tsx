@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Pause, Play, RotateCcw, Shuffle, Maximize2 } from "lucide-react";
@@ -137,6 +137,12 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, switchCat]);
 
+  // Keep the newest pairing on screen for long draws.
+  const latestRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    latestRef.current?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+  }, [revealed, catIdx, reduceMotion]);
+
   const cols = useMemo(() => (total > 16 ? "lg:grid-cols-3" : total > 6 ? "lg:grid-cols-2" : "lg:grid-cols-1"), [total]);
 
   if (isLoading) {
@@ -196,10 +202,11 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
           return (
             <motion.div
               key={p.id}
+              ref={latest ? latestRef : undefined}
               initial={reduceMotion ? false : { opacity: 0, scale: 0.6, rotateX: 90 }}
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               transition={spring}
-              className={`rounded-2xl border px-4 py-3 flex items-center gap-3 ${
+              className={`scroll-mb-28 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
                 latest ? "border-amber-400 bg-amber-400/10 shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]" : "border-slate-700 bg-slate-900/70"
               }`}
             >

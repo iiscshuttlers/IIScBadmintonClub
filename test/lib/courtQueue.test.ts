@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeQueueAlerts, queueAlertText, type QueueMatch } from "../../supabase/functions/_shared/courtQueue";
+import { computeQueueAlerts, courtLabel, queueAlertText, type QueueMatch } from "../../supabase/functions/_shared/courtQueue";
 
 let n = 0;
 const m = (over: Partial<QueueMatch>): QueueMatch => ({
@@ -71,5 +71,12 @@ describe("computeQueueAlerts", () => {
     const [a1, a2] = computeQueueAlerts([m({ status: "in_progress", court_number: "3" }), m({ court_number: "3" }), m({ court_number: "3" })]);
     expect(queueAlertText(a1).title).toBe("⏭️ You're up next on Court 3");
     expect(queueAlertText(a2).title).toBe("🏸 2 matches until you're on Court 3");
+  });
+
+  it("normalises court labels", () => {
+    expect(courtLabel("C1")).toBe("Court 1");
+    expect(courtLabel("court 2")).toBe("Court 2");
+    expect(courtLabel("3")).toBe("Court 3");
+    expect(courtLabel("Centre Court")).toBe("Centre Court");
   });
 });

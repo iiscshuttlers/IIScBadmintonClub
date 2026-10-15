@@ -90,17 +90,24 @@ export function computeQueueAlerts(matches: QueueMatch[]): QueueAlert[] {
   return alerts;
 }
 
+/** "C1" / "court 1" / "1" → "Court 1"; other names pass through ("Centre Court"). */
+export function courtLabel(raw: string): string {
+  const t = raw.trim();
+  const m = t.match(/^(?:c(?:ourt)?\s*)?(\d+)$/i);
+  return m ? `Court ${m[1]}` : t;
+}
+
 export function queueAlertText(a: QueueAlert): { title: string; body: string } {
   const vs = `${a.match.team1_label || "Team 1"} vs ${a.match.team2_label || "Team 2"}`;
   const cat = a.match.category ? `${a.match.category} · ` : "";
   if (a.position === 1) {
     return {
-      title: `⏭️ You're up next on Court ${a.court}`,
+      title: `⏭️ You're up next on ${courtLabel(a.court)}`,
       body: `${cat}${vs} — right after the match on court now. Time to warm up!`,
     };
   }
   return {
-    title: `🏸 ${a.position} matches until you're on Court ${a.court}`,
+    title: `🏸 ${a.position} matches until you're on ${courtLabel(a.court)}`,
     body: `${cat}${vs}. Stay close to the courts.`,
   };
 }

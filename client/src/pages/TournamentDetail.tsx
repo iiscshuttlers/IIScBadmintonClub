@@ -368,7 +368,7 @@ export default function TournamentDetail() {
               </CardContent>
             </Card>
 
-            {tournament.id && <UpNextPanel tournamentId={tournament.id} />}
+            {/^[0-9a-f-]{36}$/i.test(tournament.id ?? "") && <UpNextPanel tournamentId={tournament.id} />}
             <CertificateDialog input={certificate} onClose={() => setCertificate(null)} />
 
             {tournament.id && (
