@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X, ClipboardEdit, Megaphone
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
@@ -82,6 +83,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const [upcomingFormat, setUpcomingFormat] = useState("ALL");
   const [upcomingDate, setUpcomingDate] = useState("ALL");
   const [upcomingCourt, setUpcomingCourt] = useState("ALL");
+  const [upcomingStatus, setUpcomingStatus] = useState<"ALL" | "upcoming" | "live" | "completed">("ALL");
   const [collapsedRounds, setCollapsedRounds] = useState<Record<string, boolean>>({});
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [walkoverFor, setWalkoverFor] = useState<TournamentMatchForUmpire | null>(null);
@@ -92,6 +94,77 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const [savingReschedule, setSavingReschedule] = useState(false);
   const [activeTieForConsole, setActiveTieForConsole] = useState<{ tie: any; tournament: any } | null>(null);
   const [pendingTies, setPendingTies] = useState<any[]>([]);
+  const [directScoreFor, setDirectScoreFor] = useState<TournamentMatchForUmpire | null>(null);
+  const [directSets, setDirectSets] = useState<{ t1: string; t2: string }[]>([{ t1: "", t2: "" }, { t1: "", t2: "" }]);
+  const [savingDirectScore, setSavingDirectScore] = useState(false);
+
+  const { session } = useAuth();
+
+  const openDirectScore = (m: TournamentMatchForUmpire) => {
+    const numSets = m.best_of_sets || 3;
+    const initial = Array.from({ length: numSets }, () => ({ t1: "", t2: "" }));
+    setDirectSets(initial);
+    setDirectScoreFor(m);
+  };
+
+  const submitDirectScore = async () => {
+    if (!directScoreFor || !session?.user?.id) return;
+
+    const filledSets = directSets.filter(s => s.t1.trim() !== "" || s.t2.trim() !== "");
+    if (filledSets.length < 2) {
+      toast.error("Enter at least 2 sets");
+      return;
+    }
+
+    const parsed = filledSets.map(s => ({
+      t1: parseInt(s.t1, 10),
+      t2: parseInt(s.t2, 10),
+    }));
+
+    if (parsed.some(s => isNaN(s.t1) || isNaN(s.t2) || s.t1 < 0 || s.t2 < 0)) {
+      toast.error("All scores must be valid non-negative numbers");
+      return;
+    }
+
+    const t1Wins = parsed.filter(s => s.t1 > s.t2).length;
+    const t2Wins = parsed.filter(s => s.t2 > s.t1).length;
+    if (t1Wins === t2Wins) {
+      toast.error("Scores must produce a winner — tied set count");
+      return;
+    }
+    if (parsed.some(s => s.t1 === s.t2)) {
+      toast.error("A set cannot be tied");
+      return;
+    }
+
+    const winnerSide: 1 | 2 = t1Wins > t2Wins ? 1 : 2;
+    const setsArr = parsed.map(s => `${s.t1}-${s.t2}`);
+    const scoreStr = setsArr.join(", ");
+
+    setSavingDirectScore(true);
+    try {
+      const { error } = await (supabase.rpc as any)("submit_tournament_match", {
+        p_match_id: directScoreFor.id,
+        p_winner_side: winnerSide,
+        p_score: scoreStr,
+        p_sets: setsArr,
+        p_umpire_id: session.user.id,
+      });
+      if (error) throw error;
+
+      toast.success("Score submitted", {
+        description: `${directScoreFor.team1_label ?? "Team 1"} vs ${directScoreFor.team2_label ?? "Team 2"}: ${scoreStr}`,
+      });
+      setDirectScoreFor(null);
+      setSelectedMatch(null);
+      setStep("format");
+      load({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to submit score");
+    } finally {
+      setSavingDirectScore(false);
+    }
+  };
 
   const openReschedule = (m: TournamentMatchForUmpire) => {
     setRescheduleAt(toLocalDateTimeInput(m.scheduled_at));
@@ -217,7 +290,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       .from("tournament_matches")
       .select("*")
       .in("tournament_id", tournamentIds)
-      .in("status", ["scheduled", "in_progress"])
+      .in("status", ["scheduled", "in_progress", "completed", "walkover"])
       .order("round")
       .order("match_number");
 
@@ -745,107 +818,101 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     const colors = CAT_COLORS[selectedMatch.category] ?? DEFAULT_COLORS;
 
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
+            className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
-          <span className="text-muted-foreground text-sm">Match Details</span>
+          <span className="text-muted-foreground text-xs">Match Details</span>
         </div>
 
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
           {/* Category + round banner */}
-          <div className={`px-5 py-3 flex items-center gap-3 ${colors.active}`}>
-            <span className="font-black text-sm">{selectedMatch.category}</span>
-            <span className="text-sm font-bold opacity-80">·</span>
-            <span className="text-sm font-bold opacity-90">{selectedMatch.round_name}</span>
-            <span className="ml-auto text-[10px] font-black opacity-70 tracking-wider">{selectedMatch.match_code}</span>
+          <div className={`px-3 py-2 flex items-center gap-2 text-xs ${colors.active}`}>
+            <span className="font-black">{selectedMatch.category}</span>
+            <span className="font-bold opacity-80">·</span>
+            <span className="font-bold opacity-90">{selectedMatch.round_name}</span>
+            <span className="ml-auto text-[9px] font-black opacity-70 tracking-wider">{selectedMatch.match_code}</span>
           </div>
 
-          <div className="p-5 space-y-5">
-            {/* Players */}
-            <div className="space-y-3">
-              {[
-                { label: selectedMatch.team1_label, side: "Team 1" },
-                { label: selectedMatch.team2_label, side: "Team 2" },
-              ].map(({ label, side }, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{side}</p>
-                    <p className="text-foreground font-black text-sm">{label ?? "TBD"}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Scoring config */}
-            <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <Settings2 className="w-3.5 h-3.5 text-primary" />
-                <span className="font-bold text-primary">{selectedMatch.points_to_win}</span>
-                <span>pts to win</span>
+          <div className="p-3 space-y-2.5">
+            {/* Players — inline row */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] text-muted-foreground font-bold uppercase">Team 1</p>
+                <p className="text-foreground font-black text-xs truncate">{selectedMatch.team1_label ?? "TBD"}</p>
               </div>
-              <div className="text-muted-foreground">·</div>
-              <div className="text-[11px] text-muted-foreground">
-                Best of <span className="font-bold text-foreground">{selectedMatch.best_of_sets}</span> sets
-              </div>
-              <div className="text-muted-foreground">·</div>
-              <div className="text-[11px] text-muted-foreground">
-                Golden point @ <span className="font-bold text-foreground">{selectedMatch.golden_point}</span>
+              <span className="text-[9px] font-black text-rose-400 bg-slate-900 px-2 py-0.5 rounded-full shrink-0">VS</span>
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-[9px] text-muted-foreground font-bold uppercase">Team 2</p>
+                <p className="text-foreground font-black text-xs truncate">{selectedMatch.team2_label ?? "TBD"}</p>
               </div>
             </div>
 
-            {/* Court / time */}
-            {(selectedMatch.court_number || selectedMatch.scheduled_at) && (
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                {selectedMatch.court_number && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-blue-400" />
-                    <span className="font-bold text-blue-300">Court {selectedMatch.court_number}</span>
-                  </span>
-                )}
-                {selectedMatch.scheduled_at && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    {new Date(selectedMatch.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Tournament name */}
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-              {selectedMatch.tournament_name}
-            </p>
+            {/* Scoring config + court/time — single compact row */}
+            <div className="bg-slate-900 rounded-lg px-2.5 py-1.5 flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
+              <Settings2 className="w-3 h-3 text-primary shrink-0" />
+              <span><span className="font-bold text-primary">{selectedMatch.points_to_win}</span>pts</span>
+              <span>·</span>
+              <span>Bo<span className="font-bold text-foreground">{selectedMatch.best_of_sets}</span></span>
+              <span>·</span>
+              <span>GP@<span className="font-bold text-foreground">{selectedMatch.golden_point}</span></span>
+              {selectedMatch.court_number && (
+                <>
+                  <span>·</span>
+                  <span className={cn("font-bold", getCourtColor(selectedMatch.court_number))}>C{selectedMatch.court_number}</span>
+                </>
+              )}
+              {selectedMatch.scheduled_at && (
+                <>
+                  <span>·</span>
+                  <span>{new Date(selectedMatch.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+                </>
+              )}
+            </div>
 
             {/* Start button */}
             <button
               onClick={async () => {
-                // The role IS the permission. This used to additionally require a
-                // row in umpire_assignments (per match, or a time block covering
-                // now), which duplicated the role check, needed maintaining per
-                // match, and blocked umpires who simply hadn't been rostered —
-                // the reason they ended up promoted to admin just to score.
-                // Assignments still drive scheduling, they just don't gate here.
                 const sessionResponse = await supabase.auth.getSession();
                 if (!sessionResponse.data.session?.user?.id) {
                   toast.error("Session expired. Please sign in again.");
                   return;
                 }
-
                 onStartMatch(selectedMatch);
               }}
-              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
+              className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-primary/30"
             >
-              <Play className="w-5 h-5 fill-white" />
+              <Play className="w-4 h-4 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}
             </button>
+
+            {/* Call players to the court (push to both sides) */}
+            {selectedMatch.status !== "in_progress" && (
+              <button
+                onClick={async () => {
+                  const { data, error } = await supabase.functions.invoke("call-to-court", {
+                    body: { match_id: selectedMatch.id },
+                  });
+                  if (error) {
+                    // Non-2xx: the function's JSON error is on error.context (a Response).
+                    let detail = "";
+                    try {
+                      detail = (await (error as any).context?.json?.())?.error ?? "";
+                    } catch { /* ignore */ }
+                    toast.error(detail || "Couldn't call the players");
+                    return;
+                  }
+                  toast.success(`Called ${(data as any)?.notified ?? 0} player(s) to court`);
+                }}
+                className="w-full py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-bold text-[10px] uppercase tracking-wider transition hover:bg-emerald-500/20 flex items-center justify-center gap-1.5"
+              >
+                <Megaphone className="w-3.5 h-3.5" /> Call players to court
+              </button>
+            )}
 
             {/* Team Tie Lineup & Reveal Console */}
             {selectedMatch.tie_id && (
@@ -865,31 +932,36 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     setActiveTieForConsole({ tie: tieData, tournament: tourData });
                   }
                 }}
-                className="w-full py-2.5 rounded-xl border border-primary/40 bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider transition hover:bg-primary/20 flex items-center justify-center gap-2"
+                className="w-full py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider transition hover:bg-primary/20 flex items-center justify-center gap-1.5"
               >
-                <Eye className="w-4 h-4" /> Team Lineup &amp; Reveal Console
+                <Eye className="w-3.5 h-3.5" /> Lineup & Reveal Console
               </button>
             )}
 
-            {/* A no-show is discovered at the court, so the umpire needs to be
-                able to record it without finding an admin. Distinct from the
-                Retire flow, which is for a match that has already started. */}
-            <button
-              onClick={() => setWalkoverFor(selectedMatch)}
-              className="w-full py-2.5 rounded-xl border border-[var(--warning)]/50 text-[var(--warning)] font-bold text-xs uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-2">
-              <Flag className="w-4 h-4" /> Record Walkover
-            </button>
-
-            {/* Courts overrun and matches slip, which the umpire finds out at
-                the court. Rescheduling a match that has already started makes
-                no sense, so it is offered only before the first rally. */}
-            {selectedMatch.status !== "in_progress" && (
+            <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => openReschedule(selectedMatch)}
-                className="w-full py-2.5 rounded-xl border border-slate-600 text-slate-300 font-bold text-xs uppercase tracking-wider transition hover:border-blue-400 hover:text-blue-300 flex items-center justify-center gap-2">
-                <CalendarDays className="w-4 h-4" /> Reschedule
+                onClick={() => setWalkoverFor(selectedMatch)}
+                className="py-2 rounded-lg border border-[var(--warning)]/50 text-[var(--warning)] font-bold text-[10px] uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-1.5">
+                <Flag className="w-3.5 h-3.5" /> Walkover
               </button>
-            )}
+
+              {selectedMatch.status !== "in_progress" ? (
+                <>
+                  <button
+                    onClick={() => openDirectScore(selectedMatch)}
+                    className="py-2 rounded-lg border border-emerald-500/40 text-emerald-400 font-bold text-[10px] uppercase tracking-wider transition hover:bg-emerald-500/10 flex items-center justify-center gap-1.5">
+                    <ClipboardEdit className="w-3.5 h-3.5" /> Enter Score
+                  </button>
+                  <button
+                    onClick={() => openReschedule(selectedMatch)}
+                    className="col-span-2 py-2 rounded-lg border border-slate-600 text-slate-300 font-bold text-[10px] uppercase tracking-wider transition hover:border-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5">
+                    <CalendarDays className="w-3.5 h-3.5" /> Reschedule
+                  </button>
+                </>
+              ) : (
+                <div />
+              )}
+            </div>
           </div>
         </div>
 
@@ -988,6 +1060,90 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 disabled={savingWalkover}
                 onClick={() => setWalkoverFor(null)}
                 className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition disabled:opacity-50">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {directScoreFor && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+              <div className="text-center space-y-1">
+                <ClipboardEdit className="w-10 h-10 text-emerald-400 mx-auto" />
+                <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Submit Score</h2>
+                <p className="text-xs text-muted-foreground">
+                  {directScoreFor.match_code} · {directScoreFor.team1_label ?? "TBD"} vs {directScoreFor.team2_label ?? "TBD"}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">
+                  <span className="truncate">{directScoreFor.team1_label ?? "Team 1"}</span>
+                  <span />
+                  <span className="truncate text-right">{directScoreFor.team2_label ?? "Team 2"}</span>
+                </div>
+
+                {directSets.map((set, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                    <input
+                      type="number"
+                      min={0}
+                      value={set.t1}
+                      onChange={(e) => {
+                        const next = [...directSets];
+                        next[i] = { ...next[i], t1: e.target.value };
+                        setDirectSets(next);
+                      }}
+                      placeholder="0"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-emerald-400 transition"
+                    />
+                    <span className="text-[10px] font-black text-muted-foreground">Set {i + 1}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={set.t2}
+                      onChange={(e) => {
+                        const next = [...directSets];
+                        next[i] = { ...next[i], t2: e.target.value };
+                        setDirectSets(next);
+                      }}
+                      placeholder="0"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-emerald-400 transition"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {(() => {
+                const filled = directSets.filter(s => s.t1.trim() !== "" && s.t2.trim() !== "");
+                const parsed = filled.map(s => ({ t1: parseInt(s.t1, 10), t2: parseInt(s.t2, 10) }));
+                const valid = parsed.filter(s => !isNaN(s.t1) && !isNaN(s.t2) && s.t1 !== s.t2);
+                const t1Wins = valid.filter(s => s.t1 > s.t2).length;
+                const t2Wins = valid.filter(s => s.t2 > s.t1).length;
+                const winner = t1Wins > t2Wins ? directScoreFor.team1_label : t2Wins > t1Wins ? directScoreFor.team2_label : null;
+                if (!winner || valid.length < 2) return null;
+                return (
+                  <div className="text-center text-xs text-emerald-400 font-bold bg-emerald-950/30 border border-emerald-900/50 rounded-xl py-2">
+                    Winner: {winner} ({t1Wins}-{t2Wins} sets)
+                  </div>
+                );
+              })()}
+
+              <button
+                disabled={savingDirectScore}
+                onClick={submitDirectScore}
+                className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingDirectScore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardEdit className="w-4 h-4" />}
+                {savingDirectScore ? "Submitting..." : "Submit Score"}
+              </button>
+
+              <button
+                disabled={savingDirectScore}
+                onClick={() => setDirectScoreFor(null)}
+                className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition disabled:opacity-50"
+              >
                 Cancel
               </button>
             </div>
