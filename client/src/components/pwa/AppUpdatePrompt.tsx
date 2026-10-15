@@ -51,7 +51,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
                     Update Available
                   </span>
                 </div>
-                <button
+                <button aria-label="Dismiss update prompt"
                   onClick={onDismiss}
                   className="text-foreground/80 hover:text-foreground transition-colors"
                 >

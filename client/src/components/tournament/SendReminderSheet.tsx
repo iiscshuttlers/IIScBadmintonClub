@@ -291,7 +291,7 @@ export function SendReminderSheet({
                   <div className="flex-1 min-w-0">
                     <PlayerSelect value={picker} onChange={setPicker} players={players} placeholder="Add a player…" className={fieldCls} />
                   </div>
-                  <button
+                  <button aria-label="Add player"
                     onClick={addCustom}
                     disabled={!picker}
                     className="inline-flex items-center justify-center px-3 py-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 shrink-0"

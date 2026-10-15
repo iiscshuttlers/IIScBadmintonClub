@@ -517,7 +517,7 @@ export default function PlayerProfile() {
             {/* Share, Wrapped, Export — own profile only */}
             {currentUser && currentUser.id === player.userId && (
               <>
-                <button
+                <button aria-label="Share profile"
                   onClick={handleShare}
                   className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
                 >

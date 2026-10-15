@@ -1,5 +1,7 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Swords } from "lucide-react";
 
 export default function MyMatchesPage() {
   usePageMeta({
@@ -8,12 +10,17 @@ export default function MyMatchesPage() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">My Matches</h1>
-        <p className="text-muted-foreground dark:text-muted-foreground mt-2">Track all your matches and stats</p>
+    <>
+      <PageHeader
+        compact
+        badge="Tournaments"
+        badgeIcon={<Swords className="w-3.5 h-3.5 text-primary" />}
+        title="My Matches"
+        subtitle="Your live, upcoming and completed tournament matches."
+      />
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <MyMatchesTab />
       </div>
-      <MyMatchesTab />
-    </div>
+    </>
   );
 }

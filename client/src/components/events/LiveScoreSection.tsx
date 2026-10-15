@@ -318,7 +318,7 @@ function MatchBroadcastCard({
           </div>
           
           <div className="flex items-center justify-center shrink-0 pl-1 sm:border-l border-slate-800/50">
-            <button className="p-1.5 sm:p-2 bg-slate-800/50 text-slate-400 rounded-full group-hover:bg-slate-700 group-hover:text-white transition-colors">
+            <button aria-label="Open match" className="p-1.5 sm:p-2 bg-slate-800/50 text-slate-400 rounded-full group-hover:bg-slate-700 group-hover:text-white transition-colors">
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>

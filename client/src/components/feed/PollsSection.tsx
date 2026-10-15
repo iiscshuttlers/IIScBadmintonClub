@@ -240,7 +240,7 @@ function CreatePollForm({
         <h3 className="font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <BarChart2 className="w-4 h-4 text-violet-500" /> Create Poll
         </h3>
-        <button onClick={onCancel} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X className="w-4 h-4 text-muted-foreground" /></button>
+        <button aria-label="Cancel poll" onClick={onCancel} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X className="w-4 h-4 text-muted-foreground" /></button>
       </div>
       <input
         value={question}

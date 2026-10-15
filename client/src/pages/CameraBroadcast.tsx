@@ -976,7 +976,7 @@ export default function CameraBroadcast() {
             </button>
 
             {hasTorch && (
-              <button
+              <button aria-label="Toggle flashlight"
                 onClick={toggleTorch}
                 className={`p-2.5 rounded-full border transition ${
                   torchOn

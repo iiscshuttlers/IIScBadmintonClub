@@ -138,7 +138,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           <div className={`h-1.5 w-full bg-gradient-to-r ${s.accent}`} />
 
           {/* Dismiss */}
-          <button
+          <button aria-label="Dismiss tour"
             onClick={dismiss}
             className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-foreground/60 hover:text-foreground transition"
           >

@@ -331,7 +331,7 @@ export function MatchesManager() {
             {actionId === "recalc" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             Recalculate Friendly ELOs
           </button>
-          <button onClick={load} className="flex justify-center items-center p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          <button aria-label="Refresh matches" onClick={load} className="flex justify-center items-center p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
             <RefreshCw className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>

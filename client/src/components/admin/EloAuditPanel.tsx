@@ -499,7 +499,7 @@ export function EloAuditPanel() {
             ]}
           />
         </div>
-        <button onClick={load} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+        <button aria-label="Refresh ELO audit" onClick={load} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
           <RefreshCw className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>

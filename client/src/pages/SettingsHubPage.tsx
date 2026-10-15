@@ -11,6 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PreferencesModal } from "@/components/QuickSettings";
 
@@ -64,13 +65,15 @@ export default function SettingsHubPage() {
   ];
 
   return (
+    <>
+    <PageHeader
+      compact
+      badge="Account"
+      badgeIcon={<Settings className="w-3.5 h-3.5 text-primary" />}
+      title="Settings"
+      subtitle="Manage your account and preferences"
+    />
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">Settings</h1>
-        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
-          Manage your account and preferences
-        </p>
-      </div>
 
       {/* Settings Items */}
       <div className="space-y-2 mb-8">
@@ -133,5 +136,6 @@ export default function SettingsHubPage() {
         onCancel={() => setSignOutDialog(false)}
       />
     </div>
+    </>
   );
 }

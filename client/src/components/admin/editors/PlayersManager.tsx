@@ -655,7 +655,7 @@ export function PlayersManager() {
             >
                Download CSV
             </button>
-            <button
+            <button aria-label="Refresh players"
               onClick={load}
               className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >

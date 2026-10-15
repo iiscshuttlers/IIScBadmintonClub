@@ -116,7 +116,7 @@ export function RegistrationsManager() {
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
-        <button
+        <button aria-label="Refresh registrations"
           onClick={load}
           className="ml-auto px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
         >

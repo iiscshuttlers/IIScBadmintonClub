@@ -354,7 +354,7 @@ export default function Navigation() {
                     ) : (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="hover:opacity-80 transition-opacity outline-none">
+                          <button aria-label="Account menu" className="hover:opacity-80 transition-opacity outline-none">
                             <Avatar src={userAvatar} name={userName} size="xs" />
                           </button>
                         </DropdownMenuTrigger>
@@ -437,7 +437,7 @@ export default function Navigation() {
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="hover:opacity-80 transition-opacity outline-none">
+                        <button aria-label="Account menu" className="hover:opacity-80 transition-opacity outline-none">
                           <Avatar src={userAvatar} name={userName} size="sm" />
                         </button>
                       </DropdownMenuTrigger>
