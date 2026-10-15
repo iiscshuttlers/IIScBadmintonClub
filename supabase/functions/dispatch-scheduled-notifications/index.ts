@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
 
   const { data: due, error: dueErr } = await supabase
     .from("scheduled_notifications")
-    .select("id, title, body, channels, recipient_ids, tournament_id")
+    .select("id, title, body, channels, recipient_ids, tournament_id, link")
     .eq("status", "pending")
     .lte("scheduled_at", new Date().toISOString())
     .order("scheduled_at", { ascending: true })
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
     try {
       const recipients: string[] = Array.from(new Set((row.recipient_ids ?? []).filter(Boolean)));
       const channels: string[] = row.channels ?? [];
-      const link = row.tournament_id ? "/pulse" : "/pulse#announcements";
+      const link = row.link ?? (row.tournament_id ? "/pulse" : "/pulse#announcements");
 
       // ── in-app ──────────────────────────────────────────────────────────
       if (channels.includes("in_app") && recipients.length) {
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
                     notification: { title: row.title, body: row.body },
                     android: { priority: "high", notification: { channel_id: "notify_whistle" } },
                     webpush: { headers: { Urgency: "high" }, notification: { icon: "icon-192.png", badge: "icon-192.png" } },
-                    data: { type: "tournament_reminder", action: "view_announcements" },
+                    data: { type: "tournament_reminder", action: "view_announcements", link },
                   },
                 }),
               }).catch((err) => console.error("[dispatch] push failed:", err)),

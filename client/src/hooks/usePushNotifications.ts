@@ -257,6 +257,12 @@ export function usePushNotifications(userId: string | undefined) {
             const rawBase = import.meta.env.BASE_URL || "/";
             const baseUrl = rawBase.startsWith(".") ? "" : rawBase.replace(/\/$/, "");
 
+            // Newer senders include an in-app path; it wins over type routing.
+            if (userId && data && typeof data.link === "string" && /^\/(?!\/)/.test(data.link)) {
+              window.location.href = `${baseUrl}${data.link}`;
+              return;
+            }
+
             if (userId && data) {
               const type = data.type;
               const action = data.action;

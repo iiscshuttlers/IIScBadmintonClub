@@ -7,6 +7,12 @@ import { playSmashSound } from "./sounds";
 function handleDeepLink(data: Record<string, string> | undefined) {
   if (!data) return;
 
+  // Newer senders include an in-app path; it wins over type routing.
+  if (typeof data.link === "string" && /^\/(?!\/)/.test(data.link)) {
+    window.location.href = data.link;
+    return;
+  }
+
   // Some senders only set `action`, others only set `type` — check both.
   const type = data.type || data.action;
   if (!type) return;

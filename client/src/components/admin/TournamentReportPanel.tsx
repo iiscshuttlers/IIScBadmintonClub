@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { BarChart3, Clock, Download, FileText, Flag, Loader2, Medal, RefreshCw, Sparkles, Trophy, Users } from "lucide-react";
+import { BarChart3, Clock, Download, FileText, Flag, Loader2, Medal, RefreshCw, Sparkles, Star, Trophy, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { computeReport, matchesToCsv, type ReportMatch, type TournamentReport } from "@/lib/tournamentReport";
+import { summariseFeedback, type FeedbackSummary } from "@/lib/tournamentFeedback";
 
 /**
  * Organizer wrap-up: headline numbers, results per category, highlights and
@@ -108,6 +109,7 @@ export function TournamentReportPanel({
   const [matches, setMatches] = useState<ReportMatch[]>([]);
   const [umpireNames, setUmpireNames] = useState<Record<string, string>>({});
   const [registered, setRegistered] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [exporting, setExporting] = useState<"csv" | "pdf" | null>(null);
@@ -138,6 +140,13 @@ export function TournamentReportPanel({
       const { data: ump } = await supabase.from("players").select("id, full_name").in("id", umpIds);
       setUmpireNames(Object.fromEntries((ump ?? []).map((p: any) => [p.id, p.full_name])));
     }
+    // tournament_feedback is new; generated types catch up after `supabase db push`.
+    const { data: fb } = await (supabase as any)
+      .from("tournament_feedback")
+      .select("rating, tags, comment")
+      .eq("tournament_id", tournament.id);
+    setFeedback(fb ? summariseFeedback(fb) : null);
+
     if (tournament.require_app_registration) {
       const { count } = await supabase
         .from("tournament_registrations")
@@ -295,6 +304,57 @@ export function TournamentReportPanel({
           </div>
         )}
       </div>
+
+      {feedback && (
+        <div className={cardCls}>
+          <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
+            <Star className="w-4 h-4 text-amber-500" /> Player feedback
+          </h4>
+          {feedback.count === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No ratings yet. Players get a "How was it?" push two hours after you mark the tournament completed.
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-[auto_1fr] gap-5">
+              <div className="text-center">
+                <div className="text-4xl font-black tabular-nums">{feedback.average!.toFixed(1)}</div>
+                <div className="text-xs text-muted-foreground">{feedback.count} rating{feedback.count === 1 ? "" : "s"}</div>
+                <div className="mt-2 space-y-0.5">
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <div key={n} className="flex items-center gap-1.5 text-[11px] tabular-nums">
+                      <span className="w-3">{n}</span>
+                      <div className="w-24 h-1.5 rounded bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div className="h-full bg-amber-400" style={{ width: `${(feedback.distribution[n - 1] / feedback.count) * 100}%` }} />
+                      </div>
+                      <span className="w-4 text-muted-foreground">{feedback.distribution[n - 1]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3 min-w-0">
+                {feedback.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {feedback.tags.map((t) => (
+                      <span key={t.tag} className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                        {t.tag} · {t.count}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {feedback.comments.length > 0 && (
+                  <ul className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {feedback.comments.map((c, i) => (
+                      <li key={i} className="text-sm text-slate-700 dark:text-slate-300 border-l-2 border-slate-200 dark:border-slate-700 pl-2">
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {(report.highlights.length > 0 || report.umpires.length > 0) && (
         <div className="grid md:grid-cols-2 gap-5">
