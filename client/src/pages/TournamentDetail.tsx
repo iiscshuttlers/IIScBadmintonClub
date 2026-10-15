@@ -1,5 +1,5 @@
 import { Link, useRoute, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Medal,
@@ -31,6 +31,10 @@ import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { getEventFamily } from "@/lib/tournamentTheme";
+import { CertificateButton, CertificateDialog } from "@/components/tournament/CertificateDialog";
+import type { CertificateInput, Placement } from "@/lib/certificate";
+
+const PODIUM_PLACEMENTS: Placement[] = ["winner", "runnerUp", "third", "fourth"];
 
 const PODIUM_CONFIGS = [
   {
@@ -78,6 +82,7 @@ export default function TournamentDetail() {
   const params = routeParams ?? { slug: "" };
   const slug = params.slug;
   const { archivedTournaments, loading: archivedLoading } = useArchivedTournaments();
+  const [certificate, setCertificate] = useState<CertificateInput | null>(null);
   let tournament: ArchivedTournament | undefined = getArchivedTournament(slug, archivedTournaments);
   
   const { data: events, isLoading } = useQuery({
@@ -277,24 +282,37 @@ export default function TournamentDetail() {
                                 <Medal className="w-3.5 h-3.5" />
                                 {result.category}
                               </div>
-                              <p className="font-bold text-blue-950 dark:text-foreground flex items-center gap-2">
-                                🥇 {result.winner}
-                              </p>
-                              {result.runnerUp && (
-                                <p className="mt-1.5 text-sm font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
-                                  🥈 {result.runnerUp}
-                                </p>
-                              )}
-                              {result.bronze && (
-                                <p className="mt-1 text-sm font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
-                                  🥉 {result.bronze.join(" / ")}
-                                </p>
-                              )}
-                              {result.fourthPlace && (
-                                <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                                  4️⃣ {result.fourthPlace.join(" / ")}
-                                </p>
-                              )}
+                              {(() => {
+                                const open = (recipient: string, placement: Placement) =>
+                                  setCertificate({
+                                    recipient,
+                                    placement,
+                                    category: group !== "Overall" ? `${group}: ${result.category}` : result.category,
+                                    tournamentName: tournament!.name,
+                                    date: tournament!.startDate,
+                                  });
+                                const row = (name: string, placement: Placement, medal: string, cls: string, key?: string) => (
+                                  <p key={key} className={`${cls} flex items-center justify-between gap-2`}>
+                                    <span className="flex items-center gap-2 min-w-0">
+                                      {medal} <span className="truncate">{name}</span>
+                                    </span>
+                                    <CertificateButton recipient={name} placement={placement} onOpen={open} />
+                                  </p>
+                                );
+                                return (
+                                  <>
+                                    {row(result.winner, "winner", "🥇", "font-bold text-blue-950 dark:text-foreground")}
+                                    {result.runnerUp &&
+                                      row(result.runnerUp, "runnerUp", "🥈", "mt-1 text-sm font-semibold text-muted-foreground")}
+                                    {result.bronze?.map((name) =>
+                                      row(name, "third", "🥉", "mt-1 text-sm font-semibold text-muted-foreground", `b-${name}`),
+                                    )}
+                                    {result.fourthPlace?.map((name) =>
+                                      row(name, "fourth", "4️⃣", "mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400", `f-${name}`),
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
                           ))}
                         </div>
@@ -325,9 +343,22 @@ export default function TournamentDetail() {
                             >
                               {cfg.label}
                             </p>
-                            <p className="mt-2 text-lg font-bold text-blue-950 dark:text-foreground">
-                              {team}
-                            </p>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <p className="text-lg font-bold text-blue-950 dark:text-foreground">{team}</p>
+                              <CertificateButton
+                                recipient={team}
+                                placement={PODIUM_PLACEMENTS[index] ?? "fourth"}
+                                onOpen={(recipient, placement) =>
+                                  setCertificate({
+                                    recipient,
+                                    placement,
+                                    category: "Team Championship",
+                                    tournamentName: tournament!.name,
+                                    date: tournament!.startDate,
+                                  })
+                                }
+                              />
+                            </div>
                           </div>
                         );
                       })}
@@ -338,6 +369,7 @@ export default function TournamentDetail() {
             </Card>
 
             {tournament.id && <UpNextPanel tournamentId={tournament.id} />}
+            <CertificateDialog input={certificate} onClose={() => setCertificate(null)} />
 
             {tournament.id && (
               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
