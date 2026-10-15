@@ -97,6 +97,7 @@ const OfficiatePage = lazy(() => import("./pages/OfficiatePage"));
 
 const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
 const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
+const TvDrawReveal = lazy(() => import("@/pages/TvDrawReveal"));
 const ObsOverlayScoreboard = lazy(() => import("./pages/ObsOverlayScoreboard"));
 const CameraBroadcast = lazy(() => import("./pages/CameraBroadcast"));
 
@@ -139,6 +140,7 @@ function AppRoutes() {
           </Route>
           
           <Route path="/tv" component={TvScoreboardIndex} />
+          <Route path="/tv/draw/:tournamentId?" component={TvDrawReveal} />
           <Route path="/tv/overlay/:matchId?" component={ObsOverlayScoreboard} />
           <Route path="/tv/camera/:matchId?">
             <ProtectedRoute>
