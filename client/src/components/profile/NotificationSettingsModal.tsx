@@ -269,8 +269,8 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
               onCheckedChange={() => handleTogglePref("pref_notify_point")}
             />
             <PreferenceItem
-              title="Match Notifications"
-              description="When a match is logged against you"
+              title="Match Reminders"
+              description="Before your matches, and when you're up next on court"
               checked={prefs.pref_notify_smash}
               onCheckedChange={() => handleTogglePref("pref_notify_smash")}
             />

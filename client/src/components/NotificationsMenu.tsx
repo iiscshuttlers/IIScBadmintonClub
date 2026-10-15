@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy } from "lucide-react";
+import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy, Timer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { playSmashSound, playPointSound, playServeSound, playWhistleSound, playVictorySound } from "@/lib/sounds";
 import {
@@ -127,6 +127,10 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         return <BellRing className="w-5 h-5 text-amber-500" />;
       case "find_lost":
         return <PackageSearch className="w-5 h-5 text-indigo-500" />;
+      case "court_queue":
+      case "match_reminder":
+      case "friend_match_reminder":
+        return <Timer className="w-5 h-5 text-emerald-500" />;
       case "achievement":
       case "milestone":
         return <Trophy className="w-5 h-5 text-amber-400" />;
