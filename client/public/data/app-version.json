@@ -1,6 +1,6 @@
 {
-  "versionCode": 420,
-  "versionName": "4.20",
+  "versionCode": 421,
+  "versionName": "4.21",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- fix(admin): move master-only tooltip off lucide icon to a wrapping span\n- docs(admin): record Phase 7 delivery-audit panel\n- feat(admin): improve navigation UX and fix token inconsistencies\n- feat(admin): delivery audit — cron-job health + notification outcomes\n- feat(admin): hardening — error boundary, a11y, lazy modal, panel polish\n- fix(admin): clarify doubles link order is cosmetic"
+  "changelog": "- feat(certificate): add logos, signatures, and convener names\n- feat(feedback): post-event tournament rating\n- feat(predictions): bracket challenge with leaderboard\n- feat(tv): court display with head-to-head between matches\n- feat(my-matches): path to the final\n- feat(team-events): lineup-deadline reminders for captains\n- feat(umpire): \"call players to court\" push\n- feat(admin): clone a tournament into a new draft\n- feat(my-matches): show Elo stakes on upcoming ranked matches\n- feat(schedule): warn when a player is scheduled back-to-back\n- fix: polish found while verifying in the browser\n- a11y+ui: label icon-only buttons; PageHeader on My Matches and Settings\n- feat(profile): umpire track record and officiating badges\n- feat(tv): live draw ceremony at /tv/draw\n- feat(admin): tournament wrap-up report with CSV and PDF export\n- feat(results): winner certificates and shareable result cards\n- feat(notifications): \"you're up next\" court-queue push alerts\n- feat(calendar): add-to-calendar .ics export for upcoming matches\n- chore(repo): untrack scratch files, dumps and personal data; env-ify DB URLs"
 }

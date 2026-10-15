@@ -1,5 +1,31 @@
 [
   {
+    "versionCode": 421,
+    "versionName": "4.21",
+    "date": "2026-10-15T07:17:02.817Z",
+    "changes": [
+      "- feat(certificate): add logos, signatures, and convener names",
+      "- feat(feedback): post-event tournament rating",
+      "- feat(predictions): bracket challenge with leaderboard",
+      "- feat(tv): court display with head-to-head between matches",
+      "- feat(my-matches): path to the final",
+      "- feat(team-events): lineup-deadline reminders for captains",
+      "- feat(umpire): \"call players to court\" push",
+      "- feat(admin): clone a tournament into a new draft",
+      "- feat(my-matches): show Elo stakes on upcoming ranked matches",
+      "- feat(schedule): warn when a player is scheduled back-to-back",
+      "- fix: polish found while verifying in the browser",
+      "- a11y+ui: label icon-only buttons; PageHeader on My Matches and Settings",
+      "- feat(profile): umpire track record and officiating badges",
+      "- feat(tv): live draw ceremony at /tv/draw",
+      "- feat(admin): tournament wrap-up report with CSV and PDF export",
+      "- feat(results): winner certificates and shareable result cards",
+      "- feat(notifications): \"you're up next\" court-queue push alerts",
+      "- feat(calendar): add-to-calendar .ics export for upcoming matches",
+      "- chore(repo): untrack scratch files, dumps and personal data; env-ify DB URLs"
+    ]
+  },
+  {
     "versionCode": 420,
     "versionName": "4.20",
     "date": "2026-10-14T12:10:25.528Z",
