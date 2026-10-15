@@ -129,6 +129,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         return <PackageSearch className="w-5 h-5 text-indigo-500" />;
       case "court_queue":
       case "court_call":
+      case "lineup_deadline":
       case "match_reminder":
       case "friend_match_reminder":
         return <Timer className="w-5 h-5 text-emerald-500" />;
