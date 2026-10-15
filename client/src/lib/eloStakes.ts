@@ -1,6 +1,7 @@
 /**
- * "What's at stake" preview for a ranked tournament match. Mirrors the server
- * rating update (submit_tournament_match, migration 20261009105501):
+ * "What's at stake" preview for a ranked tournament match — an estimate.
+ * Follows the server rating update (submit_tournament_match, migration
+ * 20261009105501), using players.elo_rating (the leaderboard value):
  *   change = round(K * (actual - expected) * setsMult * tournamentMult)
  *   expected = 1 / (1 + 10^((opp - me) / 400)), side Elo = mean of the pair
  *   K = newbie K for < 10 completed matches, else experienced K

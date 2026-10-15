@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { Swords, Clock, Radio, CalendarPlus } from "lucide-react";
+import { Swords, Clock, Radio, CalendarPlus, Route } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { matchesToEvents, shareIcs } from "@/lib/calendarExport";
+import { PathToFinalDialog } from "@/components/tournament/PathToFinalDialog";
 import { computeStakes, formatRange, DEFAULT_ELO_CONFIG, type Stakes } from "@/lib/eloStakes";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
@@ -78,6 +79,7 @@ export function MyMatchesStrip({
 
   // Elo stakes for upcoming ranked matches with both sides decided.
   const [stakes, setStakes] = useState<Record<string, Stakes>>({});
+  const [pathFor, setPathFor] = useState<{ tournamentId: string; category: string } | null>(null);
   useEffect(() => {
     if (!myPlayerId) return;
     const ranked = myMatches.filter(
@@ -106,7 +108,7 @@ export function MyMatchesStrip({
         kExperienced: Number(v.k_factor_experienced) || DEFAULT_ELO_CONFIG.kExperienced,
         tournamentMultiplier: Number(v.tournament_multiplier) || DEFAULT_ELO_CONFIG.tournamentMultiplier,
       };
-      const elo = new Map((players ?? []).map((p: any) => [p.id, p.tournament_elo ?? p.elo_rating ?? 1200]));
+      const elo = new Map((players ?? []).map((p: any) => [p.id, p.elo_rating ?? p.tournament_elo ?? 1200]));
       const e = (id?: string | null) => (id ? elo.get(id) ?? 1200 : null);
       const out: Record<string, Stakes> = {};
       for (const m of ranked) {
@@ -202,9 +204,22 @@ export function MyMatchesStrip({
                       </span>
                     ) : null}
                   </div>
+                  {!isDone && m.tournament_id && m.category && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPathFor({ tournamentId: m.tournament_id, category: m.category });
+                      }}
+                      className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline"
+                    >
+                      <Route className="w-3 h-3" /> Path to the final
+                    </button>
+                  )}
                   {!isDone && !isLive && stakes[m.id] && (
                     <p className="text-[10px] font-bold tabular-nums text-slate-400" title="Estimated Elo change (range covers 2- and 3-game results)">
-                      Elo: win <span className="text-emerald-400">{formatRange(stakes[m.id].win)}</span> · lose{" "}
+                      Elo ≈ win <span className="text-emerald-400">{formatRange(stakes[m.id].win)}</span> · lose{" "}
                       <span className="text-rose-400">{formatRange(stakes[m.id].lose)}</span>
                     </p>
                   )}
@@ -214,6 +229,15 @@ export function MyMatchesStrip({
           );
         })}
       </div>
+      {pathFor && myPlayerId && (
+        <PathToFinalDialog
+          open
+          onClose={() => setPathFor(null)}
+          tournamentId={pathFor.tournamentId}
+          category={pathFor.category}
+          playerId={myPlayerId}
+        />
+      )}
     </div>
   );
 }
