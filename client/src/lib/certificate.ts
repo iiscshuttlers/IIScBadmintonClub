@@ -8,7 +8,7 @@ import { Share } from "@capacitor/share";
  * WhatsApp/Instagram), both drawn on a canvas so they work offline and on web.
  */
 
-export type Placement = "winner" | "runnerUp" | "third" | "fourth";
+export type Placement = "winner" | "runnerUp" | "third" | "fourth" | "participation" | "official";
 
 export interface CertificateInput {
   recipient: string;
@@ -17,6 +17,8 @@ export interface CertificateInput {
   tournamentName: string;
   /** Free text, e.g. "May 2026" or an ISO date. */
   date?: string;
+  /** Participation: stage reached ("Quarter-finalist"); official: role ("Umpire"). */
+  achievement?: string;
 }
 
 export const PLACEMENT_META: Record<Placement, { title: string; medal: string; color: string; light: string }> = {
@@ -24,7 +26,19 @@ export const PLACEMENT_META: Record<Placement, { title: string; medal: string; c
   runnerUp: { title: "Runner-up", medal: "🥈", color: "#64748b", light: "#f1f5f9" },
   third: { title: "Third Place", medal: "🥉", color: "#c2410c", light: "#ffedd5" },
   fourth: { title: "Fourth Place", medal: "🎖️", color: "#1d4ed8", light: "#dbeafe" },
+  participation: { title: "Participant", medal: "🏸", color: "#0f766e", light: "#ccfbf1" },
+  official: { title: "Official", medal: "🛡️", color: "#6d28d9", light: "#ede9fe" },
 };
+
+/** Heading, lead-in and highlighted line, by certificate kind. */
+export function certificateWording(input: CertificateInput) {
+  const meta = PLACEMENT_META[input.placement];
+  if (input.placement === "participation")
+    return { heading: "Certificate of Participation", lead: input.achievement ? "for reaching the stage of" : "for taking part as a", highlight: input.achievement ?? meta.title };
+  if (input.placement === "official")
+    return { heading: "Certificate of Appreciation", lead: "for serving as", highlight: input.achievement ?? meta.title };
+  return { heading: "Certificate of Achievement", lead: "for finishing as", highlight: meta.title };
+}
 
 export function formatCertDate(date?: string): string {
   if (!date) return "";
@@ -57,6 +71,16 @@ async function fontsReady() {
   }
 }
 
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
 const SERIF = (px: number) => `800 ${px}px "Playfair Display", Georgia, serif`;
 const DISPLAY = (w: number, px: number) => `${w} ${px}px "Outfit", "Inter", system-ui, sans-serif`;
 const BODY = (w: number, px: number) => `${w} ${px}px "Inter", system-ui, sans-serif`;
@@ -64,6 +88,13 @@ const BODY = (w: number, px: number) => `${w} ${px}px "Inter", system-ui, sans-s
 /** A4 landscape at ~150 dpi. */
 export async function drawCertificate(input: CertificateInput): Promise<HTMLCanvasElement> {
   await fontsReady();
+  const base = import.meta.env.BASE_URL ?? "/";
+  const [iiscLogo, clubLogo, signConvener, signCoConvener] = await Promise.all([
+    loadImage(`${base}iisc-logo.png`),
+    loadImage(`${base}icon-512.png`),
+    loadImage(`${base}sign-convener.png`),
+    loadImage(`${base}sign-co-convener.png`),
+  ]);
   const W = 1754;
   const H = 1240;
   const c = document.createElement("canvas");
@@ -71,6 +102,7 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
   c.height = H;
   const ctx = c.getContext("2d")!;
   const meta = PLACEMENT_META[input.placement];
+  const words = certificateWording(input);
 
   // Paper + double border
   ctx.fillStyle = "#fffdf7";
@@ -92,66 +124,109 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
+  // Logos + club name header
+  const logoSize = 72;
+  const headerY = 140;
+  if (iiscLogo) ctx.drawImage(iiscLogo, W / 2 - 260 - logoSize, headerY - logoSize / 2, logoSize, logoSize);
+  if (clubLogo) ctx.drawImage(clubLogo, W / 2 + 260, headerY - logoSize / 2, logoSize, logoSize);
+
   ctx.fillStyle = "#0f172a";
   ctx.font = DISPLAY(700, 34);
-  ctx.fillText("IISc BADMINTON CLUB", W / 2, 190);
+  ctx.fillText("IISc BADMINTON CLUB", W / 2, headerY + 12);
 
   ctx.fillStyle = meta.color;
   ctx.font = SERIF(96);
-  ctx.fillText("Certificate of Achievement", W / 2, 320);
+  fitText(ctx, words.heading, SERIF, 96, W - 300);
+  ctx.fillText(words.heading, W / 2, 300);
 
   ctx.fillStyle = "#475569";
   ctx.font = BODY(500, 34);
-  ctx.fillText("This certificate is proudly presented to", W / 2, 420);
+  ctx.fillText("This certificate is proudly presented to", W / 2, 396);
 
   ctx.fillStyle = "#0f172a";
   fitText(ctx, input.recipient, SERIF, 110, W - 360);
-  ctx.fillText(input.recipient, W / 2, 560);
+  ctx.fillText(input.recipient, W / 2, 530);
 
   // Underline under the name
   ctx.strokeStyle = meta.color;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(W / 2 - 420, 600);
-  ctx.lineTo(W / 2 + 420, 600);
+  ctx.moveTo(W / 2 - 420, 568);
+  ctx.lineTo(W / 2 + 420, 568);
   ctx.stroke();
 
   ctx.fillStyle = "#475569";
   ctx.font = BODY(500, 34);
-  ctx.fillText("for finishing as", W / 2, 680);
+  ctx.fillText(words.lead, W / 2, 644);
 
   ctx.fillStyle = meta.color;
   ctx.font = DISPLAY(800, 72);
-  ctx.fillText(`${meta.medal} ${meta.title}`, W / 2, 780);
+  ctx.fillText(`${meta.medal} ${words.highlight}`, W / 2, 740);
 
   ctx.fillStyle = "#0f172a";
   fitText(ctx, input.category, (px) => DISPLAY(700, px), 46, W - 360);
-  ctx.fillText(input.category, W / 2, 860);
+  ctx.fillText(input.category, W / 2, 820);
 
   ctx.fillStyle = "#334155";
   fitText(ctx, input.tournamentName, (px) => DISPLAY(600, px), 42, W - 360);
-  ctx.fillText(input.tournamentName, W / 2, 930);
+  ctx.fillText(input.tournamentName, W / 2, 888);
 
   const date = formatCertDate(input.date);
   ctx.font = BODY(500, 28);
   ctx.fillStyle = "#64748b";
-  if (date) ctx.fillText(date, W / 2, 990);
+  if (date) ctx.fillText(date, W / 2, 944);
 
-  // Signature line
+  // Signature lines — Convener (right) and Co-Convener (left)
+  const sigY = 1080;
+  const sigLineW = 320;
+  const signH = 60;
+
   ctx.strokeStyle = "#94a3b8";
   ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W - 560, 1080);
-  ctx.lineTo(W - 200, 1080);
-  ctx.stroke();
-  ctx.font = BODY(600, 24);
-  ctx.fillStyle = "#475569";
-  ctx.fillText("Club Convener", W - 380, 1116);
 
-  ctx.textAlign = "left";
+  // Convener (right)
+  const convX = W - 200 - sigLineW / 2;
+  if (signConvener) {
+    const aspect = signConvener.width / signConvener.height;
+    const sW = signH * aspect;
+    ctx.drawImage(signConvener, convX - sW / 2, sigY - signH - 8, sW, signH);
+  }
+  ctx.beginPath();
+  ctx.moveTo(convX - sigLineW / 2, sigY);
+  ctx.lineTo(convX + sigLineW / 2, sigY);
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.font = BODY(600, 26);
+  ctx.fillStyle = "#0f172a";
+  ctx.fillText("Raja Janmejay", convX, sigY + 36);
   ctx.font = BODY(500, 22);
+  ctx.fillStyle = "#475569";
+  ctx.fillText("Convener", convX, sigY + 64);
+
+  // Co-Convener (left)
+  const coConvX = 200 + sigLineW / 2;
+  if (signCoConvener) {
+    const aspect = signCoConvener.width / signCoConvener.height;
+    const sW = signH * aspect;
+    ctx.drawImage(signCoConvener, coConvX - sW / 2, sigY - signH - 8, sW, signH);
+  }
+  ctx.strokeStyle = "#94a3b8";
+  ctx.beginPath();
+  ctx.moveTo(coConvX - sigLineW / 2, sigY);
+  ctx.lineTo(coConvX + sigLineW / 2, sigY);
+  ctx.stroke();
+  ctx.font = BODY(600, 26);
+  ctx.fillStyle = "#0f172a";
+  ctx.fillText("Aneesh Varla", coConvX, sigY + 36);
+  ctx.font = BODY(500, 22);
+  ctx.fillStyle = "#475569";
+  ctx.fillText("Co-Convener", coConvX, sigY + 64);
+
+  // Issued-via footer
+  ctx.textAlign = "center";
+  ctx.font = BODY(500, 20);
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("Issued via IIScShuttlers", 200, 1116);
+  ctx.fillText("Issued via IIScShuttlers", W / 2, H - 100);
 
   return c;
 }
@@ -159,6 +234,8 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
 /** 1080×1080 card for social sharing. */
 export async function drawResultCard(input: CertificateInput): Promise<HTMLCanvasElement> {
   await fontsReady();
+  const base = import.meta.env.BASE_URL ?? "/";
+  const clubLogo = await loadImage(`${base}icon-512.png`);
   const S = 1080;
   const c = document.createElement("canvas");
   c.width = S;
@@ -179,17 +256,20 @@ export async function drawResultCard(input: CertificateInput): Promise<HTMLCanva
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, S, S);
 
+  // Club logo + header
   ctx.textAlign = "center";
+  if (clubLogo) ctx.drawImage(clubLogo, S / 2 - 28, 40, 56, 56);
   ctx.fillStyle = "#94a3b8";
   ctx.font = DISPLAY(700, 30);
-  ctx.fillText("IISc BADMINTON CLUB", S / 2, 110);
+  ctx.fillText("IISc BADMINTON CLUB", S / 2, 126);
 
   ctx.font = `200px system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
   ctx.fillText(meta.medal, S / 2, 400);
 
   ctx.fillStyle = meta.light;
   ctx.font = DISPLAY(800, 84);
-  ctx.fillText(meta.title.toUpperCase(), S / 2, 540);
+  fitText(ctx, certificateWording(input).highlight.toUpperCase(), (px) => DISPLAY(800, px), 84, S - 140);
+  ctx.fillText(certificateWording(input).highlight.toUpperCase(), S / 2, 540);
 
   ctx.fillStyle = "#ffffff";
   fitText(ctx, input.recipient, (px) => DISPLAY(800, px), 76, S - 140);
@@ -251,7 +331,7 @@ export async function saveCertificatePdf(input: CertificateInput, canvas?: HTMLC
 export async function shareResultCard(input: CertificateInput, canvas?: HTMLCanvasElement) {
   const c = canvas ?? (await drawResultCard(input));
   const fileName = `${certificateFileBase(input)}.png`;
-  const text = `${PLACEMENT_META[input.placement].medal} ${input.recipient} — ${PLACEMENT_META[input.placement].title}, ${input.category} at ${input.tournamentName}`;
+  const text = `${PLACEMENT_META[input.placement].medal} ${input.recipient} — ${certificateWording(input).highlight}, ${input.category} at ${input.tournamentName}`;
   if (Capacitor.isNativePlatform()) {
     await shareNative(c.toDataURL("image/png").split(",")[1], fileName, "Share result");
     return;
