@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { candidates, isLocked, maxPoints, predictableRounds, score, setPick, type PMatch } from "./bracketPredict";
+import { candidates, hasStarted, isLocked, matchLocked, maxPoints, predictableRounds, score, setPick, type PMatch } from "./bracketPredict";
 
 const mk = (code: string, round: number, n: number, next: string | null, pos: number | null, p1: string | null, p2: string | null, o: Partial<PMatch> = {}): PMatch => ({
   id: code,
@@ -41,20 +41,30 @@ describe("bracketPredict", () => {
     expect(p).toEqual({ SF1: "b" });
   });
 
-  it("locks when a real match starts, not on byes", () => {
+  it("locks each match as it starts; category only when all have", () => {
     const d = draw();
-    expect(isLocked(d)).toBe(false);
+    expect(hasStarted(d)).toBe(false);
     d[0] = { ...d[0], status: "in_progress" };
-    expect(isLocked(d)).toBe(true);
+    expect(matchLocked(d[0])).toBe(true);
+    expect(hasStarted(d)).toBe(true);
+    expect(isLocked(d)).toBe(false);
+    expect(isLocked(d.map((m) => ({ ...m, status: "completed" })))).toBe(true);
   });
 
-  it("scores 1 per first-round hit, doubling per round", () => {
+  it("refuses to change a started match's pick", () => {
+    const d = draw();
+    d[0] = { ...d[0], status: "in_progress" };
+    const picks = { [d[0].match_code]: d[0].player1_id! };
+    expect(setPick(d, picks, d[0].match_code, d[0].player2_id!)).toBe(picks);
+  });
+
+  it("scores fixed points per round counted from the final", () => {
     const d = draw();
     d[0] = { ...d[0], status: "completed", winner_side: 1 };
     d[2] = { ...d[2], status: "completed", winner_side: 2, player1_id: "a", player2_id: "c" };
-    expect(score(d, { SF1: "a", F: "c" })).toEqual({ points: 3, correct: 2, decided: 2 });
+    expect(score(d, { SF1: "a", F: "c" })).toEqual({ points: 4, correct: 2, decided: 2 });
     expect(score(d, { SF1: "b", F: "a" })).toEqual({ points: 0, correct: 0, decided: 2 });
-    expect(maxPoints(d)).toBe(3);
+    expect(maxPoints(d)).toBe(4);
     expect(predictableRounds(d)).toHaveLength(2);
   });
 });

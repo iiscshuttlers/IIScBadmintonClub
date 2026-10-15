@@ -75,14 +75,19 @@
 
 
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts — loaded asynchronously so they never block Android startup -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Playfair+Display:wght@700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Playfair+Display:wght@700;800&family=Bodoni+Moda:wght@400;500;600;700&family=Cinzel:wght@700;800&family=Caveat:wght@600&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
       crossorigin="anonymous"
     />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Playfair+Display:wght@700;800&family=Bodoni+Moda:wght@400;500;600;700&family=Cinzel:wght@700;800&family=Caveat:wght@600&display=swap" rel="stylesheet" />
+    </noscript>
 
     <style>
       :root {
@@ -111,6 +116,9 @@
   <body>
     <div id="root">
       <style>
+        /* Prevent white flash on dark-mode Android before JS boots */
+        body, html { background-color: #020617; }
+        html:not(.dark) body, html:not(.dark) { background-color: #ffffff; }
         #initial-loader {
           position: fixed;
           inset: 0;
@@ -120,6 +128,7 @@
           justify-content: center;
           background-color: #ffffff;
           z-index: 9999;
+          transition: opacity 0.3s ease;
         }
         html.dark #initial-loader {
           background-color: #020617; /* tailwind slate-950 */
@@ -139,6 +148,31 @@
       <div id="initial-loader">
         <div class="spinner"></div>
       </div>
+      <script>
+        // Remove the initial loader as soon as React has rendered real content
+        // (MutationObserver watches for React replacing the loader div)
+        (function () {
+          var loader = document.getElementById('initial-loader');
+          if (!loader) return;
+          var obs = new MutationObserver(function () {
+            // React will remove the loader element when it takes over #root
+            if (!document.getElementById('initial-loader')) {
+              obs.disconnect();
+              return;
+            }
+            // If React added siblings (real UI), fade and remove the loader
+            var root = document.getElementById('root');
+            if (root && root.children.length > 1) {
+              loader.style.opacity = '0';
+              setTimeout(function () { loader.remove(); }, 300);
+              obs.disconnect();
+            }
+          });
+          obs.observe(document.getElementById('root'), { childList: true, subtree: false });
+          // Hard failsafe: remove after 8s no matter what
+          setTimeout(function () { loader && loader.remove(); }, 8000);
+        })();
+      </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

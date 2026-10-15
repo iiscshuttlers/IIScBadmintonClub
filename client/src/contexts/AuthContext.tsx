@@ -59,9 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchProfile = async (userId: string, email?: string) => {
+    const timeout = <T,>(promise: PromiseLike<T>, ms: number): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+      ]);
+
     try {
       // Check if user still exists on the server (handles deleted users while JWT is still valid locally)
-      const { error: authError } = await supabase.auth.getUser();
+      const { error: authError } = await timeout(supabase.auth.getUser(), 8000);
       if (authError && (authError.status === 404 || authError.status === 400 || authError.message.toLowerCase().includes("user not found"))) {
         await supabase.auth.signOut();
         setProfile(null);
@@ -69,18 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      let { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
+      let { data, error } = await timeout(
+        supabase.from("players").select("*").eq("id", userId).maybeSingle(),
+        8000,
+      );
 
       if (!data && email) {
-        const res = await supabase
-          .from("players")
-          .select("*")
-          .eq("email", email)
-          .maybeSingle();
+        const res = await timeout(
+          supabase.from("players").select("*").eq("email", email).maybeSingle(),
+          8000,
+        );
         if (res.data) {
           data = res.data;
           error = res.error;

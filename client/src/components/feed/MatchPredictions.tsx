@@ -225,13 +225,17 @@ export function MatchPredictionCard({
                   tooltip="Calculated from past match history between these players. If they haven't faced each other, it defaults to their overall win rates."
                 />
               )}
+              {totalVotes === 0 ? (
+                <p className={`${compact ? "text-[10px] mt-1" : "text-xs mt-2"} text-center text-muted-foreground font-medium`}>No votes yet</p>
+              ) : (
               <ProbBar
                 t1Pct={voteT1Pct}
                 t2Pct={voteT2Pct}
-                t1Label={compact ? `${voteT1Pct}% • ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}` : `${voteT1Pct}% • ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""} • ${t1Label}`}
-                t2Label={compact ? `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} • ${voteT2Pct}%` : `${t2Label} • ${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} • ${voteT2Pct}%`}
+                t1Label={compact ? `${voteT1Pct}%` : `${voteT1Pct}% • ${t1Label}`}
+                t2Label={compact ? `${voteT2Pct}%` : `${t2Label} • ${voteT2Pct}%`}
                 tooltip={compact ? undefined : "Live predictions from people in the community watching this match."}
               />
+              )}
             </>
           ) : (
             <div className={`${compact ? "mt-1 py-1 px-2 text-[9px]" : "mt-2 p-2.5 text-[11px]"} rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-muted-foreground flex items-center justify-between font-medium`}>

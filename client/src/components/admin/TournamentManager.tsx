@@ -647,6 +647,7 @@ export function TournamentManager() {
               }}
               isMasterAdmin={isMainAdmin}
               onDelete={() => { setSelected(null); loadTournaments(false); }}
+              onGoArchive={() => setTab("archive")}
             />
           )}
           {activeTab === "participants" && <TournamentParticipantsTab tournament={selected} />}
@@ -684,8 +685,9 @@ export function TournamentManager() {
 
 // ── Setup Tab ──────────────────────────────────────────────────────────────────
 
-function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
+function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete, onGoArchive }: {
   tournament: Tournament;
+  onGoArchive?: () => void;
   onSaved: (t: Tournament) => void;
   isMasterAdmin: boolean;
   onDelete?: () => void;
@@ -762,7 +764,8 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
   };
 
   const transition = async (newStatus: string) => {
-    const ok = await confirm({ title: "Confirm Status Change", description: `Move tournament to "${newStatus}" status?`, confirmLabel: "Move", confirmVariant: "primary" });
+    const statusLabel = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    const ok = await confirm({ title: "Confirm Status Change", description: `Move tournament to ${statusLabel}?`, confirmLabel: "Move", confirmVariant: "primary" });
     if (!ok) return;
     setTransitioning(true);
     const { data, error } = await supabase.from("tournaments").update({ status: newStatus }).eq("id", tournament.id).select().single();
@@ -775,7 +778,8 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
       after_state: data,
       label: `Changed tournament "${tournament.name}" status to ${newStatus}`,
     });
-    toast.success(`Status → ${newStatus}`);
+    toast.success(`Status → ${statusLabel}`);
+    setForm((f) => ({ ...f, status: (data as Tournament).status }));
     onSaved(data as Tournament);
     setTransitioning(false);
   };
@@ -908,39 +912,55 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
 
   return (
     <div className="space-y-5">
-      {/* Status transitions */}
+      {/* Status lifecycle: Draft → Active → Completed → Archived */}
       <div className={cardCls}>
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-bold text-muted-foreground dark:text-slate-300">Status:</span>
-          <StatusChip status={form.status} />
-          {form.status === "draft" && (
-            <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-primary-foreground disabled:opacity-50 transition">
-              {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Activate"}
-            </button>
-          )}
-          {form.status === "active" && (
+        {(() => {
+          const STEPS = [
+            { key: "draft", label: "Draft", hint: "Only admins can see it" },
+            { key: "active", label: "Active", hint: "Live for players" },
+            { key: "completed", label: "Completed", hint: "Results final" },
+            { key: "archived", label: "Archived", hint: "Saved to Legacy" },
+          ];
+          const idx = Math.max(0, STEPS.findIndex((s) => s.key === form.status));
+          const next = STEPS[idx + 1];
+          const prev = idx > 0 ? STEPS[idx - 1] : null;
+          const goNext = () => (next?.key === "archived" ? onGoArchive?.() : next && transition(next.key));
+          return (
             <>
-              <button onClick={() => transition("completed")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground disabled:opacity-50 transition">
-                {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
-              </button>
-              <button onClick={() => transition("draft")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-on-accent disabled:opacity-50 transition">
-                {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Revert to Draft"}
-              </button>
+              <ol className="flex items-center gap-1 sm:gap-2" aria-label="Tournament status">
+                {STEPS.map((s, i) => (
+                  <li key={s.key} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0" aria-current={i === idx ? "step" : undefined}>
+                    <span className={`w-7 h-7 shrink-0 rounded-full grid place-items-center text-xs font-black ${i < idx ? "bg-emerald-500 text-white" : i === idx ? "bg-primary text-primary-foreground ring-4 ring-primary/25" : "bg-muted text-muted-foreground"}`}>
+                      {i < idx ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className={`block text-xs font-black truncate ${i === idx ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                      <span className="hidden sm:block text-[10px] text-muted-foreground truncate">{s.hint}</span>
+                    </span>
+                    {i < STEPS.length - 1 && <span className={`flex-1 h-0.5 min-w-2 rounded ${i < idx ? "bg-emerald-500" : "bg-border"}`} />}
+                  </li>
+                ))}
+              </ol>
+              {(next || prev) && (
+                <div className="mt-4 flex items-center gap-2 flex-wrap">
+                  {next && (
+                    <button onClick={goNext} disabled={transitioning}
+                      className="px-4 py-2 text-sm font-black rounded-xl bg-primary text-primary-foreground disabled:opacity-50 inline-flex items-center gap-1.5 transition">
+                      {transitioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+                      {next.key === "active" ? "Activate" : next.key === "completed" ? "Mark completed" : "Archive to Legacy"}
+                    </button>
+                  )}
+                  {prev && (
+                    <button onClick={() => transition(prev.key)} disabled={transitioning}
+                      className="px-3 py-2 text-xs font-bold rounded-xl border border-border text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1.5 transition">
+                      <Undo2 className="w-3.5 h-3.5" /> Back to {prev.label}
+                    </button>
+                  )}
+                </div>
+              )}
             </>
-          )}
-          {form.status === "completed" && (
-            <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground disabled:opacity-50 transition">
-              {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
-            </button>
-          )}
-          {form.status === "draft" && (
-            <span className="text-[10px] text-muted-foreground">Drafts are only visible to admins</span>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Public Visibility */}

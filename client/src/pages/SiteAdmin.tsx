@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+﻿import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +29,8 @@ import {
   Swords,
   Home,
   Radio,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -104,12 +106,27 @@ interface TabMeta {
 }
 interface TabGroup {
   title: string;
+  color: string;
   tabs: TabMeta[];
+}
+
+const PINNED_STORAGE_KEY = "admin-pinned-tabs";
+
+function loadPinnedTabs(): TabId[] {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function savePinnedTabs(pins: TabId[]) {
+  try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch {}
 }
 
 const TAB_GROUPS: TabGroup[] = [
   {
     title: "Dashboard",
+    color: "text-sky-400",
     tabs: [
       { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
       { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
@@ -119,6 +136,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "People",
+    color: "text-violet-400",
     tabs: [
       { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
       { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
@@ -127,6 +145,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Competition",
+    color: "text-amber-400",
     tabs: [
       { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
       { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
@@ -135,10 +154,12 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Content",
+    color: "text-pink-400",
     tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" }],
   },
   {
     title: "System",
+    color: "text-emerald-400",
     tabs: [
       { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
@@ -149,6 +170,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Developer",
+    color: "text-orange-400",
     tabs: [
       { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
       { id: "features", label: "Live Ops", icon: Zap, description: "Toggle live feature flags in real time" },
@@ -208,7 +230,16 @@ function AdminNav({
   getTabCount: (id: string) => number | null;
 }) {
   const [query, setQuery] = useState("");
+  const [pinnedIds, setPinnedIds] = useState<TabId[]>(loadPinnedTabs);
   const q = query.trim().toLowerCase();
+
+  const togglePin = useCallback((id: TabId) => {
+    setPinnedIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id];
+      savePinnedTabs(next);
+      return next;
+    });
+  }, []);
 
   const groups = useMemo(() => {
     return TAB_GROUPS.map((group) => ({
@@ -218,6 +249,62 @@ function AdminNav({
       ),
     })).filter((g) => g.tabs.length > 0);
   }, [q, canSee]);
+
+  const pinnedTabs = useMemo(() => {
+    if (q) return [];
+    return pinnedIds
+      .map((id) => TABS.find((t) => t.id === id))
+      .filter((t): t is TabMeta => !!t && canSee(t));
+  }, [pinnedIds, q, canSee]);
+
+  const tabGroupColor = useMemo(() => {
+    const map = new Map<TabId, string>();
+    for (const g of TAB_GROUPS) for (const t of g.tabs) map.set(t.id, g.color);
+    return map;
+  }, []);
+
+  const renderTab = (tab: TabMeta, pinned: boolean) => {
+    const Icon = tab.icon;
+    const active = activeTab === tab.id;
+    const count = getTabCount(tab.id);
+    const isPinned = pinnedIds.includes(tab.id);
+    return (
+      <button
+        key={tab.id}
+        onClick={() => onSelect(tab.id)}
+        className={`group/tab flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+          active
+            ? "bg-primary/10 text-primary dark:bg-primary/20"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        }`}
+      >
+        <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : ""}`} />
+        <span className="flex-1 text-left">{tab.label}</span>
+        {count !== null && (
+          <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black leading-none text-primary-foreground">
+            {count}
+          </span>
+        )}
+        {tab.master && (
+          <span title="Master admin only" className="inline-flex shrink-0">
+            <ShieldAlert className="h-3.5 w-3.5 text-amber-400 opacity-70" aria-label="Master admin only" />
+          </span>
+        )}
+        <span
+          role="button"
+          title={isPinned ? "Unpin" : "Pin to top"}
+          onClick={(e) => { e.stopPropagation(); togglePin(tab.id); }}
+          className={`shrink-0 rounded-md p-0.5 transition ${
+            isPinned
+              ? "text-primary opacity-80 hover:opacity-100"
+              : "opacity-0 group-hover/tab:opacity-60 hover:!opacity-100"
+          }`}
+        >
+          {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -239,41 +326,27 @@ function AdminNav({
         {groups.length === 0 && (
           <p className="px-1 pt-4 text-sm text-muted-foreground">No sections match {`"${query}"`}.</p>
         )}
+
+        {/* Pinned section */}
+        {pinnedTabs.length > 0 && (
+          <div>
+            <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-widest text-primary">
+              <Pin className="mr-1 inline h-3 w-3" />
+              Pinned
+            </p>
+            <div className="space-y-0.5">
+              {pinnedTabs.map((tab) => renderTab(tab, true))}
+            </div>
+          </div>
+        )}
+
         {groups.map((group) => (
           <div key={group.title}>
-            <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            <p className={`mb-1.5 px-2 text-[10px] font-black uppercase tracking-widest ${group.color}`}>
               {group.title}
             </p>
             <div className="space-y-0.5">
-              {group.tabs.map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.id;
-                const count = getTabCount(tab.id);
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => onSelect(tab.id)}
-                    className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
-                      active
-                        ? "bg-primary/10 text-primary dark:bg-primary/20"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-primary" : ""}`} />
-                    <span className="flex-1 text-left">{tab.label}</span>
-                    {count !== null && (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black leading-none text-primary-foreground">
-                        {count}
-                      </span>
-                    )}
-                    {tab.master && (
-                      <span title="Master admin only" className="inline-flex shrink-0">
-                        <ShieldAlert className="h-3.5 w-3.5 text-amber-400 opacity-70" aria-label="Master admin only" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {group.tabs.map((tab) => renderTab(tab, false))}
             </div>
           </div>
         ))}

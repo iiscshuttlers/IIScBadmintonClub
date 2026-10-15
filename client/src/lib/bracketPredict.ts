@@ -32,9 +32,20 @@ export const isByeLabel = (l: string | null) => !!l && /\bbye\b/i.test(l);
 const isBye = (m: PMatch) => isByeLabel(m.team1_label) || isByeLabel(m.team2_label);
 const NOT_STARTED = new Set(["scheduled", "pending"]);
 
-/** Category locks once any real (non-bye) match has started or finished. */
+/** A match's pick locks once that match has started or finished. */
+export function matchLocked(m: PMatch): boolean {
+  return !isBye(m) && !NOT_STARTED.has(m.status);
+}
+
+/** Any real match under way: the leaderboard has something to show. */
+export function hasStarted(matches: PMatch[]): boolean {
+  return matches.some(matchLocked);
+}
+
+/** Every real match has started: nothing left to pick. */
 export function isLocked(matches: PMatch[]): boolean {
-  return matches.some((m) => !isBye(m) && !NOT_STARTED.has(m.status));
+  const real = matches.filter((m) => !isBye(m));
+  return real.length > 0 && real.every(matchLocked);
 }
 
 export function rounds(matches: PMatch[]): PMatch[][] {
@@ -97,15 +108,27 @@ export function labelMap(matches: PMatch[]): Map<string, string> {
 
 /** Set a pick and drop any later pick that is no longer reachable. */
 export function setPick(matches: PMatch[], picks: Picks, code: string, winnerId: string): Picks {
+  const target = matches.find((m) => m.match_code === code);
+  if (target && matchLocked(target)) return picks;
   const next: Picks = { ...picks, [code]: winnerId };
   const ordered = rounds(matches).flat();
   for (const m of ordered) {
     const p = next[m.match_code];
-    if (!p) continue;
+    if (!p || matchLocked(m)) continue;
     const [a, b] = candidates(matches, m, next);
     if (a?.id !== p && b?.id !== p) delete next[m.match_code];
   }
   return next;
+}
+
+/**
+ * Fixed points per round, counted back from the final so the same round is
+ * worth the same in every draw size: Quarterfinal, Semifinal and Final 2,
+ * any earlier round 1.
+ */
+export function roundPoints(roundIndex: number, roundCount: number): number {
+  const fromFinal = roundCount - 1 - roundIndex;
+  return fromFinal <= 2 ? 2 : 1;
 }
 
 export function score(matches: PMatch[], picks: Picks): { points: number; correct: number; decided: number } {
@@ -120,7 +143,7 @@ export function score(matches: PMatch[], picks: Picks): { points: number; correc
       const winner = m.winner_side === 1 ? m.player1_id : m.player2_id;
       if (winner && picks[m.match_code] === winner) {
         correct++;
-        points += 2 ** i;
+        points += roundPoints(i, rs.length);
       }
     }
   });
@@ -129,5 +152,6 @@ export function score(matches: PMatch[], picks: Picks): { points: number; correc
 
 /** Max possible points for a full bracket (for "x / max" display). */
 export function maxPoints(matches: PMatch[]): number {
-  return predictableRounds(matches).reduce((s, r, i) => s + r.filter((m) => !isBye(m)).length * 2 ** i, 0);
+  const rs = predictableRounds(matches);
+  return rs.reduce((s, r, i) => s + r.filter((m) => !isBye(m)).length * roundPoints(i, rs.length), 0);
 }

@@ -369,7 +369,7 @@ export default function TournamentDetail() {
             </Card>
 
             {/^[0-9a-f-]{36}$/i.test(tournament.id ?? "") && <UpNextPanel tournamentId={tournament.id} />}
-            <CertificateDialog input={certificate} onClose={() => setCertificate(null)} />
+            <CertificateDialog input={certificate} tournamentId={tournament?.id} onClose={() => setCertificate(null)} />
 
             {tournament.id && (
               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

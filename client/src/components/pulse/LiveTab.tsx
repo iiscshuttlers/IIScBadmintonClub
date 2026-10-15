@@ -1,3 +1,4 @@
+import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -702,18 +703,18 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                           <div className="mt-1 pt-1 border-t border-slate-100/50 dark:border-slate-800/50">
                             <MatchPredictionCard
                               compact
-                              matchId={match.match_code}
+                              matchId={match.id}
                               t1Ids={[]}
                               t2Ids={[]}
                               t1Label={match.team1_label ?? "TBD"}
                               t2Label={match.team2_label ?? "TBD"}
                               hasStarted={isLiveNow || match.status === 'completed' || match.status === 'walkover'}
-                              myPick={picks[match.match_code]}
+                              myPick={picks[match.id]}
                               profileId={ownProfile?.id}
-                              onPick={(team) => handlePick(match.match_code, team)}
-                              isResultsRevealed={isLiveNow || !!revealedMatchIds[match.match_code]}
+                              onPick={(team) => handlePick(match.id, team)}
+                              isResultsRevealed={isLiveNow || !!revealedMatchIds[match.id]}
                               isAdmin={isAdmin}
-                              onToggleRevealResults={() => handleToggleReveal(match.match_code)}
+                              onToggleRevealResults={() => handleToggleReveal(match.id)}
                             />
                           </div>
                         )}
@@ -726,7 +727,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                   <>
                     {activeSubTab === "my-matches" ? (
                       <>
-                        <MatchSection 
+                        <MyCertificatesCard tournament={activeTournament} />
+                        <MatchSection
                           title="My Matches" 
                           icon={<Activity className="w-5 h-5 text-violet-500" />} 
                           matches={myMatchesList} 

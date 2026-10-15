@@ -348,6 +348,23 @@ export function UmpireEngine({
     currentGameNum, serverScore, receiverScore, cardBadge, isSaving
   } = umpireState;
 
+  // BWF 25-second rally timer — resets on every point scored
+  const [rallyTimer, setRallyTimer] = useState<number | null>(null);
+  const prevTotalScore = useRef<number | null>(null);
+  useEffect(() => {
+    if (!match || match.status !== "playing") { setRallyTimer(null); return; }
+    const total = match.t1.score + match.t2.score;
+    if (prevTotalScore.current !== null && total !== prevTotalScore.current) {
+      setRallyTimer(25);
+    }
+    prevTotalScore.current = total;
+  }, [match?.t1.score, match?.t2.score, match?.status]);
+  useEffect(() => {
+    if (rallyTimer === null) return;
+    const iv = setInterval(() => setRallyTimer((t) => (t ?? 0) - 1), 1000);
+    return () => clearInterval(iv);
+  }, [rallyTimer !== null]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // A doubles side may have only a name for the partner (never linked to a
   // player record), so presence must be tested on id OR name — testing p2Id
   // alone made the serve controls vanish for bracket-entered pairs.
@@ -476,76 +493,66 @@ export function UmpireEngine({
     const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
 
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-6 text-on-accent max-w-lg mx-auto shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-[var(--info)] rounded-t-4xl" />
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-5 text-on-accent max-w-lg mx-auto shadow-2xl">
+        <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-primary to-[var(--info)] rounded-t-2xl" />
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg text-foreground ${badgeCls}`}>{tm.category}</span>
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{tm.round_name} · {tm.match_code}</span>
-            </div>
-            <p className="text-xs text-muted-foreground font-bold">{tm.tournament_name}</p>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg text-foreground shrink-0 ${badgeCls}`}>{tm.category}</span>
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider truncate">{tm.round_name} · {tm.match_code}</span>
           </div>
-          <button onClick={() => handleClose()} className="p-2 hover:bg-slate-800 rounded-xl text-muted-foreground hover:text-on-accent transition">
-            <X className="w-4 h-4" />
+          <button onClick={() => handleClose()} className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-on-accent transition shrink-0">
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Teams */}
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center mb-6">
-          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Team 1</p>
-            <p className="text-foreground font-black text-sm leading-snug">{tm.team1_label ?? "TBD"}</p>
-          </div>
-          <span className="text-[10px] font-black text-rose-400">VS</span>
-          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Team 2</p>
-            <p className="text-foreground font-black text-sm leading-snug">{tm.team2_label ?? "TBD"}</p>
-          </div>
+        {/* Teams — inline */}
+        <div className="flex items-center justify-between gap-2 mb-3 px-1">
+          <span className="text-foreground font-black text-xs truncate flex-1">{tm.team1_label ?? "TBD"}</span>
+          <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
+          <span className="text-foreground font-black text-xs truncate flex-1 text-right">{tm.team2_label ?? "TBD"}</span>
         </div>
 
         {/* Scoring config (editable) */}
-        <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-5 border border-slate-700/50">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Scoring Rules</p>
-          <div className="flex gap-2">
+        <div className="bg-slate-800/60 rounded-xl p-3 space-y-2 mb-3 border border-slate-700/50">
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Scoring</p>
+          <div className="flex gap-1.5">
             {[1, 3, 5].map((sets) => (
               <button key={sets}
                 onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
+                className={`flex-1 py-1.5 rounded-lg font-black text-xs border transition ${match.bestOfSets === sets ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
                 BO{sets}
               </button>
             ))}
-            <div className="w-px bg-slate-700 self-stretch mx-1" />
+            <div className="w-px bg-slate-700 self-stretch" />
             {[11, 15, 21].map((pts) => (
               <button key={pts}
                 onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
+                className={`flex-1 py-1.5 rounded-lg font-black text-xs border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
                 {pts}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground shrink-0">Golden point cap:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground shrink-0">GP cap:</span>
             <input type="number" value={match.goldenPoint}
               onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 30 })}
-              className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition" />
-            <span className="text-xs text-muted-foreground">pts</span>
+              className="w-14 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-xs font-bold text-amber-400 outline-none focus:border-amber-500 transition" />
           </div>
         </div>
 
         {/* Server selection */}
-        <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-6 border border-slate-700/50">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Who Serves First?</p>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="bg-slate-800/60 rounded-xl p-3 space-y-2 mb-3 border border-slate-700/50">
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">First Server</p>
+          <div className="grid grid-cols-2 gap-1.5">
             {[
               { team: 1, label: tm.team1_label ?? "Team 1" },
               { team: 2, label: tm.team2_label ?? "Team 2" },
             ].map(({ team, label }) => (
               <button key={team}
                 onClick={() => setMatch({ ...match, serverTeam: team as 1 | 2, serverPlayerIndex: 0, receiverPlayerIndex: 0 })}
-                className={`py-3 px-3 rounded-xl font-black text-sm border transition text-center ${
+                className={`py-2 px-2 rounded-lg font-black text-xs border transition text-center truncate ${
                   match.serverTeam === team
                     ? "bg-primary/20 border-primary text-primary"
                     : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
@@ -556,18 +563,17 @@ export function UmpireEngine({
           </div>
           {isDoublesMatch && (
             <>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">Server within team</p>
-              <div className="grid grid-cols-2 gap-2">
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest pt-0.5">Server within team</p>
+              <div className="grid grid-cols-2 gap-1.5">
                 {[0, 1].map((idx) => {
                   const teamLabel = match.serverTeam === 1 ? tm.team1_label : tm.team2_label;
                   const names = splitTeamLabel(teamLabel);
-                  // Don't offer a second player the team doesn't actually have.
                   if (idx === 1 && names.length < 2) return null;
                   const name = names[idx] ?? `Player ${idx + 1}`;
                   return (
                     <button key={idx}
                       onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
-                      className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-black border transition truncate ${
                         match.serverPlayerIndex === idx
                           ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
                           : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
@@ -578,14 +584,10 @@ export function UmpireEngine({
                 })}
               </div>
 
-              {/* The tournament setup never asked who receives, so
-                  receiverPlayerIndex stayed at its default of 0. That now seeds
-                  the receiving pair's court positions in startTournamentMatch,
-                  so guessing it puts them on the wrong side from the first rally. */}
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest pt-0.5">
                 First Receiver <span className="normal-case text-muted-foreground">(BWF 9.4)</span>
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 {[0, 1].map((idx) => {
                   const receivingLabel = match.serverTeam === 1 ? tm.team2_label : tm.team1_label;
                   const names = splitTeamLabel(receivingLabel);
@@ -594,7 +596,7 @@ export function UmpireEngine({
                   return (
                     <button key={idx}
                       onClick={() => setMatch({ ...match, receiverPlayerIndex: idx as 0 | 1 })}
-                      className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-black border transition truncate ${
                         match.receiverPlayerIndex === idx
                           ? "bg-[color-mix(in_srgb,var(--warning)_20%,transparent)] border-[var(--warning)] text-[var(--warning)]"
                           : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
@@ -611,8 +613,8 @@ export function UmpireEngine({
         {/* Start */}
         <button
           onClick={startTournamentMatch}
-          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-primary-foreground font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
-          <Play className="w-5 h-5 fill-white" /> Start Match
+          className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+          <Play className="w-4 h-4 fill-white" /> Start Match
         </button>
       </div>
     );
@@ -938,10 +940,6 @@ export function UmpireEngine({
                     ))}
                   </div>
 
-                  {/* Tap hint */}
-                  <div className="mt-1.5 text-[7px] sm:text-[8px] font-bold uppercase tracking-[0.15em] text-slate-500 flex items-center gap-1">
-                    <Plus className="w-2 h-2" /> Tap to score
-                  </div>
                 </div>
               );
             })}
@@ -968,6 +966,17 @@ export function UmpireEngine({
             <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 2 ? "bg-[var(--team-2)] animate-pulse" : "bg-transparent"}`} />
             {match.setsHistory.length > 0 && <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 ml-1">({match.setsHistory.join(", ")})</span>}
           </div>
+
+          {/* ── BWF 25s Rally Timer ── */}
+          {rallyTimer !== null && (
+            <div className="flex justify-center mt-1.5">
+              <span className={`text-xs font-mono font-black tabular-nums ${
+                rallyTimer > 5 ? "text-slate-500" : rallyTimer > 0 ? "text-amber-400" : "text-rose-400 animate-pulse"
+              }`}>
+                {rallyTimer}s
+              </span>
+            </div>
+          )}
 
           {/* ── Court Visual ── */}
           <div className="flex justify-center mt-2 sm:mt-3">
@@ -1127,6 +1136,43 @@ export function UmpireEngine({
                     className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition">
                     <BookOpen className="w-3.5 h-3.5 shrink-0" /> Log ({match.pointLog.length})
                   </button>
+                  <div className="col-span-2 sm:col-span-3 md:col-span-4 border-t border-white/[0.06] my-1" />
+                  <button onClick={() => setConfirmAction({
+                    title: "Cancel Match",
+                    message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
+                    confirmLabel: "Cancel Match",
+                    confirmColor: "bg-rose-600 hover:bg-rose-500",
+                    onConfirm: () => handleClose({ endBroadcast: true })
+                  })} className="py-2.5 px-2 bg-white/[0.03] hover:bg-rose-500/10 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition">
+                    <X className="w-3.5 h-3.5 shrink-0" /> Cancel
+                  </button>
+                  <button onClick={() => setConfirmAction({
+                    title: "Abort Match",
+                    message: "Are you sure you want to permanently abort this match and delete its records?",
+                    confirmLabel: "Abort Match",
+                    confirmColor: "bg-rose-600 hover:bg-rose-500",
+                    onConfirm: async () => {
+                      try {
+                        const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
+                        const lm = (data?.value as Record<string, any>) || {};
+                        if (lm[match.id]) {
+                          delete lm[match.id];
+                          await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
+                        }
+                        if (!match.isFriendly) {
+                          const tId = tournamentMatch?.id || match.dbId || match.id;
+                          if (tId) {
+                            await supabase.from("tournament_matches").update({ status: "scheduled" }).eq("id", tId);
+                          }
+                        }
+                      } catch (e) {
+                        console.error("Failed to abort broadcast", e);
+                      }
+                      handleClose({ endBroadcast: true });
+                    }
+                  })} className="py-2.5 px-2 bg-white/[0.03] hover:bg-rose-500/10 text-rose-500 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Abort
+                  </button>
                   </>
                 )}
               </div>
@@ -1280,18 +1326,8 @@ export function UmpireEngine({
           {/* ── Match Action Buttons (Bottom Dock) ── */}
           {match.status === "playing" && (
             <div className="mt-5 mb-1 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                <button onClick={() => setConfirmAction({
-                  title: "Cancel Match",
-                  message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
-                  confirmLabel: "Cancel Match",
-                  confirmColor: "bg-rose-600 hover:bg-rose-500",
-                  onConfirm: () => handleClose({ endBroadcast: true })
-                })} className="px-2 py-3 bg-white/[0.03] hover:bg-rose-500/10 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition active:scale-95">
-                  <X className="w-3.5 h-3.5" /> Cancel
-                </button>
-                
-                <button 
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
                   onClick={async () => {
                     const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
                     const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
@@ -1299,9 +1335,9 @@ export function UmpireEngine({
                     const matchTitle = match.category ? `🏸 ${match.category} Live Score` : "🏸 Live Match Score";
                     const scoreMessage = `${t1Name} vs ${t2Name} | Sets: ${setsHistory} | Game: ${match.t1.score}-${match.t2.score}`;
                     try {
-                      await supabase.from("site_data").upsert({ 
-                        key: "match_alert", 
-                        value: { title: matchTitle, message: scoreMessage, time: Date.now() } 
+                      await supabase.from("site_data").upsert({
+                        key: "match_alert",
+                        value: { title: matchTitle, message: scoreMessage, time: Date.now() }
                       });
                     } catch (e) {
                       console.warn("Failed to upsert site_data directly, falling back to RPC", e);
@@ -1334,33 +1370,6 @@ export function UmpireEngine({
                   onConfirm: () => updateMatch({ status: 'finished', winner: match.t1.games >= match.t2.games ? 1 : 2 })
                 })} className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-[var(--success)] font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]">
                   <Save className="w-3.5 h-3.5" /> Finish
-                </button>
-                <button onClick={() => setConfirmAction({
-                  title: "Abort Match",
-                  message: "Are you sure you want to permanently abort this match and delete its records?",
-                  confirmLabel: "Abort Match",
-                  confirmColor: "bg-rose-600 hover:bg-rose-500",
-                  onConfirm: async () => {
-                    try {
-                      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
-                      const lm = (data?.value as Record<string, any>) || {};
-                      if (lm[match.id]) {
-                        delete lm[match.id];
-                        await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
-                      }
-                      if (!match.isFriendly) {
-                        const tId = tournamentMatch?.id || match.dbId || match.id;
-                        if (tId) {
-                          await supabase.from("tournament_matches").update({ status: "scheduled" }).eq("id", tId);
-                        }
-                      }
-                    } catch (e) {
-                      console.error("Failed to abort broadcast", e);
-                    }
-                    handleClose({ endBroadcast: true });
-                  }
-                })} className="px-2 py-3 bg-white/[0.03] hover:bg-rose-500/10 text-rose-500 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition active:scale-95">
-                  <AlertTriangle className="w-3.5 h-3.5" /> Abort
                 </button>
               </div>
             </div>

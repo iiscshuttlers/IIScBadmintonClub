@@ -6,10 +6,27 @@ import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import {
   Bell, X, Send, Clock, Mail, Smartphone, MonitorSmartphone,
   Users, ShieldCheck, UserPlus, Loader2, CalendarClock, Plus, Trash2,
+  Swords, CheckSquare, Square, MapPin,
 } from "lucide-react";
 
 type Channel = "in_app" | "email" | "push";
-type Audience = "tournament" | "officials" | "custom";
+type Audience = "tournament" | "officials" | "matches" | "custom";
+
+interface MatchForReminder {
+  id: string;
+  match_code: string;
+  category: string;
+  round_name: string;
+  court_number: string | null;
+  scheduled_at: string | null;
+  status: string;
+  team1_label: string | null;
+  team2_label: string | null;
+  player1_id: string | null;
+  player2_id: string | null;
+  player3_id: string | null;
+  player4_id: string | null;
+}
 
 interface SendReminderSheetProps {
   open: boolean;
@@ -32,8 +49,27 @@ const CHANNELS: { key: Channel; label: string; icon: typeof Mail; note: string }
 const AUDIENCES: { key: Audience; label: string; desc: string; icon: typeof Users }[] = [
   { key: "tournament", label: "All participants", desc: "Everyone entered in this event", icon: Users },
   { key: "officials", label: "Officials", desc: "Assigned umpires & referees", icon: ShieldCheck },
+  { key: "matches", label: "Match players", desc: "Select matches to notify", icon: Swords },
   { key: "custom", label: "Specific people", desc: "Pick players individually", icon: UserPlus },
 ];
+
+const TIME_WINDOWS = [
+  { label: "All", mins: 0 },
+  { label: "Next 30m", mins: 30 },
+  { label: "Next 1h", mins: 60 },
+  { label: "Next 2h", mins: 120 },
+  { label: "Today", mins: -1 },
+];
+
+const CAT_LABELS_SHORT: Record<string, string> = {
+  MS: "MS", WS: "WS", MD: "MD", WD: "WD", XD: "XD",
+  BS: "BS", GS: "GS", BD: "BD", GD: "GD",
+};
+
+function formatMatchTime(dt: string | null) {
+  if (!dt) return "";
+  return new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+}
 
 /** Quick-schedule presets (minutes from now); 0 = send immediately. */
 const PRESETS: { label: string; mins: number }[] = [
@@ -76,6 +112,13 @@ export function SendReminderSheet({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
+  // Match-based audience state
+  const [allMatches, setAllMatches] = useState<MatchForReminder[]>([]);
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+  const [matchCourtFilter, setMatchCourtFilter] = useState<Set<string>>(new Set());
+  const [matchCatFilter, setMatchCatFilter] = useState<Set<string>>(new Set());
+  const [matchTimeWindow, setMatchTimeWindow] = useState(0);
+
   // Reset fields each time the sheet opens so stale state never leaks.
   useEffect(() => {
     if (!open) return;
@@ -87,14 +130,23 @@ export function SendReminderSheet({
     setPicker("");
     setPresetMins(0);
     setCustomAt(toLocalInput(new Date(Date.now() + 30 * 60000)));
+    setSelectedMatchIds(new Set());
+    setMatchCourtFilter(new Set());
+    setMatchCatFilter(new Set());
+    setMatchTimeWindow(0);
   }, [open, defaultTitle, defaultBody, defaultAudience, prefillPlayerIds]);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [plRes, partRes, offRes] = await Promise.all([
+    const [plRes, partRes, offRes, matchRes] = await Promise.all([
       supabase.from("players").select("id, full_name, avatar_url").is("deleted_at", null).order("full_name"),
       supabase.from("tournament_participants").select("player_id").eq("tournament_id", tournament.id),
       supabase.from("tournament_officials").select("user_id").eq("tournament_id", tournament.id),
+      supabase.from("tournament_matches")
+        .select("id, match_code, category, round_name, court_number, scheduled_at, status, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id")
+        .eq("tournament_id", tournament.id)
+        .in("status", ["scheduled", "in_progress"])
+        .order("scheduled_at", { ascending: true, nullsFirst: false }),
     ]);
     setPlayers((plRes.data as any) ?? []);
     setParticipantIds(
@@ -103,6 +155,7 @@ export function SendReminderSheet({
     setOfficialIds(
       Array.from(new Set(((offRes.data as any[]) ?? []).map((r) => r.user_id).filter(Boolean))),
     );
+    setAllMatches((matchRes.data as MatchForReminder[]) ?? []);
     setLoading(false);
   }, [tournament.id]);
 
@@ -115,11 +168,24 @@ export function SendReminderSheet({
     [players],
   );
 
+  const matchRecipientIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const m of allMatches) {
+      if (!selectedMatchIds.has(m.id)) continue;
+      if (m.player1_id) ids.add(m.player1_id);
+      if (m.player2_id) ids.add(m.player2_id);
+      if (m.player3_id) ids.add(m.player3_id);
+      if (m.player4_id) ids.add(m.player4_id);
+    }
+    return Array.from(ids);
+  }, [allMatches, selectedMatchIds]);
+
   const recipients = useMemo(() => {
     if (audience === "tournament") return participantIds;
     if (audience === "officials") return officialIds;
+    if (audience === "matches") return matchRecipientIds;
     return customIds;
-  }, [audience, participantIds, officialIds, customIds]);
+  }, [audience, participantIds, officialIds, matchRecipientIds, customIds]);
 
   const toggleChannel = (c: Channel) =>
     setChannels((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -128,6 +194,87 @@ export function SendReminderSheet({
     if (!picker) return;
     setCustomIds((prev) => (prev.includes(picker) ? prev : [...prev, picker]));
     setPicker("");
+  };
+
+  // Derived match data
+  const availableCourts = useMemo(
+    () => Array.from(new Set(allMatches.map((m) => m.court_number).filter(Boolean) as string[])).sort(),
+    [allMatches],
+  );
+  const availableCats = useMemo(
+    () => Array.from(new Set(allMatches.map((m) => m.category).filter(Boolean))).sort(),
+    [allMatches],
+  );
+
+  const filteredMatches = useMemo(() => {
+    const now = Date.now();
+    return allMatches.filter((m) => {
+      if (matchCourtFilter.size > 0 && (!m.court_number || !matchCourtFilter.has(m.court_number))) return false;
+      if (matchCatFilter.size > 0 && !matchCatFilter.has(m.category)) return false;
+      if (matchTimeWindow === -1) {
+        // Today
+        if (!m.scheduled_at) return false;
+        const d = new Date(m.scheduled_at);
+        const today = new Date();
+        return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+      }
+      if (matchTimeWindow > 0) {
+        if (!m.scheduled_at) return false;
+        const t = new Date(m.scheduled_at).getTime();
+        return t >= now && t <= now + matchTimeWindow * 60000;
+      }
+      return true;
+    });
+  }, [allMatches, matchCourtFilter, matchCatFilter, matchTimeWindow]);
+
+  const toggleMatchSelect = (id: string) => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      const allSelected = filteredMatches.every((m) => next.has(m.id));
+      if (allSelected) {
+        filteredMatches.forEach((m) => next.delete(m.id));
+      } else {
+        filteredMatches.forEach((m) => next.add(m.id));
+      }
+      return next;
+    });
+  };
+
+  const autoFillFromMatches = () => {
+    const selected = allMatches.filter((m) => selectedMatchIds.has(m.id));
+    if (selected.length === 0) return;
+    setTitle("Your match is coming up!");
+    const lines = selected.map((m) => {
+      const time = formatMatchTime(m.scheduled_at);
+      const court = m.court_number ? `Court ${m.court_number}` : "TBD";
+      const cat = CAT_LABELS_SHORT[m.category] ?? m.category;
+      return `${cat} ${m.match_code}: ${m.team1_label ?? "TBD"} vs ${m.team2_label ?? "TBD"} — ${time || "Time TBD"}, ${court}`;
+    });
+    setBody("Please report to your court.\n\n" + lines.join("\n"));
+  };
+
+  const toggleCourtFilter = (court: string) => {
+    setMatchCourtFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(court)) next.delete(court); else next.add(court);
+      return next;
+    });
+  };
+
+  const toggleCatFilter = (cat: string) => {
+    setMatchCatFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
   };
 
   const scheduledAt = useMemo(() => {
@@ -255,11 +402,11 @@ export function SendReminderSheet({
           {/* Audience */}
           <div className="space-y-2">
             <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Audience</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {AUDIENCES.map((a) => {
                 const Icon = a.icon;
                 const active = audience === a.key;
-                const count = a.key === "tournament" ? participantIds.length : a.key === "officials" ? officialIds.length : customIds.length;
+                const count = a.key === "tournament" ? participantIds.length : a.key === "officials" ? officialIds.length : a.key === "matches" ? matchRecipientIds.length : customIds.length;
                 return (
                   <button
                     key={a.key}
@@ -311,6 +458,124 @@ export function SendReminderSheet({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {audience === "matches" && (
+              <div className="space-y-3 pt-1">
+                {/* Time window pills */}
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Time window</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TIME_WINDOWS.map((tw) => (
+                      <button key={tw.label} type="button" onClick={() => setMatchTimeWindow(tw.mins)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                          matchTimeWindow === tw.mins
+                            ? "bg-primary/15 border-primary text-primary"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                        }`}>
+                        {tw.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Format pills */}
+                {availableCats.length > 1 && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Format</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availableCats.map((cat) => (
+                        <button key={cat} type="button" onClick={() => toggleCatFilter(cat)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                            matchCatFilter.has(cat)
+                              ? "bg-indigo-500/15 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                          }`}>
+                          {CAT_LABELS_SHORT[cat] ?? cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Court pills — multi-select */}
+                {availableCourts.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Courts</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availableCourts.map((c) => (
+                        <button key={c} type="button" onClick={() => toggleCourtFilter(c)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                            matchCourtFilter.has(c)
+                              ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                          }`}>
+                          <MapPin className="w-3 h-3 inline mr-1" />C{c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Match list */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      {filteredMatches.length} match{filteredMatches.length !== 1 ? "es" : ""}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {filteredMatches.length > 0 && (
+                        <button type="button" onClick={selectAllFiltered}
+                          className="text-[10px] font-bold text-primary hover:underline">
+                          {filteredMatches.every((m) => selectedMatchIds.has(m.id)) ? "Deselect all" : "Select all"}
+                        </button>
+                      )}
+                      {selectedMatchIds.size > 0 && (
+                        <button type="button" onClick={autoFillFromMatches}
+                          className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                          Auto-fill message
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-slate-200 dark:border-slate-700 p-1.5">
+                    {filteredMatches.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No matches found for these filters</p>
+                    ) : (
+                      filteredMatches.map((m) => {
+                        const sel = selectedMatchIds.has(m.id);
+                        return (
+                          <button key={m.id} type="button" onClick={() => toggleMatchSelect(m.id)}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition ${
+                              sel ? "bg-primary/10 border border-primary/30" : "hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
+                            }`}>
+                            {sel
+                              ? <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" />
+                              : <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">
+                                  {CAT_LABELS_SHORT[m.category] ?? m.category}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-500">{m.match_code}</span>
+                                {m.court_number && (
+                                  <span className="text-[10px] text-slate-400">C{m.court_number}</span>
+                                )}
+                                {m.scheduled_at && (
+                                  <span className="text-[10px] text-slate-400">{formatMatchTime(m.scheduled_at)}</span>
+                                )}
+                              </div>
+                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                                {m.team1_label ?? "TBD"} vs {m.team2_label ?? "TBD"}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -100,6 +100,7 @@ const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
 const TvDrawReveal = lazy(() => import("@/pages/TvDrawReveal"));
 const TvNextUp = lazy(() => import("@/pages/TvNextUp"));
 const BracketPredictPage = lazy(() => import("@/pages/BracketPredictPage"));
+const VerifyCertificate = lazy(() => import("@/pages/VerifyCertificate"));
 const RateTournamentPage = lazy(() => import("@/pages/RateTournamentPage"));
 const ObsOverlayScoreboard = lazy(() => import("./pages/ObsOverlayScoreboard"));
 const CameraBroadcast = lazy(() => import("./pages/CameraBroadcast"));
@@ -233,6 +234,7 @@ function AppRoutes() {
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/glossary" component={Glossary} />
+          <Route path="/verify/:code?" component={VerifyCertificate} />
           <Route path="/host-tournament" component={HostTournament} />
           <Route path="/host-tournament/new" component={HostTournamentWizard} />
           <Route path="/login-callback" component={() => {

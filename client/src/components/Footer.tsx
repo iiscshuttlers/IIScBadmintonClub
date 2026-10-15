@@ -27,6 +27,7 @@ export default function Footer() {
     { href: "/glossary", label: "Glossary" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
+    { href: "/verify", label: "Verify Certificate" },
     { href: "/delete-account", label: "Delete Account" },
   ];
 

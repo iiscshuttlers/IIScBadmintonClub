@@ -94,6 +94,18 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const [savingReschedule, setSavingReschedule] = useState(false);
   const [activeTieForConsole, setActiveTieForConsole] = useState<{ tie: any; tournament: any } | null>(null);
   const [pendingTies, setPendingTies] = useState<any[]>([]);
+  const [availableTournaments, setAvailableTournaments] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(() => {
+    if (tournamentId) return tournamentId;
+    try { return localStorage.getItem("umpire_selected_tournament") || null; } catch { return null; }
+  });
+  const [showTournamentPicker, setShowTournamentPicker] = useState(false);
+
+  const switchTournament = (id: string) => {
+    setSelectedTournamentId(id);
+    setShowTournamentPicker(false);
+    try { localStorage.setItem("umpire_selected_tournament", id); } catch {}
+  };
   const [directScoreFor, setDirectScoreFor] = useState<TournamentMatchForUmpire | null>(null);
   const [directSets, setDirectSets] = useState<{ t1: string; t2: string }[]>([{ t1: "", t2: "" }, { t1: "", t2: "" }]);
   const [savingDirectScore, setSavingDirectScore] = useState(false);
@@ -270,29 +282,52 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   // without flashing the spinner or surfacing a toast for a transient blip.
   const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
-    let tournamentsQuery = supabase
+    // Fetch all active tournaments for the picker
+    let allTournamentsQuery = supabase
       .from("tournaments")
-      .select("id, name");
+      .select("id, name")
+      .order("created_at", { ascending: false });
 
     if (tournamentId) {
-      tournamentsQuery = tournamentsQuery.eq("id", tournamentId);
+      allTournamentsQuery = allTournamentsQuery.eq("id", tournamentId);
     } else {
-      tournamentsQuery = tournamentsQuery.eq("status", "active");
+      allTournamentsQuery = allTournamentsQuery.eq("status", "active");
     }
 
-    const { data: tournaments } = await tournamentsQuery;
+    const { data: allTournaments } = await allTournamentsQuery;
 
-    if (!tournaments?.length) { setLoading(false); return; }
+    if (!allTournaments?.length) { setLoading(false); return; }
 
-    const tournamentIds = tournaments.map((t) => t.id);
+    setAvailableTournaments(allTournaments);
 
-    const { data: matchData, error } = await supabase
-      .from("tournament_matches")
-      .select("*")
-      .in("tournament_id", tournamentIds)
-      .in("status", ["scheduled", "in_progress", "completed", "walkover"])
-      .order("round")
-      .order("match_number");
+    // Auto-select first tournament if none selected
+    const activeTId = selectedTournamentId && allTournaments.some(t => t.id === selectedTournamentId)
+      ? selectedTournamentId
+      : allTournaments[0].id;
+    if (!selectedTournamentId) {
+      setSelectedTournamentId(activeTId);
+      try { localStorage.setItem("umpire_selected_tournament", activeTId); } catch {}
+    }
+
+    const tournamentIds = [activeTId];
+
+    const [{ data: activeMatchData, error }, { data: doneMatchData }] = await Promise.all([
+      supabase
+        .from("tournament_matches")
+        .select("*")
+        .in("tournament_id", tournamentIds)
+        .in("status", ["scheduled", "in_progress"])
+        .order("round")
+        .order("match_number"),
+      supabase
+        .from("tournament_matches")
+        .select("*")
+        .in("tournament_id", tournamentIds)
+        .in("status", ["completed", "walkover"])
+        .order("scored_at", { ascending: false })
+        .limit(50),
+    ]);
+    const matchData = [...(activeMatchData ?? []), ...(doneMatchData ?? [])];
 
     if (error) { if (!silent) toast.error(error.message); setLoading(false); return; }
 
@@ -302,7 +337,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       .in("tournament_id", tournamentIds);
 
     const enriched: TournamentMatchForUmpire[] = (matchData ?? []).map((m: any) => {
-      const tournament = tournaments.find((t) => t.id === m.tournament_id);
+      const tournament = allTournaments.find((t) => t.id === m.tournament_id);
       const rule = rules?.find(
         (r) => r.tournament_id === m.tournament_id && r.category === m.category && r.round === m.round
       );
@@ -350,7 +385,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     }
 
     setLoading(false);
-  }, [tournamentId]);
+  }, [tournamentId, selectedTournamentId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -406,29 +441,35 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
   // ── Step 1: Format selection ─────────────────────────────────────────────────
   if (step === "format") {
-    let upcomingScheduled = allMatches
-      .filter((m) => m.status === "scheduled" && m.scheduled_at)
-      .filter((m) => {
-        const t1 = m.team1_label;
-        const t2 = m.team2_label;
-        const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ") || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
-        return !isBye;
-      })
-      .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
+    const isBye = (m: TournamentMatchForUmpire) => {
+      const t1 = m.team1_label;
+      const t2 = m.team2_label;
+      return t1 === "BYE" || t2 === "BYE" || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
+    };
 
-    const dateCounts = upcomingScheduled.reduce((acc, m) => {
-      const d = new Date(m.scheduled_at!).toLocaleDateString();
-      acc[d] = (acc[d] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    const availableDates = Object.keys(dateCounts);
-    const availableCourts = [...new Set(upcomingScheduled.filter(m => m.court_number).map(m => m.court_number!))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    const availableCourts = [...new Set(allMatches.filter(m => m.court_number && !isBye(m)).map(m => m.court_number!))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    let upcomingScheduled = allMatches
+      .filter(m => !isBye(m))
+      .filter(m => {
+        if (upcomingStatus === "upcoming") return m.status === "scheduled";
+        if (upcomingStatus === "live") return m.status === "in_progress";
+        if (upcomingStatus === "completed") return m.status === "completed" || m.status === "walkover";
+        return true;
+      })
+      .sort((a, b) => {
+        const priority = (s: string) => s === "scheduled" ? 0 : s === "in_progress" ? 1 : 2;
+        const pDiff = priority(a.status) - priority(b.status);
+        if (pDiff !== 0) return pDiff;
+        if (a.scheduled_at && b.scheduled_at) return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+        return (a.round || 0) - (b.round || 0) || (a.match_number || 0) - (b.match_number || 0);
+      });
 
     if (upcomingSearch.trim()) {
       const lowerQ = upcomingSearch.toLowerCase();
-      upcomingScheduled = upcomingScheduled.filter(m => 
-        (m.team1_label?.toLowerCase() || "").includes(lowerQ) || 
-        (m.team2_label?.toLowerCase() || "").includes(lowerQ) || 
+      upcomingScheduled = upcomingScheduled.filter(m =>
+        (m.team1_label?.toLowerCase() || "").includes(lowerQ) ||
+        (m.team2_label?.toLowerCase() || "").includes(lowerQ) ||
         (m.match_code?.toLowerCase() || "").includes(lowerQ) ||
         (m.court_number?.toLowerCase() || "").includes(lowerQ)
       );
@@ -436,15 +477,53 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     if (upcomingFormat !== "ALL") {
       upcomingScheduled = upcomingScheduled.filter(m => m.category === upcomingFormat);
     }
-    if (upcomingDate !== "ALL") {
-      upcomingScheduled = upcomingScheduled.filter(m => new Date(m.scheduled_at!).toLocaleDateString() === upcomingDate);
-    }
     if (upcomingCourt !== "ALL") {
       upcomingScheduled = upcomingScheduled.filter(m => m.court_number === upcomingCourt);
     }
 
+    const currentTournament = availableTournaments.find(t => t.id === selectedTournamentId) ?? availableTournaments[0];
+
     return (
       <div className="space-y-4">
+        {/* Tournament selector */}
+        {currentTournament && (
+          <div className="relative">
+            <button
+              onClick={() => availableTournaments.length > 1 && setShowTournamentPicker(!showTournamentPicker)}
+              className={cn(
+                "flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-left",
+                availableTournaments.length > 1 && "hover:border-primary/50 cursor-pointer"
+              )}
+            >
+              <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="text-xs font-black text-foreground truncate flex-1">{currentTournament.name}</span>
+              {availableTournaments.length > 1 && (
+                <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform", showTournamentPicker && "rotate-180")} />
+              )}
+            </button>
+            {showTournamentPicker && availableTournaments.length > 1 && (
+              <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowTournamentPicker(false)} />
+              <div className="absolute z-50 mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+                {availableTournaments.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => switchTournament(t.id)}
+                    className={cn(
+                      "w-full px-3 py-2.5 text-left text-xs font-bold transition hover:bg-slate-800 flex items-center gap-2",
+                      t.id === selectedTournamentId ? "text-primary bg-primary/10" : "text-slate-300"
+                    )}
+                  >
+                    <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Team Ties Requiring Attention */}
         {pendingTies.length > 0 && (
           <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-800/80 border border-amber-500/30 space-y-3">
@@ -499,50 +578,95 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
           </div>
         )}
 
-        {allMatches.some((m) => m.status === "scheduled" && m.scheduled_at) && (
+        {allMatches.length > 0 && (
           <div className="mb-6 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-blue-400" />
-                <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches ({upcomingScheduled.length})</h3>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Search player, match #..."
-                  value={upcomingSearch}
-                  onChange={e => setUpcomingSearch(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary w-[160px]"
-                />
-                <select 
-                  value={upcomingFormat}
-                  onChange={e => setUpcomingFormat(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search player, match #..."
+              value={upcomingSearch}
+              onChange={e => setUpcomingSearch(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 text-xs text-on-accent rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+            />
+
+            {/* Status pills */}
+            <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
+              {(["ALL", "upcoming", "live", "completed"] as const).map(s => {
+                const label = s === "ALL" ? "All" : s === "upcoming" ? "Upcoming" : s === "live" ? "Live" : "Done";
+                const count = s === "ALL" ? upcomingScheduled.length
+                  : s === "upcoming" ? allMatches.filter(m => m.status === "scheduled").length
+                  : s === "live" ? allMatches.filter(m => m.status === "in_progress").length
+                  : allMatches.filter(m => m.status === "completed" || m.status === "walkover").length;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setUpcomingStatus(s)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
+                      upcomingStatus === s
+                        ? s === "live" ? "bg-amber-500 text-black border-amber-500" : "bg-primary text-primary-foreground border-primary"
+                        : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                    )}
+                  >
+                    {label} {count > 0 && <span className="opacity-70">({count})</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Format pills */}
+            <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
+              {["ALL", ...categories].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setUpcomingFormat(f)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
+                    upcomingFormat === f
+                      ? `${(CAT_COLORS[f] ?? {}).active || "bg-primary text-primary-foreground border-primary"}`
+                      : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                  )}
                 >
-                  <option value="ALL">All Formats</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                {availableDates.length > 0 && (
-                  <select 
-                    value={upcomingDate}
-                    onChange={e => setUpcomingDate(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                  {f === "ALL" ? "All" : f}
+                </button>
+              ))}
+            </div>
+
+            {/* Court pills */}
+            {availableCourts.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
+                <button
+                  onClick={() => setUpcomingCourt("ALL")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
+                    upcomingCourt === "ALL"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                  )}
+                >
+                  All Courts
+                </button>
+                {availableCourts.map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setUpcomingCourt(c)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
+                      upcomingCourt === c
+                        ? "bg-blue-500 text-black border-blue-500"
+                        : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                    )}
                   >
-                    <option value="ALL">All Dates</option>
-                    {availableDates.map(d => <option key={d} value={d}>{d} ({dateCounts[d]})</option>)}
-                  </select>
-                )}
-                {availableCourts.length > 0 && (
-                  <select 
-                    value={upcomingCourt}
-                    onChange={e => setUpcomingCourt(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
-                  >
-                    <option value="ALL">All Courts</option>
-                    {availableCourts.map(c => <option key={c} value={c}>Court {c}</option>)}
-                  </select>
-                )}
+                    C{c}
+                  </button>
+                ))}
               </div>
+            )}
+
+            {/* Match count */}
+            <div className="flex items-center gap-2">
+              <Swords className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-[10px] font-bold text-slate-400">{upcomingScheduled.length} match{upcomingScheduled.length !== 1 ? "es" : ""}</span>
             </div>
             
             {upcomingScheduled.length === 0 ? (
@@ -550,81 +674,77 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 No scheduled matches match your filters.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {upcomingScheduled.map((m) => {
                   const noPlayers = !m.team1_label || !m.team2_label;
+                  const isLive = m.status === "in_progress";
+                  const isDone = m.status === "completed" || m.status === "walkover";
 
                   return (
                   <div
                     key={m.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { if (!noPlayers) { setSelectedMatch(m); setStep("confirm"); } }}
+                    onClick={() => { if (!noPlayers && !isDone) { setSelectedMatch(m); setStep("confirm"); } }}
                     className={cn(
-                      "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
-                      noPlayers
-                        ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
-                        : `${CAT_BOX_COLORS_DARK[m.category] || "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20"} hover:shadow-lg hover:-translate-y-1 cursor-pointer`
+                      "relative w-full p-3 rounded-xl border text-left transition-all duration-200 group",
+                      isDone
+                        ? "bg-slate-800/30 border-slate-800/40 opacity-60"
+                        : noPlayers
+                          ? "bg-slate-800/40 border-slate-800/50 opacity-50 cursor-not-allowed"
+                          : isLive
+                            ? "bg-amber-950/30 border-amber-500/40 hover:border-amber-400 cursor-pointer"
+                            : "bg-slate-800/60 border-slate-700/60 hover:border-primary/50 cursor-pointer"
                     )}
                   >
-                    {!noPlayers && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                    )}
-                    
-                    <div className="relative flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-slate-950/50 px-2 py-1 rounded-md border border-slate-800">
-                          {m.category} • {m.match_code}
+                    <div className="flex items-center gap-2">
+                      {/* Left: category + match code */}
+                      <span className="text-[9px] font-black text-muted-foreground uppercase bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
+                        {m.category} {m.match_code}
+                      </span>
+
+                      {isLive && (
+                        <span className="text-[9px] font-black text-amber-400 flex items-center gap-1 shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />LIVE
                         </span>
-                        <div className="flex items-center gap-2">
-                          {m.court_number && (
-                            <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800", getCourtColor(m.court_number))}>
-                              <MapPin className="w-3 h-3" /> C{m.court_number}
-                            </span>
-                          )}
-                          {m.scheduled_at && (
-                            <span className="flex items-center gap-1 text-[10px] font-medium text-slate-300 px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800">
-                              <Clock className="w-3 h-3 text-primary" />
-                              {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          )}
-                          {!noPlayers && m.scheduled_at && (
-                            <button
-                              onClick={(e) => handleNotify(e, m.id)}
-                              disabled={notifyingId === m.id}
-                              className="flex items-center justify-center bg-primary/10 hover:bg-primary/30 text-primary p-1.5 rounded-md border border-primary/20 transition-colors ml-1 z-10"
-                              title="Send Reminder to Players"
-                            >
-                              {notifyingId === m.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
-                            {m.team1_label ?? "TBD"}
-                          </span>
-                        </div>
-                        <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
-                          <div className="bg-slate-950/80 border border-slate-700/80 text-[10px] font-black text-rose-400 px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5">
-                            VS
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0 text-right">
-                          <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
-                            {m.team2_label ?? "TBD"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {noPlayers && (
-                        <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
-                          Waiting for previous round results
-                        </p>
                       )}
+                      {isDone && (
+                        <span className="text-[9px] font-black text-emerald-500 shrink-0">DONE</span>
+                      )}
+
+                      {/* Right: court + time + notify */}
+                      <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                        {m.court_number && (
+                          <span className={cn("text-[9px] font-bold", getCourtColor(m.court_number))}>C{m.court_number}</span>
+                        )}
+                        {m.scheduled_at && (
+                          <span className="text-[9px] text-slate-400">
+                            {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                        {!noPlayers && !isDone && m.scheduled_at && (
+                          <button
+                            onClick={(e) => handleNotify(e, m.id)}
+                            disabled={notifyingId === m.id}
+                            className="text-primary p-0.5 z-10"
+                            title="Send Reminder"
+                          >
+                            {notifyingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Players row */}
+                    <div className="flex items-center justify-between gap-2 mt-1.5">
+                      <span className="text-slate-100 font-bold text-xs truncate flex-1">{m.team1_label ?? "TBD"}</span>
+                      <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
+                      <span className="text-slate-100 font-bold text-xs truncate flex-1 text-right">{m.team2_label ?? "TBD"}</span>
+                    </div>
+
+                    {noPlayers && (
+                      <p className="text-[9px] text-muted-foreground text-center mt-1 italic">Waiting for previous round</p>
+                    )}
                   </div>
                 );
               })}

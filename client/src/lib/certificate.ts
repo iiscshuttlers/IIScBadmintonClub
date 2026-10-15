@@ -2,350 +2,321 @@ import { jsPDF } from "jspdf";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
+import { FileOpener } from "@capacitor-community/file-opener";
 
-/**
- * Winner certificates (A4 landscape → PDF) and square result cards (→ PNG for
- * WhatsApp/Instagram), both drawn on a canvas so they work offline and on web.
+/** Drop-in replacement for the IIScShuttlers certificate generator.
+ * Put the matching SVG and image assets in Vite's public/ directory.
+ * The supplied signatures are ILLUSTRATIVE; replace them with authorised scans.
  */
-
 export type Placement = "winner" | "runnerUp" | "third" | "fourth" | "participation" | "official";
-
+export interface CertificateSignatory { name: string; title: string; imageUrl?: string; }
 export interface CertificateInput {
   recipient: string;
   placement: Placement;
   category: string;
   tournamentName: string;
-  /** Free text, e.g. "May 2026" or an ISO date. */
   date?: string;
-  /** Participation: stage reached ("Quarter-finalist"); official: role ("Umpire"). */
   achievement?: string;
+  certificateId?: string;
+  signatories?: CertificateSignatory[];
 }
-
 export const PLACEMENT_META: Record<Placement, { title: string; medal: string; color: string; light: string }> = {
-  winner: { title: "Champion", medal: "🥇", color: "#b7791f", light: "#fef3c7" },
-  runnerUp: { title: "Runner-up", medal: "🥈", color: "#64748b", light: "#f1f5f9" },
-  third: { title: "Third Place", medal: "🥉", color: "#c2410c", light: "#ffedd5" },
-  fourth: { title: "Fourth Place", medal: "🎖️", color: "#1d4ed8", light: "#dbeafe" },
-  participation: { title: "Participant", medal: "🏸", color: "#0f766e", light: "#ccfbf1" },
-  official: { title: "Official", medal: "🛡️", color: "#6d28d9", light: "#ede9fe" },
+  winner:        { title: "Champion",    medal: "🥇", color: "#AF8A44", light: "#F5E9D0" },
+  runnerUp:      { title: "Runner-up",   medal: "🥈", color: "#7B879A", light: "#E8ECF2" },
+  third:         { title: "Third Place", medal: "🥉", color: "#A86B48", light: "#F2DFD1" },
+  fourth:        { title: "Fourth Place",medal: "🎖️",color: "#3E628A", light: "#E3ECF5" },
+  participation: { title: "Participant", medal: "🏸", color: "#3E7E79", light: "#DDEDE8" },
+  official:      { title: "Official",    medal: "🛡️",color: "#786B96", light: "#EDE8F5" },
 };
-
-/** Heading, lead-in and highlighted line, by certificate kind. */
 export function certificateWording(input: CertificateInput) {
   const meta = PLACEMENT_META[input.placement];
-  if (input.placement === "participation")
-    return { heading: "Certificate of Participation", lead: input.achievement ? "for reaching the stage of" : "for taking part as a", highlight: input.achievement ?? meta.title };
-  if (input.placement === "official")
-    return { heading: "Certificate of Appreciation", lead: "for serving as", highlight: input.achievement ?? meta.title };
-  return { heading: "Certificate of Achievement", lead: "for finishing as", highlight: meta.title };
+  if (input.placement === "participation") return {
+    heading: "Certificate of Participation",
+    lead: input.achievement ? "FOR REACHING THE STAGE OF" : "FOR PARTICIPATING AS A",
+    highlight: input.achievement || meta.title,
+  };
+  if (input.placement === "official") return {
+    heading: "Certificate of Appreciation",
+    lead: "IN APPRECIATION OF SERVING AS",
+    highlight: input.achievement || meta.title,
+  };
+  return { heading: "Certificate of Achievement", lead: "FOR FINISHING AS", highlight: input.achievement || meta.title };
 }
-
+export function expandCategory(cat: string): string {
+  const map: Record<string, string> = {
+    MS: "Men's Singles", WS: "Women's Singles", MD: "Men's Doubles", WD: "Women's Doubles", XD: "Mixed Doubles",
+    BS: "Boys' Singles", GS: "Girls' Singles", BD: "Boys' Doubles", GD: "Girls' Doubles",
+  };
+  return map[cat.trim().toUpperCase()] ?? cat;
+}
 export function formatCertDate(date?: string): string {
-  if (!date) return "";
-  if (/^\d{4}$/.test(date)) return date;
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-}
-
-/** Shrink font until text fits maxWidth. */
-function fitText(ctx: CanvasRenderingContext2D, text: string, font: (px: number) => string, start: number, maxWidth: number) {
-  let px = start;
-  ctx.font = font(px);
-  while (px > 12 && ctx.measureText(text).width > maxWidth) {
-    px -= 2;
-    ctx.font = font(px);
+  const raw = date?.trim();
+  if (!raw) return "";
+  if (/^\d{4}$/.test(raw)) return raw;
+  // Avoid timezone-induced previous-month dates for YYYY-MM-DD values.
+  const iso = /^(\d{4})-(\d{2})(?:-\d{2})?$/.exec(raw);
+  if (iso) {
+    const month = +iso[2];
+    if (month >= 1 && month <= 12) return new Date(Date.UTC(+iso[1], month - 1, 1))
+      .toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
   }
-  return px;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? raw : d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 }
 
+// Vector illustration authored at the same A4 aspect ratio as the PDF.
+const W = 1400, H = 990, OUT_W = 3508, OUT_H = 2480;
+const NAVY = "#081529", INK = "#111111", BLUE_INK = "#1239B3", GOLD = "#B58938";
+const SERIF = '"Playfair Display", Georgia, "Times New Roman", serif';
+const AWARD_SERIF = '"Cinzel", "Playfair Display", Georgia, serif';
+const SANS = '"Inter", "Montserrat", Arial, sans-serif';
+const SCRIPT = '"Caveat", "Segoe Script", cursive';
+const PUBLIC_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
+const path = (file: string) => `${PUBLIC_BASE}${file}`;
+const imageCache = new Map<string, Promise<HTMLImageElement | null>>();
+function loadImage(url: string): Promise<HTMLImageElement | null> {
+  if (!url) return Promise.resolve(null);
+  const prior = imageCache.get(url);
+  if (prior) return prior;
+  const promise = new Promise<HTMLImageElement | null>((resolve) => {
+    const image = new Image();
+    // Vite public assets are same-origin. CORS enables user-supplied URLs when authorised.
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
+  imageCache.set(url, promise);
+  return promise;
+}
 async function fontsReady() {
+  if (!document.fonts) return;
   try {
     await Promise.all([
-      document.fonts.load('800 80px "Playfair Display"'),
-      document.fonts.load('700 40px "Outfit"'),
-      document.fonts.load('500 30px "Inter"'),
+      document.fonts.load('700 70px "Playfair Display"'),
+      document.fonts.load('800 64px "Cinzel"'),
+      document.fonts.load('600 32px "Inter"'),
+      document.fonts.load('600 40px "Caveat"'),
     ]);
-  } catch {
-    /* fall back to system fonts */
+  } catch { /* graceful fallback; see README for recommended fonts */ }
+}
+function contain(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
+                 x: number, y: number, w: number, h: number) {
+  const sw = img.naturalWidth || img.width, sh = img.naturalHeight || img.height;
+  const s = Math.min(w / sw, h / sh);
+  const dw = sw * s, dh = sh * s;
+  ctx.drawImage(img, x + (w-dw)/2, y + (h-dh)/2, dw, dh);
+}
+interface TextStyle { size: number; min?: number; width: number; family?: string; weight?: number;
+  color?: string; spacing?: number; align?: CanvasTextAlign; }
+function fittedText(ctx: CanvasRenderingContext2D, text: string,
+                    x: number, baseline: number, style: TextStyle) {
+  const str = String(text || "").trim();
+  if (!str) return;
+  const family = style.family ?? SERIF, weight = style.weight ?? 700;
+  const spacing = style.spacing ?? 0;
+  let size = style.size;
+  const min = style.min ?? 16;
+  ctx.save();
+  ctx.textAlign = style.align ?? "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = style.color ?? NAVY;
+  for (; size > min; size--) {
+    ctx.font = `${weight} ${size}px ${family}`;
+    if (ctx.measureText(str).width + Math.max(0, str.length - 1) * spacing <= style.width) break;
   }
+  ctx.font = `${weight} ${size}px ${family}`;
+  const full = ctx.measureText(str).width + (str.length - 1) * spacing;
+  if (spacing > 0 && full <= style.width) {
+    // Draw tracked capitals without relying on the experimental canvas letterSpacing property.
+    let start = x - full / 2;
+    ctx.textAlign = "left";
+    for (const char of str) {
+      ctx.fillText(char, start, baseline);
+      start += ctx.measureText(char).width + spacing;
+    }
+  } else ctx.fillText(str, x, baseline, style.width);
+  ctx.restore();
+}
+function framedText(ctx: CanvasRenderingContext2D, value: string,
+                    y: number, style: TextStyle) {
+  fittedText(ctx, value, W/2, y, style);
 }
 
-function loadImage(src: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
+function tintHandwriting(img: HTMLImageElement, blue = BLUE_INK): HTMLCanvasElement {
+  // Recolour only dark handwritten pixels. Works with white-background scans or transparent PNGs.
+  const work = document.createElement("canvas");
+  work.width = img.naturalWidth; work.height = img.naturalHeight;
+  const ctx = work.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Cannot process signature image");
+  ctx.drawImage(img, 0, 0);
+  const pixels = ctx.getImageData(0, 0, work.width, work.height);
+  const data = pixels.data;
+  const rInk = parseInt(blue.slice(1,3),16), gInk = parseInt(blue.slice(3,5),16), bInk = parseInt(blue.slice(5,7),16);
+  for (let i=0; i<data.length; i+=4) {
+    const originalAlpha = data[i+3]/255;
+    const darkness = Math.max(0, (245 - (data[i]*.299 + data[i+1]*.587 + data[i+2]*.114))/220);
+    const newAlpha = Math.round(255 * originalAlpha * Math.min(1, darkness * 1.3));
+    data[i]=rInk; data[i+1]=gInk; data[i+2]=bInk; data[i+3]=newAlpha;
+  }
+  ctx.putImageData(pixels, 0, 0);
+  return work;
+}
+function displaySignature(ctx: CanvasRenderingContext2D, img: HTMLImageElement | null,
+                          sign: CertificateSignatory, cx: number) {
+  if (img) {
+    const tinted = tintHandwriting(img);
+    const ratio = tinted.width/tinted.height;
+    const w = Math.min(195, 55*ratio), h = w/ratio;
+    ctx.drawImage(tinted, cx-w/2, 854-h, w, h);
+  } else {
+    // Visual placeholder only: replace with a genuine, authorised signature before issuance.
+    fittedText(ctx, sign.name, cx, 850, { family: SCRIPT, size: 40, min: 25,
+      weight: 600, color: BLUE_INK, width: 208 });
+  }
+  fittedText(ctx, sign.name, cx, 888, { family: SANS, weight: 700, color: INK, size: 20, min: 15, width: 235 });
+  fittedText(ctx, sign.title, cx, 912, { family: SANS, weight: 500, color: INK, size: 17, min: 13, width: 235 });
+  fittedText(ctx, "IISc Badminton Club", cx, 935, { family: SANS, weight: 500, color: INK, size: 16, min: 13, width: 235 });
 }
 
-const SERIF = (px: number) => `800 ${px}px "Playfair Display", Georgia, serif`;
-const DISPLAY = (w: number, px: number) => `${w} ${px}px "Outfit", "Inter", system-ui, sans-serif`;
-const BODY = (w: number, px: number) => `${w} ${px}px "Inter", system-ui, sans-serif`;
-
-/** A4 landscape at ~150 dpi. */
+/** Generates an A4 landscape 3508×2480px certificate with vector-source artwork. */
 export async function drawCertificate(input: CertificateInput): Promise<HTMLCanvasElement> {
   await fontsReady();
-  const base = import.meta.env.BASE_URL ?? "/";
-  const [iiscLogo, clubLogo, signConvener, signCoConvener] = await Promise.all([
-    loadImage(`${base}iisc-logo.png`),
-    loadImage(`${base}icon-512.png`),
-    loadImage(`${base}sign-convener.png`),
-    loadImage(`${base}sign-co-convener.png`),
+  const [artwork, officialLogo] = await Promise.all([
+    loadImage(path("cert-artwork.svg")),
+    loadImage(path("IISc_Master_Seal_Transparent.png")),
   ]);
-  const W = 1754;
-  const H = 1240;
+  if (!artwork) throw new Error("Missing /public/cert-artwork.svg — copy the supplied artwork into public/");
+  const signatories = input.signatories ?? [
+    { name: "Aneesh Varla", title: "Co-Convener", imageUrl: path("sign-co-convener.png") },
+    { name: "Raja Janmejay", title: "Convener", imageUrl: path("sign-convener.png") },
+  ];
+  const signatureImages = await Promise.all(signatories.slice(0,2).map(s => loadImage(s.imageUrl || "")));
   const c = document.createElement("canvas");
-  c.width = W;
-  c.height = H;
-  const ctx = c.getContext("2d")!;
-  const meta = PLACEMENT_META[input.placement];
-  const words = certificateWording(input);
+  c.width = OUT_W; c.height = OUT_H;
+  const ctx = c.getContext("2d", { alpha: false });
+  if (!ctx) throw new Error("Canvas 2D is unavailable");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(artwork, 0, 0, OUT_W, OUT_H);
+  ctx.save();
+  ctx.scale(OUT_W/W, OUT_H/H);
+  // Header: preserve full official logo and the Hindi lettering, never circle-clip.
+  if (officialLogo) contain(ctx, officialLogo, 330, 30, 220, 195);
+  else fittedText(ctx, "IISc", 440, 152, { family: SERIF, size: 44, width: 130, color: NAVY });
+  fittedText(ctx, "Indian Institute of Science", 845, 120,
+    { family: SERIF, weight: 700, size: 40, min: 30, width: 530, color: NAVY });
+  fittedText(ctx, "IISc Badminton Club", 845, 158,
+    { family: SANS, weight: 500, size: 26, width: 490, color: "#194a8d" });
 
-  // Paper + double border
-  ctx.fillStyle = "#fffdf7";
-  ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 14;
-  ctx.strokeRect(40, 40, W - 80, H - 80);
-  ctx.lineWidth = 3;
-  ctx.strokeRect(72, 72, W - 144, H - 144);
-
-  // Corner ornaments
-  ctx.fillStyle = meta.light;
-  for (const [x, y] of [[72, 72], [W - 72, 72], [72, H - 72], [W - 72, H - 72]]) {
-    ctx.beginPath();
-    ctx.arc(x, y, 34, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-
-  // Logos + club name header
-  const logoSize = 72;
-  const headerY = 140;
-  if (iiscLogo) ctx.drawImage(iiscLogo, W / 2 - 260 - logoSize, headerY - logoSize / 2, logoSize, logoSize);
-  if (clubLogo) ctx.drawImage(clubLogo, W / 2 + 260, headerY - logoSize / 2, logoSize, logoSize);
-
-  ctx.fillStyle = "#0f172a";
-  ctx.font = DISPLAY(700, 34);
-  ctx.fillText("IISc BADMINTON CLUB", W / 2, headerY + 12);
-
-  ctx.fillStyle = meta.color;
-  ctx.font = SERIF(96);
-  fitText(ctx, words.heading, SERIF, 96, W - 300);
-  ctx.fillText(words.heading, W / 2, 300);
-
-  ctx.fillStyle = "#475569";
-  ctx.font = BODY(500, 34);
-  ctx.fillText("This certificate is proudly presented to", W / 2, 396);
-
-  ctx.fillStyle = "#0f172a";
-  fitText(ctx, input.recipient, SERIF, 110, W - 360);
-  ctx.fillText(input.recipient, W / 2, 530);
-
-  // Underline under the name
-  ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(W / 2 - 420, 568);
-  ctx.lineTo(W / 2 + 420, 568);
-  ctx.stroke();
-
-  ctx.fillStyle = "#475569";
-  ctx.font = BODY(500, 34);
-  ctx.fillText(words.lead, W / 2, 644);
-
-  ctx.fillStyle = meta.color;
-  ctx.font = DISPLAY(800, 72);
-  ctx.fillText(`${meta.medal} ${words.highlight}`, W / 2, 740);
-
-  ctx.fillStyle = "#0f172a";
-  fitText(ctx, input.category, (px) => DISPLAY(700, px), 46, W - 360);
-  ctx.fillText(input.category, W / 2, 820);
-
-  ctx.fillStyle = "#334155";
-  fitText(ctx, input.tournamentName, (px) => DISPLAY(600, px), 42, W - 360);
-  ctx.fillText(input.tournamentName, W / 2, 888);
-
-  const date = formatCertDate(input.date);
-  ctx.font = BODY(500, 28);
-  ctx.fillStyle = "#64748b";
-  if (date) ctx.fillText(date, W / 2, 944);
-
-  // Signature lines — Convener (right) and Co-Convener (left)
-  const sigY = 1080;
-  const sigLineW = 320;
-  const signH = 60;
-
-  ctx.strokeStyle = "#94a3b8";
-  ctx.lineWidth = 2;
-
-  // Convener (right)
-  const convX = W - 200 - sigLineW / 2;
-  if (signConvener) {
-    const aspect = signConvener.width / signConvener.height;
-    const sW = signH * aspect;
-    ctx.drawImage(signConvener, convX - sW / 2, sigY - signH - 8, sW, signH);
-  }
-  ctx.beginPath();
-  ctx.moveTo(convX - sigLineW / 2, sigY);
-  ctx.lineTo(convX + sigLineW / 2, sigY);
-  ctx.stroke();
-  ctx.textAlign = "center";
-  ctx.font = BODY(600, 26);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillText("Raja Janmejay", convX, sigY + 36);
-  ctx.font = BODY(500, 22);
-  ctx.fillStyle = "#475569";
-  ctx.fillText("Convener", convX, sigY + 64);
-
-  // Co-Convener (left)
-  const coConvX = 200 + sigLineW / 2;
-  if (signCoConvener) {
-    const aspect = signCoConvener.width / signCoConvener.height;
-    const sW = signH * aspect;
-    ctx.drawImage(signCoConvener, coConvX - sW / 2, sigY - signH - 8, sW, signH);
-  }
-  ctx.strokeStyle = "#94a3b8";
-  ctx.beginPath();
-  ctx.moveTo(coConvX - sigLineW / 2, sigY);
-  ctx.lineTo(coConvX + sigLineW / 2, sigY);
-  ctx.stroke();
-  ctx.font = BODY(600, 26);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillText("Aneesh Varla", coConvX, sigY + 36);
-  ctx.font = BODY(500, 22);
-  ctx.fillStyle = "#475569";
-  ctx.fillText("Co-Convener", coConvX, sigY + 64);
-
-  // Issued-via footer
-  ctx.textAlign = "center";
-  ctx.font = BODY(500, 20);
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillText("Issued via IIScShuttlers", W / 2, H - 100);
-
-  return c;
-}
-
-/** 1080×1080 card for social sharing. */
-export async function drawResultCard(input: CertificateInput): Promise<HTMLCanvasElement> {
-  await fontsReady();
-  const base = import.meta.env.BASE_URL ?? "/";
-  const clubLogo = await loadImage(`${base}icon-512.png`);
-  const S = 1080;
-  const c = document.createElement("canvas");
-  c.width = S;
-  c.height = S;
-  const ctx = c.getContext("2d")!;
-  const meta = PLACEMENT_META[input.placement];
-
-  const g = ctx.createLinearGradient(0, 0, S, S);
-  g.addColorStop(0, "#0f172a");
-  g.addColorStop(1, "#1e293b");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, S, S);
-
-  // Glow behind the medal
-  const glow = ctx.createRadialGradient(S / 2, 330, 20, S / 2, 330, 320);
-  glow.addColorStop(0, meta.color + "aa");
-  glow.addColorStop(1, "transparent");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, S, S);
-
-  // Club logo + header
-  ctx.textAlign = "center";
-  if (clubLogo) ctx.drawImage(clubLogo, S / 2 - 28, 40, 56, 56);
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = DISPLAY(700, 30);
-  ctx.fillText("IISc BADMINTON CLUB", S / 2, 126);
-
-  ctx.font = `200px system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-  ctx.fillText(meta.medal, S / 2, 400);
-
-  ctx.fillStyle = meta.light;
-  ctx.font = DISPLAY(800, 84);
-  fitText(ctx, certificateWording(input).highlight.toUpperCase(), (px) => DISPLAY(800, px), 84, S - 140);
-  ctx.fillText(certificateWording(input).highlight.toUpperCase(), S / 2, 540);
-
-  ctx.fillStyle = "#ffffff";
-  fitText(ctx, input.recipient, (px) => DISPLAY(800, px), 76, S - 140);
-  ctx.fillText(input.recipient, S / 2, 660);
-
-  ctx.fillStyle = "#e2e8f0";
-  fitText(ctx, input.category, (px) => DISPLAY(600, px), 44, S - 140);
-  ctx.fillText(input.category, S / 2, 750);
-
-  ctx.fillStyle = "#94a3b8";
-  fitText(ctx, input.tournamentName, (px) => BODY(600, px), 36, S - 140);
-  ctx.fillText(input.tournamentName, S / 2, 820);
-
+  const w = certificateWording(input);
+  framedText(ctx, w.heading, 281, { family: SERIF, weight: 700, size: 76, min: 49,
+    width: 1180, color: NAVY });
+  framedText(ctx, "THIS CERTIFICATE IS PROUDLY PRESENTED TO", 332,
+    { family: SANS, weight: 500, size: 17, min: 13, width: 920, color: NAVY, spacing: 4.1 });
+  framedText(ctx, input.recipient || "Recipient Name", 406,
+    { family: SERIF, weight: 800, size: 72, min: 34, width: 1070, color: NAVY });
+  framedText(ctx, w.lead, 468,
+    { family: SANS, weight: 500, size: 18, min: 13, width: 800, color: NAVY, spacing: 3.6 });
+  // Ribbon plate: lettering is drawn ONCE in dark navy, with no opaque knockout pass.
+  framedText(ctx, w.highlight.toUpperCase(), 580,
+    { family: AWARD_SERIF, weight: 800, size: 57, min: 26, width: 421, color: NAVY, spacing: 1 });
+  framedText(ctx, expandCategory(input.category), 677,
+    { family: SANS, weight: 700, size: 32, min: 20, width: 920, color: NAVY });
+  framedText(ctx, input.tournamentName, 718,
+    { family: SANS, weight: 550, size: 24, min: 17, width: 900, color: NAVY });
   const date = formatCertDate(input.date);
   if (date) {
-    ctx.font = BODY(500, 28);
-    ctx.fillText(date, S / 2, 870);
+    ctx.save(); ctx.strokeStyle = "#325d91"; ctx.lineWidth = 1.2;
+    ctx.beginPath();ctx.moveTo(510,759);ctx.lineTo(575,759);ctx.moveTo(825,759);ctx.lineTo(890,759);ctx.stroke();ctx.restore();
+    framedText(ctx, date, 766, { family: SERIF, size: 25, min: 18,
+      weight: 600, width: 240, color: "#194a8d" });
   }
 
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(0, S - 16, S, 16);
+  if (signatories.length === 1) {
+    displaySignature(ctx, signatureImages[0], signatories[0], 300);
+  } else if (signatories.length >= 2) {
+    displaySignature(ctx, signatureImages[0], signatories[0], 300);
+    displaySignature(ctx, signatureImages[1], signatories[1], 980);
+  }
+  framedText(ctx, "SPORTSMANSHIP  •  COMMUNITY  •  EXCELLENCE", 928,
+    { family: SANS, weight: 500, size: 12, min: 11, width: 370, color: "#234971", spacing: 1.1 });
+  if (input.certificateId?.trim()) {
+    framedText(ctx, `Certificate ID: ${input.certificateId.trim()}`, 799,
+      { family: SANS, weight: 500, size: 12, min: 10, width: 560, color: "#62718a" });
+  }
+  ctx.restore();
   return c;
 }
 
-const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
-
-export function certificateFileBase(input: CertificateInput) {
-  return `${slug(input.tournamentName)}-${slug(input.category)}-${slug(input.recipient)}`.slice(0, 120);
+function drawCardCentered(ctx: CanvasRenderingContext2D, text: string, y: number, opts: TextStyle) {
+  fittedText(ctx, text, 540, y, opts);
+}
+export async function drawResultCard(input: CertificateInput): Promise<HTMLCanvasElement> {
+  await fontsReady();
+  const logo = await loadImage(path("IISc_Master_Seal_Transparent.png"));
+  const S=1080;
+  const canvas=document.createElement("canvas");canvas.width=2160;canvas.height=2160;
+  const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Result card canvas unavailable");
+  ctx.scale(2,2);ctx.imageSmoothingQuality="high";
+  const meta=PLACEMENT_META[input.placement];const words=certificateWording(input);
+  const bg=ctx.createLinearGradient(0,0,S,S);bg.addColorStop(0,"#101E33");bg.addColorStop(1,"#213C5F");
+  ctx.fillStyle=bg;ctx.fillRect(0,0,S,S);
+  ctx.strokeStyle="#8393aa";ctx.lineWidth=2;ctx.strokeRect(29,29,S-58,S-58);
+  ctx.strokeStyle="#B58938";ctx.lineWidth=1;ctx.strokeRect(36,36,S-72,S-72);
+  if(logo)contain(ctx,logo,500,53,80,86);
+  drawCardCentered(ctx,"IISc BADMINTON CLUB",183,{family:SANS,weight:700,size:29,width:840,color:"#E3E9F4",spacing:2});
+  ctx.textAlign="center";ctx.font='166px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.fillText(meta.medal,540,417);
+  drawCardCentered(ctx,words.highlight.toUpperCase(),540,{family:AWARD_SERIF,weight:800,size:79,min:35,width:860,color:"#FBFAF6"});
+  ctx.strokeStyle=meta.color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(380,571);ctx.lineTo(700,571);ctx.stroke();
+  drawCardCentered(ctx,input.recipient,661,{family:SANS,weight:700,size:68,min:29,width:895,color:"#FFFFFF"});
+  drawCardCentered(ctx,expandCategory(input.category),744,{family:SANS,weight:650,size:43,min:22,width:900,color:"#DBE3EF"});
+  drawCardCentered(ctx,input.tournamentName,828,{family:SANS,weight:550,size:34,min:20,width:895,color:"#ADBFD5"});
+  drawCardCentered(ctx,formatCertDate(input.date),890,{family:SANS,weight:500,size:27,width:870,color:"#CAD4E2"});
+  ctx.fillStyle=meta.color;ctx.fillRect(0,S-16,S,16);
+  return canvas;
 }
 
-async function shareNative(base64: string, fileName: string, title: string) {
-  const { uri } = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
-  await Share.share({ title, files: [uri], dialogTitle: title });
+const slug=(s:string) => s.replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase();
+export function certificateFileBase(input:CertificateInput):string {
+  return `${slug(input.tournamentName)}-${slug(input.category)}-${slug(input.recipient)}`.slice(0,120);
 }
-
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+async function shareNative(base64:string,fileName:string,title:string) {
+  const {uri}=await Filesystem.writeFile({path:fileName,data:base64,directory:Directory.Cache});
+  await Share.share({title,files:[uri],dialogTitle:title});
 }
-
-export async function saveCertificatePdf(input: CertificateInput, canvas?: HTMLCanvasElement) {
-  const c = canvas ?? (await drawCertificate(input));
-  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  pdf.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 297, 210);
-  const fileName = `${certificateFileBase(input)}-certificate.pdf`;
-  if (Capacitor.isNativePlatform()) {
-    await shareNative(pdf.output("datauristring").split(",")[1], fileName, "Save certificate");
-  } else {
-    pdf.save(fileName);
+function downloadBlob(blob:Blob,fileName:string) {
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+export async function saveCertificatePdf(input:CertificateInput,canvas?:HTMLCanvasElement) {
+  const c=canvas??await drawCertificate(input);
+  const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
+  pdf.addImage(c.toDataURL("image/jpeg",.98),"JPEG",0,0,297,210);
+  pdf.setProperties({title:`${certificateWording(input).heading} - ${input.recipient}`,
+    subject:`${input.tournamentName} - ${expandCategory(input.category)}`,author:"IISc Badminton Club"});
+  const fileName=`${certificateFileBase(input)}-certificate.pdf`;
+  if(Capacitor.isNativePlatform()) {
+    const base64=pdf.output("datauristring").split(",")[1];
+    const {uri}=await Filesystem.writeFile({path:fileName,data:base64,directory:Directory.Cache});
+    await FileOpener.open({filePath:uri,contentType:"application/pdf",openWithDefault:true});
+  } else downloadBlob(pdf.output("blob"),fileName);
+}
+export async function shareResultCard(input:CertificateInput,canvas?:HTMLCanvasElement) {
+  const c=canvas??await drawResultCard(input);
+  const fileName=`${certificateFileBase(input)}.png`;
+  const text=`${PLACEMENT_META[input.placement].medal} ${input.recipient} — ${certificateWording(input).highlight}, ${expandCategory(input.category)} at ${input.tournamentName}`;
+  if(Capacitor.isNativePlatform()) {
+    await shareNative(c.toDataURL("image/png").split(",")[1],fileName,"Share result");return;
   }
-}
-
-export async function shareResultCard(input: CertificateInput, canvas?: HTMLCanvasElement) {
-  const c = canvas ?? (await drawResultCard(input));
-  const fileName = `${certificateFileBase(input)}.png`;
-  const text = `${PLACEMENT_META[input.placement].medal} ${input.recipient} — ${certificateWording(input).highlight}, ${input.category} at ${input.tournamentName}`;
-  if (Capacitor.isNativePlatform()) {
-    await shareNative(c.toDataURL("image/png").split(",")[1], fileName, "Share result");
-    return;
+  const blob=await new Promise<Blob|null>(resolve=>c.toBlob(resolve,"image/png"));
+  if(!blob)throw new Error("Could not render result card");
+  const file=new File([blob],fileName,{type:"image/png"});
+  if(navigator.canShare?.({files:[file]})) {
+    try{await navigator.share({title:"IISc Badminton Club",text,files:[file]});return;}
+    catch(error:unknown){if((error as {name?:string})?.name==="AbortError")return;}
   }
-  const blob: Blob | null = await new Promise((r) => c.toBlob(r, "image/png"));
-  if (!blob) throw new Error("Could not render image");
-  const file = new File([blob], fileName, { type: "image/png" });
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ title: "IISc Badminton Club", text, files: [file] });
-      return;
-    } catch (e: any) {
-      if (e?.name === "AbortError") return;
-    }
-  }
-  downloadBlob(blob, fileName);
+  downloadBlob(blob,fileName);
 }

@@ -266,18 +266,18 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 print:hidden">
                               <MatchPredictionCard
                                 compact
-                                matchId={m.match_code}
+                                matchId={m.id}
                                 t1Ids={[]}
                                 t2Ids={[]}
                                 t1Label={m.team1_label ?? "TBD"}
                                 t2Label={m.team2_label ?? "TBD"}
                                 hasStarted={isLive || isCompleted}
-                                myPick={picks[m.match_code]}
+                                myPick={picks[m.id]}
                                 profileId={profile?.id}
-                                onPick={(team) => handlePick(m.match_code, team)}
-                                isResultsRevealed={isLive || !!revealedMatchIds[m.match_code]}
+                                onPick={(team) => handlePick(m.id, team)}
+                                isResultsRevealed={isLive || !!revealedMatchIds[m.id]}
                                 isAdmin={isAdmin}
-                                onToggleRevealResults={() => handleToggleReveal(m.match_code)}
+                                onToggleRevealResults={() => handleToggleReveal(m.id)}
                               />
                             </div>
                           )}
