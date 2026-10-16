@@ -71,6 +71,7 @@ export interface Participant {
   seed: number | null;
   entry_round: number | null;
   email: string | null;
+  created_at: string | null;
 }
 
 export function TournamentParticipantsTab({ tournament }: { tournament: Tournament }) {
@@ -102,6 +103,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const [adding, setAdding] = useState<string | null>(null);
   const [externalName, setExternalName] = useState("");
   const [thirdPlacePerCat, setThirdPlacePerCat] = useState<Record<string, boolean>>({});
+  const [manualOrderPerCat, setManualOrderPerCat] = useState<Record<string, boolean>>({});
   const [bulkCat, setBulkCat] = useState<string | null>(null);
   const [bulkText, setBulkText] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -467,7 +469,8 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   // Parse bulk pasted text — each non-empty line is one entry.
   const parseBulkLines = (text: string, cat: string) => {
     const doubles = isDoubles(cat);
-    return text.split("\n").map((line) => line.trim()).filter(Boolean).map((line) => {
+    const isHeaderRow = (l: string) => /^player\s*(1\s*)?name[\t,]/i.test(l);
+    return text.split("\n").map((line) => line.trim()).filter(Boolean).filter(l => !isHeaderRow(l)).map((line) => {
       const matchPlayer = (name: string, personal: string, iisc: string) => {
         if (!name && !personal && !iisc) return null;
         return adminPlayers.find(p => {
@@ -482,8 +485,10 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       };
 
       if (doubles) {
-        // tab-separated (Excel copy) or " & " separated
-        const rawParts = line.includes("\t") ? line.split("\t").map(s => s.trim()) : line.split(/\s*&\s*/).map(s => s.trim());
+        // tab-separated (Excel copy), comma-separated (CSV), or " & " separated
+        const rawParts = line.includes("\t") ? line.split("\t").map(s => s.trim())
+          : line.includes(",") ? line.split(",").map(s => s.trim())
+          : line.split(/\s*&\s*/).map(s => s.trim());
         const validParts = rawParts.filter(Boolean);
         
         let name1 = "", name2 = "", email1 = "", email2 = "";
@@ -508,18 +513,21 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         if (!email2.includes("@")) email2 = "";
         const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
         const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
-        return { raw: line, name1, name2, email1, email2, match1, match2 };
+        const seedPart = validParts.find(p => /^\d+$/.test(p) && !p.includes("@"));
+        return { raw: line, name1, name2, email1, email2, match1, match2, seed: seedPart ? parseInt(seedPart, 10) : null };
       } else {
-        const parts = line.split("\t").map(s => s.trim()).filter(Boolean);
-        let name = "", email = "";
+        const sep = line.includes("\t") ? "\t" : ",";
+        const parts = line.split(sep).map(s => s.trim()).filter(Boolean);
+        let name = "", email = "", parsedSeed: number | null = null;
         for (const p of parts) {
           if (p.includes("@")) { if (!email) email = p; }
+          else if (/^\d+$/.test(p) && parsedSeed === null) { parsedSeed = parseInt(p, 10); }
           else { if (!name) name = p; }
         }
 
         if (/^(na|n\/a|tbd|ytd|tba|-|none)$/i.test(name)) name = "";
         const match = matchPlayer(name, email, email) || ((allPlayers ?? []).find(p => name && p.full_name.toLowerCase() === name.toLowerCase()) ?? null);
-        return { raw: line, name1: name, name2: "", email1: email, email2: "", match1: match, match2: null };
+        return { raw: line, name1: name, name2: "", email1: email, email2: "", match1: match, match2: null, seed: parsedSeed };
       }
     });
   };
@@ -528,7 +536,9 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     const entries = parseBulkLines(bulkText, cat);
     if (!entries.length) return;
     setBulkImporting(true);
-    let seed = (participants[cat]?.length ?? 0) + 1;
+    const existingCount = participants[cat]?.length ?? 0;
+    const maxExplicit = Math.max(0, ...entries.map(e => e.seed ?? 0));
+    let autoSeed = Math.max(existingCount, maxExplicit) + 1;
     for (const entry of entries) {
       if (!entry.name1) continue;
       const playerId = entry.match1?.id ?? null;
@@ -543,7 +553,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         player_id: playerId,
         partner_id: partnerId,
         display_name: displayName || null,
-        seed: seed++,
+        seed: entry.seed ?? autoSeed++,
         email: entryEmail,
       });
     }
@@ -613,7 +623,9 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     for (const cat of catKeys) {
       const text = grouped[cat].join("\n");
       const entries = parseBulkLines(text, cat);
-      let seed = (participants[cat]?.length ?? 0) + 1;
+      const existingCount = participants[cat]?.length ?? 0;
+      const maxExplicit = Math.max(0, ...entries.map(e => e.seed ?? 0));
+      let autoSeed = Math.max(existingCount, maxExplicit) + 1;
       for (const entry of entries) {
         if (!entry.name1) continue;
         const playerId = entry.match1?.id ?? null;
@@ -628,7 +640,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           player_id: playerId,
           partner_id: partnerId,
           display_name: displayName || null,
-          seed: seed++,
+          seed: entry.seed ?? autoSeed++,
           email: entryEmail,
         });
         total++;
@@ -785,13 +797,14 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     [allPlayers]
   );
 
-  const toBracketParticipant = useCallback((p: Participant) => ({
+  const toBracketParticipant = useCallback((p: Participant, index?: number) => ({
     playerId: p.player_id,
     partnerId: p.partner_id,
     displayName: p.display_name ?? (p.player_id ? playerNameById.get(p.player_id) : null) ?? "Unknown",
     seed: p.seed ?? 99,
     entryRound: p.entry_round,
     refId: p.id,
+    originalIndex: index,
   }), [playerNameById]);
 
   const generateBracket = async (onlyCat?: string) => {
@@ -834,10 +847,13 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     }
     const allRows = [];
     for (const cat of catsToGenerate) {
-      const parts = participants[cat] ?? [];
-      if (parts.length < 2) continue;
+      const rawParts = participants[cat] ?? [];
+      if (rawParts.length < 2) continue;
+      const parts = manualOrderPerCat[cat]
+        ? [...rawParts].sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""))
+        : rawParts;
       allRows.push(...generateSingleElimBracket(
-        parts.map(toBracketParticipant), cat, tournament.id, thirdPlacePerCat[cat] ?? false
+        parts.map(toBracketParticipant), cat, tournament.id, thirdPlacePerCat[cat] ?? false, manualOrderPerCat[cat] ?? false
       ));
     }
     if (!allRows.length) { toast.error("Need at least 2 participants in a category to generate bracket"); return; }
@@ -1820,6 +1836,15 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                     className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
                   >
                     <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${thirdPlacePerCat[cat] ? "translate-x-4" : ""}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground font-bold">Manual draw order</span>
+                  <button
+                    onClick={() => setManualOrderPerCat((p) => ({ ...p, [cat]: !p[cat] }))}
+                    className={`relative w-9 h-5 rounded-full transition-colors ${manualOrderPerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${manualOrderPerCat[cat] ? "translate-x-4" : ""}`} />
                   </button>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">

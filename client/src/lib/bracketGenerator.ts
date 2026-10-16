@@ -15,6 +15,8 @@ export interface BracketParticipant {
    * carried through `planDraw` so a caller can map entries back to its own rows.
    */
   refId?: string;
+  /** Original array index — used by manual-order mode to restore caller order after planDraw sorts by seed. */
+  originalIndex?: number;
 }
 
 export interface TournamentMatchInsert {
@@ -240,7 +242,8 @@ export function generateSingleElimBracket(
   participants: BracketParticipant[],
   category: string,
   tournamentId: string,
-  hasThirdPlace = false
+  hasThirdPlace = false,
+  manualOrder = false,
 ): TournamentMatchInsert[] {
   if (participants.length < 2) return [];
 
@@ -249,7 +252,21 @@ export function generateSingleElimBracket(
 
   const { drawSize: P, totalRounds } = plan;
   const slots: (DrawEntry | null)[] = new Array(P).fill(null);
-  placeEntries(plan.entries, 0, P, false, slots);
+  if (manualOrder) {
+    // Place participants in the exact order they were provided (no snake seeding).
+    // planDraw sorts by seed, so restore the caller's original order.
+    const ordered = [...plan.entries].sort((a, b) =>
+      (a.participant.originalIndex ?? 999) - (b.participant.originalIndex ?? 999)
+    );
+    let cursor = 0;
+    for (const entry of ordered) {
+      if (cursor >= P) break;
+      slots[cursor] = entry;
+      cursor += entry.blockSize;
+    }
+  } else {
+    placeEntries(plan.entries, 0, P, false, slots);
+  }
 
   // occupants[i] = number of real participants in slots [0, i)
   const occupants: number[] = new Array(P + 1).fill(0);
