@@ -556,12 +556,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
 
   const downloadParticipantTemplate = (cat: string) => {
     const doubles = isDoubles(cat);
-    const header = doubles 
-      ? ["Player1 Name", "Player1 Personal Email", "Player1 IISc Email", "Player2 Name", "Player2 Personal Email", "Player2 IISc Email"] 
-      : ["Player Name", "Personal Email", "IISc Email"];
+    const header = doubles
+      ? ["Player1 Name", "Player1 Email", "Player2 Name", "Player2 Email", "Seed"]
+      : ["Player Name", "Email", "Seed"];
     const examples = doubles
-      ? [["Rahul Sharma", "rahul@gmail.com", "rahul@iisc.ac.in", "Priya Nair", "priya@gmail.com", "priya@iisc.ac.in"]]
-      : [["Rahul Sharma", "rahul@gmail.com", "rahul@iisc.ac.in"]];
+      ? [["Rahul Sharma", "rahul@iisc.ac.in", "Priya Nair", "priya@iisc.ac.in", "1"]]
+      : [["Rahul Sharma", "rahul@iisc.ac.in", "1"]];
     downloadCSV(`${cat}_participants_template.csv`, [header, ...examples]);
   };
 
@@ -572,8 +572,10 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     const dataRows = rows[0]?.[0]?.toLowerCase().match(/^(player|name)/) ? rows.slice(1) : rows;
     const lines = dataRows.map((r) => {
       if (doubles) {
-        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? "", r[4] ?? "", r[5] ?? ""].join("\t");
+        // player1_name, player1_email, player2_name, player2_email, seed
+        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? "", r[4] ?? ""].join("\t");
       } else {
+        // player_name, email, seed
         return [r[0] ?? "", r[1] ?? "", r[2] ?? ""].join("\t");
       }
     }).filter(line => line.replace(/\t/g, '').trim().length > 0);
