@@ -448,7 +448,7 @@ export function TournamentManager() {
             />
           </div>
 
-          <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-2 justify-between sm:justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
             {selected && (
               <div className="block xs:hidden">
                 <StatusChip status={selected.status} />

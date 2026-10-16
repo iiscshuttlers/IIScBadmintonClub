@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
-import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle } from 'lucide-react';
+import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -172,8 +172,8 @@ export default function HostTournamentWizard() {
 
   const handleDownloadTemplate = () => {
     const csvContent = formatFamily === 'OPEN_EVENT'
-      ? "data:text/csv;charset=utf-8,category,player1_name,player2_name,seed\nMS,John Doe,,1\nWS,Jane Smith,,\nMD,John Doe,Sam Lee,\nXD,John Doe,Jane Smith,2"
-      : "data:text/csv;charset=utf-8,team_name,player_name,gender\nTeam Alpha,John Doe,M\nTeam Alpha,Jane Smith,F";
+      ? "data:text/csv;charset=utf-8,category,player1_name,player1_email,player2_name,player2_email,seed\nMS,John Doe,john@gmail.com,,,1\nWS,Jane Smith,jane@iisc.ac.in,,,\nMD,John Doe,john@gmail.com,Sam Lee,sam@gmail.com,\nXD,John Doe,john@gmail.com,Jane Smith,jane@iisc.ac.in,2"
+      : "data:text/csv;charset=utf-8,team_name,player_name,email,gender\nTeam Alpha,John Doe,john@gmail.com,M\nTeam Alpha,Jane Smith,jane@iisc.ac.in,F";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -184,7 +184,64 @@ export default function HostTournamentWizard() {
   };
 
   const isStep1Valid = name.trim().length > 0 && location.trim().length > 0;
-  
+
+  const tbd = /^(na|n\/a|tbd|ytd|tba|-|none|)$/i;
+  const csvWarnings = useMemo(() => {
+    if (previewData.length < 2 || formatFamily !== 'OPEN_EVENT') return new Map<number, string>();
+    const warnings = new Map<number, string>();
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    const dataRows = previewData.slice(1);
+
+    // Track names and pairs for dedup
+    const seenNames = new Map<string, number>(); // norm(name) -> first row index
+    const seenPairs = new Map<string, number>(); // sorted pair key -> first row index
+
+    dataRows.forEach((row, i) => {
+      const cat = (row[0] ?? '').trim().toUpperCase();
+      const p1 = norm(row[1] ?? '');
+      const p2Raw = (row[3] ?? '').trim();
+      const p2 = tbd.test(p2Raw) ? '' : norm(p2Raw);
+      const doubles = ['MD', 'WD', 'XD'].includes(cat);
+
+      if (doubles && p1 && p2) {
+        const pairKey = `${cat}:${[p1, p2].sort().join('+')}`;
+        if (seenPairs.has(pairKey)) {
+          const prevRow = seenPairs.get(pairKey)!;
+          warnings.set(i, `Duplicate pair — same as row ${prevRow + 1}`);
+          if (!warnings.has(prevRow)) warnings.set(prevRow, `Duplicate pair — same as row ${i + 1}`);
+        } else {
+          seenPairs.set(pairKey, i);
+        }
+      }
+
+      // Check if same player appears in multiple entries within same category
+      const checkName = (n: string, role: string) => {
+        if (!n) return;
+        const key = `${cat}:${n}`;
+        if (seenNames.has(key)) {
+          const prevRow = seenNames.get(key)!;
+          warnings.set(i, `${role} "${row[1]?.trim() || row[3]?.trim()}" also in row ${prevRow + 1}`);
+          if (!warnings.has(prevRow)) warnings.set(prevRow, `Player also appears in row ${i + 1}`);
+        } else {
+          seenNames.set(key, i);
+        }
+      };
+      checkName(p1, 'Player');
+      if (p2) checkName(p2, 'Partner');
+    });
+    return warnings;
+  }, [previewData, formatFamily]);
+
+  const removePreviewRow = (rowIndex: number) => {
+    const updated = previewData.filter((_, i) => i !== rowIndex + 1); // +1 for header
+    setPreviewData(updated);
+    setParsedTeams(updated.length - 1);
+    if (updated.length <= 1) {
+      setFile(null);
+      setParsedTeams(0);
+    }
+  };
+
   const handleNext = () => {
     if (step === 1 && !isStep1Valid) return;
     if (step === 4) {
@@ -266,7 +323,88 @@ export default function HostTournamentWizard() {
       const { data, error } = await supabase.from('tournaments').insert(payload).select().single();
       
       if (error) throw error;
-      
+
+      // Import CSV entrants if provided
+      if (data?.id && previewData.length > 1 && formatFamily === 'OPEN_EVENT') {
+        try {
+          const { data: players } = await supabase.from("players").select("id, full_name, email, iisc_email").is("deleted_at", null);
+          const matchPlayer = (name: string, email: string) => {
+            if (!name && !email) return null;
+            return (players ?? []).find(p => {
+              if (email && p.email && p.email.toLowerCase() === email.toLowerCase()) return true;
+              if (email && p.iisc_email && p.iisc_email.toLowerCase() === email.toLowerCase()) return true;
+              if (name && p.full_name && p.full_name.toLowerCase() === name.toLowerCase()) return true;
+              return false;
+            }) ?? null;
+          };
+          const dataRows = previewData.slice(1);
+          const byCat: Record<string, { player_id: string | null, partner_id: string | null, display_name: string, seed: number | null }[]> = {};
+          for (const row of dataRows) {
+            const cat = (row[0] ?? '').trim().toUpperCase();
+            if (!cat) continue;
+            const p1Name = (row[1] ?? '').trim();
+            const p1Email = (row[2] ?? '').trim();
+            const rawP2Name = (row[3] ?? '').trim();
+            const p2Name = /^(na|n\/a|tbd|ytd|tba|-|none|)$/i.test(rawP2Name) ? '' : rawP2Name;
+            const p2Email = (row[4] ?? '').trim();
+            const seedVal = row[5] ? parseInt(row[5]) : null;
+            const m1 = matchPlayer(p1Name, p1Email);
+            const m2 = matchPlayer(p2Name, p2Email);
+            const doubles = ['MD', 'WD', 'XD'].includes(cat);
+            const displayName = doubles && p2Name ? `${p1Name} & ${p2Name}` : p1Name;
+            if (!byCat[cat]) byCat[cat] = [];
+            // Skip duplicates: reverse-pair by name, or same player_id already in category
+            const isDupe = (() => {
+              if (doubles && p1Name && p2Name) {
+                const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ');
+                if (byCat[cat].some(e => {
+                  const dn = e.display_name ?? '';
+                  const [ea, eb] = dn.split(' & ').map(norm);
+                  return (ea === norm(p2Name) && eb === norm(p1Name));
+                })) return true;
+              }
+              // Same player_id already registered in this category
+              if (m1?.id && byCat[cat].some(e => e.player_id === m1!.id || e.partner_id === m1!.id)) return true;
+              if (m2?.id && byCat[cat].some(e => e.player_id === m2!.id || e.partner_id === m2!.id)) return true;
+              return false;
+            })();
+            if (isDupe) continue;
+            byCat[cat].push({
+              player_id: m1?.id ?? null,
+              partner_id: m2?.id ?? null,
+              display_name: displayName || null!,
+              seed: seedVal,
+            });
+          }
+          let imported = 0, failed = 0;
+          for (const [cat, entries] of Object.entries(byCat)) {
+            let nextSeed = 1;
+            for (const entry of entries) {
+              const { error: insertErr } = await supabase.from("tournament_participants").insert({
+                tournament_id: data.id,
+                category: cat,
+                player_id: entry.player_id,
+                partner_id: entry.partner_id,
+                display_name: entry.display_name,
+                seed: entry.seed ?? nextSeed,
+              });
+              if (insertErr) {
+                console.error(`Failed to import ${entry.display_name} in ${cat}:`, insertErr.message);
+                failed++;
+              } else {
+                imported++;
+              }
+              nextSeed++;
+            }
+          }
+          if (imported > 0) toast.success(`${imported} entrant(s) imported from CSV`);
+          if (failed > 0) toast.error(`${failed} entrant(s) failed to import — add them from the dashboard`);
+        } catch (csvErr) {
+          console.error("CSV import error:", csvErr);
+          toast.error("Tournament created but CSV import failed — import from the dashboard.");
+        }
+      }
+
       // Cleanup
       ['wizard_step', 'wizard_name', 'wizard_location', 'wizard_startDate', 'wizard_endDate', 'wizard_formatFamily', 'wizard_format', 'wizard_lineupEntry', 'wizard_countsForElo', 'wizard_ignoreGenderRules', 'wizard_playDeadRubbers', 'wizard_customRubbers', 'wizard_teamRosterMin', 'wizard_teamRosterMax', 'wizard_tiePointsWin', 'wizard_tiePointsDraw', 'wizard_maxRubbersPerMale', 'wizard_maxRubbersPerFemale', 'wizard_allowSameDisciplineRepeat', 'wizard_allowSameEventRepeatInDecider']
         .forEach(k => localStorage.removeItem(k));
@@ -514,6 +652,64 @@ export default function HostTournamentWizard() {
                     </button>
                   </div>
                 </div>
+
+                {/* CSV Preview Table */}
+                {file && previewData.length > 1 && formatFamily === 'OPEN_EVENT' && (
+                  <div className="mt-6">
+                    {csvWarnings.size > 0 && (
+                      <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm font-bold">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        {csvWarnings.size} potential duplicate(s) found — review and remove before continuing
+                      </div>
+                    )}
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-800/50 text-left">
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500 w-8">#</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Cat</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Player 1</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Player 2</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500 w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {previewData.slice(1).map((row, i) => {
+                            const warning = csvWarnings.get(i);
+                            return (
+                              <tr
+                                key={i}
+                                className={`border-t border-slate-100 dark:border-slate-800 ${warning ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
+                              >
+                                <td className="px-3 py-2 text-slate-400 text-xs">{i + 1}</td>
+                                <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">{row[0]}</td>
+                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
+                                  {row[1]}{row[2] && <span className="text-[10px] text-slate-400 ml-1">({row[2]})</span>}
+                                </td>
+                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
+                                  {tbd.test((row[3] ?? '').trim()) ? <span className="text-slate-400 italic">TBD</span> : (
+                                    <>{row[3]}{row[4] && <span className="text-[10px] text-slate-400 ml-1">({row[4]})</span>}</>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2">
+                                  {warning ? (
+                                    <button
+                                      onClick={() => removePreviewRow(i)}
+                                      title={warning}
+                                      className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </PageTransition>
             )}
 

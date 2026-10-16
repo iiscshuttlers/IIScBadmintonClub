@@ -70,6 +70,7 @@ export interface Participant {
   display_name: string | null;
   seed: number | null;
   entry_round: number | null;
+  email: string | null;
 }
 
 export function TournamentParticipantsTab({ tournament }: { tournament: Tournament }) {
@@ -104,6 +105,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const [bulkCat, setBulkCat] = useState<string | null>(null);
   const [bulkText, setBulkText] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
+  const [allCatImporting, setAllCatImporting] = useState(false);
   const [linkingId, setLinkingId] = useState<string | null>(null);
   const [linkSearch, setLinkSearch] = useState("");
   const [linkSearch2, setLinkSearch2] = useState("");
@@ -117,7 +119,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const allPlayers = adminPlayers;
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5";
   const [editingName, setEditingName] = useState<{ id: string, name1: string, name2: string } | null>(null);
-  const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string }[][] } | null>(null);
+  const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string, participantId?: string }[][] } | null>(null);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
   const { confirm } = useConfirm();
 
@@ -512,9 +514,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
            }
         }
 
+        const tbd = /^(na|n\/a|tbd|ytd|tba|-|none)$/i;
+        if (tbd.test(name1)) name1 = "";
+        if (tbd.test(name2)) name2 = "";
         const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
         const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
-        return { raw: line, name1, name2, match1, match2 };
+        return { raw: line, name1, name2, email1, email2, match1, match2 };
       } else {
         const parts = line.split("\t").map(s => s.trim()).filter(Boolean);
         let name = "", email = "";
@@ -522,9 +527,10 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           if (p.includes("@")) { if (!email) email = p; }
           else { if (!name) name = p; }
         }
-        
+
+        if (/^(na|n\/a|tbd|ytd|tba|-|none)$/i.test(name)) name = "";
         const match = matchPlayer(name, email, email) || ((allPlayers ?? []).find(p => name && p.full_name.toLowerCase() === name.toLowerCase()) ?? null);
-        return { raw: line, name1: name, name2: "", match1: match, match2: null };
+        return { raw: line, name1: name, name2: "", email1: email, email2: "", match1: match, match2: null };
       }
     });
   };
@@ -540,6 +546,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       const displayName = isDoubles(cat)
         ? (entry.name2 ? `${entry.name1} & ${entry.name2}` : entry.name1)
         : entry.name1;
+      const entryEmail = entry.email1 || entry.email2 || null;
       await supabase.from("tournament_participants").insert({
         tournament_id: tournament.id,
         category: cat,
@@ -547,6 +554,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         partner_id: partnerId,
         display_name: displayName || null,
         seed: seed++,
+        email: entryEmail,
       });
     }
     await load();
@@ -581,6 +589,61 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     }).filter(line => line.replace(/\t/g, '').trim().length > 0);
     setBulkText(lines.join("\n"));
     setBulkCat(cat);
+  };
+
+  const handleAllCategoryCSV = async (file: File) => {
+    const rows = await readCSVFile(file);
+    if (!rows.length) return;
+    const header = rows[0].map(h => h.toLowerCase().trim());
+    const catIdx = header.findIndex(h => /^(category|cat|event)$/.test(h));
+    if (catIdx === -1) {
+      toast.error("CSV must have a 'Category' column (e.g. MS, WS, MD)");
+      return;
+    }
+    const dataRows = rows.slice(1).filter(r => r.some(c => c.trim()));
+    if (!dataRows.length) { toast.error("No data rows found"); return; }
+
+    const cats = tournament.categories || [];
+    const grouped: Record<string, string[]> = {};
+    for (const row of dataRows) {
+      const cat = row[catIdx]?.trim().toUpperCase();
+      if (!cat || !cats.includes(cat)) continue;
+      const fields = row.filter((_, i) => i !== catIdx);
+      grouped[cat] = grouped[cat] || [];
+      grouped[cat].push(fields.join("\t"));
+    }
+
+    const catKeys = Object.keys(grouped);
+    if (!catKeys.length) { toast.error("No matching categories found in CSV"); return; }
+
+    setAllCatImporting(true);
+    let total = 0;
+    for (const cat of catKeys) {
+      const text = grouped[cat].join("\n");
+      const entries = parseBulkLines(text, cat);
+      let seed = (participants[cat]?.length ?? 0) + 1;
+      for (const entry of entries) {
+        const playerId = entry.match1?.id ?? null;
+        const partnerId = entry.match2?.id ?? null;
+        const displayName = isDoubles(cat)
+          ? (entry.name2 ? `${entry.name1} & ${entry.name2}` : entry.name1)
+          : entry.name1;
+        const entryEmail = entry.email1 || entry.email2 || null;
+        await supabase.from("tournament_participants").insert({
+          tournament_id: tournament.id,
+          category: cat,
+          player_id: playerId,
+          partner_id: partnerId,
+          display_name: displayName || null,
+          seed: seed++,
+          email: entryEmail,
+        });
+        total++;
+      }
+    }
+    await load();
+    setAllCatImporting(false);
+    toast.success(`Imported ${total} participant(s) across ${catKeys.length} categor${catKeys.length === 1 ? "y" : "ies"}: ${catKeys.join(", ")}`);
   };
 
   const hasMatches = async () => {
@@ -620,7 +683,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       return false;
     };
 
-    const mappedNames: { name: string, details: string }[] = [];
+    const mappedNames: { name: string, details: string, participantId: string }[] = [];
     catParts.forEach((p, index) => {
       const details = p.seed ? `Seed ${p.seed}` : `Row ${index + 1}`;
       if (doubles) {
@@ -631,16 +694,16 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           n1 = splitNames[0];
           n2 = splitNames[1] || n2;
         }
-        mappedNames.push({ name: n1, details });
-        mappedNames.push({ name: n2, details });
+        mappedNames.push({ name: n1, details, participantId: p.id });
+        mappedNames.push({ name: n2, details, participantId: p.id });
       } else {
         let n = p.display_name ?? allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown";
-        mappedNames.push({ name: n, details });
+        mappedNames.push({ name: n, details, participantId: p.id });
       }
     });
 
     const nameItems = mappedNames.filter(n => n.name && n.name.toLowerCase() !== "unknown" && n.name.toLowerCase() !== "partner");
-    const groups: { name: string, details: string }[][] = [];
+    const groups: { name: string, details: string, participantId?: string }[][] = [];
     const visited = new Set<number>();
 
     for (let i = 0; i < nameItems.length; i++) {
@@ -665,6 +728,55 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       if (currentGroup.length > 1) {
         groups.push(currentGroup);
       }
+    }
+
+    // Detect same player_id appearing in multiple entries (e.g. player C listed as partner by both A and B)
+    const pidSeen = new Map<string, number>();
+    catParts.forEach((p, i) => {
+      for (const pid of [p.player_id, p.partner_id].filter(Boolean)) {
+        const details = p.seed ? `Seed ${p.seed}` : `Row ${i + 1}`;
+        const playerName = allPlayers?.find((pl: any) => pl.id === pid)?.full_name ?? pid;
+        if (pidSeen.has(pid)) {
+          const prevIdx = pidSeen.get(pid)!;
+          const prevDetails = catParts[prevIdx].seed ? `Seed ${catParts[prevIdx].seed}` : `Row ${prevIdx + 1}`;
+          groups.push([
+            { name: `${playerName} (same account in: ${catParts[prevIdx].display_name})`, details: prevDetails, participantId: catParts[prevIdx].id },
+            { name: `${playerName} (same account in: ${p.display_name})`, details, participantId: p.id },
+          ]);
+        } else {
+          pidSeen.set(pid, i);
+        }
+      }
+    });
+
+    // Detect reverse-pair duplicates in doubles (A&B vs B&A)
+    if (doubles) {
+      const pairKey = (p: any) => {
+        let n1 = '', n2 = '';
+        if (p.display_name?.includes('&')) {
+          [n1, n2] = p.display_name.split('&').map((s: string) => s.trim().toLowerCase());
+        } else {
+          n1 = (p.display_name ?? allPlayers?.find((pl: any) => pl.id === p.player_id)?.full_name ?? '').toLowerCase().trim();
+          n2 = (allPlayers?.find((pl: any) => pl.id === p.partner_id)?.full_name ?? '').toLowerCase().trim();
+        }
+        return [n1, n2].sort().join(' & ');
+      };
+      const seen = new Map<string, number>();
+      catParts.forEach((p, i) => {
+        const key = pairKey(p);
+        if (!key || key === ' & ') return;
+        if (seen.has(key)) {
+          const prevIdx = seen.get(key)!;
+          const prevDetails = catParts[prevIdx].seed ? `Seed ${catParts[prevIdx].seed}` : `Row ${prevIdx + 1}`;
+          const curDetails = p.seed ? `Seed ${p.seed}` : `Row ${i + 1}`;
+          groups.push([
+            { name: `${catParts[prevIdx].display_name} (reverse pair)`, details: prevDetails, participantId: catParts[prevIdx].id },
+            { name: `${p.display_name} (reverse pair)`, details: curDetails, participantId: p.id },
+          ]);
+        } else {
+          seen.set(key, i);
+        }
+      });
     }
 
     if (groups.length > 0) {
@@ -810,9 +922,24 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                      <h4 className="text-[10px] font-black text-[var(--warning)]/80 uppercase tracking-widest mb-2">Match Group {i+1}</h4>
                      <ul className="space-y-2">
                         {g.map((item, j) => (
-                          <li key={j} className="text-sm flex items-center justify-between font-bold text-slate-700 dark:text-slate-300 before:content-[''] before:w-1.5 before:h-1.5 before:bg-[var(--warning)] before:rounded-full before:mr-2">
-                            <span className="truncate">{item.name}</span>
+                          <li key={j} className="text-sm flex items-center justify-between gap-2 font-bold text-slate-700 dark:text-slate-300 before:content-[''] before:w-1.5 before:h-1.5 before:bg-[var(--warning)] before:rounded-full before:mr-2">
+                            <span className="truncate flex-1">{item.name}</span>
                             <span className="text-[10px] uppercase tracking-widest text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md shrink-0">{item.details}</span>
+                            {item.participantId && (
+                              <button
+                                onClick={async () => {
+                                  const ok = await confirm({ title: "Remove duplicate?", message: `Remove "${item.name}" (${item.details}) from ${duplicateReport!.cat}?`, confirmLabel: "Remove", variant: "danger" });
+                                  if (!ok) return;
+                                  await supabase.from("tournament_participants").delete().eq("id", item.participantId!);
+                                  toast.success("Removed duplicate entry");
+                                  await load();
+                                  setDuplicateReport(null);
+                                }}
+                                className="text-[10px] font-black text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 px-2 py-1 rounded-md transition shrink-0"
+                              >
+                                Remove
+                              </button>
+                            )}
                           </li>
                         ))}
                      </ul>
@@ -823,7 +950,17 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          onClick={() => setTabCat("ALL")}
+          className={`px-4 py-2 rounded-full text-sm font-black transition ${
+            activeCat === "ALL"
+              ? "bg-primary text-primary-foreground shadow-md"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+          }`}
+        >
+          All <span className="opacity-75 ml-1">({Object.values(participants).reduce((s, a) => s + a.length, 0)})</span>
+        </button>
         {(tournament.categories || []).map((cat) => (
           <button
             key={cat}
@@ -845,6 +982,223 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           <p className="text-xs text-slate-400 mt-1">Go to the Setup tab to select categories first.</p>
         </div>
       )}
+
+      {activeCat === "ALL" && (() => {
+        type AllEntry = { name: string; email: string; cats: string[]; linked: boolean; participantIds: { id: string; cat: string }[] };
+        const playerMap = new Map<string, AllEntry>();
+        for (const cat of (tournament.categories || [])) {
+          for (const p of (participants[cat] ?? [])) {
+            const player = p.player_id ? allPlayers?.find(pl => pl.id === p.player_id) : null;
+            const key = p.player_id || (p.display_name ?? "").toLowerCase().split(" & ")[0].trim();
+            if (!key) continue;
+            const existing = playerMap.get(key);
+            if (existing) {
+              if (!existing.cats.includes(cat)) existing.cats.push(cat);
+              existing.participantIds.push({ id: p.id, cat });
+            } else {
+              const name = player?.full_name ?? (p.display_name ?? "Unknown").split(" & ")[0].trim();
+              const email = player ? (player.iisc_email || player.email || "") : (p.email || "");
+              playerMap.set(key, { name, email, cats: [cat], linked: !!p.player_id, participantIds: [{ id: p.id, cat }] });
+            }
+            if (isDoubles(cat)) {
+              const partner = p.partner_id ? allPlayers?.find(pl => pl.id === p.partner_id) : null;
+              const partnerName = partner?.full_name ?? (p.display_name ?? "").split(" & ")[1]?.trim();
+              if (partnerName) {
+                const pKey = p.partner_id || partnerName.toLowerCase();
+                const pExisting = playerMap.get(pKey);
+                if (pExisting) {
+                  if (!pExisting.cats.includes(cat)) pExisting.cats.push(cat);
+                  pExisting.participantIds.push({ id: p.id, cat });
+                } else {
+                  const pEmail = partner ? (partner.iisc_email || partner.email || "") : "";
+                  playerMap.set(pKey, { name: partnerName, email: pEmail, cats: [cat], linked: !!p.partner_id, participantIds: [{ id: p.id, cat }] });
+                }
+              }
+            }
+          }
+        }
+        const allFilterStatus = filterStatus["ALL"] || "all";
+        const allEntriesRaw = [...playerMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+        const allEntries = allEntriesRaw.filter(e => {
+          if (allFilterStatus === "registered") return e.linked;
+          if (allFilterStatus === "external") return !e.linked;
+          return true;
+        });
+        const downloadAllCSV = () => {
+          const header = ["Name", "Email", "Categories", "Status"];
+          const rows = allEntries.map(e => [e.name, e.email, e.cats.join(", "), e.linked ? "Linked" : "External"]);
+          downloadCSV(`${tournament.name.replace(/\s+/g, '_')}_all_participants.csv`, [header, ...rows]);
+        };
+        const checkAllDuplicates = () => {
+          const groups: { name: string; details: string; participantId?: string }[][] = [];
+
+          // 1. Cross-category name duplicates
+          const allParts: { name: string; cat: string; participantId: string }[] = [];
+          for (const cat of (tournament.categories || [])) {
+            for (const p of (participants[cat] ?? [])) {
+              const player = p.player_id ? allPlayers?.find(pl => pl.id === p.player_id) : null;
+              const name = player?.full_name ?? (p.display_name ?? "Unknown").split(" & ")[0].trim();
+              allParts.push({ name, cat, participantId: p.id });
+              if (isDoubles(cat)) {
+                const partner = p.partner_id ? allPlayers?.find(pl => pl.id === p.partner_id) : null;
+                const pName = partner?.full_name ?? (p.display_name ?? "").split(" & ")[1]?.trim();
+                if (pName) allParts.push({ name: pName, cat, participantId: p.id });
+              }
+            }
+          }
+          const seen = new Map<string, { name: string; details: string; participantId: string }[]>();
+          for (const p of allParts) {
+            const key = p.name.toLowerCase().trim();
+            if (!seen.has(key)) seen.set(key, []);
+            seen.get(key)!.push({ name: p.name, details: p.cat, participantId: p.participantId });
+          }
+          groups.push(...[...seen.values()].filter(g => g.length > 1));
+
+          // 2. Same player_id across categories
+          const pidSeen = new Map<string, { cat: string; participantId: string; displayName: string }>();
+          for (const cat of (tournament.categories || [])) {
+            for (const p of (participants[cat] ?? [])) {
+              for (const pid of [p.player_id, p.partner_id].filter(Boolean) as string[]) {
+                const playerName = allPlayers?.find(pl => pl.id === pid)?.full_name ?? pid;
+                const key = pid;
+                if (pidSeen.has(key)) {
+                  const prev = pidSeen.get(key)!;
+                  // Only flag cross-category (within-category is handled by per-cat check)
+                  if (prev.cat !== cat) {
+                    groups.push([
+                      { name: `${playerName} (in ${prev.cat}: ${prev.displayName})`, details: prev.cat, participantId: prev.participantId },
+                      { name: `${playerName} (in ${cat}: ${p.display_name})`, details: cat, participantId: p.id },
+                    ]);
+                  }
+                } else {
+                  pidSeen.set(key, { cat, participantId: p.id, displayName: p.display_name ?? playerName });
+                }
+              }
+            }
+          }
+
+          // 3. Reverse pairs within each doubles category
+          for (const cat of (tournament.categories || [])) {
+            if (!isDoubles(cat)) continue;
+            const catParts = participants[cat] ?? [];
+            const pairKey = (p: any) => {
+              let n1 = '', n2 = '';
+              if (p.display_name?.includes('&')) {
+                [n1, n2] = p.display_name.split('&').map((s: string) => s.trim().toLowerCase());
+              } else {
+                n1 = (allPlayers?.find(pl => pl.id === p.player_id)?.full_name ?? '').toLowerCase().trim();
+                n2 = (allPlayers?.find(pl => pl.id === p.partner_id)?.full_name ?? '').toLowerCase().trim();
+              }
+              return [n1, n2].sort().join(' & ');
+            };
+            const pairSeen = new Map<string, number>();
+            catParts.forEach((p, i) => {
+              const key = pairKey(p);
+              if (!key || key === ' & ') return;
+              if (pairSeen.has(key)) {
+                const prevIdx = pairSeen.get(key)!;
+                groups.push([
+                  { name: `${catParts[prevIdx].display_name} (reverse pair)`, details: cat, participantId: catParts[prevIdx].id },
+                  { name: `${p.display_name} (reverse pair)`, details: cat, participantId: p.id },
+                ]);
+              } else {
+                pairSeen.set(key, i);
+              }
+            });
+          }
+
+          if (!groups.length) { toast.success("No duplicates found across categories"); return; }
+          setDuplicateReport({ cat: "ALL", groups });
+        };
+        return (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="text-sm font-black text-slate-700 dark:text-foreground">{allEntries.length} players</span>
+              <select
+                value={allFilterStatus}
+                onChange={(e) => setFilterStatus(prev => ({ ...prev, ALL: e.target.value as any }))}
+                className="text-xs font-bold px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="all">All</option>
+                <option value="registered">Linked Only</option>
+                <option value="external">External Only</option>
+              </select>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <button onClick={checkAllDuplicates} className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[var(--warning)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md">
+                <AlertCircle className="w-3 h-3" /> Check Duplicates
+              </button>
+              <button onClick={downloadAllCSV} className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md">
+                <Download className="w-3 h-3" /> Export CSV
+              </button>
+              <label className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold cursor-pointer transition bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-[var(--info)] ${allCatImporting ? "opacity-50 pointer-events-none" : ""}`}>
+                <Upload className="w-3 h-3" />
+                {allCatImporting ? "Importing..." : "Import"}
+                <input type="file" accept=".csv" className="hidden" disabled={allCatImporting}
+                  onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleAllCategoryCSV(f); e.target.value = ""; }} />
+              </label>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {allEntries.map((entry, idx) => (
+                <div key={idx} className="flex items-center gap-3 py-2.5">
+                  <span className="text-[10px] font-black text-muted-foreground w-6 text-center shrink-0">{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-800 dark:text-foreground truncate">{entry.name}</span>
+                      {!entry.linked && <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)]/20 px-1.5 py-0.5 rounded-full shrink-0">external</span>}
+                    </div>
+                    {entry.email && (
+                      <div className={`text-[10px] truncate ${entry.linked ? "text-slate-400" : "text-[var(--info)]"}`}>{entry.email}</div>
+                    )}
+                  </div>
+                  {!entry.linked && (
+                    <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/50 shrink-0">
+                      <button
+                        onClick={() => {
+                          const firstPart = entry.participantIds[0];
+                          if (firstPart) {
+                            setTabCat(firstPart.cat);
+                            setTimeout(() => {
+                              setEditingName({ id: firstPart.id, name1: entry.name, name2: "" });
+                              setLinkingId(null);
+                            }, 100);
+                          }
+                        }}
+                        title="Edit Name"
+                        className="p-1.5 text-slate-500 hover:text-[var(--info)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const firstPart = entry.participantIds[0];
+                          if (firstPart) {
+                            setTabCat(firstPart.cat);
+                            setTimeout(() => {
+                              setLinkingId(firstPart.id);
+                              setLinkSearch("");
+                              setEditingName(null);
+                            }, 100);
+                          }
+                        }}
+                        title="Link to registered player"
+                        className="p-1.5 text-slate-500 hover:text-[var(--info)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition"
+                      >
+                        <Link className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex gap-1 shrink-0">
+                    {entry.cats.map(c => (
+                      <span key={c} className="text-[9px] font-black px-1.5 py-0.5 rounded bg-primary/10 text-primary">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {(tournament.categories || []).includes(activeCat) && (() => {
         const cat = activeCat;
@@ -874,7 +1228,11 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           return true; // XD — allow both
         };
         const filteredPlayers = (allPlayers ?? []).filter(
-          (p) => !p.is_guest && genderFilter(p) && p.full_name.toLowerCase().includes(catSearch.toLowerCase())
+          (p) => {
+            if (p.is_guest || !genderFilter(p)) return false;
+            const q = catSearch.toLowerCase();
+            return p.full_name.toLowerCase().includes(q) || (p.email && p.email.toLowerCase().includes(q)) || (p.iisc_email && p.iisc_email.toLowerCase().includes(q));
+          }
         );
         const filteredPartners = (allPlayers ?? []).filter(
           (p) => !p.is_guest && genderFilter(p) && p.full_name.toLowerCase().includes(catPartnerSearch.toLowerCase())
@@ -908,8 +1266,14 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                       <option value="registered">Registered Only</option>
                       <option value="external">External Only</option>
                     </select>
+                    <button
+                      onClick={() => { setBulkCat(cat); setBulkText(""); setAdding(null); }}
+                      className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-[var(--info)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    >
+                      <Upload className="w-3 h-3" /> Import
+                    </button>
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => checkDuplicates(cat, parts, doubles)}
@@ -936,10 +1300,10 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                     <span className="text-sm font-bold text-primary flex-1">
                       {selectedParts.filter(id => parts.some(p => p.id === id)).length} selected in {cat}
                     </span>
-                    <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-[var(--warning)] bg-[var(--warning)] hover:bg-[var(--warning)] rounded-lg transition flex items-center gap-1">
+                    <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-black bg-[var(--warning)] hover:opacity-80 rounded-lg transition flex items-center gap-1">
                       <Unlink className="w-3 h-3" /> Unlink
                     </button>
-                    <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-[var(--danger)] bg-[var(--danger)] hover:bg-[var(--danger)] rounded-lg transition flex items-center gap-1">
+                    <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-white bg-[var(--danger)] hover:opacity-80 rounded-lg transition flex items-center gap-1">
                       <X className="w-3 h-3" /> Delete
                     </button>
                     <button onClick={() => setSelectedParts(prev => prev.filter(id => !parts.some(p => p.id === id)))} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
@@ -1035,11 +1399,14 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                                       <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
                                     )}
                                   </div>
-                                  {player?.department && (
-                                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                                      {getDepartmentAcronym(player.department)}
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const emailDisplay = player ? (player.iisc_email || player.email) : p.email;
+                                    const dept = player?.department ? getDepartmentAcronym(player.department) : null;
+                                    const info = [dept, emailDisplay].filter(Boolean).join(" · ");
+                                    return info ? (
+                                      <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 truncate">{info}</div>
+                                    ) : null;
+                                  })()}
                                 </div>
                               );
                             }
@@ -1150,13 +1517,14 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                             {linkSearch && (
                               <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
                                 {(allPlayers ?? [])
-                                  .filter((pl) => !pl.is_guest && genderFilter(pl) && pl.full_name.toLowerCase().includes(linkSearch.toLowerCase()))
+                                  .filter((pl) => { const q = linkSearch.toLowerCase(); return !pl.is_guest && genderFilter(pl) && (pl.full_name.toLowerCase().includes(q) || (pl.email && pl.email.toLowerCase().includes(q)) || (pl.iisc_email && pl.iisc_email.toLowerCase().includes(q))); })
                                   .slice(0, 8)
                                   .map((pl) => (
                                     <button key={pl.id}
                                       className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-[var(--info)]/30 transition"
                                       onClick={() => linkParticipantToPlayer(p.id, pl.id, pl.full_name)}>
-                                      {pl.full_name}
+                                      <span>{pl.full_name}</span>
+                                      {(pl.iisc_email || pl.email) && <span className="ml-2 text-[10px] text-slate-400">{pl.iisc_email || pl.email}</span>}
                                     </button>
                                   ))}
                               </div>
@@ -1174,13 +1542,14 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                               {linkSearch2 && (
                                 <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
                                   {(allPlayers ?? [])
-                                    .filter((pl) => !pl.is_guest && genderFilter(pl) && pl.full_name.toLowerCase().includes(linkSearch2.toLowerCase()))
+                                    .filter((pl) => { const q = linkSearch2.toLowerCase(); return !pl.is_guest && genderFilter(pl) && (pl.full_name.toLowerCase().includes(q) || (pl.email && pl.email.toLowerCase().includes(q)) || (pl.iisc_email && pl.iisc_email.toLowerCase().includes(q))); })
                                     .slice(0, 8)
                                     .map((pl) => (
                                       <button key={pl.id}
                                         className="w-full text-left px-3 py-2 text-xs hover:bg-purple-50 dark:hover:bg-purple-950/30 transition"
                                         onClick={() => linkParticipantToPartner(p.id, pl.id, pl.full_name)}>
-                                        {pl.full_name}
+                                        <span>{pl.full_name}</span>
+                                        {(pl.iisc_email || pl.email) && <span className="ml-2 text-[10px] text-slate-400">{pl.iisc_email || pl.email}</span>}
                                       </button>
                                     ))}
                                 </div>
@@ -1241,7 +1610,8 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                                       sessionStorage.setItem(`tp_p1_${cat}`, JSON.stringify({ id: pl.id, name: pl.full_name }));
                                     }
                                   }}>
-                                  {pl.full_name}
+                                  <span>{pl.full_name}</span>
+                                  {(pl.iisc_email || pl.email) && <span className="ml-2 text-[10px] text-slate-400">{pl.iisc_email || pl.email}</span>}
                                 </button>
                               ))}
                             </div>
@@ -1398,10 +1768,6 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                     <button onClick={() => setAdding(cat)}
                       className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition flex items-center justify-center gap-1">
                       <Plus className="w-3.5 h-3.5" /> Add Participant
-                    </button>
-                    <button onClick={() => { setBulkCat(cat); setBulkText(""); setAdding(null); }}
-                      className="px-3 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-[var(--info)] hover:text-[var(--info)] transition flex items-center justify-center gap-1">
-                      <Upload className="w-3.5 h-3.5" /> Bulk / CSV
                     </button>
                   </div>
                 )}

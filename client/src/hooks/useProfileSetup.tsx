@@ -332,7 +332,22 @@ export function useProfileSetup() {
 
   const saveNow = useCallback(async (silent = false, nextTab?: string) => {
     if (!session) return;
-    
+
+    if (!silent) {
+      const missing: string[] = [];
+      if (!fullName.trim()) missing.push("Full Name");
+      if (!isGuest && !iiscEmail.trim()) missing.push("IISc Email");
+      if (!contactNumber.trim()) missing.push("Contact Number");
+      if (!gender) missing.push("Gender");
+      if (!joinedYear.trim()) missing.push("Joined Year");
+      if (!department) missing.push("Department");
+      if (missing.length > 0) {
+        toast.error("Required fields missing", { description: `Please fill: ${missing.join(", ")}` });
+        if (activeTab !== "basic") setActiveTab("basic" as any);
+        return;
+      }
+    }
+
     if (iiscEmail && !silent) {
       const e = iiscEmail.toLowerCase();
       if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
@@ -401,7 +416,7 @@ export function useProfileSetup() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation, iiscEmail]);
+  }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation, iiscEmail, fullName, isGuest, contactNumber, gender, joinedYear, department, activeTab]);
 
   // Auto-save: debounce 1.5s after any field change (skip on first load)
   useEffect(() => {
