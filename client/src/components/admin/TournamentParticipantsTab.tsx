@@ -541,6 +541,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     setBulkImporting(true);
     let seed = (participants[cat]?.length ?? 0) + 1;
     for (const entry of entries) {
+      if (!entry.name1) continue;
       const playerId = entry.match1?.id ?? null;
       const partnerId = entry.match2?.id ?? null;
       const displayName = isDoubles(cat)

@@ -198,10 +198,16 @@ export default function HostTournamentWizard() {
 
     dataRows.forEach((row, i) => {
       const cat = (row[0] ?? '').trim().toUpperCase();
-      const p1 = norm(row[1] ?? '');
+      const rawP1 = (row[1] ?? '').trim();
+      const p1 = tbd.test(rawP1) ? '' : norm(rawP1);
       const p2Raw = (row[3] ?? '').trim();
       const p2 = tbd.test(p2Raw) ? '' : norm(p2Raw);
       const doubles = ['MD', 'WD', 'XD'].includes(cat);
+
+      if (!p1) {
+        warnings.set(i, 'Placeholder row — will be skipped');
+        return;
+      }
 
       if (doubles && p1 && p2) {
         const pairKey = `${cat}:${[p1, p2].sort().join('+')}`;
@@ -342,11 +348,14 @@ export default function HostTournamentWizard() {
           for (const row of dataRows) {
             const cat = (row[0] ?? '').trim().toUpperCase();
             if (!cat) continue;
-            const p1Name = (row[1] ?? '').trim();
-            const p1Email = (row[2] ?? '').trim();
+            const placeholder = /^(na|n\/a|tbd|ytd|tba|-|none|)$/i;
+            const rawP1Name = (row[1] ?? '').trim();
+            const p1Name = placeholder.test(rawP1Name) ? '' : rawP1Name;
+            const p1Email = placeholder.test((row[2] ?? '').trim()) ? '' : (row[2] ?? '').trim();
             const rawP2Name = (row[3] ?? '').trim();
-            const p2Name = /^(na|n\/a|tbd|ytd|tba|-|none|)$/i.test(rawP2Name) ? '' : rawP2Name;
-            const p2Email = (row[4] ?? '').trim();
+            const p2Name = placeholder.test(rawP2Name) ? '' : rawP2Name;
+            const p2Email = placeholder.test((row[4] ?? '').trim()) ? '' : (row[4] ?? '').trim();
+            if (!p1Name && !p1Email) continue;
             const seedVal = row[5] ? parseInt(row[5]) : null;
             const m1 = matchPlayer(p1Name, p1Email);
             const m2 = matchPlayer(p2Name, p2Email);
