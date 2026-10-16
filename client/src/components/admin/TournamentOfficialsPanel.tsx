@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { toast } from "sonner";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
-import { Loader2, Plus, Trash2, Gavel, Flag, UserCog, ShieldCheck } from "lucide-react";
+import { Loader2, Plus, Trash2, Gavel, Flag, UserCog, ShieldCheck, X } from "lucide-react";
 
 type OfficialRole = "ORGANIZER" | "UMPIRE" | "REFEREE";
 
@@ -30,7 +30,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [roles, setRoles] = useState<OfficialRole[]>(["UMPIRE"]);
-  const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const canManage = isAdmin || tournament.created_by === profile?.id;
@@ -70,35 +70,32 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   };
 
   const addOfficial = async () => {
-    if (!selectedPlayer) {
-      toast.error("Pick a player first");
+    if (selectedPlayers.length === 0) {
+      toast.error("Pick at least one player");
       return;
     }
     if (roles.length === 0) {
       toast.error("Select at least one role");
       return;
     }
-    const newRoles = roles.filter((r) => !officials.some((o) => o.user_id === selectedPlayer && o.role === r));
-    if (newRoles.length === 0) {
-      toast.error("That player already holds all selected roles");
+    const rows = selectedPlayers.flatMap((pid) =>
+      roles
+        .filter((r) => !officials.some((o) => o.user_id === pid && o.role === r))
+        .map((r) => ({ tournament_id: tournament.id, user_id: pid, role: r, assigned_by: profile?.id ?? null })),
+    );
+    if (rows.length === 0) {
+      toast.error("All selected players already hold the selected roles");
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("tournament_officials").insert(
-      newRoles.map((r) => ({
-        tournament_id: tournament.id,
-        user_id: selectedPlayer,
-        role: r,
-        assigned_by: profile?.id ?? null,
-      })),
-    );
+    const { error } = await supabase.from("tournament_officials").insert(rows);
     setSaving(false);
     if (error) {
       toast.error(error.message || "Could not assign official");
       return;
     }
-    toast.success(newRoles.length > 1 ? `Assigned ${newRoles.length} roles` : "Official assigned");
-    setSelectedPlayer("");
+    toast.success(`Assigned ${rows.length} role${rows.length > 1 ? "s" : ""}`);
+    setSelectedPlayers([]);
     load();
   };
 
@@ -167,24 +164,50 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
             </div>
 
             {/* Player picker + add */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1 min-w-0">
-                <PlayerSelect
-                  value={selectedPlayer}
-                  onChange={setSelectedPlayer}
-                  players={players}
-                  placeholder="Search a player to assign…"
-                  className="w-full text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/40"
-                />
+            <div className="space-y-2">
+              {selectedPlayers.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedPlayers.map((pid) => {
+                    const p = players.find((x) => x.id === pid);
+                    return (
+                      <span
+                        key={pid}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/15 text-primary text-xs font-bold"
+                      >
+                        {p?.full_name ?? "Unknown"}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPlayers((prev) => prev.filter((x) => x !== pid))}
+                          className="hover:text-rose-500 transition"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 min-w-0">
+                  <PlayerSelect
+                    value=""
+                    onChange={(id) => {
+                      if (id && !selectedPlayers.includes(id)) setSelectedPlayers((prev) => [...prev, id]);
+                    }}
+                    players={players.filter((p) => !selectedPlayers.includes(p.id))}
+                    placeholder="Search a player to assign…"
+                    className="w-full text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+                <button
+                  onClick={addOfficial}
+                  disabled={saving || selectedPlayers.length === 0}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition disabled:opacity-50 shrink-0"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  <span>Assign</span>
+                </button>
               </div>
-              <button
-                onClick={addOfficial}
-                disabled={saving || !selectedPlayer}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition disabled:opacity-50 shrink-0"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                <span>Assign</span>
-              </button>
             </div>
           </div>
         )}
