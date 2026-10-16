@@ -1778,7 +1778,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                           {entries.map((e, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
                               <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-[var(--warning)]"}`} />
-                              <span className="flex-1 text-muted-foreground dark:text-slate-300 truncate">{e.raw}</span>
+                              <span className="flex-1 truncate">
+                                <span className="font-bold text-slate-800 dark:text-foreground">{e.name1}</span>
+                                {e.email1 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email1}</span>}
+                                {e.name2 && <><span className="text-muted-foreground mx-1">&</span><span className="font-bold text-slate-800 dark:text-foreground">{e.name2}</span></>}
+                                {e.email2 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email2}</span>}
+                              </span>
                               <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-[var(--warning)]"}`}>
                                 {e.match1 ? "Found" : "External"}
                               </span>
