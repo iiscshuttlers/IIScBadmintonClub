@@ -488,37 +488,24 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         
         let name1 = "", name2 = "", email1 = "", email2 = "";
         
-        if (validParts.length >= 6) {
-           name1 = validParts[0]; email1 = validParts[1] || validParts[2];
-           name2 = validParts[3]; email2 = validParts[4] || validParts[5];
+        const tbd = /^(na|n\/a|tbd|ytd|tba|-|none)$/i;
+        const clean = (v: string) => tbd.test(v) ? "" : v;
+        if (validParts.length >= 4) {
+           const emails = validParts.filter(p => p.includes("@"));
+           const names = validParts.filter(p => !p.includes("@")).map(clean).filter(Boolean);
+           name1 = names[0] || "";
+           name2 = names[1] || "";
+           email1 = emails[0] || "";
+           email2 = emails[1] || "";
         } else {
-           let state = 1; 
            for (const p of validParts) {
-             const isEmail = p.includes("@");
-             if (state === 1) {
-                if (!name1 && !isEmail) { name1 = p; }
-                else if (isEmail) {
-                   if (!email1) email1 = p;
-                } else {
-                   state = 2;
-                   name2 = p;
-                }
-             } else if (state === 2) {
-                if (isEmail) {
-                   if (!email2) email2 = p;
-                } else {
-                   if (!name2) name2 = p;
-                   else name2 += " " + p;
-                }
-             }
+             if (p.includes("@")) { if (!email1) email1 = p; else if (!email2) email2 = p; }
+             else { const c = clean(p); if (c) { if (!name1) name1 = c; else if (!name2) name2 = c; } }
            }
         }
 
-        const tbd = /^(na|n\/a|tbd|ytd|tba|-|none)$/i;
-        if (tbd.test(name1)) name1 = "";
-        if (tbd.test(name2)) name2 = "";
-        if (tbd.test(email1) || !email1.includes("@")) email1 = "";
-        if (tbd.test(email2) || !email2.includes("@")) email2 = "";
+        if (!email1.includes("@")) email1 = "";
+        if (!email2.includes("@")) email2 = "";
         const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
         const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
         return { raw: line, name1, name2, email1, email2, match1, match2 };
