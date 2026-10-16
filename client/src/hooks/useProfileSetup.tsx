@@ -333,25 +333,25 @@ export function useProfileSetup() {
   const saveNow = useCallback(async (silent = false, nextTab?: string) => {
     if (!session) return;
 
-    if (!silent) {
-      const missing: string[] = [];
-      if (!fullName.trim()) missing.push("Full Name");
-      if (!isGuest && !iiscEmail.trim()) missing.push("IISc Email");
-      if (!contactNumber.trim()) missing.push("Contact Number");
-      if (!gender) missing.push("Gender");
-      if (!joinedYear.trim()) missing.push("Joined Year");
-      if (!department) missing.push("Department");
-      if (missing.length > 0) {
+    const missing: string[] = [];
+    if (!fullName.trim()) missing.push("Full Name");
+    if (!isGuest && !iiscEmail.trim()) missing.push("IISc Email");
+    if (!contactNumber.trim()) missing.push("Contact Number");
+    if (!gender) missing.push("Gender");
+    if (!joinedYear.trim()) missing.push("Joined Year");
+    if (!department) missing.push("Department");
+    if (missing.length > 0) {
+      if (!silent) {
         toast.error("Required fields missing", { description: `Please fill: ${missing.join(", ")}` });
         if (activeTab !== "basic") setActiveTab("basic" as any);
-        return;
       }
+      return;
     }
 
-    if (iiscEmail && !silent) {
+    if (iiscEmail) {
       const e = iiscEmail.toLowerCase();
       if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
-        toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
+        if (!silent) toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
         return;
       }
     }
