@@ -1,5 +1,17 @@
 [
   {
+    "versionCode": 423,
+    "versionName": "4.23",
+    "date": "2026-10-16T06:58:19.323Z",
+    "changes": [
+      "- fix(import): clean placeholder names per-field before concatenation",
+      "- feat(participants): Select All checkboxes in All tab + fix placeholder skip in CSV import",
+      "- fix(import): skip placeholder names (TBD/NA/YTD) in both player1 and player2",
+      "- feat(wizard): CSV import with email columns, duplicate detection, and host RLS",
+      "- feat: certificate improvements — IISc seal, Mixed Doubles label, 4K quality, async fonts, white screen fix, Android PDF open"
+    ]
+  },
+  {
     "versionCode": 422,
     "versionName": "4.22",
     "date": "2026-10-15T10:42:34.250Z",

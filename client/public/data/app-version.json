@@ -1,6 +1,6 @@
 {
-  "versionCode": 422,
-  "versionName": "4.22",
+  "versionCode": 423,
+  "versionName": "4.23",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "Version 4.22 released with bug fixes and performance improvements."
+  "changelog": "- fix(import): clean placeholder names per-field before concatenation\n- feat(participants): Select All checkboxes in All tab + fix placeholder skip in CSV import\n- fix(import): skip placeholder names (TBD/NA/YTD) in both player1 and player2\n- feat(wizard): CSV import with email columns, duplicate detection, and host RLS\n- feat: certificate improvements — IISc seal, Mixed Doubles label, 4K quality, async fonts, white screen fix, Android PDF open"
 }
