@@ -45,7 +45,18 @@ export function PlayerSelect({
   const isSearchUnchanged = selectedPlayer && search === selectedPlayer.full_name;
   const filtered = isSearchUnchanged
     ? players
-    : players.filter((p) => isFuzzyMatch(search, p.full_name));
+    : players.filter((p) => isFuzzyMatch(search, p.full_name))
+        .sort((a, b) => {
+          if (!search) return 0;
+          const s = search.toLowerCase();
+          const aInc = a.full_name.toLowerCase().includes(s);
+          const bInc = b.full_name.toLowerCase().includes(s);
+          if (aInc !== bInc) return aInc ? -1 : 1;
+          const aStart = a.full_name.toLowerCase().startsWith(s);
+          const bStart = b.full_name.toLowerCase().startsWith(s);
+          if (aStart !== bStart) return aStart ? -1 : 1;
+          return 0;
+        });
 
   useEffect(() => {
     setSelectedIndex(-1);
@@ -97,7 +108,7 @@ export function PlayerSelect({
         className={className || "w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-primary"}
       />
       {isOpen && (
-        <div className="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+        <div className="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-72 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="p-2 text-xs text-muted-foreground text-center">No players found</div>
           ) : (
@@ -112,8 +123,8 @@ export function PlayerSelect({
                 }}
                 className={`p-2 text-xs font-bold cursor-pointer flex items-center justify-between gap-2 ${
                   selectedIndex === idx
-                    ? "bg-primary/15 dark:bg-primary/60 text-primary dark:text-primary/30"
-                    : "hover:bg-primary/10 dark:hover:bg-primary/80/30 text-muted-foreground dark:text-slate-200"
+                    ? "bg-primary text-white"
+                    : "hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <span className="truncate">{p.full_name}</span>

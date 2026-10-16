@@ -29,7 +29,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [role, setRole] = useState<OfficialRole>("UMPIRE");
+  const [roles, setRoles] = useState<OfficialRole[]>(["UMPIRE"]);
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -65,28 +65,39 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
     load();
   }, [load]);
 
+  const toggleRole = (r: OfficialRole) => {
+    setRoles((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
+  };
+
   const addOfficial = async () => {
     if (!selectedPlayer) {
       toast.error("Pick a player first");
       return;
     }
-    if (officials.some((o) => o.user_id === selectedPlayer && o.role === role)) {
-      toast.error("That player already holds this role");
+    if (roles.length === 0) {
+      toast.error("Select at least one role");
+      return;
+    }
+    const newRoles = roles.filter((r) => !officials.some((o) => o.user_id === selectedPlayer && o.role === r));
+    if (newRoles.length === 0) {
+      toast.error("That player already holds all selected roles");
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("tournament_officials").insert({
-      tournament_id: tournament.id,
-      user_id: selectedPlayer,
-      role,
-      assigned_by: profile?.id ?? null,
-    });
+    const { error } = await supabase.from("tournament_officials").insert(
+      newRoles.map((r) => ({
+        tournament_id: tournament.id,
+        user_id: selectedPlayer,
+        role: r,
+        assigned_by: profile?.id ?? null,
+      })),
+    );
     setSaving(false);
     if (error) {
       toast.error(error.message || "Could not assign official");
       return;
     }
-    toast.success("Official assigned");
+    toast.success(newRoles.length > 1 ? `Assigned ${newRoles.length} roles` : "Official assigned");
     setSelectedPlayer("");
     load();
   };
@@ -131,12 +142,12 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {ROLES.map((r) => {
                 const Icon = r.icon;
-                const active = role === r.key;
+                const active = roles.includes(r.key);
                 return (
                   <button
                     key={r.key}
                     type="button"
-                    onClick={() => setRole(r.key)}
+                    onClick={() => toggleRole(r.key)}
                     className={`flex items-start gap-2 rounded-xl border p-3 text-left transition-colors ${
                       active
                         ? "border-primary bg-primary/10"

@@ -419,6 +419,16 @@ export default function HostTournamentWizard() {
         .forEach(k => localStorage.removeItem(k));
 
         
+      // Auto-assign creator as organizer
+      if (data?.id && session.user.id) {
+        await supabase.from("tournament_officials").insert({
+          tournament_id: data.id,
+          user_id: session.user.id,
+          role: "ORGANIZER",
+          assigned_by: session.user.id,
+        });
+      }
+
       toast.success("Tournament created successfully!");
       if (data?.id) {
         navigate(`/tournament-setup/${data.id}`);
