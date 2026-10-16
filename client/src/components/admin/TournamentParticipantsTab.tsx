@@ -517,6 +517,8 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         const tbd = /^(na|n\/a|tbd|ytd|tba|-|none)$/i;
         if (tbd.test(name1)) name1 = "";
         if (tbd.test(name2)) name2 = "";
+        if (tbd.test(email1) || !email1.includes("@")) email1 = "";
+        if (tbd.test(email2) || !email2.includes("@")) email2 = "";
         const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
         const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
         return { raw: line, name1, name2, email1, email2, match1, match2 };
@@ -624,6 +626,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       const entries = parseBulkLines(text, cat);
       let seed = (participants[cat]?.length ?? 0) + 1;
       for (const entry of entries) {
+        if (!entry.name1) continue;
         const playerId = entry.match1?.id ?? null;
         const partnerId = entry.match2?.id ?? null;
         const displayName = isDoubles(cat)
@@ -1114,6 +1117,20 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         return (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2 mb-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const allIds = allEntries.flatMap(e => e.participantIds.map(p => p.id));
+                  setSelectedParts(prev =>
+                    allIds.every(id => prev.includes(id))
+                      ? prev.filter(id => !allIds.includes(id))
+                      : Array.from(new Set([...prev, ...allIds]))
+                  );
+                }}
+                className="text-xs font-bold text-primary hover:underline px-2 py-1 bg-primary/10 rounded-md"
+              >
+                {allEntries.length > 0 && allEntries.flatMap(e => e.participantIds.map(p => p.id)).every(id => selectedParts.includes(id)) ? "Deselect All" : "Select All"}
+              </button>
               <span className="text-sm font-black text-slate-700 dark:text-foreground">{allEntries.length} players</span>
               <select
                 value={allFilterStatus}
@@ -1139,9 +1156,37 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                   onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleAllCategoryCSV(f); e.target.value = ""; }} />
               </label>
             </div>
+            {selectedParts.length > 0 && allEntries.some(e => e.participantIds.some(p => selectedParts.includes(p.id))) && (
+              <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl mb-4">
+                <span className="text-sm font-bold text-primary flex-1">
+                  {allEntries.filter(e => e.participantIds.some(p => selectedParts.includes(p.id))).length} selected
+                </span>
+                <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-black bg-[var(--warning)] hover:opacity-80 rounded-lg transition flex items-center gap-1">
+                  <Unlink className="w-3 h-3" /> Unlink
+                </button>
+                <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-white bg-[var(--danger)] hover:opacity-80 rounded-lg transition flex items-center gap-1">
+                  <X className="w-3 h-3" /> Delete
+                </button>
+                <button onClick={() => { const allIds = allEntries.flatMap(e => e.participantIds.map(p => p.id)); setSelectedParts(prev => prev.filter(id => !allIds.includes(id))); }} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+                  Clear
+                </button>
+              </div>
+            )}
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {allEntries.map((entry, idx) => (
                 <div key={idx} className="flex items-center gap-3 py-2.5">
+                  <input type="checkbox"
+                    checked={entry.participantIds.every(p => selectedParts.includes(p.id))}
+                    onChange={() => {
+                      const ids = entry.participantIds.map(p => p.id);
+                      setSelectedParts(prev =>
+                        ids.every(id => prev.includes(id))
+                          ? prev.filter(id => !ids.includes(id))
+                          : Array.from(new Set([...prev, ...ids]))
+                      );
+                    }}
+                    className="accent-primary w-4 h-4 shrink-0"
+                  />
                   <span className="text-[10px] font-black text-muted-foreground w-6 text-center shrink-0">{idx + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
