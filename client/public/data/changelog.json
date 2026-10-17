@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 425,
+    "versionName": "4.25",
+    "date": "2026-10-17T18:17:45.611Z",
+    "changes": [
+      "fix: scoring rules input clearing, mobile clipboard/CSV download"
+    ]
+  },
+  {
     "versionCode": 423,
     "versionName": "4.23",
     "date": "2026-10-16T06:58:19.323Z",
