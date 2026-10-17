@@ -130,8 +130,9 @@ export function UmpireTab({
         if (data?.value && typeof data.value === 'object') {
           const myMatches = Object.values(data.value).filter(
             (m: any) => m && m.umpireId === session.user.id
+              && (!tournamentId || m.tournamentId === tournamentId)
           ) as BwfMatchState[];
-          
+
           if (myMatches.length > 0) {
             setActiveMatches((prev) => {
               const existingIds = new Set(prev.map(p => (p as any).id));

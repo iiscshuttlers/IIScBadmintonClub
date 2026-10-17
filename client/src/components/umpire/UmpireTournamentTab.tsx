@@ -123,8 +123,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     if (!directScoreFor || !session?.user?.id) return;
 
     const filledSets = directSets.filter(s => s.t1.trim() !== "" || s.t2.trim() !== "");
-    if (filledSets.length < 2) {
-      toast.error("Enter at least 2 sets");
+    const minSets = (directScoreFor.best_of_sets ?? 3) === 1 ? 1 : 2;
+    if (filledSets.length < minSets) {
+      toast.error(`Enter at least ${minSets} set${minSets > 1 ? "s" : ""}`);
       return;
     }
 
