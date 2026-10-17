@@ -56,6 +56,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const [contactMap, setContactMap] = useState<Record<string, ContactInfo>>({});
   const [officials, setOfficials] = useState<ContactInfo[]>([]);
   const [expandedContacts, setExpandedContacts] = useState<Record<string, boolean>>({});
+  const [showAllContacts, setShowAllContacts] = useState(false);
   const [myRoles, setMyRoles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -464,6 +465,61 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         ))}
         </div>
       </div>
+
+      {(isAdmin || myRoles.size > 0) && (
+        <div className="mt-1">
+          <button
+            onClick={() => setShowAllContacts(!showAllContacts)}
+            className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+          >
+            <Phone className="w-3 h-3" />
+            {showAllContacts ? "Hide Contacts" : "All Contacts"}
+            {showAllContacts ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          {showAllContacts && (
+            <div className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 p-3 shadow-sm max-h-72 overflow-y-auto">
+              {Object.keys(contactMap).length === 0 && officials.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No contacts loaded yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {officials.length > 0 && (
+                    <div>
+                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Officials</h5>
+                      <div className="space-y-0.5">
+                        {officials.map((o) => (
+                          <div key={o.id} className="flex items-center gap-2 text-xs py-1 px-1">
+                            <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{o.name} {o.role && <span className="text-muted-foreground font-normal">· {o.role}</span>}</span>
+                            {o.contact_number ? (
+                              <a href={`tel:${o.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{o.contact_number}</a>
+                            ) : (
+                              <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Players</h5>
+                    <div className="space-y-0.5">
+                      {Object.values(contactMap).map((c) => (
+                        <div key={c.id} className="flex items-center gap-2 text-xs py-1 px-1">
+                          <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
+                          {c.contact_number ? (
+                            <a href={`tel:${c.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{c.contact_number}</a>
+                          ) : (
+                            <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {filtered.length > 0 ? (
         <div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl p-1 sm:p-2">
