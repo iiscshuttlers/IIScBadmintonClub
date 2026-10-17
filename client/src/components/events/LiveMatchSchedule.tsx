@@ -121,7 +121,10 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   useEffect(() => {
     if (!tournamentId) return;
     supabase.from("tournaments").select("status").eq("id", tournamentId).single().then(({ data }) => {
-      if (data?.status === "COMPLETED" || data?.status === "ARCHIVED") setTournamentOver(true);
+      if (data?.status === "COMPLETED" || data?.status === "ARCHIVED") {
+        setTournamentOver(true);
+        supabase.from("site_data").delete().eq("key", `tournament_contacts_${tournamentId}`);
+      }
     });
   }, [tournamentId]);
 
