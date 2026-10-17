@@ -1,6 +1,6 @@
 {
-  "versionCode": 425,
-  "versionName": "4.25",
+  "versionCode": 426,
+  "versionName": "4.26",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "fix: scoring rules input clearing, mobile clipboard/CSV download"
+  "changelog": "feat: contact opponent/officials from match cards"
 }
