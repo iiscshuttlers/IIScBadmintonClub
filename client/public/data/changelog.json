@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 427,
+    "versionName": "4.27",
+    "date": "2026-10-17T19:13:32.619Z",
+    "changes": [
+      "feat: phone editor for participants + contact buttons"
+    ]
+  },
+  {
     "versionCode": 426,
     "versionName": "4.26",
     "date": "2026-10-17T19:09:31.653Z",

@@ -1,6 +1,6 @@
 {
-  "versionCode": 426,
-  "versionName": "4.26",
+  "versionCode": 427,
+  "versionName": "4.27",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "feat: contact opponent/officials from match cards"
+  "changelog": "feat: phone editor for participants + contact buttons"
 }
