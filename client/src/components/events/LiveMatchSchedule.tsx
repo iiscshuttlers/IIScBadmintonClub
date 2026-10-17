@@ -57,6 +57,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const [officials, setOfficials] = useState<ContactInfo[]>([]);
   const [expandedContacts, setExpandedContacts] = useState<Record<string, boolean>>({});
   const [showAllContacts, setShowAllContacts] = useState(false);
+  const [contactSearch, setContactSearch] = useState("");
+  const [tournamentOver, setTournamentOver] = useState(false);
   const [myRoles, setMyRoles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -114,6 +116,13 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         setSchedMatches((data as ScheduledMatch[]) ?? []);
         setLoading(false);
       });
+  }, [tournamentId]);
+
+  useEffect(() => {
+    if (!tournamentId) return;
+    supabase.from("tournaments").select("status").eq("id", tournamentId).single().then(({ data }) => {
+      if (data?.status === "COMPLETED" || data?.status === "ARCHIVED") setTournamentOver(true);
+    });
   }, [tournamentId]);
 
   // Load contacts setting, player contacts, and officials
@@ -466,60 +475,75 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         </div>
       </div>
 
-      {(isAdmin || myRoles.size > 0) && (
-        <div className="mt-1">
-          <button
-            onClick={() => setShowAllContacts(!showAllContacts)}
-            className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-          >
-            <Phone className="w-3 h-3" />
-            {showAllContacts ? "Hide Contacts" : "All Contacts"}
-            {showAllContacts ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-          {showAllContacts && (
-            <div className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 p-3 shadow-sm max-h-72 overflow-y-auto">
-              {Object.keys(contactMap).length === 0 && officials.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">No contacts loaded yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {officials.length > 0 && (
-                    <div>
-                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Officials</h5>
-                      <div className="space-y-0.5">
-                        {officials.map((o) => (
-                          <div key={o.id} className="flex items-center gap-2 text-xs py-1 px-1">
-                            <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{o.name} {o.role && <span className="text-muted-foreground font-normal">· {o.role}</span>}</span>
-                            {o.contact_number ? (
-                              <a href={`tel:${o.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{o.contact_number}</a>
-                            ) : (
-                              <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div>
-                    <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Players</h5>
-                    <div className="space-y-0.5">
-                      {Object.values(contactMap).map((c) => (
-                        <div key={c.id} className="flex items-center gap-2 text-xs py-1 px-1">
-                          <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
-                          {c.contact_number ? (
-                            <a href={`tel:${c.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{c.contact_number}</a>
-                          ) : (
-                            <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
-                          )}
+      {(isAdmin || myRoles.size > 0) && !tournamentOver && (() => {
+        const q = contactSearch.toLowerCase();
+        const filteredOfficials = q ? officials.filter(o => o.name.toLowerCase().includes(q) || o.contact_number?.includes(q)) : officials;
+        const allPlayers = Object.values(contactMap);
+        const filteredPlayers = q ? allPlayers.filter(c => c.name.toLowerCase().includes(q) || c.contact_number?.includes(q)) : allPlayers;
+        return (
+          <div className="mt-1">
+            <button
+              onClick={() => { setShowAllContacts(!showAllContacts); setContactSearch(""); }}
+              className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+            >
+              <Phone className="w-3 h-3" />
+              {showAllContacts ? "Hide Contacts" : "All Contacts"}
+              {showAllContacts ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {showAllContacts && (
+              <div className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 p-3 shadow-sm">
+                <input
+                  type="text"
+                  value={contactSearch}
+                  onChange={(e) => setContactSearch(e.target.value)}
+                  placeholder="Search name or number…"
+                  className="w-full text-xs font-bold px-3 py-2 mb-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-1 focus:ring-emerald-400"
+                />
+                {filteredOfficials.length === 0 && filteredPlayers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">{q ? "No matches." : "No contacts loaded yet."}</p>
+                ) : (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {filteredOfficials.length > 0 && (
+                      <div>
+                        <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Officials</h5>
+                        <div className="space-y-0.5">
+                          {filteredOfficials.map((o) => (
+                            <div key={o.id + o.role} className="flex items-center gap-2 text-xs py-1 px-1">
+                              <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{o.name} {o.role && <span className="text-muted-foreground font-normal">· {o.role}</span>}</span>
+                              {o.contact_number ? (
+                                <a href={`tel:${o.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{o.contact_number}</a>
+                              ) : (
+                                <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
+                    {filteredPlayers.length > 0 && (
+                      <div>
+                        <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Players</h5>
+                        <div className="space-y-0.5">
+                          {filteredPlayers.map((c) => (
+                            <div key={c.id} className="flex items-center gap-2 text-xs py-1 px-1">
+                              <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
+                              {c.contact_number ? (
+                                <a href={`tel:${c.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{c.contact_number}</a>
+                              ) : (
+                                <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {filtered.length > 0 ? (
         <div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl p-1 sm:p-2">
