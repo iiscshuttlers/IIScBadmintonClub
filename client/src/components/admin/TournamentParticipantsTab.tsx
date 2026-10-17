@@ -122,6 +122,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5";
   const [editingName, setEditingName] = useState<{ id: string, name1: string, name2: string } | null>(null);
   const [editingPhone, setEditingPhone] = useState<{ playerId: string; phone: string } | null>(null);
+  const [contactsView, setContactsView] = useState<string | null>(null);
   const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string, participantId?: string }[][] } | null>(null);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
   const { confirm } = useConfirm();
@@ -130,36 +131,36 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     const parts = participants[cat] ?? [];
     const statusFilt = filterStatus[cat] || "all";
     const doubles = isDoubles(cat);
-    
+
     const filtered = parts.filter(p => {
       if (statusFilt === "registered") return p.player_id !== null;
       if (statusFilt === "external") return p.player_id === null;
       return true;
     });
 
-    const header = doubles 
-      ? ["Seed", "Player 1", "Player 1 Status", "Player 2", "Player 2 Status"] 
-      : ["Seed", "Player Name", "Status"];
+    const header = doubles
+      ? ["Seed", "Player 1", "Player 1 Phone", "Player 2", "Player 2 Phone"]
+      : ["Seed", "Player Name", "Phone"];
 
     const rows = filtered.map(p => {
       const player = allPlayers?.find(pl => pl.id === p.player_id);
       const partner = allPlayers?.find(pl => pl.id === p.partner_id);
-      
+
       if (doubles) {
         const p1Name = player?.full_name ?? p.display_name?.split(' &')[0]?.trim() ?? "Unknown";
         const p2Name = partner?.full_name ?? p.display_name?.split(' &')[1]?.trim() ?? "";
         return [
           (p.seed ?? "").toString(),
           p1Name,
-          p.player_id ? "Registered" : "External",
+          player?.contact_number ?? "",
           p2Name,
-          p.partner_id ? "Registered" : (p2Name ? "External" : "")
+          partner?.contact_number ?? ""
         ];
       } else {
         return [
           (p.seed ?? "").toString(),
           p.display_name ?? player?.full_name ?? "Unknown",
-          p.player_id ? "Registered" : "External"
+          player?.contact_number ?? ""
         ];
       }
     });
@@ -485,27 +486,33 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         }) ?? null;
       };
 
+      const isPhone = (s: string) => /^\d{7,15}$/.test(s.replace(/[\s\-+()]/g, ""));
+
       if (doubles) {
         // tab-separated (Excel copy), comma-separated (CSV), or " & " separated
         const rawParts = line.includes("\t") ? line.split("\t").map(s => s.trim())
           : line.includes(",") ? line.split(",").map(s => s.trim())
           : line.split(/\s*&\s*/).map(s => s.trim());
         const validParts = rawParts.filter(Boolean);
-        
-        let name1 = "", name2 = "", email1 = "", email2 = "";
-        
+
+        let name1 = "", name2 = "", email1 = "", email2 = "", phone1 = "", phone2 = "";
+
         const tbd = /^(na|n\/a|tbd|ytd|tba|-|none)$/i;
         const clean = (v: string) => tbd.test(v) ? "" : v;
         if (validParts.length >= 4) {
            const emails = validParts.filter(p => p.includes("@"));
-           const names = validParts.filter(p => !p.includes("@")).map(clean).filter(Boolean);
+           const phones = validParts.filter(p => isPhone(p));
+           const names = validParts.filter(p => !p.includes("@") && !isPhone(p) && !/^\d+$/.test(p)).map(clean).filter(Boolean);
            name1 = names[0] || "";
            name2 = names[1] || "";
            email1 = emails[0] || "";
            email2 = emails[1] || "";
+           phone1 = phones[0] || "";
+           phone2 = phones[1] || "";
         } else {
            for (const p of validParts) {
              if (p.includes("@")) { if (!email1) email1 = p; else if (!email2) email2 = p; }
+             else if (isPhone(p)) { if (!phone1) phone1 = p; else if (!phone2) phone2 = p; }
              else { const c = clean(p); if (c) { if (!name1) name1 = c; else if (!name2) name2 = c; } }
            }
         }
@@ -514,21 +521,22 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         if (!email2.includes("@")) email2 = "";
         const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
         const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
-        const seedPart = validParts.find(p => /^\d+$/.test(p) && !p.includes("@"));
-        return { raw: line, name1, name2, email1, email2, match1, match2, seed: seedPart ? parseInt(seedPart, 10) : null };
+        const seedPart = validParts.find(p => /^\d{1,3}$/.test(p) && !isPhone(p) && !p.includes("@"));
+        return { raw: line, name1, name2, email1, email2, phone1, phone2, match1, match2, seed: seedPart ? parseInt(seedPart, 10) : null };
       } else {
         const sep = line.includes("\t") ? "\t" : ",";
         const parts = line.split(sep).map(s => s.trim()).filter(Boolean);
-        let name = "", email = "", parsedSeed: number | null = null;
+        let name = "", email = "", phone1 = "", parsedSeed: number | null = null;
         for (const p of parts) {
           if (p.includes("@")) { if (!email) email = p; }
-          else if (/^\d+$/.test(p) && parsedSeed === null) { parsedSeed = parseInt(p, 10); }
+          else if (isPhone(p) && !phone1) { phone1 = p; }
+          else if (/^\d{1,3}$/.test(p) && parsedSeed === null) { parsedSeed = parseInt(p, 10); }
           else { if (!name) name = p; }
         }
 
         if (/^(na|n\/a|tbd|ytd|tba|-|none)$/i.test(name)) name = "";
         const match = matchPlayer(name, email, email) || ((allPlayers ?? []).find(p => name && p.full_name.toLowerCase() === name.toLowerCase()) ?? null);
-        return { raw: line, name1: name, name2: "", email1: email, email2: "", match1: match, match2: null, seed: parsedSeed };
+        return { raw: line, name1: name, name2: "", email1: email, email2: "", phone1, phone2: "", match1: match, match2: null, seed: parsedSeed };
       }
     });
   };
@@ -557,6 +565,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         seed: entry.seed ?? autoSeed++,
         email: entryEmail,
       });
+      if (entry.phone1 && playerId) {
+        await supabase.from("players").update({ contact_number: entry.phone1 }).eq("id", playerId).is("contact_number", null);
+      }
+      if (entry.phone2 && partnerId) {
+        await supabase.from("players").update({ contact_number: entry.phone2 }).eq("id", partnerId).is("contact_number", null);
+      }
     }
     await load();
     setBulkCat(null);
@@ -568,11 +582,11 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const downloadParticipantTemplate = (cat: string) => {
     const doubles = isDoubles(cat);
     const header = doubles
-      ? ["Player1 Name", "Player1 Email", "Player2 Name", "Player2 Email", "Seed"]
-      : ["Player Name", "Email", "Seed"];
+      ? ["Player1 Name", "Player1 Email", "Player1 Phone", "Player2 Name", "Player2 Email", "Player2 Phone", "Seed"]
+      : ["Player Name", "Email", "Phone", "Seed"];
     const examples = doubles
-      ? [["Rahul Sharma", "rahul@iisc.ac.in", "Priya Nair", "priya@iisc.ac.in", "1"]]
-      : [["Rahul Sharma", "rahul@iisc.ac.in", "1"]];
+      ? [["Rahul Sharma", "rahul@iisc.ac.in", "9876543210", "Priya Nair", "priya@iisc.ac.in", "9123456789", "1"]]
+      : [["Rahul Sharma", "rahul@iisc.ac.in", "9876543210", "1"]];
     downloadCSV(`${cat}_participants_template.csv`, [header, ...examples]);
   };
 
@@ -583,11 +597,11 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     const dataRows = rows[0]?.[0]?.toLowerCase().match(/^(player|name)/) ? rows.slice(1) : rows;
     const lines = dataRows.map((r) => {
       if (doubles) {
-        // player1_name, player1_email, player2_name, player2_email, seed
-        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? "", r[4] ?? ""].join("\t");
+        // player1_name, player1_email, player1_phone, player2_name, player2_email, player2_phone, seed
+        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? "", r[4] ?? "", r[5] ?? "", r[6] ?? ""].join("\t");
       } else {
-        // player_name, email, seed
-        return [r[0] ?? "", r[1] ?? "", r[2] ?? ""].join("\t");
+        // player_name, email, phone, seed
+        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? ""].join("\t");
       }
     }).filter(line => line.replace(/\t/g, '').trim().length > 0);
     setBulkText(lines.join("\n"));
@@ -644,6 +658,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           seed: entry.seed ?? autoSeed++,
           email: entryEmail,
         });
+        if (entry.phone1 && playerId) {
+          await supabase.from("players").update({ contact_number: entry.phone1 }).eq("id", playerId).is("contact_number", null);
+        }
+        if (entry.phone2 && partnerId) {
+          await supabase.from("players").update({ contact_number: entry.phone2 }).eq("id", partnerId).is("contact_number", null);
+        }
         total++;
       }
     }
@@ -1345,8 +1365,44 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                     >
                       <Download className="w-3 h-3" /> Export CSV
                     </button>
+                    <button
+                      onClick={() => setContactsView(contactsView === cat ? null : cat)}
+                      className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md"
+                    >
+                      <Phone className="w-3 h-3" /> Contacts
+                    </button>
                   </div>
                 </div>
+                {contactsView === cat && (
+                  <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                        {cat} Contacts ({parts.length})
+                      </h4>
+                      <button onClick={() => setContactsView(null)} className="text-slate-400 hover:text-slate-600 transition">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {parts.map((p, i) => {
+                        const pl = allPlayers?.find((x: any) => x.id === p.player_id);
+                        const name = p.display_name ?? pl?.full_name ?? "Unknown";
+                        const phone = pl?.contact_number;
+                        return (
+                          <div key={p.id} className="flex items-center gap-2 text-xs py-1 px-2 rounded-lg hover:bg-white/60 dark:hover:bg-slate-800/40">
+                            <span className="w-5 text-right text-muted-foreground font-bold shrink-0">{i + 1}.</span>
+                            <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{name}</span>
+                            {phone ? (
+                              <a href={`tel:${phone}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{phone}</a>
+                            ) : (
+                              <span className="text-slate-400 italic shrink-0">no phone</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {selectedParts.length > 0 && parts.some(p => selectedParts.includes(p.id)) && (
                   <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl mb-4">
                     <span className="text-sm font-bold text-primary flex-1">
@@ -1836,8 +1892,10 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                               <span className="flex-1 truncate">
                                 <span className="font-bold text-slate-800 dark:text-foreground">{e.name1}</span>
                                 {e.email1 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email1}</span>}
+                                {e.phone1 && <span className="text-emerald-500 ml-1">{e.phone1}</span>}
                                 {e.name2 && <><span className="text-muted-foreground mx-1">&</span><span className="font-bold text-slate-800 dark:text-foreground">{e.name2}</span></>}
                                 {e.email2 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email2}</span>}
+                                {e.phone2 && <span className="text-emerald-500 ml-1">{e.phone2}</span>}
                               </span>
                               <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-[var(--warning)]"}`}>
                                 {e.match1 ? "Found" : "External"}
