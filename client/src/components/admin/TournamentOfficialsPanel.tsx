@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { toast } from "sonner";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
-import { Loader2, Plus, Trash2, Gavel, Flag, UserCog, ShieldCheck, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Gavel, Flag, UserCog, ShieldCheck, X, Phone } from "lucide-react";
 
 type OfficialRole = "ORGANIZER" | "UMPIRE" | "REFEREE";
 
@@ -32,6 +32,8 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const [roles, setRoles] = useState<OfficialRole[]>(["UMPIRE"]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [contactsEnabled, setContactsEnabled] = useState(false);
+  const [contactsLoading, setContactsLoading] = useState(true);
 
   const canManage = isAdmin || tournament.created_by === profile?.id;
 
@@ -64,6 +66,20 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    supabase.from("site_data").select("value").eq("key", `tournament_contacts_${tournament.id}`).maybeSingle().then(({ data }) => {
+      setContactsEnabled(data?.value === true || (data?.value as any)?.enabled === true);
+      setContactsLoading(false);
+    });
+  }, [tournament.id]);
+
+  const toggleContacts = async () => {
+    const next = !contactsEnabled;
+    setContactsEnabled(next);
+    await supabase.from("site_data").upsert({ key: `tournament_contacts_${tournament.id}`, value: next }, { onConflict: "key" });
+    toast.success(next ? "Player contacts visible on match cards" : "Player contacts hidden");
+  };
 
   const toggleRole = (r: OfficialRole) => {
     setRoles((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
@@ -278,6 +294,31 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
           </div>
         )}
       </div>
+
+      {/* Contact sharing toggle */}
+      {canManage && (
+        <div className={cardCls}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-black text-slate-800 dark:text-foreground">Share Contacts with Players</h4>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                When enabled, players can see their opponent's phone number and officials' contacts on match cards.
+                Officials and admins can always see contacts.
+              </p>
+            </div>
+            <button
+              onClick={toggleContacts}
+              disabled={contactsLoading}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${contactsEnabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}
+            >
+              <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${contactsEnabled ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

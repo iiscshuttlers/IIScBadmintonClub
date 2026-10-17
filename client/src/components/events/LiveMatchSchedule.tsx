@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Trophy } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Trophy, Phone, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -17,7 +17,13 @@ interface ScheduledMatch {
   status: string;
   winner_side: 1 | 2 | null;
   sets_history: string[] | null;
+  player1_id: string | null;
+  player2_id: string | null;
+  player3_id: string | null;
+  player4_id: string | null;
 }
+
+interface ContactInfo { id: string; name: string; contact_number: string | null; role?: string; }
 
 const CAT_COLORS: Record<string, string> = {
   "MS": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
@@ -46,6 +52,11 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const { profile, isAdmin } = useAuth();
   const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
   const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+  const [contactsEnabled, setContactsEnabled] = useState(false);
+  const [contactMap, setContactMap] = useState<Record<string, ContactInfo>>({});
+  const [officials, setOfficials] = useState<ContactInfo[]>([]);
+  const [expandedContacts, setExpandedContacts] = useState<Record<string, boolean>>({});
+  const [myRoles, setMyRoles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -93,7 +104,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
     if (!tournamentId) { setLoading(false); return; }
     supabase
       .from("tournament_matches")
-      .select("id,category,match_code,round_name,team1_label,team2_label,court_number,scheduled_at,status,winner_side,sets_history")
+      .select("id,category,match_code,round_name,team1_label,team2_label,court_number,scheduled_at,status,winner_side,sets_history,player1_id,player2_id,player3_id,player4_id")
       .eq("tournament_id", tournamentId)
       .order("scheduled_at", { ascending: false, nullsFirst: false })
       .order("round", { ascending: false })
@@ -103,6 +114,57 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         setLoading(false);
       });
   }, [tournamentId]);
+
+  // Load contacts setting, player contacts, and officials
+  useEffect(() => {
+    if (!tournamentId || !profile?.id) return;
+    (async () => {
+      // Check if contacts are enabled for this tournament
+      const { data: sd } = await supabase.from("site_data").select("value").eq("key", `tournament_contacts_${tournamentId}`).maybeSingle();
+      const enabled = sd?.value === true || (sd?.value as any)?.enabled === true;
+      setContactsEnabled(enabled);
+
+      // Load my roles for this tournament
+      const { data: myOff } = await supabase.from("tournament_officials").select("role").eq("tournament_id", tournamentId).eq("user_id", profile.id);
+      if (myOff) setMyRoles(new Set(myOff.map(o => o.role)));
+
+      // Load officials with contacts
+      const { data: offRows } = await supabase
+        .from("tournament_officials")
+        .select("user_id, role")
+        .eq("tournament_id", tournamentId);
+      if (offRows?.length) {
+        const offIds = [...new Set(offRows.map(o => o.user_id))];
+        const { data: offPlayers } = await supabase.from("players").select("id, name, contact_number").in("id", offIds);
+        if (offPlayers) {
+          setOfficials(offRows.map(o => {
+            const p = offPlayers.find(pl => pl.id === o.user_id);
+            return { id: o.user_id, name: p?.name ?? "Unknown", contact_number: p?.contact_number ?? null, role: o.role };
+          }));
+        }
+      }
+    })();
+  }, [tournamentId, profile?.id]);
+
+  // Load player contacts when matches are available
+  useEffect(() => {
+    if (!schedMatches.length) return;
+    const playerIds = new Set<string>();
+    for (const m of schedMatches) {
+      if (m.player1_id) playerIds.add(m.player1_id);
+      if (m.player2_id) playerIds.add(m.player2_id);
+      if (m.player3_id) playerIds.add(m.player3_id);
+      if (m.player4_id) playerIds.add(m.player4_id);
+    }
+    if (!playerIds.size) return;
+    supabase.from("players").select("id, name, contact_number").in("id", [...playerIds]).then(({ data }) => {
+      if (data) {
+        const map: Record<string, ContactInfo> = {};
+        data.forEach(p => { map[p.id] = p; });
+        setContactMap(map);
+      }
+    });
+  }, [schedMatches]);
 
   if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 animate-spin border-4 border-primary border-t-transparent rounded-full" /></div>;
 
@@ -260,6 +322,77 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                           {isCompleted && m.sets_history?.length ? (
                             <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
                           ) : null}
+
+                          {/* Contact buttons */}
+                          {(() => {
+                            const isOfficial = myRoles.size > 0;
+                            const canSeeContacts = isAdmin || isOfficial || (contactsEnabled && isMyMatch);
+                            if (!canSeeContacts || isCompleted) return null;
+                            const matchPlayerIds = [m.player1_id, m.player2_id, m.player3_id, m.player4_id].filter(Boolean) as string[];
+                            const opponentIds = isMyMatch && !isOfficial
+                              ? matchPlayerIds.filter(id => id !== profile?.id)
+                              : matchPlayerIds;
+                            const contacts = opponentIds.map(id => contactMap[id]).filter(Boolean);
+                            const showOfficials = isMyMatch && !isOfficial;
+                            const expanded = expandedContacts[m.id];
+                            if (!contacts.length && !showOfficials) return null;
+                            return (
+                              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 print:hidden">
+                                <button
+                                  onClick={() => setExpandedContacts(p => ({ ...p, [m.id]: !p[m.id] }))}
+                                  className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  {expanded ? "Hide Contacts" : `Contact ${isOfficial || isAdmin ? "Players" : "Opponent"}`}
+                                </button>
+                                {expanded && (
+                                  <div className="mt-2 space-y-1.5">
+                                    {contacts.map(c => (
+                                      <div key={c.id} className="flex items-center gap-2 text-xs">
+                                        <span className="font-bold text-slate-700 dark:text-slate-200 min-w-0 truncate flex-1">{c.name}</span>
+                                        {c.contact_number ? (
+                                          <div className="flex items-center gap-1.5 shrink-0">
+                                            <a href={`tel:${c.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-bold hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition">
+                                              <Phone className="w-3 h-3" /> Call
+                                            </a>
+                                            <a href={`https://wa.me/${c.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold hover:bg-green-200 dark:hover:bg-green-800/50 transition">
+                                              <MessageCircle className="w-3 h-3" /> WhatsApp
+                                            </a>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[10px] text-muted-foreground">No phone</span>
+                                        )}
+                                      </div>
+                                    ))}
+                                    {showOfficials && officials.length > 0 && (
+                                      <>
+                                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mt-2">Officials</div>
+                                        {officials.map((o, i) => (
+                                          <div key={`${o.id}-${o.role}-${i}`} className="flex items-center gap-2 text-xs">
+                                            <span className="font-bold text-slate-700 dark:text-slate-200 min-w-0 truncate flex-1">
+                                              {o.name} <span className="text-[10px] text-muted-foreground">({o.role})</span>
+                                            </span>
+                                            {o.contact_number ? (
+                                              <div className="flex items-center gap-1.5 shrink-0">
+                                                <a href={`tel:${o.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-bold hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition">
+                                                  <Phone className="w-3 h-3" /> Call
+                                                </a>
+                                                <a href={`https://wa.me/${o.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold hover:bg-green-200 dark:hover:bg-green-800/50 transition">
+                                                  <MessageCircle className="w-3 h-3" /> WhatsApp
+                                                </a>
+                                              </div>
+                                            ) : (
+                                              <span className="text-[10px] text-muted-foreground">No phone</span>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {/* Poll Card (Compact) */}
                           {m.match_code && (
