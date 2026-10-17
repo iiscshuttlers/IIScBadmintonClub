@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -11,7 +10,7 @@ import { exportToImage, exportToPDF } from "@/utils/exportUtils";
 import {
   Loader2, Save, Trophy, Users, Swords, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play,
-  Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Pencil, FileText,
+  Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Pencil, FileText, Phone,
   Link, Unlink, Camera
 } from "lucide-react";
 import { getDepartmentAcronym } from "@/data/departments";
@@ -122,6 +121,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
   const allPlayers = adminPlayers;
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5";
   const [editingName, setEditingName] = useState<{ id: string, name1: string, name2: string } | null>(null);
+  const [editingPhone, setEditingPhone] = useState<{ playerId: string; phone: string } | null>(null);
   const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string, participantId?: string }[][] } | null>(null);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
   const { confirm } = useConfirm();
@@ -220,7 +220,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
       .order("seed", { ascending: true });
 
     // Also fetch admin players with emails for better CSV matching
-    const { data: playersData } = await supabase.from("players").select("id, full_name, email, iisc_email").is("deleted_at", null);
+    const { data: playersData } = await supabase.from("players").select("id, full_name, email, iisc_email, contact_number, department").is("deleted_at", null);
     if (playersData) setAdminPlayers(playersData);
 
     const grouped: Record<string, Participant[]> = {};
@@ -1531,6 +1531,17 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                               <Unlink className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          {p.player_id && (
+                            <button
+                              onClick={() => {
+                                const pl = allPlayers?.find((x: any) => x.id === p.player_id);
+                                setEditingPhone(editingPhone?.playerId === p.player_id ? null : { playerId: p.player_id, phone: pl?.contact_number ?? "" });
+                              }}
+                              title="Set phone number"
+                              className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${allPlayers?.find((x: any) => x.id === p.player_id)?.contact_number ? "text-emerald-500" : "text-slate-400 hover:text-emerald-500"}`}>
+                              <Phone className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       
@@ -1553,6 +1564,32 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                           )}
                           <button onClick={saveEditedName} className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:opacity-90">Save</button>
                           <button onClick={() => setEditingName(null)} className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:opacity-90">Cancel</button>
+                        </div>
+                      )}
+
+                      {editingPhone?.playerId === p.player_id && (
+                        <div className="ml-14 mt-1 flex items-center gap-2">
+                          <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <input
+                            value={editingPhone.phone}
+                            onChange={(e) => setEditingPhone({ ...editingPhone, phone: e.target.value })}
+                            placeholder="+91 9876543210"
+                            autoFocus
+                            type="tel"
+                            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-emerald-400"
+                          />
+                          <button
+                            onClick={async () => {
+                              const { error } = await supabase.from("players").update({ contact_number: editingPhone.phone || null }).eq("id", editingPhone.playerId);
+                              if (error) { toast.error("Failed to save"); return; }
+                              toast.success("Phone number saved");
+                              const pl = allPlayers?.find((x: any) => x.id === editingPhone.playerId);
+                              if (pl) pl.contact_number = editingPhone.phone || null;
+                              setEditingPhone(null);
+                            }}
+                            className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:opacity-90"
+                          >Save</button>
+                          <button onClick={() => setEditingPhone(null)} className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:opacity-90">Cancel</button>
                         </div>
                       )}
 
