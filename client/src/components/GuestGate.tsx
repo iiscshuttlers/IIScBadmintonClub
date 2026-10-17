@@ -107,7 +107,7 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
 
             {/* Back link */}
             <p className="mt-5 text-xs text-muted-foreground dark:text-slate-500">
-                <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'} className="hover:text-foreground dark:hover:text-slate-300 transition-colors font-semibold">
+                <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="hover:text-foreground dark:hover:text-slate-300 transition-colors font-semibold">
                   ← Back to Home
                 </button>
             </p>

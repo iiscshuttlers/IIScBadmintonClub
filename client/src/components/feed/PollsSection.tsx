@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart2, CheckCircle2, Plus, Trash2, Save, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -105,9 +106,9 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               Delete
             </button>
           )}
-          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
+          <Link href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
             Manage
-          </a>
+          </Link>
         </div>
       )}
       <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-4 mt-2">{poll.question}</h3>

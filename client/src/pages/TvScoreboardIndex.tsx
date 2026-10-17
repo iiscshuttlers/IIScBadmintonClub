@@ -11,7 +11,7 @@ export default function TvScoreboardIndex() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 text-slate-200 relative">
-      <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'} className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-full transition border border-slate-800 shadow-md flex items-center gap-2 pr-4">
+      <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-full transition border border-slate-800 shadow-md flex items-center gap-2 pr-4">
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-bold">Back to App</span>
         </button>

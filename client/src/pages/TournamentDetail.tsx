@@ -137,7 +137,7 @@ export default function TournamentDetail() {
           <p className="text-muted-foreground dark:text-muted-foreground">
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
-          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/pulse'} className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
               Back to Pulse
             </button>
@@ -191,11 +191,11 @@ export default function TournamentDetail() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              <BreadcrumbLink href={import.meta.env.BASE_URL}>Home</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/pulse#events">Pulse</BreadcrumbLink>
+              <BreadcrumbLink href={`${import.meta.env.BASE_URL}pulse#events`}>Pulse</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -499,20 +499,20 @@ export default function TournamentDetail() {
                 </div>
 
                 <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <a
+                  <Link
                     href={tournament.galleryFolder ? `/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}#albums` : `/legacy#albums`}
                   >
                     <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <ImageIcon className="w-4 h-4" />
                       View Gallery
                     </button>
-                  </a>
-                  <a href="/legacy#champions">
+                  </Link>
+                  <Link href="/legacy#champions">
                     <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-on-accent font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
                       Hall of Fame
                     </button>
-                  </a>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
