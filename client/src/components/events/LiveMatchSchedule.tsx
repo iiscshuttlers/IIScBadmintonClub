@@ -136,11 +136,11 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         .eq("tournament_id", tournamentId);
       if (offRows?.length) {
         const offIds = [...new Set(offRows.map(o => o.user_id))];
-        const { data: offPlayers } = await supabase.from("players").select("id, name, contact_number").in("id", offIds);
+        const { data: offPlayers } = await supabase.from("players").select("id, full_name, contact_number").in("id", offIds);
         if (offPlayers) {
           setOfficials(offRows.map(o => {
             const p = offPlayers.find(pl => pl.id === o.user_id);
-            return { id: o.user_id, name: p?.name ?? "Unknown", contact_number: p?.contact_number ?? null, role: o.role };
+            return { id: o.user_id, name: p?.full_name ?? "Unknown", contact_number: p?.contact_number ?? null, role: o.role };
           }));
         }
       }
@@ -158,10 +158,10 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
       if (m.player4_id) playerIds.add(m.player4_id);
     }
     if (!playerIds.size) return;
-    supabase.from("players").select("id, name, contact_number").in("id", [...playerIds]).then(({ data }) => {
+    supabase.from("players").select("id, full_name, contact_number").in("id", [...playerIds]).then(({ data }) => {
       if (data) {
         const map: Record<string, ContactInfo> = {};
-        data.forEach(p => { map[p.id] = p; });
+        data.forEach(p => { map[p.id] = { id: p.id, name: p.full_name, contact_number: p.contact_number }; });
         setContactMap(map);
       }
     });
