@@ -21,8 +21,9 @@ function downloadCSV(filename: string, rows: string[][]) {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 200);
 }
 
 function readCSVFile(file: File): Promise<string[][]> {
@@ -1755,11 +1756,12 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                         <button
                           onClick={async () => {
                             try {
-                              const text = await navigator.clipboard.readText();
-                              if (text) setBulkText(p => p ? p + "\n" + text : text);
-                            } catch (e) {
-                              toast.error("Clipboard access denied or empty");
-                            }
+                              if (navigator.clipboard?.readText) {
+                                const text = await navigator.clipboard.readText();
+                                if (text) { setBulkText(p => p ? p + "\n" + text : text); return; }
+                              }
+                            } catch {}
+                            toast("Long-press the text box and use your device's Paste", { icon: "📋" });
                           }}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-[var(--info)] hover:text-[var(--info)] hover:border-[var(--info)] transition"
                         >

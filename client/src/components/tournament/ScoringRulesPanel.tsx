@@ -91,7 +91,7 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
   };
 
   const setField = (category: string, round: number, field: keyof RuleVals, raw: string) => {
-    const n = Math.max(1, parseInt(raw || "0", 10) || 0);
+    const n = raw === "" ? 0 : (parseInt(raw, 10) || 0);
     setEdits((prev) => ({ ...prev, [key(category, round)]: { ...valueFor(category, round), [field]: n } }));
   };
 
@@ -107,8 +107,9 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
 
   const saveRule = async (category: string, round: number, round_name: string | null) => {
     const vals = valueFor(category, round);
+    const clamped = { points_to_win: Math.max(1, vals.points_to_win), best_of_sets: Math.max(1, vals.best_of_sets), golden_point: Math.max(1, vals.golden_point) };
     const { error: upErr } = await supabase.from("tournament_round_rules").upsert({
-      tournament_id: tournament.id, category, round, round_name, ...vals,
+      tournament_id: tournament.id, category, round, round_name, ...clamped,
     }, { onConflict: "tournament_id,category,round" });
     if (upErr) throw upErr;
     // Push the rule onto existing matches so live/scheduled matches pick it up.
@@ -242,9 +243,9 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
                       <span className="text-sm font-black text-slate-700 dark:text-slate-200 truncate">{round_name ?? `Round ${round}`}</span>
                       {dirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Unsaved" />}
                     </div>
-                    <input type="number" min={1} value={v.points_to_win} onChange={(e) => setField(category, round, "points_to_win", e.target.value)} className={numCls} aria-label="Points to win" />
-                    <input type="number" min={1} step={2} value={v.best_of_sets} onChange={(e) => setField(category, round, "best_of_sets", e.target.value)} className={numCls} aria-label="Best of games" />
-                    <input type="number" min={1} value={v.golden_point} onChange={(e) => setField(category, round, "golden_point", e.target.value)} className={numCls} aria-label="Point cap" />
+                    <input type="number" min={1} value={v.points_to_win || ""} onChange={(e) => setField(category, round, "points_to_win", e.target.value)} onBlur={() => { if (!v.points_to_win) setField(category, round, "points_to_win", "1"); }} className={numCls} aria-label="Points to win" />
+                    <input type="number" min={1} step={2} value={v.best_of_sets || ""} onChange={(e) => setField(category, round, "best_of_sets", e.target.value)} onBlur={() => { if (!v.best_of_sets) setField(category, round, "best_of_sets", "1"); }} className={numCls} aria-label="Best of games" />
+                    <input type="number" min={1} value={v.golden_point || ""} onChange={(e) => setField(category, round, "golden_point", e.target.value)} onBlur={() => { if (!v.golden_point) setField(category, round, "golden_point", "1"); }} className={numCls} aria-label="Point cap" />
                     <button
                       onClick={() => saveOne(category, round, round_name)}
                       disabled={savingKey === k || !dirty}
