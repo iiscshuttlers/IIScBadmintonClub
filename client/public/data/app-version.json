@@ -1,6 +1,6 @@
 {
-  "versionCode": 427,
-  "versionName": "4.27",
+  "versionCode": 428,
+  "versionName": "4.28",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "feat: phone editor for participants + contact buttons"
+  "changelog": "- feat(live): auto-delete contact sharing toggle when tournament ends\n- feat(live): search filter and auto-hide for contacts panel\n- fix(live): use full_name column for contacts query\n- feat(live): all-contacts panel for admins/officials on match schedule\n- feat(participants): contacts quick-view and phone-aware CSV import/export"
 }

@@ -1,5 +1,17 @@
 [
   {
+    "versionCode": 428,
+    "versionName": "4.28",
+    "date": "2026-10-17T19:40:31.626Z",
+    "changes": [
+      "- feat(live): auto-delete contact sharing toggle when tournament ends",
+      "- feat(live): search filter and auto-hide for contacts panel",
+      "- fix(live): use full_name column for contacts query",
+      "- feat(live): all-contacts panel for admins/officials on match schedule",
+      "- feat(participants): contacts quick-view and phone-aware CSV import/export"
+    ]
+  },
+  {
     "versionCode": 427,
     "versionName": "4.27",
     "date": "2026-10-17T19:13:32.619Z",
