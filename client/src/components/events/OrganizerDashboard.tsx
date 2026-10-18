@@ -1,22 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { 
-  LayoutDashboard, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle2, 
-  Calendar, 
-  Users, 
-  RefreshCw, 
-  ExternalLink, 
-  Eye, 
-  ChevronRight, 
-  ShieldAlert, 
-  ArrowRight, 
-  Swords, 
+import {
+  LayoutDashboard,
+  AlertTriangle,
+  Clock,
+  CheckCircle2,
+  Calendar,
+  Users,
+  RefreshCw,
+  ExternalLink,
+  Eye,
+  ChevronRight,
+  ShieldAlert,
+  ArrowRight,
+  Swords,
   Crown,
-  X
+  X,
+  Activity,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -32,6 +34,341 @@ interface OrganizerDashboardProps {
 }
 
 export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
+  const isTeamEvent = tournament?.format_family === 'TEAM';
+
+  if (!isTeamEvent) {
+    return <IndividualEventDashboard tournamentId={tournamentId} tournament={tournament} />;
+  }
+
+  return <TeamEventDashboard tournamentId={tournamentId} tournament={tournament} />;
+}
+
+function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
+  const { data: matches = [], isLoading, refetch } = useQuery({
+    queryKey: ['organizer_ind_matches', tournamentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tournament_matches' as any)
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .order('match_number', { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!tournamentId,
+    refetchInterval: 15000
+  });
+
+  const { data: registrations = [] } = useQuery({
+    queryKey: ['organizer_ind_registrations', tournamentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tournament_registrations' as any)
+        .select('id, status, category, player:players!player_id(id, full_name)')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'confirmed');
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!tournamentId,
+    refetchInterval: 30000
+  });
+
+  const completedMatches = matches.filter((m: any) => m.status === 'completed');
+  const inProgressMatches = matches.filter((m: any) => m.status === 'in_progress');
+  const matchesMissingCourt = matches.filter((m: any) => {
+    const court = m.court ?? m.court_number;
+    return !court && m.status !== 'completed';
+  });
+  const scheduledMatches = matches.filter((m: any) => m.status === 'scheduled' || !m.status);
+  const completionRate = matches.length > 0 ? Math.round((completedMatches.length / matches.length) * 100) : 0;
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    matches.forEach((m: any) => { if (m.category) cats.add(m.category); });
+    return Array.from(cats).sort();
+  }, [matches]);
+
+  const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'IN_PROGRESS' | 'UNASSIGNED_COURTS' | 'SCHEDULED'>('ALL');
+  const [showModal, setShowModal] = useState(false);
+
+  const filteredMatches = useMemo(() => {
+    if (selectedFilter === 'IN_PROGRESS') return inProgressMatches;
+    if (selectedFilter === 'UNASSIGNED_COURTS') return matchesMissingCourt;
+    if (selectedFilter === 'SCHEDULED') return scheduledMatches;
+    return matches;
+  }, [selectedFilter, matches, inProgressMatches, matchesMissingCourt, scheduledMatches]);
+
+  const handleCardClick = (filter: typeof selectedFilter) => {
+    setSelectedFilter(prev => prev === filter ? 'ALL' : filter);
+    setShowModal(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <LayoutDashboard className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-white">
+              Organizer Command Center
+            </h2>
+            <p className="text-xs text-slate-400">
+              Live match tracking, court assignments, and tournament progress
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="text-xs font-bold rounded-xl border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white flex-1 sm:flex-initial"
+          >
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            Refresh Data
+          </Button>
+          <a
+            href={`/tournament-admin?id=${tournamentId}`}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition flex-1 sm:flex-initial text-center whitespace-nowrap shadow-sm"
+          >
+            Full Admin Panel <ExternalLink className="w-3.5 h-3.5 ml-1" />
+          </a>
+        </div>
+      </div>
+
+      {/* Action Cards */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            Match Status Overview
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Live Matches */}
+          <button
+            type="button"
+            onClick={() => handleCardClick('IN_PROGRESS')}
+            className={`p-4 rounded-2xl border transition text-left cursor-pointer group hover:scale-[1.02] active:scale-[0.99] ${
+              selectedFilter === 'IN_PROGRESS'
+                ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-950/40 text-white shadow-lg'
+                : 'bg-slate-900 border-slate-800 text-white hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 group-hover:text-emerald-300 transition-colors">Live Matches</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                inProgressMatches.length > 0 ? 'bg-emerald-500 text-slate-950 animate-pulse' : 'bg-slate-800 text-slate-400'
+              }`}>
+                {inProgressMatches.length} Active
+              </span>
+            </div>
+            <p className="text-2xl font-black text-white flex items-center justify-between">
+              <span>{inProgressMatches.length} Playing</span>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+            </p>
+            <p className="text-xs text-emerald-300/80 mt-1 font-medium">
+              {inProgressMatches.length > 0
+                ? `${inProgressMatches.length} ${inProgressMatches.length === 1 ? 'match' : 'matches'} currently in progress`
+                : 'No matches currently in progress'}
+            </p>
+          </button>
+
+          {/* Unassigned Courts */}
+          <button
+            type="button"
+            onClick={() => handleCardClick('UNASSIGNED_COURTS')}
+            className={`p-4 rounded-2xl border transition text-left cursor-pointer group hover:scale-[1.02] active:scale-[0.99] ${
+              selectedFilter === 'UNASSIGNED_COURTS'
+                ? 'ring-2 ring-sky-500 border-sky-500 bg-sky-950/40 text-white shadow-lg'
+                : matchesMissingCourt.length > 0
+                ? 'bg-amber-950/20 border-amber-900/40 text-white hover:border-amber-700'
+                : 'bg-slate-900 border-slate-800 text-white hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 group-hover:text-sky-300 transition-colors">Unassigned Courts</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                matchesMissingCourt.length > 0 ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+              }`}>
+                {matchesMissingCourt.length}
+              </span>
+            </div>
+            <p className="text-2xl font-black text-white flex items-center justify-between">
+              <span>{matchesMissingCourt.length} Matches</span>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+            </p>
+            <p className="text-xs text-sky-300/80 mt-1 font-medium">
+              {matchesMissingCourt.length > 0
+                ? `${matchesMissingCourt.length} matches need court assignments`
+                : 'All matches have courts assigned'}
+            </p>
+          </button>
+
+          {/* Upcoming / Scheduled */}
+          <button
+            type="button"
+            onClick={() => handleCardClick('SCHEDULED')}
+            className={`p-4 rounded-2xl border transition text-left cursor-pointer group hover:scale-[1.02] active:scale-[0.99] ${
+              selectedFilter === 'SCHEDULED'
+                ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-950/40 text-white shadow-lg'
+                : 'bg-slate-900 border-slate-800 text-white hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 group-hover:text-amber-300 transition-colors">Upcoming</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400">
+                {scheduledMatches.length}
+              </span>
+            </div>
+            <p className="text-2xl font-black text-white flex items-center justify-between">
+              <span>{scheduledMatches.length} Scheduled</span>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+            </p>
+            <p className="text-xs text-amber-300/80 mt-1 font-medium">
+              {scheduledMatches.length > 0
+                ? `${scheduledMatches.length} matches waiting to be played`
+                : 'No scheduled matches remaining'}
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {/* Progress Stats */}
+      <div className="bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-800 shadow-xl space-y-4">
+        <h3 className="font-bold text-sm text-white">
+          Tournament Progress &amp; Completion ({completionRate}%)
+        </h3>
+        <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+          <div
+            className="bg-primary h-full transition-all duration-500 rounded-full"
+            style={{ width: `${completionRate}%` }}
+          />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+          <div>
+            <span className="text-slate-400">Participants:</span>
+            <p className="font-bold text-sm text-white">{registrations.length}</p>
+          </div>
+          <div>
+            <span className="text-slate-400">Categories:</span>
+            <p className="font-bold text-sm text-white">{categories.length > 0 ? categories.join(', ') : '—'}</p>
+          </div>
+          <div>
+            <span className="text-slate-400">Total Matches:</span>
+            <p className="font-bold text-sm text-white">{matches.length}</p>
+          </div>
+          <div>
+            <span className="text-slate-400">Completed:</span>
+            <p className="font-bold text-sm text-emerald-400">
+              {completedMatches.length} / {matches.length}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Match Health Monitor */}
+      <div className="bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-800 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+          <div>
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
+              Match Health Monitor
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                {filteredMatches.length} / {matches.length} Matches
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              {selectedFilter === 'ALL'
+                ? 'All matches across categories'
+                : selectedFilter === 'IN_PROGRESS' ? 'Matches currently being played'
+                : selectedFilter === 'UNASSIGNED_COURTS' ? 'Matches needing court assignments'
+                : 'Upcoming scheduled matches'}
+            </p>
+          </div>
+          {selectedFilter !== 'ALL' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedFilter('ALL')}
+              className="text-xs font-bold rounded-xl border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Clear Filter
+            </Button>
+          )}
+        </div>
+
+        {filteredMatches.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-sm">
+            {selectedFilter === 'ALL'
+              ? 'No matches created yet for this tournament.'
+              : 'No matches matching this filter criteria!'}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredMatches.slice(0, 20).map((match: any) => {
+              const court = match.court ?? match.court_number;
+              return (
+                <div
+                  key={match.id}
+                  className="px-3 py-2.5 rounded-2xl border border-slate-800 bg-slate-950/60 flex items-center gap-2 h-12"
+                >
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-primary shrink-0 w-[72px] text-center truncate">
+                    {match.match_code || `M${match.match_number || '?'}`}
+                  </span>
+                  {match.category && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                      {match.category}
+                    </span>
+                  )}
+                  <span className="font-bold text-xs text-white truncate min-w-0 flex-1">
+                    {match.team1_label || 'TBD'} vs {match.team2_label || 'TBD'}
+                  </span>
+                  {match.round_name && (
+                    <span className="text-[10px] text-slate-400 shrink-0 hidden sm:inline">{match.round_name}</span>
+                  )}
+                  <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                    {court ? (
+                      <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-medium text-[10px] whitespace-nowrap">
+                        <MapPin className="w-3 h-3 inline mr-0.5" />{court}
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-bold text-[10px] whitespace-nowrap">
+                        No Court
+                      </span>
+                    )}
+                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
+                      match.status === 'in_progress' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                      match.status === 'completed' ? 'bg-slate-700 text-slate-400' :
+                      'bg-slate-800/80 text-slate-300'
+                    }`}>
+                      {match.status || 'scheduled'}
+                    </span>
+                    {match.score && (
+                      <span className="font-mono font-bold text-white text-[10px] whitespace-nowrap">{match.score}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {filteredMatches.length > 20 && (
+              <p className="text-xs text-slate-400 text-center pt-2">
+                Showing 20 of {filteredMatches.length} matches
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const { openTeamModal } = useTeamModal();
   const { user, profile } = useAuth();
   const [selectedTieForConsole, setSelectedTieForConsole] = useState<any | null>(null);
@@ -185,6 +522,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
   // Compute key action-required metrics
   const [selectedBottleneck, setSelectedBottleneck] = useState<'ALL' | 'MISSING_LINEUPS' | 'AWAITING_REVEAL' | 'LIVE_TIES' | 'UNASSIGNED_COURTS'>('ALL');
   const [showBottleneckModal, setShowBottleneckModal] = useState<boolean>(false);
+  const [courtSubTab, setCourtSubTab] = useState<'ties' | 'rubbers'>('rubbers');
 
   const tiesWithMissingLineups = useMemo(() => {
     return ties.filter((t: any) => {
@@ -300,6 +638,9 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
   const handleCardClick = (type: 'MISSING_LINEUPS' | 'AWAITING_REVEAL' | 'LIVE_TIES' | 'UNASSIGNED_COURTS') => {
     setSelectedBottleneck(prev => prev === type ? 'ALL' : type);
     setShowBottleneckModal(true);
+    if (type === 'UNASSIGNED_COURTS') {
+      setCourtSubTab(matchesMissingCourt.length > 0 ? 'rubbers' : 'ties');
+    }
   };
 
   return (
@@ -895,19 +1236,81 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
 
               {selectedBottleneck === 'UNASSIGNED_COURTS' && (
                 <>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/20 font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setCourtSubTab('ties')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold transition ${
+                      courtSubTab === 'ties'
+                        ? 'bg-sky-500/20 text-sky-200 border border-sky-400/40 ring-1 ring-sky-400/30'
+                        : 'bg-sky-500/10 text-sky-300 border border-sky-500/20 hover:bg-sky-500/15'
+                    }`}
+                  >
                     <span>Ties Missing Court: {tiesMissingCourt.length}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCourtSubTab('rubbers')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold transition ${
+                      courtSubTab === 'rubbers'
+                        ? 'bg-indigo-500/20 text-indigo-200 border border-indigo-400/40 ring-1 ring-indigo-400/30'
+                        : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/15'
+                    }`}
+                  >
                     <span>Rubbers Missing Court: {matchesMissingCourt.length}</span>
-                  </div>
+                  </button>
                 </>
               )}
             </div>
 
             {/* Modal Body: List of ties/rubbers */}
             <div className="p-5 overflow-y-auto space-y-3 flex-1">
-              {displayedTies.length === 0 ? (
+              {/* Rubbers sub-tab for Unassigned Courts */}
+              {selectedBottleneck === 'UNASSIGNED_COURTS' && courtSubTab === 'rubbers' ? (
+                matchesMissingCourt.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 text-sm space-y-1">
+                    <p className="font-bold text-white">All clear!</p>
+                    <p className="text-xs">All rubbers have courts assigned.</p>
+                  </div>
+                ) : (
+                  matchesMissingCourt.map((match: any) => {
+                    const parentTie = ties.find((t: any) => t.id === match.tie_id);
+                    return (
+                      <div
+                        key={match.id}
+                        className="p-4 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-primary">
+                              {match.match_code || match.rubber_code || `R${match.rubber_number || match.match_number || '?'}`}
+                            </span>
+                            <span className="font-bold text-sm text-white">
+                              {match.category || match.discipline || 'Rubber'}
+                            </span>
+                            {parentTie && (
+                              <span className="text-xs text-slate-400">
+                                ({parentTie.team_a?.short_name || parentTie.team_a?.name || 'A'} vs {parentTie.team_b?.short_name || parentTie.team_b?.name || 'B'})
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs pt-0.5">
+                            <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/20 font-bold">
+                              Court: No Court Assigned
+                            </span>
+                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                              match.status === 'in_progress' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                              match.status === 'completed' ? 'bg-slate-800 text-slate-400' :
+                              'bg-slate-800/80 text-slate-300'
+                            }`}>
+                              {match.status || 'scheduled'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )
+              ) : displayedTies.length === 0 ? (
                 <div className="text-center py-10 text-slate-400 text-sm space-y-1">
                   <p className="font-bold text-white">All clear!</p>
                   <p className="text-xs">No ties found under this filter right now.</p>
@@ -1017,7 +1420,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex justify-between items-center text-xs text-slate-400 shrink-0">
-              <span>Showing {displayedTies.length} items</span>
+              <span>Showing {selectedBottleneck === 'UNASSIGNED_COURTS' && courtSubTab === 'rubbers' ? matchesMissingCourt.length : displayedTies.length} items</span>
               <Button
                 variant="outline"
                 size="sm"
