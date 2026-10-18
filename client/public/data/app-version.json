@@ -1,6 +1,6 @@
 {
-  "versionCode": 428,
-  "versionName": "4.28",
+  "versionCode": 429,
+  "versionName": "4.29",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- feat(live): auto-delete contact sharing toggle when tournament ends\n- feat(live): search filter and auto-hide for contacts panel\n- fix(live): use full_name column for contacts query\n- feat(live): all-contacts panel for admins/officials on match schedule\n- feat(participants): contacts quick-view and phone-aware CSV import/export"
+  "changelog": "- chore: remove @ts-nocheck from admin components\n- feat: swap participant on bracket, export schedule (PNG/PDF), biometric fix, notified indicator\n- feat(dashboard): add individual-event organizer dashboard and fix unassigned courts bug\n- fix: use BASE_URL for all internal navigation links"
 }

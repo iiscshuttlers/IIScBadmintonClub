@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 429,
+    "versionName": "4.29",
+    "date": "2026-10-18T05:51:01.838Z",
+    "changes": [
+      "- chore: remove @ts-nocheck from admin components",
+      "- feat: swap participant on bracket, export schedule (PNG/PDF), biometric fix, notified indicator",
+      "- feat(dashboard): add individual-event organizer dashboard and fix unassigned courts bug",
+      "- fix: use BASE_URL for all internal navigation links"
+    ]
+  },
+  {
     "versionCode": 428,
     "versionName": "4.28",
     "date": "2026-10-17T19:40:31.626Z",
