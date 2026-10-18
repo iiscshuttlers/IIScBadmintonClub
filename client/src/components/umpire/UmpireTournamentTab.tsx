@@ -33,6 +33,7 @@ export interface TournamentMatchForUmpire {
   best_of_sets: number;
   golden_point: number;
   tie_id?: string | null;
+  reminder_sent?: boolean | null;
 }
 
 interface Props {
@@ -727,10 +728,10 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                           <button
                             onClick={(e) => handleNotify(e, m.id)}
                             disabled={notifyingId === m.id}
-                            className="text-primary p-0.5 z-10"
-                            title="Send Reminder"
+                            className={cn("p-0.5 z-10", m.reminder_sent ? "text-emerald-400" : "text-primary")}
+                            title={m.reminder_sent ? "Notified — tap to resend" : "Send Reminder"}
                           >
-                            {notifyingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                            {notifyingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className={cn("w-3 h-3", m.reminder_sent && "fill-current")} />}
                           </button>
                         )}
                       </div>

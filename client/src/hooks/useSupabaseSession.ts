@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
-import { storeRefreshToken } from "@/lib/biometricAuth";
+import { storeRefreshToken, isBiometricEnabled } from "@/lib/biometricAuth";
 
 export interface SupabaseSessionResult {
   /** The current Supabase session, or null if signed out / not yet resolved. */
@@ -99,10 +100,29 @@ export function useSupabaseSession(): SupabaseSessionResult {
       .then(({ data }) => resolve(data.session))
       .catch(() => resolve(null));
 
+    // On app resume, sync the current refresh token to the biometric keystore.
+    // Without this, a token rotation that happened while backgrounded (or across
+    // devices) leaves the keystore holding a spent token → "expired" on next
+    // biometric sign-in.
+    let appResumeCleanup: (() => void) | undefined;
+    if (Capacitor.isNativePlatform() && isBiometricEnabled()) {
+      import("@capacitor/app").then(({ App }) => {
+        const listener = App.addListener("appStateChange", ({ isActive }) => {
+          if (isActive) {
+            supabase.auth.getSession().then(({ data }) => {
+              if (data.session) void storeRefreshToken(data.session);
+            });
+          }
+        });
+        appResumeCleanup = () => { listener.then(h => h.remove()); };
+      });
+    }
+
     return () => {
       mounted = false;
       clearTimeout(failsafe);
       subscription.unsubscribe();
+      appResumeCleanup?.();
     };
   }, []);
 

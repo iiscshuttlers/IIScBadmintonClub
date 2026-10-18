@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -15,7 +14,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, ChevronRight, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge, Copy
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer, GripVertical, ShieldCheck, ClipboardList, CalendarClock, Gauge, Copy, ArrowLeftRight
 } from "lucide-react";
 import { TournamentOfficialsPanel } from "@/components/admin/TournamentOfficialsPanel";
 import { TournamentReportPanel } from "@/components/admin/TournamentReportPanel";
@@ -144,6 +143,8 @@ interface TournamentMatch {
   advances_to_position: 1 | 2 | null;
   advances_to_match_loser: string | null;
   advances_to_position_loser: 1 | 2 | null;
+  reminder_sent: boolean | null;
+  scored_by?: string | null;
 }
 
 interface RoundRule {
@@ -1526,6 +1527,43 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [remindSentMap, setRemindSentMap] = useState<Record<string, boolean>>({});
   const [isSyncing, setIsSyncing] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [swapParticipant, setSwapParticipant] = useState<{ matchId: string; side: 1 | 2 } | null>(null);
+  const [catParticipants, setCatParticipants] = useState<{ id: string; player_id: string | null; partner_id: string | null; display_name: string | null; category: string }[]>([]);
+  const [swapSaving, setSwapSaving] = useState(false);
+
+  const loadParticipants = useCallback(async (cat: string) => {
+    const { data } = await supabase
+      .from("tournament_participants")
+      .select("id, player_id, partner_id, display_name, category")
+      .eq("tournament_id", tournament.id)
+      .eq("category", cat)
+      .order("seed");
+    setCatParticipants((data as any[]) ?? []);
+  }, [tournament.id]);
+
+  const executeSwap = async (participantId: string) => {
+    if (!swapParticipant) return;
+    setSwapSaving(true);
+    const p = catParticipants.find((x) => x.id === participantId);
+    if (!p) { setSwapSaving(false); return; }
+    const label = p.display_name ?? allPlayers?.find((x: any) => x.id === p.player_id)?.full_name ?? "Unknown";
+    const payload: Record<string, any> = {};
+    if (swapParticipant.side === 1) {
+      payload.player1_id = p.player_id;
+      payload.player3_id = p.partner_id;
+      payload.team1_label = label;
+    } else {
+      payload.player2_id = p.player_id;
+      payload.player4_id = p.partner_id;
+      payload.team2_label = label;
+    }
+    const { error } = await supabase.from("tournament_matches").update(payload).eq("id", swapParticipant.matchId);
+    setSwapSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Participant swapped");
+    setSwapParticipant(null);
+    await load();
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2083,6 +2121,36 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     await exportToPDF([{ name: sheetName, data: [header, ...rows], cellStyler }], filename);
   };
 
+  const printDailyScheduleImage = async () => {
+    const dateMatches = matches.filter(m => {
+      if (!m.scheduled_at) return false;
+      return new Date(m.scheduled_at).toISOString().split("T")[0] === scheduleDate;
+    });
+    if (!dateMatches.length) { toast.error(`No matches scheduled for ${scheduleDate}`); return; }
+
+    dateMatches.sort((a, b) => {
+      const catA = a.category || "", catB = b.category || "";
+      if (catA !== catB) return catA.localeCompare(catB);
+      const timeA = new Date(a.scheduled_at!).getTime(), timeB = new Date(b.scheduled_at!).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return (a.court_number || "").localeCompare(b.court_number || "");
+    });
+
+    const header = ["Sr. No", "Category", "Time", "Court", "Match", "Round", "Team 1", "Team 2", "Score / Result"];
+    const rows = dateMatches.map((m, idx) => {
+      const scheduleStr = new Date(m.scheduled_at!).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit" });
+      let scoreStr = "-";
+      if (m.status === "walkover") scoreStr = `W/O (${m.winner_side === 1 ? m.team1_label : m.team2_label})`;
+      else if (m.sets_history?.length) scoreStr = m.sets_history.join(", ");
+      else if (m.score) scoreStr = m.score;
+      return [(idx + 1).toString(), m.category, scheduleStr, m.court_number ? `Court ${m.court_number}` : "-", m.match_code || "", m.round_name || `Round ${m.round}`, m.team1_label || "TBD", m.team2_label || "TBD", scoreStr];
+    });
+
+    const sheetName = `Schedule - ${scheduleDate}`;
+    const filename = `${tournament.name.replace(/\s+/g, '_')}_schedule_${scheduleDate}`;
+    await exportToImage([{ name: sheetName, data: [header, ...rows] }], filename);
+  };
+
   const downloadMatchesCSV = (cat: string) => {
     const catMatches = matches.filter((m) => m.category === cat);
     if (!catMatches.length) {
@@ -2187,8 +2255,12 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold w-32 focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-800 dark:text-slate-200"
             />
             <button onClick={printDailySchedulePDF}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 text-xs font-black transition">
-              <Printer className="w-3.5 h-3.5 shrink-0" /> Print Daily Schedule
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 text-xs font-black transition">
+              <FileText className="w-3.5 h-3.5 shrink-0" /> PDF
+            </button>
+            <button onClick={printDailyScheduleImage}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-xs font-black transition">
+              <Camera className="w-3.5 h-3.5 shrink-0" /> PNG
             </button>
           </div>
 
@@ -2298,6 +2370,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                     <div className="flex items-center gap-2 flex-wrap px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">{m.match_code}</span>
                       <MatchStatusChip match={m} />
+                      {m.reminder_sent && (
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400" title="Notification sent">
+                          <Bell className="w-3 h-3 fill-current" /> Notified
+                        </span>
+                      )}
                       {m.locked && <Lock className="w-3.5 h-3.5 text-[var(--warning)]" aria-label="Locked" />}
                       {m.scored_by && m.status === 'completed' && (
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 ml-auto">
@@ -2330,15 +2407,55 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         <div className="flex-1 min-w-0">
                           <div className={`text-sm font-bold truncate ${m.winner_side === 1 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
                             {m.team1_label ?? "TBD"}
+                            {m.status === "scheduled" && (!m.locked || isMasterAdmin) && m.team1_label && m.team1_label !== "TBD" && (
+                              <button onClick={() => { setSwapParticipant({ matchId: m.id, side: 1 }); loadParticipants(m.category); }}
+                                className="ml-1 inline-flex align-middle text-muted-foreground hover:text-[var(--info)] transition" title="Swap participant">
+                                <ArrowLeftRight className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
                         </div>
                         <span className="text-[10px] font-black text-muted-foreground uppercase shrink-0">vs</span>
                         <div className="flex-1 min-w-0 text-right">
                           <div className={`text-sm font-bold truncate ${m.winner_side === 2 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
+                            {m.status === "scheduled" && (!m.locked || isMasterAdmin) && m.team2_label && m.team2_label !== "TBD" && (
+                              <button onClick={() => { setSwapParticipant({ matchId: m.id, side: 2 }); loadParticipants(m.category); }}
+                                className="mr-1 inline-flex align-middle text-muted-foreground hover:text-[var(--info)] transition" title="Swap participant">
+                                <ArrowLeftRight className="w-3 h-3" />
+                              </button>
+                            )}
                             {m.team2_label ?? "TBD"}
                           </div>
                         </div>
                       </div>
+
+                      {/* Swap participant inline */}
+                      {swapParticipant?.matchId === m.id && (
+                        <div className="mt-2 p-2.5 rounded-lg bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <ArrowLeftRight className="w-3.5 h-3.5 text-[var(--info)]" />
+                            <span className="text-[11px] font-black text-[var(--info)]">
+                              Swap {swapParticipant.side === 1 ? m.team1_label : m.team2_label}
+                            </span>
+                            <button onClick={() => setSwapParticipant(null)} className="ml-auto text-muted-foreground hover:text-foreground">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <select
+                            className="w-full text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5"
+                            defaultValue=""
+                            disabled={swapSaving}
+                            onChange={(e) => { if (e.target.value) executeSwap(e.target.value); }}
+                          >
+                            <option value="" disabled>Select participant...</option>
+                            {catParticipants.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.display_name ?? "Unknown"}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {/* Score */}
                       {m.status === "completed" && (

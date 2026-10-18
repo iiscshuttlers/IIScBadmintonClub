@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Trophy, Phone, MessageCircle } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Trophy, Phone, MessageCircle, Download, Image, FileText } from "lucide-react";
+import { exportElementToImage, exportElementToPDF } from "@/utils/exportUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const [contactMap, setContactMap] = useState<Record<string, ContactInfo>>({});
   const [officials, setOfficials] = useState<ContactInfo[]>([]);
   const [expandedContacts, setExpandedContacts] = useState<Record<string, boolean>>({});
+  const [exportMenuDate, setExportMenuDate] = useState<string | null>(null);
   const [showAllContacts, setShowAllContacts] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
   const [tournamentOver, setTournamentOver] = useState(false);
@@ -231,23 +233,47 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                   {date} <span className="text-xs font-bold text-slate-400">({totalMatchesForDate})</span>
                 </h4>
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const printContent = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
-                      if (printContent) {
-                        const originalContents = document.body.innerHTML;
-                        document.body.innerHTML = printContent.innerHTML;
-                        window.print();
-                        document.body.innerHTML = originalContents;
-                        window.location.reload();
-                      }
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold"
-                  >
-                    <Trophy className="w-3 h-3" />
-                    Print
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setExportMenuDate(exportMenuDate === date ? null : date);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold"
+                    >
+                      <Download className="w-3 h-3" />
+                      Export
+                    </button>
+                    {exportMenuDate === date && (
+                      <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden min-w-[130px]">
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setExportMenuDate(null);
+                            const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
+                            if (el) await exportElementToImage(el, `schedule_${date.replace(/\s+/g, '_')}`, "#0f172a");
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                        >
+                          <Image className="w-3.5 h-3.5 text-emerald-500" /> PNG Image
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setExportMenuDate(null);
+                            const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
+                            if (el) await exportElementToPDF(el, `schedule_${date.replace(/\s+/g, '_')}`, "#ffffff");
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-red-500" /> PDF
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <ChevronDown className="w-4 h-4 text-muted-foreground group-open:rotate-180 transition-transform" />
                 </div>
               </summary>
