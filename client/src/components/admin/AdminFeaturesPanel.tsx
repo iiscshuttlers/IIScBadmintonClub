@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Admin Features Panel
  * Central dashboard for all new features: live scores, predictions,
