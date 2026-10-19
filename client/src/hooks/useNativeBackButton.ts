@@ -33,6 +33,51 @@ function showExitToast(onDone: () => void) {
   }, 2000);
 }
 
+/**
+ * Detects any open overlay that should capture the Back button before
+ * we do history navigation:
+ *  – Radix UI Dialog / Sheet / AlertDialog / DropdownMenu / Select / Combobox
+ *  – Vaul (swipe-up) drawers
+ *  – Any element whose body scroll-lock indicates an open overlay
+ *
+ * Returns true when such an overlay is present.
+ */
+function hasOpenOverlay(): boolean {
+  // 1. Radix UI: data-state="open" on ARIA roles
+  const radixOpen = document.querySelector(
+    '[role="dialog"][data-state="open"],' +
+    '[role="alertdialog"][data-state="open"],' +
+    '[role="menu"][data-state="open"],' +
+    '[role="listbox"][data-state="open"],' +
+    '[role="tooltip"][data-state="open"]',
+  );
+  if (radixOpen) return true;
+
+  // 2. Radix UI popover/combobox content wrapper (not always a dialog role)
+  const radixPopover = document.querySelector(
+    '[data-radix-popper-content-wrapper] [data-state="open"],' +
+    '[data-radix-popper-content-wrapper]',
+  );
+  if (radixPopover) return true;
+
+  // 3. Vaul drawer (swipe-up sheet used on mobile)
+  const vaulDrawer = document.querySelector(
+    '[data-vaul-drawer][data-state="open"],' +
+    '[vaul-drawer][data-state="open"]',
+  );
+  if (vaulDrawer) return true;
+
+  // 4. Body scroll-lock is Radix's / Vaul's signal that a layer is open
+  //    Radix sets overflow:hidden; Vaul does the same.
+  const bodyStyle = window.getComputedStyle(document.body);
+  if (bodyStyle.overflow === "hidden" || bodyStyle.overflowY === "hidden") return true;
+
+  // 5. Legacy pointer-events block (Radix v1 compat)
+  if (document.body.style.pointerEvents === "none") return true;
+
+  return false;
+}
+
 export function useNativeBackButton() {
   const backPressedRef = useRef(false);
   const lastPressTime = useRef(0);
@@ -42,28 +87,12 @@ export function useNativeBackButton() {
 
     const listener = CapApp.addListener("backButton", (event) => {
       const now = Date.now();
-      // Ignore bounces/duplicate events within 300ms
+      // Debounce: ignore duplicate events within 300 ms
       if (now - lastPressTime.current < 300) return;
       lastPressTime.current = now;
 
-      const path = window.location.pathname;
-      const isHome =
-        path === "/" ||
-        path === "" ||
-        path === "/iiscshuttlers" ||
-        path === "/iiscshuttlers/";
-
-      // 1. Intercept Back Button for Open Modals/Sheets/Drawers (Radix UI)
-      // Radix UI components (Dialog, Sheet, Dropdown, etc.) listen for the 'Escape' key to close.
-      // They also add `data-state="open"` and lock the body pointer events.
-      const hasOpenOverlays = document.querySelectorAll(
-        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [role="menu"][data-state="open"], [role="listbox"][data-state="open"]'
-      ).length > 0;
-      
-      const isBodyLocked = document.body.style.pointerEvents === "none";
-
-      if (hasOpenOverlays || isBodyLocked) {
-        // Synthesize an Escape key press to dismiss the top-most overlay gracefully
+      // 1. Dismiss any open overlay (modal, sheet, drawer, menu, popover)
+      if (hasOpenOverlay()) {
         document.dispatchEvent(
           new KeyboardEvent("keydown", {
             key: "Escape",
@@ -72,18 +101,24 @@ export function useNativeBackButton() {
             which: 27,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
         return;
       }
 
-      // If we are on Home, or WebView has no history, handle double-tap to exit
+      const path = window.location.pathname;
+      const isHome =
+        path === "/" ||
+        path === "" ||
+        path === "/iiscshuttlers" ||
+        path === "/iiscshuttlers/";
+
+      // 2. Double-tap-to-exit when on home or nothing in history
       if (isHome || !event.canGoBack) {
         if (backPressedRef.current) {
           CapApp.exitApp();
           return;
         }
-
         backPressedRef.current = true;
         showExitToast(() => {
           backPressedRef.current = false;
@@ -91,7 +126,10 @@ export function useNativeBackButton() {
         return;
       }
 
-      // Otherwise, standard browser back navigation
+      // 3. Standard back navigation — works for both:
+      //    • wouter route changes (URL-based)
+      //    • useHashTab tab states (state-object-based pushState)
+      //    • useQueryState subtab changes (query-string pushState)
       window.history.back();
     });
 

@@ -47,46 +47,83 @@ export default function Pulse() {
 
   const isCapacitorEnv = Capacitor.isNativePlatform();
 
-  const getPulseTab = () => {
-    try {
-      const hash = window.location.hash.replace("#", "");
-      if (hash.startsWith("directory")) return "directory";
-      if (hash.startsWith("calendar") || hash.startsWith("events")) return "calendar";
-      if (hash.startsWith("feed")) return "feed";
-      if (hash.startsWith("live")) return "live";
-    } catch { /* ignore */ }
-    // No hash → restore from localStorage
-    const saved = navGet("pulse_tab") as "live" | "feed" | "calendar" | "directory" | null;
-    if (saved) return saved;
+  const PULSE_STATE_KEY = "pulse_tab_state";
+  type PulseTab = "live" | "feed" | "calendar" | "directory";
+
+  const getPulseTab = (): PulseTab => {
+    // On Capacitor: read from history state pushed by setPulseTab
+    if (isCapacitorEnv) {
+      try {
+        const sv = (window.history.state as Record<string, string> | null)?.[PULSE_STATE_KEY] as PulseTab | undefined;
+        if (sv && ["live", "feed", "calendar", "directory"].includes(sv)) return sv;
+      } catch { /* ignore */ }
+    } else {
+      // Web: read from hash
+      try {
+        const hash = window.location.hash.replace("#", "");
+        if (hash.startsWith("directory")) return "directory";
+        if (hash.startsWith("calendar") || hash.startsWith("events")) return "calendar";
+        if (hash.startsWith("feed")) return "feed";
+        if (hash.startsWith("live")) return "live";
+      } catch { /* ignore */ }
+    }
+    // Fall back to localStorage
+    const saved = navGet("pulse_tab") as PulseTab | null;
+    if (saved && ["live", "feed", "calendar", "directory"].includes(saved)) return saved;
     return "live";
   };
 
-  const [pulseTab, setPulseTabState] = useState<"live" | "feed" | "calendar" | "directory">(getPulseTab);
+  const [pulseTab, setPulseTabState] = useState<PulseTab>(getPulseTab);
 
   useEffect(() => {
-    const onHashChange = () => setPulseTabState(getPulseTab());
-    window.addEventListener("hashchange", onHashChange);
-    if (!window.location.hash) {
-      const restored = navGet("pulse_tab") || "live";
-      try { window.history.replaceState(null, "", `#${restored}`); } catch { /* ignore */ }
+    if (isCapacitorEnv) {
+      // Capacitor: listen for popstate (tab changes push state objects, not hashes)
+      const onPopState = (e: PopStateEvent) => {
+        const sv = (e.state as Record<string, string> | null)?.[PULSE_STATE_KEY] as PulseTab | undefined;
+        if (sv && ["live", "feed", "calendar", "directory"].includes(sv)) {
+          setPulseTabState(sv);
+        }
+      };
+      window.addEventListener("popstate", onPopState);
+      return () => window.removeEventListener("popstate", onPopState);
+    } else {
+      // Web: hashchange
+      const onHashChange = () => setPulseTabState(getPulseTab());
+      window.addEventListener("hashchange", onHashChange);
+      if (!window.location.hash) {
+        const restored = navGet("pulse_tab") || "live";
+        try { window.history.replaceState(null, "", `#${restored}`); } catch { /* ignore */ }
+      }
+      return () => window.removeEventListener("hashchange", onHashChange);
     }
-    return () => window.removeEventListener("hashchange", onHashChange);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const DIR_PARAMS = ["dir_q", "dir_sort", "dir_level", "dir_dept", "dir_tourn", "dir_cat", "dir_view"];
 
-  const setPulseTab = (tab: "live" | "feed" | "calendar" | "directory") => {
+  const setPulseTab = (tab: PulseTab) => {
     setPulseTabState(tab);
     navSet("pulse_tab", tab); // persist across refresh
-    try {
-      const url = new URL(window.location.href);
-      if (tab !== "directory") {
-        url.search = "";
-      }
-      // When switching TO directory, keep existing dir_* params intact
-      url.hash = tab;
-      window.history.pushState(null, "", url.toString());
-    } catch { /* ignore */ }
+
+    if (isCapacitorEnv) {
+      // Capacitor: push state object — no hash in URL to avoid WebView flash
+      try {
+        const newState: Record<string, string> = {
+          ...(window.history.state as Record<string, string> | null ?? {}),
+          [PULSE_STATE_KEY]: tab,
+        };
+        window.history.pushState(newState, "");
+      } catch { /* ignore */ }
+    } else {
+      // Web: push hash so browser Back/Forward walks through tabs
+      try {
+        const url = new URL(window.location.href);
+        if (tab !== "directory") url.search = "";
+        // When switching TO directory, keep existing dir_* params intact
+        url.hash = tab;
+        window.history.pushState(null, "", url.toString());
+      } catch { /* ignore */ }
+    }
   };
 
   type LiveTournament = {

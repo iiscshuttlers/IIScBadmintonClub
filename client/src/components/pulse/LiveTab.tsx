@@ -113,33 +113,36 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     }
   };
 
-  const [feedView, setFeedView] = useQueryState<"my" | "tournament">("feed", "tournament");
+  const [feedView, setFeedView] = useQueryState<"my" | "tournament">("feed", "tournament", true);
 
-  // Dynamic URL syncing for Tournament Matches
-  const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming");
-  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL");
+  // Dynamic URL syncing for Tournament Matches — use replace so filters
+  // don't create back-button history entries; only the primary subtab does.
+  const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming", true);
+  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL", true);
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
-  // Is the viewer an assigned organiser/referee for the active tournament? (gates the Referee tab)
-  const [isLiveOfficial, setIsLiveOfficial] = useState(false);
+  // Is the viewer an assigned official (umpire/organiser/referee) for the active tournament?
+  const [liveOfficialRoles, setLiveOfficialRoles] = useState<Set<string>>(new Set());
   useEffect(() => {
     let cancelled = false;
     const pid = ownProfile?.id;
-    if (!activeTournamentId || !pid) { setIsLiveOfficial(false); return; }
+    if (!activeTournamentId || !pid) { setLiveOfficialRoles(new Set()); return; }
     (async () => {
       const { data } = await supabase
         .from("tournament_officials" as any)
         .select("role")
         .eq("tournament_id", activeTournamentId)
-        .eq("user_id", pid)
-        .in("role", ["ORGANIZER", "REFEREE"]);
-      if (!cancelled) setIsLiveOfficial(!!data && data.length > 0);
+        .eq("user_id", pid);
+      if (!cancelled) setLiveOfficialRoles(new Set((data ?? []).map((d: any) => d.role)));
     })();
     return () => { cancelled = true; };
   }, [activeTournamentId, ownProfile?.id]);
-  const canReferee = isAdmin || isLiveOfficial;
+  const isLiveUmpire = liveOfficialRoles.has("UMPIRE");
+  const isLiveOrganizer = liveOfficialRoles.has("ORGANIZER");
+  const isLiveReferee = liveOfficialRoles.has("REFEREE");
+  const canReferee = isAdmin || isLiveOrganizer || isLiveReferee;
 
   const initialTournamentId = typeof window !== "undefined"
     ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
@@ -386,7 +389,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
           { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
           ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
           { id: "brackets", label: "Brackets", icon: LayoutList },
-          ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
+          ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ...(canReferee ? [{
             id: "referee",
             label: "Referee",
@@ -395,8 +398,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
             inactiveClass: "bg-rose-600/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600/20 border border-rose-600/20",
             iconClass: "text-rose-600"
           }] : []),
-          ...((isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) ? [{
-            id: "organizer", 
+          ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
+            id: "organizer",
             label: "Organizer", 
             icon: LayoutDashboard,
             activeClass: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-600/20 scale-105 font-black",
@@ -565,7 +568,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                   
                   if (isLiveNow) {
                     // Handled by LiveScoreSection, exclude from here
-                  } else if (match.status === 'scheduled') {
+                  } else if (match.status === 'scheduled' || match.status === 'pending') {
                     upcomingMatches.push(match);
                   } else {
                     completedMatches.push(match);
@@ -963,7 +966,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         </div>
       )}
 
-      {(isUmpire || isAdmin) && activeSubTab === "umpire" && (
+      {(isUmpire || isAdmin || isLiveUmpire) && activeSubTab === "umpire" && (
         <div className="mb-6">
           <UmpireTab tournamentId={activeTournament?.id} tournament={activeTournament} />
         </div>
@@ -985,7 +988,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         </div>
       )}
 
-      {(isAdmin || isUmpire || activeTournament?.created_by === session?.user?.id) && activeSubTab === "organizer" && (
+      {(isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) && activeSubTab === "organizer" && (
         <div className="mb-6">
           {activeTournamentId ? (
             <OrganizerDashboard 
