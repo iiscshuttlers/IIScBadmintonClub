@@ -27,12 +27,26 @@ export function UmpireTab({
   tournament?: any;
 }) {
   const { session, isUmpire, profile } = useAuth();
-  // Only master_admin, admin, and umpire roles can run tournament matches
-  const hasElevatedRole = isUmpire && (
+  const hasGlobalElevatedRole = isUmpire && (
     profile?.role === 'master_admin' || profile?.role === 'admin' || profile?.role === 'umpire'
   );
+  const [isTournamentOfficial, setIsTournamentOfficial] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const pid = profile?.id;
+    if (!tournamentId || !pid) { setIsTournamentOfficial(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("tournament_officials" as any)
+        .select("role")
+        .eq("tournament_id", tournamentId)
+        .eq("user_id", pid);
+      if (!cancelled) setIsTournamentOfficial(!!data && data.length > 0);
+    })();
+    return () => { cancelled = true; };
+  }, [tournamentId, profile?.id]);
+  const hasElevatedRole = hasGlobalElevatedRole || isTournamentOfficial;
   const [hasActiveTournament, setHasActiveTournament] = useState(Boolean(tournamentId));
-  // canRunTournament = elevated role + active tournament exists
   const canRunTournament = hasElevatedRole && hasActiveTournament;
   const [activeMatches, setActiveMatches] = useState<(BwfMatchState | MatchEditState | TournamentMatchForUmpire)[]>(() => {
     // Restore any setup-state matches from localStorage on first render

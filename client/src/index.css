@@ -597,21 +597,6 @@ html {
   }
 }
 
-.marquee-anim {
-  display: flex;
-  width: max-content;
-  animation: marquee 90s linear infinite;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
 /* Shimmer loading effect */
 @keyframes shimmer {
   0% {
@@ -809,21 +794,6 @@ html {
   background-color: rgba(71, 85, 105, 0.8);
 }
 
-.marquee-anim {
-  display: flex;
-  width: max-content;
-  animation: marquee 90s linear infinite;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
 /* Shimmer loading effect */
 @keyframes shimmer {
   0% {
@@ -975,21 +945,6 @@ html {
 }
 .visible-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(156, 163, 175, 0.6);
-}
-
-.marquee-anim {
-  display: flex;
-  width: max-content;
-  animation: marquee 90s linear infinite;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
 }
 
 /* Shimmer loading effect */

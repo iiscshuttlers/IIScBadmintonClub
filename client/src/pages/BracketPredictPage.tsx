@@ -65,6 +65,25 @@ export default function BracketPredictPage() {
   const started = hasStarted(matches);
   const roundsList = useMemo(() => predictableRounds(matches), [matches]);
 
+  // Auto-scroll to the latest round that still has actionable matches
+  const scrolledRef = useRef(false);
+  useEffect(() => {
+    if (scrolledRef.current || !roundsList.length) return;
+    // Find the latest round with at least one non-bye, non-completed match
+    let targetIdx = 0;
+    for (let i = roundsList.length - 1; i >= 0; i--) {
+      const hasOpen = roundsList[i].some(m =>
+        !isByeLabel(m.team1_label) && !isByeLabel(m.team2_label) && !m.winner_side
+      );
+      if (hasOpen) { targetIdx = i; break; }
+    }
+    scrolledRef.current = true;
+    setTimeout(() => {
+      const el = document.querySelector(`[data-predict-round="${targetIdx}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+  }, [roundsList]);
+
   usePageMeta({ title: `Bracket challenge · ${data?.name ?? ""}`, description: "Predict the draw" });
 
   // Own row (RLS: own only).
@@ -132,6 +151,21 @@ export default function BracketPredictPage() {
     }, 600);
   };
 
+  // Community pick stats: per match_code → { [playerId]: count }
+  const communityStats = useMemo(() => {
+    if (!board?.length) return new Map<string, Map<string, number>>();
+    const stats = new Map<string, Map<string, number>>();
+    for (const row of board) {
+      for (const [code, pickId] of Object.entries(row.picks ?? {})) {
+        if (!pickId) continue;
+        let m = stats.get(code);
+        if (!m) { m = new Map(); stats.set(code, m); }
+        m.set(pickId, (m.get(pickId) ?? 0) + 1);
+      }
+    }
+    return stats;
+  }, [board]);
+
   const real = roundsList.flat().filter((m) => !isByeLabel(m.team1_label) && !isByeLabel(m.team2_label));
   const total = real.length;
   const openLeft = real.filter((m) => !matchLocked(m)).length;
@@ -178,7 +212,7 @@ export default function BracketPredictPage() {
               role="tab"
               aria-selected={c === cat}
               onClick={() => {
-                setCat(c);
+                setCat(c); scrolledRef.current = false;
                 loadedFor.current = "";
               }}
               className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition ${
@@ -238,7 +272,7 @@ export default function BracketPredictPage() {
             const list = r.filter((m) => !isByeLabel(m.team1_label) && !isByeLabel(m.team2_label));
             if (!list.length) return null;
             return (
-              <section key={i} className="space-y-3" aria-label={r[0]?.round_name ?? `Round ${i + 1}`}>
+              <section key={i} data-predict-round={i} className="space-y-3" aria-label={r[0]?.round_name ?? `Round ${i + 1}`}>
                 <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
                   <span className="w-1.5 h-4 rounded-full bg-primary" />
                   {r[0]?.round_name ?? `Round ${i + 1}`}
@@ -299,6 +333,28 @@ export default function BracketPredictPage() {
                           );
                         })}
                       </div>
+                      {(() => {
+                        const cs = communityStats.get(m.match_code);
+                        if (!cs || !matchLocked(m)) return null;
+                        const total = Array.from(cs.values()).reduce((s, v) => s + v, 0);
+                        if (!total) return null;
+                        const p1Count = (a?.id ? cs.get(a.id) : 0) ?? 0;
+                        const p2Count = (b?.id ? cs.get(b.id) : 0) ?? 0;
+                        const p1Pct = Math.round((p1Count / total) * 100);
+                        const p2Pct = Math.round((p2Count / total) * 100);
+                        return (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-1.5 h-2 rounded-full overflow-hidden bg-muted/50">
+                              {p1Pct > 0 && <div className="h-full rounded-full bg-primary/60" style={{ width: `${p1Pct}%` }} />}
+                              {p2Pct > 0 && <div className="h-full rounded-full bg-sky-500/60 ml-auto" style={{ width: `${p2Pct}%` }} />}
+                            </div>
+                            <div className="flex justify-between text-[9px] font-bold text-muted-foreground">
+                              <span>{p1Pct}% picked</span>
+                              <span>{p2Pct}% picked</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </article>
                   );
                 })}

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X, ClipboardEdit, Megaphone
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X, ClipboardEdit, Megaphone, Trash2, CheckCircle2
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ export interface TournamentMatchForUmpire {
   golden_point: number;
   tie_id?: string | null;
   reminder_sent?: boolean | null;
+  winner_side?: number | null;
+  score?: string | null;
 }
 
 interface Props {
@@ -111,7 +113,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const [directSets, setDirectSets] = useState<{ t1: string; t2: string }[]>([{ t1: "", t2: "" }, { t1: "", t2: "" }]);
   const [savingDirectScore, setSavingDirectScore] = useState(false);
 
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
+  const isAdmin = profile?.role === 'master_admin' || profile?.role === 'admin';
+  const [deletingMatchId, setDeletingMatchId] = useState<string | null>(null);
 
   const openDirectScore = (m: TournamentMatchForUmpire) => {
     const numSets = m.best_of_sets || 3;
@@ -280,6 +284,21 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     }
   };
 
+  const deleteThirdPlaceMatch = async (m: TournamentMatchForUmpire) => {
+    if (!confirm(`Remove 3rd place match ${m.match_code}? This cannot be undone.`)) return;
+    setDeletingMatchId(m.id);
+    try {
+      const { error } = await supabase.from("tournament_matches").delete().eq("id", m.id);
+      if (error) throw error;
+      setAllMatches(prev => prev.filter(x => x.id !== m.id));
+      toast.success("3rd place match removed");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete match");
+    } finally {
+      setDeletingMatchId(null);
+    }
+  };
+
   // `silent` is used by the realtime/focus refresh so the list updates in place
   // without flashing the spinner or surfacing a toast for a transient blip.
   const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -318,7 +337,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         .from("tournament_matches")
         .select("*")
         .in("tournament_id", tournamentIds)
-        .in("status", ["scheduled", "in_progress"])
+        .in("status", ["scheduled", "in_progress", "pending"])
         .order("round")
         .order("match_number"),
       supabase
@@ -454,7 +473,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     let upcomingScheduled = allMatches
       .filter(m => !isBye(m))
       .filter(m => {
-        if (upcomingStatus === "upcoming") return m.status === "scheduled";
+        if (upcomingStatus === "upcoming") return m.status === "scheduled" || m.status === "pending";
         if (upcomingStatus === "live") return m.status === "in_progress";
         if (upcomingStatus === "completed") return m.status === "completed" || m.status === "walkover";
         return true;
@@ -678,7 +697,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             ) : (
               <div className="space-y-1.5">
                 {upcomingScheduled.map((m) => {
-                  const noPlayers = !m.team1_label || !m.team2_label;
+                  const isBye = m.team1_label === "BYE" || m.team2_label === "BYE";
+                  const noPlayers = !isBye && (!m.team1_label || !m.team2_label);
                   const isLive = m.status === "in_progress";
                   const isDone = m.status === "completed" || m.status === "walkover";
 
@@ -691,7 +711,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     className={cn(
                       "relative w-full p-3 rounded-xl border text-left transition-all duration-200 group",
                       isDone
-                        ? "bg-slate-800/30 border-slate-800/40 opacity-60"
+                        ? "bg-slate-800/30 border-slate-800/40"
                         : noPlayers
                           ? "bg-slate-800/40 border-slate-800/50 opacity-50 cursor-not-allowed"
                           : isLive
@@ -711,7 +731,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         </span>
                       )}
                       {isDone && (
-                        <span className="text-[9px] font-black text-emerald-500 shrink-0">DONE</span>
+                        <span className="text-[9px] font-black text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 shrink-0">DONE</span>
                       )}
 
                       {/* Right: court + time + notify */}
@@ -738,11 +758,21 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     </div>
 
                     {/* Players row */}
-                    <div className="flex items-center justify-between gap-2 mt-1.5">
-                      <span className="text-slate-100 font-bold text-xs truncate flex-1">{m.team1_label ?? "TBD"}</span>
-                      <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
-                      <span className="text-slate-100 font-bold text-xs truncate flex-1 text-right">{m.team2_label ?? "TBD"}</span>
-                    </div>
+                    {(() => {
+                      const t1Won = m.winner_side === 1 || m.team2_label === "BYE";
+                      const t2Won = m.winner_side === 2 || m.team1_label === "BYE";
+                      return (
+                        <div className="flex items-center justify-between gap-2 mt-1.5">
+                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                            {t1Won && <CheckCircle2 className="w-3 h-3 inline mr-0.5 -mt-0.5" />}{m.team1_label ?? "TBD"}
+                          </span>
+                          <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
+                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                            {m.team2_label ?? "TBD"}{t2Won && <CheckCircle2 className="w-3 h-3 inline ml-0.5 -mt-0.5" />}
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {noPlayers && (
                       <p className="text-[9px] text-muted-foreground text-center mt-1 italic">Waiting for previous round</p>
@@ -764,7 +794,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
           {categories.map((cat) => {
             const colors = CAT_COLORS[cat] ?? DEFAULT_COLORS;
             const catMatches = allMatches.filter((m) => m.category === cat);
+            const upcoming = catMatches.filter((m) => m.status === "scheduled" || m.status === "pending").length;
             const inProgress = catMatches.filter((m) => m.status === "in_progress").length;
+            const done = catMatches.filter((m) => m.status === "completed" || m.status === "walkover").length;
 
             return (
               <button
@@ -778,8 +810,17 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <div className="flex-1 min-w-0">
                   <p className="font-black text-foreground">{CAT_LABELS[cat] ?? cat}</p>
                   <p className="text-sm text-muted-foreground">
-                    {catMatches.length} match{catMatches.length !== 1 ? "es" : ""} pending
-                    {inProgress > 0 && <span className="ml-2 text-amber-400 font-bold">· {inProgress} live</span>}
+                    {(() => {
+                      if (catMatches.length > 0 && upcoming === 0 && inProgress === 0) {
+                        return <span className="text-emerald-400 font-bold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 inline" /> All {done} matches completed</span>;
+                      }
+                      const parts: React.ReactNode[] = [];
+                      if (upcoming > 0) parts.push(<span key="u">{upcoming} upcoming</span>);
+                      if (inProgress > 0) parts.push(<span key="l" className="text-amber-400 font-bold">{inProgress} live</span>);
+                      if (done > 0) parts.push(<span key="d" className="text-slate-500">{done} done</span>);
+                      if (parts.length === 0) return <span>No matches</span>;
+                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600">·</span>, part], []);
+                    })()}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -795,8 +836,19 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   if (step === "match" && selectedCategory) {
     const colors = CAT_COLORS[selectedCategory] ?? DEFAULT_COLORS;
 
-    // Group by round
-    const rounds = [...new Set(matchesForCategory.map((m) => m.round_name))];
+    // Group by round, sorted descending (Final first, then SF, QF, etc.)
+    const roundEntries = [...new Set(matchesForCategory.map((m) => m.round_name))].map(name => {
+      const maxRound = Math.max(...matchesForCategory.filter(m => m.round_name === name).map(m => m.round ?? 0));
+      const is3rd = name.toLowerCase().includes('3rd');
+      return { name, maxRound, is3rd };
+    });
+    roundEntries.sort((a, b) => {
+      // 3rd place goes right after Final (highest round)
+      if (a.is3rd && !b.is3rd) return b.maxRound === Math.max(...roundEntries.map(r => r.maxRound)) ? 1 : -1;
+      if (b.is3rd && !a.is3rd) return a.maxRound === Math.max(...roundEntries.map(r => r.maxRound)) ? -1 : 1;
+      return b.maxRound - a.maxRound;
+    });
+    const rounds = roundEntries.map(r => r.name);
 
     return (
       <div className="space-y-4">
@@ -809,6 +861,18 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
           </button>
           <div className={`px-3 py-1.5 rounded-xl font-black text-sm border ${colors.active}`}>{selectedCategory}</div>
           <span className="text-muted-foreground text-sm">{CAT_LABELS[selectedCategory] ?? selectedCategory}</span>
+          <button
+            onClick={() => {
+              const allCollapsed = rounds.every(r => collapsedRounds[r] ?? true);
+              const next: Record<string, boolean> = {};
+              rounds.forEach(r => { next[r] = !allCollapsed; });
+              setCollapsedRounds(prev => ({ ...prev, ...next }));
+            }}
+            className="ml-auto p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent text-[10px] font-bold"
+            title={rounds.every(r => collapsedRounds[r] ?? true) ? "Expand all" : "Collapse all"}
+          >
+            {rounds.every(r => collapsedRounds[r] ?? true) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
         </div>
 
         <div className="space-y-4">
@@ -837,7 +901,28 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       !isCollapsed ? "text-slate-200" : "text-slate-400 group-hover:text-slate-300"
                     )}>{roundName}</p>
                   </div>
-                  {!isCollapsed && <span className="text-[10px] font-bold text-slate-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full">{roundMatches.length}</span>}
+                  <div className="flex items-center gap-2">
+                    {!isCollapsed && <span className="text-[10px] font-bold text-slate-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full">{roundMatches.length}</span>}
+                    {isAdmin && roundName.toLowerCase().includes('3rd') && (
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!confirm(`Remove all ${roundMatches.length} 3rd place match(es) for ${selectedCategory}?`)) return;
+                          Promise.all(roundMatches.map(m => supabase.from("tournament_matches").delete().eq("id", m.id)))
+                            .then(() => {
+                              setAllMatches(prev => prev.filter(m => !roundMatches.some(rm => rm.id === m.id)));
+                              toast.success("3rd place match(es) removed");
+                            })
+                            .catch((err: any) => toast.error(err.message || "Failed to delete"));
+                        }}
+                        className="p-1 rounded-md bg-rose-950/50 border border-rose-900/50 text-rose-400 hover:bg-rose-900/50 hover:text-rose-300 transition"
+                        title="Remove 3rd place match"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </span>
+                    )}
+                  </div>
                 </button>
                 
                 {!isCollapsed && (
@@ -845,7 +930,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     {roundMatches.map((m) => {
                       const isLive = m.status === "in_progress";
                       const isDoubles = m.category.includes('D') || m.category.includes('Doubles');
-                      const noPlayers = !m.team1_label || !m.team2_label || m.team1_label === "TBD" || m.team2_label === "TBD" || !m.player1_id || (isDoubles && !m.player3_id);
+                      const isBye = m.team1_label === "BYE" || m.team2_label === "BYE";
+                      const hasLabels = m.team1_label && m.team2_label && m.team1_label !== "TBD" && m.team2_label !== "TBD";
+                      const noPlayers = !isBye && !hasLabels;
 
                       return (
                         <button
@@ -881,6 +968,16 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
+                                {isAdmin && m.match_code.includes("3RD") && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); deleteThirdPlaceMatch(m); }}
+                                    disabled={deletingMatchId === m.id}
+                                    className="p-1 rounded-md bg-rose-950/50 border border-rose-900/50 text-rose-400 hover:bg-rose-900/50 hover:text-rose-300 transition"
+                                    title="Remove 3rd place match"
+                                  >
+                                    {deletingMatchId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                  </button>
+                                )}
                                 {m.court_number && (
                                   <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800", getCourtColor(m.court_number))}>
                                     <MapPin className="w-3 h-3" /> C{m.court_number}
@@ -895,32 +992,59 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
-                              <div className="flex-1 min-w-0">
-                                <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
-                                  {m.team1_label ?? "TBD"}
-                                </span>
-                              </div>
-                              <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
-                                <div className={cn(
-                                  "border text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5",
-                                  isLive ? "bg-amber-950/80 border-amber-700/80 text-amber-500" : "bg-slate-950/80 border-slate-700/80 text-rose-400"
-                                )}>
-                                  VS
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0 text-right">
-                                <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
-                                  {m.team2_label ?? "TBD"}
-                                </span>
-                              </div>
-                            </div>
+                            {(() => {
+                              const w = m.winner_side;
+                              const t1Won = w === 1 || m.team2_label === "BYE";
+                              const t2Won = w === 2 || m.team1_label === "BYE";
+                              return (
+                                <>
+                                  <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
+                                    <div className="flex-1 min-w-0">
+                                      <span className={cn(
+                                        "font-bold text-sm sm:text-base block truncate transition-colors",
+                                        t1Won ? "text-emerald-400" : t2Won ? "text-slate-500" : "text-slate-100 group-hover:text-primary"
+                                      )}>
+                                        {t1Won && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
+                                        {m.team1_label ?? "TBD"}
+                                      </span>
+                                    </div>
+                                    <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
+                                      <div className={cn(
+                                        "border text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5",
+                                        isLive ? "bg-amber-950/80 border-amber-700/80 text-amber-500" : "bg-slate-950/80 border-slate-700/80 text-rose-400"
+                                      )}>
+                                        VS
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0 text-right">
+                                      <span className={cn(
+                                        "font-bold text-sm sm:text-base block truncate transition-colors",
+                                        t2Won ? "text-emerald-400" : t1Won ? "text-slate-500" : "text-slate-100 group-hover:text-primary"
+                                      )}>
+                                        {t2Won && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
+                                        {m.team2_label ?? "TBD"}
+                                      </span>
+                                    </div>
+                                  </div>
 
-                            {noPlayers && (
-                              <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
-                                Waiting for previous round results
-                              </p>
-                            )}
+                                  {isBye && (
+                                    <p className="text-[11px] text-emerald-400/70 text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                                      Advances automatically
+                                    </p>
+                                  )}
+                                  {(t1Won || t2Won) && !isBye && m.score && (
+                                    <p className="text-[11px] text-emerald-400/70 text-center mt-2 border-t border-slate-800/50 pt-2">
+                                      {m.score}
+                                    </p>
+                                  )}
+                                  {noPlayers && (
+                                    <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                                      Waiting for previous round results
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         </button>
                       );

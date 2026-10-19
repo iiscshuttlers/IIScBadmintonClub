@@ -1,5 +1,6 @@
 interface Props {
   sets_history?: string[] | null;
+  score?: string | null;
   team1_label?: string;
   team2_label?: string;
   winner_side?: 1 | 2 | null;
@@ -8,7 +9,7 @@ interface Props {
 }
 
 /** Renders a completed match score as a styled game-by-game table. */
-export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winner_side, status, compact }: Props) {
+export function MatchScoreDisplay({ sets_history, score, team1_label, team2_label, winner_side, status, compact }: Props) {
   if (status === "walkover") {
     return (
       <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-muted-foreground">
@@ -17,9 +18,10 @@ export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winn
     );
   }
 
-  if (!sets_history?.length) return null;
+  const effectiveSets = sets_history?.length ? sets_history : score ? score.split(",").map(s => s.trim()).filter(Boolean) : [];
+  if (!effectiveSets.length) return null;
 
-  const parsed = sets_history.map((s) => {
+  const parsed = effectiveSets.map((s) => {
     const [a, b] = s.split("-").map(Number);
     return { a: isNaN(a) ? 0 : a, b: isNaN(b) ? 0 : b };
   });
@@ -30,7 +32,7 @@ export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winn
   if (compact) {
     return (
       <span className="font-mono text-xs text-muted-foreground dark:text-slate-300">
-        {sets_history.join(", ")}
+        {effectiveSets.join(", ")}
       </span>
     );
   }

@@ -215,7 +215,7 @@ export default function StatusBanner() {
     <div className="relative bg-primary text-primary-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/pulse" className="flex-1 overflow-hidden min-w-0 pr-10 group">
         <div 
-          className="animate-marquee w-[max-content] group-hover:[animation-play-state:paused] flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer"
+          className="w-[max-content] group-hover:[animation-play-state:paused] flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap cursor-pointer"
           style={{ animation: 'marquee 90s linear infinite' }}
         >
           {Array(2)
@@ -257,7 +257,7 @@ export default function StatusBanner() {
         const flyerContent = (
           <div className="flex-1 overflow-hidden min-w-0 pr-10 group">
             <div 
-              className="animate-marquee w-[max-content] group-hover:[animation-play-state:paused] flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity"
+              className="w-[max-content] group-hover:[animation-play-state:paused] flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap"
               style={{ animation: `marquee ${flyer.speed === 'custom' ? `${flyer.customSpeed || 90}s` : flyer.speed === 'slow' ? '150s' : flyer.speed === 'fast' ? '45s' : '90s'} linear infinite` }}
             >
               {Array(2)

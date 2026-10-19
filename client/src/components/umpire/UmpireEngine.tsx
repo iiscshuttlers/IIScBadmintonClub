@@ -341,7 +341,7 @@ export function UmpireEngine({
     setPendingBreakAfterEnds, setShowCardPanel, setCardTarget, setShowRetireModal,
     setIsEditSetupOpen, setShowToolsMenu, setIsDirectScoreOpen, setShowFullTimer,
     setDirectSetsText, setDirectWinner, setBreakSecondsLeft, setBreakLabel,
-    updateMatch, startMatch, startTournamentMatch, handleEditSet, reopenSet, addPoint, deductPoint, forceEndSet,
+    updateMatch, startMatch, startTournamentMatch, handleEditSet, reopenSet, deleteSet, addPoint, deductPoint, forceEndSet,
     confirmChangeEnds, callLet, callServiceFault, issueCard, retireTeam, saveMatchToProfile,
     handleClose, getName, getGender, deduceCategory, startBreak, endBreak,
     selectedPlayerIds, buddyCheckPassed, isDoubles, serverName, receiverName,
@@ -374,12 +374,13 @@ export function UmpireEngine({
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let fallbackId: NodeJS.Timeout;
     if (match.status === "playing") {
       hasAutoSavedRef.current = false;
       toast.dismiss("auto-save");
     } else if (match.status === "finished" && !hasSaved && !isSaving && !hasAutoSavedRef.current) {
       hasAutoSavedRef.current = true;
-      
+
       toast("Match Finished!", {
         id: "auto-save",
         description: "Auto-saving in 3 seconds...",
@@ -397,10 +398,25 @@ export function UmpireEngine({
       timeoutId = setTimeout(() => {
         saveMatchToProfile();
       }, 3000);
+    } else if (match.status === "finished" && !hasSaved && !isSaving) {
+      // Fallback: if initial auto-save was undone or failed, retry after 30s
+      fallbackId = setTimeout(() => {
+        saveMatchToProfile();
+      }, 30000);
     }
-    return () => clearTimeout(timeoutId);
+    return () => { clearTimeout(timeoutId); clearTimeout(fallbackId); };
   }, [match.status, hasSaved, isSaving, saveMatchToProfile, updateMatch]);
 
+  // Auto-save when umpire leaves the tab/app with a finished unsaved match
+  useEffect(() => {
+    const onVisChange = () => {
+      if (document.visibilityState === "hidden" && match.status === "finished" && !hasSaved && !isSaving) {
+        saveMatchToProfile();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisChange);
+    return () => document.removeEventListener("visibilitychange", onVisChange);
+  }, [match.status, hasSaved, isSaving, saveMatchToProfile]);
 
   // Render variables
   // friendlyOnly = no tournament in progress OR user lacks umpire/admin role
@@ -804,7 +820,21 @@ export function UmpireEngine({
               <X className="w-3.5 h-3.5 text-rose-400" /> Close
             </button>
           </div>
-          <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-3 text-[9px] font-bold text-slate-600 hover:text-slate-400 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition">
+          <button onClick={() => {
+            const gamesToWin = Math.ceil((match.bestOfSets || 1) / 2);
+            const maxSets = match.bestOfSets || 1;
+            if (match.setsHistory.length >= maxSets) {
+              setConfirmAction({
+                title: "Resume Match?",
+                message: `This is a Best-of-${maxSets} match and ${match.setsHistory.length} set${match.setsHistory.length > 1 ? "s have" : " has"} been played. Are you sure you want to add another set?`,
+                confirmLabel: "Resume Anyway",
+                confirmColor: "bg-amber-600 hover:bg-amber-500",
+                onConfirm: () => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined }),
+              });
+            } else {
+              updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined });
+            }
+          }} className="mt-3 text-[9px] font-bold text-slate-600 hover:text-slate-400 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition">
             Wait, add a set / resume match
           </button>
         </div>
@@ -835,11 +865,11 @@ export function UmpireEngine({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`font-black text-2xl sm:text-3xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : 'text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]'}`}>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`font-black text-xl sm:text-2xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : 'text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]'}`}>
                   {breakSecondsLeft < 0 ? "-" : ""}{Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")}
                 </span>
-                <button onClick={endBreak} className="px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-bold text-[10px] rounded-xl border border-white/[0.08] transition backdrop-blur-sm">
+                <button onClick={endBreak} className="px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-bold text-[10px] rounded-xl border border-white/[0.08] transition backdrop-blur-sm shrink-0">
                   End
                 </button>
               </div>
@@ -1052,6 +1082,9 @@ export function UmpireEngine({
                   <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
                     <ArrowLeftRight className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Swap Ends
                   </button>
+                  <button onClick={() => updateMatch({ serverTeam: match.serverTeam === 1 ? 2 : 1, serverPlayerIndex: 0, receiverPlayerIndex: 0 })} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
+                    <Shuffle className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Switch Server
+                  </button>
                   {servingTeamIsDoubles && (
                     <button
                       onClick={() => {
@@ -1064,7 +1097,7 @@ export function UmpireEngine({
                         });
                       }}
                       className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
-                      <Repeat className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Switch Server
+                      <Repeat className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Swap Server Player
                     </button>
                   )}
                   {receivingTeamIsDoubles && (
@@ -1100,7 +1133,7 @@ export function UmpireEngine({
                   {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]].map(([label, secs, lbl]) => (
                     <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
                       className={`py-2.5 font-bold text-[10px] sm:text-xs rounded-xl transition-all flex justify-center items-center gap-1.5 ${
-                        label === "1 min"
+                        breakTotalSeconds === secs
                           ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
                           : "bg-white/[0.03] hover:bg-amber-500/10 border border-white/[0.06] hover:border-amber-500/30 text-slate-400 hover:text-amber-300"
                       }`}>
@@ -1251,9 +1284,16 @@ export function UmpireEngine({
                           <div className="line-clamp-2 break-words leading-tight">{winnerStr}</div>
                         </td>
                         <td className="px-2 sm:px-4 py-3 text-center">
-                          <button onClick={() => reopenSet(i)} className="p-1.5 sm:p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 shadow-xs group relative" title="Reopen Set in Score Panel">
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => reopenSet(i)} className="p-1.5 sm:p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 shadow-xs" title="Reopen Set in Score Panel">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            {match.setsHistory.length > 1 && (
+                              <button onClick={() => deleteSet(i)} className="p-1.5 sm:p-2 bg-slate-800 hover:bg-rose-900/50 text-slate-500 hover:text-rose-400 rounded-lg transition-colors border border-slate-700 hover:border-rose-700 shadow-xs" title="Delete Set">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

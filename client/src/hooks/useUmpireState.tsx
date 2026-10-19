@@ -615,7 +615,8 @@ export function useUmpireState({
       }
 
       if (_changeEnds) {
-        setPendingBreakAfterEnds(_break || null);
+        if (_break) startBreak(_break, _reason || "Change Ends");
+        setPendingBreakAfterEnds(null);
         setChangeEndsReason(_reason || "Change Ends");
         // Games 1 and 2 take the interval without switching sides, so the
         // overlay must not claim the ends changed.
