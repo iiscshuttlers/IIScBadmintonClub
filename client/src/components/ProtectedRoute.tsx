@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { getReturnUrl } from "@/lib/returnUrl";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -19,7 +20,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!session) {
-    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+    sessionStorage.setItem("return_url", getReturnUrl());
     return <Redirect to="/join" />;
   }
 
