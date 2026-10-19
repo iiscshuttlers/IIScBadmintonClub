@@ -43,12 +43,12 @@ export function DisputePanel() {
     setProcessing(matchId);
     try {
       if (action === "uphold") {
-        const { error } = await supabase.from("matches").update({ status: "confirmed", dispute_reason: null }).eq("id", matchId);
+        const { error } = await supabase.from("matches").update({ status: "confirmed", dispute_reason: null } as any).eq("id", matchId);
         if (error) throw error;
         await logAction(`Upheld disputed match ${matchId}`);
         toast.success("Match upheld — result stands");
       } else if (action === "override" && newWinnerId) {
-        const { error } = await supabase.from("matches").update({ status: "confirmed", winner_id: newWinnerId, dispute_reason: null }).eq("id", matchId);
+        const { error } = await supabase.from("matches").update({ status: "confirmed", winner_id: newWinnerId, dispute_reason: null } as any).eq("id", matchId);
         if (error) throw error;
         await logAction(`Overrode winner on match ${matchId} → player ${newWinnerId}`);
         toast.success("Winner overridden — match confirmed");

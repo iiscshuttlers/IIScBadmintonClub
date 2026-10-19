@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Shield, ShieldAlert, ShieldCheck, User, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Player } from "@/types/player";
+import { PlayerRow as Player } from "@/types/player";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 
@@ -34,7 +34,7 @@ export function RoleManagerPanel() {
         .order("full_name");
 
       if (error) throw error;
-      setPlayers(data || []);
+      setPlayers((data || []) as any);
     } catch (err: any) {
       toast.error("Failed to load players: " + err.message);
     } finally {
@@ -65,7 +65,7 @@ export function RoleManagerPanel() {
       const { error } = await supabase.rpc("set_player_role", { p_id: id, p_role: newRole });
       if (error) throw error;
 
-      setPlayers(p => p.map(player => player.id === id ? { ...player, role: newRole } : player));
+      setPlayers(p => p.map(player => player.id === id ? { ...player, role: newRole as any } : player));
       toast.success(`Role updated successfully`);
     } catch (err: any) {
       toast.error("Failed to update role: " + err.message);
@@ -89,7 +89,7 @@ export function RoleManagerPanel() {
   };
 
   const elevatedUsers = useMemo(() => {
-    return players.filter(p => p.role && p.role !== 'user');
+    return players.filter(p => p.role && (p.role as string) !== 'user');
   }, [players]);
 
   const masterAdmins = useMemo(() => elevatedUsers.filter(p => p.role === 'master_admin'), [elevatedUsers]);

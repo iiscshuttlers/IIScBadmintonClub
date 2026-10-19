@@ -125,7 +125,7 @@ export function AdminSettings() {
 
       setExporting(tableName);
       toast.loading(`Fetching ${label.toLowerCase()}...`, { id: "export-data" });
-      const { data, error } = await supabase.from(tableName).select("*");
+      const { data, error } = await (supabase as any).from(tableName).select("*");
       if (error) throw error;
       if (!data || data.length === 0) throw new Error(`No ${label.toLowerCase()} found`);
 
@@ -238,7 +238,7 @@ export function AdminSettings() {
   const save = async () => {
     setSaving(true);
     try {
-      await supabase.from("site_data").upsert({ key: "club_settings", value: settings, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      await supabase.from("site_data").upsert({ key: "club_settings", value: settings as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
       // Log admin action
       await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: "Updated club settings", created_at: new Date().toISOString() });
       toast.success("Settings saved");

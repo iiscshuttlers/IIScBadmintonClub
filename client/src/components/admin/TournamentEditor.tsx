@@ -56,7 +56,7 @@ export function TournamentEditor() {
     setSaving(true);
     try {
       await supabase.from("site_data").upsert(
-        { key: "tournament_config", value: config, updated_at: new Date().toISOString() },
+        { key: "tournament_config", value: config as any, updated_at: new Date().toISOString() },
         { onConflict: "key" },
       );
       await supabase.from("admin_logs").insert({

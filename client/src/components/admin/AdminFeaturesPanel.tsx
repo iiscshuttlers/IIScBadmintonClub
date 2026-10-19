@@ -96,7 +96,7 @@ function LiveMatchesPanel() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("live_matches")
       .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
       .order("started_at", { ascending: false })
@@ -106,13 +106,13 @@ function LiveMatchesPanel() {
   };
 
   const endMatch = async (id: string) => {
-    await supabase.from("live_matches").update({ status: "finished" }).eq("id", id);
+    await (supabase as any).from("live_matches").update({ status: "finished" }).eq("id", id);
     toast.success("Match ended");
     load();
   };
 
   const deleteMatch = async (id: string) => {
-    await supabase.from("live_matches").delete().eq("id", id);
+    await (supabase as any).from("live_matches").delete().eq("id", id);
     toast.success("Match deleted");
     load();
   };
@@ -163,9 +163,9 @@ function PredictionsPanel() {
   useEffect(() => {
     const load = async () => {
       const [totalRes, correctRes, topRes] = await Promise.all([
-        supabase.from("match_predictions").select("id", { count: "exact", head: true }),
-        supabase.from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
-        supabase.from("prediction_points").select("total_points, player:players!player_id(full_name)")
+        (supabase as any).from("match_predictions").select("id", { count: "exact", head: true }),
+        (supabase as any).from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
+        (supabase as any).from("prediction_points").select("total_points, player:players!player_id(full_name)")
           .order("total_points", { ascending: false }).limit(1).single(),
       ]);
       setStats({
@@ -179,7 +179,7 @@ function PredictionsPanel() {
   }, []);
 
   const resolveAll = async () => {
-    const { data: unresolved } = await supabase
+    const { data: unresolved } = await (supabase as any)
       .from("match_predictions")
       .select("id, match_id, player_id, predicted_winner_id, points_wagered, match:matches!match_id(winner_id, status)")
       .is("correct", null);
@@ -191,8 +191,8 @@ function PredictionsPanel() {
       if (!pred.match?.winner_id || pred.match.status !== "confirmed") continue;
       const correct = pred.predicted_winner_id === pred.match.winner_id;
       const earned = correct ? pred.points_wagered * 2 : 0;
-      await supabase.from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
-      await supabase.from("prediction_points").upsert({
+      await (supabase as any).from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
+      await (supabase as any).from("prediction_points").upsert({
         player_id: pred.player_id,
         total_points: correct ? 100 + earned : 100 - pred.points_wagered,
       }, { onConflict: "player_id" });
@@ -243,7 +243,7 @@ function ChallengesAdminPanel() {
     const sunday = new Date();
     sunday.setDate(sunday.getDate() - sunday.getDay());
     const weekStart = sunday.toISOString().slice(0, 10);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("weekly_challenges")
       .select("*, completions:challenge_progress(count)")
       .eq("week_start", weekStart);
@@ -252,7 +252,7 @@ function ChallengesAdminPanel() {
   };
 
   const deleteChallenge = async (id: string) => {
-    await supabase.from("weekly_challenges").delete().eq("id", id);
+    await (supabase as any).from("weekly_challenges").delete().eq("id", id);
     toast.success("Challenge deleted");
     load();
   };
@@ -264,7 +264,7 @@ function ChallengesAdminPanel() {
     sunday.setDate(sunday.getDate() - sunday.getDay());
     const weekStart = sunday.toISOString().slice(0, 10);
     
-    const { error } = await supabase.from("weekly_challenges").insert({
+    const { error } = await (supabase as any).from("weekly_challenges").insert({
       title: newTitle,
       type: newType,
       target: newTarget,

@@ -197,7 +197,7 @@ export function EloAuditPanel() {
               all_players_logs: logsList
             };
           });
-          setGlobalMatches(fallbackEntries);
+          setGlobalMatches(fallbackEntries as any);
         } else {
           // Build proper entries from actual ELO logs grouped by match
           const realEntries = uniqueMatches.map((l: any) => ({

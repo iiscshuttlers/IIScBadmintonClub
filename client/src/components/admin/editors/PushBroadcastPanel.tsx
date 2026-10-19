@@ -43,7 +43,7 @@ export function PushBroadcastPanel() {
       // 3. Optionally add to home_banners if requested
       if (showOnHome) {
         const { data: bData } = await supabase.from("site_data").select("value").eq("key", "home_banners").maybeSingle();
-        const existingBanners = bData?.value?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
+        const existingBanners = (bData?.value as any)?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
         const newBanner = {
           id: `broadcast_${Date.now()}`,
           type: "custom",
@@ -64,7 +64,7 @@ export function PushBroadcastPanel() {
       const sent = fnData?.sent ?? 0;
       const failed = fnData?.failed ?? 0;
 
-      await supabase.from("broadcast_history").insert({
+      await (supabase as any).from("broadcast_history").insert({
         sent_by: session?.user?.email ?? "admin",
         title: customPush.title.trim(),
         body: customPush.body.trim() || null,

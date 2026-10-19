@@ -102,6 +102,8 @@ interface Tournament {
   ignore_gender_rules?: boolean;
   play_dead_rubbers?: boolean;
   tie_format_config?: any;
+  max_rubbers_per_player?: number;
+  team_roster_min?: number;
 }
 
 interface Participant {
@@ -145,6 +147,7 @@ interface TournamentMatch {
   advances_to_position_loser: 1 | 2 | null;
   reminder_sent: boolean | null;
   scored_by?: string | null;
+  umpired_by?: string | null;
 }
 
 interface RoundRule {
@@ -1557,7 +1560,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       payload.player4_id = p.partner_id;
       payload.team2_label = label;
     }
-    const { error } = await supabase.from("tournament_matches").update(payload).eq("id", swapParticipant.matchId);
+    const { error } = await supabase.from("tournament_matches").update(payload as any).eq("id", swapParticipant.matchId);
     setSwapSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Participant swapped");
@@ -1816,7 +1819,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     // or:        MATCH_CODE court=X date=YYYY-MM-DD time=HH:MM
     // or:        MATCH_CODE, Court X, DD/MM/YYYY HH:MM
     const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    const results: { matchCode: string; court: string; at: string; found: boolean }[] = [];
+    const results: { matchCode: string; court: string; at: string; found: boolean; wrongCategory?: boolean }[] = [];
     for (const line of lines) {
       if (line.startsWith("#") || line.startsWith("//")) continue;
       const matchCode = line.split(/[\s,:,\t]+/)[0].toUpperCase();
@@ -2643,6 +2646,28 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               disabled={busy}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-[var(--danger)]/30 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-[var(--danger)] dark:hover:bg-[var(--danger)]/30 transition">
                               <RotateCcw className="w-3 h-3" /> Reset
+                            </button>
+                          )}
+                          {m.match_code.includes("_3RD_") && (
+                            <button onClick={async () => {
+                              const ok = await confirm({
+                                title: "Delete 3rd Place Match",
+                                description: `Delete ${m.match_code}? This cannot be undone.`,
+                                confirmLabel: "Delete",
+                                confirmVariant: "danger",
+                              });
+                              if (!ok) return;
+                              setActingOn(m.id);
+                              const { error } = await supabase.from("tournament_matches").delete().eq("id", m.id);
+                              setActingOn(null);
+                              if (error) { toast.error(error.message); return; }
+                              toast.success("3rd place match deleted");
+                              const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                              if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                            }}
+                              disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-[var(--danger)]/30 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-[var(--danger)] dark:hover:bg-[var(--danger)]/30 transition">
+                              <Trash2 className="w-3 h-3" /> Delete 3rd Place
                             </button>
                           )}
                           <div className="flex-1" />

@@ -73,7 +73,7 @@ export function RecycleBin() {
   const restore = async (item: RecycleBinItem) => {
     setActionId(item.id);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from(item.table_name)
         .insert(item.record_data);
       if (error) throw error;
