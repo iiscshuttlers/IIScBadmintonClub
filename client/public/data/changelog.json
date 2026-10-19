@@ -1,5 +1,15 @@
 [
   {
+    "versionCode": 430,
+    "versionName": "4.30",
+    "date": "2026-10-19T00:00:00.000Z",
+    "changes": [
+      "- fix(nav): back button restores last tab/view on Android and web",
+      "- fix(ts): resolve all pre-existing TypeScript errors in admin components",
+      "- feat(tournament-day): umpire UX, bracket predict, and tournament-day polish"
+    ]
+  },
+  {
     "versionCode": 429,
     "versionName": "4.29",
     "date": "2026-10-18T05:51:01.838Z",

@@ -1,6 +1,6 @@
 {
-  "versionCode": 429,
-  "versionName": "4.29",
+  "versionCode": 430,
+  "versionName": "4.30",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- chore: remove @ts-nocheck from admin components\n- feat: swap participant on bracket, export schedule (PNG/PDF), biometric fix, notified indicator\n- feat(dashboard): add individual-event organizer dashboard and fix unassigned courts bug\n- fix: use BASE_URL for all internal navigation links"
+  "changelog": "- fix(nav): back button restores last tab/view on Android and web\n- fix(ts): resolve all pre-existing TypeScript errors in admin components\n- feat(tournament-day): umpire UX, bracket predict, and tournament-day polish"
 }
