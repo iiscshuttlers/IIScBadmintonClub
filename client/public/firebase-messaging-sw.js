@@ -32,6 +32,13 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+// Derive the app's base path from where this SW file is hosted.
+// On GitHub Pages: self.location.pathname = '/IIScBadmintonClub/firebase-messaging-sw.js'
+//   → BASE_PATH = '/IIScBadmintonClub'
+// On Netlify / Capacitor (root): pathname = '/firebase-messaging-sw.js'
+//   → BASE_PATH = ''
+const BASE_PATH = self.location.pathname.replace(/\/[^/]+$/, '');
+
 // Handle notification click to deep link (#19)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
@@ -63,7 +70,7 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus();
         }
       }
-      return clients.openWindow(path);
+      return clients.openWindow(self.location.origin + BASE_PATH + path);
     })
   );
 });
