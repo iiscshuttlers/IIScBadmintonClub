@@ -1,11 +1,9 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Loader2, Archive, RotateCcw } from "lucide-react";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
-import { MatchStatusChip } from "@/components/tournament/MatchStatusChip";
 
 interface Tournament {
   id: string;

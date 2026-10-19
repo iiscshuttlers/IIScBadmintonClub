@@ -1,6 +1,6 @@
 {
-  "versionCode": 428,
-  "versionName": "4.28",
+  "versionCode": 431,
+  "versionName": "4.31",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- feat(live): auto-delete contact sharing toggle when tournament ends\n- feat(live): search filter and auto-hide for contacts panel\n- fix(live): use full_name column for contacts query\n- feat(live): all-contacts panel for admins/officials on match schedule\n- feat(participants): contacts quick-view and phone-aware CSV import/export"
+  "changelog": "- feat(tournament-day): umpire UX, bracket predict, and tournament-day polish\n- chore: remove invalid PLAYWRIGHT_BROWSERS_PATH from .npmrc\n- fix(ts): resolve all pre-existing TypeScript errors in admin components\n- fix(nav): back button restores last tab/view on Android and web"
 }

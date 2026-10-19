@@ -226,7 +226,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
 
     const grouped: Record<string, Participant[]> = {};
     for (const cat of (tournament.categories || [])) grouped[cat] = [];
-    for (const p of (data ?? []) as Participant[]) {
+    for (const p of (data ?? []) as unknown as Participant[]) {
       if (!grouped[p.category]) grouped[p.category] = [];
       grouped[p.category].push(p);
     }
@@ -564,7 +564,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
         display_name: displayName || null,
         seed: entry.seed ?? autoSeed++,
         email: entryEmail,
-      });
+      } as any);
       if (entry.phone1 && playerId) {
         await supabase.from("players").update({ contact_number: entry.phone1 }).eq("id", playerId).is("contact_number", null);
       }
@@ -657,7 +657,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
           display_name: displayName || null,
           seed: entry.seed ?? autoSeed++,
           email: entryEmail,
-        });
+        } as any);
         if (entry.phone1 && playerId) {
           await supabase.from("players").update({ contact_number: entry.phone1 }).eq("id", playerId).is("contact_number", null);
         }
@@ -958,7 +958,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                             {item.participantId && (
                               <button
                                 onClick={async () => {
-                                  const ok = await confirm({ title: "Remove duplicate?", message: `Remove "${item.name}" (${item.details}) from ${duplicateReport!.cat}?`, confirmLabel: "Remove", variant: "danger" });
+                                  const ok = await confirm({ title: "Remove duplicate?", message: `Remove "${item.name}" (${item.details}) from ${duplicateReport!.cat}?`, confirmLabel: "Remove", confirmVariant: "danger" });
                                   if (!ok) return;
                                   await supabase.from("tournament_participants").delete().eq("id", item.participantId!);
                                   toast.success("Removed duplicate entry");

@@ -13,7 +13,7 @@ export function getBaseShareUrl() {
 export function getCourtColor(court: string | null | undefined): string {
   if (!court) return "text-blue-400";
   const c = String(court).trim().toLowerCase();
-  if (c.includes("1")) return "text-emerald-400";
+  if (c.includes("1")) return "text-sky-400";
   if (c.includes("2")) return "text-amber-400";
   if (c.includes("3")) return "text-rose-400";
   if (c.includes("4")) return "text-violet-400";

@@ -164,6 +164,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
                               </div>
                               <MatchScoreDisplay
                                 sets_history={m.sets_history}
+                                score={m.score}
                                 team1_label={m.team1_label ?? "TBD"}
                                 team2_label={m.team2_label ?? "TBD"}
                                 winner_side={m.winner_side}

@@ -69,12 +69,19 @@ export function NoticeBoard() {
             let iconWrapperClass = "bg-fuchsia-500/10 dark:bg-fuchsia-400/10";
             let iconClass = "text-fuchsia-600 dark:text-fuchsia-400";
             let badgeClass = "bg-fuchsia-500/15 text-fuchsia-700 dark:bg-fuchsia-400/20 dark:text-fuchsia-300 ring-1 ring-inset ring-fuchsia-500/20 dark:ring-fuchsia-400/20";
-            
+
             if (t.status === "active") {
               badgeText = "Active";
               iconWrapperClass = "bg-emerald-500/10 dark:bg-emerald-400/10";
               iconClass = "text-emerald-600 dark:text-emerald-400";
               badgeClass = "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300 ring-1 ring-inset ring-emerald-500/20 dark:ring-emerald-400/20";
+            } else if (t.status === "archived") {
+              badgeText = "Archived";
+              iconWrapperClass = "bg-slate-500/10 dark:bg-slate-400/10";
+              iconClass = "text-slate-500 dark:text-slate-400";
+              badgeClass = "bg-slate-500/15 text-slate-600 dark:bg-slate-400/20 dark:text-slate-400 ring-1 ring-inset ring-slate-500/20 dark:ring-slate-400/20";
+            } else if (t.status === "draft") {
+              badgeText = "Draft";
             }
 
             fetchedItems.push({
