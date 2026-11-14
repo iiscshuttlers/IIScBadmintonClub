@@ -1,6 +1,6 @@
 {
-  "versionCode": 431,
-  "versionName": "4.31",
+  "versionCode": 432,
+  "versionName": "4.32",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "- feat(tournament-day): umpire UX, bracket predict, and tournament-day polish\n- chore: remove invalid PLAYWRIGHT_BROWSERS_PATH from .npmrc\n- fix(ts): resolve all pre-existing TypeScript errors in admin components\n- fix(nav): back button restores last tab/view on Android and web"
+  "changelog": "- fix(pwa): fix SW notification deep-link dropping the base path on GitHub Pages"
 }
