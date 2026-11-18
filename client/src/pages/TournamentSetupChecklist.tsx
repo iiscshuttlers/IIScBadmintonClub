@@ -2,7 +2,7 @@ import { tournamentPath } from "@/lib/tournamentRoutes";
 import React from 'react';
 import { useRoute, useLocation, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { 
   CheckCircle2, 
@@ -25,7 +25,11 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { fetchTournamentParticipants } from '@/services/tournamentService';
+import {
+  fetchAllTournamentMatchRows,
+  fetchTournamentById,
+  fetchTournamentParticipants,
+} from '@/services/tournamentService';
 import { 
   evaluateLifecycleReadiness, 
   type LifecycleAction, 
@@ -46,13 +50,7 @@ export default function TournamentSetupChecklist() {
     queryKey: ['tournament_setup_checklist', tournamentId],
     queryFn: async () => {
       if (!tournamentId) throw new Error("No tournament id");
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select('*')
-        .eq('id', tournamentId)
-        .single();
-      if (error) throw error;
-      return data;
+      return fetchTournamentById(tournamentId);
     },
     enabled: !!tournamentId
   });
@@ -60,12 +58,7 @@ export default function TournamentSetupChecklist() {
   const teamsQuery = useQuery({
     queryKey: ['setup_teams', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_teams' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId);
-      if (error) throw error;
-      return data || [];
+      return teamService.getTournamentTeamRows(tournamentId);
     },
     enabled: !!tournamentId
   });
@@ -73,12 +66,7 @@ export default function TournamentSetupChecklist() {
   const tiesQuery = useQuery({
     queryKey: ['setup_ties', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_ties' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId);
-      if (error) throw error;
-      return data || [];
+      return teamService.getTournamentTieRows(tournamentId);
     },
     enabled: !!tournamentId
   });
@@ -86,12 +74,7 @@ export default function TournamentSetupChecklist() {
   const matchesQuery = useQuery({
     queryKey: ['setup_matches', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId);
-      if (error) throw error;
-      return data || [];
+      return fetchAllTournamentMatchRows(tournamentId);
     },
     enabled: !!tournamentId
   });

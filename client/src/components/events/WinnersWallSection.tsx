@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -105,11 +105,8 @@ export function WinnersWallSection() {
   const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    supabase
-      .from("players")
-      .select("id, full_name")
-      .is("deleted_at", null)
-      .then(({ data }) => {
+    playerService.getActivePlayerNames()
+      .then((data) => {
         if (data) {
           const map: Record<string, string> = {};
           data.forEach(p => {

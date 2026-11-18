@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Swords, Clock, AlertCircle, MapPin, User, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,31 +21,7 @@ export function PlayerMatchBanner({ tournamentId, onNavigateToTie }: PlayerMatch
     queryFn: async () => {
       if (!userId) return [];
 
-      let query = supabase
-        .from('tie_lineups' as any)
-        .select(`
-          *,
-          tie:tournament_ties!tie_lineups_tie_id_fkey(
-            id,
-            tie_code,
-            state,
-            scheduled_at,
-            court,
-            tournament_id,
-            team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-            team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
-          ),
-          player1:players!tie_lineups_player1_id_fkey(full_name, display_name),
-          player2:players!tie_lineups_player2_id_fkey(full_name, display_name)
-        `)
-        .or(`player1_id.eq.${userId},player2_id.eq.${userId}`);
-
-      if (tournamentId) {
-        // filter by tie tournament_id
-        query = query.filter('tie.tournament_id', 'eq', tournamentId);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await teamService.getMyAssignedRubbers(userId, tournamentId);
       if (error) {
         console.warn('Could not load player assigned rubbers:', error.message);
         return [];

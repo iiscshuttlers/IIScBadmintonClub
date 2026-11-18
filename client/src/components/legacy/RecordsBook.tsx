@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, RefreshCw } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { MATCH_VIEW_COLUMNS, toMatchView, type MatchRow } from "@/lib/matchView";
+import { fetchRecordsBookPage } from "@/services/matchService";
+import { toMatchView, type MatchRow } from "@/lib/matchView";
 import { computeClubRecords, type MatchRecordRow, type PlayerRecordRow, type RecordTournament } from "@/lib/clubRecords";
 import { DISCIPLINES, matchPath, parseDiscipline } from "@/lib/tournamentRoutes";
 import { ChipStrip } from "@/components/match/ChipStrip";
@@ -23,14 +23,7 @@ type Row = MatchRow & { tournaments: { id: string; name: string; status: string;
 async function fetchRecordData() {
   const rows: Row[] = [];
   for (let page = 0; page < MAX_PAGES; page++) {
-    const { data, error } = await supabase
-      .from("tournament_matches")
-      .select(`${MATCH_VIEW_COLUMNS}, tournaments!inner(id, name, status, counts_for_elo)`)
-      .in("status", ["completed", "finished", "walkover"])
-      .not("tournaments.status", "in", "(draft,cancelled,deleted)")
-      .order("id", { ascending: true })
-      .range(page * PAGE, page * PAGE + PAGE - 1);
-    if (error) throw error;
+    const data = await fetchRecordsBookPage(page * PAGE, page * PAGE + PAGE - 1);
     rows.push(...((data ?? []) as unknown as Row[]));
     if (!data || data.length < PAGE) break;
   }

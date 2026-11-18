@@ -15,7 +15,8 @@ import {
   Activity
 } from "lucide-react";
 import { Link } from "wouter";
-import { supabase } from "@/lib/supabase";
+import { teamService } from "@/services/teamService";
+import { playerService } from "@/services/playerService";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
 import { TeamLogo } from "@/components/events/TeamLogo";
@@ -122,20 +123,12 @@ export function TeamDetailModal({
       setLoading(true);
       try {
         // 1. Fetch team record to verify captain_id and details
-        const { data: teamRec } = await supabase
-          .from("tournament_teams")
-          .select("id, name, short_name, pool, captain_id, tournament_id, logo_url")
-          .eq("id", team!.id)
-          .maybeSingle();
+        const teamRec = await teamService.getTeamDetailRecord(team!.id);
 
         const captainId = teamRec?.captain_id || team!.captain_id;
 
         // 2. Fetch team members with joined player info
-        const { data: rawMembers } = await supabase
-          .from("tournament_team_members")
-          .select("id, player_id, role, status, player:players!player_id(id, full_name, gender, is_guest, avatar_url, elo_rating)")
-          .eq("team_id", team!.id)
-          .eq("status", "ACTIVE");
+        const rawMembers = await teamService.getActiveTeamMembersWithCards(team!.id);
 
         const list: TeamMemberItem[] = (rawMembers || [])
           .filter((m: any) => m.player)
@@ -154,11 +147,7 @@ export function TeamDetailModal({
 
         // 3. If captain is designated on team but not present in tournament_team_members list, fetch and prepend captain
         if (captainId && !list.some(m => m.player_id === captainId)) {
-          const { data: captainPlayer } = await supabase
-            .from("players")
-            .select("id, full_name, gender, is_guest, avatar_url, elo_rating")
-            .eq("id", captainId)
-            .maybeSingle();
+          const captainPlayer = await playerService.getRosterCard(captainId);
 
           if (captainPlayer) {
             list.unshift({
@@ -180,23 +169,7 @@ export function TeamDetailModal({
         });
 
         // 4. Fetch ties involving this team
-        const { data: rawTies } = await supabase
-          .from("tournament_ties")
-          .select(`
-            id,
-            tie_code,
-            round_name,
-            stage,
-            state,
-            score_team_a,
-            score_team_b,
-            winner_team_id,
-            created_at,
-            team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
-            team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
-          `)
-          .or(`team_a_id.eq.${team!.id},team_b_id.eq.${team!.id}`)
-          .order("created_at", { ascending: true });
+        const rawTies = await teamService.getTeamTiesWithScores(team!.id);
 
         const priority = (state: string) => {
           if (state === 'IN_PROGRESS') return 0;
@@ -214,27 +187,7 @@ export function TeamDetailModal({
         // Fetch rubbers for these ties if any exist
         if (formattedTies.length > 0) {
           const tieIds = formattedTies.map(t => t.id);
-          const { data: rawRubbers } = await supabase
-            .from("tournament_matches")
-            .select(`
-              id,
-              tie_id,
-              match_code,
-              category,
-              rubber_order,
-              rubber_label,
-              playing_order,
-              status,
-              winner_team,
-              set1_team1, set1_team2,
-              set2_team1, set2_team2,
-              set3_team1, set3_team2,
-              player1:players!tournament_matches_player1_id_fkey(full_name),
-              player2:players!tournament_matches_player2_id_fkey(full_name),
-              player3:players!tournament_matches_player3_id_fkey(full_name),
-              player4:players!tournament_matches_player4_id_fkey(full_name)
-            `)
-            .in("tie_id", tieIds);
+          const rawRubbers = await teamService.getTieRubberSummaries(tieIds);
 
           const rubbersByTie = new Map<string, TieMatchItem[]>();
           (rawRubbers || []).forEach((r: any) => {

@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { UserPlus } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchHomeRailMatches } from "@/services/matchService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { subscriptionService } from "@/services/subscriptionService";
-import { MATCH_VIEW_COLUMNS, toMatchView, type MatchRow } from "@/lib/matchView";
+import { toMatchView, type MatchRow } from "@/lib/matchView";
 import { buildHomeRail, buildMyTournamentSummary, RECENT_MS } from "@/lib/homeRail";
 import { MatchScorecard } from "@/components/match/MatchPrimitives";
 import { MyTournamentCard } from "@/components/home/MyTournamentCard";
@@ -45,15 +45,7 @@ async function fetchRail(userId: string, myId: string | null): Promise<RailData>
   if (clauses.length === 0) return { rows: [], tournamentNames: {}, followedPlayers, followedTournaments, partial: ps.status === "rejected" || ts.status === "rejected" };
 
   const since = new Date(Date.now() - RECENT_MS).toISOString();
-  const { data, error } = await supabase
-    .from("tournament_matches")
-    .select(`${MATCH_VIEW_COLUMNS}, tournaments(name)`)
-    .or(clauses.join(","))
-    // Live or upcoming, or finished within the recent window.
-    .or(`status.in.(in_progress,playing,live,ongoing,scheduled,pending),ended_at.gte.${since}`)
-    .order("scheduled_at", { ascending: true, nullsFirst: false })
-    .limit(200);
-  if (error) throw error;
+  const data = await fetchHomeRailMatches(clauses.join(","), since);
   const rows = (data ?? []) as unknown as Array<MatchRow & { tournaments?: { name?: string | null } | null }>;
   const tournamentNames: Record<string, string> = {};
   for (const row of rows) {

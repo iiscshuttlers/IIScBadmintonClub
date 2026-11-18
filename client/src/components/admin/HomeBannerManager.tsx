@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchSiteDataEntry } from "@/services/playerService";
+import { feedService } from "@/services/feedService";
 import { Plus, Trash2, Save, Loader2, Eye, EyeOff, Pin, PinOff, AlertTriangle, Info, Megaphone, ClipboardList, PartyPopper, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,11 +55,7 @@ export function HomeBannerManager() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "home_banners")
-      .maybeSingle()
+    fetchSiteDataEntry("home_banners")
       .then(({ data }) => {
         if (data?.value) {
           const val = data.value as any;
@@ -70,9 +67,7 @@ export function HomeBannerManager() {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("site_data")
-      .upsert({ key: "home_banners", value: banners as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    const { error } = await feedService.saveHomeBanners(banners as any);
     setSaving(false);
     if (error) toast.error("Failed to save: " + error.message);
     else toast.success("Home banners saved!");

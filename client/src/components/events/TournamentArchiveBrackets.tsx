@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Loader2, LayoutList, Tv2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentMatchViewRows } from "@/services/tournamentService";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
 import { ResultsByRound } from "@/components/match/ResultsByRound";
-import { MATCH_VIEW_COLUMNS, toMatchView, type MatchRow } from "@/lib/matchView";
+import { toMatchView, type MatchRow } from "@/lib/matchView";
 
 /**
  * Read-only bracket/results view for a completed tournament. Rendered on the
@@ -27,12 +27,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tournament_matches")
-      .select(MATCH_VIEW_COLUMNS)
-      .eq("tournament_id", tournamentId)
-      .order("round")
-      .order("match_number");
+    const { data, error } = await fetchTournamentMatchViewRows(tournamentId);
     if (error) {
       setLoadError(true);
     } else {

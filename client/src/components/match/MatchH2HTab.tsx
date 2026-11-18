@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { fetchH2HHistoryMatches } from "@/services/matchService";
 import { headToHead, type HistMatch } from "@/lib/headToHead";
 import type { MatchSide, MatchView } from "@/lib/matchView";
 import { FormChips } from "@/components/match/MatchPrimitives";
@@ -12,9 +12,6 @@ import { usePlayerNames } from "@/hooks/queries/usePlayerNames";
  * the head-to-head record between the two sides (a player, or an exact
  * pair in any order) and every player's last-5 tournament form.
  */
-
-const HIST_COLUMNS =
-  "id, status, winner_side, player1_id, player2_id, player3_id, player4_id, score, ended_at, scheduled_at, category, tournaments(name)";
 
 /** Side label "A / B" → per-player names aligned with playerIds; falls back to the side label. */
 export function playerNames(side: MatchSide): Array<{ id: string; name: string }> {
@@ -35,15 +32,7 @@ function useH2HHistory(view: MatchView) {
     staleTime: 5 * 60_000,
     queryFn: async () => {
       // Matches where side A's first player took part; H2H filtering is client-side.
-      const list = a.join(",");
-      const { data, error } = await supabase
-        .from("tournament_matches")
-        .select(HIST_COLUMNS)
-        .in("status", ["completed", "walkover"])
-        .or(`player1_id.in.(${list}),player2_id.in.(${list}),player3_id.in.(${list}),player4_id.in.(${list})`)
-        .order("ended_at", { ascending: false, nullsFirst: false })
-        .limit(300);
-      if (error) throw error;
+      const data = await fetchH2HHistoryMatches(a);
       return (data ?? []) as unknown as HistMatch[];
     },
   });

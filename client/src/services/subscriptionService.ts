@@ -195,6 +195,27 @@ export const subscriptionService = {
     if (error) throw error;
   },
 
+  /** The user's match alerts (user_match_notifications) with the match summary. Returns null on error. */
+  async fetchMatchSubscriptionRows(userId: string) {
+    const { data } = await supabase
+      .from("user_match_notifications")
+      .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code, round_name, tournament_id)")
+      .eq("user_id", userId);
+    return data;
+  },
+
+  /**
+   * Deletes the user's alert for one match. The result is not checked: the
+   * subscriptions page reports success either way (removeUserMatchAlert throws).
+   */
+  async removeMatchSubscription(userId: string, matchId: string): Promise<void> {
+    await supabase
+      .from("user_match_notifications")
+      .delete()
+      .eq("user_id", userId)
+      .eq("match_id", matchId);
+  },
+
   async fetchFollowingMatches(userId: string, followingPlayerIds: string[] = []): Promise<FollowingMatchesResponse> {
     // 1. Get followed tournament IDs
     const tournamentSubs = await this.fetchTournamentSubscriptions(userId);

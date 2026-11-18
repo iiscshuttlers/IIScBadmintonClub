@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
 import { Link } from "wouter";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentSeedRows } from "@/services/tournamentService";
 import { buildSeedIndex, courtLabel, matchState, toMatchView, type MatchRow, type SeedIndex } from "@/lib/matchView";
 import { MatchSideRow, MatchStatusBadge, scoreSummary } from "@/components/match/MatchPrimitives";
 import { matchPath } from "@/lib/tournamentRoutes";
@@ -79,14 +79,9 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   useEffect(() => {
     if (!tournamentId) return;
     let cancelled = false;
-    supabase
-      .from("tournament_participants")
-      .select("category, player_id, partner_id, seed")
-      .eq("tournament_id", tournamentId)
-      .not("seed", "is", null)
-      .then(({ data, error }) => {
-        if (!cancelled && !error && data) setSeeds(buildSeedIndex(data));
-      });
+    fetchTournamentSeedRows(tournamentId).then((data) => {
+      if (!cancelled && data) setSeeds(buildSeedIndex(data));
+    });
     return () => {
       cancelled = true;
     };

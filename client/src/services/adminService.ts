@@ -57,6 +57,16 @@ export const adminService = {
     return (data ?? []) as AdminLogEntry[];
   },
 
+  /** One page of admin_history, newest first. Returns `{ data, error }` so the caller can report the error. */
+  async getAdminHistoryPage(pageNum: number, pageSize: number) {
+    const { data, error } = await supabase
+      .from("admin_history")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(pageNum * pageSize, (pageNum + 1) * pageSize - 1);
+    return { data, error };
+  },
+
   async recalculateAllElo(): Promise<void> {
     const { error } = await supabase.rpc("recalculate_all_elo");
     if (error) throw error;
@@ -374,6 +384,32 @@ export const adminService = {
       message: message.trim(),
       status: "new",
     });
+    if (error) throw error;
+  },
+
+  /**
+   * All user feedback, newest first, with the submitter embedded as
+   * `players:user_id ( full_name, email )`. Throws on error.
+   */
+  async fetchUserFeedback() {
+    const { data, error } = await supabase
+      .from("user_feedback")
+      .select(`
+          *,
+          players:user_id ( full_name, email )
+        `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  /** Sets the status of one user_feedback row. Throws on error. */
+  async updateUserFeedbackStatus(id: string, status: string): Promise<void> {
+    const { error } = await supabase
+      .from("user_feedback")
+      .update({ status })
+      .eq("id", id);
     if (error) throw error;
   },
 

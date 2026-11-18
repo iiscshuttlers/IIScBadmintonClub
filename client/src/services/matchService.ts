@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import type { RealtimePostgresChangesPayload, SupabaseClient } from '@supabase/supabase-js';
 import type { Json, Tables } from '@/lib/supabase-types-auto';
 import type { MatchWithPlayers } from '@/types';
+import { MATCH_VIEW_COLUMNS } from '@/lib/matchView';
 
 // live_matches is not in the production schema (missing from the types
 // generated on 18 Nov 2026), and updateMatchVideoUrl picks its table at
@@ -573,6 +574,86 @@ export function subscribeToHomeLiveMatches(onChange: () => void): () => void {
     .subscribe();
 
   return () => { supabase.removeChannel(channel); };
+}
+
+/**
+ * Home rail: matches selected by `orClauses` (followed players / tournaments)
+ * that are live or upcoming, or ended at or after `sinceIso`, with the
+ * tournament name; earliest scheduled first, at most 200. Throws on error.
+ */
+export async function fetchHomeRailMatches(orClauses: string, sinceIso: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select(`${MATCH_VIEW_COLUMNS}, tournaments(name)`)
+    .or(orClauses)
+    // Live or upcoming, or finished within the recent window.
+    .or(`status.in.(in_progress,playing,live,ongoing,scheduled,pending),ended_at.gte.${sinceIso}`)
+    .order("scheduled_at", { ascending: true, nullsFirst: false })
+    .limit(200);
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Records book: rows [from, to] (by id) of finished matches whose tournament
+ * is not draft, cancelled or deleted, with that tournament. Throws on error.
+ */
+export async function fetchRecordsBookPage(from: number, to: number) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select(`${MATCH_VIEW_COLUMNS}, tournaments!inner(id, name, status, counts_for_elo)`)
+    .in("status", ["completed", "finished", "walkover"])
+    .not("tournaments.status", "in", "(draft,cancelled,deleted)")
+    .order("id", { ascending: true })
+    .range(from, to);
+  if (error) throw error;
+  return data;
+}
+
+const H2H_HISTORY_COLUMNS =
+  "id, status, winner_side, player1_id, player2_id, player3_id, player4_id, score, ended_at, scheduled_at, category, tournaments(name)";
+
+/**
+ * Completed or walkover matches in which any of `playerIds` played, most
+ * recently ended first, at most 300 (match H2H tab). Throws on error.
+ */
+export async function fetchH2HHistoryMatches(playerIds: string[]) {
+  const list = playerIds.join(",");
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select(H2H_HISTORY_COLUMNS)
+    .in("status", ["completed", "walkover"])
+    .or(`player1_id.in.(${list}),player2_id.in.(${list}),player3_id.in.(${list}),player4_id.in.(${list})`)
+    .order("ended_at", { ascending: false, nullsFirst: false })
+    .limit(300);
+  if (error) throw error;
+  return data;
+}
+
+/** Completed or walkover matches umpired by `playerId`, with the tournament name, at most 1000. Throws on error. */
+export async function fetchUmpiredMatches(playerId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, tournament_id, category, round_name, team1_label, team2_label, score, status, started_at, ended_at, scheduled_at, tournaments(name)")
+    .eq("umpired_by", playerId)
+    .in("status", ["completed", "walkover"])
+    .limit(1000);
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * The server copy of a match's point log (`points` only), or null when there
+ * is no row or the read fails (it never throws: recovery treats it as optional).
+ */
+export async function fetchStoredPointLog(matchId: string) {
+  const { data } = await supabase
+    .from("tournament_match_point_logs")
+    .select("points")
+    .eq("match_id", matchId)
+    .maybeSingle()
+    .then((r) => r, () => ({ data: null }));
+  return data;
 }
 
 export async function fetchActiveTournamentId(): Promise<string | null> {

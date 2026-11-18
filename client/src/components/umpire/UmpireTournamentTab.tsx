@@ -17,7 +17,14 @@ import {
   deleteTournamentMatch,
   deleteTournamentMatches,
   invokeCallToCourt,
+  fetchRoundRulesForTournaments,
+  fetchTournamentRowOrNull,
+  fetchUmpireDoneMatches,
+  fetchUmpireOpenMatches,
+  fetchUmpirePickerTournaments,
+  subscribeToUmpireTournamentMatches,
 } from "@/services/tournamentService";
+import { teamService } from "@/services/teamService";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -306,18 +313,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
     // Fetch all active tournaments for the picker
-    let allTournamentsQuery = supabase
-      .from("tournaments")
-      .select("id, name")
-      .order("created_at", { ascending: false });
-
-    if (tournamentId) {
-      allTournamentsQuery = allTournamentsQuery.eq("id", tournamentId);
-    } else {
-      allTournamentsQuery = allTournamentsQuery.eq("status", "active");
-    }
-
-    const { data: allTournaments } = await allTournamentsQuery;
+    const allTournaments = await fetchUmpirePickerTournaments(tournamentId);
 
     if (!allTournaments?.length) { setLoading(false); return; }
 
@@ -335,29 +331,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     const tournamentIds = [activeTId];
 
     const [{ data: activeMatchData, error }, { data: doneMatchData }] = await Promise.all([
-      supabase
-        .from("tournament_matches")
-        .select("*")
-        .in("tournament_id", tournamentIds)
-        .in("status", ["scheduled", "in_progress", "pending"])
-        .order("round")
-        .order("match_number"),
-      supabase
-        .from("tournament_matches")
-        .select("*")
-        .in("tournament_id", tournamentIds)
-        .in("status", ["completed", "walkover"])
-        .order("scored_at", { ascending: false })
-        .limit(50),
+      fetchUmpireOpenMatches(tournamentIds),
+      fetchUmpireDoneMatches(tournamentIds),
     ]);
     const matchData = [...(activeMatchData ?? []), ...(doneMatchData ?? [])];
 
     if (error) { if (!silent) toast.error(error.message); setLoading(false); return; }
 
-    const { data: rules } = await supabase
-      .from("tournament_round_rules")
-      .select("*")
-      .in("tournament_id", tournamentIds);
+    const rules = await fetchRoundRulesForTournaments(tournamentIds);
 
     const enriched: TournamentMatchForUmpire[] = (matchData ?? []).map((m: any) => {
       const tournament = allTournaments.find((t) => t.id === m.tournament_id);
@@ -390,17 +371,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
     // Fetch team ties needing official attention (unrevealed or pending lineups)
     try {
-      const { data: tiesData } = await supabase
-        .from("tournament_ties" as any)
-        .select(`
-          *,
-          tournament:tournaments(name),
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
-        `)
-        .in("tournament_id", tournamentIds)
-        .neq("state", "COMPLETED")
-        .order("created_at", { ascending: true });
+      const tiesData = await teamService.getUmpirePendingTies(tournamentIds);
 
       setPendingTies(tiesData || []);
     } catch (tieErr) {
@@ -421,14 +392,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   // and an in-progress scoring session lives in UmpireEngine, so neither is
   // disturbed by a refetch.
   useEffect(() => {
-    const channel = supabase
-      .channel("umpire_tournament_matches")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tournament_matches" },
-        () => { load({ silent: true }); },
-      )
-      .subscribe();
+    const unsubscribe = subscribeToUmpireTournamentMatches(() => { load({ silent: true }); });
 
     const onFocus = () => {
       if (document.visibilityState === "visible") load({ silent: true });
@@ -437,7 +401,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     window.addEventListener("focus", onFocus);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
       document.removeEventListener("visibilitychange", onFocus);
       window.removeEventListener("focus", onFocus);
     };
@@ -1176,16 +1140,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             {selectedMatch.tie_id && (
               <button
                 onClick={async () => {
-                  const { data: tieData } = await supabase
-                    .from('tournament_ties')
-                    .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name)')
-                    .eq('id', selectedMatch.tie_id)
-                    .single();
-                  const { data: tourData } = await supabase
-                    .from('tournaments')
-                    .select('*')
-                    .eq('id', selectedMatch.tournament_id)
-                    .single();
+                  const tieData = await teamService.getTieWithTeamNames(selectedMatch.tie_id);
+                  const tourData = await fetchTournamentRowOrNull(selectedMatch.tournament_id);
                   if (tieData) {
                     setActiveTieForConsole({ tie: tieData, tournament: tourData });
                   }

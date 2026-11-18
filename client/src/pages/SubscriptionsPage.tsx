@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { 
   BellOff, 
   Loader2, 
@@ -53,15 +53,12 @@ export default function SubscriptionsPage() {
       const [tourRes, playerRes, matchRes] = await Promise.all([
         subscriptionService.fetchTournamentSubscriptions(session!.user.id),
         subscriptionService.fetchPlayerSubscriptions(session!.user.id),
-        supabase
-          .from("user_match_notifications")
-          .select("*, tournament_matches(team1_label, team2_label, scheduled_at, category, match_code, round_name, tournament_id)")
-          .eq("user_id", session!.user.id),
+        subscriptionService.fetchMatchSubscriptionRows(session!.user.id),
       ]);
 
       setTournamentSubs(tourRes || []);
       setPlayerSubs(playerRes || []);
-      setMatchSubs(matchRes.data || []);
+      setMatchSubs(matchRes || []);
     } catch (e: any) {
       console.warn("Error loading subscriptions", e);
       toast.error("Failed to load some subscriptions");
@@ -156,11 +153,7 @@ export default function SubscriptionsPage() {
 
   const removeMatchSub = async (matchId: string) => {
     try {
-      await supabase
-        .from("user_match_notifications")
-        .delete()
-        .eq("user_id", session!.user.id)
-        .eq("match_id", matchId);
+      await subscriptionService.removeMatchSubscription(session!.user.id, matchId);
       toast.success("Match alert removed");
       setMatchSubs((s) => s.filter((m) => m.match_id !== matchId));
     } catch {
@@ -172,16 +165,11 @@ export default function SubscriptionsPage() {
     if (!profile?.id) return;
     setSavingQuiet(true);
     try {
-      const { error } = await supabase
-        .from("players")
-        .update({
-          quiet_hours_enabled: quietEnabled,
-          quiet_hours_start: quietStart,
-          quiet_hours_end: quietEnd,
-        } as any)
-        .eq("id", profile.id);
-
-      if (error) throw error;
+      await playerService.updateQuietHours(profile.id, {
+        quiet_hours_enabled: quietEnabled,
+        quiet_hours_start: quietStart,
+        quiet_hours_end: quietEnd,
+      } as any);
       toast.success("Quiet hours saved");
       if (refreshProfile) await refreshProfile();
     } catch (err: any) {

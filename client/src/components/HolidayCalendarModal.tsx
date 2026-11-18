@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchSiteDataEntry } from "@/services/playerService";
 
 interface Holiday {
   date: string;
@@ -14,11 +14,7 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "holidays")
-      .maybeSingle()
+    fetchSiteDataEntry("holidays")
       .then(({ data }) => {
         if (data?.value) {
           const val = data.value as any;

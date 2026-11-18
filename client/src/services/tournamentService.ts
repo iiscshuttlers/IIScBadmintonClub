@@ -12,6 +12,7 @@ import type {
 import type { ScoreConflictState, ScoreCorrectionResult } from '@/types/umpire';
 import type { LifecycleAction, LifecycleReadinessReport } from '@/lib/tournamentReadiness';
 import { PARTICIPANT_PUBLIC_COLUMNS } from "@/lib/playerColumns";
+import { MATCH_VIEW_COLUMNS } from "@/lib/matchView";
 
 export async function fetchTournaments(opts?: { status?: string[] }): Promise<Tournament[]> {
   let query = supabase
@@ -142,6 +143,203 @@ export async function fetchTournamentMatchRow(id: string) {
   return data;
 }
 
+/**
+ * Every match of a tournament by round and match number, as `{ data, error }`
+ * for callers that branch on the error (fetchTournamentMatches throws instead).
+ */
+export async function fetchTournamentMatchesResult(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .eq("tournament_id", tournamentId)
+    .order("round")
+    .order("match_number");
+  return { data, error };
+}
+
+/** A tournament's matches as MATCH_VIEW_COLUMNS rows by round and match number, as `{ data, error }`. */
+export async function fetchTournamentMatchViewRows(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select(MATCH_VIEW_COLUMNS)
+    .eq("tournament_id", tournamentId)
+    .order("round")
+    .order("match_number");
+  return { data, error };
+}
+
+/** Every tournament_matches row of a tournament, unordered. Throws on error. */
+export async function fetchAllTournamentMatchRows(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .eq("tournament_id", tournamentId);
+  if (error) throw error;
+  return data || [];
+}
+
+/** Every tournament_matches row of a tournament by match number. Throws on error. */
+export async function fetchTournamentMatchesByNumber(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .eq("tournament_id", tournamentId)
+    .order("match_number", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * The match page row (MATCH_VIEW_COLUMNS plus officiating and scoring fields)
+ * when the match belongs to `tournamentId`; null when it is missing. Throws on error.
+ */
+export async function fetchTournamentMatchForRoute(tournamentId: string, matchId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select(`${MATCH_VIEW_COLUMNS}, umpired_by, scored_by, golden_point, best_of_sets`)
+    .eq("id", matchId)
+    .eq("tournament_id", tournamentId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** id, round_name and category of the tournament's match with `matchCode`, or null (missing row or error). */
+export async function fetchTournamentMatchByCode(tournamentId: string, matchCode: string) {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("id, round_name, category")
+    .eq("tournament_id", tournamentId)
+    .eq("match_code", matchCode)
+    .maybeSingle();
+  return data;
+}
+
+/** The 15 most recently created matches (any tournament) with their tournament name. Returns null on error. */
+export async function fetchRecentTournamentMatchesWithNames() {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("*, tournaments(name)")
+    .order("created_at", { ascending: false }) // tournament_matches has no updated_at; that 400ed on every home load
+    .limit(15);
+  return data;
+}
+
+/** Every completed match (any tournament) with its tournament name. Returns null on error. */
+export async function fetchCompletedTournamentMatchesWithNames() {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("*, tournaments(name)")
+    .eq("status", "completed");
+  return data;
+}
+
+/**
+ * Matches with a court, scheduled within [fromIso, toIso] (any tournament),
+ * with their tournament (id, name, tournament_type). Returns null on error.
+ */
+export async function fetchCourtMatchesBetween(fromIso: string, toIso: string) {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select(`
+            id,
+            tournament_id,
+            match_code,
+            category,
+            court_number,
+            scheduled_at,
+            status,
+            team1_label,
+            team2_label,
+            tournaments (
+              id,
+              name,
+              tournament_type
+            )
+          `)
+    .gte("scheduled_at", fromIso)
+    .lte("scheduled_at", toIso)
+    .not("court_number", "is", null);
+  return data;
+}
+
+/** Referee dashboard match list by round and match number, as `{ data, error }`. */
+export async function fetchRefereeMatches(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, court_number, scheduled_at, status, score, winner_side, reminder_sent")
+    .eq("tournament_id", tournamentId)
+    .order("round", { ascending: true })
+    .order("match_number", { ascending: true });
+  return { data, error };
+}
+
+/** Order-of-play match list by round and match number, as `{ data, error }`. */
+export async function fetchOrderOfPlayMatches(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, court_number, scheduled_at, started_at, ended_at, status, tie_id")
+    .eq("tournament_id", tournamentId)
+    .order("round", { ascending: true })
+    .order("match_number", { ascending: true });
+  return { data, error };
+}
+
+/**
+ * Order-of-play court check: the tournament's pending, scheduled, live and
+ * completed matches with their timing and players, as `{ data, error }`.
+ */
+export async function fetchCourtCheckMatches(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("id, match_code, court_number, scheduled_at, started_at, ended_at, status, tie_id, player1_id, player2_id, player3_id, player4_id")
+    .eq("tournament_id", tournamentId)
+    .in("status", ["pending", "scheduled", "in_progress", "completed"]);
+  return { data, error };
+}
+
+/** Applies `patch` to one tournament_matches row and returns `{ error }` (updateTournamentMatch throws instead). */
+export async function updateTournamentMatchResult(id: string, patch: TablesUpdate<"tournament_matches">) {
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update(patch)
+    .eq("id", id);
+  return { error };
+}
+
+/** Applies `patch` to every rubber (tournament_matches row) of a tie and returns `{ error }`. */
+export async function updateTieRubbersResult(tieId: string, patch: TablesUpdate<"tournament_matches">) {
+  const { error } = await supabase
+    .from("tournament_matches")
+    .update(patch)
+    .eq("tie_id", tieId);
+  return { error };
+}
+
+/** Umpire tab: scheduled, in-progress and pending matches of the given tournaments, as `{ data, error }`. */
+export async function fetchUmpireOpenMatches(tournamentIds: string[]) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .in("tournament_id", tournamentIds)
+    .in("status", ["scheduled", "in_progress", "pending"])
+    .order("round")
+    .order("match_number");
+  return { data, error };
+}
+
+/** Umpire tab: the 50 most recently scored completed or walkover matches of the given tournaments, as `{ data, error }`. */
+export async function fetchUmpireDoneMatches(tournamentIds: string[]) {
+  const { data, error } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .in("tournament_id", tournamentIds)
+    .in("status", ["completed", "walkover"])
+    .order("scored_at", { ascending: false })
+    .limit(50);
+  return { data, error };
+}
+
 export async function updateTournamentMatch(id: string, patch: Partial<TournamentMatch>): Promise<void> {
   const { id: _id, created_at: _created, ...matchUpdate } = patch;
   const { error } = await supabase
@@ -187,6 +385,43 @@ export async function fetchTournamentParticipants(tournamentId: string): Promise
 
   if (error) throw error;
   return (data ?? []) as Participant[];
+}
+
+/** Seeded entries (category, player_id, partner_id, seed) of a tournament. Returns null on error. */
+export async function fetchTournamentSeedRows(tournamentId: string) {
+  const { data } = await supabase
+    .from("tournament_participants")
+    .select("category, player_id, partner_id, seed")
+    .eq("tournament_id", tournamentId)
+    .not("seed", "is", null);
+  return data;
+}
+
+/**
+ * Public participant columns with the player's and partner's name and
+ * department, by category then seed. Returns null on error.
+ */
+export async function fetchParticipantsWithDepartments(tournamentId: string) {
+  const { data } = await supabase
+    .from("tournament_participants")
+    .select(`
+        ${PARTICIPANT_PUBLIC_COLUMNS},
+        player:player_id (full_name, department),
+        partner:partner_id (full_name, department)
+      `)
+    .eq("tournament_id", tournamentId)
+    .order("category")
+    .order("seed", { ascending: true });
+  return data;
+}
+
+/** Who entered which category of a tournament (player_id, partner_id, tournament_id, category). Returns null on error. */
+export async function fetchTournamentEntryIds(tournamentId: string) {
+  const { data } = await supabase
+    .from("tournament_participants")
+    .select("player_id, partner_id, tournament_id, category")
+    .eq("tournament_id", tournamentId);
+  return data;
 }
 
 export async function bulkUpsertParticipants(rows: ParticipantInsert[]): Promise<void> {
@@ -335,6 +570,71 @@ export async function rejectTournamentRegistration(id: string, reviewerId?: stri
 }
 
 /** Every registration across all tournaments, newest first. Returns null on error. */
+/** Registrations panel rows (with the registering player), newest first, as `{ data, error }`. */
+export async function fetchTournamentRegistrationRows(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_registrations")
+    .select("id, status, full_name, email, phone, categories, partner_names, transaction_id, message, created_at, player:players!tournament_registrations_player_id_fkey(id, full_name, avatar_url)")
+    .eq("tournament_id", tournamentId)
+    .order("created_at", { ascending: false });
+  return { data, error };
+}
+
+/**
+ * Approves or rejects one registration with the reviewer stamp and returns
+ * `{ error }` (approve/rejectTournamentRegistration throw instead).
+ */
+export async function reviewTournamentRegistration(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerId: string | null,
+) {
+  const { error } = await supabase
+    .from("tournament_registrations")
+    .update({ status, reviewed_by: reviewerId, reviewed_at: new Date().toISOString() })
+    .eq("id", id);
+  return { error };
+}
+
+/** The player's own registration (id, status, categories) for a tournament, or null (none or error). */
+export async function fetchMyTournamentRegistration(tournamentId: string, playerId: string) {
+  const { data } = await supabase
+    .from("tournament_registrations")
+    .select("id, status, categories")
+    .eq("tournament_id", tournamentId)
+    .eq("player_id", playerId)
+    .maybeSingle();
+  return data;
+}
+
+/** Inserts or replaces the player's registration (unique on tournament_id, player_id); returns `{ error }`. */
+export async function upsertTournamentRegistration(row: TablesInsert<"tournament_registrations">) {
+  const { error } = await supabase
+    .from("tournament_registrations")
+    .upsert(row, { onConflict: "tournament_id,player_id" });
+  return { error };
+}
+
+/** Marks one registration withdrawn; returns `{ error }`. */
+export async function withdrawTournamentRegistration(id: string) {
+  const { error } = await supabase
+    .from("tournament_registrations")
+    .update({ status: "withdrawn" })
+    .eq("id", id);
+  return { error };
+}
+
+/** `confirmed` registrations of a tournament with the player (id, full_name). Throws on error. */
+export async function fetchConfirmedRegistrations(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_registrations")
+    .select("id, status, category, player:players!player_id(id, full_name)")
+    .eq("tournament_id", tournamentId)
+    .eq("status", "confirmed");
+  if (error) throw error;
+  return data || [];
+}
+
 export async function fetchAllTournamentRegistrations() {
   const { data, error } = await supabase
     .from("tournament_registrations")
@@ -1215,6 +1515,149 @@ export async function fetchActiveTournamentRows() {
     .eq("status", "active")
     .limit(1);
   return data;
+}
+
+/** id and name of every tournament that is not deleted, newest first (pickers). Returns null on error. */
+export async function fetchTournamentOptions() {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("id, name")
+    .neq("status", "deleted")
+    .order("created_at", { ascending: false });
+  return data;
+}
+
+/** Tournaments created by `userId` that are not deleted, newest first. Returns null on error. */
+export async function fetchTournamentsCreatedBy(userId: string) {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("*")
+    .eq("created_by", userId)
+    .neq("status", "deleted")
+    .order("created_at", { ascending: false });
+  return data;
+}
+
+/** The five newest tournaments that are not deleted (notice board). Returns null on error. */
+export async function fetchLatestTournamentsForNotices() {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("*")
+    .neq("status", "deleted")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  return data;
+}
+
+/** Tie points, tie format and bracket format of a tournament (team standings), as `{ data, error }`. */
+export async function fetchTournamentStandingsConfig(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournaments")
+    .select("id, name, tie_points_win, tie_points_draw, tie_format_config, bracket_format, format_family")
+    .eq("id", tournamentId)
+    .maybeSingle();
+  return { data, error };
+}
+
+/** id and categories of one tournament, or null (missing row or error). */
+export async function fetchTournamentCategories(id: string) {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("id, categories")
+    .eq("id", id)
+    .single();
+  return data;
+}
+
+/** Rest and court policy columns of a tournament (order of play), as `{ data, error }`. */
+export async function fetchTournamentSchedulingPolicy(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournaments")
+    .select("min_rest_minutes, estimated_match_minutes, unavailable_court_periods")
+    .eq("id", tournamentId)
+    .maybeSingle();
+  return { data, error };
+}
+
+/**
+ * Umpire tab tournament picker (id, name), newest first: just `tournamentId`
+ * when given, otherwise every active tournament. Returns null on error.
+ */
+export async function fetchUmpirePickerTournaments(tournamentId?: string | null) {
+  let allTournamentsQuery = supabase
+    .from("tournaments")
+    .select("id, name")
+    .order("created_at", { ascending: false });
+
+  if (tournamentId) {
+    allTournamentsQuery = allTournamentsQuery.eq("id", tournamentId);
+  } else {
+    allTournamentsQuery = allTournamentsQuery.eq("status", "active");
+  }
+
+  const { data } = await allTournamentsQuery;
+  return data;
+}
+
+/** Round rules of the given tournaments. Returns null on error. */
+export async function fetchRoundRulesForTournaments(tournamentIds: string[]) {
+  const { data } = await supabase
+    .from("tournament_round_rules")
+    .select("*")
+    .in("tournament_id", tournamentIds);
+  return data;
+}
+
+/** One tournaments row (every column), or null (missing row or error). */
+export async function fetchTournamentRowOrNull(id: string) {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("*")
+    .eq("id", id)
+    .single();
+  return data;
+}
+
+/**
+ * Referee dashboard realtime: one channel with changes to the tournament's
+ * matches and ties; both call `onChange`. Returns the cleanup.
+ */
+export function subscribeToRefereeBoard(tournamentId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`referee_matches_${tournamentId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches", filter: `tournament_id=eq.${tournamentId}` }, () => onChange())
+    .on("postgres_changes", { event: "*", schema: "public", table: "tournament_ties", filter: `tournament_id=eq.${tournamentId}` }, () => onChange())
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+/**
+ * Order-of-play realtime: one channel with changes to the tournament's
+ * matches and ties; both call `onChange`. Returns the cleanup.
+ */
+export function subscribeToOrderOfPlay(tournamentId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`oop_matches_${tournamentId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches", filter: `tournament_id=eq.${tournamentId}` }, () => onChange())
+    .on("postgres_changes", { event: "*", schema: "public", table: "tournament_ties", filter: `tournament_id=eq.${tournamentId}` }, () => onChange())
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+/** Umpire tab: calls `onChange` on any change to tournament_matches (unfiltered). Returns the cleanup. */
+export function subscribeToUmpireTournamentMatches(onChange: () => void): () => void {
+  const channel = supabase
+    .channel("umpire_tournament_matches")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "tournament_matches" },
+      () => { onChange(); },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export function subscribeToTournaments(callback: () => void): () => void {

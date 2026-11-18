@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
+import { umpireService } from '@/services/umpireService';
 import { 
   X, 
   Swords, 
@@ -69,19 +70,7 @@ export function TieVisualLineupModal({
     queryKey: ['visual_tie_rubbers', tie?.id],
     queryFn: async () => {
       if (!tie?.id) return [];
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select(`
-          *,
-          player1:players!tournament_matches_player1_id_fkey(id, full_name, avatar_url, gender),
-          player2:players!tournament_matches_player2_id_fkey(id, full_name, avatar_url, gender),
-          player3:players!tournament_matches_player3_id_fkey(id, full_name, avatar_url, gender),
-          player4:players!tournament_matches_player4_id_fkey(id, full_name, avatar_url, gender),
-          revealer:players!tournament_matches_revealed_by_fkey(id, full_name)
-        `)
-        .eq('tie_id', tie.id)
-        .order('playing_order', { ascending: true, nullsFirst: false });
-      if (error) throw error;
+      const data = await teamService.getTieRubbersWithPlayers(tie.id);
 
       // Sort by status priority (Live -> Upcoming -> Completed), then by playing_order / rubber_order
       const statusPriority = (status: string) => {
@@ -108,18 +97,7 @@ export function TieVisualLineupModal({
     queryKey: ['visual_tie_audits', tie?.id],
     queryFn: async () => {
       if (!tie?.id) return [];
-      const { data, error } = await supabase
-        .from('tie_lineup_audits')
-        .select(`
-          *,
-          referee:players!tie_lineup_audits_referee_id_fkey(full_name),
-          orig_player:players!tie_lineup_audits_original_player_id_fkey(full_name),
-          repl_player:players!tie_lineup_audits_replacement_player_id_fkey(full_name)
-        `)
-        .eq('tie_id', tie.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      return umpireService.fetchTieLineupAudits(tie.id);
     },
     enabled: isOpen && !!tie?.id
   });

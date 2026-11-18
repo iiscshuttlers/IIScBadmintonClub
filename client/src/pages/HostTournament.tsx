@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Trophy, Plus, MapPin, LayoutDashboard, ShieldCheck, Search, Copy, Check, Briefcase, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { fetchTournamentsCreatedBy } from '@/services/tournamentService';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { motion } from 'framer-motion';
@@ -24,12 +24,7 @@ export default function HostTournament() {
         setLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from('tournaments')
-        .select('*')
-        .eq('created_by', session.user.id)
-        .neq('status', 'deleted')
-        .order('created_at', { ascending: false });
+      const data = await fetchTournamentsCreatedBy(session.user.id);
       
       setTournaments(data || []);
       setLoading(false);

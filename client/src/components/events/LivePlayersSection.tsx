@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchParticipantsWithDepartments } from "@/services/tournamentService";
 import { Loader2, Users, Info, Image as ImageIcon, FileText } from "lucide-react";
 import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 import { toPng } from "html-to-image";
 import { getDepartmentAcronym } from "@/data/departments";
-import { PARTICIPANT_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 interface Participant {
   id: string;
@@ -152,17 +151,8 @@ export function LivePlayersSection({
       return;
     }
 
-    supabase
-      .from("tournament_participants")
-      .select(`
-        ${PARTICIPANT_PUBLIC_COLUMNS},
-        player:player_id (full_name, department),
-        partner:partner_id (full_name, department)
-      `)
-      .eq("tournament_id", tournamentId)
-      .order("category")
-      .order("seed", { ascending: true })
-      .then(({ data }) => {
+    fetchParticipantsWithDepartments(tournamentId)
+      .then((data) => {
         const grouped: Record<string, Participant[]> = {};
         for (const p of (data as any as Participant[]) || []) {
           if (!grouped[p.category]) grouped[p.category] = [];

@@ -798,6 +798,315 @@ export const teamService = {
     return newTieId;
   },
 
+  /** Every tournament_teams row of a tournament, unordered. Throws on error. */
+  async getTournamentTeamRows(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_teams')
+      .select('*')
+      .eq('tournament_id', tournamentId);
+    if (error) throw error;
+    return data || [];
+  },
+
+  /** Every tournament_ties row of a tournament, unordered. Throws on error. */
+  async getTournamentTieRows(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_ties')
+      .select('*')
+      .eq('tournament_id', tournamentId);
+    if (error) throw error;
+    return data || [];
+  },
+
+  /** Organizer dashboard: teams that are not DELETED, by name, as `{ data, error }`. */
+  async getOrganizerTeams(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_teams')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .neq('status', 'DELETED')
+      .order('name', { ascending: true });
+    return { data, error };
+  },
+
+  /** ACTIVE members of a tournament's teams with `player:players!player_id(id, full_name, gender)`, as `{ data, error }`. */
+  async getActiveMembersWithPlayer(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_team_members')
+      .select('id, team_id, player_id, role, status, player:players!player_id(id, full_name, gender)')
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'ACTIVE');
+    return { data, error };
+  },
+
+  /** Same members embedding the player through the explicit FK name (`players:`), as `{ data, error }`. */
+  async getActiveMembersWithPlayerFk(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_team_members')
+      .select('id, team_id, player_id, role, status, players:players!tournament_team_members_player_id_fkey(id, full_name, gender)')
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'ACTIVE');
+    return { data, error };
+  },
+
+  /** Same members without any player embed, as `{ data, error }`. */
+  async getActiveMembersBare(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_team_members')
+      .select('id, team_id, player_id, role, status')
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'ACTIVE');
+    return { data, error };
+  },
+
+  /** Organizer dashboard: a tournament's ties with both teams (name, short_name, captain_id), oldest first. Throws on error. */
+  async getOrganizerTies(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_ties')
+      .select(`
+          *,
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name, captain_id),
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name, captain_id)
+        `)
+      .eq('tournament_id', tournamentId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+
+  /** Referee dashboard: a tournament's ties with both teams (id, name, short_name, logo_url), oldest first, as `{ data, error }`. */
+  async getRefereeTies(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_ties')
+      .select(`
+              *,
+              team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
+              team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
+            `)
+      .eq('tournament_id', tournamentId)
+      .order('created_at', { ascending: true });
+    return { data, error };
+  },
+
+  /** Order of play: a tournament's ties that are not COMPLETED, by round number, as `{ data, error }`. */
+  async getOrderOfPlayTies(tournamentId: string) {
+    const { data, error } = await supabase
+      .from('tournament_ties')
+      .select(`
+          id, tie_code, stage, round_name, round_number, state, scheduled_at,
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+        `)
+      .eq('tournament_id', tournamentId)
+      .neq('state', 'COMPLETED')
+      .order('round_number', { ascending: true });
+    return { data, error };
+  },
+
+  /** Sets only a tie's scheduled_at and returns `{ error }` (updateTieSchedule/updateTournamentTie differ). */
+  async setTieScheduledAt(tieId: string, scheduledAt: string | null) {
+    const { error } = await supabase
+      .from('tournament_ties')
+      .update({
+        scheduled_at: scheduledAt,
+      })
+      .eq('id', tieId);
+    return { error };
+  },
+
+  /**
+   * Umpire tab: ties of the given tournaments that are not COMPLETED, with
+   * the tournament name and both team names, oldest first. Returns null on error.
+   */
+  async getUmpirePendingTies(tournamentIds: string[]) {
+    const { data } = await supabase
+      .from('tournament_ties')
+      .select(`
+          *,
+          tournament:tournaments(name),
+          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+        `)
+      .in('tournament_id', tournamentIds)
+      .neq('state', 'COMPLETED')
+      .order('created_at', { ascending: true });
+    return data;
+  },
+
+  /** One tie with both team names (lineup console), or null (missing row or error). */
+  async getTieWithTeamNames(tieId: string) {
+    const { data } = await supabase
+      .from('tournament_ties')
+      .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name)')
+      .eq('id', tieId)
+      .single();
+    return data;
+  },
+
+  /**
+   * Lineup rows naming `userId` as player1 or player2, with the tie (and both
+   * teams) and both players embedded; restricted to the tie's tournament when
+   * `tournamentId` is given. Returns `{ data, error }`.
+   */
+  async getMyAssignedRubbers(userId: string, tournamentId?: string) {
+    let query = supabase
+      .from('tie_lineups')
+      .select(`
+          *,
+          tie:tournament_ties!tie_lineups_tie_id_fkey(
+            id,
+            tie_code,
+            state,
+            scheduled_at,
+            court,
+            tournament_id,
+            team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
+            team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
+          ),
+          player1:players!tie_lineups_player1_id_fkey(full_name, display_name),
+          player2:players!tie_lineups_player2_id_fkey(full_name, display_name)
+        `)
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`);
+
+    if (tournamentId) {
+      // filter by tie tournament_id
+      query = query.filter('tie.tournament_id', 'eq', tournamentId);
+    }
+
+    const { data, error } = await query;
+    return { data, error };
+  },
+
+  /** A team's members (id, role, player_id) with the player card, as `{ data, error }`. */
+  async getTeamSquadRoster(teamId: string) {
+    const { data, error } = await supabase
+      .from('tournament_team_members')
+      .select('id, role, player_id, players!tournament_team_members_player_id_fkey(id, full_name, avatar_url, gender)')
+      .eq('team_id', teamId);
+    return { data, error };
+  },
+
+  /**
+   * A tie's rubbers with all four players (id, full_name, avatar_url, gender)
+   * and the revealer, by playing order (nulls last). Throws on error.
+   */
+  async getTieRubbersWithPlayers(tieId: string) {
+    const { data, error } = await supabase
+      .from('tournament_matches')
+      .select(`
+          *,
+          player1:players!tournament_matches_player1_id_fkey(id, full_name, avatar_url, gender),
+          player2:players!tournament_matches_player2_id_fkey(id, full_name, avatar_url, gender),
+          player3:players!tournament_matches_player3_id_fkey(id, full_name, avatar_url, gender),
+          player4:players!tournament_matches_player4_id_fkey(id, full_name, avatar_url, gender),
+          revealer:players!tournament_matches_revealed_by_fkey(id, full_name)
+        `)
+      .eq('tie_id', tieId)
+      .order('playing_order', { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    return data;
+  },
+
+  /** The user's watcher row (id) for a tie, as `{ data, error }`. */
+  async getTieWatcher(tieId: string, userId: string) {
+    const { data, error } = await supabase
+      .from('tie_lineup_watchers')
+      .select('id')
+      .eq('tie_id', tieId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    return { data, error };
+  },
+
+  /** Stops the user's lineup notifications for a tie. Throws on error. */
+  async unwatchTie(tieId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('tie_lineup_watchers')
+      .delete()
+      .eq('tie_id', tieId)
+      .eq('user_id', userId);
+    if (error) throw error;
+  },
+
+  /** Subscribes the user to lineup notifications for a tie. Throws on error. */
+  async watchTie(tieId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('tie_lineup_watchers')
+      .insert({
+        tie_id: tieId,
+        user_id: userId,
+      });
+    if (error) throw error;
+  },
+
+  /** Team detail header (id, name, short_name, pool, captain_id, tournament_id, logo_url), or null (missing row or error). */
+  async getTeamDetailRecord(teamId: string) {
+    const { data } = await supabase
+      .from('tournament_teams')
+      .select('id, name, short_name, pool, captain_id, tournament_id, logo_url')
+      .eq('id', teamId)
+      .maybeSingle();
+    return data;
+  },
+
+  /** A team's ACTIVE members with the player card (incl. elo_rating). Returns null on error. */
+  async getActiveTeamMembersWithCards(teamId: string) {
+    const { data } = await supabase
+      .from('tournament_team_members')
+      .select('id, player_id, role, status, player:players!player_id(id, full_name, gender, is_guest, avatar_url, elo_rating)')
+      .eq('team_id', teamId)
+      .eq('status', 'ACTIVE');
+    return data;
+  },
+
+  /** Ties involving a team with scores and both teams (id, name, short_name, logo_url), oldest first. Returns null on error. */
+  async getTeamTiesWithScores(teamId: string) {
+    const { data } = await supabase
+      .from('tournament_ties')
+      .select(`
+            id,
+            tie_code,
+            round_name,
+            stage,
+            state,
+            score_team_a,
+            score_team_b,
+            winner_team_id,
+            created_at,
+            team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
+            team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
+          `)
+      .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
+      .order('created_at', { ascending: true });
+    return data;
+  },
+
+  /** Rubber summaries (order, status, set scores, player names) of the given ties. Returns null on error. */
+  async getTieRubberSummaries(tieIds: string[]) {
+    const { data } = await supabase
+      .from('tournament_matches')
+      .select(`
+              id,
+              tie_id,
+              match_code,
+              category,
+              rubber_order,
+              rubber_label,
+              playing_order,
+              status,
+              winner_team,
+              set1_team1, set1_team2,
+              set2_team1, set2_team2,
+              set3_team1, set3_team2,
+              player1:players!tournament_matches_player1_id_fkey(full_name),
+              player2:players!tournament_matches_player2_id_fkey(full_name),
+              player3:players!tournament_matches_player3_id_fkey(full_name),
+              player4:players!tournament_matches_player4_id_fkey(full_name)
+            `)
+      .in('tie_id', tieIds);
+    return data;
+  },
+
   async submitDeciderLineup(tieId: string, side: string, player1Id: string, player2Id: string | null) {
     const { data, error } = await supabase.rpc('submit_decider_lineup', {
       p_tie_id: tieId,

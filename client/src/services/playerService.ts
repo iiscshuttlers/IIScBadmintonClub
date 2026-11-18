@@ -304,6 +304,81 @@ export const playerService = {
     }
   },
 
+  /** id and full_name of every player that is not deleted. Returns null on error. */
+  async getActivePlayerNames() {
+    const { data } = await supabase
+      .from("players")
+      .select("id, full_name")
+      .is("deleted_at", null);
+    return data;
+  },
+
+  /** Public list for pickers (id, full_name, gender), players not deleted, by name. Throws on error. */
+  async getPublicPlayerList() {
+    // Public columns only — no contact details.
+    const { data, error } = await supabase
+      .from("players")
+      .select("id, full_name, gender")
+      .is("deleted_at", null)
+      .order("full_name");
+    if (error) throw error;
+    return data;
+  },
+
+  /** Every player's public columns (PLAYER_PUBLIC_COLUMNS), deleted players included. Returns null on error. */
+  async getAllPublicPlayers() {
+    const { data } = await supabase
+      .from("players")
+      .select(PLAYER_PUBLIC_COLUMNS);
+    return data;
+  },
+
+  /** The player preview modal's profile fields, or null (missing row or error). */
+  async getPlayerPreview(playerId: string) {
+    const { data } = await supabase
+      .from("players")
+      .select(`
+            id, full_name, nickname, department, avatar_url,
+            elo_rating, singles_elo, doubles_elo, mixed_elo,
+            win_loss_record, playing_level, playing_style,
+            dominant_hand, is_guest, current_racket, role
+          `)
+      .eq("id", playerId)
+      .maybeSingle();
+    return data;
+  },
+
+  /** A player's card for a team roster (id, full_name, gender, is_guest, avatar_url, elo_rating), or null (missing row or error). */
+  async getRosterCard(playerId: string) {
+    const { data } = await supabase
+      .from("players")
+      .select("id, full_name, gender, is_guest, avatar_url, elo_rating")
+      .eq("id", playerId)
+      .maybeSingle();
+    return data;
+  },
+
+  /** Updates the given notification preference columns of a player and returns `{ error }`. */
+  async updateNotificationPreferences(playerId: string, patch: TablesUpdate<"players">) {
+    const { error } = await supabase
+      .from("players")
+      .update(patch)
+      .eq("id", playerId);
+    return { error };
+  },
+
+  /** Saves a player's quiet-hours settings. Throws on error. */
+  async updateQuietHours(
+    playerId: string,
+    patch: Pick<TablesUpdate<"players">, "quiet_hours_enabled" | "quiet_hours_start" | "quiet_hours_end">,
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("players")
+      .update(patch)
+      .eq("id", playerId);
+    if (error) throw error;
+  },
+
   async fetchSearchPlayers() {
     const { data, error } = await supabase.from("search_players_view").select("id, full_name, avatar_url, department, overall_rank");
     if (error) throw error;

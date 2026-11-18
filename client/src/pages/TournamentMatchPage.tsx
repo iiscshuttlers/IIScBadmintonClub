@@ -2,7 +2,11 @@ import { useEffect } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchTournamentMatchByCode,
+  fetchTournamentMatchForRoute,
+  fetchTournamentSeedRows,
+} from "@/services/tournamentService";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { RouteStatusCard } from "@/pages/TournamentPage";
@@ -10,7 +14,7 @@ import { isUuid, matchPath, parseMatchTab, type MatchTab } from "@/lib/tournamen
 import { fetchVisibleTournamentIdForMatch } from "@/lib/matchRouteVisibility";
 import { tournamentReturnRoute } from "@/lib/routeContinuity";
 
-import { DISCIPLINE_LABELS, MATCH_VIEW_COLUMNS, buildSeedIndex, toMatchView, type MatchRow, type MatchView } from "@/lib/matchView";
+import { DISCIPLINE_LABELS, buildSeedIndex, toMatchView, type MatchRow, type MatchView } from "@/lib/matchView";
 import { MatchSideRow, MatchStatusBadge, scoreSummary } from "@/components/match/MatchPrimitives";
 import { ScrollTabs } from "@/components/ui/ScrollTabs";
 import { MatchSummaryTab } from "@/components/match/MatchSummaryTab";
@@ -33,35 +37,20 @@ interface RouteMatchData {
 
 async function fetchMatchForRoute(tournamentId: string, matchId: string): Promise<RouteMatchData | null> {
   if (!isUuid(tournamentId) || !isUuid(matchId)) return null;
-  const { data, error } = await supabase
-    .from("tournament_matches")
-    .select(`${MATCH_VIEW_COLUMNS}, umpired_by, scored_by, golden_point, best_of_sets`)
-    .eq("id", matchId)
-    .eq("tournament_id", tournamentId)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await fetchTournamentMatchForRoute(tournamentId, matchId);
   if (!data) return null;
   const match = data as unknown as RouteMatchData["match"];
 
-  const [nextRes, seedRes] = await Promise.all([
+  const [next, seeds] = await Promise.all([
     match.advances_to_match
-      ? supabase
-          .from("tournament_matches")
-          .select("id, round_name, category")
-          .eq("tournament_id", tournamentId)
-          .eq("match_code", match.advances_to_match)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("tournament_participants")
-      .select("category, player_id, partner_id, seed")
-      .eq("tournament_id", tournamentId)
-      .not("seed", "is", null),
+      ? fetchTournamentMatchByCode(tournamentId, match.advances_to_match)
+      : Promise.resolve(null),
+    fetchTournamentSeedRows(tournamentId),
   ]);
   return {
     match,
-    seeds: (seedRes.data ?? []) as RouteMatchData["seeds"],
-    next: (nextRes.data as RouteMatchData["next"]) ?? null,
+    seeds: (seeds ?? []) as RouteMatchData["seeds"],
+    next: (next as RouteMatchData["next"]) ?? null,
   };
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
+import { fetchCompletedTournamentMatchesWithNames } from "@/services/tournamentService";
 import { Swords, Trophy, Activity, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
@@ -7,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { ChevronDown } from "lucide-react";
-import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 export function H2HSection() {
   const { session } = useAuth();
@@ -20,10 +20,8 @@ export function H2HSection() {
   const rankMap = useMemo(() => calculateRanksMap(players), [players]);
 
   useEffect(() => {
-    supabase
-      .from("players")
-      .select(PLAYER_PUBLIC_COLUMNS)
-      .then(({ data }) => {
+    playerService.getAllPublicPlayers()
+      .then((data) => {
         if (data) {
           setPlayers(data.sort((a, b) => b.elo_rating - a.elo_rating));
           if (data.length >= 2) {
@@ -41,11 +39,8 @@ export function H2HSection() {
         setLoading(false);
       });
 
-    supabase
-      .from("tournament_matches")
-      .select("*, tournaments(name)")
-      .eq("status", "completed")
-      .then(({ data }) => {
+    fetchCompletedTournamentMatchesWithNames()
+      .then((data) => {
         if (data) setTournamentMatches(data);
       });
   }, [session?.user?.id]);

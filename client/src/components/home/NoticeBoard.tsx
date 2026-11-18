@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchLatestTournamentsForNotices, fetchRecentTournamentMatchesWithNames } from "@/services/tournamentService";
+import { hubService } from "@/services/hubService";
 import { fetchSiteData } from "@/lib/siteData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Trophy, Swords, Search, ShoppingBag, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { FIND_LOST_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 type NoticeType = "announcement" | "tournament" | "match" | "find_lost" | "marketplace";
 
@@ -56,12 +56,7 @@ export function NoticeBoard() {
         }
 
         // 2. Tournaments
-        const { data: tournaments } = await supabase
-          .from("tournaments")
-          .select("*")
-          .neq("status", "deleted")
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const tournaments = await fetchLatestTournamentsForNotices();
 
         if (tournaments) {
           tournaments.forEach((t) => {
@@ -101,11 +96,7 @@ export function NoticeBoard() {
         }
 
         // 3. Matches (Live / Scheduled / Recent)
-        const { data: matches } = await supabase
-          .from("tournament_matches")
-          .select("*, tournaments(name)")
-          .order("created_at", { ascending: false }) // tournament_matches has no updated_at; that 400ed on every home load
-          .limit(15);
+        const matches = await fetchRecentTournamentMatchesWithNames();
 
         if (matches) {
           matches.forEach((m) => {
@@ -150,12 +141,7 @@ export function NoticeBoard() {
         }
 
         // 4. Find & Lost
-        const { data: findLost } = await supabase
-          .from("find_lost_posts")
-          .select(FIND_LOST_PUBLIC_COLUMNS)
-          .eq("resolved", false)
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const findLost = await hubService.getOpenFindLostForNotices();
 
         if (findLost) {
           findLost.forEach((post) => {
@@ -179,12 +165,7 @@ export function NoticeBoard() {
         }
 
         // 5. Marketplace
-        const { data: marketplace } = await supabase
-          .from("marketplace_listings")
-          .select("*")
-          .eq("status", "active")
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const marketplace = await hubService.getActiveListingsForNotices();
 
         if (marketplace) {
           marketplace.forEach((listing) => {

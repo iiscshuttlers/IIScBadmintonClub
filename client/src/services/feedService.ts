@@ -22,6 +22,14 @@ export interface Poll {
   tournament_id?: string;
 }
 
+/** Response of the send-announcement edge function. */
+export interface SendAnnouncementResponse {
+  message?: string;
+  sent?: number;
+  failed?: number;
+  total?: number;
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -194,6 +202,18 @@ export const feedService = {
     if (error) throw error;
   },
 
+  /**
+   * Invokes send-announcement with exactly `{ title, body }` and returns the
+   * function's response (unlike sendAnnouncement). Throws on error.
+   */
+  async sendAnnouncementPush(body: { title: string; body: string }): Promise<SendAnnouncementResponse | null> {
+    const { data, error } = await supabase.functions.invoke<SendAnnouncementResponse>("send-announcement", {
+      body,
+    });
+    if (error) throw error;
+    return data;
+  },
+
   async getLiveMatchPicks(userId: string, matchIds?: string[]): Promise<Record<string, 1 | 2>> {
     let query = supabase
       .from("live_match_votes")
@@ -247,6 +267,14 @@ export const feedService = {
       .in("key", ["home_banners", "announcements", "events", "flyers"]);
     if (error) throw error;
     return data || [];
+  },
+
+  /** Replaces the site_data `home_banners` value (stamping updated_at) and returns `{ error }`. */
+  async saveHomeBanners(banners: Json) {
+    const { error } = await supabase
+      .from("site_data")
+      .upsert({ key: "home_banners", value: banners, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    return { error };
   },
 
   subscribeToHomeBanners(callback: (data: Pick<Tables<"site_data">, "key" | "value">[]) => void): () => void {

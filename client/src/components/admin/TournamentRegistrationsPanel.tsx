@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentRegistrationRows, reviewTournamentRegistration } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -49,11 +49,7 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tournament_registrations")
-      .select("id, status, full_name, email, phone, categories, partner_names, transaction_id, message, created_at, player:players!tournament_registrations_player_id_fkey(id, full_name, avatar_url)")
-      .eq("tournament_id", tournament.id)
-      .order("created_at", { ascending: false });
+    const { data, error } = await fetchTournamentRegistrationRows(tournament.id);
     if (error) {
       console.error("Failed to load registrations", error);
       toast.error("Could not load registrations");
@@ -77,10 +73,7 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
 
   const review = async (row: RegRow, status: "approved" | "rejected") => {
     setActingId(row.id);
-    const { error } = await supabase
-      .from("tournament_registrations")
-      .update({ status, reviewed_by: profile?.id ?? null, reviewed_at: new Date().toISOString() })
-      .eq("id", row.id);
+    const { error } = await reviewTournamentRegistration(row.id, status, profile?.id ?? null);
     setActingId(null);
     if (error) return toast.error(error.message || "Could not update");
     toast.success(status === "approved" ? "Registration approved" : "Registration rejected");

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
-import { supabase } from "@/lib/supabase";
 import { 
   fetchActiveTournamentId, 
   getLiveMatchesFromSiteData, 
   fetchMatchScoreAndSets, 
   fetchRecentCompletedMatches, 
+  fetchStoredPointLog,
   subscribeToLiveMatches 
 } from "@/services/matchService";
 import { teamService } from "@/services/teamService";
@@ -263,12 +263,7 @@ export function UmpireTab({
       if (completed.length > 0 || current[0] > 0 || current[1] > 0) {
         // Server copy of the point log (kept since the point-log migration);
         // used only if it agrees with the row's score. Failure is non-fatal.
-        const { data: storedLog } = await supabase
-          .from("tournament_match_point_logs")
-          .select("points")
-          .eq("match_id", m.id)
-          .maybeSingle()
-          .then((r) => r, () => ({ data: null }));
+        const storedLog = await fetchStoredPointLog(m.id);
         const recovered = recoverMatchFromTournamentRow(
           m,
           row ?? { score: null, sets_history: null },

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { Json } from "@/lib/supabase-types-auto";
 import { fetchFindLostClaimContacts } from "@/services/playerPrivateService";
 import { FIND_LOST_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
@@ -273,6 +274,63 @@ export const hubService = {
     return () => {
       supabase.removeChannel(channel);
     };
+  },
+
+  /** Replaces the site_data `court_reservations` value. Throws on error. */
+  async saveCourtReservations(reservations: Json): Promise<void> {
+    const { error } = await supabase
+      .from("site_data")
+      .upsert(
+        { key: "court_reservations", value: reservations },
+        { onConflict: "key" }
+      );
+
+    if (error) throw error;
+  },
+
+  /** Calls `onChange` on any change to the site_data `court_reservations` row. Returns the cleanup. */
+  subscribeToCourtReservations(onChange: () => void): () => void {
+    const channel = supabase
+      .channel("court-reservations-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "site_data",
+          filter: "key=eq.court_reservations",
+        },
+        () => {
+          onChange();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
+  /** The five newest unresolved lost/found posts (public columns, no author). Returns null on error. */
+  async getOpenFindLostForNotices() {
+    const { data } = await supabase
+      .from("find_lost_posts")
+      .select(FIND_LOST_PUBLIC_COLUMNS)
+      .eq("resolved", false)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    return data;
+  },
+
+  /** The five newest active marketplace listings (no seller embed). Returns null on error. */
+  async getActiveListingsForNotices() {
+    const { data } = await supabase
+      .from("marketplace_listings")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    return data;
   },
 
   async updateCourtStatus(

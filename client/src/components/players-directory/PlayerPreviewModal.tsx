@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { 
   X, 
   ExternalLink, 
@@ -64,18 +64,9 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
     async function fetchFullPlayerData() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("players")
-          .select(`
-            id, full_name, nickname, department, avatar_url,
-            elo_rating, singles_elo, doubles_elo, mixed_elo,
-            win_loss_record, playing_level, playing_style,
-            dominant_hand, is_guest, current_racket, role
-          `)
-          .eq("id", playerId)
-          .maybeSingle();
+        const data = await playerService.getPlayerPreview(playerId);
 
-        if (!error && data && isMounted) {
+        if (data && isMounted) {
           setPlayerData(data as ClickablePlayerData);
         } else if (typeof player === "object" && isMounted) {
           setPlayerData(player);

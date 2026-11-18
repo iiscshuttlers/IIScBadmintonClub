@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { teamService } from "@/services/teamService";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
@@ -10,7 +10,15 @@ import {
   suggestAlternativeSlots,
   type UnavailableCourtPeriod,
 } from "@/lib/courtConflicts";
-import { tournamentService } from "@/services/tournamentService";
+import {
+  tournamentService,
+  fetchCourtCheckMatches,
+  fetchOrderOfPlayMatches,
+  fetchTournamentSchedulingPolicy,
+  subscribeToOrderOfPlay,
+  updateTieRubbersResult,
+  updateTournamentMatchResult,
+} from "@/services/tournamentService";
 import {
   Loader2, CalendarClock, MapPin, Clock, Check, Swords, LayoutGrid,
   RefreshCw, AlertTriangle, Radio, ShieldAlert, Sparkles, X,
@@ -87,27 +95,9 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     if (!silent) setLoading(true);
 
     const [matchesRes, tiesRes, tourRes] = await Promise.all([
-      supabase
-        .from("tournament_matches")
-        .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, court_number, scheduled_at, started_at, ended_at, status, tie_id")
-        .eq("tournament_id", tournament.id)
-        .order("round", { ascending: true })
-        .order("match_number", { ascending: true }),
-      supabase
-        .from("tournament_ties")
-        .select(`
-          id, tie_code, stage, round_name, round_number, state, scheduled_at,
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
-        `)
-        .eq("tournament_id", tournament.id)
-        .neq("state", "COMPLETED")
-        .order("round_number", { ascending: true }),
-      supabase
-        .from("tournaments")
-        .select("min_rest_minutes, estimated_match_minutes, unavailable_court_periods")
-        .eq("id", tournament.id)
-        .maybeSingle(),
+      fetchOrderOfPlayMatches(tournament.id),
+      teamService.getOrderOfPlayTies(tournament.id),
+      fetchTournamentSchedulingPolicy(tournament.id),
     ]);
 
     if (tourRes.data) {
@@ -165,12 +155,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`oop_matches_${tournament.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
-      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_ties", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return subscribeToOrderOfPlay(tournament.id, () => load(true));
   }, [tournament.id, load]);
 
   const categories = useMemo(() => Array.from(new Set(matches.map((m) => m.category))).sort(), [matches]);
@@ -202,35 +187,24 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
 
     if (m.is_tie) {
       // 1. Update the tie's scheduled_at
-      const res = await supabase
-        .from("tournament_ties")
-        .update({
-          scheduled_at: iso,
-        })
-        .eq("id", m.id);
+      const res = await teamService.setTieScheduledAt(m.id, iso);
       error = res.error;
 
       // 2. Also propagate court and scheduled_at to all rubbers under this tie
       if (!error && (court || iso)) {
-        const rubberRes = await supabase
-          .from("tournament_matches")
-          .update({
-            ...(court ? { court_number: court } : {}),
-            ...(iso ? { scheduled_at: iso } : {}),
-          } as any)
-          .eq("tie_id", m.id);
+        const rubberRes = await updateTieRubbersResult(m.id, {
+          ...(court ? { court_number: court } : {}),
+          ...(iso ? { scheduled_at: iso } : {}),
+        } as any);
         error = rubberRes.error;
       }
     } else {
-      const res = await supabase
-        .from("tournament_matches")
-        .update({
-          court_number: court || null,
-          scheduled_at: iso,
-          status: "scheduled",
-          reminder_sent: false,
-        } as any)
-        .eq("id", m.id);
+      const res = await updateTournamentMatchResult(m.id, {
+        court_number: court || null,
+        scheduled_at: iso,
+        status: "scheduled",
+        reminder_sent: false,
+      } as any);
       error = res.error;
     }
 
@@ -248,11 +222,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
 
     const proposedCourt = e.court.trim();
     if (proposedCourt && iso) {
-      const { data: currentCourtMatches, error: validationError } = await supabase
-        .from("tournament_matches")
-        .select("id, match_code, court_number, scheduled_at, started_at, ended_at, status, tie_id, player1_id, player2_id, player3_id, player4_id")
-        .eq("tournament_id", tournament.id)
-        .in("status", ["pending", "scheduled", "in_progress", "completed"]);
+      const { data: currentCourtMatches, error: validationError } = await fetchCourtCheckMatches(tournament.id);
 
       if (validationError) {
         setSavingId(null);

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftRight, Info, Loader2, Users, User } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { DISCIPLINES, matchPath, parseDiscipline, type Discipline } from "@/lib/tournamentRoutes";
@@ -60,13 +60,7 @@ export default function HeadToHeadPage() {
   const players = useQuery({
     queryKey: ["players", "public-list"],
     queryFn: async (): Promise<PublicPlayer[]> => {
-      // Public columns only — no contact details.
-      const { data, error } = await supabase
-        .from("players")
-        .select("id, full_name, gender")
-        .is("deleted_at", null)
-        .order("full_name");
-      if (error) throw error;
+      const data = await playerService.getPublicPlayerList();
       return (data ?? []) as PublicPlayer[];
     },
     staleTime: 10 * 60 * 1000,

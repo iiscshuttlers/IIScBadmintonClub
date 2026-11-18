@@ -8,7 +8,7 @@ import { getEloTier } from "@/lib/tiers";
 import type { PlayerRow } from "@/types";
 import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
 import { navGet, navSet, navRemove } from "@/lib/navMemory";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentEntryIds } from "@/services/tournamentService";
 
 function isCategoryMatch(cat?: string | null, filter?: string | null): boolean {
   if (!filter || filter === "All") return true;
@@ -109,13 +109,10 @@ export function DirectoryWrapper() {
       return;
     }
     setParticipantsLoading(true);
-    supabase
-      .from("tournament_participants")
-      .select("player_id, partner_id, tournament_id, category")
-      .eq("tournament_id", tournamentFilter)
-      .then(({ data, error }) => {
+    fetchTournamentEntryIds(tournamentFilter)
+      .then((data) => {
         setParticipantsLoading(false);
-        if (!error && data) {
+        if (data) {
           setParticipants(data);
         }
       });

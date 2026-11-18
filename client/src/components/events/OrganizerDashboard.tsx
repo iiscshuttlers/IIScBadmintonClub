@@ -1,6 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import {
+  fetchAllTournamentMatchRows,
+  fetchConfirmedRegistrations,
+  fetchTournamentMatchesByNumber,
+} from '@/services/tournamentService';
+import { teamService } from '@/services/teamService';
 import {
   LayoutDashboard,
   AlertTriangle,
@@ -47,12 +52,7 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
   const { data: matches = [], isLoading, refetch } = useQuery({
     queryKey: ['organizer_ind_matches', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('match_number', { ascending: true });
-      if (error) throw error;
+      const data = await fetchTournamentMatchesByNumber(tournamentId);
       return (data || []) as any[];
     },
     enabled: !!tournamentId,
@@ -62,12 +62,7 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
   const { data: registrations = [] } = useQuery({
     queryKey: ['organizer_ind_registrations', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_registrations' as any)
-        .select('id, status, category, player:players!player_id(id, full_name)')
-        .eq('tournament_id', tournamentId)
-        .eq('status', 'confirmed');
-      if (error) throw error;
+      const data = await fetchConfirmedRegistrations(tournamentId);
       return (data || []) as any[];
     },
     enabled: !!tournamentId,
@@ -381,16 +376,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const { data: ties = [], isLoading: tiesLoading, refetch: refetchTies } = useQuery({
     queryKey: ['organizer_ties', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_ties' as any)
-        .select(`
-          *,
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name, captain_id),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name, captain_id)
-        `)
-        .eq('tournament_id', tournamentId)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
+      const data = await teamService.getOrganizerTies(tournamentId);
       return (data || []) as any[];
     },
     enabled: !!tournamentId,
@@ -401,11 +387,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const { data: matches = [], isLoading: matchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['organizer_matches', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId);
-      if (error) throw error;
+      const data = await fetchAllTournamentMatchRows(tournamentId);
       return (data || []) as any[];
     },
     enabled: !!tournamentId,
@@ -417,12 +399,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
     queryKey: ['organizer_teams', tournamentId],
     queryFn: async () => {
       // 1. Fetch valid teams
-      const { data: teamsData, error: teamsError } = await supabase
-        .from('tournament_teams' as any)
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .neq('status', 'DELETED')
-        .order('name', { ascending: true });
+      const { data: teamsData, error: teamsError } = await teamService.getOrganizerTeams(tournamentId);
 
       if (teamsError) {
         console.error('Error fetching organizer teams:', teamsError);
@@ -433,20 +410,12 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
       if (teamList.length === 0) return [];
 
       // 2. Fetch members with joined player info
-      const { data: rawMembers, error: membersError } = await supabase
-        .from('tournament_team_members' as any)
-        .select('id, team_id, player_id, role, status, player:players!player_id(id, full_name, gender)')
-        .eq('tournament_id', tournamentId)
-        .eq('status', 'ACTIVE');
+      const { data: rawMembers, error: membersError } = await teamService.getActiveMembersWithPlayer(tournamentId);
 
       let memberList: any[] = [];
       if (membersError) {
         // Fallback with explicit FK constraint name
-        const fallback = await supabase
-          .from('tournament_team_members' as any)
-          .select('id, team_id, player_id, role, status, players:players!tournament_team_members_player_id_fkey(id, full_name, gender)')
-          .eq('tournament_id', tournamentId)
-          .eq('status', 'ACTIVE');
+        const fallback = await teamService.getActiveMembersWithPlayerFk(tournamentId);
 
         if (!fallback.error && fallback.data) {
           memberList = fallback.data.map((m: any) => ({
@@ -455,11 +424,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
           }));
         } else {
           // If relationship join completely fails, fetch members without join
-          const bareMembers = await supabase
-            .from('tournament_team_members' as any)
-            .select('id, team_id, player_id, role, status')
-            .eq('tournament_id', tournamentId)
-            .eq('status', 'ACTIVE');
+          const bareMembers = await teamService.getActiveMembersBare(tournamentId);
           memberList = (bareMembers.data || []) as any[];
         }
       } else {
