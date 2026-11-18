@@ -353,7 +353,7 @@ export default function TournamentSetupChecklist() {
                     {item.done ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-600'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
                     )}
                   </div>
                   <div>
@@ -416,7 +416,7 @@ export default function TournamentSetupChecklist() {
                     {item.done ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-600'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
                     )}
                   </div>
                   <div>
@@ -483,7 +483,7 @@ export default function TournamentSetupChecklist() {
                     {item.done ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-600'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
                     )}
                   </div>
                   <div>

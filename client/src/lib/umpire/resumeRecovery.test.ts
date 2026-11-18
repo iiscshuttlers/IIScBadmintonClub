@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitSets, recoverMatchFromTournamentRow, type TournamentRowForRecovery } from "./resumeRecovery";
+import { splitSets, recoverMatchFromTournamentRow, restorePointLog, type TournamentRowForRecovery } from "./resumeRecovery";
 
 const row: TournamentRowForRecovery = {
   id: "tm-1",
@@ -104,5 +104,29 @@ describe("recoverMatchFromTournamentRow", () => {
     expect(m.t1RightCourt).toBe(0);
     expect(m.t2RightCourt).toBe(0);
     expect(m.pointLog).toEqual([]); // genuinely unrecoverable
+  });
+});
+
+describe("restorePointLog", () => {
+  const stored = [
+    [2, 1, 1, 0, 1, 1000],
+    [2, 0, 1, 0, 1, 1500],
+    [2, 2, 1, 1, 2, 2000],
+  ];
+  it("restores entries and the last server when the log matches the row", () => {
+    const r = restorePointLog(stored, 1, [1, 1])!;
+    expect(r.pointLog).toHaveLength(3);
+    expect(r.pointLog[1].team).toBe("let");
+    expect(r.serverTeam).toBe(2);
+  });
+  it("refuses a log that disagrees with the tournament row", () => {
+    expect(restorePointLog(stored, 1, [2, 1])).toBeNull();
+    expect(restorePointLog(stored, 0, [1, 1])).toBeNull();
+    expect(restorePointLog("junk", 1, [1, 1])).toBeNull();
+  });
+  it("is used by recovery when supplied", () => {
+    const m = recoverMatchFromTournamentRow(row, { score: "1-1", sets_history: ["21-15", "1-1"] }, umpire, stored);
+    expect(m.pointLog).toHaveLength(3);
+    expect(m.serverTeam).toBe(2);
   });
 });

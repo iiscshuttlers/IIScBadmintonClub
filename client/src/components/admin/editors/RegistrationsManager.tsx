@@ -105,7 +105,7 @@ export function RegistrationsManager() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+      <div className="flex flex-wrap gap-2 mb-4 pb-2">
         {(["pending", "approved", "rejected", "all"] as const).map((f) => (
           <button
             key={f}

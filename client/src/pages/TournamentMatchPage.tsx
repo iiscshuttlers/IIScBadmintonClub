@@ -6,8 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { RouteStatusCard } from "@/pages/TournamentPage";
-import { isUuid, matchPath, parseMatchTab, tournamentPath, type MatchTab } from "@/lib/tournamentRoutes";
+import { isUuid, matchPath, parseMatchTab, type MatchTab } from "@/lib/tournamentRoutes";
 import { fetchVisibleTournamentIdForMatch } from "@/lib/matchRouteVisibility";
+import { tournamentReturnRoute } from "@/lib/routeContinuity";
 
 import { DISCIPLINE_LABELS, MATCH_VIEW_COLUMNS, buildSeedIndex, toMatchView, type MatchRow, type MatchView } from "@/lib/matchView";
 import { MatchSideRow, MatchStatusBadge, scoreSummary } from "@/components/match/MatchPrimitives";
@@ -15,9 +16,17 @@ import { ScrollTabs } from "@/components/ui/ScrollTabs";
 import { MatchSummaryTab } from "@/components/match/MatchSummaryTab";
 import { MatchH2HTab } from "@/components/match/MatchH2HTab";
 import { MatchInfoTab } from "@/components/match/MatchInfoTab";
+import { MatchPointsTab } from "@/components/match/MatchPointsTab";
+import { useMatchPointLog } from "@/hooks/queries/useMatchPointLog";
 
 interface RouteMatchData {
-  match: MatchRow & { umpired_by?: string | null; scored_by?: string | null };
+  match: MatchRow & {
+    umpired_by?: string | null;
+    scored_by?: string | null;
+    points_to_win?: number | null;
+    golden_point?: number | null;
+    best_of_sets?: number | null;
+  };
   seeds: Array<{ category: string | null; player_id: string | null; partner_id: string | null; seed: number | null }>;
   next: { id: string; round_name: string; category: string } | null;
 }
@@ -26,7 +35,7 @@ async function fetchMatchForRoute(tournamentId: string, matchId: string): Promis
   if (!isUuid(tournamentId) || !isUuid(matchId)) return null;
   const { data, error } = await supabase
     .from("tournament_matches")
-    .select(`${MATCH_VIEW_COLUMNS}, umpired_by, scored_by`)
+    .select(`${MATCH_VIEW_COLUMNS}, umpired_by, scored_by, golden_point, best_of_sets`)
     .eq("id", matchId)
     .eq("tournament_id", tournamentId)
     .maybeSingle();
@@ -87,6 +96,7 @@ export default function TournamentMatchPage() {
     refetchInterval: 60_000,
   });
 
+  const pointLog = useMatchPointLog(tournamentId, matchId, tState.kind === "ready");
   const view: MatchView | null = mQuery.data ? toMatchView(mQuery.data.match, buildSeedIndex(mQuery.data.seeds)) : null;
   usePageMeta({
     title: view ? `${view.sides[0].label} vs ${view.sides[1].label}` : "Match",
@@ -108,14 +118,15 @@ export default function TournamentMatchPage() {
   const lastUpdated = mQuery.dataUpdatedAt ? new Date(mQuery.dataUpdatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : null;
 
   // Points appears only once a stored point log exists (Phase C); never an empty tab.
-  const tabs: MatchTab[] = ["summary", "h2h", "info"];
+  const hasPoints = !!pointLog.data && pointLog.data.pointCount > 0;
+  const tabs: MatchTab[] = hasPoints ? ["summary", "points", "h2h", "info"] : ["summary", "h2h", "info"];
   const tab: MatchTab = tabs.includes(requestedTab) ? requestedTab : "summary";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
       <div className="container mx-auto px-4 max-w-2xl pt-5 space-y-4">
         <Link
-          href={tournamentPath(t.id)}
+          href={tournamentReturnRoute(t.id)}
           className="inline-flex items-center gap-1.5 text-sm font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden /> {t.name}
@@ -161,6 +172,17 @@ export default function TournamentMatchPage() {
           className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6"
         >
           {tab === "summary" && <MatchSummaryTab view={view} tournamentName={t.name} next={next} />}
+          {tab === "points" && pointLog.data && (
+            <MatchPointsTab
+              view={view}
+              log={pointLog.data}
+              rules={{
+                pointsToWin: match.points_to_win ?? 21,
+                goldenPoint: match.golden_point ?? 30,
+                bestOf: match.best_of_sets ?? 3,
+              }}
+            />
+          )}
           {tab === "h2h" && <MatchH2HTab view={view} />}
           {tab === "info" && (
             <MatchInfoTab

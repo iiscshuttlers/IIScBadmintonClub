@@ -5,6 +5,7 @@ import { headToHead, type HistMatch } from "@/lib/headToHead";
 import type { MatchSide, MatchView } from "@/lib/matchView";
 import { FormChips } from "@/components/match/MatchPrimitives";
 import { useRecentForm } from "@/hooks/queries/useRecentForm";
+import { usePlayerNames } from "@/hooks/queries/usePlayerNames";
 
 /**
  * H2H & form (FotMob / BWF pre-match context). Tournament matches only:
@@ -53,6 +54,7 @@ export function MatchH2HTab({ view }: { view: MatchView }) {
   const hasEntrants = s1.playerIds.length > 0 && s2.playerIds.length > 0;
   const history = useH2HHistory(view);
   const form = useRecentForm([...s1.playerIds, ...s2.playerIds]);
+  const names = usePlayerNames([...s1.playerIds, ...s2.playerIds]);
   if (!hasEntrants) {
     return <p className="mt-4 text-sm text-muted-foreground">Head-to-head appears once both sides are known.</p>;
   }
@@ -121,7 +123,7 @@ export function MatchH2HTab({ view }: { view: MatchView }) {
         </h2>
         <ul className="space-y-2">
           {[s1, s2].flatMap((side) =>
-            playerNames(side).map((p) => (
+            playerNames(side).map((p) => ({ ...p, name: names.data?.[p.id] ?? p.name })).map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold min-w-0 break-words">{p.name}</span>
                 <FormChips entries={form.data?.[p.id]} loading={form.isPending} />

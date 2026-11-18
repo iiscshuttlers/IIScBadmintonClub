@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodePoints, gameMinutes, isGamePoint, keyMoments, longestRun, progression, splitGames, type Rally } from "@/lib/pointLog";
+import { assessPointLogCoverage, decodePoints, gameMinutes, isGamePoint, keyMoments, longestRun, progression, splitGames, type Rally } from "@/lib/pointLog";
 
 /** Build a game's rallies from a winner sequence like "1122…". */
 function game(n: number, seq: string, t0 = 0): Rally[] {
@@ -30,6 +30,45 @@ describe("isGamePoint", () => {
     expect(isGamePoint(21, 20, rules)).toBe(true);
     expect(isGamePoint(29, 29, rules)).toBe(true);
     expect(isGamePoint(19, 10, rules)).toBe(false);
+  });
+
+  it("supports 15- and 30-point formats and an uncapped game", () => {
+    const to15 = { pointsToWin: 15, goldenPoint: 21, bestOf: 3 };
+    expect(isGamePoint(14, 10, to15)).toBe(true);
+    expect(isGamePoint(14, 14, to15)).toBe(false);
+    expect(isGamePoint(20, 20, to15)).toBe(true);
+
+    const to30 = { pointsToWin: 30, goldenPoint: 30, bestOf: 1 };
+    expect(isGamePoint(29, 29, to30)).toBe(true);
+
+    const uncapped = { pointsToWin: 21, goldenPoint: 0, bestOf: 3 };
+    expect(isGamePoint(0, 0, uncapped)).toBe(false);
+    expect(isGamePoint(20, 20, uncapped)).toBe(false);
+    expect(isGamePoint(21, 20, uncapped)).toBe(true);
+  });
+});
+
+describe("assessPointLogCoverage", () => {
+  const options = { finished: true, final: true, supersededByCorrection: false };
+
+  it.each([
+    [15, { side1: 15, side2: 0 }],
+    [21, { side1: 21, side2: 0 }],
+    [30, { side1: 30, side2: 0 }],
+  ])("recognises a complete contiguous game to %i", (points, expected) => {
+    expect(assessPointLogCoverage(game(1, "1".repeat(points)), [expected], options)).toBe("complete");
+  });
+
+  it("does not call a score-only or truncated timeline complete", () => {
+    const jumped: Rally[] = [{ game: 1, side: 1, t1: 21, t2: 0, server: 1, ts: 1 }];
+    expect(assessPointLogCoverage(jumped, [{ side1: 21, side2: 0 }], options)).toBe("partial");
+    expect(assessPointLogCoverage(game(1, "1".repeat(11)), [{ side1: 21, side2: 0 }], options)).toBe("partial");
+  });
+
+  it("distinguishes a current live history and a corrected result", () => {
+    const rallies = game(1, "11122");
+    expect(assessPointLogCoverage(rallies, [{ side1: 3, side2: 2 }], { ...options, finished: false, final: false })).toBe("live");
+    expect(assessPointLogCoverage(rallies, [{ side1: 3, side2: 2 }], { ...options, supersededByCorrection: true })).toBe("corrected");
   });
 });
 

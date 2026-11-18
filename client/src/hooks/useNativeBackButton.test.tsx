@@ -27,8 +27,9 @@ describe("useNativeBackButton tournament history", () => {
     vi.restoreAllMocks();
   });
 
-  it("uses browser history for a canonical tournament tab on Android", () => {
-    window.history.replaceState({}, "", "/tournaments/3f2b8c1e-1d2a-4b5c-8d9e-0a1b2c3d4e5f/results");
+  it("uses browser history from a match so the filtered tournament entry remains available", () => {
+    window.history.replaceState({}, "", "/tournaments/3f2b8c1e-1d2a-4b5c-8d9e-0a1b2c3d4e5f/schedule?cat=XD&court=2");
+    window.history.pushState({}, "", "/tournaments/3f2b8c1e-1d2a-4b5c-8d9e-0a1b2c3d4e5f/matches/7f2b8c1e-1d2a-4b5c-8d9e-0a1b2c3d4e6a");
     const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
     renderHook(() => useNativeBackButton());
 

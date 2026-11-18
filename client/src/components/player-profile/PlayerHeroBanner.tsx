@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { FormChips } from "@/components/match/MatchPrimitives";
 import { useRecentForm } from "@/hooks/queries/useRecentForm";
+import { useRankingMovement } from "@/hooks/queries/useRankingMovement";
+import { movementLabel } from "@/lib/rankMovement";
 
 interface PlayerHeroBannerProps {
   player: PlayerRow;
@@ -17,6 +19,9 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
   const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
   const form = useRecentForm([player.id]);
   const formEntries = form.data?.[player.id];
+  const movement = useRankingMovement("overall", !!eloRank);
+  const myMove = movement.data?.[player.id];
+  const moveLabel = movementLabel(myMove);
 
   return (
     <>
@@ -133,6 +138,14 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                   </span>
                 </div>
               )}
+
+              {eloRank && (moveLabel || (myMove?.peakRank && myMove.peakRank < eloRank)) ? (
+                <p className="mt-3 text-xs md:text-sm font-bold text-slate-700 dark:text-slate-300">
+                  Rank #{eloRank}
+                  {moveLabel && <span title={moveLabel.long}> ({moveLabel.text}<span className="sr-only">: {moveLabel.long}</span>)</span>}
+                  {myMove?.peakRank && myMove.peakRank < eloRank ? <> · peak #{myMove.peakRank}</> : null}
+                </p>
+              ) : null}
 
               {/* Last-5 tournament form; hidden for players with no tournament results. */}
               {(form.isPending && form.fetchStatus !== "idle") || (formEntries && formEntries.length > 0) ? (

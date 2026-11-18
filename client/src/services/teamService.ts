@@ -642,79 +642,11 @@ export const teamService = {
     scoreB?: string;
     rubberScores: Record<string, { winnerSide: number; score: string }>;
   }): Promise<void> {
-    const { tieId, winnerId, scoreA, scoreB, rubberScores } = params;
-
-    if (rubberScores && Object.keys(rubberScores).length > 0) {
-      for (const [matchId, rData] of Object.entries(rubberScores)) {
-        const matchUpdate: Record<string, any> = {};
-        if (rData.score !== undefined && rData.score !== null) {
-          matchUpdate.score = rData.score.trim() || null;
-        }
-        if (rData.winnerSide === 1 || rData.winnerSide === 2) {
-          matchUpdate.winner_side = rData.winnerSide;
-          matchUpdate.status = 'completed';
-        } else if (rData.winnerSide === 0) {
-          if (rData.score.trim()) {
-            matchUpdate.status = 'completed';
-          }
-        }
-
-        if (Object.keys(matchUpdate).length > 0) {
-          const { error: matchErr } = await supabase
-            .from('tournament_matches')
-            .update(matchUpdate as TablesUpdate<'tournament_matches'>)
-            .eq('id', matchId);
-          if (matchErr) throw matchErr;
-        }
-      }
-    }
-
-    const updatePayload: Record<string, any> = {};
-    if (scoreA !== undefined && scoreA !== null) updatePayload.score_team_a = scoreA;
-    if (scoreB !== undefined && scoreB !== null) updatePayload.score_team_b = scoreB;
-
-    if (Object.keys(updatePayload).length > 0) {
-      const { error: tieErr } = await supabase
-        .from('tournament_ties')
-        .update(updatePayload as TablesUpdate<'tournament_ties'>)
-        .eq('id', tieId);
-      if (tieErr) throw tieErr;
-    }
-
-    const { error } = await supabase.rpc('set_tie_result', {
-      p_tie_id: tieId,
-      p_winner_team_id: winnerId,
-      p_note: 'Resolved by manager',
-    });
-    if (error) throw error;
-
-    const { data: currentTie, error: currErr } = await supabase
-      .from('tournament_ties')
-      .select('*')
-      .eq('id', tieId)
-      .single();
-    if (currErr) throw currErr;
-
-    if (currentTie?.advances_to_tie && currentTie?.advances_to_slot) {
-      const slotField = currentTie.advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
-      const { error: advErr } = await supabase
-        .from('tournament_ties')
-        .update({ [slotField]: winnerId } as TablesUpdate<'tournament_ties'>)
-        .eq('id', currentTie.advances_to_tie);
-      if (advErr) throw advErr;
-    }
-
-    if (currentTie?.loser_advances_to_tie && currentTie?.loser_advances_to_slot) {
-      const loserId = winnerId === currentTie.team_a_id ? currentTie.team_b_id : currentTie.team_a_id;
-      if (loserId) {
-        const loserSlotField = currentTie.loser_advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
-        const { error: losErr } = await supabase
-          .from('tournament_ties')
-          .update({ [loserSlotField]: loserId } as TablesUpdate<'tournament_ties'>)
-          .eq('id', currentTie.loser_advances_to_tie);
-        if (losErr) throw losErr;
-      }
-    }
+    void params;
+    throw new Error(
+      "Manual tie-result correction is locked. Record or correct each rubber through its audited match flow; " +
+      "winner-changing tie corrections require the coordinated tie recalculation RPC.",
+    );
   },
 
   async getTournamentConfigForLineup(tournamentId: string) {

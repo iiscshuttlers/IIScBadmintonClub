@@ -37,6 +37,7 @@ import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { HomePersonalDashboard } from "@/components/home/HomePersonalDashboard";
 import { HomeLiveStrip } from "@/components/home/HomeLiveStrip";
+import { HomeMatchRail } from "@/components/home/HomeMatchRail";
 import { useAuth } from "@/contexts/AuthContext";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -175,6 +176,8 @@ export default function Home() {
             <HomeAnnouncementBar isAdmin={isAdmin} />
 
             <HomeLiveStrip />
+
+            <HomeMatchRail />
 
             <HomePersonalDashboard />
 

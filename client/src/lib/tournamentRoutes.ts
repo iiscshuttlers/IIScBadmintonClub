@@ -11,7 +11,7 @@
  * adds it), so they can be passed to `setLocation` / `<Link href>` directly.
  */
 
-export const TOURNAMENT_TABS = ["overview", "players", "draw", "schedule", "results", "live"] as const;
+export const TOURNAMENT_TABS = ["overview", "players", "draw", "schedule", "results", "stats", "live"] as const;
 export type TournamentTab = (typeof TOURNAMENT_TABS)[number];
 
 /** Role- or viewer-specific sub-views, addressed with `?panel=`. */
@@ -235,7 +235,7 @@ export function canonicalFromPulse(search: string, hash: string): string | null 
 
 // ── Old LiveTab sub-tab ⇄ canonical tab (used by the embedded LiveTab) ─────
 
-export type LiveSubTab = LegacySubTab | "players";
+export type LiveSubTab = LegacySubTab | "players" | "stats";
 
 export function liveSubTabFor(
   tab: TournamentTab,
@@ -252,6 +252,8 @@ export function liveSubTabFor(
       return isTeam ? "ties" : "brackets";
     case "schedule":
       return "schedule";
+    case "stats":
+      return "stats";
     case "results":
     case "live":
       return "matches";
@@ -275,6 +277,8 @@ export function canonicalForLiveSubTab(
       return { tab: "schedule", panel: null };
     case "matches":
       return { tab: currentTab === "results" ? "results" : "live", panel: null };
+    case "stats":
+      return { tab: "stats", panel: null };
     default:
       return { tab: currentTab, panel: sub };
   }

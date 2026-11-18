@@ -144,6 +144,10 @@ async function installApi(page: Page, me: string, overrides: Record<string, (url
     if (overrides[table]) {
       const body = overrides[table](url);
       if (isHead && typeof body === "number") return count(route, body);
+      // A numeric override represents count-only fixture data. If another
+      // widget reads rows from the same table, return an honest empty list
+      // instead of a number that violates the PostgREST row shape.
+      if (typeof body === "number") return fulfill(route, wantsObject ? null : []);
       return fulfill(route, wantsObject && Array.isArray(body) ? body[0] ?? null : body);
     }
     if (table === "players") {
@@ -226,5 +230,179 @@ test("admin dashboard lists actionable items that link to their fix", async ({ p
   await expect(page.getByRole("button", { name: /2 disputed results awaiting a decision/ })).toBeVisible();
   await officials.click();
   await expect(page).toHaveURL(new RegExp(`/tournament-admin\\?id=${TOURNAMENT}&tab=officials`));
+  expectNoPrivatePlayerReads(seen);
+});
+
+test("mobile home shows one actionable My tournament card", async ({ page }) => {
+  const primaryMatch = "00000000-0000-4000-8000-000000000310";
+  const otherMatch = "00000000-0000-4000-8000-000000000311";
+  const partner = "00000000-0000-4000-8000-0000000000b3";
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  const seen = await installApi(page, MEMBER, {
+    tournaments: () => [{
+      id: TOURNAMENT,
+      name: "Spectrum Open",
+      status: "active",
+      start_date: "2026-11-14",
+      end_date: "2026-11-16",
+    }],
+    tournament_matches: () => [
+      {
+        id: primaryMatch,
+        tournament_id: TOURNAMENT,
+        category: "XD",
+        match_code: "XD_QF_01",
+        round: "QF",
+        round_name: "Quarter-final",
+        match_number: 1,
+        team1_label: "Asha Rao & Dev Kumar",
+        team2_label: "Bina Iyer & Chitra Shah",
+        player1_id: MEMBER,
+        player2_id: RIVAL,
+        player3_id: partner,
+        player4_id: "00000000-0000-4000-8000-0000000000b4",
+        court_number: "2",
+        status: "scheduled",
+        score: null,
+        sets_history: null,
+        scheduled_at: "2026-11-15T09:30:00Z",
+        started_at: null,
+        ended_at: null,
+        winner_side: null,
+        advances_to_match: null,
+        rubber_label: null,
+        tie_id: null,
+        points_to_win: 21,
+        tournaments: { name: "Spectrum Open" },
+      },
+      {
+        id: otherMatch,
+        tournament_id: TOURNAMENT,
+        category: "WS",
+        match_code: "WS_R1_01",
+        round: "R1",
+        round_name: "Round 1",
+        match_number: 2,
+        team1_label: "Asha Rao",
+        team2_label: "Bina Iyer",
+        player1_id: MEMBER,
+        player2_id: RIVAL,
+        player3_id: null,
+        player4_id: null,
+        court_number: null,
+        status: "pending",
+        score: null,
+        sets_history: null,
+        scheduled_at: null,
+        started_at: null,
+        ended_at: null,
+        winner_side: null,
+        advances_to_match: null,
+        rubber_label: null,
+        tie_id: null,
+        points_to_win: 21,
+        tournaments: { name: "Spectrum Open" },
+      },
+    ],
+  });
+
+  await page.goto("/");
+
+  const card = page.getByRole("region", { name: "My tournament" });
+  await expect(card.getByRole("heading", { name: "Your next match" })).toBeVisible();
+  await expect(card.getByText("Spectrum Open").first()).toBeVisible();
+  await expect(card.getByRole("link", { name: "Open match" })).toHaveAttribute(
+    "href",
+    `/tournaments/${TOURNAMENT}/matches/${primaryMatch}`,
+  );
+  await expect(card.getByRole("link", { name: /WS.*Round 1/i })).toHaveAttribute(
+    "href",
+    `/tournaments/${TOURNAMENT}/matches/${otherMatch}`,
+  );
+  await expect(card.getByText("Time not assigned")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your next match" })).toHaveCount(1);
+  await expect(page.locator("body")).not.toContainText(/report(?:ing)? time/i);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expectNoPrivatePlayerReads(seen);
+});
+
+test("tournament match back preserves filters and scroll context", async ({ page }) => {
+  const filteredRoute = `/tournaments/${TOURNAMENT}/schedule?cat=XD&court=2&date=2026-11-15&status=upcoming`;
+  const matches = Array.from({ length: 12 }, (_, index) => ({
+    id: `00000000-0000-4000-8000-${String(410 + index).padStart(12, "0")}`,
+    tournament_id: TOURNAMENT,
+    category: "XD",
+    match_code: `XD_R1_${String(index + 1).padStart(2, "0")}`,
+    round: 1,
+    round_name: "Round 1",
+    match_number: index + 1,
+    team1_label: `Asha Rao & Partner ${index + 1}`,
+    team2_label: `Bina Iyer & Rival ${index + 1}`,
+    player1_id: MEMBER,
+    player2_id: RIVAL,
+    player3_id: null,
+    player4_id: null,
+    court_number: "2",
+    status: "scheduled",
+    score: null,
+    sets_history: null,
+    scheduled_at: `2026-11-15T${String(8 + Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}:00Z`,
+    started_at: null,
+    ended_at: null,
+    winner_side: null,
+    advances_to_match: null,
+    rubber_label: null,
+    tie_id: null,
+    points_to_win: 21,
+  }));
+  const seen = await installApi(page, MEMBER, {
+    tournaments: () => [{
+      id: TOURNAMENT,
+      name: "Spectrum Open",
+      status: "active",
+      format_family: "INDIVIDUAL",
+      categories: ["XD"],
+      start_date: "2026-11-14",
+      end_date: "2026-11-16",
+      show_participants: true,
+    }],
+    tournament_matches: (url) => {
+      const requestedId = url.searchParams.get("id")?.replace(/^eq\./, "");
+      return requestedId ? matches.find((match) => match.id === requestedId) ?? null : matches;
+    },
+    tournament_participants: () => [],
+  });
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(filteredRoute);
+  const firstMatch = matches[0].id;
+  const matchLink = page.locator(`a[href="/tournaments/${TOURNAMENT}/matches/${firstMatch}"]`).first();
+  await page.locator("summary").filter({ hasText: "Sunday, 15 November" }).click();
+  await expect(matchLink).toBeVisible();
+
+  await page.evaluate(() => window.scrollTo(0, Math.min(700, document.documentElement.scrollHeight - innerHeight)));
+  const listScroll = await page.evaluate(() => window.scrollY);
+  expect(listScroll).toBeGreaterThan(100);
+
+  await matchLink.click();
+  await expect(page).toHaveURL(new RegExp(`/tournaments/${TOURNAMENT}/matches/${firstMatch}$`));
+  const savedListScroll = await page.evaluate((route) =>
+    Number(sessionStorage.getItem(`iiscshuttlers:scroll:${route}`)), filteredRoute);
+  expect(savedListScroll).toBeGreaterThan(100);
+  const tournamentBack = page.getByRole("link", { name: "Spectrum Open" }).first();
+  await expect(tournamentBack).toHaveAttribute("href", filteredRoute).catch(async (error) => {
+    await dumpAppErrors(page);
+    throw error;
+  });
+
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`${filteredRoute.replace(/[?]/g, "\\?")}$`));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(Math.max(0, savedListScroll - 5));
+
+  await page.locator("summary").filter({ hasText: "Sunday, 15 November" }).click();
+  await matchLink.click();
+  await tournamentBack.click();
+  await expect(page).toHaveURL(new RegExp(`${filteredRoute.replace(/[?]/g, "\\?")}$`));
   expectNoPrivatePlayerReads(seen);
 });

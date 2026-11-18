@@ -46,9 +46,17 @@ self.addEventListener('notificationclick', (event) => {
   const type = data.type || '';
   const action = data.action || '';
   const playerId = data.player_id || data.from_player_id || '';
+  const matchId = data.match_id || data.matchId || '';
+  const tournamentId = data.tournament_id || '';
   let path = '/pulse';
 
-  if (type === 'match_confirmation' || type === 'match_logged' || type === 'kudos' || action === 'view_match') {
+  // Authoritative senders provide the canonical in-app route. It must win over
+  // legacy type/action fallbacks, for both a focused client and a cold open.
+  if (typeof data.link === 'string' && /^\/(?!\/)/.test(data.link) && !data.link.includes('\\')) {
+    path = data.link;
+  } else if (matchId && tournamentId) {
+    path = `/tournaments/${encodeURIComponent(tournamentId)}/matches/${encodeURIComponent(matchId)}`;
+  } else if (type === 'match_confirmation' || type === 'match_logged' || type === 'kudos' || action === 'view_match') {
     path = '/my-matches';
   } else if (type === 'challenge_expiry' || type === 'new_challenge' || action === 'view_challenges') {
     path = '/my-matches';

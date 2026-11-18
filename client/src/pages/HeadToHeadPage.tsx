@@ -40,6 +40,13 @@ export default function HeadToHeadPage() {
   const bIds = parseIds(params.get("b"));
   const mode: "players" | "pairs" = params.get("mode") === "pairs" || aIds.length === 2 || bIds.length === 2 ? "pairs" : "players";
   const discipline = parseDiscipline(params.get("cat") ?? "");
+  const period = params.get("period") === "12m" || params.get("period") === "36m" ? params.get("period")! : "all";
+  const dateFrom = useMemo(() => {
+    if (period === "all") return null;
+    const date = new Date();
+    date.setUTCMonth(date.getUTCMonth() - (period === "12m" ? 12 : 36));
+    return date.toISOString();
+  }, [period]);
 
   const set = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(search);
@@ -78,9 +85,9 @@ export default function HeadToHeadPage() {
   });
 
   const result = useMemo(
-    () => (data.data ? compareSides(data.data.rows, a, b, { discipline }) : null),
+    () => (data.data ? compareSides(data.data.rows, a, b, { discipline, dateFrom }) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data.data, aIds.join(), bIds.join(), discipline],
+    [data.data, aIds.join(), bIds.join(), discipline, dateFrom],
   );
 
   const nameOf = (id: string) => players.data?.find((p) => p.id === id)?.full_name ?? data.data?.players[id]?.full_name ?? "Player";
@@ -161,6 +168,20 @@ export default function HeadToHeadPage() {
           ))}
         </div>
 
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Comparison period">
+          <span className="text-xs font-bold text-muted-foreground">Period</span>
+          {(["all", "12m", "36m"] as const).map((value) => (
+            <button
+              key={value}
+              onClick={() => set({ period: value === "all" ? null : value })}
+              aria-pressed={period === value}
+              className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border ${period === value ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700"}`}
+            >
+              {value === "all" ? "All time" : value === "12m" ? "Last 12 months" : "Last 3 years"}
+            </button>
+          ))}
+        </div>
+
         {!ready ? (
           <p className="text-sm text-muted-foreground">
             {aIds.some((x) => bIds.includes(x))
@@ -191,6 +212,7 @@ export default function HeadToHeadPage() {
               <p className="mt-2 text-center text-xs text-muted-foreground">
                 {result.sample} counted {result.sample === 1 ? "meeting" : "meetings"}
                 {discipline ? ` in ${DISCIPLINE_LABELS[discipline]}` : ""}
+                {period !== "all" ? ` · ${period === "12m" ? "last 12 months" : "last 3 years"}` : ""}
                 {result.walkovers.aWon + result.walkovers.bWon > 0 &&
                   ` · walkovers ${result.walkovers.aWon}–${result.walkovers.bWon} (not counted)`}
                 {result.excluded > 0 && ` · ${result.excluded} not counted`}

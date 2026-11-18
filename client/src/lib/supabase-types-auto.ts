@@ -2817,6 +2817,66 @@ export type Database = {
           },
         ]
       }
+      ranking_snapshots: {
+        Row: {
+          created_at: string
+          list: string
+          player_id: string
+          rank: number
+          rating: number
+          snapshot_date: string
+        }
+        Insert: {
+          created_at?: string
+          list: string
+          player_id: string
+          rank: number
+          rating: number
+          snapshot_date: string
+        }
+        Update: {
+          created_at?: string
+          list?: string
+          player_id?: string
+          rank?: number
+          rating?: number
+          snapshot_date?: string
+        }
+        Relationships: []
+      }
+      tournament_match_point_logs: {
+        Row: {
+          final: boolean
+          match_id: string
+          point_count: number
+          points: Json
+          recorded_by: string | null
+          revision: number
+          superseded_by_correction: boolean
+          updated_at: string
+        }
+        Insert: {
+          final?: boolean
+          match_id: string
+          point_count?: number
+          points?: Json
+          recorded_by?: string | null
+          revision?: number
+          superseded_by_correction?: boolean
+          updated_at?: string
+        }
+        Update: {
+          final?: boolean
+          match_id?: string
+          point_count?: number
+          points?: Json
+          recorded_by?: string | null
+          revision?: number
+          superseded_by_correction?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       player_matches_unified: {
@@ -2880,6 +2940,18 @@ export type Database = {
       }
     }
     Functions: {
+      ranking_movement: {
+        Args: { p_list?: string }
+        Returns: {
+          delta: number | null
+          peak_rank: number | null
+          player_id: string
+          previous_rank: number | null
+          rank: number
+          since: string | null
+          status: string
+        }[]
+      }
       accept_buddy_request: {
         Args: { p_target_id: string }
         Returns: undefined

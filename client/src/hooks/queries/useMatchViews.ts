@@ -149,3 +149,45 @@ export function useFinishedMatchViews(
     retry: () => void q.refetch(),
   };
 }
+
+/**
+ * Every decided match of a tournament (completed + walkover, capped at 1,000)
+ * plus how many non-cancelled matches exist, for the Stats tab.
+ */
+export function useDecidedMatchViews(tournamentId: string) {
+  const q = useQuery({
+    queryKey: ["tournament_matches", tournamentId, "decided-views"],
+    enabled: !!tournamentId,
+    queryFn: async () => {
+      const [{ data, error }, total, seeds] = await Promise.all([
+        supabase
+          .from("tournament_matches")
+          .select(MATCH_VIEW_COLUMNS)
+          .eq("tournament_id", tournamentId)
+          .in("status", ["completed", "finished", "walkover"])
+          .limit(1000),
+        supabase
+          .from("tournament_matches")
+          .select("id", { count: "exact", head: true })
+          .eq("tournament_id", tournamentId)
+          .neq("status", "cancelled"),
+        fetchSeeds(tournamentId),
+      ]);
+      if (error) throw error;
+      return { rows: (data ?? []) as unknown as MatchRow[], seeds, total: total.count ?? null };
+    },
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const views = useMemo(() => {
+    if (!q.data) return [];
+    const seeds = buildSeedIndex(q.data.seeds);
+    return q.data.rows.map((r) => toMatchView(r, seeds));
+  }, [q.data]);
+  return {
+    views,
+    total: q.data?.total ?? null,
+    status: (q.isPending ? "loading" : q.data ? "ready" : "error") as "loading" | "ready" | "error",
+    retry: () => void q.refetch(),
+  };
+}

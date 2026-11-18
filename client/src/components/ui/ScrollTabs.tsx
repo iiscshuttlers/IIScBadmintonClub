@@ -53,7 +53,7 @@ export function ScrollTabs({
     <nav
       aria-label={label}
       ref={setRow}
-      className="-mx-4 px-4 sm:mx-0 sm:px-0 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex flex-wrap items-center gap-2 pb-1"
     >
       {tabs.map((t) => {
         const active = t.key === activeKey;

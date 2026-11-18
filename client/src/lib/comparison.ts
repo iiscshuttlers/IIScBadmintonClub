@@ -24,12 +24,16 @@ export interface ComparisonSide {
   ids: string[];
 }
 
+export function canonicalSideIds(ids: Array<string | null | undefined>): string[] {
+  return [...new Set(ids.filter((x): x is string => !!x).map((x) => x.trim().toLowerCase()).filter(Boolean))].sort();
+}
+
 export function pairKey(ids: Array<string | null | undefined>): string {
-  return ids.filter((x): x is string => !!x).map((x) => x.toLowerCase()).sort().join("+");
+  return canonicalSideIds(ids).join("+");
 }
 
 export function sideKind(s: ComparisonSide): "player" | "pair" {
-  return s.ids.length >= 2 ? "pair" : "player";
+  return canonicalSideIds(s.ids).length >= 2 ? "pair" : "player";
 }
 
 export interface ComparisonRow {
@@ -112,8 +116,8 @@ export function rowDiscipline(row: ComparisonRow): Discipline | null {
 }
 
 function sideMatches(side: string[], target: ComparisonSide): boolean {
-  const ids = target.ids.map((x) => x.toLowerCase());
-  const s = side.map((x) => x.toLowerCase());
+  const ids = canonicalSideIds(target.ids);
+  const s = canonicalSideIds(side);
   if (ids.length >= 2) return pairKey(s) === pairKey(ids);
   return s.includes(ids[0]);
 }
@@ -147,7 +151,7 @@ export function compareSides(
   rows: ComparisonRow[],
   a: ComparisonSide,
   b: ComparisonSide,
-  opts: { discipline?: Discipline | null } = {},
+  opts: { discipline?: Discipline | null; dateFrom?: string | null; dateTo?: string | null } = {},
 ): ComparisonResult {
   const seen = new Set<string>();
   const against: ComparisonMeeting[] = [];
@@ -156,6 +160,8 @@ export function compareSides(
     const key = `${row.source}:${row.id}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    if (opts.dateFrom && (!row.date || row.date < opts.dateFrom)) continue;
+    if (opts.dateTo && (!row.date || row.date > opts.dateTo)) continue;
     const discipline = rowDiscipline(row);
     if (opts.discipline && discipline !== opts.discipline) continue;
     const rel = relation(row, a, b);

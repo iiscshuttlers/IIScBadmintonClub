@@ -3,6 +3,7 @@ import { Link, useLocation, useRoute, useSearch } from "wouter";
 import { ArrowLeft, Loader2, RefreshCw, SearchX, WifiOff } from "lucide-react";
 import { LiveTab } from "@/components/pulse/LiveTab";
 import { TournamentWinnersPanel } from "@/components/tournament/TournamentWinnersPanel";
+import { TournamentStoryPanel } from "@/components/tournament/TournamentStoryPanel";
 import { FollowTournamentButton } from "@/components/tournament/FollowTournamentButton";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
@@ -125,6 +126,7 @@ export default function TournamentPage() {
   };
 
   const showWinners = finished && tab === "results" && !panel;
+  const showStory = tab === "results" && !panel;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
@@ -144,9 +146,15 @@ export default function TournamentPage() {
           tab,
           panel,
           navigate: go,
-          beforeContent: showWinners ? (
-            <FinishedWinners id={id} name={tournament.name} startDate={tournament.start_date} derived={winners} />
-          ) : undefined,
+          beforeContent:
+            showWinners || showStory ? (
+              <>
+                {showWinners && (
+                  <FinishedWinners id={id} name={tournament.name} startDate={tournament.start_date} derived={winners} />
+                )}
+                {showStory && <TournamentStoryPanel tournamentId={id} tournamentName={tournament.name} />}
+              </>
+            ) : undefined,
         }}
       />
     </div>

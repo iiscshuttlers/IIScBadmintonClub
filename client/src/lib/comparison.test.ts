@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareSides, eligibilityOf, pairKey, relation, rowDiscipline, sampleNote, type ComparisonRow } from "./comparison";
+import { canonicalSideIds, compareSides, eligibilityOf, pairKey, relation, rowDiscipline, sampleNote, sideKind, type ComparisonRow } from "./comparison";
 
 let n = 0;
 const row = (side1: string[], side2: string[], o: Partial<ComparisonRow> = {}): ComparisonRow => ({
@@ -22,6 +22,11 @@ describe("pair identity", () => {
   it("A+B equals B+A, A+C is different", () => {
     expect(pairKey(["a", "b"])).toBe(pairKey(["b", "a"]));
     expect(pairKey(["a", "b"])).not.toBe(pairKey(["a", "c"]));
+  });
+
+  it("normalizes case and rejects duplicate members as a pair identity", () => {
+    expect(canonicalSideIds([" B ", "a", "A"])).toEqual(["a", "b"]);
+    expect(sideKind({ ids: ["a", "A"] })).toBe("player");
   });
 
   it("pair-vs-pair ignores partner order but not partner identity", () => {
@@ -83,6 +88,20 @@ describe("player comparisons", () => {
   it("does not double count a row seen twice", () => {
     const r1 = row(["a"], ["b"]);
     expect(compareSides([r1, { ...r1 }], { ids: ["a"] }, { ids: ["b"] }).sample).toBe(1);
+  });
+
+  it("applies an inclusive date range and excludes undated rows from a dated sample", () => {
+    const rows = [
+      row(["a"], ["b"], { date: "2025-12-31T23:59:59Z" }),
+      row(["a"], ["b"], { date: "2026-01-01T00:00:00Z" }),
+      row(["a"], ["b"], { date: "2026-12-31T23:59:59Z" }),
+      row(["a"], ["b"], { date: null }),
+    ];
+    const result = compareSides(rows, { ids: ["a"] }, { ids: ["b"] }, {
+      dateFrom: "2026-01-01T00:00:00Z",
+      dateTo: "2026-12-31T23:59:59Z",
+    });
+    expect(result.sample).toBe(2);
   });
 
   it("explains small samples", () => {

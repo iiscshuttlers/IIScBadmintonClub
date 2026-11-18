@@ -10,7 +10,14 @@
 import { findCourtConflicts, type CourtScheduledMatch, type UnavailableCourtPeriod } from "@/lib/courtConflicts";
 import { findRestConflicts, type ScheduledMatch } from "@/lib/restConflicts";
 
-export type AdminActionKind = "missing_officials" | "schedule_conflicts" | "disputed_results" | "unresolved_identities" | "unsynced_scores";
+export type AdminActionKind =
+  | "missing_officials"
+  | "schedule_conflicts"
+  | "delayed_matches"
+  | "disputed_results"
+  | "unresolved_identities"
+  | "unsynced_scores"
+  | "sync_visibility";
 
 export interface AdminActionCard {
   id: string;
@@ -31,14 +38,18 @@ export interface TournamentActionInput {
   officialCount: number;
   hardConflicts: number;
   warningConflicts: number;
+  delayedMatches: number;
 }
 
 export interface AdminActionInput {
   tournaments: TournamentActionInput[];
   disputedResults: number;
   guestIdentities: number;
-  unsyncedOnThisDevice: number;
+  /** null means the device queue could not be inspected; it must not be presented as zero. */
+  unsyncedOnThisDevice: number | null;
 }
+
+export const DELAY_THRESHOLD_MINUTES = 15;
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -79,6 +90,18 @@ export function buildAdminActionCards(input: AdminActionInput): AdminActionCard[
         actionLabel: "Open order of play",
       });
     }
+    if (t.delayedMatches > 0) {
+      cards.push({
+        id: `delayed:${t.id}`,
+        kind: "delayed_matches",
+        severity: t.lifecycle === "active" ? "high" : "medium",
+        title: `${t.name}: ${plural(t.delayedMatches, "delayed match", "delayed matches")}`,
+        detail: `Scheduled at least ${DELAY_THRESHOLD_MINUTES} minutes ago but not started. Review the authoritative schedule; no fixture is moved automatically.`,
+        count: t.delayedMatches,
+        href: `/tournament-admin?id=${encodeURIComponent(t.id)}&tab=schedule&attention=delayed`,
+        actionLabel: "Review schedule",
+      });
+    }
   }
   if (input.disputedResults > 0) {
     cards.push({
@@ -104,7 +127,18 @@ export function buildAdminActionCards(input: AdminActionInput): AdminActionCard[
       actionLabel: "Resolve guests",
     });
   }
-  if (input.unsyncedOnThisDevice > 0) {
+  if (input.unsyncedOnThisDevice == null) {
+    cards.push({
+      id: "sync-visibility",
+      kind: "sync_visibility",
+      severity: "medium",
+      title: "Score-sync status is unknown on this device",
+      detail: "The local umpire queue could not be inspected. This is not an all-clear and says nothing about offline queues on other devices.",
+      count: 0,
+      href: "#umpire",
+      actionLabel: "Check umpire mode",
+    });
+  } else if (input.unsyncedOnThisDevice > 0) {
     cards.push({
       id: "unsynced",
       kind: "unsynced_scores",
@@ -118,6 +152,28 @@ export function buildAdminActionCards(input: AdminActionInput): AdminActionCard[
   }
   const rank = (c: AdminActionCard) => (c.severity === "high" ? 0 : 1);
   return cards.sort((a, b) => rank(a) - rank(b));
+}
+
+export interface DelayCandidate {
+  scheduled_at?: string | null;
+  started_at?: string | null;
+  status?: string | null;
+}
+
+/** Estimated delay signal only: a past scheduled time is not a confirmed incident. */
+export function countDelayedMatches(
+  matches: DelayCandidate[],
+  now = new Date(),
+  thresholdMinutes = DELAY_THRESHOLD_MINUTES,
+): number {
+  const cutoff = now.getTime() - thresholdMinutes * 60_000;
+  return matches.filter((match) => {
+    const status = (match.status ?? "").toLowerCase();
+    if (status !== "scheduled" && status !== "pending") return false;
+    if (match.started_at || !match.scheduled_at) return false;
+    const scheduled = Date.parse(match.scheduled_at);
+    return Number.isFinite(scheduled) && scheduled <= cutoff;
+  }).length;
 }
 
 type ConflictMatch = CourtScheduledMatch &

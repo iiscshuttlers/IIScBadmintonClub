@@ -208,7 +208,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button 
           onClick={() => setActiveTab('teams')}
           className={`pb-2.5 px-3 text-xs sm:text-sm font-black border-b-2 transition-all flex items-center gap-2 shrink-0 ${
@@ -571,19 +571,12 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => {
-                              setResolvingTie({
-                                tie,
-                                winnerId: tie.winner_team_id || tie.team_a_id,
-                                scoreA: tie.score_team_a ? String(tie.score_team_a) : '',
-                                scoreB: tie.score_team_b ? String(tie.score_team_b) : '',
-                                rubberScores: {},
-                              });
-                            }}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition"
+                            disabled
+                            title="Correct each rubber through its audited match flow. Tie-winner changes remain locked until coordinated recalculation is available."
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 cursor-not-allowed opacity-80"
                           >
-                            <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            {isCompleted ? 'Edit Scores' : 'Enter Scores / Resolve'}
+                            <Award className="w-3.5 h-3.5" />
+                            Tie correction locked
                           </button>
                         </div>
                       )}

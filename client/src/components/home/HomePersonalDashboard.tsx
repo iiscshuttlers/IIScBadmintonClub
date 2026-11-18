@@ -9,7 +9,6 @@ import { usePlayerMatches } from "@/hooks/usePlayerMatches";
 import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
 import { useLiveScoresFor } from "@/hooks/useLiveScoresFor";
 import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTournamentHero";
-import { MyMatchesStrip } from "@/components/tournament/MyMatchesStrip";
 import { getTournaments } from "@/lib/tournaments";
 import { Button } from "@/components/ui/button";
 
@@ -194,9 +193,6 @@ export function HomePersonalDashboard() {
           )}
         </div>
       </div>
-
-      {/* My Matches — live / upcoming / completed */}
-      <MyMatchesStrip myPlayerId={myPlayerId} className="pt-3.5" />
 
       {/* Featured Tournament Card */}
       {featuredTournament && (

@@ -10,6 +10,8 @@ import { navGet, navSet } from "@/lib/navMemory";
 import { useMyAvailability, useAvailablePlayers } from "@/hooks/useAvailability";
 import { useBlockedPlayers } from "@/hooks/useBlockedPlayers";
 import { Zap } from "lucide-react";
+import { useRankingMovement } from "@/hooks/queries/useRankingMovement";
+import type { RankList } from "@/lib/rankMovement";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -97,6 +99,9 @@ export function DirectoryTab({
   categoryFilter = "All",
   setCategoryFilter,
 }: DirectoryTabProps) {
+  // Weekly rank movement for whichever rating the cards rank by.
+  const movementList: RankList = (["singles", "doubles", "mixed"] as const).includes(sortBy as never) ? (sortBy as RankList) : "overall";
+  const movement = useRankingMovement(movementList);
   const getInitialParam = (param: string, defaultVal: string) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -273,6 +278,7 @@ export function DirectoryTab({
                       currentUserId={ownProfile?.id}
                       isPersonalView={isPersonalView}
                       allRanks={rankMap[player.id]}
+                      rankMovement={movement.data?.[player.id]}
                       activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
                     />
                   </div>
@@ -368,6 +374,7 @@ export function DirectoryTab({
                         currentUserId={ownProfile?.id}
                         isPersonalView={isPersonalView}
                         allRanks={rankMap[player.id]}
+                        rankMovement={movement.data?.[player.id]}
                         activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
                       />
                     </motion.div>

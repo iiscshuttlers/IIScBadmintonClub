@@ -76,7 +76,7 @@ export function IntensityTrendChart({ motionMatches }: { motionMatches: MotionMa
             dataKey="workRate"
             stroke="#f59e0b"
             strokeWidth={3}
-            dot={{ r: 3, fill: "#1e293b", stroke: "#f59e0b", strokeWidth: 2 }}
+            dot={{ r: 3, fill: "#24252a", stroke: "#f59e0b", strokeWidth: 2 }}
             activeDot={{ r: 6, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
             animationDuration={1200}
           />

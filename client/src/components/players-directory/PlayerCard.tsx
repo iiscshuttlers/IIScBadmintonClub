@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword, BellRing, BellOff, Info } from "lucide-react";
 import { toast } from "sonner";
+import { RankMovementBadge } from "@/components/players-directory/RankMovementBadge";
+import type { RankMovement } from "@/lib/rankMovement";
 import { getEloTier } from "@/lib/tiers";
 import { getDepartmentAcronym } from "@/data/departments";
 import { Capacitor } from "@capacitor/core";
@@ -97,6 +99,8 @@ interface PlayerCardProps {
   currentUserId?: string;
   isPersonalView?: boolean;
   allRanks?: { overall?: number; singles?: number; doubles?: number; mixed?: number };
+  /** Weekly rank movement for the active metric (▲/▼/NEW/RE). */
+  rankMovement?: RankMovement;
   activeMetric?: "overall" | "singles" | "doubles" | "mixed";
 }
 
@@ -113,6 +117,7 @@ export function PlayerCard({
   currentUserId,
   isPersonalView = false,
   allRanks,
+  rankMovement,
   activeMetric = "overall",
 }: PlayerCardProps) {
   const [, setLocation] = useLocation();
@@ -225,8 +230,9 @@ export function PlayerCard({
           
           {/* 0. Ranking number */}
           {displayRank ? (
-            <div className="shrink-0 flex items-center justify-center font-black text-xl sm:text-2xl text-slate-300 dark:text-slate-700 w-8 sm:w-10">
-              #{displayRank}
+            <div className="shrink-0 flex flex-col items-center justify-center w-8 sm:w-10">
+              <span className="font-black text-xl sm:text-2xl text-slate-400 dark:text-slate-500">#{displayRank}</span>
+              <RankMovementBadge movement={rankMovement} className="mt-0.5" />
             </div>
           ) : (
              <div className="shrink-0 w-8 sm:w-10" />

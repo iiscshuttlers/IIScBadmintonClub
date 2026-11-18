@@ -29,7 +29,7 @@ export function ChipStrip({
     <div
       role="group"
       aria-label={label}
-      className="-mx-1 px-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-1 px-1 flex flex-wrap gap-1.5 pb-1"
     >
       {options.map((o) => {
         const active = o.value === value;

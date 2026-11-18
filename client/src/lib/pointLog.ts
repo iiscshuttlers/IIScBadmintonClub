@@ -71,8 +71,57 @@ export function splitGames(rallies: Rally[]): GameSeries[] {
 /** Would winning the next rally win the game for side `s`? */
 export function isGamePoint(mine: number, theirs: number, rules: ScoringRules): boolean {
   const next = mine + 1;
-  if (next >= rules.goldenPoint) return true;
+  if (rules.goldenPoint > 0 && next >= rules.goldenPoint) return true;
   return next >= rules.pointsToWin && next - theirs >= 2;
+}
+
+export type PointLogCoverage = "complete" | "live" | "partial" | "corrected";
+
+export interface ExpectedGameScore {
+  side1: number;
+  side2: number;
+}
+
+/**
+ * Classify how much of the displayed score is supported by the stored log.
+ * A matching final score is not sufficient: every scoring rally must advance
+ * exactly one side by one point, otherwise an omitted part of the history
+ * could be presented as a complete timeline.
+ */
+export function assessPointLogCoverage(
+  rallies: Rally[],
+  expectedGames: ExpectedGameScore[],
+  options: {
+    finished: boolean;
+    final: boolean;
+    supersededByCorrection: boolean;
+    storedEntryCountMatches?: boolean;
+  },
+): PointLogCoverage {
+  if (options.supersededByCorrection) return "corrected";
+  if (rallies.length === 0 || expectedGames.length === 0 || options.storedEntryCountMatches === false) return "partial";
+
+  const games = splitGames(rallies);
+  if (games.length !== expectedGames.length) return "partial";
+
+  for (let gameIndex = 0; gameIndex < games.length; gameIndex += 1) {
+    const game = games[gameIndex];
+    const expected = expectedGames[gameIndex];
+    if (game.game !== gameIndex + 1 || game.final[0] !== expected.side1 || game.final[1] !== expected.side2) return "partial";
+
+    let previous: [number, number] = [0, 0];
+    for (const rally of game.rallies) {
+      const delta1 = rally.t1 - previous[0];
+      const delta2 = rally.t2 - previous[1];
+      if ((rally.side === 1 && (delta1 !== 1 || delta2 !== 0)) || (rally.side === 2 && (delta1 !== 0 || delta2 !== 1))) {
+        return "partial";
+      }
+      previous = [rally.t1, rally.t2];
+    }
+  }
+
+  if (options.finished) return options.final ? "complete" : "partial";
+  return options.final ? "partial" : "live";
 }
 
 export function longestRun(rallies: Rally[]): { side: 1 | 2; length: number } | null {
@@ -133,7 +182,7 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
       const score: [number, number] = [r.t1, r.t2];
       maxDeficit = [Math.max(maxDeficit[0], score[1] - score[0]), Math.max(maxDeficit[1], score[0] - score[1])];
       if (score[0] >= rules.pointsToWin - 1 && score[1] >= rules.pointsToWin - 1) deuce = true;
-      if (score[0] === rules.goldenPoint - 1 && score[1] === rules.goldenPoint - 1) golden = true;
+      if (rules.goldenPoint > 0 && score[0] === rules.goldenPoint - 1 && score[1] === rules.goldenPoint - 1) golden = true;
       prev = score;
     }
 

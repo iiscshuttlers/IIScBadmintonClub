@@ -38,7 +38,8 @@ import { useLocation } from "wouter";
 import { fetchRemoteGalleryImages, saveRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
 import { GalleryUploader } from "@/components/admin/GalleryUploader";
 import { useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Trash2, ListOrdered } from "lucide-react";
+import { RecordsBook } from "@/components/legacy/RecordsBook";
 import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -111,7 +112,7 @@ export default function Legacy() {
   const initialFilter = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("filter") : null;
 
   const [activeTab, setActiveTab] = useHashTab(
-    ["champions", "albums", "photos", "videos"] as const,
+    ["champions", "records", "albums", "photos", "videos"] as const,
     initialFilter ? "albums" : "champions"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -597,7 +598,7 @@ export default function Legacy() {
         subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
       >
         <div className="flex justify-center w-full px-2">
-          <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
               <Button
                 asChild
                 variant="tab"
@@ -617,15 +618,29 @@ export default function Legacy() {
                 variant="tab"
                 size="tab"
                 className={`w-full sm:w-auto ${
-                  activeTab !== "champions"
+                  activeTab === "records"
+                    ? "bg-slate-900 text-emerald-400 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                }`}
+              >
+                <a href="#records" onClick={() => setActiveTab("records")}>
+                  <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Records
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
+                  activeTab !== "champions" && activeTab !== "records"
                     ? "bg-slate-900 text-blue-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
                 <a
-                  href={`#${activeTab === "champions" ? "albums" : activeTab}`}
+                  href={`#${activeTab === "champions" || activeTab === "records" ? "albums" : activeTab}`}
                   onClick={() => {
-                    if (activeTab === "champions") setActiveTab("albums");
+                    if (activeTab === "champions" || activeTab === "records") setActiveTab("albums");
                   }}
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
@@ -636,8 +651,9 @@ export default function Legacy() {
       </PageHeader>
 
       {activeTab === "champions" && <WinnersWallSection />}
+      {activeTab === "records" && <RecordsBook />}
 
-      {activeTab !== "champions" && (
+      {activeTab !== "champions" && activeTab !== "records" && (
         <section className="pt-6 pb-2 bg-slate-50/50 dark:bg-slate-950/50 relative border-b border-slate-100 dark:border-slate-800">
           <div className="container mx-auto px-4 flex justify-center">
             <div className="bg-slate-200/50 dark:bg-slate-900 p-1.5 rounded-2xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto shadow-inner">

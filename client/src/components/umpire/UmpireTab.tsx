@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
+import { supabase } from "@/lib/supabase";
 import { 
   fetchActiveTournamentId, 
   getLiveMatchesFromSiteData, 
@@ -260,6 +261,14 @@ export function UmpireTab({
 
       const { completed, current } = splitSets(row ?? { score: null, sets_history: null });
       if (completed.length > 0 || current[0] > 0 || current[1] > 0) {
+        // Server copy of the point log (kept since the point-log migration);
+        // used only if it agrees with the row's score. Failure is non-fatal.
+        const { data: storedLog } = await supabase
+          .from("tournament_match_point_logs")
+          .select("points")
+          .eq("match_id", m.id)
+          .maybeSingle()
+          .then((r) => r, () => ({ data: null }));
         const recovered = recoverMatchFromTournamentRow(
           m,
           row ?? { score: null, sets_history: null },
@@ -267,6 +276,7 @@ export function UmpireTab({
             id: session!.user.id,
             name: profile?.full_name || session!.user.email?.split("@")[0] || "Umpire",
           },
+          (storedLog as { points?: unknown } | null)?.points,
         );
         setActiveMatches(prev => {
           setActiveMatchIndex(prev.length);
@@ -274,7 +284,9 @@ export function UmpireTab({
         });
         toast(
           `Recovered ${completed.length > 0 ? completed.join(", ") + " | " : ""}${current[0]}-${current[1]}. ` +
-          "The point log and serve order could not be restored — check who is serving before continuing.",
+          (recovered.pointLog.length > 0
+            ? "The point log and serving side were restored — check which player is serving before continuing."
+            : "The point log and serve order could not be restored — check who is serving before continuing."),
           { duration: 10000, icon: "⚠️" },
         );
         return;
@@ -306,7 +318,7 @@ export function UmpireTab({
     <div className="w-full max-w-5xl mx-auto p-2 sm:p-4 space-y-6">
       {/* Tabs - Only show when there are in-progress or queued active matches */}
       {activeMatches.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
           {activeMatches.map((m, idx) => {
             let mLabel = `Match ${idx + 1}`;
             if ('category' in m) {
@@ -654,7 +666,7 @@ function RecentUmpireMatches({
               </button>
 
               {/* Category Pills */}
-              <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800 overflow-x-auto hide-scrollbar">
+              <div className="flex flex-wrap bg-slate-950/80 p-1 rounded-xl border border-slate-800">
                 {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
                   <button
                     key={f}

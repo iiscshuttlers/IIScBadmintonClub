@@ -372,7 +372,7 @@ export function UmpireScoringScreen({
                 updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined });
               }
             }}
-            className="mt-3 text-[9px] font-bold text-slate-600 hover:text-slate-400 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition"
+            className="mt-3 text-[9px] font-bold text-slate-600 dark:text-slate-400 hover:text-slate-400 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition"
           >
             Wait, add a set / resume match
           </button>
@@ -505,7 +505,7 @@ export function UmpireScoringScreen({
               {match.t1.p2Name ? `${match.t1.p1Name} / ${match.t1.p2Name}` : match.t1.p1Name}
             </span>
             <span className="text-[var(--team-1)] text-base sm:text-lg font-black tabular-nums">{match.t1.score}</span>
-            <span className="text-slate-600 text-xs font-black">—</span>
+            <span className="text-slate-600 dark:text-slate-400 text-xs font-black">—</span>
             <span className="text-[var(--team-2)] text-base sm:text-lg font-black tabular-nums">{match.t2.score}</span>
             <span className="text-[var(--team-2)] text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {match.t2.p2Name ? `${match.t2.p1Name} / ${match.t2.p2Name}` : match.t2.p1Name}

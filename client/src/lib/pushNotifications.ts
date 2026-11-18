@@ -2,64 +2,14 @@ import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "./supabase";
 import { playSmashSound } from "./sounds";
+import { notificationTarget } from "./notificationDeepLinks";
 
 /** Navigate based on data payload from a push notification tap (#19). */
 function handleDeepLink(data: Record<string, string> | undefined) {
-  if (!data) return;
-
-  // Newer senders include an in-app path; it wins over type routing.
-  if (typeof data.link === "string" && /^\/(?!\/)/.test(data.link)) {
-    window.location.href = data.link;
-    return;
-  }
-
-  // Some senders only set `action`, others only set `type` — check both.
-  const type = data.type || data.action;
-  if (!type) return;
-
-  switch (type) {
-    case "match_confirmation":
-    case "match_logged":
-    case "view_match":
-      window.location.href = "/my-matches";
-      break;
-    case "challenge_expiry":
-    case "new_challenge":
-    case "view_challenges":
-      window.location.href = "/my-matches";
-      break;
-    case "find_lost":
-    case "find_lost_post":
-    case "view_find_lost":
-      window.location.href = "/hub?tab=lost-found";
-      break;
-    case "announcement":
-    case "view_announcements":
-      window.location.href = "/pulse#announcements";
-      break;
-    case "app_update":
-      window.open("https://play.google.com/store/apps/details?id=shuttlers.iisc.com", "_system");
-      break;
-    case "kudos":
-      window.location.href = "/my-matches";
-      break;
-    case "player_profile":
-    case "buddy_request":
-    case "follow":
-    case "status_update":
-    case "elo_milestone":
-      if (data.player_id) {
-        window.location.href = `/player/${data.player_id}`;
-      } else {
-        window.location.href = "/pulse";
-      }
-      break;
-    case "weekly_digest":
-      window.location.href = "/my-matches";
-      break;
-    default:
-      window.location.href = "/pulse";
-  }
+  const target = notificationTarget(data);
+  if (!target) return;
+  if (target.kind === "external") window.open(target.url, "_system");
+  else window.location.href = target.path;
 }
 
 export const registerPushNotifications = async (userId: string) => {

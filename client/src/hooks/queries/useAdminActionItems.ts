@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Preferences } from "@capacitor/preferences";
 import { supabase } from "@/lib/supabase";
 import { computeTournamentStatus } from "@/lib/tournaments";
-import { buildAdminActionCards, countScheduleConflicts, type AdminActionCard, type TournamentActionInput } from "@/lib/adminActions";
+import { buildAdminActionCards, countDelayedMatches, countScheduleConflicts, type AdminActionCard, type TournamentActionInput } from "@/lib/adminActions";
 import { parseOfflineQueue } from "@/lib/umpire/offlineQueue";
 
 const OFFLINE_QUEUE_KEY = "umpire_offline_queue_v1"; // same key as useOfflineUmpireSync
@@ -15,16 +15,16 @@ async function countRows(query: any): Promise<number> {
   return count ?? 0;
 }
 
-async function unsyncedOnThisDevice(): Promise<number> {
+async function unsyncedOnThisDevice(): Promise<number | null> {
   try {
     const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
     return parseOfflineQueue(value).length;
   } catch {
-    return 0;
+    return null;
   }
 }
 
-async function tournamentInputs(): Promise<TournamentActionInput[]> {
+async function tournamentInputs(now = new Date()): Promise<TournamentActionInput[]> {
   // select("*"): policy columns (rest/duration/blackouts) may not exist on
   // every deployed schema yet; missing ones fall back to defaults.
   const { data: tournaments, error } = await db
@@ -59,6 +59,7 @@ async function tournamentInputs(): Promise<TournamentActionInput[]> {
       officialCount: (officials ?? []).filter((o: any) => o.tournament_id === t.id).length,
       hardConflicts: conflicts.hard,
       warningConflicts: conflicts.warning,
+      delayedMatches: countDelayedMatches(mine, now),
     };
   });
 }

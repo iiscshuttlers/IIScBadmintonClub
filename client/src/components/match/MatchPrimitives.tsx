@@ -1,5 +1,6 @@
+import type React from "react";
 import { Link } from "wouter";
-import { Trophy } from "lucide-react";
+import { Check } from "lucide-react";
 import { courtLabel, type MatchSide, type MatchState, type MatchView } from "@/lib/matchView";
 import { matchPath } from "@/lib/tournamentRoutes";
 import { currentGameIndex } from "@/lib/matchGrouping";
@@ -58,17 +59,19 @@ export function MatchSideRow({
     ? "font-black text-slate-900 dark:text-white"
     : side.isTbd || side.isBye
       ? "italic text-muted-foreground"
-      : "font-semibold text-slate-700 dark:text-slate-200";
+      : "font-medium text-slate-700 dark:text-slate-300";
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
-      <div className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
-        <span className={`break-words ${nameClass}`}>{side.label}</span>
-        <SeedMark seed={side.seed} />
-        {side.isWinner && (
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-black text-amber-600 dark:text-amber-400">
-            <Trophy className="w-3 h-3" aria-hidden /> Winner
-          </span>
-        )}
+      <div className="min-w-0 flex items-start gap-2">
+        {/* Fixed-width slot so both names line up whether or not one won. */}
+        <span className="w-4 shrink-0 pt-0.5" aria-hidden>
+          {side.isWinner && <Check className="w-4 h-4 text-primary" strokeWidth={3} />}
+        </span>
+        <span className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
+          <span className={`break-words ${nameClass}`}>{side.label}</span>
+          <SeedMark seed={side.seed} />
+          {side.isWinner && <span className="sr-only">(winner)</span>}
+        </span>
       </div>
       {view.games.length > 0 && (
         <div className="flex gap-1 shrink-0" aria-hidden>
@@ -130,12 +133,21 @@ export function MatchScorecard({
   showCourt = true,
   linked = true,
   showShare = false,
+  badges,
+  footer,
+  hideRound = false,
 }: {
   view: MatchView;
   showCourt?: boolean;
   linked?: boolean;
+  /** The surrounding list already heads the round (e.g. ResultsByRound). */
+  hideRound?: boolean;
   /** Completed/walkover only: a share icon kept outside the link (no nested controls). */
   showShare?: boolean;
+  /** Extra labels in the header row, e.g. "Match of the day", "Upset". Text, not interactive. */
+  badges?: React.ReactNode;
+  /** Interactive extras (kudos, polls) rendered below the card, outside the link. */
+  footer?: React.ReactNode;
 }) {
   const summary = scoreSummary(view);
   const share = showShare && canShareResult(view);
@@ -143,12 +155,16 @@ export function MatchScorecard({
     <>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-black uppercase tracking-wider text-muted-foreground">
         <span>{view.discipline ?? view.categoryLabel}</span>
-        {view.roundName && <span>· {view.roundName}</span>}
-        {view.rubberLabel && <span>· {view.rubberLabel}</span>}
+        {view.roundName && !hideRound && <span>· {view.roundName}</span>}        {view.rubberLabel && <span>· {view.rubberLabel}</span>}
         {showCourt && view.court && <span>· {courtLabel(view.court)}</span>}
-        <span className="ml-auto normal-case tracking-normal">
-          <MatchStatusBadge view={view} />
-        </span>
+        {badges && <span className="normal-case tracking-normal inline-flex flex-wrap gap-1">{badges}</span>}
+        {/* A finished match reads as finished from the check mark and scores;
+            the pill is kept for states that need calling out. */}
+        {view.state !== "completed" && (
+          <span className="ml-auto normal-case tracking-normal">
+            <MatchStatusBadge view={view} />
+          </span>
+        )}
       </div>
       <div className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">
         <MatchSideRow side={view.sides[0]} index={0} view={view} />
@@ -163,7 +179,7 @@ export function MatchScorecard({
   );
   const cls =
     "block bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-3 sm:p-4";
-  if (!linked) return <div className={cls}>{body}</div>;
+  if (!linked) return <div className={cls}>{body}{footer && <div className="mt-2">{footer}</div>}</div>;
   const card = (
     <Link
       href={matchPath(view.tournamentId, view.id)}
@@ -173,13 +189,18 @@ export function MatchScorecard({
       {body}
     </Link>
   );
-  if (!share) return card;
+  if (!share && !footer) return card;
   return (
-    <div className="relative">
-      {card}
-      <div className="absolute bottom-1 right-1">
-        <ShareResultButton view={view} variant="icon" />
+    <div>
+      <div className="relative">
+        {card}
+        {share && (
+          <div className="absolute bottom-1 right-1">
+            <ShareResultButton view={view} variant="icon" />
+          </div>
+        )}
       </div>
+      {footer && <div className="mt-1.5 px-1">{footer}</div>}
     </div>
   );
 }

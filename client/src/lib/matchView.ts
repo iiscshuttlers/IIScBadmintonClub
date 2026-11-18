@@ -20,7 +20,7 @@ import { parseDiscipline, type Discipline } from "@/lib/tournamentRoutes";
 
 /** Columns every match surface needs; keep queries on this list. */
 export const MATCH_VIEW_COLUMNS =
-  "id, tournament_id, category, match_code, round, round_name, match_number, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, court_number, status, score, sets_history, scheduled_at, started_at, ended_at, winner_side, advances_to_match, rubber_label, tie_id";
+  "id, tournament_id, category, match_code, round, round_name, match_number, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, court_number, status, score, sets_history, scheduled_at, started_at, ended_at, winner_side, advances_to_match, rubber_label, tie_id, points_to_win";
 
 export interface MatchRow {
   id: string;
@@ -47,6 +47,8 @@ export interface MatchRow {
   advances_to_match: string | null;
   rubber_label: string | null;
   tie_id: string | null;
+  /** Game target (21, or 30 for single-game formats). Optional for older callers. */
+  points_to_win?: number | null;
 }
 
 /** Statuses present in the domain today. There is no retirement status. */
@@ -93,6 +95,8 @@ export interface MatchView {
   startedAt: string | null;
   endedAt: string | null;
   nextMatchCode: string | null;
+  /** Points needed to win a game (21 standard, 30 single-game), when known. */
+  pointsToWin?: number | null;
 }
 
 const BYE_RE = /\bbye\b/i;
@@ -234,6 +238,7 @@ export function toMatchView(row: MatchRow, seeds?: SeedIndex): MatchView {
     startedAt: row.started_at,
     endedAt: row.ended_at,
     nextMatchCode: row.advances_to_match,
+    pointsToWin: row.points_to_win ?? null,
   };
 }
 

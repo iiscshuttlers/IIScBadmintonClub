@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Activity, CalendarClock, LayoutGrid, RefreshCw, WifiOff, AlertTriangle, Loader2 } from "lucide-react";
 import { useQueryState } from "@/hooks/useQueryState";
 import {
@@ -19,8 +19,12 @@ import {
 } from "@/lib/matchView";
 import { DISCIPLINES, parseDiscipline } from "@/lib/tournamentRoutes";
 import { MatchScorecard } from "@/components/match/MatchPrimitives";
-import { dayChipLabel, groupByEventRound, liveCourts } from "@/lib/matchGrouping";
+import { dayChipLabel, liveCourts } from "@/lib/matchGrouping";
 import { ChipStrip, type ChipOption } from "@/components/match/ChipStrip";
+import { ResultsByRound } from "@/components/match/ResultsByRound";
+
+/** Supabase caps a select at 1,000 rows; no club tournament comes close. */
+const RESULTS_ALL_LIMIT = 999;
 
 /**
  * Match Centre (WP6) — Live, Upcoming and Courts for an active tournament,
@@ -272,12 +276,18 @@ export function MatchCentre({ tournamentId, mode }: { tournamentId: string; mode
   const [catRaw, setCat] = useQueryState<string>("cat", "ALL", true);
   const [court, setCourt] = useQueryState<string>("court", "", true);
   const [date, setDate] = useQueryState<string>("date", "", true);
-  const [limit, setLimit] = useState(COMPLETED_PAGE_SIZE);
   const cat = parseDiscipline(catRaw) ?? "ALL";
   const discipline = cat === "ALL" ? null : cat;
 
   const open = useOpenMatchViews(tournamentId);
-  const finished = useFinishedMatchViews(tournamentId, { discipline, court: court || null, limit });
+  // Results are grouped Final-first, which needs every round on the page:
+  // paging by finish time would leave early rounds half-loaded. Rounds before
+  // the quarter-finals render collapsed, so the full set stays light.
+  const finished = useFinishedMatchViews(tournamentId, {
+    discipline,
+    court: court || null,
+    limit: mode === "results" ? RESULTS_ALL_LIMIT : COMPLETED_PAGE_SIZE,
+  });
 
   const source = mode === "results" ? finished : open;
   const allViews = source.views;
@@ -304,41 +314,15 @@ export function MatchCentre({ tournamentId, mode }: { tournamentId: string; mode
     { id: "courts", label: "Courts", icon: LayoutGrid, count: new Set(filtered.filter((v) => v.court).map((v) => v.court)).size },
   ];
 
-  const list = (items: MatchView[], empty: { title: string; hint?: string }, grouped = false) =>
+  const list = (items: MatchView[], empty: { title: string; hint?: string }) =>
     items.length > 0 ? (
-      grouped ? (
-        // BWF results / cricket series style: one header per event and round.
-        <div className="space-y-5">
-          {groupByEventRound(items).map((g) => (
-            <section key={g.key} aria-labelledby={`grp-${g.key}`}>
-              <h3
-                id={`grp-${g.key}`}
-                className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2 px-1"
-              >
-                <span>{g.title}</span>
-                <span className="text-muted-foreground tabular-nums normal-case tracking-normal font-bold">
-                  {g.items.length} {g.items.length === 1 ? "match" : "matches"}
-                </span>
-              </h3>
-              <ul className="space-y-3">
-                {g.items.map((v) => (
-                  <li key={v.id}>
-                    <MatchScorecard view={v} showShare />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <ul className="space-y-3">
-          {items.map((v) => (
-            <li key={v.id}>
-              <MatchScorecard view={v} />
-            </li>
-          ))}
-        </ul>
-      )
+      <ul className="space-y-3">
+        {items.map((v) => (
+          <li key={v.id}>
+            <MatchScorecard view={v} />
+          </li>
+        ))}
+      </ul>
     ) : (
       <Empty title={filtersOn ? "No matches match these filters" : empty.title} hint={filtersOn ? "Clear a filter to see more." : empty.hint} />
     );
@@ -392,20 +376,15 @@ export function MatchCentre({ tournamentId, mode }: { tournamentId: string; mode
       ) : source.status === "error" ? (
         <LoadFailed onRetry={source.retry} />
       ) : mode === "results" ? (
-        <>
-          {list(filtered, { title: "No results yet", hint: "Completed matches, walkovers and cancellations appear here." }, true)}
-          {finished.hasMore && (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => setLimit((l) => l + COMPLETED_PAGE_SIZE)}
-                className="min-h-[44px] px-5 rounded-full bg-slate-200 dark:bg-slate-800 text-sm font-bold"
-              >
-                Load more results
-              </button>
-            </div>
-          )}
-        </>
+        filtered.length === 0 && filtersOn ? (
+          <Empty title="No matches match these filters" hint="Clear a filter to see more." />
+        ) : (
+          <ResultsByRound
+            views={filtered}
+            emptyTitle="No results yet"
+            emptyHint="Completed matches, walkovers and cancellations appear here."
+          />
+        )
       ) : effectiveView === "live" ? (
         list(live, { title: "No matches on court right now", hint: "Check Upcoming or Courts for what's next." })
       ) : effectiveView === "upcoming" ? (

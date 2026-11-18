@@ -1,6 +1,7 @@
 import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
-import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
 import { getLiveMatchPicks, saveLiveMatchPick, fetchPollRevealedMatches, updatePollRevealedMatches } from "@/services/feedService";
 import { toggleMatchKudos } from "@/services/socialService";
@@ -35,6 +36,9 @@ import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
 import { MatchCentre } from "@/components/match/MatchCentre";
 import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
+import { TournamentStatsTab } from "@/components/match/TournamentStatsTab";
+import { ChipStrip } from "@/components/match/ChipStrip";
+import { PulseMatchItem } from "@/components/pulse/PulseMatchItem";
 import {
   canonicalForLiveSubTab,
   isLiveTabOffered,
@@ -48,17 +52,14 @@ import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
 import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
 import { TeamTiesSection } from "@/components/events/TeamTiesSection";
 import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
-import { UpNextPanel } from "@/components/tournament/UpNextPanel";
 import { MatchSection } from "@/components/pulse/MatchSection";
-import { LIVE_STATUSES } from "@/lib/matchView";
-import { MatchCard } from "@/components/feed/MatchCard";
+import { LIVE_STATUSES, disciplineOf } from "@/lib/matchView";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
-import { shareMatch } from "@/lib/shareMatch";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { OrganizerDashboard } from "@/components/events/OrganizerDashboard";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, BarChart3 } from "lucide-react";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
@@ -106,7 +107,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
     setActiveTournament(route.tournament);
     setTournaments([route.tournament]);
     setTournamentFilter(route.tournament.id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route?.tournament]);
 
   useEffect(() => {
@@ -127,15 +128,14 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
             return;
           }
         }
-        const active = data.find((t: any) => t.status === "active");
-        if (active) {
-          setActiveTournament(active);
-          setTournamentFilter(active.id);
-        } else {
-          // Prefer team tournament if available, else latest
-          const preferred = data.find((t: any) => t.format_family === "TEAM") || data[0];
-          setActiveTournament(preferred);
-          setTournamentFilter(preferred.id);
+        // Live shows what's on now (or next). Completed/archived events live on
+        // the Tournaments page; falling back to them made Live look stale.
+        const current =
+          data.find((t: any) => t.status === "active") ||
+          data.find((t: any) => t.status === "upcoming");
+        if (current) {
+          setActiveTournament(current);
+          setTournamentFilter(current.id);
         }
       }
     }
@@ -192,8 +192,8 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
   const initialTournamentId = route
     ? route.tournament.id
     : typeof window !== "undefined"
-    ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
-    : "all";
+      ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
+      : "all";
 
   const {
     loading,
@@ -204,8 +204,6 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
     courtUtil,
     matchOfTheDayId,
     weeklyRecap,
-    categoryFilter,
-    setCategoryFilter,
     timeFilter,
     setTimeFilter,
     tournamentFilter,
@@ -281,33 +279,6 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
-  // Keep the active tab visible in the scrollable row — horizontal only, so the page never jumps.
-  const tabRowRef = useRef<HTMLDivElement | null>(null);
-  const activeTabKey = route ? `${route.tab}|${route.panel ?? ""}` : activeSubTab;
-  const revealActiveTab = (row: HTMLElement | null, smooth: boolean) => {
-    const active = row?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!row || !active) return;
-    const r = row.getBoundingClientRect();
-    const a = active.getBoundingClientRect();
-    const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
-    if (a.left < r.left) row.scrollBy({ left: a.left - r.left - 16, behavior });
-    else if (a.right > r.right) row.scrollBy({ left: a.right - r.right + 16, behavior });
-  };
-  // Stable callback ref: runs when the row mounts (incl. after a loading remount).
-  const setTabRow = useCallback((el: HTMLDivElement | null) => {
-    tabRowRef.current = el;
-    if (!el) return;
-    requestAnimationFrame(() => revealActiveTab(el, false));
-    // Web fonts widen the pills after first paint; re-check once they settle.
-    document.fonts?.ready.then(() => revealActiveTab(el, false)).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => revealActiveTab(tabRowRef.current, true));
-    return () => cancelAnimationFrame(frame);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTabKey]);
-
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">
       {[...Array(5)].map((_, i) => (
@@ -343,8 +314,14 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
             No Live Tournament
           </h3>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-            There is no active live tournament at the moment. Check the Events tab for upcoming tournaments.
+            Nothing is being played right now. Past results and upcoming events are on the Tournaments page.
           </p>
+          <Link
+            href="/tournaments"
+            className="mt-5 inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-black"
+          >
+            <Trophy className="w-4 h-4" aria-hidden /> Browse tournaments
+          </Link>
         </div>
       </div>
     );
@@ -414,7 +391,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               </div>
             )
           )}
-          {activeTournament.require_app_registration && activeTournament.status !== "completed" && session && (
+          {activeTournament.require_app_registration && (activeTournament.status === "upcoming" || activeTournament.status === "active") && session && (
             <button
               onClick={() => setShowRegister(true)}
               className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
@@ -443,69 +420,68 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {/* Score strip on every tab except Live, which already leads with live cards. */}
       {route && activeTournamentId && route.tab !== "live" && <LiveScoreTicker tournamentId={activeTournamentId} />}
 
-      {/* One scrollable tab row (Cricbuzz/cricinfo/FotMob) instead of wrapping pill rows. */}
+      {/* Multi-row wrapping tab row on smaller screens (flex-wrap) */}
       <div
         role="navigation"
         aria-label="Tournament sections"
-        ref={setTabRow}
-        className="-mx-4 px-4 sm:mx-0 sm:px-0 flex flex-nowrap items-center gap-2 overflow-x-auto pt-1 pb-2 mb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex flex-wrap items-center gap-2 pt-1 pb-2 mb-6"
       >
         {(route
           ? [
-              { key: "overview", label: "Overview", icon: FileText, to: { tab: "overview", panel: null } },
-              { key: "players", label: isRouteTeam ? "Teams" : "Players", icon: Users, to: { tab: "players", panel: null } },
-              { key: "draw", label: isRouteTeam ? "Ties & Standings" : "Draw", icon: isRouteTeam ? Swords : LayoutList, to: { tab: "draw", panel: null } },
-              { key: "schedule", label: "Schedule", icon: Calendar, to: { tab: "schedule", panel: null } },
-              { key: "results", label: "Results", icon: Trophy, to: { tab: "results", panel: null } },
-              ...(isLiveTabOffered(route.lifecycle, route.tab) ? [{ key: "live", label: "Live", icon: Activity, to: { tab: "live", panel: null } }] : []),
-              ...(session ? [{ key: "my-matches", label: "My Matches", icon: Activity, to: { tab: route.tab, panel: "my-matches" } }] : []),
-              { key: "polls", label: "Polls", icon: ListChecks, to: { tab: route.tab, panel: "polls" } },
-              ...((isUmpire || isAdmin || isLiveUmpire) ? [{ key: "umpire", label: "Umpire", icon: Tv2, to: { tab: route.tab, panel: "umpire" } }] : []),
-              ...(canReferee ? [{ key: "referee", label: "Referee", icon: Gavel, to: { tab: route.tab, panel: "referee" } }] : []),
-              ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{ key: "organizer", label: "Organizer", icon: LayoutDashboard, to: { tab: route.tab, panel: "organizer" } }] : []),
-            ].map((t: any) => ({
-              ...t,
-              isActive: t.to.panel ? route.panel === t.to.panel : !route.panel && route.tab === t.to.tab,
-              onSelect: () => route.navigate(t.to),
-            }))
+            { key: "overview", label: "Overview", icon: FileText, to: { tab: "overview", panel: null } },
+            { key: "players", label: isRouteTeam ? "Teams" : "Players", icon: Users, to: { tab: "players", panel: null } },
+            { key: "draw", label: isRouteTeam ? "Ties & Standings" : "Draw", icon: isRouteTeam ? Swords : LayoutList, to: { tab: "draw", panel: null } },
+            { key: "schedule", label: "Schedule", icon: Calendar, to: { tab: "schedule", panel: null } },
+            { key: "results", label: "Results", icon: Trophy, to: { tab: "results", panel: null } },
+            ...(!isRouteTeam ? [{ key: "stats", label: "Stats", icon: BarChart3, to: { tab: "stats", panel: null } }] : []),
+            ...(isLiveTabOffered(route.lifecycle, route.tab) ? [{ key: "live", label: "Live", icon: Activity, to: { tab: "live", panel: null } }] : []),
+            ...(session ? [{ key: "my-matches", label: "My Matches", icon: Activity, to: { tab: route.tab, panel: "my-matches" } }] : []),
+            { key: "polls", label: "Polls", icon: ListChecks, to: { tab: route.tab, panel: "polls" } },
+            ...((isUmpire || isAdmin || isLiveUmpire) ? [{ key: "umpire", label: "Umpire", icon: Tv2, to: { tab: route.tab, panel: "umpire" } }] : []),
+            ...(canReferee ? [{ key: "referee", label: "Referee", icon: Gavel, to: { tab: route.tab, panel: "referee" } }] : []),
+            ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{ key: "organizer", label: "Organizer", icon: LayoutDashboard, to: { tab: route.tab, panel: "organizer" } }] : []),
+          ].map((t: any) => ({
+            ...t,
+            isActive: t.to.panel ? route.panel === t.to.panel : !route.panel && route.tab === t.to.tab,
+            onSelect: () => route.navigate(t.to),
+          }))
           : [
-          { id: "details", label: "Details", icon: FileText },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords }] : []),
-          { id: "matches", label: "Matches", icon: Activity },
-          { id: "polls", label: "Polls", icon: ListChecks },
-          { id: "schedule", label: "Schedule", icon: Calendar },
-          { id: "my-matches", label: "My Matches", icon: Activity },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy }] : []),
-          { id: "brackets", label: "Brackets", icon: LayoutList },
-          ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
-          ...(canReferee ? [{
-            id: "referee",
-            label: "Referee",
-            icon: Gavel
-          }] : []),
-          ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
-            id: "organizer",
-            label: "Organizer", 
-            icon: LayoutDashboard
-          }] : []),
-            ].map((t: any) => ({ ...t, key: t.id, isActive: activeSubTab === t.id, onSelect: () => setActiveSubTab(t.id) }))
+            { id: "details", label: "Details", icon: FileText },
+            ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords }] : []),
+            { id: "matches", label: "Matches", icon: Activity },
+            { id: "polls", label: "Polls", icon: ListChecks },
+            { id: "schedule", label: "Schedule", icon: Calendar },
+            { id: "my-matches", label: "My Matches", icon: Activity },
+            ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy }] : []),
+            { id: "brackets", label: "Brackets", icon: LayoutList },
+            ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
+            ...(canReferee ? [{
+              id: "referee",
+              label: "Referee",
+              icon: Gavel
+            }] : []),
+            ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
+              id: "organizer",
+              label: "Organizer",
+              icon: LayoutDashboard
+            }] : []),
+          ].map((t: any) => ({ ...t, key: t.id, isActive: activeSubTab === t.id, onSelect: () => setActiveSubTab(t.id) }))
         ).map((tab: any) => (
           <button
             key={tab.key}
             onClick={tab.onSelect}
             aria-current={tab.isActive ? "page" : undefined}
-            className={`shrink-0 flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-              tab.isActive
-                ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
-                : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`flex-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${tab.isActive
+              ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
+              : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             <tab.icon className="w-4 h-4 mb-[1px]" aria-hidden />
             <span>{tab.label}</span>
           </button>
         ))}
       </div>
-      
+
       {route?.beforeContent}
 
       {/* Players / Teams (canonical route only) */}
@@ -527,10 +503,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {!loading && activeSubTab === "details" && (
         <div className="mb-6">
           {activeTournament ? (
-            <div className="space-y-6">
-              <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
-              {route && <UpNextPanel tournamentId={activeTournament.id} />}
-            </div>
+            <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
               <FileText className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
@@ -543,12 +516,20 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
         </div>
       )}
 
+      {/* Sports-site plan item 8: tournament stats, live from finished matches. */}
+      {route && route.tab === "stats" && !route.panel && activeTournamentId && (
+        <TournamentStatsTab
+          tournamentId={activeTournamentId}
+          finished={route.lifecycle === "completed" || route.lifecycle === "archived"}
+        />
+      )}
+
       {/* WP6: canonical Live / Results tabs use the Match Centre. */}
       {route && activeSubTab === "matches" && activeTournamentId && (
         <>
           {route.tab === "live" && (
             <div className="-mx-4 sm:mx-0 mb-6">
-              <LiveScoreSection tournamentId={activeTournamentId} />
+              <LiveScoreSection />
             </div>
           )}
           <MatchCentre key={route.tab} tournamentId={activeTournamentId} mode={route.tab === "results" ? "results" : "live"} />
@@ -614,33 +595,19 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>}
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
-              <div className="relative flex-1 sm:flex-none">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value as any)}
-                  className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="singles">Singles</option>
-                  <option value="doubles">Doubles</option>
-                  <option value="mixed">Mixed Doubles</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-              <div className="relative flex-1 sm:flex-none">
-                <select
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+            {/* One-tap time range (Match Centre style); disciplines are the chips below. */}
+            <div className="w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700 min-w-0">
+              <ChipStrip
+                label="Time"
+                options={[
+                  { value: "all", label: "All time" },
+                  { value: "today", label: "Today" },
+                  { value: "week", label: "This week" },
+                  { value: "month", label: "This month" },
+                ]}
+                value={timeFilter}
+                onChange={(v) => setTimeFilter(v as typeof timeFilter)}
+              />
             </div>
           </div>
 
@@ -681,7 +648,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                     (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
                       (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
                       (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
-                  
+
                   if (isLiveNow) {
                     // Handled by LiveScoreSection, exclude from here
                   } else if (
@@ -701,22 +668,22 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                     if (m.status === 'scheduled') return 0;
                     if (m.status === 'in_progress') return 0;
                     if (m.status === 'pending') return 1;
-                    return 2; 
+                    return 2;
                   };
                   const rankA = getRank(a);
                   const rankB = getRank(b);
                   if (rankA !== rankB) return rankA - rankB;
-                  
-                  if (rankA === 0) { 
+
+                  if (rankA === 0) {
                     if (!a.scheduled_at && !b.scheduled_at) return 0;
                     if (!a.scheduled_at) return 1;
                     if (!b.scheduled_at) return -1;
                     return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
                   }
-                  
+
                   return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                 });
-                
+
                 upcomingMatches.sort((a, b) => {
                   if (!a.scheduled_at && !b.scheduled_at) return 0;
                   if (!a.scheduled_at) return 1;
@@ -780,13 +747,12 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                     }
                   };
 
-                  const handleShare = (match: any) => shareMatch(match);
-                  
+
                   const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
                   const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : 0;
                   const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
                   let finalKudosCount = baseCount;
-                  
+
                   if (isLikedLocally && !isIncludedInBackend) {
                     finalKudosCount += 1;
                   } else if (!isLikedLocally && isIncludedInBackend) {
@@ -795,23 +761,16 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
                   return (
                     <ErrorBoundary key={`eb-${match.id}`}>
-                      <MatchCard
+                      <PulseMatchItem
                         key={match.id}
                         match={match}
-                        currentUser={session?.user}
-                        isLiveNow={isLiveNow}
                         isMatchOfTheDay={isMatchOfTheDay}
                         upsetDiff={upsetDiff}
                         isKudosed={isLikedLocally || isIncludedInBackend}
                         kudosCount={finalKudosCount}
                         onKudos={() => handleKudos(match)}
-                        onShare={() => handleShare(match)}
-                        index={i}
-                        isExpanded={expandedMatchId === match.id}
-                        onToggleExpand={(expanded) => setExpandedMatchId(expanded ? match.id : null)}
-                      >
-                        {match.match_code && (
-                          <div className="mt-1 pt-1 border-t border-slate-100/50 dark:border-slate-800/50">
+                        prediction={
+                          match.match_code ? (
                             <MatchPredictionCard
                               compact
                               matchId={match.id}
@@ -823,13 +782,15 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                               myPick={picks[match.id]}
                               profileId={ownProfile?.id}
                               onPick={(team) => handlePick(match.id, team)}
-                              isResultsRevealed={isLiveNow || !!revealedMatchIds[match.id]}
+                              // Revealed once play starts (the poll's own rule), so finished matches too.
+                              isResultsRevealed={isLiveNow || match.status === 'completed' || match.status === 'walkover' || !!revealedMatchIds[match.id]}
                               isAdmin={isAdmin}
-                              onToggleRevealResults={() => handleToggleReveal(match.id)}
+                              // Finished matches always show results, so there is nothing to toggle.
+                              onToggleRevealResults={match.status === 'completed' || match.status === 'walkover' ? undefined : () => handleToggleReveal(match.id)}
                             />
-                          </div>
-                        )}
-                      </MatchCard>
+                          ) : null
+                        }
+                      />
                     </ErrorBoundary>
                   );
                 };
@@ -840,10 +801,10 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                       <>
                         <MyCertificatesCard tournament={activeTournament} />
                         <MatchSection
-                          title="My Matches" 
-                          icon={<Activity className="w-5 h-5 text-violet-500" />} 
-                          matches={myMatchesList} 
-                          defaultExpanded={true} 
+                          title="My Matches"
+                          icon={<Activity className="w-5 h-5 text-violet-500" />}
+                          matches={myMatchesList}
+                          defaultExpanded={true}
                           renderMatchCard={renderCard}
                           headerAction={
                             <button
@@ -871,11 +832,10 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                             <button
                               key={status}
                               onClick={() => setMatchStatus(status)}
-                              className={`flex-1 py-4 text-sm font-black capitalize transition-colors ${
-                                matchStatus === status 
-                                  ? "text-primary border-b-2 border-primary bg-slate-50/50 dark:bg-slate-800/50" 
-                                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                              }`}
+                              className={`flex-1 py-4 text-sm font-black capitalize transition-colors ${matchStatus === status
+                                ? "text-primary border-b-2 border-primary bg-slate-50/50 dark:bg-slate-800/50"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                                }`}
                             >
                               {status}
                               <span className="ml-2 text-xs text-muted-foreground opacity-70">
@@ -885,42 +845,22 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                           ))}
                         </div>
                         <div className="p-4 sm:p-5">
-                          <div className="mb-5 bg-slate-100/50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                            <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1">
-                              {(["ALL", "MS", "MD", "XD", "WS", "WD"] as const).map(cat => (
-                                <button
-                                  key={cat}
-                                  onClick={() => setMatchCat(cat)}
-                                  aria-pressed={matchCat === cat}
-                                  className={`flex-1 sm:flex-none px-3 py-2 min-h-[44px] rounded-xl text-xs font-black transition-all ${
-                                    matchCat === cat
-                                      ? "bg-primary text-primary-foreground shadow-sm"
-                                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
-                                  }`}
-                                >
-                                  {cat}
-                                </button>
-                              ))}
-                            </div>
+                          <div className="mb-5">
+                            <ChipStrip
+                              label="Discipline"
+                              options={(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((c) => ({ value: c, label: c === "ALL" ? "All" : c }))}
+                              value={matchCat}
+                              onChange={(v) => setMatchCat(v as typeof matchCat)}
+                            />
                           </div>
                           <div className="space-y-4">
                             {(() => {
-                               const list = matchStatus === "upcoming" ? upcomingMatches : completedMatches;
-                               const filteredList = list.filter(m => {
-                                 if (matchCat === "ALL") return true;
-                                 const c = (m.match_code || m.matchNumber || "").toUpperCase();
-                                 if (c.startsWith(matchCat)) return true;
-                                 const cat = (m.category || "").toUpperCase();
-                                 if (matchCat === "MS" && (cat.includes("MEN'S SINGLES") || cat === "MS" || cat === "SINGLES")) return true;
-                                 if (matchCat === "MD" && (cat.includes("MEN'S DOUBLES") || cat === "MD" || cat === "DOUBLES")) return true;
-                                 if (matchCat === "WS" && (cat.includes("WOMEN'S SINGLES") || cat === "WS")) return true;
-                                 if (matchCat === "WD" && (cat.includes("WOMEN'S DOUBLES") || cat === "WD")) return true;
-                                 if (matchCat === "XD" && (cat.includes("MIXED") || cat === "XD")) return true;
-                                 return false;
-                               });
-                               
-                               if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-slate-400">No matches found in this section.</div>;
-                               return filteredList.map((m, i) => renderCard(m, i));
+                              const list = matchStatus === "upcoming" ? upcomingMatches : completedMatches;
+                              // One discipline rule everywhere (category text or match-code prefix).
+                              const filteredList = list.filter(m => matchCat === "ALL" || disciplineOf(m.category, m.match_code) === matchCat);
+
+                              if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-slate-400">No matches found in this section.</div>;
+                              return filteredList.map((m, i) => renderCard(m, i));
                             })()}
                           </div>
                         </div>
@@ -1026,7 +966,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 Points Table Not Available
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Points tables and league standings are only available for <strong>Team Tournaments</strong>. 
+                Points tables and league standings are only available for <strong>Team Tournaments</strong>.
                 {activeTournament?.name ? ` "${activeTournament.name}"` : " This event"} is an individual (open event) tournament where players advance via knockout brackets.
               </p>
               <div className="mt-5 flex justify-center gap-3">
@@ -1105,9 +1045,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {(isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) && activeSubTab === "organizer" && (
         <div className="mb-6">
           {activeTournamentId ? (
-            <OrganizerDashboard 
-              tournamentId={activeTournamentId} 
-              tournament={activeTournament} 
+            <OrganizerDashboard
+              tournamentId={activeTournamentId}
+              tournament={activeTournament}
             />
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">

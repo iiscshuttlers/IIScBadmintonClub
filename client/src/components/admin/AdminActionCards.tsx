@@ -16,6 +16,8 @@ export function AdminActionCards({ onOpenTab }: { onOpenTab: (tab: string) => vo
     if (card.href.startsWith("#")) onOpenTab(card.href.slice(1));
     else setLocation(card.href);
   };
+  const error = q.error as { code?: string; status?: number } | null;
+  const denied = error?.code === "42501" || error?.status === 401 || error?.status === 403;
 
   return (
     <section aria-labelledby="admin-actions-heading" className="mb-6">
@@ -39,7 +41,9 @@ export function AdminActionCards({ onOpenTab }: { onOpenTab: (tab: string) => vo
         </p>
       ) : q.isError && !q.data ? (
         <p role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4 text-sm">
-          Couldn't check for outstanding items, so this list may be incomplete.{" "}
+          {denied
+            ? "You don't have permission to inspect these operational issue sources. No all-clear can be calculated. "
+            : "Couldn't check for outstanding items, so their status is unknown. "}
           <button type="button" className="underline font-bold" onClick={() => void q.refetch()}>Try again</button>
         </p>
       ) : (q.data ?? []).length === 0 ? (

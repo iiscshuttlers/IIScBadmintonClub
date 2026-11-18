@@ -139,12 +139,13 @@ function vitePluginStorageProxy(): Plugin {
 const pkgPath = path.resolve(PROJECT_ROOT, "package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   // 🔥 CRITICAL FIX
   // For Capacitor, we want relative base './'. For github pages we want '/iiscshuttlers/'.
   // Otherwise use '/'
   const isCapacitor = process.env.CAPACITOR === "true";
   const isGithubPages = process.env.GITHUB_PAGES === "true";
+  const isDevServer = command === "serve";
   const basePath = isCapacitor ? "./" : isGithubPages ? "/IIScBadmintonClub/" : "/";
   const manifestIconPath = (name: string) => isGithubPages ? `/IIScBadmintonClub/${name}` : `/${name}`;
 
@@ -156,9 +157,13 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
-      vitePluginManusRuntime(),
-      vitePluginManusDebugCollector(),
-      vitePluginStorageProxy(),
+      // Manus inspection and storage helpers are useful while developing, but
+      // the runtime is injected inline into index.html. Keeping these plugins
+      // out of production avoids shipping a second React/CSS payload before the
+      // application can start.
+      ...(isDevServer
+        ? [vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()]
+        : []),
 
       VitePWA({
         selfDestroying: true,

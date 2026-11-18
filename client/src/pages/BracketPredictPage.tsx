@@ -195,7 +195,7 @@ export default function BracketPredictPage() {
         {error && <p className="text-sm text-muted-foreground">Couldn't load this tournament.</p>}
         {!me && <p className="rounded-xl border border-border bg-muted/40 p-3 text-sm">Sign in to make your predictions.</p>}
 
-        <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1" role="tablist" aria-label="Category">
+        <div className="flex flex-wrap gap-2 pb-1" role="tablist" aria-label="Category">
           {categories.map((c) => (
             <button
               key={c}

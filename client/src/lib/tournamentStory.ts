@@ -9,6 +9,8 @@ export interface FactualStoryItem {
   body: string;
   discipline?: string | null;
   supportingMatchIds: string[];
+  /** Deterministic snapshot of the computed facts used for review/revalidation. */
+  sourceFingerprint: string;
   facts: {
     winnerLabel?: string;
     runnerUpLabel?: string;
@@ -23,6 +25,28 @@ export interface TournamentStoryDraft {
   tournamentName: string;
   generatedAt: string;
   items: FactualStoryItem[];
+}
+
+export type StoryReviewStatus = "draft" | "reviewed" | "published" | "needs_review";
+
+export interface TournamentStoryReview {
+  draft: TournamentStoryDraft;
+  status: StoryReviewStatus;
+  reviewedAt: string | null;
+  publishedAt: string | null;
+  invalidatedItemIds: string[];
+}
+
+function sourceFingerprint(match: MatchView): string {
+  return JSON.stringify({
+    id: match.id,
+    state: match.state,
+    winner: match.sides.find((side) => side.isWinner)?.playerIds ?? [],
+    score: match.scoreText,
+    games: match.games,
+    round: match.roundName,
+    discipline: match.discipline,
+  });
 }
 
 /**
@@ -53,6 +77,7 @@ export function buildTournamentStoryDraft(
       body: `${winner.label} defeated ${runnerUp.label} in the ${disc} final (${scoreStr}).`,
       discipline: m.discipline,
       supportingMatchIds: [m.id],
+      sourceFingerprint: sourceFingerprint(m),
       facts: {
         winnerLabel: winner.label,
         runnerUpLabel: runnerUp.label,
@@ -86,6 +111,7 @@ export function buildTournamentStoryDraft(
         body: `${winnerSeedStr} ${winner.label} secured victory over ${loserSeedStr} ${loser.label} in the ${m.roundName} (${scoreStr}).`,
         discipline: m.discipline,
         supportingMatchIds: [m.id],
+        sourceFingerprint: sourceFingerprint(m),
         facts: {
           winnerLabel: winner.label,
           runnerUpLabel: loser.label,
@@ -102,7 +128,7 @@ export function buildTournamentStoryDraft(
     if (m.games.length === 3) {
       const g3 = m.games[2];
       const diff = Math.abs(g3.side1 - g3.side2);
-      if (diff <= 2 || Math.max(g3.side1, g3.side2) >= 21) {
+      if (diff <= 2) {
         const winner = m.sides.find((s) => s.isWinner);
         const loser = m.sides.find((s) => !s.isWinner);
         if (!winner || !loser) continue;
@@ -115,6 +141,7 @@ export function buildTournamentStoryDraft(
           body: `A tightly contested 3-game battle concluded with ${winner.label} winning ${scoreStr}.`,
           discipline: m.discipline,
           supportingMatchIds: [m.id],
+          sourceFingerprint: sourceFingerprint(m),
           facts: {
             winnerLabel: winner.label,
             runnerUpLabel: loser.label,
@@ -142,5 +169,133 @@ export function isStoryInvalidated(
   correctedMatchIds: string[]
 ): boolean {
   return item.supportingMatchIds.some((id) => correctedMatchIds.includes(id));
+}
+
+/** New drafts are private until an organiser explicitly reviews and publishes them. */
+export function createStoryReview(draft: TournamentStoryDraft): TournamentStoryReview {
+  return { draft, status: "draft", reviewedAt: null, publishedAt: null, invalidatedItemIds: [] };
+}
+
+export function markStoryReviewed(review: TournamentStoryReview, reviewedAt = new Date().toISOString()): TournamentStoryReview {
+  return { ...review, status: "reviewed", reviewedAt, publishedAt: null, invalidatedItemIds: [] };
+}
+
+/**
+ * Rechecks every computed item against a freshly generated draft. Changed or
+ * removed facts return the story to review instead of silently staying public.
+ */
+export function reconcileStoryReview(
+  review: TournamentStoryReview,
+  latestDraft: TournamentStoryDraft,
+): TournamentStoryReview {
+  const latest = new Map(latestDraft.items.map((item) => [item.id, item.sourceFingerprint]));
+  const invalidatedItemIds = review.draft.items
+    .filter((item) => latest.get(item.id) !== item.sourceFingerprint)
+    .map((item) => item.id);
+  return {
+    ...review,
+    draft: latestDraft,
+    status: invalidatedItemIds.length > 0 ? "needs_review" : review.status,
+    publishedAt: invalidatedItemIds.length > 0 ? null : review.publishedAt,
+    invalidatedItemIds,
+  };
+}
+
+export function publishStoryReview(review: TournamentStoryReview, publishedAt = new Date().toISOString()): TournamentStoryReview {
+  if (review.status !== "reviewed" || review.invalidatedItemIds.length > 0) {
+    throw new Error("Story must be reviewed against current match facts before publication");
+  }
+  return { ...review, status: "published", publishedAt };
+}
+
+// ── Publication (WC-08) ─────────────────────────────────────────────────────
+//
+// Only the published story is stored, in the public-read / admin-write
+// `site_data` table. Drafts are regenerated from match data in the organiser's
+// browser and never written, so they cannot leak through the public read.
+
+export const STORY_EDITORIAL_NOTE_MAX = 500;
+
+export function storySiteDataKey(tournamentId: string): string {
+  return `tournament_story:${tournamentId}`;
+}
+
+/** Plain-JSON record stored under `storySiteDataKey`. */
+export interface PublishedStoryRecord {
+  version: 1;
+  tournamentId: string;
+  publishedAt: string;
+  /** Organiser wording, shown separately from the computed facts. */
+  editorialNote: string;
+  /** Computed items exactly as reviewed, including their source fingerprints. */
+  items: FactualStoryItem[];
+}
+
+/**
+ * Builds the record to publish from the organiser's selection. Items are taken
+ * from a freshly generated draft so publication re-checks facts at that time.
+ */
+export function buildPublishedStoryRecord(
+  latestDraft: TournamentStoryDraft,
+  selectedItemIds: readonly string[],
+  editorialNote: string,
+  publishedAt = new Date().toISOString(),
+): PublishedStoryRecord {
+  const selected = new Set(selectedItemIds);
+  const items = latestDraft.items.filter((item) => selected.has(item.id));
+  if (items.length === 0) throw new Error("Select at least one verified story item to publish");
+  return {
+    version: 1,
+    tournamentId: latestDraft.tournamentId,
+    publishedAt,
+    editorialNote: editorialNote.trim().slice(0, STORY_EDITORIAL_NOTE_MAX),
+    items,
+  };
+}
+
+export function parsePublishedStoryRecord(value: unknown, tournamentId: string): PublishedStoryRecord | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Partial<PublishedStoryRecord>;
+  if (v.version !== 1 || v.tournamentId !== tournamentId || !Array.isArray(v.items)) return null;
+  if (typeof v.publishedAt !== "string") return null;
+  const items = v.items.filter(
+    (item): item is FactualStoryItem =>
+      !!item &&
+      typeof item.id === "string" &&
+      typeof item.headline === "string" &&
+      typeof item.body === "string" &&
+      typeof item.sourceFingerprint === "string" &&
+      Array.isArray(item.supportingMatchIds),
+  );
+  return {
+    version: 1,
+    tournamentId,
+    publishedAt: v.publishedAt,
+    editorialNote: typeof v.editorialNote === "string" ? v.editorialNote.slice(0, STORY_EDITORIAL_NOTE_MAX) : "",
+    items,
+  };
+}
+
+export interface PublicStoryView {
+  /** Items whose facts still match current results. */
+  visible: FactualStoryItem[];
+  /** Published items withheld because a supporting result changed or vanished. */
+  withheldItemIds: string[];
+}
+
+/**
+ * Public rendering rule: every published item is re-checked against a draft
+ * built from current results. Anything whose fingerprint changed is withheld,
+ * so a corrected final can never keep showing the old champion.
+ */
+export function publicStoryView(record: PublishedStoryRecord, latestDraft: TournamentStoryDraft): PublicStoryView {
+  const latest = new Map(latestDraft.items.map((item) => [item.id, item.sourceFingerprint]));
+  const visible: FactualStoryItem[] = [];
+  const withheldItemIds: string[] = [];
+  for (const item of record.items) {
+    if (latest.get(item.id) === item.sourceFingerprint) visible.push(item);
+    else withheldItemIds.push(item.id);
+  }
+  return { visible, withheldItemIds };
 }
 

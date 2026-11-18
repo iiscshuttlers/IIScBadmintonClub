@@ -165,7 +165,9 @@ export function MatchesManager() {
     try {
       await undoTournamentMatchRpc(id);
       
-      await adminService.recalculateTournamentElo();
+      // Full reset + replay. recalculateTournamentElo alone replays on top of
+      // current ratings, counting every match again.
+      await adminService.recalculateAllElo();
 
       toast.success("Tournament match undone and ELO recalculated");
       load();
@@ -321,7 +323,7 @@ export function MatchesManager() {
         </div>
       )}
 
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
         {FORMATS.map(f => (
           <button key={f} onClick={() => setActiveFormat(f)} className={`shrink-0 px-5 py-2 rounded-t-xl text-xs font-black transition-all border-b-2 ${activeFormat === f ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20' : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
             {f}

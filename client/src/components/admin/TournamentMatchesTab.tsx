@@ -764,7 +764,7 @@ export function TournamentMatchesTab({
                           )}
                           <div className="flex-1" />
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">Status</span>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
                             <select
                               value={m.status}
                               onChange={async (e) => {

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { AdminActionCard } from "@/lib/adminActions";
 
-const state: { data?: AdminActionCard[]; isPending: boolean; isError: boolean } = { data: [], isPending: false, isError: false };
+const state: { data?: AdminActionCard[]; isPending: boolean; isError: boolean; error?: unknown } = { data: [], isPending: false, isError: false };
 const setLocation = vi.fn();
 vi.mock("@/hooks/queries/useAdminActionItems", () => ({
   useAdminActionItems: () => ({ ...state, isFetching: false, refetch: vi.fn() }),
@@ -45,8 +45,19 @@ describe("AdminActionCards", () => {
     state.data = undefined;
     state.isError = true;
     render(<AdminActionCards onOpenTab={vi.fn()} />);
-    expect(screen.getByRole("alert").textContent).toMatch(/may be incomplete/);
+    expect(screen.getByRole("alert").textContent).toMatch(/status is unknown/);
     expect(screen.queryByText("Nothing needs attention right now.")).toBeNull();
     state.isError = false;
+  });
+
+  it("distinguishes permission denial from an unknown fetch failure", () => {
+    state.data = undefined;
+    state.isError = true;
+    state.error = { code: "42501" };
+    render(<AdminActionCards onOpenTab={vi.fn()} />);
+    expect(screen.getByRole("alert").textContent).toMatch(/don't have permission/);
+    expect(screen.queryByText("Nothing needs attention right now.")).toBeNull();
+    state.isError = false;
+    state.error = undefined;
   });
 });

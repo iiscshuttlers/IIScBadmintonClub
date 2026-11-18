@@ -5,11 +5,14 @@ import { useOpenMatchViews } from "@/hooks/queries/useMatchViews";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { buildCourtQueues, courtLabel, type MatchView } from "@/lib/matchView";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { isVenueDataStale, venueTournamentUrl } from "@/lib/venueDisplay";
 
 export default function VenueScoreboardPage() {
   const { id: tournamentId = "" } = useParams<{ id: string }>();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState(false);
   const [selectedCourt, setSelectedCourt] = useState<string | "all">("all");
+  const [clock, setClock] = useState(() => Date.now());
 
   const tournamentQuery = useTournamentRoute(tournamentId);
   const tournament = tournamentQuery.kind === "ready" ? tournamentQuery.tournament : null;
@@ -36,11 +39,17 @@ export default function VenueScoreboardPage() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      setFullscreenError(false);
+      document.documentElement.requestFullscreen().catch(() => setFullscreenError(true));
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => setFullscreenError(true));
     }
   };
 
@@ -52,6 +61,8 @@ export default function VenueScoreboardPage() {
   const lastConfirmed = open.updatedAt
     ? new Date(open.updatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
     : null;
+  const stale = isVenueDataStale(open.updatedAt, clock);
+  const publicUrl = venueTournamentUrl(tournamentId);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans select-none">
@@ -109,7 +120,7 @@ export default function VenueScoreboardPage() {
       </header>
 
       {/* Connectivity & freshness banner */}
-      {(!open.online || open.refreshFailed) && (
+      {(!open.online || open.refreshFailed || stale) && (
         <div
           role="status"
           className="flex items-center justify-between px-6 py-2.5 bg-amber-950 border-b border-amber-800 text-amber-200 text-xs font-bold"
@@ -119,7 +130,9 @@ export default function VenueScoreboardPage() {
             <span>
               {!open.online
                 ? `Network disconnected. Scores confirmed at ${lastConfirmed ?? "—"}.`
-                : `Couldn't refresh live scores. Showing state confirmed at ${lastConfirmed ?? "—"}.`}
+                : open.refreshFailed
+                  ? `Couldn't refresh live scores. Showing state confirmed at ${lastConfirmed ?? "—"}.`
+                  : `Scores may be stale. Last server confirmation was ${lastConfirmed ?? "—"}.`}
             </span>
           </div>
           <button
@@ -130,12 +143,17 @@ export default function VenueScoreboardPage() {
           </button>
         </div>
       )}
+      {fullscreenError && (
+        <p role="status" className="px-6 py-2 bg-slate-900 text-amber-300 text-xs font-bold">
+          Fullscreen was not allowed by this browser. The scoreboard remains available in the current window.
+        </p>
+      )}
 
       {/* Main Scoreboard Display Area */}
-      <main className="flex-1 p-6 overflow-y-auto">
+      <section aria-label="Venue courts" className="flex-1 p-6 overflow-y-auto">
         {displayedQueues.length === 0 ? (
           <div className="h-full min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
-            <Monitor className="w-16 h-16 text-slate-700 mb-4" />
+            <Monitor className="w-16 h-16 text-slate-700 dark:text-slate-500 mb-4" />
             <h2 className="text-2xl font-black text-slate-300">No Matches Currently On Court</h2>
             <p className="text-slate-500 mt-2 max-w-sm">
               When an umpire or tournament desk starts a match on a court, it will immediately display here in high contrast.
@@ -156,7 +174,7 @@ export default function VenueScoreboardPage() {
             ))}
           </div>
         )}
-      </main>
+      </section>
 
       {/* Footer ticker info */}
       <footer className="px-6 py-3 bg-slate-900/80 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
@@ -164,7 +182,10 @@ export default function VenueScoreboardPage() {
           <span>Last server confirmation: {lastConfirmed ?? "Syncing..."}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span>IISc Shuttlers Venue Display</span>
+          <a href={publicUrl} className="underline underline-offset-2" aria-label="Open the public tournament page">
+            Public tournament
+          </a>
+          <span>· IISc Shuttlers Venue Display</span>
         </div>
       </footer>
     </div>

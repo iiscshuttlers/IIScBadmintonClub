@@ -1,12 +1,12 @@
 {
   "name": "iiscshuttlers",
   "private": true,
-  "version": "4.24.0",
+  "version": "4.32.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "vite build && node scripts/check-production-index.mjs && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit && node scripts/check-undefined-refs.mjs",

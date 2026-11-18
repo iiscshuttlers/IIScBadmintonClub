@@ -102,7 +102,7 @@ export function ArchitectureNeuralGraph() {
 
   return (
     <div 
-      className={`w-full bg-[#0A1118] text-[#E2E8F0] font-sans ${
+      className={`w-full bg-slate-950 text-[#E2E8F0] font-sans ${
         isFullscreen ? 'fixed inset-0 z-[100] p-0' : 'min-h-[calc(100vh-4rem)] p-6 md:p-10'
       }`}
     >
@@ -133,7 +133,7 @@ export function ArchitectureNeuralGraph() {
         {/* Graph Container */}
         <div 
           ref={containerRef}
-          className={`relative bg-[#0F172A] border border-[#1E293B] rounded-xl overflow-hidden shadow-2xl flex-1 ${
+          className={`relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex-1 ${
             isFullscreen ? 'border-0 rounded-none' : 'min-h-[650px]'
           }`}
         >
@@ -141,21 +141,21 @@ export function ArchitectureNeuralGraph() {
           <div className="absolute top-4 right-4 z-10 flex gap-2">
             <button 
               onClick={recenter}
-              className="p-2 bg-[#1E293B]/80 hover:bg-[#334155] backdrop-blur-md rounded-lg text-[#94A3B8] hover:text-white transition-colors border border-[#334155]"
+              className="p-2 bg-slate-800/80 hover:bg-slate-700 backdrop-blur-md rounded-lg text-[#94A3B8] hover:text-white transition-colors border border-slate-700"
               title="Recenter Camera"
             >
               <RefreshCw className="w-5 h-5" />
             </button>
             <button 
               onClick={toggleFullscreen}
-              className="p-2 bg-[#1E293B]/80 hover:bg-[#334155] backdrop-blur-md rounded-lg text-[#94A3B8] hover:text-white transition-colors border border-[#334155]"
+              className="p-2 bg-slate-800/80 hover:bg-slate-700 backdrop-blur-md rounded-lg text-[#94A3B8] hover:text-white transition-colors border border-slate-700"
               title="Toggle Fullscreen"
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
           </div>
 
-          <div className="absolute top-4 left-4 z-10 bg-[#1E293B]/80 backdrop-blur-md px-3 py-2 rounded-lg border border-[#334155] text-xs font-mono shadow-lg">
+          <div className="absolute top-4 left-4 z-10 bg-slate-800/80 backdrop-blur-md px-3 py-2 rounded-lg border border-slate-700 text-xs font-mono shadow-lg">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8]"></span>
@@ -180,7 +180,7 @@ export function ArchitectureNeuralGraph() {
             linkWidth={1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleSpeed={0.005}
-            backgroundColor="#0F172A"
+            backgroundColor="#131417"
             onNodeClick={(node: any) => {
               // Center/zoom on node
               if (fgRef.current) {

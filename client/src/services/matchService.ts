@@ -103,8 +103,12 @@ export async function fetchFeedMatches(
   limit = 100,
   categoryFilter = "all",
   timeFilter = "all",
-  tournamentFilter = "all"
+  tournamentFilter = "all",
+  opts: { includeFriendlies?: boolean } = {},
 ): Promise<MatchWithPlayers[]> {
+  // Pulse's match list is tournament-only (owner decision 5, 14 Nov 2026);
+  // other callers keep the original mixed feed.
+  const includeFriendlies = opts.includeFriendlies ?? true;
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
 
   let friendlyQuery = supabase
@@ -132,7 +136,13 @@ export async function fetchFeedMatches(
     tourneyUpcomingQuery = tourneyUpcomingQuery.eq("tournament_id", tournamentFilter);
   }
 
-  if (categoryFilter !== "all") {
+  if (/^(MS|WS|MD|WD|XD)$/.test(categoryFilter)) {
+    // Exact discipline (MS vs WS), the same rule as the Match Centre.
+    const disc = `category.eq.${categoryFilter},match_code.like.${categoryFilter}_%`;
+    tourneyCompletedQuery = tourneyCompletedQuery.or(disc);
+    tourneyUpcomingQuery = tourneyUpcomingQuery.or(disc);
+    friendlyQuery = friendlyQuery.eq("category", categoryFilter);
+  } else if (categoryFilter !== "all") {
     if (categoryFilter === "singles") {
       friendlyQuery = friendlyQuery.not("category", "ilike", "%Doubles%");
       tourneyCompletedQuery = tourneyCompletedQuery.not("category", "ilike", "%Doubles%");
@@ -174,7 +184,7 @@ export async function fetchFeedMatches(
       { data: completedData, error: completedError },
       { data: upcomingData, error: upcomingError }
     ] = await Promise.all([
-      isTournamentSpecific ? Promise.resolve({ data: [], error: null }) : friendlyQuery.order("created_at", { ascending: false }).limit(limit),
+      isTournamentSpecific || !includeFriendlies ? Promise.resolve({ data: [], error: null }) : friendlyQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyCompletedQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyUpcomingQuery.order("scheduled_at", { ascending: true }).limit(limit)
     ]);
