@@ -18,12 +18,14 @@ export interface PlayerPrivate {
   sr_number: string | null;
 }
 
+type RpcResult = { data: unknown; error: { code?: string; message: string } | null };
+
 // Called through the client object: `supabase.rpc` needs its `this`.
 const rpc = (
   fn: string,
   args?: Record<string, unknown>,
-): Promise<{ data: any; error: { code?: string; message: string } | null }> =>
-  (supabase as unknown as { rpc: (f: string, a?: Record<string, unknown>) => any }).rpc(fn, args);
+): Promise<RpcResult> =>
+  (supabase as unknown as { rpc: (f: string, a?: Record<string, unknown>) => PromiseLike<RpcResult> }).rpc(fn, args) as Promise<RpcResult>;
 
 export async function fetchMyPrivate(): Promise<PlayerPrivate | null> {
   const { data, error } = await rpc("get_my_player_private");

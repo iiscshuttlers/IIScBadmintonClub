@@ -78,7 +78,7 @@ export function useAllTournamentMatches() {
       if (error) throw error;
       
       // Transform to match what TournamentStandingsTab expects
-      return (data || []).map((m: any) => {
+      return (data || []).map((m) => {
         let w_partner = null;
         let l_id = null;
         let l_partner = null;

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { Tables, TablesInsert, TablesUpdate } from "@/lib/supabase-types-auto";
 import type { PlayerRow } from "@/types";
 import { withAdminPrivate } from "@/services/playerPrivateService";
 import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
@@ -7,6 +8,9 @@ import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 export const PLAYER_SELECT =
   "id, full_name, nickname, is_guest, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, singles_record, doubles_record, mixed_record, tournament_elo, win_loss_record, recent_form, is_looking_to_play, buddies, following, gender, favorite_format, instagram";
+
+type PlayerWithEmails = { id: string; full_name: string; email: string | null; iisc_email: string | null };
+type AdminDirectoryPlayer = PlayerWithEmails & { contact_number: string | null; department: string | null };
 
 export const playerService = {
   async getAllPlayers(): Promise<PlayerRow[]> {
@@ -123,14 +127,14 @@ export const playerService = {
 
   async upsertProfile(userId: string, isEditing: boolean, payload: Partial<PlayerRow>, email?: string): Promise<void> {
     if (isEditing) {
-      const { error } = await supabase.from("players").update(payload as any).eq("id", userId);
+      const { error } = await supabase.from("players").update(payload as unknown as TablesUpdate<"players">).eq("id", userId);
       if (error) throw error;
     } else {
       const { error } = await supabase.from("players").insert({
         id: userId,
         email: email,
         ...payload,
-      } as any);
+      } as unknown as TablesInsert<"players">);
       if (error) throw error;
     }
   },
@@ -147,23 +151,23 @@ export const playerService = {
     return data.publicUrl;
   },
 
-  async getActivePlayersForMatching(): Promise<Array<{ id: string; full_name: string; email: string | null; iisc_email: string | null }>> {
+  async getActivePlayersForMatching(): Promise<PlayerWithEmails[]> {
     const { data, error } = await supabase
       .from("players")
       .select("id, full_name")
       .is("deleted_at", null);
     if (error) throw error;
     // Emails come from the admin-only RPC (empty for non-admins).
-    return (await withAdminPrivate((data ?? []) as any[])) as any[];
+    return (await withAdminPrivate(data ?? [])) as PlayerWithEmails[];
   },
 
-  async fetchAdminPlayerDirectory(): Promise<Array<{ id: string; full_name: string; email: string | null; iisc_email: string | null; contact_number: string | null; department: string | null }>> {
+  async fetchAdminPlayerDirectory(): Promise<AdminDirectoryPlayer[]> {
     const { data, error } = await supabase
       .from("players")
       .select("id, full_name, department")
       .is("deleted_at", null);
     if (error) throw error;
-    return (await withAdminPrivate((data ?? []) as any[])) as any[];
+    return (await withAdminPrivate(data ?? [])) as AdminDirectoryPlayer[];
   },
 
   async updatePlayerContact(id: string, contactNumber: string | null): Promise<void> {
@@ -270,7 +274,7 @@ export const playerService = {
     return data ?? [];
   },
 
-  subscribeToNotifications(userId: string, onInsert: (n: any) => void) {
+  subscribeToNotifications(userId: string, onInsert: (n: Tables<"notifications">) => void) {
     const channel = supabase
       .channel(`notifications_channel_${userId}_${Math.random().toString(36).slice(2)}`)
       .on(
@@ -281,7 +285,7 @@ export const playerService = {
           table: "notifications",
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => onInsert(payload.new)
+        (payload) => onInsert(payload.new as Tables<"notifications">)
       )
       .subscribe();
     return () => {
@@ -352,7 +356,7 @@ export const playerService = {
       .ilike("team_name", `%${q}%`)
       .limit(4);
     if (error) throw error;
-    return (data ?? []) as any[];
+    return data ?? [];
   },
 
   async fetchSearchMatches(matchingIds: string[]) {
@@ -365,7 +369,7 @@ export const playerService = {
       .order("created_at", { ascending: false })
       .limit(4);
     if (error) throw error;
-    return (data ?? []) as any[];
+    return data ?? [];
   },
 
   async fetchSiteDataEntry(key: string) {

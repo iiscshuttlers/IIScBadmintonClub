@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-type noop = (...args: any[]) => any;
+type noop = (...args: never[]) => unknown;
 
 /**
  * Stable function reference that always calls the latest version of fn.

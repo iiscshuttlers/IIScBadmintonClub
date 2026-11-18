@@ -1,9 +1,24 @@
 import { supabase } from '@/lib/supabase';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import type { Tables } from '@/lib/supabase-types-auto';
+import type { RealtimePostgresChangesPayload, SupabaseClient } from '@supabase/supabase-js';
+import type { Database, Json, Tables } from '@/lib/supabase-types-auto';
 import { MATCH_SELECT_WITH_PLAYERS } from '@/types';
 import type { MatchWithPlayers } from '@/types';
 import { deleteTournamentMatch } from './tournamentService';
+
+// live_matches is not in the production schema (missing from the types
+// generated on 18 Nov 2026), and updateMatchVideoUrl picks its table at
+// runtime. Both go through this untyped client.
+const untypedTables = supabase as unknown as SupabaseClient;
+
+type UmpireSubmitMatchArgs = Database["public"]["Functions"]["umpire_submit_match"]["Args"];
+
+/** The date fields the merged friendly + tournament feeds are sorted by. */
+type FeedSortDates = {
+  ended_at?: string | null;
+  scheduled_at?: string | null;
+  date?: string | null;
+  created_at?: string | null;
+};
 
 export async function fetchPlayerMatches(playerId: string, limit = 200): Promise<MatchWithPlayers[]> {
   try {
@@ -17,7 +32,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
 
     if (!unifiedError && unifiedData) {
       const pIds = new Set<string>();
-      for (const m of unifiedData as any[]) {
+      for (const m of unifiedData) {
         if (m.player1_id) pIds.add(m.player1_id);
         if (m.player2_id) pIds.add(m.player2_id);
         if (m.player3_id) pIds.add(m.player3_id);
@@ -29,8 +44,8 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
         .select(playerSelect)
         .in("id", Array.from(pIds));
 
-      const pMap = new Map((playerRows ?? []).map((p: any) => [p.id, p]));
-      return (unifiedData as any[]).map((m: any) => ({
+      const pMap = new Map((playerRows ?? []).map((p) => [p.id, p] as const));
+      return unifiedData.map((m) => ({
         ...m,
         team1_partner_id: m.player3_id,
         team2_partner_id: m.player4_id,
@@ -67,12 +82,12 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
   if (tourneyError) throw tourneyError;
 
   const mappedTourney = (tournamentData ?? [])
-    .filter((m: any) => {
+    .filter((m) => {
       const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
       const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
       return hasTeam1 && hasTeam2;
     })
-    .map((m: any) => ({
+    .map((m) => ({
       ...m,
       is_friendly: false,
       counts_for_elo: m.tournaments?.counts_for_elo,
@@ -80,7 +95,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
       team2_partner_id: m.player4_id,
     }));
 
-  const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
+  const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
     const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
     const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -196,20 +211,20 @@ export async function fetchFeedMatches(
     if (upcomingError) throw upcomingError;
   
     const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
-      .filter((m: any) => {
+      .filter((m) => {
         if (isTournamentSpecific && m.tournament_id !== tournamentFilter) return false;
         const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
         const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
         return hasTeam1 && hasTeam2;
       })
-      .map((m: any) => ({
+      .map((m) => ({
         ...m,
         is_friendly: false, counts_for_elo: m.tournaments?.counts_for_elo,
         team1_partner_id: m.player3_id,
         team2_partner_id: m.player4_id,
       }));
   
-    const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
+    const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
       const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
       const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
       return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -244,7 +259,7 @@ export class MatchService {
     if (error) throw error;
   }
 
-  static async submitMatch(payload: any) {
+  static async submitMatch(payload: UmpireSubmitMatchArgs) {
     const { data: submitId, error: submitError } = await supabase.rpc("umpire_submit_match", payload);
     if (submitError) throw submitError;
     return submitId;
@@ -279,7 +294,7 @@ export class MatchService {
     try {
       const { error } = await supabase.rpc("upsert_live_match_by_id", {
         p_match_id: matchId,
-        match_state: state as any,
+        match_state: state as Json,
       });
       if (error) throw error;
       waiters.forEach(w => w.resolve());
@@ -539,13 +554,13 @@ export async function umpireSubmitMatch(params: {
   started_at: string;
   ended_at: string;
 }): Promise<string | null> {
-  const { data, error } = await (supabase.rpc as any)("umpire_submit_match", params);
+  const { data, error } = await supabase.rpc("umpire_submit_match", params as UmpireSubmitMatchArgs);
   if (error) throw error;
   return data as string | null;
 }
 
 export async function confirmFriendlyMatch(matchUuid: string, confirmerId: string = "umpire_bypass"): Promise<void> {
-  const { error } = await (supabase.rpc as any)("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: confirmerId });
+  const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: confirmerId });
   if (error) throw error;
 }
 
@@ -793,7 +808,7 @@ export async function fetchRecentCompletedMatches(params: {
     query = query.order("created_at", { ascending: false }).limit(params.limit);
     const { data, error } = await query;
     if (error) throw error;
-    return (data || []).map((m: any) => ({
+    return (data || []).map((m) => ({
       ...m,
       created_at: m.scored_at || m.created_at || new Date().toISOString(),
       is_friendly: false,
@@ -825,7 +840,7 @@ export async function countPendingMatchesForPlayer(playerId: string): Promise<nu
 }
 
 export async function getLiveMatchesAdminList(limit = 10): Promise<any[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await untypedTables
     .from("live_matches")
     .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
     .order("started_at", { ascending: false })
@@ -835,7 +850,7 @@ export async function getLiveMatchesAdminList(limit = 10): Promise<any[]> {
 }
 
 export async function updateLiveMatchStatus(id: string, status: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await untypedTables
     .from("live_matches")
     .update({ status })
     .eq("id", id);
@@ -843,14 +858,14 @@ export async function updateLiveMatchStatus(id: string, status: string): Promise
 }
 
 export async function deleteLiveMatch(id: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await untypedTables
     .from("live_matches")
     .delete()
     .eq("id", id);
   if (error) throw error;
 }
 
-export async function fetchMatchById(id: string): Promise<any> {
+export async function fetchMatchById(id: string): Promise<Tables<"matches">> {
   const { data, error } = await supabase
     .from("matches")
     .select("*")
@@ -861,7 +876,7 @@ export async function fetchMatchById(id: string): Promise<any> {
 }
 
 export async function fetchLiveFeedMatches(limit = 5): Promise<any[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await untypedTables
     .from("live_matches")
     .select(`
       *,
@@ -893,9 +908,9 @@ export function subscribeToLiveFeedMatches(callback: () => void): () => void {
 }
 
 export async function updateLiveMatchScore(matchId: string, payload: Record<string, unknown>): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await untypedTables
     .from("live_matches")
-    .update(payload as any)
+    .update(payload)
     .eq("id", matchId);
   if (error) throw error;
 }
@@ -949,12 +964,12 @@ export async function logFriendlyMatch(
 }
 
 export async function createLiveMatch(payload: Record<string, unknown>): Promise<void> {
-  const { error } = await (supabase as any).from("live_matches").insert(payload as any);
+  const { error } = await untypedTables.from("live_matches").insert(payload);
   if (error) throw error;
 }
 
 export async function updateMatchVideoUrl(matchId: string, tableName: string, videoUrl: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await untypedTables
     .from(tableName)
     .update({ video_url: videoUrl })
     .eq("id", matchId);

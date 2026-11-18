@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
  * previewed merge does.
  */
 const db = supabase as unknown as {
-  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: { code?: string; message: string } | null }>;
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { code?: string; message: string } | null }>;
   from: (t: string) => any;
 };
 
@@ -32,7 +32,8 @@ export interface ClaimRequest {
 export async function requestPlayerClaim(guestId: string, evidence: string): Promise<{ requestId: number; created: boolean }> {
   const { data, error } = await db.rpc("request_player_claim", { p_guest_id: guestId, p_evidence: evidence });
   if (error) throw error;
-  return { requestId: Number(data?.request_id), created: !!data?.created };
+  const claim = data as { request_id?: number | string; created?: boolean } | null;
+  return { requestId: Number(claim?.request_id), created: !!claim?.created };
 }
 
 export async function fetchMyClaimRequest(guestId: string, requesterId: string): Promise<ClaimRequest | null> {
@@ -60,13 +61,24 @@ export async function fetchPendingClaimRequests(): Promise<ClaimRequest[]> {
 export async function previewPlayerMerge(guestId: string, realId: string): Promise<MergePreview> {
   const { data, error } = await db.rpc("preview_player_merge", { p_guest_id: guestId, p_real_id: realId });
   if (error) throw error;
+  const raw = data as {
+    guest?: MergePreview["guest"];
+    target?: MergePreview["target"];
+    references?: unknown;
+    conflicts?: unknown;
+    blockers?: unknown;
+    alias_redirects?: unknown;
+  } | null;
+  const references = raw?.references;
+  const conflicts = raw?.conflicts;
+  const blockers = raw?.blockers;
   return {
-    guest: data?.guest ?? { id: guestId, name: null },
-    target: data?.target ?? { id: realId, name: null },
-    references: Array.isArray(data?.references) ? data.references : [],
-    conflicts: Array.isArray(data?.conflicts) ? data.conflicts : [],
-    blockers: Array.isArray(data?.blockers) ? data.blockers.map(String) : [],
-    aliasRedirects: Number(data?.alias_redirects ?? 0),
+    guest: raw?.guest ?? { id: guestId, name: null },
+    target: raw?.target ?? { id: realId, name: null },
+    references: Array.isArray(references) ? references : [],
+    conflicts: Array.isArray(conflicts) ? conflicts : [],
+    blockers: Array.isArray(blockers) ? blockers.map(String) : [],
+    aliasRedirects: Number(raw?.alias_redirects ?? 0),
   };
 }
 

@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import type { Tables } from "@/lib/supabase-types-auto";
 import { useAuth } from "@/contexts/AuthContext";
 import { showWebNotification } from "./usePushNotifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { playSmashSound, playPointSound, playVictorySound } from "@/lib/sounds";
+
+/** A realtime matches row. `is_friendly` is not a production column, so it is always undefined. */
+type MatchChangeRow = Tables<"matches"> & { is_friendly?: boolean };
 
 /**
  * Subscribes to realtime INSERT events on the `matches` table.
@@ -39,7 +43,7 @@ export function useMatchNotification() {
           table: "matches",
         },
         async (payload) => {
-          const match = payload.new as any;
+          const match = payload.new as MatchChangeRow;
           if (!match) return;
 
           // Only alert if this match involves the current player
@@ -57,7 +61,7 @@ export function useMatchNotification() {
           const isUmpire = challengerId !== match.player1_id && challengerId !== match.player2_id && challengerId !== match.team1_partner_id && challengerId !== match.team2_partner_id;
 
           if (payload.eventType === "UPDATE") {
-            const oldMatch = payload.old as any;
+            const oldMatch = payload.old as Partial<MatchChangeRow>;
             if (oldMatch.status === "pending" && match.status === "confirmed" && !isSubmitter) {
               // Match confirmed
               if (Capacitor.isNativePlatform()) {
@@ -178,8 +182,8 @@ export function useMatchNotification() {
           filter: `id=eq.${profile.id}`
         },
         async (payload) => {
-          const oldPlayer = payload.old as any;
-          const newPlayer = payload.new as any;
+          const oldPlayer = payload.old as Partial<Tables<"players">>;
+          const newPlayer = payload.new as Tables<"players">;
           
           if (newPlayer.elo_rating > oldPlayer.elo_rating) {
             // Check if entered top 10
@@ -189,7 +193,7 @@ export function useMatchNotification() {
               .order("elo_rating", { ascending: false })
               .limit(10);
               
-            if (data && data.some((p: any) => p.id === profile.id)) {
+            if (data && data.some((p) => p.id === profile.id)) {
               // They are in top 10!
               if (!localStorage.getItem("notified_top10")) {
                 localStorage.setItem("notified_top10", "true");

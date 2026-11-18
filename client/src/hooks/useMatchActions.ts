@@ -4,11 +4,27 @@ import confetti from "canvas-confetti";
 import type { PlayerRow } from "@/types";
 import { queueOfflineAction } from "@/hooks/useOfflineSync";
 
+/** The pending-match fields used to pick the confirmer's Elo change. */
+type PendingMatchSides = {
+  id: string;
+  player2_id?: string | null;
+  team1_partner_id?: string | null;
+  team2_partner_id?: string | null;
+};
+
+/** Elo deltas returned by confirm_friendly_match. */
+type ConfirmEloChanges = {
+  p1_elo_change?: number;
+  p2_elo_change?: number;
+  p3_elo_change?: number;
+  p4_elo_change?: number;
+};
+
 export function useMatchActions(
   ownPlayerProfile: PlayerRow | null,
   fetchPendingMatches: (userId: string) => void,
   setRawMatches: React.Dispatch<React.SetStateAction<any[]>>,
-  pendingMatches: any[]
+  pendingMatches: PendingMatchSides[]
 ) {
   const handleConfirmMatch = async (matchId: string) => {
     if (!ownPlayerProfile) return;
@@ -23,12 +39,13 @@ export function useMatchActions(
         confirmer_id: ownPlayerProfile.id,
       });
       if (error) throw error;
-      let myEloChange = (data as any).p1_elo_change;
+      const elo = data as ConfirmEloChanges;
+      let myEloChange = elo.p1_elo_change;
       const targetMatch = pendingMatches.find(m => m.id === matchId);
       if (targetMatch) {
-        if (targetMatch.player2_id === ownPlayerProfile.id) myEloChange = (data as any).p2_elo_change;
-        if (targetMatch.team1_partner_id === ownPlayerProfile.id) myEloChange = (data as any).p3_elo_change;
-        if (targetMatch.team2_partner_id === ownPlayerProfile.id) myEloChange = (data as any).p4_elo_change;
+        if (targetMatch.player2_id === ownPlayerProfile.id) myEloChange = elo.p2_elo_change;
+        if (targetMatch.team1_partner_id === ownPlayerProfile.id) myEloChange = elo.p3_elo_change;
+        if (targetMatch.team2_partner_id === ownPlayerProfile.id) myEloChange = elo.p4_elo_change;
       }
 
       confetti({
@@ -42,8 +59,8 @@ export function useMatchActions(
         description: `Elo Ratings Updated. Your Elo Change: ${myEloChange || 0}`,
       });
       fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) {
-      toast.error("Error confirming match", { description: e.message });
+    } catch (e) {
+      toast.error("Error confirming match", { description: e instanceof Error ? e.message : String(e) });
     }
   };
 
@@ -64,20 +81,20 @@ export function useMatchActions(
         description: "The match request has been dismissed.",
       });
       fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) {
-      toast.error("Error rejecting match", { description: e.message });
+    } catch (e) {
+      toast.error("Error rejecting match", { description: e instanceof Error ? e.message : String(e) });
     }
   };
 
-  const handleResendRequest = async (match: any) => {
+  const handleResendRequest = async (match: object) => {
     try {
       const { error } = await supabase.functions.invoke("notify-match", {
         body: { type: "INSERT", table: "matches", record: match },
       });
       if (error) throw error;
       toast.success("Request resent to opponent(s)");
-    } catch (e: any) {
-      toast.error("Failed to resend request", { description: e.message });
+    } catch (e) {
+      toast.error("Failed to resend request", { description: e instanceof Error ? e.message : String(e) });
     }
   };
 
@@ -110,8 +127,8 @@ export function useMatchActions(
             toast.success("Match withdrawn successfully.");
             setRawMatches((prev) => prev.filter((m) => m.id !== matchId));
             fetchPendingMatches(ownPlayerProfile.id);
-          } catch (e: any) {
-            toast.error("Error withdrawing match", { description: e.message });
+          } catch (e) {
+            toast.error("Error withdrawing match", { description: e instanceof Error ? e.message : String(e) });
           }
         },
       },

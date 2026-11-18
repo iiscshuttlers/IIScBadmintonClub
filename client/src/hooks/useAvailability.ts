@@ -4,10 +4,6 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 
-// player_availability is new; the generated types regenerate after the
-// migration is applied (npx supabase db push). Cast until then.
-const sb = supabase as any;
-
 /**
  * #31 "Available to play now" — a manual, location-free presence signal.
  * A player toggles availability, which writes a row with an expiry. Everyone
@@ -30,7 +26,7 @@ export function useAvailablePlayers() {
     queryKey: ["presence"],
     queryFn: async (): Promise<AvailabilityRow[]> => {
       const nowIso = new Date().toISOString();
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from("player_availability")
         .select("player_id, available_until, note")
         .gt("available_until", nowIso);
@@ -63,7 +59,7 @@ export function useMyAvailability(myPlayerId: string | null | undefined) {
     async (durationMinutes = 120, note?: string) => {
       if (!myPlayerId) return;
       const availableUntil = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
-      const { error } = await sb
+      const { error } = await supabase
         .from("player_availability")
         .upsert({ player_id: myPlayerId, available_until: availableUntil, note: note ?? null, updated_at: new Date().toISOString() });
       if (error) {
@@ -79,7 +75,7 @@ export function useMyAvailability(myPlayerId: string | null | undefined) {
 
   const clearAvailable = useCallback(async () => {
     if (!myPlayerId) return;
-    const { error } = await sb.from("player_availability").delete().eq("player_id", myPlayerId);
+    const { error } = await supabase.from("player_availability").delete().eq("player_id", myPlayerId);
     if (error) {
       toast.error("Couldn't update availability");
       return;

@@ -10,7 +10,7 @@ export function useSocialActions() {
   const handleToggleFollow = useMutation({
     mutationFn: async ({ targetId, targetName }: { targetId: string, targetName: string }) => {
       if (!ownProfile) throw new Error("Not authenticated");
-      const currentFollowing = (ownProfile as any).following || [];
+      const currentFollowing = ownProfile.following || [];
       const newFollowing = await socialService.toggleFollow(ownProfile.id, targetId, currentFollowing, targetName, ownProfile.full_name);
       return newFollowing;
     },
@@ -18,7 +18,7 @@ export function useSocialActions() {
       queryClient.invalidateQueries({ queryKey: ["followers"] });
       refreshProfile(); // to update own following list
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error(error);
       toast.error("Failed to toggle follow: " + (error.message || error.toString()));
     }

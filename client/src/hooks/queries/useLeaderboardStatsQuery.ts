@@ -1,9 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { Tables } from "@/lib/supabase-types-auto";
+
+type StatsPlayer = { id: string; full_name: string; avatar_url: string | null };
+
+/** A confirmed friendly match whose winner gained the most Elo. */
+export type LeaderboardUpset = Tables<"matches"> & {
+  player1: StatsPlayer | null;
+  player2: StatsPlayer | null;
+  partner1: StatsPlayer | null;
+  partner2: StatsPlayer | null;
+  upsetScore: number;
+};
+
+export interface LeaderboardStreak {
+  id: string;
+  name: string;
+  avatar: string;
+  streak: number;
+  isAlive: boolean;
+}
 
 export interface LeaderboardStats {
-  upsets: any[];
-  activeStreaks: any[];
+  upsets: LeaderboardUpset[];
+  activeStreaks: LeaderboardStreak[];
   allStreaks: Record<string, number>;
   lastEloChange: Record<string, number>;
   eloHistory: Record<string, number[]>;

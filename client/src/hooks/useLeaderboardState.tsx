@@ -38,7 +38,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">(() => {
     const params = safeGetSearchParams();
     const cat = params.get("cat");
-    if (["ALL", "MS", "WS", "MD", "WD", "XD"].includes(cat || "")) return cat as any;
+    if (["ALL", "MS", "WS", "MD", "WD", "XD"].includes(cat || "")) return cat as "ALL" | "MS" | "WS" | "MD" | "WD" | "XD";
     return "ALL";
   });
 
@@ -46,7 +46,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
   const [eloMode, setEloMode] = useState<"club" | "tournament">(() => {
     const params = safeGetSearchParams();
     const mode = params.get("mode");
-    if (mode === "club" || mode === "tournament") return mode as any;
+    if (mode === "club" || mode === "tournament") return mode;
     return "club";
   });
 
@@ -112,7 +112,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
     return 0;
   };
 
-  const displayRecord = (record: string | any) => {
+  const displayRecord = (record: unknown) => {
     if (!record) return "No data";
     try {
       const parsed = typeof record === "string" ? JSON.parse(record) : record;
@@ -140,7 +140,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
         const recA = getCategoryRecord(a);
         const recB = getCategoryRecord(b);
         
-        const parseWinsLosses = (rec: any) => {
+        const parseWinsLosses = (rec: string) => {
           const str = displayRecord(rec);
           const match = str.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
           if (match) {

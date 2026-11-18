@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import type { ScoreLog } from "../useYoutubePlayer";
+import type { ScoreLog, YouTubePlayer } from "../useYoutubePlayer";
 
 export interface UseYoutubeScoreTrackingProps {
   scoreLogs: ScoreLog[];
@@ -8,7 +8,7 @@ export interface UseYoutubeScoreTrackingProps {
   showHint: (text: string) => void;
   teamA: string[];
   teamB: string[];
-  playerRef: React.MutableRefObject<any>;
+  playerRef: React.MutableRefObject<YouTubePlayer | null>;
   seekTo: (seconds: number, isPercent?: boolean) => void;
   setPlaying: (p: boolean) => void;
 }

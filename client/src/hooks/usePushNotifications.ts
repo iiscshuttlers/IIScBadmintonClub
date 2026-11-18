@@ -131,7 +131,8 @@ export async function enableWebPush(): Promise<boolean> {
     }
 
     return true;
-  } catch (err: any) {
+  } catch (caught) {
+    const err = caught as { name?: string; code?: string; message?: string };
     // Suppress expected errors on environments without valid FCM push credentials (AbortError, token-subscribe-failed, 401)
     if (
       err.name === "AbortError" ||
@@ -233,7 +234,7 @@ export function usePushNotifications(userId: string | undefined) {
             // We just need to play the appropriate custom sound if needed.
             
             // Get channelId either from data or the root
-            const channelId = notification.data?.channelId || (notification as any).channelId || "notify_whistle";
+            const channelId = notification.data?.channelId || (notification as typeof notification & { channelId?: string }).channelId || "notify_whistle";
 
             // Play the corresponding foreground sound
             if (channelId === "notify_smash") playSmashSound();

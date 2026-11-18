@@ -3,9 +3,40 @@ import { useVideoGestures } from "@/hooks/useVideoGestures";
 import { useYoutubeDrawing } from "./youtube/useYoutubeDrawing";
 import { useYoutubeScoreTracking } from "./youtube/useYoutubeScoreTracking";
 
+/** The parts of the YouTube IFrame API player this app calls. */
+export interface YouTubePlayer {
+  getCurrentTime(): number;
+  getDuration(): number;
+  getVolume(): number;
+  mute(): void;
+  unMute(): void;
+  playVideo(): void;
+  pauseVideo(): void;
+  seekTo(seconds: number, allowSeekAhead?: boolean): void;
+  setPlaybackRate(rate: number): void;
+  destroy(): void;
+}
+
+/** onReady / onStateChange event from the IFrame API. */
+interface YouTubePlayerEvent {
+  target: YouTubePlayer;
+  data: number;
+}
+
+interface YouTubeIframeApi {
+  Player: new (elementId: string, options: Record<string, unknown>) => YouTubePlayer;
+  PlayerState: Record<string, number>;
+}
+
+/** Screen Orientation lock/unlock are not in every lib.dom version (or browser). */
+type LockableOrientation = ScreenOrientation & {
+  lock?: (orientation: string) => Promise<void>;
+  unlock?: () => void;
+};
+
 declare global {
   interface Window {
-    YT: any;
+    YT: YouTubeIframeApi;
     onYouTubeIframeAPIReady: () => void;
   }
 }
@@ -72,7 +103,7 @@ export function useYoutubePlayer({
   onScoreLogsChange,
 }: UseYoutubePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YouTubePlayer | null>(null);
   const divId = useRef(`yt-${videoId}-${Math.random().toString(36).slice(2)}`);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -121,14 +152,14 @@ export function useYoutubePlayer({
         videoId,
         playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, enablejsapi: 1, playsinline: 1, iv_load_policy: 3 },
         events: {
-          onReady: (e: any) => {
+          onReady: (e: YouTubePlayerEvent) => {
             setReady(true);
             const d = e.target.getDuration();
             setDuration(d);
             const saved = parseFloat(localStorage.getItem(STORAGE_KEY) || "0");
             if (saved > 5 && saved < d - 5) e.target.seekTo(saved, true);
           },
-          onStateChange: (e: any) => {
+          onStateChange: (e: YouTubePlayerEvent) => {
             const isPlaying = e.data === window.YT.PlayerState.PLAYING;
             setPlaying(isPlaying);
             if (isPlaying) {
@@ -220,10 +251,10 @@ export function useYoutubePlayer({
     if (!containerRef.current) return;
     if (document.fullscreenElement) {
       document.exitFullscreen();
-      try { if (screen.orientation && (screen.orientation as any).unlock) (screen.orientation as any).unlock(); } catch { /* intentional — screen orientation unlock may not be supported by browser */ }
+      try { const o = screen.orientation as LockableOrientation; if (o && o.unlock) o.unlock(); } catch { /* intentional — screen orientation unlock may not be supported by browser */ }
     } else {
       containerRef.current.requestFullscreen?.().then(() => {
-        try { if (screen.orientation && (screen.orientation as any).lock) (screen.orientation as any).lock("landscape").catch(() => {}); } catch { /* intentional — screen orientation lock may not be supported */ }
+        try { const o = screen.orientation as LockableOrientation; if (o && o.lock) o.lock("landscape").catch(() => {}); } catch { /* intentional — screen orientation lock may not be supported */ }
       });
     }
   }, []);

@@ -114,8 +114,8 @@ export function useUmpireState({
           const [a, b] = s.split("-").map(Number);
           return b > a;
         }).length;
-        const t1Names = ((editState as any).team1_label || "").split(" & ");
-        const t2Names = ((editState as any).team2_label || "").split(" & ");
+        const t1Names = (editState.team1_label || "").split(" & ");
+        const t2Names = (editState.team2_label || "").split(" & ");
         
         return {
           id: editState.id || crypto.randomUUID(),
@@ -273,8 +273,8 @@ export function useUmpireState({
     // Listen to site_data changes for live_matches
     const sub = supabase.channel(`umpire_engine_${match.id}_${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" }, (payload) => {
-        if (payload.new && (payload.new as any).value) {
-          const newMatches = (payload.new as any).value;
+        if (payload.new && (payload.new as { value?: Record<string, BwfMatchState> }).value) {
+          const newMatches = (payload.new as { value?: Record<string, BwfMatchState> }).value;
           // The key in live_matches is now the match's id
           const remoteMatch = newMatches[match.id];
           if (remoteMatch) {
@@ -469,8 +469,8 @@ export function useUmpireState({
             p_expected_court: tournamentMatch.court_number,
             p_expected_scheduled_at: tournamentMatch.scheduled_at,
           });
-        } catch (error: any) {
-          const message = error?.message ?? "Could not start the tournament match";
+        } catch (error) {
+          const message = (error instanceof Error ? error.message : undefined) ?? "Could not start the tournament match";
           if (message.includes("court_in_use:") || message.includes("court_conflict:")) {
             toast.error("Court is not available", { description: message.split(":").slice(1).join(":").trim() });
           } else if (message.includes("player_in_use:")) {
@@ -604,7 +604,7 @@ export function useUmpireState({
       const updates = computeAddPoint(match, team, note);
       if (!updates) return;
       
-      const { _changeEnds, _reason, _break, _title, ...stateUpdates } = updates as any;
+      const { _changeEnds, _reason, _break, _title, ...stateUpdates } = updates;
       updateMatch(stateUpdates);
 
       // ── Score-tap feedback: haptics + sound (#33) ──────────────────────────
@@ -820,8 +820,8 @@ export function useUmpireState({
               }
             })();
 
-          } catch (err: any) {
-            const message = String(err?.message || err);
+          } catch (err) {
+            const message = String((err instanceof Error && err.message) || err);
             if (message.includes("result_conflict") || message.includes("result_revision_conflict")) {
               try {
                 const conflictCtx = await fetchTournamentMatchConflictContext({
@@ -952,11 +952,11 @@ export function useUmpireState({
           
           // Clear from live matches immediately
           await MatchService.removeLiveMatch(match.id).catch(console.error);
-        } catch (err: any) {
-          toast.error("Failed to save match: " + err.message);
+        } catch (err) {
+          toast.error("Failed to save match: " + (err instanceof Error ? err.message : String(err)));
         }
-      } catch (err: any) {
-        toast.error("Failed to save: " + err.message);
+      } catch (err) {
+        toast.error("Failed to save: " + (err instanceof Error ? err.message : String(err)));
       } finally {
         setIsSaving(false);
       }
@@ -1038,8 +1038,8 @@ export function useUmpireState({
         setConflictState(null);
         toast.info("Retained server result.");
         handleClose();
-      } catch (err: any) {
-        toast.error("Failed to dismiss conflict: " + (err?.message || err));
+      } catch (err) {
+        toast.error("Failed to dismiss conflict: " + ((err instanceof Error && err.message) || err));
       } finally {
         setIsResolvingConflict(false);
       }
@@ -1077,8 +1077,8 @@ export function useUmpireState({
         toast.success("Tournament match score corrected and audited!");
         onMatchSaved?.(conflictState.matchId, "tournament");
         handleClose();
-      } catch (err: any) {
-        const msg = String(err?.message || err);
+      } catch (err) {
+        const msg = String((err instanceof Error && err.message) || err);
         if (msg.includes("result_revision_conflict")) {
           try {
             const refreshed = await fetchTournamentMatchConflictContext({

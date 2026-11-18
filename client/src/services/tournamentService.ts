@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { cloneTournament } from '@/lib/cloneTournament';
-import type { TablesInsert, TablesUpdate } from '@/lib/supabase-types-auto';
+import type { Json, Tables, TablesInsert, TablesUpdate } from '@/lib/supabase-types-auto';
 import type {
   Tournament,
   TournamentInsert,
@@ -159,9 +159,9 @@ export async function adminUpdateTournamentMatch(
   operationId = crypto.randomUUID(),
 ): Promise<{ applied: boolean; eventId?: number }> {
   const { id: _id, created_at: _created, ...safePatch } = patch;
-  const { data, error } = await supabase.rpc("admin_update_tournament_match" as any, {
+  const { data, error } = await supabase.rpc("admin_update_tournament_match", {
     p_match_id: id,
-    p_patch: safePatch,
+    p_patch: safePatch as Json,
     p_reason: reason,
     p_operation_id: operationId,
   });
@@ -254,7 +254,9 @@ export async function updateTournamentParticipants(
   );
 }
 
-export async function createTournamentMatches(matches: any[]): Promise<any[]> {
+export async function createTournamentMatches(
+  matches: TablesInsert<"tournament_matches">[],
+): Promise<Tables<"tournament_matches">[]> {
   if (!matches.length) return [];
   const { data, error } = await supabase
     .from("tournament_matches")
@@ -390,7 +392,7 @@ export async function fetchTournamentParticipantsByCategory(
     .order("seed");
 
   if (error) throw error;
-  return (data ?? []) as any[];
+  return data ?? [];
 }
 
 export interface TournamentResultSubmission {
@@ -564,7 +566,7 @@ export async function overrideTournamentSchedule(params: {
   conflictType?: string;
   conflictingId?: string;
 }): Promise<{ applied: boolean; match_id: string; court_number: string; scheduled_at: string }> {
-  const { data, error } = await supabase.rpc("override_tournament_schedule" as any, {
+  const { data, error } = await supabase.rpc("override_tournament_schedule", {
     p_tournament_id: params.tournamentId,
     p_match_id: params.matchId,
     p_court: params.court,
@@ -575,31 +577,31 @@ export async function overrideTournamentSchedule(params: {
   });
 
   if (error) throw error;
-  return data as any;
+  return data as unknown as { applied: boolean; match_id: string; court_number: string; scheduled_at: string };
 }
 
 export async function verifyTournamentReadiness(
   tournamentId: string,
   action: LifecycleAction
 ): Promise<LifecycleReadinessReport> {
-  const { data, error } = await supabase.rpc("verify_tournament_readiness" as any, {
+  const { data, error } = await supabase.rpc("verify_tournament_readiness", {
     p_tournament_id: tournamentId,
     p_action: action,
   });
   if (error) throw error;
-  return data as LifecycleReadinessReport;
+  return data as unknown as LifecycleReadinessReport;
 }
 
 export async function transitionTournamentLifecycle(
   tournamentId: string,
   action: LifecycleAction
 ): Promise<{ applied: boolean; action: LifecycleAction; tournament_id: string; report: LifecycleReadinessReport }> {
-  const { data, error } = await supabase.rpc("transition_tournament_lifecycle" as any, {
+  const { data, error } = await supabase.rpc("transition_tournament_lifecycle", {
     p_tournament_id: tournamentId,
     p_action: action,
   });
   if (error) throw error;
-  return data as any;
+  return data as unknown as { applied: boolean; action: LifecycleAction; tournament_id: string; report: LifecycleReadinessReport };
 }
 
 export async function undoTournamentMatch(matchId: string): Promise<void> {
@@ -777,7 +779,7 @@ export async function saveBracketPredictions(payload: {
   tournament_id: string;
   category: string;
   user_id: string;
-  picks: any;
+  picks: Json;
 }): Promise<void> {
   const { error } = await supabase.from("bracket_predictions").upsert({
     ...payload,
@@ -956,7 +958,7 @@ export async function fetchTournamentReportPanelData(tournamentId: string, requi
   let umpireMap: Record<string, string> = {};
   if (umpIds.length) {
     const { data: ump } = await supabase.from("players").select("id, full_name").in("id", umpIds);
-    umpireMap = Object.fromEntries((ump ?? []).map((p: any) => [p.id, p.full_name]));
+    umpireMap = Object.fromEntries((ump ?? []).map((p) => [p.id, p.full_name] as const));
   }
 
   const { data: fb } = await supabase
@@ -998,7 +1000,7 @@ export async function fetchTournamentReportData(tournamentId: string) {
   if (mErr) throw mErr;
 
   const { data: fb } = await supabase
-    .from("tournament_feedback" as any)
+    .from("tournament_feedback")
     .select("rating, tags, comment")
     .eq("tournament_id", tournamentId);
 
@@ -1024,11 +1026,11 @@ export async function fetchPathToFinalData(tournamentId: string, category: strin
     .is("tie_id", null);
   if (error) throw error;
   const ids = Array.from(
-    new Set((matches ?? []).flatMap((m: any) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean)),
+    new Set((matches ?? []).flatMap((m) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean)),
   );
   const { data: players } = ids.length
     ? await supabase.from("players").select("id, tournament_elo, elo_rating").in("id", ids)
-    : { data: [] as any[] };
+    : { data: [] as Array<Pick<Tables<"players">, "id" | "tournament_elo" | "elo_rating">> };
   return { matches: matches ?? [], players: players ?? [] };
 }
 
@@ -1064,13 +1066,13 @@ export async function getTournamentContacts(tournamentId: string): Promise<boole
     .eq("key", `tournament_contacts_${tournamentId}`)
     .maybeSingle();
   if (error) throw error;
-  return data?.value === true || (data?.value as any)?.enabled === true;
+  return data?.value === true || (data?.value as { enabled?: unknown } | null)?.enabled === true;
 }
 
 export async function setTournamentContacts(tournamentId: string, enabled: boolean): Promise<void> {
   const { error } = await supabase
     .from("site_data")
-    .upsert({ key: `tournament_contacts_${tournamentId}`, value: enabled as any }, { onConflict: "key" });
+    .upsert({ key: `tournament_contacts_${tournamentId}`, value: enabled }, { onConflict: "key" });
   if (error) throw error;
 }
 
@@ -1175,7 +1177,7 @@ export async function fetchEloStakesContext(playerId: string, playerIds: string[
   return {
     players: players || [],
     completedCount: count ?? 0,
-    eloConfig: ((cfgRow as any)?.value ?? {}) as Record<string, any>,
+    eloConfig: (cfgRow?.value ?? {}) as Record<string, any>,
   };
 }
 
@@ -1230,12 +1232,12 @@ export function subscribeToTournaments(callback: () => void): () => void {
 
 export async function fetchUserTournamentRoles(tournamentId: string, userId: string): Promise<string[]> {
   const { data, error } = await supabase
-    .from("tournament_officials" as any)
+    .from("tournament_officials")
     .select("role")
     .eq("tournament_id", tournamentId)
     .eq("user_id", userId);
   if (error) throw error;
-  return ((data ?? []) as any[]).map((d: any) => d.role);
+  return (data ?? []).map((d) => d.role);
 }
 
 export async function bulkImportParticipants(params: {
@@ -1270,13 +1272,13 @@ export async function bulkImportParticipants(params: {
       display_name: entry.displayName || null,
       seed: entry.seed ?? autoSeed++,
       email: entry.email,
-    } as any);
+    });
 
     if (entry.phone1 && entry.playerId) {
-      await (supabase as any).rpc("admin_fill_player_contact", { p_player_id: entry.playerId, p_contact: entry.phone1 }); // fills only if empty
+      await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.playerId, p_contact: entry.phone1 }); // fills only if empty
     }
     if (entry.phone2 && entry.partnerId) {
-      await (supabase as any).rpc("admin_fill_player_contact", { p_player_id: entry.partnerId, p_contact: entry.phone2 }); // fills only if empty
+      await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.partnerId, p_contact: entry.phone2 }); // fills only if empty
     }
   }
 }

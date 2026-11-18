@@ -99,9 +99,9 @@ export const feedService = {
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id ?? null;
       if (!uid) return;
-      await supabase.from("analytics_events" as any).insert({
+      await supabase.from("analytics_events").insert({
         event,
-        props,
+        props: props as Json,
         player_id: uid,
       });
     } catch {
@@ -254,7 +254,7 @@ export const feedService = {
     };
   },
 
-  async fetchHomeBannersData(): Promise<any[]> {
+  async fetchHomeBannersData(): Promise<Pick<Tables<"site_data">, "key" | "value">[]> {
     const { data, error } = await supabase
       .from("site_data")
       .select("key, value")
@@ -263,7 +263,7 @@ export const feedService = {
     return data || [];
   },
 
-  subscribeToHomeBanners(callback: (data: any[]) => void): () => void {
+  subscribeToHomeBanners(callback: (data: Pick<Tables<"site_data">, "key" | "value">[]) => void): () => void {
     const ch = supabase
       .channel("home_banners_rt")
       .on(
@@ -369,7 +369,7 @@ export const feedService = {
           filter: `live_match_id=eq.${matchId}`,
         },
         (payload) => {
-          onInsert(payload.new as any);
+          onInsert(payload.new as { user_id: string; pick: number });
         }
       )
       .on(
@@ -381,7 +381,7 @@ export const feedService = {
           filter: `live_match_id=eq.${matchId}`,
         },
         (payload) => {
-          onDelete(payload.old as any);
+          onDelete(payload.old as { user_id: string; pick: number });
         }
       )
       .subscribe();

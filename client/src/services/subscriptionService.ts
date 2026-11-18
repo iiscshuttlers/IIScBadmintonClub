@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { Tables } from "@/lib/supabase-types-auto";
 
 export interface TournamentSubscription {
   id: string;
@@ -55,17 +56,31 @@ export interface MatchSubscription {
   };
 }
 
+type FollowingMatchPlayer = Pick<Tables<"players">, "id" | "full_name" | "avatar_url">;
+
+/** A tournament match as selected by fetchFollowingMatches. */
+export type FollowingMatch = Pick<
+  Tables<"tournament_matches">,
+  | "id" | "tournament_id" | "category" | "round_name" | "match_number" | "match_code" | "court_number"
+  | "scheduled_at" | "status" | "score" | "winner_side"
+  | "player1_id" | "player2_id" | "player3_id" | "player4_id" | "team1_label" | "team2_label"
+> & {
+  player1: FollowingMatchPlayer | null;
+  player2: FollowingMatchPlayer | null;
+  tournaments: Pick<Tables<"tournaments">, "id" | "name" | "venue" | "status"> | null;
+};
+
 export interface FollowingMatchesResponse {
-  live: any[];
-  upcoming: any[];
-  completed: any[];
-  all: any[];
+  live: FollowingMatch[];
+  upcoming: FollowingMatch[];
+  completed: FollowingMatch[];
+  all: FollowingMatch[];
 }
 
 export const subscriptionService = {
   async fetchTournamentSubscriptions(userId: string): Promise<TournamentSubscription[]> {
     const { data, error } = await supabase
-      .from("user_tournament_subscriptions" as any)
+      .from("user_tournament_subscriptions")
       .select("*, tournaments(id, name, venue, status, start_date)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -80,7 +95,7 @@ export const subscriptionService = {
 
   async isFollowingTournament(userId: string, tournamentId: string): Promise<boolean> {
     const { data, error } = await supabase
-      .from("user_tournament_subscriptions" as any)
+      .from("user_tournament_subscriptions")
       .select("id")
       .eq("user_id", userId)
       .eq("tournament_id", tournamentId)
@@ -105,7 +120,7 @@ export const subscriptionService = {
     };
 
     const { error } = await supabase
-      .from("user_tournament_subscriptions" as any)
+      .from("user_tournament_subscriptions")
       .upsert(payload, { onConflict: "user_id,tournament_id" });
 
     if (error) throw error;
@@ -113,7 +128,7 @@ export const subscriptionService = {
 
   async unfollowTournament(userId: string, tournamentId: string): Promise<void> {
     const { error } = await supabase
-      .from("user_tournament_subscriptions" as any)
+      .from("user_tournament_subscriptions")
       .delete()
       .eq("user_id", userId)
       .eq("tournament_id", tournamentId);
@@ -132,7 +147,7 @@ export const subscriptionService = {
     >
   ): Promise<void> {
     const { error } = await supabase
-      .from("user_tournament_subscriptions" as any)
+      .from("user_tournament_subscriptions")
       .update(updates)
       .eq("user_id", userId)
       .eq("tournament_id", tournamentId);
@@ -161,7 +176,8 @@ export const subscriptionService = {
       >
     >
   ): Promise<void> {
-    const { error } = await (supabase.from("user_player_subscriptions") as any)
+    const { error } = await supabase
+      .from("user_player_subscriptions")
       .update(updates)
       .eq("user_id", userId)
       .eq("player_id", playerId);
@@ -209,7 +225,7 @@ export const subscriptionService = {
     const tIdSet = new Set(followedTournamentIds);
     const pIdSet = new Set(allPlayerIds);
 
-    const relevant = rawMatches.filter((m: any) => {
+    const relevant = rawMatches.filter((m) => {
       if (tIdSet.has(m.tournament_id)) return true;
       if (
         (m.player1_id && pIdSet.has(m.player1_id)) ||
@@ -223,9 +239,9 @@ export const subscriptionService = {
     });
 
     const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
-    const live: any[] = [];
-    const upcoming: any[] = [];
-    const completed: any[] = [];
+    const live: FollowingMatch[] = [];
+    const upcoming: FollowingMatch[] = [];
+    const completed: FollowingMatch[] = [];
 
     for (const m of relevant) {
       if (LIVE_STATUSES.has(m.status)) {

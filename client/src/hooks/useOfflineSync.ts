@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Preferences } from "@capacitor/preferences";
@@ -66,7 +67,7 @@ export function useOfflineSync() {
         const failedQueue: OfflineAction[] = [];
 
         for (const action of queue) {
-          let error: any = null;
+          let error: PostgrestError | null = null;
           if (action.type === "confirm") {
             ({ error } = await supabase.rpc("confirm_friendly_match", {
               match_uuid: action.matchId,

@@ -135,7 +135,7 @@ interface ProfileOverviewTabProps {
   handleWithdrawMatch: (id: string) => void;
   handleConfirmMatch: (id: string) => void;
   handleRejectMatch: (id: string) => void;
-  handleResendRequest: (id: string) => void;
+  handleResendRequest: (match: object) => Promise<void>;
 }
 
 export function ProfileOverviewTab({

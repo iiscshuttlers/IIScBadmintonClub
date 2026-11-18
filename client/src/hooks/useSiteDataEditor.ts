@@ -56,7 +56,7 @@ export function useSiteDataEditor<T>(
         setOriginalData(JSON.parse(JSON.stringify(fetchedValue)));
         setIsDirty(false);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(`Load ${dbKey}:`, err);
       toast.error(`Failed to load ${dbKey}`);
     } finally {
@@ -113,8 +113,8 @@ export function useSiteDataEditor<T>(
       }
       toast.success(`${dbKey} updated — live instantly.`);
       return true;
-    } catch (err: any) {
-      toast.error("Save failed: " + err.message);
+    } catch (err) {
+      toast.error("Save failed: " + (err instanceof Error ? err.message : String(err)));
       return false;
     } finally {
       if (mounted.current) setIsSaving(false);

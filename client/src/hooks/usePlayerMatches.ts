@@ -24,8 +24,8 @@ export function usePlayerMatches(playerId: string | undefined) {
       ]);
       setMatches(allMatches);
       setPendingMatches(pending);
-    } catch (err: any) {
-      setError(err);
+    } catch (err) {
+      setError(err as Error);
       console.error('usePlayerMatches error:', err);
     } finally {
       setLoading(false);

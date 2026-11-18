@@ -1,7 +1,28 @@
 import { supabase } from "@/lib/supabase";
-import type { TablesInsert, TablesUpdate } from "@/lib/supabase-types-auto";
+import type { Tables, TablesInsert, TablesUpdate } from "@/lib/supabase-types-auto";
 import { findPlayerByEmail } from "@/services/playerPrivateService";
 import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
+
+/** Public player columns (PLAYER_PUBLIC_COLUMNS) embedded in a roster row. */
+type RosterPlayer = Partial<Tables<"players">>;
+
+/** A tournament_team_members row with its player embedded (under both `player` and `players`). */
+type RosterMemberRow = Tables<"tournament_team_members"> & {
+  player?: RosterPlayer | null;
+  players?: RosterPlayer | null;
+};
+
+/** One entry of getTeamRosterWithCaptain; the captain may be a synthetic entry. */
+export type TeamRosterEntry = Partial<Tables<"tournament_team_members">> & {
+  id: string;
+  team_id: string;
+  player_id: string;
+  role: string;
+  status: string;
+  is_captain?: boolean;
+  player: RosterPlayer | null;
+  players: RosterPlayer | null;
+};
 
 export interface TournamentTeam {
   id: string;
@@ -529,7 +550,7 @@ export const teamService = {
   },
 
   async getTeamRosterWithCaptain(teamId: string, captainId?: string | null) {
-    let rawMembers: any[] = [];
+    let rawMembers: RosterMemberRow[] = [];
     const { data, error } = await supabase
       .from('tournament_team_members')
       .select(`*, player:players!player_id(${PLAYER_PUBLIC_COLUMNS})`)
@@ -541,18 +562,18 @@ export const teamService = {
         .select(`*, players:players!tournament_team_members_player_id_fkey(${PLAYER_PUBLIC_COLUMNS})`)
         .eq('team_id', teamId);
       if (!fallback.error) {
-        rawMembers = fallback.data || [];
+        rawMembers = (fallback.data || []) as unknown as RosterMemberRow[];
       }
     } else {
-      rawMembers = data || [];
+      rawMembers = (data || []) as unknown as RosterMemberRow[];
     }
 
-    const list: any[] = rawMembers.map((m: any) => {
+    const list: TeamRosterEntry[] = rawMembers.map((m) => {
       const p = m.player || m.players;
       return { ...m, player: p, players: p };
     });
 
-    if (captainId && !list.some((m: any) => m.player_id === captainId)) {
+    if (captainId && !list.some((m) => m.player_id === captainId)) {
       const { data: captainPlayer } = await supabase
         .from('players')
         .select(PLAYER_PUBLIC_COLUMNS)
@@ -614,13 +635,13 @@ export const teamService = {
       .eq("player_id", playerId)
       .eq("status", "ACTIVE")
       .limit(1)
-      .maybeSingle()) as { data: any };
+      .maybeSingle());
 
     if (!memberTeam?.team_id) {
       return { myTeamId: null, pendingLineups: 0 };
     }
 
-    const isCap = memberTeam.role === "CAPTAIN" || (memberTeam.team as any)?.captain_id === playerId;
+    const isCap = memberTeam.role === "CAPTAIN" || memberTeam.team?.captain_id === playerId;
     if (!isCap) {
       return { myTeamId: memberTeam.team_id, pendingLineups: 0 };
     }
@@ -678,7 +699,11 @@ export const teamService = {
     return data || [];
   },
 
-  async saveTieLineups(tieId: string, side: string, inserts: any[]) {
+  async saveTieLineups(
+    tieId: string,
+    side: string,
+    inserts: Array<Omit<TablesInsert<"tie_lineups">, "tie_id" | "side" | "submitted_by">>,
+  ) {
     const { data: authData } = await supabase.auth.getSession();
     const currentUserId = authData?.session?.user?.id;
 
@@ -705,7 +730,7 @@ export const teamService = {
   },
 
   async getTeamByInviteToken(token: string) {
-    const { data, error } = await (supabase.rpc as any)('get_team_by_invite_token', {
+    const { data, error } = await supabase.rpc('get_team_by_invite_token', {
       p_token: token,
     });
     if (error) throw error;
@@ -724,7 +749,7 @@ export const teamService = {
   },
 
   async joinTeamByToken(token: string) {
-    const { data, error } = await (supabase.rpc as any)('join_team_by_token', {
+    const { data, error } = await supabase.rpc('join_team_by_token', {
       p_token: token,
     });
     if (error) throw error;
@@ -780,7 +805,7 @@ export const teamService = {
   },
 
   async submitDeciderLineup(tieId: string, side: string, player1Id: string, player2Id: string | null) {
-    const { data, error } = await (supabase.rpc as any)('submit_decider_lineup', {
+    const { data, error } = await supabase.rpc('submit_decider_lineup', {
       p_tie_id: tieId,
       p_side: side,
       p_player1_id: player1Id,

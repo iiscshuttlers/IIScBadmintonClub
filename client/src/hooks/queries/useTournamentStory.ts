@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { Json } from "@/lib/supabase-types-auto";
 import {
   parsePublishedStoryRecord,
   storySiteDataKey,
@@ -33,7 +34,7 @@ export function useTournamentStory(tournamentId: string) {
     mutationFn: async (record: PublishedStoryRecord) => {
       const { error } = await supabase
         .from("site_data")
-        .upsert({ key, value: record as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
+        .upsert({ key, value: record as unknown as Json, updated_at: new Date().toISOString() }, { onConflict: "key" });
       if (error) throw error;
       return record;
     },

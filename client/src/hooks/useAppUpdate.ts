@@ -11,6 +11,15 @@ import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { fetchSiteData } from "@/lib/siteData";
 
+/** The `app_version` site_data record (see adminService.saveAppVersion). */
+type AppVersionRecord = {
+  versionCode?: number | string;
+  versionName?: string;
+  changelog?: string;
+  downloadUrl?: string;
+  forcedAt?: number | string;
+};
+
 export type AppUpdateInfo = {
   versionName: string;
   changelog: string;
@@ -59,7 +68,7 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
       try {
         const [info, latest] = await Promise.all([
           CapApp.getInfo(),
-          fetchSiteData<any>("app_version", "app-version.json")
+          fetchSiteData<AppVersionRecord>("app_version", "app-version.json")
         ]);
 
         const installed = Number.parseInt(info.build, 10);

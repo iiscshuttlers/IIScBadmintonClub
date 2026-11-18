@@ -1,6 +1,19 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import type { Json, Tables } from '@/lib/supabase-types-auto';
 import type { BwfMatchState } from '@/types/umpire';
 import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
+
+// match_motion_stats, match_sensor_analytics and match_rally_stats are not in
+// the production schema (missing from the types generated on 18 Nov 2026), so
+// the rally/sensor analytics calls below go through this untyped client.
+const untypedTables = supabase as unknown as SupabaseClient;
+
+/** Response of the push-live-score edge function. */
+export interface PushLiveScoreResult {
+  sent?: number;
+  total?: number;
+}
 
 export interface MatchAlertParams {
   tournamentId?: string;
@@ -10,7 +23,7 @@ export interface MatchAlertParams {
 
 export interface EmergencyLineupParams {
   tieId: string;
-  rubbers: any;
+  rubbers: unknown;
   reason: string;
 }
 
@@ -43,19 +56,20 @@ export const umpireService = {
   async upsertLiveMatch(matchId: string, matchState: BwfMatchState): Promise<void> {
     const { error } = await supabase.rpc('upsert_live_match_by_id', {
       p_match_id: matchId,
-      match_state: matchState as any,
+      match_state: matchState as Json,
     });
     if (error) throw error;
   },
 
-  subscribeToLiveMatchesRegistry(callback: (value: any) => void): () => void {
+  subscribeToLiveMatchesRegistry(callback: (value: Record<string, BwfMatchState>) => void): () => void {
     const sub = supabase
       .channel("live_matches_registry_channel")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
         (payload) => {
-          if ((payload.new as any)?.value) callback((payload.new as any).value);
+          const value = (payload.new as { value?: Json })?.value;
+          if (value) callback(value as Record<string, BwfMatchState>);
         }
       )
       .subscribe();
@@ -66,7 +80,7 @@ export const umpireService = {
   },
 
   async resetMatchToScheduled(tournamentMatchId: string, reason: string): Promise<void> {
-    const { error } = await supabase.rpc('admin_update_tournament_match' as any, {
+    const { error } = await supabase.rpc('admin_update_tournament_match', {
       p_match_id: tournamentMatchId,
       p_patch: { status: 'scheduled' },
       p_reason: reason,
@@ -89,8 +103,8 @@ export const umpireService = {
     if (error) console.error('push_match_alert error:', error);
   },
 
-  async invokePushLiveScore(payload: any): Promise<any> {
-    const { data, error } = await supabase.functions.invoke('push-live-score', {
+  async invokePushLiveScore(payload: Record<string, unknown>): Promise<PushLiveScoreResult | null> {
+    const { data, error } = await supabase.functions.invoke<PushLiveScoreResult>('push-live-score', {
       body: payload,
     });
     if (error) throw error;
@@ -98,7 +112,7 @@ export const umpireService = {
   },
 
   // Tie format RPCs & queries
-  async fetchTieById(tieId: string): Promise<any> {
+  async fetchTieById(tieId: string): Promise<Tables<"tournament_ties">> {
     const { data, error } = await supabase
       .from('tournament_ties')
       .select('*')
@@ -226,7 +240,7 @@ export const umpireService = {
     reason: string;
     bothCaptainsAgreed?: boolean;
   }): Promise<void> {
-    const { error } = await (supabase.rpc as any)('emergency_modify_lineup', {
+    const { error } = await supabase.rpc('emergency_modify_lineup', {
       p_tie_id: params.tieId,
       p_side: params.side,
       p_rubber_order: params.rubberOrder,
@@ -244,7 +258,7 @@ export const umpireService = {
     label: string;
     bestOfSets: number;
     pointsToWin: number;
-  }): Promise<any> {
+  }): Promise<Json> {
     const { data, error } = await supabase.rpc('add_decider_rubber_to_tie', {
       p_tie_id: params.tieId,
       p_category: params.category,
@@ -256,7 +270,7 @@ export const umpireService = {
     return data;
   },
 
-  async revealDeciderRubber(tieId: string): Promise<any> {
+  async revealDeciderRubber(tieId: string): Promise<Json> {
     const { data, error } = await supabase.rpc('reveal_decider_rubber', {
       p_tie_id: tieId,
     });
@@ -266,18 +280,18 @@ export const umpireService = {
 
   // Rally & Sensor analytics
   async recordMotionStats(stats: Record<string, any>): Promise<void> {
-    const { error } = await supabase.from('match_motion_stats' as any).upsert(stats);
+    const { error } = await untypedTables.from('match_motion_stats').upsert(stats);
     if (error) throw error;
   },
 
   async recordSensorAnalytics(analytics: Record<string, any>): Promise<void> {
-    const { error } = await supabase.from('match_sensor_analytics' as any).upsert(analytics);
+    const { error } = await untypedTables.from('match_sensor_analytics').upsert(analytics);
     if (error) throw error;
   },
 
   async reconcileRallyMatchId(oldMatchId: string, newMatchId: string): Promise<void> {
-    const { error } = await supabase
-      .from('match_rally_stats' as any)
+    const { error } = await untypedTables
+      .from('match_rally_stats')
       .update({ match_id: newMatchId })
       .eq('match_id', oldMatchId)
       .eq('match_source', 'friendly');
@@ -285,8 +299,8 @@ export const umpireService = {
   },
 
   async reconcileRallyStats(matchId: string, rallyIndex: number, stats: Record<string, any>): Promise<void> {
-    const { error } = await supabase
-      .from('match_rally_stats' as any)
+    const { error } = await untypedTables
+      .from('match_rally_stats')
       .update(stats)
       .eq('match_id', matchId)
       .eq('rally_index', rallyIndex);
@@ -294,7 +308,7 @@ export const umpireService = {
   },
 
   async insertRallyStats(stats: Record<string, any>): Promise<void> {
-    const { error } = await supabase.from('match_rally_stats' as any).insert(stats);
+    const { error } = await untypedTables.from('match_rally_stats').insert(stats);
     if (error) throw error;
   },
 };

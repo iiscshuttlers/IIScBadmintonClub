@@ -18,8 +18,8 @@ export function usePlayer(id: string | undefined) {
     try {
       const data = await fetchPlayer(id);
       setPlayer(data);
-    } catch (err: any) {
-      setError(err);
+    } catch (err) {
+      setError(err as Error);
       console.error('usePlayer error:', err);
     } finally {
       setLoading(false);

@@ -1,6 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
+/** Participant columns of either a tournament match or a friendly match row. */
+type IronmanMatchRow = {
+  player1_id: string | null;
+  player2_id: string | null;
+  player3_id?: string | null;
+  player4_id?: string | null;
+  team1_partner_id?: string | null;
+  team2_partner_id?: string | null;
+};
+
 export function useIronmanMonthlyQuery(eloMode: "club" | "tournament", enabled: boolean = true) {
   return useQuery<Record<string, number>>({
     queryKey: ["ironman-monthly-counts", eloMode],
@@ -23,7 +33,7 @@ export function useIronmanMonthlyQuery(eloMode: "club" | "tournament", enabled: 
       
       const counts: Record<string, number> = {};
       if (data) {
-        for (const match of (data as any[])) {
+        for (const match of (data as IronmanMatchRow[])) {
           const ids = eloMode === "tournament" 
             ? [match.player1_id, match.player2_id, match.player3_id, match.player4_id]
             : [match.player1_id, match.player2_id, match.team1_partner_id, match.team2_partner_id];

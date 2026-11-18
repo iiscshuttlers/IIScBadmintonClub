@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { ARCHIVED_TOURNAMENTS, ArchivedTournament } from "@/data/tournamentArchive";
+import { ARCHIVED_TOURNAMENTS, ArchivedTournament, type TournamentType } from "@/data/tournamentArchive";
 
 export function useArchivedTournaments() {
   const [archivedTournaments, setArchivedTournaments] = useState<ArchivedTournament[]>(ARCHIVED_TOURNAMENTS);
@@ -98,9 +98,9 @@ export function useArchivedTournaments() {
             name: t.name,
             subtitle: "Official Results",
             description: t.description || "Tournament completed.",
-            type: (t.tournament_type as any) || "open",
-            tournament_type: (t.tournament_type as any) || "open",
-            counts_for_elo: (t as any).counts_for_elo,
+            type: (t.tournament_type as TournamentType) || "open",
+            tournament_type: t.tournament_type || "open",
+            counts_for_elo: t.counts_for_elo,
             startDate: t.start_date || t.end_date || t.archived_at || t.created_at || new Date().toISOString(),
             status: "archived",
             winners,

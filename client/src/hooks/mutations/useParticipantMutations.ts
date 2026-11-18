@@ -32,7 +32,7 @@ export function useAddParticipant() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "participants"] });
       toast.success("Participant added");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to add participant");
     },
   });
@@ -48,7 +48,7 @@ export function useRemoveParticipant() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "participants"] });
       toast.success("Participant removed");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to remove participant");
     },
   });
@@ -66,7 +66,7 @@ export function useSeedParticipants() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "participants"] });
       toast.success("Seeds saved");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to update seeds");
     },
   });
@@ -82,7 +82,7 @@ export function useBulkImportParticipants() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "participants"] });
       toast.success("Participants imported");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to bulk import participants");
     },
   });

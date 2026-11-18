@@ -101,10 +101,10 @@ export function useOfflineUmpireSync(ownerId: string) {
         await mutateQueue((current) => removeAcknowledgedSnapshots(current, acknowledgedIds));
         setSyncStatus("confirmed");
         toast.success("Offline scores confirmed by the server");
-      } catch (e: any) {
+      } catch (e) {
         console.error("Failed to flush offline umpire queue", e);
         setSyncStatus("error");
-        toast.error("Offline sync error: " + (e?.message || "Check connection"));
+        toast.error("Offline sync error: " + ((e instanceof Error && e.message) || "Check connection"));
       } finally {
         flushPromiseRef.current = null;
       }

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import type { Json } from '@/lib/supabase-types-auto';
 
 export const galleryService = {
   async fetchGalleryData() {
@@ -34,17 +35,17 @@ export const galleryService = {
   },
 
   async updateGalleryTags(tags: Record<string, any[]>): Promise<void> {
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: tags as any }, { onConflict: "key" });
+    await supabase.from("site_data").upsert({ key: "gallery_tags", value: tags as Json }, { onConflict: "key" });
   },
 
   async updatePendingTags(pending: Record<string, any[]>): Promise<void> {
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: pending as any }, { onConflict: "key" });
+    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: pending as Json }, { onConflict: "key" });
   },
 
   async approvePendingTag(updatedTags: Record<string, any[]>, updatedPending: Record<string, any[]>): Promise<void> {
     await Promise.all([
-      supabase.from("site_data").upsert({ key: "gallery_tags", value: updatedTags as any }, { onConflict: "key" }),
-      supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending as any }, { onConflict: "key" }),
+      supabase.from("site_data").upsert({ key: "gallery_tags", value: updatedTags as Json }, { onConflict: "key" }),
+      supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending as Json }, { onConflict: "key" }),
     ]);
   },
 };

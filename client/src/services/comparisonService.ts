@@ -9,7 +9,7 @@ import type { ComparisonRow, ComparisonSide } from "@/lib/comparison";
 
 const MAX_ROWS = 1000;
 
-const anyOf = (id: string, cols: string[]) => cols.map((c) => `${c}.eq.${id}`).join(",");
+const anyOf = (id: string, cols: readonly string[]) => cols.map((c) => `${c}.eq.${id}`).join(",");
 
 export interface ComparisonData {
   rows: ComparisonRow[];
@@ -19,8 +19,8 @@ export interface ComparisonData {
 
 export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide): Promise<ComparisonData> {
   const ids = Array.from(new Set([...a.ids, ...b.ids]));
-  const fCols = ["player1_id", "player2_id", "team1_partner_id", "team2_partner_id"];
-  const tCols = ["player1_id", "player2_id", "player3_id", "player4_id"];
+  const fCols = ["player1_id", "player2_id", "team1_partner_id", "team2_partner_id"] as const;
+  const tCols = ["player1_id", "player2_id", "player3_id", "player4_id"] as const;
 
   let fq = supabase
     .from("matches")
@@ -48,17 +48,17 @@ export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide):
 
   // Genders of every participant (to place friendly rows in a discipline).
   const participantIds = new Set<string>();
-  for (const m of (f.data ?? []) as any[]) for (const c of fCols) if (m[c]) participantIds.add(m[c]);
-  for (const m of (t.data ?? []) as any[]) for (const c of tCols) if (m[c]) participantIds.add(m[c]);
+  for (const m of f.data ?? []) for (const c of fCols) if (m[c]) participantIds.add(m[c]);
+  for (const m of t.data ?? []) for (const c of tCols) if (m[c]) participantIds.add(m[c]);
   const extra = [...participantIds].filter((id) => !ids.includes(id));
   const g = extra.length
     ? await supabase.from("players").select("id, gender").in("id", extra)
     : { data: [] as { id: string; gender: string | null }[], error: null };
   const genders: Record<string, string | null> = {};
-  for (const row of [...(p.data ?? []), ...((g.data as any[]) ?? [])]) genders[row.id] = row.gender ?? null;
+  for (const row of [...(p.data ?? []), ...(g.data ?? [])]) genders[row.id] = row.gender ?? null;
 
   const rows: ComparisonRow[] = [
-    ...((f.data ?? []) as any[]).map((m) => ({
+    ...(f.data ?? []).map((m) => ({
       id: m.id,
       source: "friendly" as const,
       status: m.status,
@@ -73,11 +73,11 @@ export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide):
       round: null,
       event: "Friendly",
     })),
-    ...((t.data ?? []) as any[]).map((m) => ({
+    ...(t.data ?? []).map((m) => ({
       id: m.id,
       source: "tournament" as const,
       status: m.status,
-      winnerSide: m.winner_side === 1 || m.winner_side === 2 ? m.winner_side : null,
+      winnerSide: m.winner_side === 1 || m.winner_side === 2 ? (m.winner_side as 1 | 2) : null,
       winnerId: m.winner_id ?? null,
       side1: [m.player1_id, m.player3_id].filter(Boolean),
       side2: [m.player2_id, m.player4_id].filter(Boolean),
@@ -93,7 +93,7 @@ export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide):
   ];
 
   const players: ComparisonData["players"] = {};
-  for (const row of (p.data ?? []) as any[]) players[row.id] = row;
+  for (const row of p.data ?? []) players[row.id] = row;
   return {
     rows,
     players,

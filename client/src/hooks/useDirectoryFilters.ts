@@ -79,9 +79,9 @@ export function useDirectoryFilters(
       .sort((a, b) => {
         // Hoist Looking-to-Play buddies above everyone else
         const aIsLtpBuddy =
-          (a!.player as any).is_looking_to_play && myBuddyIds.has(a!.player.id);
+          a!.player.is_looking_to_play && myBuddyIds.has(a!.player.id);
         const bIsLtpBuddy =
-          (b!.player as any).is_looking_to_play && myBuddyIds.has(b!.player.id);
+          b!.player.is_looking_to_play && myBuddyIds.has(b!.player.id);
         if (aIsLtpBuddy && !bIsLtpBuddy) return -1;
         if (!aIsLtpBuddy && bIsLtpBuddy) return 1;
 

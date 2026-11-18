@@ -26,7 +26,7 @@ export function useCreateTournament() {
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });
       toast.success("Tournament created");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to create tournament");
     },
   });
@@ -41,7 +41,7 @@ export function useUpdateTournament() {
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });
       queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to update tournament");
     },
   });
@@ -55,7 +55,7 @@ export function useDeleteTournament() {
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });
       toast.success("Tournament deleted");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to delete tournament");
     },
   });
@@ -70,7 +70,7 @@ export function useArchiveTournament() {
       queryClient.invalidateQueries({ queryKey: ["tournament", id] });
       toast.success("Tournament archived");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to archive tournament");
     },
   });
@@ -85,7 +85,7 @@ export function useAdvanceTournamentWinner() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "matches"] });
       toast.success("Winner advanced");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to advance winner");
     },
   });
@@ -100,7 +100,7 @@ export function useApproveTournamentRegistration() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "registrations"] });
       toast.success("Registration approved");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to approve registration");
     },
   });
@@ -115,7 +115,7 @@ export function useRejectTournamentRegistration() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "registrations"] });
       toast.success("Registration rejected");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to reject registration");
     },
   });
@@ -130,7 +130,7 @@ export function useBulkUpsertParticipants() {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "participants"] });
       toast.success("Participants updated");
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to update participants");
     },
   });
@@ -144,7 +144,7 @@ export function useUpdateTournamentMatch() {
     onSuccess: (_, { tournamentId }) => {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId, "matches"] });
     },
-    onError: (err: any) => {
+    onError: (err) => {
       toast.error(err?.message || "Failed to update match");
     },
   });

@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchFeedMatches } from "@/services/matchService";
 
-export function useFeedMatches(ownProfile: any, initialLimit = 100, initialTournament = "all") {
+export function useFeedMatches(
+  ownProfile: { following?: string[] | null; buddies?: string[] | null } | null | undefined,
+  initialLimit = 100,
+  initialTournament = "all",
+) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(initialLimit);

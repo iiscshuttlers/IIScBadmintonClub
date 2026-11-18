@@ -20,7 +20,12 @@ export function usePersonalStats(playerId: string | undefined) {
   const sensorAnalytics = personalData?.sensorAnalytics ?? [];
   const workRate = motionSummary ? motionSummary.runningPct + motionSummary.smashSprintPct * 2 : 0;
 
-  const isWinner = (m: any) => {
+  const isWinner = (m: {
+    player1_id?: string | null;
+    team1_partner_id?: string | null;
+    winner_side?: number | null;
+    winner_id?: string | null;
+  }) => {
     if (!player?.id) return false;
     const isTeam1 = m.player1_id === player.id || m.team1_partner_id === player.id;
     if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
@@ -30,10 +35,10 @@ export function usePersonalStats(playerId: string | undefined) {
     return isTeam1 ? isTeam1Winner : !isTeam1Winner;
   };
 
-  const tournamentMatches = fullMatches?.filter((m: any) => m.is_friendly === false) || [];
+  const tournamentMatches = fullMatches?.filter((m) => m.is_friendly === false) || [];
   const recentTournament = tournamentMatches
     .slice(0, 5)
-    .map((m: any) => (isWinner(m) ? "W" : "L"))
+    .map((m) => (isWinner(m) ? "W" : "L"))
     .reverse();
   const tournamentStreak = recentTournament.join("");
 
