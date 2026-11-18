@@ -635,7 +635,7 @@ export async function fetchRecentCompletedMatches(params: {
           id,
           tie_code,
           team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
         )
       `)
       .in("status", ["completed", "walkover"]);

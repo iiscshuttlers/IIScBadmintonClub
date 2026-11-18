@@ -542,7 +542,7 @@ export const teamService = {
   async getTeamTiesForTeam(teamId: string) {
     const { data, error } = await supabase
       .from('tournament_ties')
-      .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name), team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)')
+      .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)')
       .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
       .order('created_at', { ascending: true });
     if (error) throw error;

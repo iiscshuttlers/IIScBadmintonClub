@@ -104,7 +104,7 @@ export function NoticeBoard() {
         const { data: matches } = await supabase
           .from("tournament_matches")
           .select("*, tournaments(name)")
-          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false }) // tournament_matches has no updated_at; that 400ed on every home load
           .limit(15);
 
         if (matches) {

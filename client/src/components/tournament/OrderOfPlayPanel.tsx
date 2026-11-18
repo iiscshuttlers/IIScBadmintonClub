@@ -98,7 +98,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
         .select(`
           id, tie_code, stage, round_name, round_number, state, scheduled_at,
           team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)
+          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
         `)
         .eq("tournament_id", tournament.id)
         .neq("state", "COMPLETED")
