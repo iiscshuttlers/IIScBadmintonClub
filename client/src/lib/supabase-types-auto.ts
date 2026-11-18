@@ -256,15 +256,7 @@ export type Database = {
           last_updated?: string | null
           status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "club_courts_current_match_id_fkey"
-            columns: ["current_match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       court_calls: {
         Row: {
@@ -304,6 +296,13 @@ export type Database = {
             foreignKeyName: "court_calls_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_calls_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
             referencedRelation: "tournament_matches"
             referencedColumns: ["id"]
           },
@@ -333,6 +332,13 @@ export type Database = {
             foreignKeyName: "court_queue_alerts_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_queue_alerts_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
             referencedRelation: "tournament_matches"
             referencedColumns: ["id"]
           },
@@ -342,7 +348,6 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
-          error_message: string | null
           event_type: string
           event_version: number
           id: string
@@ -353,7 +358,6 @@ export type Database = {
         Insert: {
           channel?: string
           created_at?: string
-          error_message?: string | null
           event_type: string
           event_version?: number
           id?: string
@@ -364,7 +368,6 @@ export type Database = {
         Update: {
           channel?: string
           created_at?: string
-          error_message?: string | null
           event_type?: string
           event_version?: number
           id?: string
@@ -377,72 +380,14 @@ export type Database = {
             foreignKeyName: "delivered_targeted_alerts_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivered_targeted_alerts_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
             referencedRelation: "tournament_matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      doubles_teams: {
-        Row: {
-          category: string
-          created_at: string | null
-          elo_rating: number
-          id: string
-          matches_played: number
-          matches_won: number
-          player1_id: string
-          player2_id: string
-          team_name: string
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          elo_rating?: number
-          id?: string
-          matches_played?: number
-          matches_won?: number
-          player1_id: string
-          player2_id: string
-          team_name: string
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          elo_rating?: number
-          id?: string
-          matches_played?: number
-          matches_won?: number
-          player1_id?: string
-          player2_id?: string
-          team_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "doubles_teams_player1_id_fkey"
-            columns: ["player1_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "doubles_teams_player1_id_fkey"
-            columns: ["player1_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "doubles_teams_player2_id_fkey"
-            columns: ["player2_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "doubles_teams_player2_id_fkey"
-            columns: ["player2_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
             referencedColumns: ["id"]
           },
         ]
@@ -759,183 +704,14 @@ export type Database = {
             foreignKeyName: "match_reminders_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      matches: {
-        Row: {
-          category: string
-          confirmed_by: string[]
-          created_at: string
-          date: string
-          elo_change_p1: number | null
-          elo_change_p2: number | null
-          elo_change_p3: number | null
-          elo_change_p4: number | null
-          ended_at: string | null
-          id: string
-          kudos_count: number | null
-          kudos_users: string[] | null
-          player1_id: string | null
-          player2_id: string | null
-          round: string
-          score: string
-          sets_history: string[] | null
-          started_at: string | null
-          status: string | null
-          submitted_by: string | null
-          team1_partner_id: string | null
-          team2_partner_id: string | null
-          tournament_id: string | null
-          video_url: string | null
-          winner_id: string | null
-        }
-        Insert: {
-          category: string
-          confirmed_by?: string[]
-          created_at?: string
-          date: string
-          elo_change_p1?: number | null
-          elo_change_p2?: number | null
-          elo_change_p3?: number | null
-          elo_change_p4?: number | null
-          ended_at?: string | null
-          id?: string
-          kudos_count?: number | null
-          kudos_users?: string[] | null
-          player1_id?: string | null
-          player2_id?: string | null
-          round: string
-          score: string
-          sets_history?: string[] | null
-          started_at?: string | null
-          status?: string | null
-          submitted_by?: string | null
-          team1_partner_id?: string | null
-          team2_partner_id?: string | null
-          tournament_id?: string | null
-          video_url?: string | null
-          winner_id?: string | null
-        }
-        Update: {
-          category?: string
-          confirmed_by?: string[]
-          created_at?: string
-          date?: string
-          elo_change_p1?: number | null
-          elo_change_p2?: number | null
-          elo_change_p3?: number | null
-          elo_change_p4?: number | null
-          ended_at?: string | null
-          id?: string
-          kudos_count?: number | null
-          kudos_users?: string[] | null
-          player1_id?: string | null
-          player2_id?: string | null
-          round?: string
-          score?: string
-          sets_history?: string[] | null
-          started_at?: string | null
-          status?: string | null
-          submitted_by?: string | null
-          team1_partner_id?: string | null
-          team2_partner_id?: string | null
-          tournament_id?: string | null
-          video_url?: string | null
-          winner_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "matches_player1_id_fkey"
-            columns: ["player1_id"]
-            isOneToOne: false
-            referencedRelation: "players"
+            referencedRelation: "player_matches_unified"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "matches_player1_id_fkey"
-            columns: ["player1_id"]
+            foreignKeyName: "match_reminders_match_id_fkey"
+            columns: ["match_id"]
             isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_player2_id_fkey"
-            columns: ["player2_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_player2_id_fkey"
-            columns: ["player2_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_team1_partner_id_fkey"
-            columns: ["team1_partner_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_team1_partner_id_fkey"
-            columns: ["team1_partner_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_team2_partner_id_fkey"
-            columns: ["team2_partner_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_team2_partner_id_fkey"
-            columns: ["team2_partner_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_winner_id_fkey"
-            columns: ["winner_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "matches_winner_id_fkey"
-            columns: ["winner_id"]
-            isOneToOne: false
-            referencedRelation: "search_players_view"
+            referencedRelation: "tournament_matches"
             referencedColumns: ["id"]
           },
         ]
@@ -1403,6 +1179,7 @@ export type Database = {
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
+          status: string
           total_friendly_matches: number | null
           tournament_doubles_elo: number | null
           tournament_elo: number | null
@@ -1482,6 +1259,7 @@ export type Database = {
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
+          status?: string
           total_friendly_matches?: number | null
           tournament_doubles_elo?: number | null
           tournament_elo?: number | null
@@ -1561,6 +1339,7 @@ export type Database = {
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
+          status?: string
           total_friendly_matches?: number | null
           tournament_doubles_elo?: number | null
           tournament_elo?: number | null
@@ -1736,6 +1515,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sent_fan_notifications_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sent_fan_notifications_match_id_fkey"
             columns: ["match_id"]
@@ -2153,6 +1939,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tournament_match_point_logs_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tournament_match_point_logs_match_id_fkey"
             columns: ["match_id"]
@@ -2877,8 +2670,6 @@ export type Database = {
           lineup_locked_b: boolean
           loser_advances_to_slot: string | null
           loser_advances_to_tie: string | null
-          needs_admin_decision: boolean
-          result_type: string
           round_name: string | null
           round_number: number | null
           scheduled_at: string | null
@@ -2905,8 +2696,6 @@ export type Database = {
           lineup_locked_b?: boolean
           loser_advances_to_slot?: string | null
           loser_advances_to_tie?: string | null
-          needs_admin_decision?: boolean
-          result_type?: string
           round_name?: string | null
           round_number?: number | null
           scheduled_at?: string | null
@@ -2933,8 +2722,6 @@ export type Database = {
           lineup_locked_b?: boolean
           loser_advances_to_slot?: string | null
           loser_advances_to_tie?: string | null
-          needs_admin_decision?: boolean
-          result_type?: string
           round_name?: string | null
           round_number?: number | null
           scheduled_at?: string | null
@@ -3183,6 +2970,13 @@ export type Database = {
             foreignKeyName: "umpire_assignments_tournament_match_id_fkey"
             columns: ["tournament_match_id"]
             isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "umpire_assignments_tournament_match_id_fkey"
+            columns: ["tournament_match_id"]
+            isOneToOne: false
             referencedRelation: "tournament_matches"
             referencedColumns: ["id"]
           },
@@ -3285,6 +3079,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_match_notifications_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "player_matches_unified"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_match_notifications_match_id_fkey"
             columns: ["match_id"]
@@ -3528,7 +3329,78 @@ export type Database = {
           winner_id: string | null
           winner_side: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tournament_matches_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player3_id_fkey"
+            columns: ["player3_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player3_id_fkey"
+            columns: ["player3_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player4_id_fkey"
+            columns: ["player4_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_player4_id_fkey"
+            columns: ["player4_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       search_players_view: {
         Row: {
@@ -3602,7 +3474,6 @@ export type Database = {
         Args: { p_guest: string; p_real: string }
         Returns: Json
       }
-      _player_private_columns: { Args: never; Returns: string[] }
       _player_reference_columns: {
         Args: never
         Returns: {
@@ -3634,14 +3505,6 @@ export type Database = {
         Returns: boolean
       }
       _unclaim_find_lost: { Args: { p_post: string }; Returns: undefined }
-      accept_buddy_request: {
-        Args: { p_target_id: string }
-        Returns: undefined
-      }
-      accept_friendly_match: {
-        Args: { confirmer_id: string; match_uuid: string }
-        Returns: Json
-      }
       add_decider_rubber_to_tie: {
         Args: {
           p_best_of_sets?: number
@@ -3658,15 +3521,6 @@ export type Database = {
             Args: { p_approved?: boolean; p_ids: string[] }
             Returns: undefined
           }
-      admin_assign_umpires: {
-        Args: {
-          p_end_time?: string
-          p_start_time?: string
-          p_tournament_match_id?: string
-          p_user_ids: string[]
-        }
-        Returns: number
-      }
       admin_cron_health: {
         Args: never
         Returns: {
@@ -3681,10 +3535,6 @@ export type Database = {
           runs_24h: number
           schedule: string
         }[]
-      }
-      admin_delete_umpire_assignment: {
-        Args: { p_id: string }
-        Returns: undefined
       }
       admin_edit_tournament_match: {
         Args: {
@@ -3709,16 +3559,6 @@ export type Database = {
           iisc_email: string
           sr_number: string
         }[]
-      }
-      admin_move_player_in_bracket: {
-        Args: {
-          p_label: string
-          p_match_id: string
-          p_partner_id: string
-          p_player_id: string
-          p_slot: number
-        }
-        Returns: undefined
       }
       admin_notification_delivery: {
         Args: { days_back?: number }
@@ -3770,14 +3610,10 @@ export type Database = {
         }
         Returns: Json
       }
-      approve_player:
-        | { Args: { admin_email: string; player_id: string }; Returns: boolean }
-        | { Args: { admin_id: string; player_id: string }; Returns: undefined }
       archive_tournament: {
         Args: { p_tournament_id: string }
         Returns: undefined
       }
-      auto_claim_duplicate_profile: { Args: never; Returns: boolean }
       bracket_category_locked: {
         Args: { p_category: string; p_tournament: string }
         Returns: boolean
@@ -3809,10 +3645,6 @@ export type Database = {
       can_umpire_match: {
         Args: { p_match_id: string; p_uid: string }
         Returns: boolean
-      }
-      cancel_buddy_request: {
-        Args: { p_target_id: string }
-        Returns: undefined
       }
       check_email_exists: { Args: { lookup_email: string }; Returns: boolean }
       claim_find_lost_item:
@@ -3857,26 +3689,7 @@ export type Database = {
         Args: { p_guest_id: string; p_real_player_id: string }
         Returns: undefined
       }
-      cleanup_stale_push_tokens: { Args: never; Returns: undefined }
       compact_point_log: { Args: { p_log: Json }; Returns: Json }
-      complete_match: {
-        Args: {
-          p_game1_s1: number
-          p_game1_s2: number
-          p_game2_s1: number
-          p_game2_s2: number
-          p_game3_s1?: number
-          p_game3_s2?: number
-          p_match_id: string
-          p_umpire_id: string
-          p_winner_id: string
-        }
-        Returns: undefined
-      }
-      confirm_friendly_match: {
-        Args: { confirmer_id: string; match_uuid: string }
-        Returns: Json
-      }
       create_guest_player: {
         Args: { p_full_name: string; p_gender?: string }
         Returns: {
@@ -3950,6 +3763,7 @@ export type Database = {
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
+          status: string
           total_friendly_matches: number | null
           tournament_doubles_elo: number | null
           tournament_elo: number | null
@@ -4038,6 +3852,7 @@ export type Database = {
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
+          status: string
           total_friendly_matches: number | null
           tournament_doubles_elo: number | null
           tournament_elo: number | null
@@ -4118,7 +3933,6 @@ export type Database = {
         Returns: Record<string, unknown>[]
       }
       dblink_is_busy: { Args: { "": string }; Returns: number }
-      debug_recalc: { Args: never; Returns: undefined }
       decide_player_claim: {
         Args: {
           p_approve: boolean
@@ -4185,18 +3999,6 @@ export type Database = {
       generate_new_team_invite_token: {
         Args: { p_team_id: string }
         Returns: string
-      }
-      get_court_popularity: {
-        Args: never
-        Returns: {
-          day_of_week: number
-          hour: number
-          visit_count: number
-        }[]
-      }
-      get_expected_score: {
-        Args: { p_opponent_elo: number; p_team_elo: number }
-        Returns: number
       }
       get_find_lost_claim_contacts: {
         Args: { p_ids: string[] }
@@ -4370,26 +4172,12 @@ export type Database = {
         Args: { curlopt: string; value: string }
         Returns: boolean
       }
-      increment_match_score: {
-        Args: { match_id: string; p1_increment: number; p2_increment: number }
-        Returns: undefined
-      }
       invite_team_member: {
         Args: { p_player_id: string; p_team_id: string }
         Returns: string
       }
-      is_active_team_member: { Args: { t_team_id: string }; Returns: boolean }
       is_admin_or_master: { Args: never; Returns: boolean }
       is_admin_or_umpire: { Args: never; Returns: boolean }
-      is_authorized_for_analytics: {
-        Args: {
-          p_auth_uid: string
-          p_match_id: string
-          p_match_source: string
-          p_target_player: string
-        }
-        Returns: boolean
-      }
       is_in_quiet_hours: {
         Args: { p_current_time?: string; p_end: string; p_start: string }
         Returns: boolean
@@ -4504,17 +4292,12 @@ export type Database = {
         }[]
       }
       recalculate_all_elo: { Args: never; Returns: undefined }
-      recalculate_all_win_loss_records: { Args: never; Returns: undefined }
       recalculate_category_records: {
         Args: { player_uuid: string }
         Returns: undefined
       }
       recalculate_player_all_records: {
         Args: { player_uuid: string }
-        Returns: undefined
-      }
-      recalculate_player_win_loss_records: {
-        Args: { p_player_id: string }
         Returns: undefined
       }
       recalculate_tournament_elo: { Args: never; Returns: undefined }
@@ -4527,16 +4310,6 @@ export type Database = {
         Returns: undefined
       }
       record_win_pct: { Args: { p_record: string }; Returns: number }
-      reject_friendly_match:
-        | {
-            Args: { match_uuid: string; rejecter_id: string }
-            Returns: boolean
-          }
-        | {
-            Args: { match_uuid: string; rejecter_id: string }
-            Returns: boolean
-          }
-      remove_buddy: { Args: { p_target_id: string }; Returns: undefined }
       remove_live_match_by_id: {
         Args: { p_match_id: string }
         Returns: undefined
@@ -4560,11 +4333,6 @@ export type Database = {
         Args: { p_operation_id: string; p_reason: string }
         Returns: Json
       }
-      save_tie_lineup: {
-        Args: { p_assignments: Json; p_side: string; p_tie_id: string }
-        Returns: boolean
-      }
-      send_buddy_request: { Args: { p_target_id: string }; Returns: undefined }
       send_ping_notification: {
         Args: { p_sender_name: string; p_target_id: string }
         Returns: undefined
@@ -4585,9 +4353,6 @@ export type Database = {
         Args: { p_ended_at: string; p_match_id: string; p_started_at: string }
         Returns: undefined
       }
-      soft_delete_player:
-        | { Args: { admin_email: string; player_id: string }; Returns: boolean }
-        | { Args: { target_player_id: string }; Returns: undefined }
       start_tournament_match_checked: {
         Args: {
           p_expected_court?: string
@@ -4605,32 +4370,6 @@ export type Database = {
         }
         Returns: Json
       }
-      submit_friendly_match:
-        | {
-            Args: {
-              match_score: string
-              match_winner_id: string
-              opponent_id: string
-              opponent_partner_id?: string
-              submitter_id: string
-              submitter_partner_id?: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              is_cross_gender_singles?: boolean
-              is_hybrid?: boolean
-              is_mixed_category_doubles?: boolean
-              match_score: string
-              match_winner_id: string
-              opponent_id: string
-              opponent_partner_id?: string
-              submitter_id: string
-              submitter_partner_id?: string
-            }
-            Returns: string
-          }
       submit_tournament_match: {
         Args: {
           p_match_id: string
@@ -4655,60 +4394,10 @@ export type Database = {
       }
       take_ranking_snapshot: { Args: { p_date?: string }; Returns: number }
       text_to_bytea: { Args: { data: string }; Returns: string }
-      toggle_buddy: { Args: { p_target_id: string }; Returns: undefined }
-      toggle_follow: { Args: { p_target_id: string }; Returns: undefined }
-      toggle_match_kudos: { Args: { p_match_id: string }; Returns: undefined }
-      toggle_team_invite_token: {
-        Args: { p_enabled: boolean; p_team_id: string }
-        Returns: boolean
-      }
-      transfer_umpire_duty: {
-        Args: { p_match_id: string; p_new_umpire_id: string }
-        Returns: undefined
-      }
       transition_tournament_lifecycle: {
         Args: { p_action: string; p_tournament_id: string }
         Returns: Json
       }
-      umpire_submit_match: {
-        Args: {
-          ended_at?: string
-          is_friendly: boolean
-          match_category: string
-          match_round: string
-          match_score: string
-          player1_id: string
-          player2_id: string
-          sets_history?: string[]
-          started_at?: string
-          team1_partner_id: string
-          team2_partner_id: string
-          umpire_id: string
-          winner_id: string
-        }
-        Returns: string
-      }
-      umpire_update_match:
-        | {
-            Args: {
-              match_category: string
-              match_score: string
-              match_uuid: string
-              sets_history: string[]
-              winner_id: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              match_category: string
-              match_score: string
-              match_uuid: string
-              sets_history: string[]
-              winner_id: string
-            }
-            Returns: undefined
-          }
       unclaim_find_lost_item:
         | { Args: { post_uuid: string; user_id: string }; Returns: undefined }
         | { Args: { post_uuid: string; user_id: string }; Returns: undefined }
@@ -4752,7 +4441,6 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
-      validate_tie_format: { Args: { config: Json }; Returns: boolean }
       verify_tournament_readiness: {
         Args: { p_action: string; p_tournament_id: string }
         Returns: Json

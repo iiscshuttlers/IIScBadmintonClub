@@ -2,7 +2,7 @@
  * Public read-only API for IISc Badminton Club
  * Endpoints (all GET, no auth required):
  *   /public-api/leaderboard   → top 20 players by ELO
- *   /public-api/recent-matches → last 20 confirmed matches
+ *   /public-api/recent-matches → last 20 completed tournament matches
  *   /public-api/stats          → aggregate club stats
  *   /public-api/widget         → embeddable HTML snippet
  */
@@ -63,20 +63,20 @@ serve(async (req) => {
   // --- /recent-matches ---
   if (path === "/recent-matches") {
     const { data, error } = await supabase
-      .from("matches")
-      .select("id, match_score, created_at, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .eq("status", "confirmed")
-      .order("created_at", { ascending: false })
+      .from("tournament_matches")
+      .select("id, score, ended_at, created_at, team1_label, team2_label")
+      .in("status", ["completed", "walkover"])
+      .order("ended_at", { ascending: false, nullsFirst: false })
       .limit(20);
     if (error) return json({ error: error.message }, 500);
     return json({
       generated_at: new Date().toISOString(),
       matches: (data ?? []).map((m: any) => ({
         id: m.id,
-        score: m.match_score?.split("[")[0]?.trim() ?? "",
-        player1: m.player1?.full_name ?? "Unknown",
-        player2: m.player2?.full_name ?? "Unknown",
-        played_at: m.created_at,
+        score: m.score ?? "",
+        player1: m.team1_label ?? "Unknown",
+        player2: m.team2_label ?? "Unknown",
+        played_at: m.ended_at ?? m.created_at,
       })),
     });
   }
@@ -85,7 +85,7 @@ serve(async (req) => {
   if (path === "/stats") {
     const [playersRes, matchesRes] = await Promise.all([
       supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", true),
-      supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
+      supabase.from("tournament_matches").select("id", { count: "exact", head: true }).in("status", ["completed", "walkover"]),
     ]);
     return json({
       generated_at: new Date().toISOString(),

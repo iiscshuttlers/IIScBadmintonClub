@@ -20,7 +20,7 @@ serve(async (req) => {
   const errors: string[] = [];
 
   // 1. Ping: can we read from core tables?
-  const tables = ["players", "matches", "find_lost_posts"];
+  const tables = ["players", "tournaments", "tournament_matches", "find_lost_posts"];
   for (const table of tables) {
     const { count, error } = await supabase
       .from(table)

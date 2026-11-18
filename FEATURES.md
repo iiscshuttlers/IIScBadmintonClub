@@ -29,7 +29,7 @@ _A comprehensive log of the top 30+ major features, architectural upgrades, and 
 
 ## 🚀 4. PWA (Progressive Web App) & Mobile Polish
 
-17. **Native Device Haptics:** The application leverages physical phone vibration motors when logging matches or swiping Kudos for tactile satisfaction.
+17. **Native Device Haptics:** The application uses the phone's vibration motor for tactile feedback while scoring matches.
 18. **Automated PWA Updates:** Background service workers that proactively prompt returning users to "Update App" when a new version is pushed.
 19. **"What's New" Release Notes:** A stunning one-time modal that intercepts users after a major platform update to announce new features.
 20. **Platform Features Hub:** A dedicated `/features` discovery page detailing all application capabilities to onboard new users.
