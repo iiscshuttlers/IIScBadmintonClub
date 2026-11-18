@@ -763,11 +763,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       const t2Won = m.winner_side === 2 || m.team1_label === "BYE";
                       return (
                         <div className="flex items-center justify-between gap-2 mt-1.5">
-                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
                             {t1Won && <CheckCircle2 className="w-3 h-3 inline mr-0.5 -mt-0.5" />}{m.team1_label ?? "TBD"}
                           </span>
                           <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
-                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
                             {m.team2_label ?? "TBD"}{t2Won && <CheckCircle2 className="w-3 h-3 inline ml-0.5 -mt-0.5" />}
                           </span>
                         </div>
@@ -819,7 +819,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       if (inProgress > 0) parts.push(<span key="l" className="text-amber-400 font-bold">{inProgress} live</span>);
                       if (done > 0) parts.push(<span key="d" className="text-slate-500">{done} done</span>);
                       if (parts.length === 0) return <span>No matches</span>;
-                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600">·</span>, part], []);
+                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600 dark:text-slate-400">·</span>, part], []);
                     })()}
                   </p>
                 </div>

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Loader2, Archive, RotateCcw } from "lucide-react";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
+import { groupByStageDesc } from "@/lib/roundOrder";
 
 interface Tournament {
   id: string;
@@ -97,7 +98,7 @@ export function TournamentArchiveTab({
             <button
               onClick={archive}
               disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground font-black transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:opacity-90 text-slate-950 font-black transition disabled:opacity-50"
             >
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
@@ -108,7 +109,7 @@ export function TournamentArchiveTab({
 
       {tournament.status === "archived" && (
         <div className="flex flex-col items-center gap-3 py-2">
-          <span className="text-xs font-black text-[var(--warning)] uppercase tracking-widest px-3 py-1.5 bg-[var(--warning)] dark:bg-[var(--warning)]/40 rounded-full">
+          <span className="text-xs font-black text-[var(--warning)] uppercase tracking-widest px-3 py-1.5 bg-[var(--warning)]/15 border border-[var(--warning)]/30 rounded-full">
             Archived {tournament.archived_at ? new Date(tournament.archived_at).toLocaleDateString() : ""}
           </span>
           {isMasterAdmin && (
@@ -144,30 +145,32 @@ export function TournamentArchiveTab({
         </div>
       )}
 
-      {/* Full fixture list */}
+      {/* Full fixture list, Final first */}
       {categories.map((cat) => {
-        const catMatches = matches.filter((m) => m.category === cat);
-        const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
+        const catMatches = matches
+          .filter((m) => m.category === cat)
+          .sort((a, b) => a.match_number - b.match_number);
+        const stages = groupByStageDesc(catMatches, (m) => m.category);
         return (
           <div key={cat} className={cardCls}>
             <h3 className="font-black text-slate-800 dark:text-foreground mb-4">{cat} — Full Fixtures</h3>
             <div className="space-y-4">
-              {rounds.map((round) => {
-                const roundMatches = catMatches.filter((m) => m.round === round);
+              {stages.map(({ stage, items: roundMatches }) => {
                 return (
-                  <div key={round}>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                      {roundMatches[0]?.round_name}
+                  <div key={stage.key}>
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-300 mb-2">
+                      {stage.label}
                     </p>
                     <div className="space-y-2">
                       {roundMatches.map((m) => (
                         <div key={m.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[10px] font-black text-muted-foreground">{m.match_code}</span>
-                            {/* MatchStatusChip placeholder or custom */}
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {m.status}
-                            </span>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[11px] font-bold text-muted-foreground">{m.match_code}</span>
+                            {m.status !== "completed" && (
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                {m.status.replace(/_/g, " ")}
+                              </span>
+                            )}
                           </div>
                           <MatchScoreDisplay
                             sets_history={m.sets_history}

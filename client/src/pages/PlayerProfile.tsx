@@ -431,14 +431,14 @@ export default function PlayerProfile() {
   if (loading || !player) return <LoadingScreen />;
 
   return (
-    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-[#0a1628] selection:bg-amber-500/30 overflow-x-hidden">
+    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-amber-500/30 overflow-x-hidden">
       {/* Background patterns */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
       </div>
 
-      <div className="relative z-10 w-full bg-white dark:bg-[#060d1b]">
+      <div className="relative z-10 w-full bg-white dark:bg-slate-950">
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <button
@@ -620,7 +620,7 @@ export default function PlayerProfile() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
+        <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-slate-950 sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center gap-2 md:gap-6 w-full md:min-w-max">
               {[

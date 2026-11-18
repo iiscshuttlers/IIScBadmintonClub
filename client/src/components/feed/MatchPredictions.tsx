@@ -82,7 +82,7 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
           {label && <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>}
           {tooltip && (
             <div className="group/tooltip relative flex items-center">
-              <HelpCircle className="w-3 h-3 text-muted-foreground/70 hover:text-muted-foreground cursor-help transition-colors" />
+              <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-muted-foreground cursor-help transition-colors" />
               <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-slate-800 text-slate-300 text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl border border-slate-700 leading-relaxed text-center pointer-events-none">
                 {tooltip}
                 <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-slate-800" />

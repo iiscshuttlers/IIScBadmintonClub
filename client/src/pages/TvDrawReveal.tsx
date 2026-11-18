@@ -174,7 +174,7 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
 
   return (
     <div
-      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#1e293b,_#020617_70%)] text-white flex flex-col"
+      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#24252a,_#0a0a0b_70%)] text-white flex flex-col"
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button,a")) return;
         next();

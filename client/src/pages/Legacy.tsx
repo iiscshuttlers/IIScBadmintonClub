@@ -1234,7 +1234,7 @@ export default function Legacy() {
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     )}
-                  <p className="text-foreground/30 text-[10px] mt-1 hidden sm:block">
+                  <p className="text-foreground/60 text-[10px] mt-1 hidden sm:block">
                     ← → to navigate &nbsp;·&nbsp; Esc to close
                   </p>
                 </>

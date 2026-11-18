@@ -639,7 +639,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
                         {tie.score_team_a ?? 0}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-700 font-bold leading-none">-</span>
+                      <span className="text-slate-300 dark:text-slate-500 font-bold leading-none">-</span>
                       <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
                         {tie.score_team_b ?? 0}
                       </span>

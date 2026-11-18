@@ -248,8 +248,8 @@ export default function Navigation() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
         className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
-            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/20 dark:to-slate-950 border-b border-transparent"
+            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/15 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
+            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/10 dark:to-slate-950 border-b border-transparent"
         }`}
       >
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
@@ -681,8 +681,8 @@ function NavLink({ href, label, isActive, badge }: { href: string; label: string
       <button
         className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
-            : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
+            : "text-slate-600 dark:text-slate-300 hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
         {label}
@@ -706,7 +706,7 @@ function MobileNavLink({
         onClick={onClick}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
             : "text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >

@@ -252,7 +252,7 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo, allPlayers
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground flex-1">Specialization</span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-[200px] text-center">
                 <p>Identifies the match category where you have the highest win rate compared to your overall performance.</p>

@@ -137,7 +137,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
   return (
     <div className="bg-white dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/40">
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/60">
           Skills & Endorsements
         </h3>
         {isOwnProfile && (visibleSkills.length < SKILLS.length || visibleBehaviors.length < BEHAVIORS.length) && (

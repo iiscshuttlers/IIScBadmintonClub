@@ -307,10 +307,10 @@ export default function Pulse() {
           <div className="mt-6 w-full flex justify-center mb-2 px-2">
             <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
               {[
-                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-rose-400 shadow-md scale-100" },
-                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-sky-400 shadow-md scale-100" },
-                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
-                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-fuchsia-400 shadow-md scale-100" },
+                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
               ].map((tab) => (
                 <Button
                   key={tab.id}

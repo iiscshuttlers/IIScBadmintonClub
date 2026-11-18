@@ -595,7 +595,7 @@ export function TieVisualLineupModal({
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-slate-500 italic text-xs">
-                              <Lock className="w-4 h-4 text-slate-600" />
+                              <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                               <span>Secret Lineup</span>
                             </div>
                           )}
@@ -671,7 +671,7 @@ export function TieVisualLineupModal({
                           ) : (
                             <div className="flex items-center gap-2 text-slate-500 italic text-xs">
                               <span>Secret Lineup</span>
-                              <Lock className="w-4 h-4 text-slate-600" />
+                              <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                             </div>
                           )}
                         </div>

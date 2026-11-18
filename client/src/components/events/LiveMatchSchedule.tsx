@@ -281,7 +281,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                 {/* Print Header (Only visible in print) */}
                 <div className="hidden print:block mb-8 text-center border-b pb-4">
                   <h1 className="text-2xl font-black mb-1">IISc Badminton Club</h1>
-                  <h2 className="text-xl text-slate-600">Match Schedule - {date}</h2>
+                  <h2 className="text-xl text-slate-600 dark:text-slate-400">Match Schedule - {date}</h2>
                 </div>
 
                 {Object.entries(categoriesGroup).map(([cat, rawDayMatches]) => {

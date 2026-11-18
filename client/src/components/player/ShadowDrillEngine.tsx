@@ -184,7 +184,7 @@ export function ShadowDrillEngine() {
 
         {/* Stats */}
         <div className="flex-1 flex flex-col justify-center items-center p-4 bg-slate-800 rounded-xl border border-slate-700">
-          <Volume2 className={`w-8 h-8 mb-2 ${isActive ? "text-orange-400 animate-pulse" : "text-slate-600"}`} />
+          <Volume2 className={`w-8 h-8 mb-2 ${isActive ? "text-orange-400 animate-pulse" : "text-slate-600 dark:text-slate-400"}`} />
           <div className="text-3xl font-black text-slate-100 font-mono tracking-wider">
             {drillCount}
           </div>

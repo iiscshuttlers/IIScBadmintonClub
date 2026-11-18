@@ -75,7 +75,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0 flex items-center gap-2">
           <Camera className="w-3.5 h-3.5 text-blue-500" /> Through the Lens
         </span>
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />

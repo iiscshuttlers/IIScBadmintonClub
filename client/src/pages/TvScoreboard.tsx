@@ -148,7 +148,7 @@ export default function TvScoreboard() {
         {/* Player names & Server indicator */}
         <div className="mb-auto mt-4 md:mt-8 flex flex-col items-center text-center">
           {t.teamName && (
-            <div className="text-lg md:text-2xl font-bold tracking-[0.2em] text-slate-500/80 mb-2 uppercase">{t.teamName}</div>
+            <div className="text-lg md:text-2xl font-bold tracking-[0.2em] text-slate-500 mb-2 uppercase">{t.teamName}</div>
           )}
           <div className="relative">
             <div className="text-4xl md:text-6xl xl:text-7xl font-black tracking-tight text-white/95 truncate max-w-[35vw] px-2">
@@ -270,7 +270,7 @@ export default function TvScoreboard() {
         <div className="flex items-center gap-6 text-xl md:text-2xl font-bold text-slate-500 tracking-wider">
           {matchState.setsHistory?.length > 0 ? (
             <>
-              <span className="text-slate-600 uppercase text-sm tracking-[0.2em]">Previous Sets</span>
+              <span className="text-slate-600 dark:text-slate-400 uppercase text-sm tracking-[0.2em]">Previous Sets</span>
               {matchState.setsHistory.map((s: string, i: number) => (
                 <span key={i} className="px-4 py-1.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white font-mono font-black text-lg">
                   {s}
@@ -278,7 +278,7 @@ export default function TvScoreboard() {
               ))}
             </>
           ) : (
-            <span className="text-slate-700 text-sm uppercase tracking-[0.2em]">Game {matchState.t1.games + matchState.t2.games + 1}</span>
+            <span className="text-slate-700 dark:text-slate-500 text-sm uppercase tracking-[0.2em]">Game {matchState.t1.games + matchState.t2.games + 1}</span>
           )}
         </div>
       </div>

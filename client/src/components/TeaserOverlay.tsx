@@ -59,7 +59,7 @@ export function TeaserOverlay({
           >
             Already have an account? Sign In
           </button>
-          <div className="mt-2 text-xs font-semibold text-muted-foreground/60">
+          <div className="mt-2 text-xs font-semibold text-muted-foreground">
             Takes less than 30 seconds!
           </div>
         </div>

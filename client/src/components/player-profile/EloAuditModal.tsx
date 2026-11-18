@@ -167,7 +167,7 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
                         </span>
                       </div>
                       <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
-                        <span><span className="text-[10px] uppercase text-rose-500/70 mr-1">vs</span>{opponentStr}</span>
+                        <span><span className="text-[10px] uppercase text-rose-400 mr-1">vs</span>{opponentStr}</span>
                         {ownPartner && (
                           <span className="text-xs text-muted-foreground font-medium ml-1">
                             <span className="text-[9px] uppercase text-sky-500/70 mr-1">with</span>{getFirstName(ownPartner.full_name)}

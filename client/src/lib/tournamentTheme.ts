@@ -83,24 +83,15 @@ export function getTournamentTheme(input: TournamentThemeInput): TournamentTheme
 }
 
 /**
- * CSS-variable overrides per family. Setting `--primary` on a wrapper re-tints
- * every `bg-primary` / `text-primary` / `ring-primary` descendant to the event
- * family's colour (the same mechanism the global data-accent themes use), so a
- * whole console section can adopt its family identity without per-class edits.
+ * Class that re-tints a subtree to the event family's accent. The class sets
+ * `--primary` (and its foreground/ring) in index.css, so every `bg-primary` /
+ * `text-primary` / `ring-primary` descendant adopts the family colour — the
+ * same mechanism the global data-accent themes use. Defined in CSS rather than
+ * inline so dark mode can use the lighter, AA-readable shade.
  */
-export const FAMILY_CSS_VARS: Record<EventFamily, Record<string, string>> = {
-  individual: {
-    // violet-600
-    "--primary": "#7c3aed",
-    "--primary-foreground": "#ffffff",
-    "--family-glow": "rgba(124, 58, 237, 0.15)",
-  },
-  team: {
-    // emerald-600
-    "--primary": "#059669",
-    "--primary-foreground": "#ffffff",
-    "--family-glow": "rgba(5, 150, 105, 0.15)",
-  },
+export const FAMILY_CLASS: Record<EventFamily, string> = {
+  individual: "family-individual",
+  team: "family-team",
 };
 
 /**

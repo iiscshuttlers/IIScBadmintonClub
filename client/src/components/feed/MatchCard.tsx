@@ -320,7 +320,7 @@ export function MatchCard({
                 <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>
                   {match.status === "finished" || hasWinner ? <Trophy className="w-3 h-3 shrink-0" /> : <Swords className="w-3 h-3 shrink-0" />}
                   <span className="truncate">{match.is_friendly === false ? "Tournament" : "Friendly"}</span>
-                  <span className="text-slate-600 shrink-0">•</span>
+                  <span className="text-slate-600 dark:text-slate-400 shrink-0">•</span>
                   <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
                 </div>
                 <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold shrink-0 ml-2 flex items-center gap-2">

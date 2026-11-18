@@ -29,7 +29,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
           className="w-full h-full object-cover hidden dark:block"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/20 to-transparent dark:from-black/65 dark:via-black/35 dark:to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-slate-50 dark:from-[#060d1b] to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent" />
       </div>
 
       {/* Hero Content */}

@@ -382,29 +382,23 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
       <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
         {[
           { id: "details", label: "Details", icon: FileText },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords, activeClass: "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-600/20 scale-105 font-black", inactiveClass: "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600/20 border border-indigo-600/20", iconClass: "text-indigo-600" }] : []),
+          ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords }] : []),
           { id: "matches", label: "Matches", icon: Activity },
           { id: "polls", label: "Polls", icon: ListChecks },
           { id: "schedule", label: "Schedule", icon: Calendar },
-          { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
+          { id: "my-matches", label: "My Matches", icon: Activity },
+          ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy }] : []),
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ...(canReferee ? [{
             id: "referee",
             label: "Referee",
-            icon: Gavel,
-            activeClass: "bg-rose-600 text-white shadow-md ring-2 ring-rose-600/20 scale-105 font-black",
-            inactiveClass: "bg-rose-600/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600/20 border border-rose-600/20",
-            iconClass: "text-rose-600"
+            icon: Gavel
           }] : []),
           ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
             id: "organizer",
             label: "Organizer", 
-            icon: LayoutDashboard,
-            activeClass: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-600/20 scale-105 font-black",
-            inactiveClass: "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/20 border border-emerald-600/20",
-            iconClass: "text-emerald-600"
+            icon: LayoutDashboard
           }] : []),
         ].map((tab: any) => (
           <button
@@ -412,8 +406,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
             onClick={() => setActiveSubTab(tab.id as any)}
             className={`flex-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
               activeSubTab === tab.id
-                ? (tab.activeClass || "bg-red-500 text-white shadow-md ring-2 ring-red-500/20 scale-105")
-                : (tab.inactiveClass || "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white")
+                ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
+                : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <tab.icon className={`w-4 h-4 mb-[1px] ${activeSubTab !== tab.id && tab.iconClass && !tab.inactiveClass ? tab.iconClass : ""}`} />

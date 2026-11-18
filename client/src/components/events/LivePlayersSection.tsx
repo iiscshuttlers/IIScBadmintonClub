@@ -44,7 +44,7 @@ export function LivePlayersSection({
       const dataUrl = await toPng(exportRef.current, { 
         cacheBust: true, 
         pixelRatio: 2,
-        backgroundColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc'
+        backgroundColor: document.documentElement.classList.contains('dark') ? '#131417' : '#f8fafc'
       });
       const link = document.createElement('a');
       link.download = `players-${activeCat}.png`;
@@ -240,7 +240,7 @@ export function LivePlayersSection({
                 : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-on-accent ring-1 ring-inset ring-slate-200 dark:ring-slate-700/50"
             }`}
           >
-            {cat} <span className={`text-[11px] ml-1 font-bold ${activeCat === cat ? "opacity-90" : "opacity-60"}`}>({participants[cat].length})</span>
+            {cat} <span className={`text-[11px] ml-1 font-bold ${activeCat === cat ? "opacity-90" : ""}`}>({participants[cat].length})</span>
           </button>
         ))}
       </div>
@@ -313,7 +313,7 @@ export function LivePlayersSection({
             </div>
             
             <div className="flex-shrink-0 relative z-10 flex flex-col items-end justify-center self-stretch ml-2">
-              <span className="text-[32px] font-black leading-none text-slate-200/80 dark:text-slate-700/40 group-hover:text-primary/30 dark:group-hover:text-primary/30 transition-colors duration-300">
+              <span className="text-[32px] font-black leading-none text-slate-300 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
                 #{i + 1}
               </span>
             </div>

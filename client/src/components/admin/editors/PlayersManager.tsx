@@ -536,7 +536,7 @@ export function PlayersManager() {
   };
 
   const SortIcon = ({ field }: { field: string }) => {
-    if (sortField !== field) return <span className="text-muted-foreground/30 opacity-0 group-hover:opacity-100 ml-1">↕</span>;
+    if (sortField !== field) return <span className="text-muted-foreground opacity-0 group-hover:opacity-100 ml-1">↕</span>;
     return sortDirection === "asc" ? <ArrowUp className="inline w-3 h-3 ml-1 text-primary" /> : <ArrowDown className="inline w-3 h-3 ml-1 text-primary" />;
   };
 
@@ -612,7 +612,7 @@ export function PlayersManager() {
           {
             label: "Pending",
             value: pending,
-            color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 text-muted-foreground"}`,
+            color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 dark:bg-slate-800 text-muted-foreground"}`,
           },
         ].map((s) => (
           <div
@@ -809,7 +809,7 @@ export function PlayersManager() {
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("singles")}>Singles (Rank) <SortIcon field="singles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("doubles")}>Doubles (Rank) <SortIcon field="doubles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("mixed")}>Mixed (Rank) <SortIcon field="mixed" /></th>
-                  <th className="p-3 font-bold text-right sticky right-0 bg-white/90 dark:bg-[#0B1120]/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-slate-100 dark:border-slate-800">Actions</th>
+                  <th className="p-3 font-bold text-right sticky right-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-slate-100 dark:border-slate-800">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -894,7 +894,7 @@ export function PlayersManager() {
                           {p.ranks?.mixed !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.mixed}</span>}
                         </div>
                       </td>
-                      <td className="p-3 text-right sticky right-0 bg-white dark:bg-[#0B1120] group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-slate-100 dark:border-slate-800/50 z-10">
+                      <td className="p-3 text-right sticky right-0 bg-white dark:bg-slate-950 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-slate-100 dark:border-slate-800/50 z-10">
                         <div className="flex gap-1.5 shrink-0 justify-end flex-nowrap">
                           {!p.is_approved ? (
                             <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">

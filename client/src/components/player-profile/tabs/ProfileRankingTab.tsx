@@ -81,10 +81,10 @@ export function ProfileRankingTab({
         liveMatches.length < 5 && (
           <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 text-center">
             <Trophy className="w-12 h-12 text-slate-300 dark:text-foreground/10 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/40">
+            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/60">
               Not Enough Data
             </h3>
-            <p className="text-xs text-muted-foreground dark:text-foreground/20 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Play more matches to unlock ranking analytics.
             </p>
           </div>

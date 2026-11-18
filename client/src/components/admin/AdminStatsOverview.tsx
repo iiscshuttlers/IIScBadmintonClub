@@ -219,7 +219,7 @@ export function AdminStatsOverview() {
               <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
               <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
               <RechartsTooltip 
-                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#f8fafc', fontWeight: 'bold' }}
+                contentStyle={{ backgroundColor: '#131417', borderColor: '#24252a', borderRadius: '12px', color: '#f8fafc', fontWeight: 'bold' }}
                 itemStyle={{ color: '#a78bfa' }}
                 cursor={{ stroke: '#334155', strokeWidth: 1, strokeDasharray: '4 4' }}
               />

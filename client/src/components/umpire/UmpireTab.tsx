@@ -773,7 +773,7 @@ function RecentUmpireMatches({
           {/* Results Grid */}
           {filteredMatches.length === 0 ? (
             <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/30">
-              <Filter className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <Filter className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-400">No submissions matching criteria</p>
               <p className="text-xs text-slate-500 mt-1">Try resetting category or search filters.</p>
             </div>

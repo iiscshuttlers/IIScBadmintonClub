@@ -104,17 +104,17 @@ export function AuthBanner({
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="relative overflow-hidden bg-gradient-to-r from-primary to-teal-700 rounded-3xl p-6 text-on-accent shadow-xl shadow-primary/20">
+        <div className="relative overflow-hidden bg-slate-900 border border-primary/30 rounded-3xl p-6 text-foreground shadow-xl shadow-primary/10">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
           <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-              <UserCircle className="w-9 h-9 text-foreground" />
+            <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0">
+              <UserCircle className="w-9 h-9 text-primary" />
             </div>
             <div className="flex-1">
               <div className="text-lg font-black mb-1">
                 You're in! Now create your player card 🏸
               </div>
-              <div className="text-primary/30 text-sm font-medium">
+              <div className="text-slate-300 text-sm font-medium">
                 You're signed in as{" "}
                 <span className="font-bold text-foreground">
                   {session.user.email}
@@ -124,7 +124,7 @@ export function AuthBanner({
             </div>
             <button
               onClick={() => setLocation("/profile/setup")}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-lime-700 font-black text-sm hover:bg-lime-50 transition shadow-lg shrink-0"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-black text-sm hover:bg-primary/90 transition shadow-lg shrink-0"
             >
               <PlusCircle className="w-5 h-5" /> Create My Profile
             </button>

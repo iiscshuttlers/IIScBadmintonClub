@@ -149,7 +149,7 @@ export function NotificationModal({
               />
               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Hours</span>
             </div>
-            <span className="text-2xl font-black text-slate-600 mb-4">:</span>
+            <span className="text-2xl font-black text-slate-600 dark:text-slate-400 mb-4">:</span>
             <div className="flex flex-col items-center gap-1">
               <Input
                 type="number"

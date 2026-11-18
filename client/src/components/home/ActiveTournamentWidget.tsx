@@ -364,7 +364,7 @@ export function ActiveTournamentWidget() {
                       {/* Score */}
                       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 rounded-xl border border-slate-700 shrink-0">
                         <span className={`text-xl font-black tabular-nums ${isT1Leading ? "text-yellow-400" : "text-slate-100"}`}>{m.t1_score}</span>
-                        <span className="text-slate-600 text-xs">-</span>
+                        <span className="text-slate-600 dark:text-slate-400 text-xs">-</span>
                         <span className={`text-xl font-black tabular-nums ${isT2Leading ? "text-yellow-400" : "text-slate-100"}`}>{m.t2_score}</span>
                       </div>
                       {/* Team 2 */}
@@ -495,7 +495,7 @@ export function ActiveTournamentWidget() {
                 </div>
               ) : todayMatches.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                  <Calendar className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
                   <p className="text-sm font-bold text-slate-500">No matches scheduled for this date</p>
                 </div>
               ) : (

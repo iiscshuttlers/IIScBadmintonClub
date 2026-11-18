@@ -277,7 +277,7 @@ function MatchBroadcastCard({
                     <span className="truncate tracking-widest leading-none pt-0.5">LIVE</span>
                   </div>
                 )}
-                <span className="text-slate-600 shrink-0">•</span>
+                <span className="text-slate-600 dark:text-slate-400 shrink-0">•</span>
                 <span className="text-[var(--winner)] truncate">{match.isFriendly ? "Friendly" : match.matchNumber}</span>
               </div>
               <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold mt-0.5 truncate">
@@ -298,7 +298,7 @@ function MatchBroadcastCard({
                 ) : (
                   <div className="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 shadow-inner">
                     <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 1 ? 'text-[var(--winner)]' : 'text-slate-100'}`}>{match.t1.score}</span>
-                    <span className="text-slate-600 text-[10px]">-</span>
+                    <span className="text-slate-600 dark:text-slate-400 text-[10px]">-</span>
                     <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 2 ? 'text-[var(--winner)]' : 'text-slate-100'}`}>{match.t2.score}</span>
                   </div>
                 )}
@@ -407,7 +407,7 @@ function MatchBroadcastCard({
 
             {/* VS */}
             <div className="flex flex-col items-center justify-center px-1">
-               <div className="text-lg sm:text-xl font-black italic text-slate-600">VS</div>
+               <div className="text-lg sm:text-xl font-black italic text-slate-600 dark:text-slate-400">VS</div>
             </div>
 
             {/* Team 2 */}

@@ -31,7 +31,7 @@ export function ProfileOverviewTabRight({
       {player.quote && (
         <motion.div variants={itemVariants} className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-800 to-amber-500 rounded-[1.75rem] blur opacity-25 group-hover:opacity-50 transition duration-500" />
-          <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-[#070d1a] rounded-[1.75rem] p-7 shadow-lg shadow-blue-950/40 overflow-hidden border border-amber-500/20">
+          <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-slate-950 rounded-[1.75rem] p-7 shadow-lg shadow-blue-950/40 overflow-hidden border border-amber-500/20">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-400/0 via-amber-400/50 to-amber-400/0" />
             <Quote className="absolute -bottom-3 -right-3 w-24 h-24 text-amber-400/[0.12] -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
             <div className="relative z-10">
@@ -50,7 +50,7 @@ export function ProfileOverviewTabRight({
           className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 to-cyan-500" />
-          <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/60 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />{" "}
             About
           </h2>
@@ -66,7 +66,7 @@ export function ProfileOverviewTabRight({
             <div className={`${player.bio ? "mt-4 pt-4 border-t border-slate-200 dark:border-white/8" : ""} space-y-2.5`}>
               {player.coach && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Coach
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
@@ -76,7 +76,7 @@ export function ProfileOverviewTabRight({
               )}
               {player.favoriteFormat && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Favorite Format
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
@@ -86,7 +86,7 @@ export function ProfileOverviewTabRight({
               )}
               {player.startedPlayingYear != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Years Playing
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
@@ -96,7 +96,7 @@ export function ProfileOverviewTabRight({
               )}
               {player.highestRanking != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Career-High Rank
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
@@ -115,7 +115,7 @@ export function ProfileOverviewTabRight({
         className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
-        <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+        <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/60 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
           <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
         </h2>
 
@@ -135,7 +135,7 @@ export function ProfileOverviewTabRight({
         {/* Bracket Record */}
         {tournamentRuns && tournamentRuns.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-3 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-3 flex items-center gap-1.5">
               <Swords className="w-3 h-3 text-primary" /> Bracket Record
             </h3>
             <div className="space-y-2">
@@ -155,11 +155,11 @@ export function ProfileOverviewTabRight({
                         <p className="text-[11px] font-bold text-slate-800 dark:text-foreground/85 truncate leading-tight">
                           {run.tournament_name}
                         </p>
-                        <p className="text-[9px] text-muted-foreground dark:text-foreground/35 uppercase tracking-wider">
+                        <p className="text-[9px] text-muted-foreground dark:text-foreground/60 uppercase tracking-wider">
                           {run.category}
                         </p>
                       </div>
-                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-muted-foreground dark:text-foreground/40" : "bg-primary/15 text-primary dark:text-primary"}`}>
+                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-muted-foreground dark:text-foreground/60" : "bg-primary/15 text-primary dark:text-primary"}`}>
                         {resultLabel}
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export function ProfileOverviewTabRight({
                           style={{ width: `${winPct}%` }}
                         />
                       </div>
-                      <span className="text-[9px] font-mono text-muted-foreground dark:text-foreground/35 shrink-0">
+                      <span className="text-[9px] font-mono text-muted-foreground dark:text-foreground/60 shrink-0">
                         {run.wins}W – {run.losses}L
                       </span>
                     </div>
@@ -184,7 +184,7 @@ export function ProfileOverviewTabRight({
         {/* Achievements */}
         {validAchievements.length > 0 && (
           <div className="mb-5">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-4 flex items-center gap-1.5">
               <Medal className="w-3 h-3 text-amber-500 dark:text-amber-400" />{" "}
               Achievements
             </h3>
@@ -253,7 +253,7 @@ export function ProfileOverviewTabRight({
                 : ""
             }
           >
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-4 flex items-center gap-1.5">
               <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
             </h3>
             <div className="relative ml-5 space-y-2.5">

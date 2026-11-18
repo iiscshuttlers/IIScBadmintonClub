@@ -22,7 +22,7 @@ export default function TournamentAdmin() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060d1b]">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -30,7 +30,7 @@ export default function TournamentAdmin() {
 
   if (!isAdmin && !isMainAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060d1b] gap-4 p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 gap-4 p-6 text-center">
         <ShieldAlert className="w-16 h-16 text-rose-500" />
         <h1 className="text-2xl font-black text-slate-800 dark:text-foreground">Access Denied</h1>
         <p className="text-muted-foreground">You need admin permissions to access Tournament Manager.</p>
@@ -43,7 +43,7 @@ export default function TournamentAdmin() {
 
   return (
     <AdminHistoryProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-[#060d1b]">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="max-w-5xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">

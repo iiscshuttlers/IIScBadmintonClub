@@ -260,8 +260,8 @@ export function AnnouncementsSection() {
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
     if (status === "ongoing") return "bg-blue-100 text-blue-700";
-    if (status === "past") return "bg-gray-100 text-muted-foreground";
-    return "bg-gray-100 text-muted-foreground";
+    if (status === "past") return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
+    return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
   }
 
   return (
@@ -361,7 +361,7 @@ export function AnnouncementsSection() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 animate-pulse"
+                  className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 animate-pulse"
                 >
                   <div className="h-6 w-3/4 rounded bg-gray-200" />
                   <div className="flex gap-3">

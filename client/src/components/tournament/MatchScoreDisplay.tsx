@@ -1,3 +1,5 @@
+import { Check } from "lucide-react";
+
 interface Props {
   sets_history?: string[] | null;
   score?: string | null;
@@ -8,11 +10,15 @@ interface Props {
   compact?: boolean;
 }
 
-/** Renders a completed match score as a styled game-by-game table. */
+/**
+ * Game-by-game score as two scoreboard rows, matching MatchScorecard: the
+ * winner is bright with a check mark, the other side stays readable grey, and
+ * each game's higher score is bold. No per-card "Player / G1 / Sets" header.
+ */
 export function MatchScoreDisplay({ sets_history, score, team1_label, team2_label, winner_side, status, compact }: Props) {
   if (status === "walkover") {
     return (
-      <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-muted-foreground">
+      <span className="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
         W/O — {winner_side === 1 ? team1_label : team2_label}
       </span>
     );
@@ -26,62 +32,63 @@ export function MatchScoreDisplay({ sets_history, score, team1_label, team2_labe
     return { a: isNaN(a) ? 0 : a, b: isNaN(b) ? 0 : b };
   });
 
-  const t1Sets = parsed.filter((s) => s.a > s.b).length;
-  const t2Sets = parsed.filter((s) => s.b > s.a).length;
-
   if (compact) {
     return (
-      <span className="font-mono text-xs text-muted-foreground dark:text-slate-300">
+      <span className="font-mono text-xs text-slate-600 dark:text-slate-300">
         {effectiveSets.join(", ")}
       </span>
     );
   }
 
   const renderLabel = (label: string) => {
-    if (!label.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{label}</div>;
+    if (!label.includes("&")) return <span className="break-words">{label}</span>;
     const parts = label.split("&");
     return (
-      <div className="flex flex-col leading-[1.1] py-0.5">
-        <span className="break-words whitespace-normal w-full">{parts[0].trim()}</span>
-        <span className="text-[10px] opacity-60 my-0.5 font-bold text-muted-foreground dark:text-muted-foreground">&amp;</span>
-        <span className="break-words whitespace-normal w-full">{parts[1].trim()}</span>
+      <span className="flex flex-col leading-tight">
+        <span className="break-words">{parts[0].trim()}</span>
+        <span className="break-words">{parts[1].trim()}</span>
+      </span>
+    );
+  };
+
+  const row = (side: 1 | 2, label: string) => {
+    const won = winner_side === side;
+    return (
+      <div className="flex items-start justify-between gap-3 py-1.5">
+        <div className="min-w-0 flex items-start gap-2">
+          <span className="w-4 shrink-0 pt-0.5" aria-hidden>
+            {won && <Check className="w-4 h-4 text-primary" strokeWidth={3} />}
+          </span>
+          <span className={`min-w-0 text-sm ${won ? "font-black text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"}`}>
+            {renderLabel(label)}
+            {won && <span className="sr-only"> (winner)</span>}
+          </span>
+        </div>
+        <div className="flex gap-1 shrink-0">
+          {parsed.map((g, i) => {
+            const mine = side === 1 ? g.a : g.b;
+            const theirs = side === 1 ? g.b : g.a;
+            return (
+              <span
+                key={i}
+                className={`w-7 text-center font-mono text-sm tabular-nums ${
+                  mine > theirs ? "font-black text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {mine}
+              </span>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="text-xs w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="text-left py-1 pr-3 text-muted-foreground font-bold w-full">Player</th>
-            {parsed.map((_, i) => (
-              <th key={i} className="text-center py-1 px-2 text-muted-foreground font-bold min-w-[2rem]">G{i + 1}</th>
-            ))}
-            <th className="text-center py-1 px-2 text-muted-foreground font-bold">Sets</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className={winner_side === 1 ? "text-primary dark:text-primary font-black" : "text-muted-foreground dark:text-muted-foreground"}>
-            <td className="py-1 pr-3 align-middle">{renderLabel(team1_label || "Team 1")}</td>
-            {parsed.map((s, i) => (
-              <td key={i} className="text-center py-1 px-2 align-middle">
-                <span className={s.a > s.b ? "inline-block px-1.5 py-0.5 rounded-md bg-primary/10 dark:bg-primary/15" : ""}>{s.a}</span>
-              </td>
-            ))}
-            <td className="text-center py-1 px-2 font-black align-middle">{t1Sets}</td>
-          </tr>
-          <tr className={winner_side === 2 ? "text-primary dark:text-primary font-black" : "text-muted-foreground dark:text-muted-foreground"}>
-            <td className="py-1 pr-3 align-middle">{renderLabel(team2_label || "Team 2")}</td>
-            {parsed.map((s, i) => (
-              <td key={i} className="text-center py-1 px-2 align-middle">
-                <span className={s.b > s.a ? "inline-block px-1.5 py-0.5 rounded-md bg-primary/10 dark:bg-primary/15" : ""}>{s.b}</span>
-              </td>
-            ))}
-            <td className="text-center py-1 px-2 font-black align-middle">{t2Sets}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+      <p className="sr-only">Score: {parsed.map((g, i) => `Game ${i + 1} ${g.a}–${g.b}`).join(", ")}</p>
+      {row(1, team1_label || "Team 1")}
+      {row(2, team2_label || "Team 2")}
     </div>
   );
 }

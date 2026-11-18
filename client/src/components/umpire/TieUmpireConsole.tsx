@@ -825,7 +825,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 >
                   <div className="flex items-center gap-3">
                     {/* Drag handle */}
-                    <div className="text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors shrink-0">
+                    <div className="text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-400 transition-colors shrink-0">
                       <GripVertical className="w-4 h-4" />
                     </div>
 
