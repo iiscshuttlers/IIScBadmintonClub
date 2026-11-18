@@ -244,7 +244,8 @@ DO $$
 DECLARE
   v_revision BIGINT;
   v_schedule_alerts INTEGER;
-  v_queued INTEGER;
+  v_pending_schedule INTEGER;
+  v_cancelled_schedule INTEGER;
 BEGIN
   SELECT schedule_revision INTO v_revision
   FROM public.tournament_matches
@@ -262,16 +263,28 @@ BEGIN
   END IF;
 
   IF to_regclass('public.scheduled_notifications') IS NOT NULL THEN
-    SELECT COUNT(*) INTO v_queued
+    SELECT COUNT(*) INTO v_pending_schedule
     FROM public.scheduled_notifications
     WHERE recipient_ids @> ARRAY['11111111-1111-1111-1111-111111111111'::UUID]
       AND channels = ARRAY['push']::TEXT[]
       AND audience = 'custom'
       AND link = '/tournaments/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/matches/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+      AND match_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+      AND event_type = 'schedule_change'
+      AND event_version = 2
+      AND expires_at > now()
       AND status = 'pending';
 
-    IF v_queued < 4 THEN
-      RAISE EXCEPTION 'TEST 5b FAILED: Expected result and schedule alerts in the push queue, got %', v_queued;
+    SELECT COUNT(*) INTO v_cancelled_schedule
+    FROM public.scheduled_notifications
+    WHERE recipient_ids @> ARRAY['11111111-1111-1111-1111-111111111111'::UUID]
+      AND match_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+      AND event_type = 'schedule_change'
+      AND event_version = 1
+      AND status = 'cancelled';
+
+    IF v_pending_schedule <> 1 OR v_cancelled_schedule <> 1 THEN
+      RAISE EXCEPTION 'TEST 5b FAILED: Expected one live revision 2 queue row and one cancelled revision 1 row, pending %, cancelled %', v_pending_schedule, v_cancelled_schedule;
     END IF;
   END IF;
 
