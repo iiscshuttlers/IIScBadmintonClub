@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { Loader2, Users, Info, Image as ImageIcon, FileText } from "lucide-react";
 import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 import { toPng } from "html-to-image";
-import { jsPDF } from "jspdf";
 import { getDepartmentAcronym } from "@/data/departments";
 import { PARTICIPANT_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
@@ -65,6 +64,7 @@ export function LivePlayersSection({
       const parts = participants[activeCat];
       const isDoubles = ["MD", "WD", "XD"].includes(activeCat);
 
+      const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'pt',

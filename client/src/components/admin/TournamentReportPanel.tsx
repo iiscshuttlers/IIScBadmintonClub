@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
@@ -47,7 +46,8 @@ async function saveFile(fileName: string, data: string, mime: string, isBase64 =
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function buildPdf(name: string, r: TournamentReport, umpireNames: Record<string, string>, registered: number | null) {
+async function buildPdf(name: string, r: TournamentReport, umpireNames: Record<string, string>, registered: number | null) {
+  const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const left = 16;
   let y = 20;
@@ -154,7 +154,7 @@ export function TournamentReportPanel({
   const exportPdf = async () => {
     setExporting("pdf");
     try {
-      const pdf = buildPdf(tournament.name, report, umpireNames, registered);
+      const pdf = await buildPdf(tournament.name, report, umpireNames, registered);
       await saveFile(
         `${fileSafe(tournament.name)}-report.pdf`,
         pdf.output("datauristring").split(",")[1],

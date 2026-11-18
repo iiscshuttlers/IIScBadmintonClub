@@ -232,7 +232,6 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist"),
       emptyOutDir: true,
-      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         // capacitor-native-biometric used to be listed as `external` while it was
         // uninstalled. It is a real dependency now and is loaded via dynamic

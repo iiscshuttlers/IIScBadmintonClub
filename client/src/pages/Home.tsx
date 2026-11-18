@@ -101,7 +101,7 @@ export default function Home() {
       role: "Convener",
       name: convenerData?.convener?.name || "Raja Janmejay",
       description: convenerData?.convener?.description || "Leading the club with vision and passion for the sport",
-      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.png`,
+      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.webp`,
     },
     {
       role: "Co-Convener",

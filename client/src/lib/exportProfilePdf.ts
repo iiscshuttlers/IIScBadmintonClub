@@ -1,5 +1,4 @@
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
 
 export interface ProfilePdfData {
   playerName: string;
@@ -156,7 +155,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     ctx.restore();
 
     try {
-      const logoImg = await loadImage("/iisc-logo.png");
+      const logoImg = await loadImage(`${import.meta.env.BASE_URL}iisc-logo.png`);
       if (logoImg) {
         ctx.save();
         ctx.globalAlpha = 0.05;
@@ -462,6 +461,8 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     // Calculate PDF dimensions to match canvas exactly (no clipping)
     const pdfPageW = 210; // A4 width in mm
     const pdfPageH = Math.round((H * pdfPageW) / W); // maintain aspect ratio
+    // Loaded here so jsPDF doesn't download with every profile view.
+    const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [pdfPageW, pdfPageH] });
     pdf.addImage(imgData, "JPEG", 0, 0, pdfPageW, pdfPageH);
 

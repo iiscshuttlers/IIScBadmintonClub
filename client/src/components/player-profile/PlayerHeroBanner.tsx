@@ -27,15 +27,11 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
     <>
       {/* Profile Banner */}
       <div className="absolute top-0 left-0 w-full h-[380px] md:h-[460px] overflow-hidden">
+        {/* The app is dark-only (ThemeContext), so only the dark banner ships. */}
         <img
-          src={`${import.meta.env.BASE_URL}profile_banner_light.png`}
+          src={`${import.meta.env.BASE_URL}profile_banner_dark.webp`}
           alt="Profile Banner"
-          className="w-full h-full object-cover dark:hidden"
-        />
-        <img
-          src={`${import.meta.env.BASE_URL}profile_banner_dark.png`}
-          alt="Profile Banner"
-          className="w-full h-full object-cover hidden dark:block"
+          className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/20 to-transparent dark:from-black/65 dark:via-black/35 dark:to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent" />
