@@ -293,3 +293,25 @@ A and B can run in parallel (different files). C must not overlap any other scor
 - Accessibility: text labels alongside colour, 44 px targets, `aria-current`/`aria-pressed`, motion behind `motion-safe`.
 - Migrations are additive, tested in the isolated harness, and not applied to hosted Supabase without explicit approval.
 - Each PR updates the benchmark doc's status table and this plan's item status.
+
+## 7. As built (14–15 November 2026)
+
+All twelve items are implemented. Differences from the plan above, and why:
+
+| Item | Plan said | Built | Why |
+| --- | --- | --- | --- |
+| 2 | Shared channel for `useLiveMatches` | Not changed | It has a single caller (`LiveTab`), so there is nothing to share. |
+| 4 | Absolute URL from `import.meta.env.BASE_URL` + origin | `getBaseShareUrl()` + `matchPath` | On Android the app's origin is the device itself; shares must use the public site. A test pins the GitHub Pages base path. |
+| 5 | Service judge on Info | Umpire (`umpired_by`, else `scored_by`) and tournament referees | No service-judge field exists. Referees are readable by signed-in users only (RLS), so visitors don't see that row. |
+| 6 | New `save_match_point_log` RPC + offline queue changes | The existing `upsert_live_match_by_id` also stores the compacted log | That RPC already authorises the single active scorer and carries the full log on every point, so a lost write heals on the next point and no umpire-client change was needed. A failing log write can never break live scoring. Finish freezes the log; later score corrections flag it. |
+| 6 | Resume recovery as a follow-up | Done | `restorePointLog` restores the log and serving side only when it agrees with the match row. |
+| 8 | Biggest Elo upset | Seed upsets | Tournament matches don't store Elo changes. |
+| 8 | — | Forfeits entered as 0–21 count as wins and as "Walkovers & forfeits", but not in score records or upsets | The August 2026 data has several such matches. |
+| 8 | Deuce = 20–20 | Both sides reach `points_to_win − 1` | Most August matches were single games to 30, where 29–29 is the only deuce. `points_to_win` is now part of `MatchView`. |
+| 9 | `club_records()` SQL function | Computed in the app (`lib/clubRecords.ts`) from paged decided matches | Simpler to test; club-scale data. Revisit if it gets slow. |
+| 8, 9, 5 | Names from team labels | Names looked up by player id (`usePlayerNames`) | Team label order doesn't always match `player1/player3`, which credited titles to the wrong person. |
+| 10 | "Movement from <date>" note before the first comparison | Arrows simply appear once a 6-day-old snapshot exists | Nothing to compare in week one. The first snapshot was taken 14 Nov 2026. |
+| 11 | Follow suggestions on Home | A "Find players" link to the directory | Suggestions need a ranking of candidates; left out of v1. |
+| 12 | Pulse Matches → `MatchCentre` | Pulse keeps its data flow (likes, polls, match of the day, load more, `#match-card-…` links) but renders every match with `MatchScorecard` via `PulseMatchItem`; discipline and time filters are shared chips; friendlies no longer appear | Same presentation without losing Pulse's social features. `MatchCard` and `MatchSection` stay because other pages use them. |
+
+**Verification.** Typecheck, the full Vitest suite and `npm run build` pass. SQL: `supabase/tests/point_log_assertions.sql` and `ranking_snapshot_assertions.sql` pass in an isolated Supabase Postgres 17 container (`result_revision_bootstrap.sql` + `sports_plan_harness_setup.sql` + the scorer-lock migration + both new migrations). Browser (375 px, light and dark): Results court strip and share icons, Stats tab, match page Summary / H2H / Info, Legacy Records. Signed-in and live-only surfaces (Pulse, profile form chips and rank line, Home rail, LIVE marker, Points tab) are covered by component tests in `components/match/sportsSiteUi.test.tsx`, because the browser session wasn't signed in and no match was live.

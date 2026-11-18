@@ -22,19 +22,22 @@ Include all three distinctive additions: doubles intelligence, factual tournamen
 
 ## 2. Evidence and current state
 
-Code-review-graph tools were not available in this session; targeted file inspection was the fallback. Findings describe local source, not the deployed product. No tests, device qualification or hosted migration checks were performed while writing this document.
+> **Status update — 14 November 2026 (evening).** The live, dated status of every capability is now kept in [`world-class-evidence-ledger.md`](./world-class-evidence-ledger.md); this section is the original starting snapshot. Since it was written, WC-00 to WC-07 and WC-09 have been completed **locally**, and WC-08 now has a local organiser review/publish flow and a public story section. Nothing in this roadmap is staging- or production-verified yet. What remains is mostly *external* qualification — an isolated staging project, a physical Android device, a physical venue screen and a hosting decision — see §19 and [`docs/tickets/`](./tickets/README.md).
 
-| Capability | Evidence reviewed | Planning treatment |
-| --- | --- | --- |
-| Match Summary / Points / H2H / Info | `client/src/pages/TournamentMatchPage.tsx`, existing sports-site plan | Existing; qualify and improve rather than rebuild |
-| Point progression and key moments | `client/src/components/match/MatchPointsTab.tsx`, `lib/pointLog.ts` imports | Existing; verify rules, completeness and correction handling |
-| Personalised next/live match rail | `client/src/lib/homeRail.ts` | Existing; extend into a player action card |
-| Doubles-pair profile | `client/src/pages/DoublesPairProfile.tsx` | Existing; audit eligibility and extend comparison depth |
-| Actionable admin cards | `client/src/components/admin/AdminActionCards.tsx` | Existing; reconcile action coverage before adding cards |
-| Player/tournament/match follows and preferences | `client/src/services/subscriptionService.ts` | Existing; verify delivery, deduplication and deep links |
-| Court selection, result sharing, stats, records, ranking movement | `docs/sports-site-feature-plan.md`, As built section | Documented locally implemented; qualification required |
-| Offline recovery, revision checks, rest/court guards, correction audit | `docs/tournament-experience-execution-plan.md` | Documented locally implemented; verify full deployed path |
-| Tournament story and venue display | Not established by targeted inspection | Candidate additions; inventory before implementation |
+Original snapshot: code-review-graph tools were not available in that session; targeted file inspection was the fallback. Findings describe local source, not the deployed product. All file paths below were rechecked and exist.
+
+| Capability | Evidence reviewed | Planning treatment | Status now (see ledger) |
+| --- | --- | --- | --- |
+| Match Summary / Points / H2H / Info | `client/src/pages/TournamentMatchPage.tsx`, existing sports-site plan | Existing; qualify and improve rather than rebuild | Source-present, UI tests pass |
+| Point progression and key moments | `client/src/components/match/MatchPointsTab.tsx`, `lib/pointLog.ts` | Existing; verify rules, completeness and correction handling | Locally verified (WC-02) |
+| Personalised next/live match rail | `client/src/lib/homeRail.ts`, `components/home/MyTournamentCard.tsx` | Existing; extend into a player action card | Locally verified (WC-03) |
+| Doubles-pair profile | `client/src/pages/DoublesPairProfile.tsx`, `lib/comparison.ts` | Existing; audit eligibility and extend comparison depth | Locally verified (WC-06) |
+| Actionable admin cards | `client/src/components/admin/AdminActionCards.tsx` | Existing; reconcile action coverage before adding cards | Locally verified (WC-07) |
+| Player/tournament/match follows and preferences | `client/src/services/subscriptionService.ts`, `followingAlerts.ts` | Existing; verify delivery, deduplication and deep links | Locally verified (WC-05); provider unqualified |
+| Court selection, result sharing, stats, records, ranking movement | `docs/sports-site-feature-plan.md`, As built section | Documented locally implemented; qualification required | Mixed; see ledger |
+| Offline recovery, revision checks, rest/court guards, correction audit | `docs/tournament-experience-execution-plan.md` | Documented locally implemented; verify full deployed path | Unit-verified; physical device open (WC-01) |
+| Tournament story | `lib/tournamentStory.ts`, `components/tournament/TournamentStoryPanel.tsx` | Built in WC-08 | Locally verified; staging publish open |
+| Venue display | `pages/VenueScoreboardPage.tsx`, `lib/venueDisplay.ts` | Built in WC-09 | Browser-verified; physical soak open |
 
 The existing sports-site document includes an As built heading dated 14–15 November. Treat its verification statements as recorded reports, not independently reproduced evidence or proof of future work. Likewise, verify any claimed snapshot job or migration against the actual target environment before relying on it.
 
@@ -333,3 +336,18 @@ Decisions needed during implementation: pilot event/date and named owners; event
 12. WC-11: run integrated rehearsal, update evidence ledger and prepare release decision.
 
 Each ticket should record scope, dependencies, source touchpoints, data changes, acceptance scenarios, test evidence, deployment state and known limitations. Completion requires observable behavior and evidence, not merely merged source.
+
+### Revised effort after reconciliation (14 November 2026)
+
+The 44–71 engineer-day estimate in §4 assumed most features still had to be built. After the local implementation pass, the remaining work is qualification, not construction:
+
+| Remaining work | Ticket | Estimate | Blocked on |
+| --- | --- | --- | --- |
+| Staging replay of the full migration chain, RLS/role matrix | WC-11a | 2–3 days | An approved isolated Supabase project/branch |
+| Physical Android recovery, native back, push acceptance | WC-01 / WC-05 | 2–3 days | A connected device or emulator; non-production push tokens |
+| Venue screen rehearsal and two-hour soak | WC-09 | 1 day + soak | Access to the venue screen |
+| Public metadata: prerender/edge or host change | WC-10 | 1 day decision; 2–5 days if prerender | Product/hosting decision |
+| Stories: staging publish, non-admin organiser permission (optional), walkover-final policy | WC-08 | 1–2 days | Staging; product decision on organiser role |
+| Controlled tournament rehearsal and screen-reader matrix | WC-11 | 2–3 days | A nominated event and owners |
+
+Revised total: roughly 9–17 engineer-days plus external lead time. Ticket files with acceptance criteria live in [`docs/tickets/`](./tickets/README.md).

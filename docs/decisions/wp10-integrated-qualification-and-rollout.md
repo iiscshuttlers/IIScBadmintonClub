@@ -3,6 +3,13 @@
 State: `locally-qualified; external-rollout-gates-open` (13 November 2026).
 Work package: 10 (execution playbook §17). Integrates and qualifies Work Packages 0 through 9.
 
+14 November follow-up: the remaining product choices are recorded in
+[`remaining-engineering-product-decisions-2026-11-14.md`](./remaining-engineering-product-decisions-2026-11-14.md).
+The current local run passes type-checking and 574 Vitest tests. The new scorer-lock,
+identity/reversal and reasoned-admin migrations have static qualification coverage,
+but their SQL assertion harness is not yet counted as database-qualified because the
+disposable Docker execution was blocked by the current approval limit.
+
 ---
 
 ## 1. Executive Summary & Qualification Matrix
@@ -107,6 +114,9 @@ Apply migrations in chronological order:
 9. `20261113180000_restrict_player_contact_columns.sql` (Contact privacy; deliberately after WP9 player columns)
 10. `20261113190000_harden_legacy_tournament_result_rpcs.sql` (Old-client write-path revocation)
 11. `20261114090000_restrict_participant_email_and_claim_contact.sql` (Entry emails and lost-and-found claimant contacts; same client-first rule as step 9)
+12. `20261114100000` … `20261115100000` (parallel-session follow-ups: single active scorer, identity decisions/merge reversal, reasoned admin updates, point logs, ranking snapshots; see their headers)
+13. `20261115110000_correction_and_merge_followups.sql` — **compatible with the current client; contains a live security fix.** The production `claim_find_lost_item`/`unclaim_find_lost_item` overloads were executable by anon and trusted caller-supplied IDs (anyone could claim a post in another person's name or undo any claim). Same signatures, now bound to `auth.uid()`. Also: corrections keep `scored_at`; merges relabel/restore team labels. Requires `player_aliases` (step 7) and `find_lost_posts`. Can be applied ahead of the client release.
+14. `20261115120000_ranked_only_elo_replay.sql` — compatible with the current client; marks Open Tournament August 2026 as ranked and makes the Elo replay ranked-only. **Does not recalculate**; see `elo-recalculation-decision-needed.md` before pressing "Recalculate ELO".
 
 **Re-apply step 9's restriction after the client ships.** On 14 November production access was restored with a re-grant (see §5.2), so the database currently allows the old `select("*")`. After the new client is live and old cached builds have updated, run:
 
@@ -160,7 +170,21 @@ Counts only; no values were displayed or stored.
 
 Not audited: what signed-in members can read (needs a member account on staging).
 
-Separate defect noticed: `find_lost_posts` UPDATE is allowed only for the author or admins, so a non-author claiming an item likely fails silently. Not changed.
+Correction: lost-and-found claims do not use a direct UPDATE; they go through `claim_find_lost_item` / `unclaim_find_lost_item`. Those legacy `uuid` overloads were executable by `anon` and trusted caller-supplied IDs (anyone could claim in another person's name or undo any claim). Fixed in `20261115110000_correction_and_merge_followups.sql` (same signatures, bound to `auth.uid()`, compatible with the current client).
+
+### 5.4 Second production incident — 14/15 November 2026
+
+- **What happened.** A parallel session ran a full `supabase db push`, applying every migration through `20261115100000` while production still served the 19 October client. Newly incompatible: `20261114090000` (column-restricted `tournament_participants` and `find_lost_posts`; the old client reads both with `select("*")` — participant lists, bracket name sync, lost-and-found page, home notice board) and `20261113190000` (revoked legacy `submit_tournament_match` / `admin_edit_tournament_match`, which the old client uses for umpire finalization, live scoring, walkovers and admin edits).
+- **Mitigation (approved, executed).** On the linked project:
+  ```sql
+  GRANT SELECT ON public.tournament_participants, public.find_lost_posts TO anon, authenticated;
+  GRANT EXECUTE ON FUNCTION public.submit_tournament_match(UUID, SMALLINT, TEXT, TEXT[], UUID) TO authenticated;
+  GRANT EXECUTE ON FUNCTION public.admin_edit_tournament_match(UUID, SMALLINT, TEXT, TEXT[], UUID) TO authenticated;
+  ```
+  Verified: signed-out `select=*` on `tournament_participants`, `find_lost_posts` (with author embed) and `players` return 200; `authenticated` can execute both legacy RPCs.
+- **Consequence until the new client ships.** Entry emails (11 rows) and claimant contacts (1 row) are publicly readable again, and the unrevisioned legacy result path is open again.
+- **Still unapplied:** `20261115110000` (safe with the old client; includes the lost-and-found security fix) and `20261115120000` (safe with the old client; changes ratings only when someone runs "Recalculate ELO").
+- **Rule.** Do not run `supabase db push` on this project until the new client is deployed; apply individual old-client-compatible migrations with `supabase db query --remote -f <file>` only, and re-apply the restrictions per §7 step 5 afterwards (re-running `20261113180000`, `20261113190000` and `20261114090000` is idempotent).
 
 ---
 
@@ -183,6 +207,7 @@ Run in order; do not skip ahead.
 4. **Verify the client on the current DB.** Signed out and signed in: home, a tournament page, a player profile, the schedule. No `select=*` requests to `players`, `tournament_participants` or `find_lost_posts` in the network log.
 5. **Apply compatibility-ending migrations**, one at a time, verifying after each:
    - re-apply `20261113180000_restrict_player_contact_columns.sql` (contacts were re-granted on 14 Nov);
+   - re-apply `20261113190000` and `20261114090000` as well (both re-granted on 14/15 Nov, §5.4);
    - `20261113190000_harden_legacy_tournament_result_rpcs.sql`;
    - `20261114090000_restrict_participant_email_and_claim_contact.sql`.
    If a preflight check stops a migration, fix the named policy/function and re-run.
