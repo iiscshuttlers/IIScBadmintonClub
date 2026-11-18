@@ -131,11 +131,6 @@ export function MyMatchesTab() {
                         Browse Tournaments
                       </button>
                     </Link>
-                    <Link href="/players">
-                      <button className="px-4 py-2 text-xs font-bold border border-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
-                        Player Directory
-                      </button>
-                    </Link>
                   </div>
                 </>
               ) : (
@@ -159,7 +154,7 @@ export function MyMatchesTab() {
                 const isLive = LIVE_STATUSES.has(m.status);
                 const matchLink = m.tournament_id
                   ? `/tournaments/${m.tournament_id}/matches/${m.id}`
-                  : `/match/${m.id}`;
+                  : `/matches/${m.id}`;
 
                 return (
                   <Link key={m.id} href={matchLink}>

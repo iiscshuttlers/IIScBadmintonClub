@@ -26,7 +26,7 @@ interface RailData {
   partial: boolean;
 }
 
-async function fetchRail(userId: string, myId: string | null): Promise<RailData> {
+export async function fetchRail(userId: string, myId: string | null): Promise<RailData> {
   const [ps, ts] = await Promise.allSettled([
     subscriptionService.fetchPlayerSubscriptions(userId),
     subscriptionService.fetchTournamentSubscriptions(userId),

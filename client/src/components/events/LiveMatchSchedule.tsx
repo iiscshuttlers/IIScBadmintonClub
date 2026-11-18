@@ -225,28 +225,43 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   );
 
   const renderMatchList = (matches: ScheduledMatch[]) => {
+    // Group by local calendar day (sortable key), label each day in words.
+    const dayKey = (iso: string) => {
+      const d = new Date(iso);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
     const grouped: Record<string, Record<string, ScheduledMatch[]>> = {};
+    const labels: Record<string, string> = {};
     for (const m of matches) {
-      const key = m.scheduled_at
-        ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
-        : "Unscheduled";
+      const key = m.scheduled_at ? dayKey(m.scheduled_at) : "Unscheduled";
+      if (!labels[key]) {
+        labels[key] = m.scheduled_at
+          ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
+          : "Unscheduled";
+      }
       if (!grouped[key]) grouped[key] = {};
       const catKey = m.category || "Other";
       if (!grouped[key][catKey]) grouped[key][catKey] = [];
       grouped[key][catKey].push(m);
     }
 
+    // Days run in order. With no date picked, open today (or the next day with
+    // matches, or the last day once play is over); a picked date is open.
+    const days = Object.keys(grouped).sort((a, b) => (a === "Unscheduled" ? 1 : b === "Unscheduled" ? -1 : a.localeCompare(b)));
+    const today = dayKey(new Date().toISOString());
+    const datedDays = days.filter((d) => d !== "Unscheduled");
+    const focusDay = activeDate !== "ALL"
+      ? null
+      : datedDays.find((d) => d >= today) ?? datedDays[datedDays.length - 1] ?? days[0];
+
     return (
       <div className="space-y-6 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-        {Object.entries(grouped).sort(([dateA], [dateB]) => {
-          if (dateA === "Unscheduled") return 1;
-          if (dateB === "Unscheduled") return -1;
-          return new Date(dateB).getTime() - new Date(dateA).getTime();
-        }).map(([date, categoriesGroup]) => {
-          const isOpen = activeDate !== "ALL" && activeDate === date;
+        {days.map((key) => [key, grouped[key]] as const).map(([key, categoriesGroup]) => {
+          const date = labels[key];
+          const isOpen = activeDate !== "ALL" || key === focusDay || days.length === 1;
           const totalMatchesForDate = Object.values(categoriesGroup).reduce((acc, matches) => acc + matches.length, 0);
           return (
-            <details key={date} open={isOpen} className="group mb-6 last:mb-0 relative">
+            <details key={key} open={isOpen} className="group mb-6 last:mb-0 relative">
               <summary className="flex items-center gap-3 mb-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none outline-none">
                 <Calendar className="w-4 h-4 text-primary" />
                 <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm flex-1">
