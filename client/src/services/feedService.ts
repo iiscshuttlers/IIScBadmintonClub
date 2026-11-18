@@ -40,6 +40,61 @@ export interface Announcement {
   tag?: string;
 }
 
+// ── Live match vote cards ────────────────────────────────────────────────
+// A schedule can show ~140 prediction cards at once. Each card used to make
+// its own tally request and open its own realtime channel, which meant ~140
+// requests per page view and more channels than Supabase Realtime's default
+// per-connection limit (100), so the cards past that never updated live.
+
+type VoteTally = { t1: number; t2: number };
+type VoteRow = { live_match_id?: string; user_id: string; pick: number };
+const TALLY_CHUNK = 100; // keeps the `in.(...)` filter well inside URL limits
+
+let tallyQueue: Map<string, Array<(t: VoteTally) => void>> | null = null;
+
+async function flushTallyQueue(queue: Map<string, Array<(t: VoteTally) => void>>) {
+  const ids = [...queue.keys()];
+  const counts = new Map<string, VoteTally>(ids.map((id) => [id, { t1: 0, t2: 0 }]));
+  for (let i = 0; i < ids.length; i += TALLY_CHUNK) {
+    // Errors are ignored as before: a failed read leaves the tally at 0–0.
+    const { data } = await supabase
+      .from("live_match_votes")
+      .select("live_match_id, pick")
+      .in("live_match_id", ids.slice(i, i + TALLY_CHUNK));
+    data?.forEach((r) => {
+      const c = counts.get(r.live_match_id);
+      if (!c) return;
+      if (r.pick === 1) c.t1++;
+      else if (r.pick === 2) c.t2++;
+    });
+  }
+  queue.forEach((resolvers, id) => resolvers.forEach((resolve) => resolve(counts.get(id)!)));
+}
+
+type VoteListener = { onInsert: (v: VoteRow) => void; onDelete: (v: VoteRow) => void };
+const voteListeners = new Map<string, Set<VoteListener>>();
+let voteChannel: ReturnType<typeof supabase.channel> | null = null;
+
+function ensureVoteChannel() {
+  if (voteChannel) return;
+  const dispatch = (row: VoteRow, kind: keyof VoteListener) => {
+    if (!row?.live_match_id) return;
+    voteListeners.get(row.live_match_id)?.forEach((l) => l[kind](row));
+  };
+  voteChannel = supabase
+    .channel("live_match_votes_all")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "live_match_votes" }, (payload) =>
+      dispatch(payload.new as VoteRow, "onInsert"),
+    )
+    // live_match_votes has the default replica identity, so `old` carries only
+    // the primary key and deletions can't be routed to a card. The old
+    // per-match filtered DELETE subscription never delivered them either.
+    .on("postgres_changes", { event: "DELETE", schema: "public", table: "live_match_votes" }, (payload) =>
+      dispatch(payload.old as VoteRow, "onDelete"),
+    )
+    .subscribe();
+}
+
 export const feedService = {
   async getPolls(tournamentId?: string): Promise<Poll[]> {
     const { data, error } = await supabase
@@ -295,53 +350,47 @@ export const feedService = {
     };
   },
 
-  async fetchVoteTally(matchId: string): Promise<{ t1: number; t2: number }> {
-    const { data } = await supabase
-      .from("live_match_votes")
-      .select("pick")
-      .eq("live_match_id", matchId);
-    if (!data) return { t1: 0, t2: 0 };
-    return {
-      t1: data.filter(r => r.pick === 1).length,
-      t2: data.filter(r => r.pick === 2).length,
-    };
+  /** Calls made in the same tick share one query (see flushTallyQueue). */
+  fetchVoteTally(matchId: string): Promise<{ t1: number; t2: number }> {
+    return new Promise((resolve) => {
+      if (!tallyQueue) {
+        const queue = new Map<string, Array<(t: VoteTally) => void>>();
+        tallyQueue = queue;
+        setTimeout(() => {
+          tallyQueue = null;
+          void flushTallyQueue(queue);
+        }, 0);
+      }
+      const waiting = tallyQueue.get(matchId);
+      if (waiting) waiting.push(resolve);
+      else tallyQueue.set(matchId, [resolve]);
+    });
   },
 
+  /**
+   * Live vote updates for one match card. Every card shares a single realtime
+   * channel (see ensureVoteChannel); the channel closes when the last card
+   * unsubscribes.
+   */
   subscribeToMatchVotes(
     matchId: string,
     onInsert: (vote: { user_id: string; pick: number }) => void,
     onDelete: (vote: { user_id: string; pick: number }) => void
   ): () => void {
-    const sub = supabase
-      .channel(`votes_${matchId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "live_match_votes",
-          filter: `live_match_id=eq.${matchId}`,
-        },
-        (payload) => {
-          onInsert(payload.new as { user_id: string; pick: number });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "live_match_votes",
-          filter: `live_match_id=eq.${matchId}`,
-        },
-        (payload) => {
-          onDelete(payload.old as { user_id: string; pick: number });
-        }
-      )
-      .subscribe();
+    const listener: VoteListener = { onInsert, onDelete };
+    const set = voteListeners.get(matchId) ?? new Set<VoteListener>();
+    set.add(listener);
+    voteListeners.set(matchId, set);
+    ensureVoteChannel();
 
     return () => {
-      supabase.removeChannel(sub);
+      const current = voteListeners.get(matchId);
+      current?.delete(listener);
+      if (current && current.size === 0) voteListeners.delete(matchId);
+      if (voteListeners.size === 0 && voteChannel) {
+        supabase.removeChannel(voteChannel);
+        voteChannel = null;
+      }
     };
   },
 
