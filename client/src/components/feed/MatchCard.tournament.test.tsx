@@ -5,7 +5,6 @@ vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ isAdmin: false }) }
 vi.mock("@/contexts/ConfirmContext", () => ({ useConfirm: () => ({ confirm: async () => false }) }));
 vi.mock("@/hooks/useUserMatchAlerts", () => ({ useUserMatchAlerts: () => [] }));
 vi.mock("@/services/matchService", () => ({ deleteMatchRecord: vi.fn() }));
-vi.mock("@/lib/aiPredictor", () => ({ fetchMatchSummary: vi.fn() }));
 vi.mock("./EditVideoModal", () => ({ EditVideoModal: () => null }));
 vi.mock("./VideoPlayerModal", () => ({ VideoPlayerModal: () => null }));
 vi.mock("./MatchScorecardModal", () => ({ MatchScorecardModal: () => null }));

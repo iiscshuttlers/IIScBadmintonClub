@@ -2,7 +2,7 @@ import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell, Clock, MapPin, PlayCircle } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Bell, Clock, MapPin, PlayCircle } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { deleteMatchRecord } from "@/services/matchService";
 import { toast } from "sonner";
@@ -12,7 +12,6 @@ import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { EditVideoModal } from "./EditVideoModal";
 import { VideoPlayerModal } from "./VideoPlayerModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
-import { fetchMatchSummary } from "@/lib/aiPredictor";
 import { MatchReminderModal } from "../pulse/MatchReminderModal";
 import { courtLabel, matchOutcome } from "@/lib/matchView";
 import { MatchStatusBadge, MatchTimes } from "@/components/match/MatchPrimitives";
@@ -86,25 +85,6 @@ export function MatchCard({
       onToggleExpand(val);
     } else {
       setLocalExpanded(val);
-    }
-  };
-
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-
-  const handleGenerateSummary = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (aiSummary || isGeneratingSummary) return;
-
-    setIsGeneratingSummary(true);
-    try {
-      const summary = await fetchMatchSummary(match);
-      setAiSummary(summary);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to generate AI summary.");
-    } finally {
-      setIsGeneratingSummary(false);
     }
   };
 

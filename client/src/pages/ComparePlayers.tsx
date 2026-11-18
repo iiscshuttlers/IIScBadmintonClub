@@ -11,12 +11,11 @@ import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
-import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler, Sparkles, Loader2 } from "lucide-react";
+import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
 import { calculateRanksMap } from "@/lib/rankingUtils";
-import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
+import { generateMatchPrediction } from "@/lib/aiPredictor";
 import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
-import { toast } from "sonner";
 import {
   LineChart,
   Line,
@@ -433,23 +432,6 @@ export default function ComparePlayers() {
 
 function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { player1: PlayerRow, player2: PlayerRow, p1Wins: number, p2Wins: number, matches: MatchWithPlayers[] }) {
   const prediction = generateMatchPrediction(player1, player2, p1Wins, p2Wins, matches);
-  const hasGeminiKey = !!import.meta.env.VITE_GEMINI_API_KEY;
-  
-  const [deepAnalysis, setDeepAnalysis] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGenerateDeepAnalysis = async () => {
-    setIsLoading(true);
-    try {
-      const result = await fetchGeminiPunditAnalysis(player1, player2, p1Wins, p2Wins);
-      setDeepAnalysis(result);
-      toast.success("Deep AI analysis generated successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to generate analysis.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <Card className="p-6 bg-gradient-to-br from-indigo-900 to-violet-900 text-on-accent rounded-3xl shadow-2xl mb-8 relative overflow-hidden border border-indigo-500/30">
@@ -476,31 +458,9 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
         </div>
       </div>
 
-      {deepAnalysis ? (
-        <div className="bg-indigo-950/80 backdrop-blur border border-indigo-500/50 rounded-2xl p-5 text-sm leading-relaxed text-indigo-50 shadow-inner">
-          <div className="flex items-center gap-2 mb-3 text-primary font-bold">
-            <Sparkles className="w-4 h-4" /> Gemini Deep Analysis
-          </div>
-          <div className="whitespace-pre-wrap">{deepAnalysis}</div>
-        </div>
-      ) : (
-        <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
-          "{prediction.punditCommentary}"
-          
-          {false && hasGeminiKey && (
-            <div className="mt-4 pt-4 border-t border-indigo-800/50 flex justify-center">
-              <button
-                onClick={handleGenerateDeepAnalysis}
-                disabled={isLoading}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-on-accent px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
-                {isLoading ? "Consulting AI..." : "Generate Deep AI Analysis"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
+        "{prediction.punditCommentary}"
+      </div>
     </Card>
   );
 }
