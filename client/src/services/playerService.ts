@@ -184,6 +184,12 @@ export const playerService = {
     return (data ?? []) as Array<{ id: string; full_name: string; email: string | null; gender: string | null; is_guest: boolean | null; avatar_url: string | null }>;
   },
 
+  /** Names only (id, full_name) for public display: never contact columns. Returns null on error. */
+  async getPlayerNamesByIds(ids: string[]) {
+    const { data } = await supabase.from("players").select("id, full_name").in("id", ids);
+    return data;
+  },
+
   async searchPlayersByQuery(query: string, limit = 10) {
     const q = query.trim();
     if (!q || q.length < 2) return [];

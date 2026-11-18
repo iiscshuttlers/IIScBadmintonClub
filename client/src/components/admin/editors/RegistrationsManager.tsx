@@ -3,7 +3,11 @@ import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchAllTournamentRegistrations,
+  getTournamentReceiptUrl,
+  setTournamentRegistrationStatus,
+} from "@/services/tournamentService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
   Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
@@ -21,11 +25,8 @@ export function RegistrationsManager() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tournament_registrations")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) setRegistrations(data);
+    const data = await fetchAllTournamentRegistrations();
+    if (data) setRegistrations(data);
     setLoading(false);
   }, []);
 
@@ -38,10 +39,12 @@ export function RegistrationsManager() {
     status: "approved" | "rejected" | "pending",
   ) => {
     setActionId(id);
-    const { error } = await supabase
-      .from("tournament_registrations")
-      .update({ status })
-      .eq("id", id);
+    let error: { message: string } | null = null;
+    try {
+      await setTournamentRegistrationStatus(id, status);
+    } catch (err) {
+      error = err as { message: string };
+    }
     if (error) {
       toast(`Failed to ${status}: ` + error.message, { icon: "❌" });
     } else {
@@ -171,11 +174,7 @@ export function RegistrationsManager() {
 
               <div className="flex items-center gap-2 w-full md:w-auto shrink-0 border-t border-slate-100 dark:border-slate-800 md:border-none pt-3 md:pt-0 mt-2 md:mt-0">
                 <a
-                  href={
-                    supabase.storage
-                      .from("tournament_receipts")
-                      .getPublicUrl(r.receipt_path).data.publicUrl
-                  }
+                  href={getTournamentReceiptUrl(r.receipt_path)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold"

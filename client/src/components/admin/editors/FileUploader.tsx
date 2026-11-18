@@ -3,7 +3,7 @@ import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { uploadNoticeFile } from "@/services/tournamentService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
   Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
@@ -23,14 +23,8 @@ export function FileUploader({
     setUploading(true);
     try {
       const fileName = `site_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-      const { error } = await supabase.storage
-        .from("tournament_notices")
-        .upload(fileName, file);
-      if (error) throw error;
-      const { data } = supabase.storage
-        .from("tournament_notices")
-        .getPublicUrl(fileName);
-      onUpload(data.publicUrl);
+      const publicUrl = await uploadNoticeFile(fileName, file);
+      onUpload(publicUrl);
       toast.success("File uploaded successfully");
     } catch (err: any) {
       toast.error(`Upload failed: ${err.message}`);

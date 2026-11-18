@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "wouter";
-import { supabase } from "@/lib/supabase";
+import { fetchLiveMatchesRow, subscribeToObsOverlay } from "@/services/matchService";
 import type { BwfMatchState } from "@/types/umpire";
 
 export default function ObsOverlayScoreboard() {
@@ -11,11 +11,7 @@ export default function ObsOverlayScoreboard() {
 
   useEffect(() => {
     async function fetchLiveMatch() {
-      const { data } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "live_matches")
-        .maybeSingle();
+      const data = await fetchLiveMatchesRow();
 
       if (data?.value) {
         const matches = data.value as Record<string, BwfMatchState>;
@@ -30,10 +26,9 @@ export default function ObsOverlayScoreboard() {
 
     fetchLiveMatch();
 
-    // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
-    const instantChannel = supabase.channel("obs_instant_scores");
-    instantChannel
-      .on("broadcast", { event: "score_update" }, (e) => {
+    // Channel 1: instant broadcast; channel 2: site_data postgres_changes fallback.
+    return subscribeToObsOverlay({
+      onScoreUpdate: (e) => {
         if (e.payload) {
           const bwf = e.payload as BwfMatchState;
           if (matchId && (bwf.id === matchId || (bwf as any).dbId === matchId)) {
@@ -42,33 +37,19 @@ export default function ObsOverlayScoreboard() {
             setMatchState(bwf);
           }
         }
-      })
-      .subscribe();
-
-    // Channel 2: Postgres Changes fallback (site_data updates)
-    const sub = supabase
-      .channel("obs_overlay_live")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
-        (payload) => {
-          if ((payload.new as any)?.value) {
-            const matches = (payload.new as any).value as Record<string, BwfMatchState>;
-            if (matchId && matches[matchId]) {
-              setMatchState(matches[matchId]);
-            } else {
-              const active = Object.values(matches).find(m => m.status === "playing" || m.status === "setup");
-              if (active) setMatchState(active);
-            }
+      },
+      onLiveMatchesChange: (payload) => {
+        if ((payload.new as any)?.value) {
+          const matches = (payload.new as any).value as Record<string, BwfMatchState>;
+          if (matchId && matches[matchId]) {
+            setMatchState(matches[matchId]);
+          } else {
+            const active = Object.values(matches).find(m => m.status === "playing" || m.status === "setup");
+            if (active) setMatchState(active);
           }
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(instantChannel);
-      supabase.removeChannel(sub);
-    };
+      },
+    });
   }, [matchId]);
 
   // Score flash animation

@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
-import type { Json } from "@/lib/supabase-types-auto";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { Json, Tables } from "@/lib/supabase-types-auto";
 
 export interface PollOption {
   id: string;
@@ -498,6 +499,23 @@ export const feedService = {
       .maybeSingle();
     if (error) throw error;
     return (data?.value as Record<string, unknown>) ?? null;
+  },
+
+  /** Raw postgres_changes on site_data `club_settings` (maintenance banner). Returns the cleanup. */
+  subscribeToClubSettings(
+    onChange: (payload: RealtimePostgresChangesPayload<Tables<"site_data">>) => void
+  ): () => void {
+    const channel = supabase.channel('club-settings-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.club_settings" },
+        onChange
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   },
 };
 

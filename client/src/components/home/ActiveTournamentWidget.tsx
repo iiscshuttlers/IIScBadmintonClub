@@ -1,6 +1,7 @@
 import { matchShortPath } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchLiveMatchesRow, subscribeToHomeLiveMatches } from "@/services/matchService";
+import { fetchActiveTournamentRows, fetchTournamentMatchesScheduledBetween } from "@/services/tournamentService";
 import { Card } from "@/components/ui/card";
 import {
   Calendar, CalendarRange, Trophy, Loader2, ChevronRight, Activity, Clock, Users, Flame, ChevronDown, ChevronUp, MapPin, ArrowRight, CheckCircle2
@@ -69,11 +70,7 @@ export function ActiveTournamentWidget() {
       if (isInitial) setLoading(true);
       try {
         // Fetch active tournament
-        const { data: tourneys } = await supabase
-          .from("tournaments")
-          .select("id, name, status, format_family")
-          .eq("status", "active")
-          .limit(1);
+        const tourneys = await fetchActiveTournamentRows();
 
         if (tourneys && tourneys.length > 0) {
           setTournament(tourneys[0]);
@@ -82,11 +79,7 @@ export function ActiveTournamentWidget() {
         }
 
         // Fetch ALL live broadcasted matches from site_data
-        const { data: siteData } = await supabase
-          .from("site_data")
-          .select("value")
-          .eq("key", "live_matches")
-          .maybeSingle();
+        const siteData = await fetchLiveMatchesRow();
 
         if (siteData?.value) {
           const liveState = siteData.value as Record<string, any>;
@@ -127,13 +120,9 @@ export function ActiveTournamentWidget() {
 
     fetchActiveData(true);
 
-    const channel = supabase.channel('live_matches_home')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.live_matches" }, () => {
-        fetchActiveData(false);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    return subscribeToHomeLiveMatches(() => {
+      fetchActiveData(false);
+    });
   }, []);
 
   async function fetchTodayMatches(dateToFetch: Date = selectedDate) {
@@ -149,11 +138,7 @@ export function ActiveTournamentWidget() {
       queryEnd.setHours(23, 59, 59, 999);
 
       // tournament_matches is the correct table for scheduled tournament matches
-      const { data } = await supabase
-        .from("tournament_matches")
-        .select("id, category, round_name, match_code, court_number, status, scheduled_at, score, winner_id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label")
-        .gte("scheduled_at", queryStart.toISOString())
-        .lte("scheduled_at", queryEnd.toISOString());
+      const data = await fetchTournamentMatchesScheduledBetween(queryStart.toISOString(), queryEnd.toISOString());
 
       if (data) {
         const targetDateStr = toLocalISOString(dateToFetch);

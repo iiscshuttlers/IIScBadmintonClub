@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { fetchFeederMatches, fetchTournamentRefereeRows } from "@/services/tournamentService";
+import { playerService } from "@/services/playerService";
 import { DISCIPLINE_LABELS, courtLabel, type MatchView } from "@/lib/matchView";
 import { matchPath, tournamentPath } from "@/lib/tournamentRoutes";
 import { MatchTimes } from "@/components/match/MatchPrimitives";
@@ -31,26 +32,21 @@ function useMatchInfo(view: MatchView, officials: MatchOfficialIds) {
       const umpireId = officials.umpiredBy ?? officials.scoredBy;
       const [feeds, refs] = await Promise.all([
         view.matchCode
-          ? supabase
-              .from("tournament_matches")
-              .select("id, round_name, team1_label, team2_label")
-              .eq("tournament_id", view.tournamentId)
-              .eq("advances_to_match", view.matchCode)
-              .order("match_number", { ascending: true })
-          : Promise.resolve({ data: [] as FeedMatch[] }),
+          ? fetchFeederMatches(view.tournamentId, view.matchCode)
+          : Promise.resolve([] as FeedMatch[]),
         // Readable by signed-in users only (RLS); visitors simply see no referee row.
-        supabase.from("tournament_officials").select("user_id, role").eq("tournament_id", view.tournamentId).eq("role", "REFEREE"),
+        fetchTournamentRefereeRows(view.tournamentId),
       ]);
-      const refereeIds = ((refs.data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id);
+      const refereeIds = ((refs ?? []) as Array<{ user_id: string }>).map((r) => r.user_id);
       const ids = Array.from(new Set([umpireId, ...refereeIds].filter((x): x is string => !!x)));
       const names: Record<string, string> = {};
       if (ids.length) {
         // Name only: never select contact columns for public display.
-        const { data } = await supabase.from("players").select("id, full_name").in("id", ids);
+        const data = await playerService.getPlayerNamesByIds(ids);
         for (const p of (data ?? []) as Array<{ id: string; full_name: string | null }>) names[p.id] = p.full_name ?? "";
       }
       return {
-        feeds: ((feeds.data ?? []) as FeedMatch[]).map((f) => ({ ...f })),
+        feeds: ((feeds ?? []) as FeedMatch[]).map((f) => ({ ...f })),
         umpire: umpireId ? names[umpireId] || null : null,
         referees: refereeIds.map((id) => names[id]).filter(Boolean),
       };

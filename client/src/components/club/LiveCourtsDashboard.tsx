@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { hubService } from "@/services/hubService";
 import { Activity, Users, MonitorPlay, AlertTriangle } from "lucide-react";
 
@@ -21,15 +20,9 @@ export function LiveCourtsDashboard() {
 
     fetchCourts();
 
-    const channel = supabase.channel('live-courts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_courts' }, payload => {
-        fetchCourts();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return hubService.subscribeToClubCourts(() => {
+      fetchCourts();
+    });
   }, []);
 
   if (loading) {

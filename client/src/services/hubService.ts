@@ -262,6 +262,19 @@ export const hubService = {
     return (data ?? []) as unknown as ClubCourt[];
   },
 
+  /** Calls `onChange` on any change to club_courts. Returns the cleanup. */
+  subscribeToClubCourts(onChange: () => void): () => void {
+    const channel = supabase.channel('live-courts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_courts' }, () => {
+        onChange();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
   async updateCourtStatus(
     courtNumber: number,
     status: string,

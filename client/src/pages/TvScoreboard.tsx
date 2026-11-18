@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { BwfMatchState } from "@/types/umpire";
 import { Loader2, ArrowLeft, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchLiveMatchesRow, subscribeToTvScoreboard } from "@/services/matchService";
 
 export default function TvScoreboard() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -27,12 +27,8 @@ export default function TvScoreboard() {
     queryKey: ['tv_scoreboard', matchId],
     queryFn: async () => {
       if (!matchId) return null;
-      const { data } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "live_matches")
-        .maybeSingle();
-      
+      const data = await fetchLiveMatchesRow();
+
       if (data?.value && data.value[matchId]) {
         return data.value[matchId] as BwfMatchState;
       }
@@ -51,42 +47,22 @@ export default function TvScoreboard() {
       setMatchState(queryData);
     }
     
-    // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
-    const instantChannel = supabase.channel(`tv_instant_${matchId}`);
-    instantChannel
-      .on("broadcast", { event: "score_update" }, (e) => {
+    // Channel 1: instant broadcast; channel 2: site_data postgres_changes fallback.
+    return subscribeToTvScoreboard(matchId, {
+      onScoreUpdate: (e) => {
         if (e.payload && (e.payload.id === matchId || e.payload.dbId === matchId)) {
           setMatchState(e.payload as BwfMatchState);
         }
-      })
-      .subscribe();
-
-    // Channel 2: Postgres Changes fallback (site_data updates)
-    const sub = supabase
-      .channel(`tv_scoreboard_${matchId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_data",
-          filter: "key=eq.live_matches",
-        },
-        (payload) => {
-          const newValue = (payload.new as Record<string, unknown>)?.value as Record<string, BwfMatchState> | undefined;
-          if (newValue && newValue[matchId]) {
-            setMatchState(newValue[matchId]);
-          } else {
-            setMatchState(null);
-          }
+      },
+      onLiveMatchesChange: (payload) => {
+        const newValue = (payload.new as Record<string, unknown>)?.value as Record<string, BwfMatchState> | undefined;
+        if (newValue && newValue[matchId]) {
+          setMatchState(newValue[matchId]);
+        } else {
+          setMatchState(null);
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(instantChannel);
-      supabase.removeChannel(sub);
-    };
+      },
+    });
   }, [matchId, queryData]);
 
   useEffect(() => {

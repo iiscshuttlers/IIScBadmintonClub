@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2, Share2 } from "lucide-react";
 import type { MatchView } from "@/lib/matchView";
 import { canShareResult } from "@/lib/matchViewShare";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentName } from "@/services/tournamentService";
 
 /**
  * "Share result" for a decided tournament match: renders the PNG score card
@@ -29,8 +29,7 @@ export function ShareResultButton({
     try {
       let name = tournamentName ?? null;
       if (!name) {
-        const { data } = await supabase.from("tournaments").select("name").eq("id", view.tournamentId).maybeSingle();
-        name = (data as { name?: string } | null)?.name ?? null;
+        name = await fetchTournamentName(view.tournamentId);
       }
       const { shareTournamentMatch } = await import("@/lib/shareMatch");
       await shareTournamentMatch(view, name);

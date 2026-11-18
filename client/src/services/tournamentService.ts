@@ -97,6 +97,51 @@ export async function fetchTournamentMatches(tournamentId: string): Promise<Tour
   return (data ?? []) as TournamentMatch[];
 }
 
+/**
+ * Bracket feeders: the matches whose winner advances into `matchCode`, in
+ * match order. Returns null on error (callers treat that as "no feeders").
+ */
+export async function fetchFeederMatches(tournamentId: string, matchCode: string) {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("id, round_name, team1_label, team2_label")
+    .eq("tournament_id", tournamentId)
+    .eq("advances_to_match", matchCode)
+    .order("match_number", { ascending: true });
+  return data;
+}
+
+/** Tournament matches scheduled within [fromIso, toIso], any tournament. Returns null on error. */
+export async function fetchTournamentMatchesScheduledBetween(fromIso: string, toIso: string) {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("id, category, round_name, match_code, court_number, status, scheduled_at, score, winner_id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label")
+    .gte("scheduled_at", fromIso)
+    .lte("scheduled_at", toIso);
+  return data;
+}
+
+/** Up to 20 tournament matches that are not completed, by round (camera match picker). Returns null on error. */
+export async function fetchUncompletedTournamentMatches() {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .neq("status", "completed")
+    .order("round", { ascending: true })
+    .limit(20);
+  return data;
+}
+
+/** One tournament_matches row by id, or null (missing row or error). */
+export async function fetchTournamentMatchRow(id: string) {
+  const { data } = await supabase
+    .from("tournament_matches")
+    .select("*")
+    .eq("id", id)
+    .single();
+  return data;
+}
+
 export async function updateTournamentMatch(id: string, patch: Partial<TournamentMatch>): Promise<void> {
   const { id: _id, created_at: _created, ...matchUpdate } = patch;
   const { error } = await supabase
@@ -285,6 +330,35 @@ export async function rejectTournamentRegistration(id: string, reviewerId?: stri
     .eq("id", id);
 
   if (error) throw error;
+}
+
+/** Every registration across all tournaments, newest first. Returns null on error. */
+export async function fetchAllTournamentRegistrations() {
+  const { data, error } = await supabase
+    .from("tournament_registrations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return null;
+  return data;
+}
+
+/** Sets only the status column (no reviewer stamp, unlike approve/rejectTournamentRegistration). */
+export async function setTournamentRegistrationStatus(
+  id: string,
+  status: "approved" | "rejected" | "pending",
+): Promise<void> {
+  const { error } = await supabase
+    .from("tournament_registrations")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/** Public URL of an uploaded payment receipt in the tournament_receipts bucket. */
+export function getTournamentReceiptUrl(receiptPath: string): string {
+  return supabase.storage
+    .from("tournament_receipts")
+    .getPublicUrl(receiptPath).data.publicUrl;
 }
 
 export async function cloneTournamentFull(id: string, createdBy?: string | null): Promise<Tournament> {
@@ -615,6 +689,18 @@ export function getTournamentNoticePublicUrl(folder: string, fileName: string): 
   return supabase.storage.from(NOTICES_BUCKET).getPublicUrl(`${folder}/${fileName}`).data.publicUrl;
 }
 
+/** Uploads `file` as `fileName` at the root of the notices bucket and returns its public URL. */
+export async function uploadNoticeFile(fileName: string, file: File): Promise<string> {
+  const { error } = await supabase.storage
+    .from(NOTICES_BUCKET)
+    .upload(fileName, file);
+  if (error) throw error;
+  const { data } = supabase.storage
+    .from(NOTICES_BUCKET)
+    .getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 export async function upsertTournamentRoundRule(rule: {
   tournament_id: string;
   category: string;
@@ -754,6 +840,25 @@ export async function fetchTournamentOfficials(tournamentId: string): Promise<an
     .order("created_at", { ascending: true });
   if (error) throw error;
   return data ?? [];
+}
+
+/**
+ * The tournament's REFEREE rows. tournament_officials is readable by
+ * signed-in users only (RLS), so visitors get no rows. Returns null on error.
+ */
+export async function fetchTournamentRefereeRows(tournamentId: string) {
+  const { data } = await supabase
+    .from("tournament_officials")
+    .select("user_id, role")
+    .eq("tournament_id", tournamentId)
+    .eq("role", "REFEREE");
+  return data;
+}
+
+/** A tournament's name, or null (missing row or error). */
+export async function fetchTournamentName(id: string): Promise<string | null> {
+  const { data } = await supabase.from("tournaments").select("name").eq("id", id).maybeSingle();
+  return data?.name ?? null;
 }
 
 export async function deleteTournamentOfficial(officialId: string): Promise<void> {
@@ -1098,6 +1203,16 @@ export async function fetchLatestActiveTournament(): Promise<any | null> {
     .limit(1);
   if (error) throw error;
   return data?.[0] ?? null;
+}
+
+/** At most one `active` tournament (id, name, status, format_family). Returns null on error. */
+export async function fetchActiveTournamentRows() {
+  const { data } = await supabase
+    .from("tournaments")
+    .select("id, name, status, format_family")
+    .eq("status", "active")
+    .limit(1);
+  return data;
 }
 
 export function subscribeToTournaments(callback: () => void): () => void {

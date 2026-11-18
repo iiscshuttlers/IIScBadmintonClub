@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, UserCheck } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { decidePlayerClaim, fetchPendingClaimRequests, type ClaimRequest } from "@/services/identityService";
 import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
 
@@ -21,7 +21,7 @@ export function ClaimRequestsSection({ onResolved }: { onResolved?: () => void }
       const ids = Array.from(new Set(requests.flatMap((r) => [r.guest_id, r.requester_id])));
       const names: Record<string, string> = {};
       if (ids.length) {
-        const { data } = await supabase.from("players").select("id, full_name").in("id", ids);
+        const data = await playerService.getPlayerNamesByIds(ids);
         for (const p of data ?? []) names[p.id] = p.full_name ?? "Player";
       }
       return { requests, names };

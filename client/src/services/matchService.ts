@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { Tables } from '@/lib/supabase-types-auto';
 import { MATCH_SELECT_WITH_PLAYERS } from '@/types';
 import type { MatchWithPlayers } from '@/types';
 import { deleteTournamentMatch } from './tournamentService';
@@ -494,6 +496,20 @@ export async function getLiveMatchesFromSiteData(): Promise<Record<string, any>>
   return (data?.value as Record<string, any>) || {};
 }
 
+/**
+ * The raw `site_data` row (`key = live_matches`) holding every live umpire
+ * state, or null when it is missing. Unlike getLiveMatchesFromSiteData this
+ * never throws: the scoreboard screens treat a failed read like an empty one.
+ */
+export async function fetchLiveMatchesRow() {
+  const { data } = await supabase
+    .from("site_data")
+    .select("value")
+    .eq("key", "live_matches")
+    .maybeSingle();
+  return data;
+}
+
 export async function requestTakeoverLiveMatch(matchId: string, requester: { id: string; name: string }): Promise<void> {
   const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
   if (!data?.value) return;
@@ -569,6 +585,140 @@ export function subscribeToLiveMatches(callback: (matches: Record<string, any>) 
   return () => {
     supabase.removeChannel(sub);
   };
+}
+
+/** A `score_update` broadcast as sent by MatchService.upsertLiveMatch. */
+export type ScoreUpdateBroadcast = {
+  type: "broadcast";
+  event: string;
+  payload: BwfMatchState;
+};
+
+/** postgres_changes payload for the `site_data` table. */
+export type SiteDataChange = RealtimePostgresChangesPayload<Tables<"site_data">>;
+
+/** postgres_changes payload for the `tournament_matches` table. */
+export type TournamentMatchChange = RealtimePostgresChangesPayload<Tables<"tournament_matches">>;
+
+export interface LiveScoreHandlers {
+  /** Instant `score_update` broadcast on the screen's broadcast channel. */
+  onScoreUpdate: (e: ScoreUpdateBroadcast) => void;
+  /** postgres_changes fallback on `site_data` (`key=eq.live_matches`). */
+  onLiveMatchesChange: (payload: SiteDataChange) => void;
+}
+
+/**
+ * TV scoreboard (/tv/:matchId) realtime: an instant broadcast channel plus a
+ * postgres_changes fallback on site_data. Returns the cleanup.
+ */
+export function subscribeToTvScoreboard(matchId: string, handlers: LiveScoreHandlers): () => void {
+  // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
+  const instantChannel = supabase.channel(`tv_instant_${matchId}`);
+  instantChannel
+    .on("broadcast", { event: "score_update" }, handlers.onScoreUpdate)
+    .subscribe();
+
+  // Channel 2: Postgres Changes fallback (site_data updates)
+  const sub = supabase
+    .channel(`tv_scoreboard_${matchId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "site_data",
+        filter: "key=eq.live_matches",
+      },
+      handlers.onLiveMatchesChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(instantChannel);
+    supabase.removeChannel(sub);
+  };
+}
+
+/**
+ * OBS overlay realtime: an instant broadcast channel plus a postgres_changes
+ * fallback on site_data. Returns the cleanup.
+ */
+export function subscribeToObsOverlay(handlers: LiveScoreHandlers): () => void {
+  // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
+  const instantChannel = supabase.channel("obs_instant_scores");
+  instantChannel
+    .on("broadcast", { event: "score_update" }, handlers.onScoreUpdate)
+    .subscribe();
+
+  // Channel 2: Postgres Changes fallback (site_data updates)
+  const sub = supabase
+    .channel("obs_overlay_live")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
+      handlers.onLiveMatchesChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(instantChannel);
+    supabase.removeChannel(sub);
+  };
+}
+
+export interface CameraBroadcastHandlers extends LiveScoreHandlers {
+  /** postgres_changes on the selected `tournament_matches` row. */
+  onMatchChange: (payload: TournamentMatchChange) => void;
+}
+
+/**
+ * Camera broadcast realtime for the selected match: the shared
+ * `court_live_scores` broadcast channel, site_data live_matches changes and
+ * changes to the tournament_matches row. Returns the cleanup.
+ */
+export function subscribeToCameraBroadcast(selectedMatchId: string, handlers: CameraBroadcastHandlers): () => void {
+  // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
+  const instantBroadcastChannel = supabase.channel("court_live_scores");
+  instantBroadcastChannel
+    .on("broadcast", { event: "score_update" }, handlers.onScoreUpdate)
+    .subscribe();
+
+  // Channel 2: Listen to live_matches in site_data DB
+  const siteDataChannel = supabase
+    .channel(`camera_sitedata_${selectedMatchId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
+      handlers.onLiveMatchesChange
+    )
+    .subscribe();
+
+  // Channel 3: Listen to tournament_matches table DB
+  const tmChannel = supabase
+    .channel(`camera_tm_${selectedMatchId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "tournament_matches", filter: `id=eq.${selectedMatchId}` },
+      handlers.onMatchChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(instantBroadcastChannel);
+    supabase.removeChannel(siteDataChannel);
+    supabase.removeChannel(tmChannel);
+  };
+}
+
+/** Home widget: calls `onChange` on any change to site_data `live_matches`. Returns the cleanup. */
+export function subscribeToHomeLiveMatches(onChange: () => void): () => void {
+  const channel = supabase.channel('live_matches_home')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.live_matches" }, () => {
+      onChange();
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
 }
 
 export async function fetchActiveTournamentId(): Promise<string | null> {
