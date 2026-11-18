@@ -16,6 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import nodemailer from "npm:nodemailer";
 import { getNotificationTargets } from "../_shared/notifications.ts";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -154,9 +155,12 @@ Deno.serve(async (req) => {
 
         if (channels.includes("push") && fcm) {
           const uniqueTokens = [...new Map(pushTokens.map((t) => [t.token, t])).values()];
-          await Promise.allSettled(
-            uniqueTokens.map((t) =>
-              fetch(`https://fcm.googleapis.com/v1/projects/${fcm.projectId}/messages:send`, {
+          if (uniqueTokens.length === 0) {
+            throw new Error("push: no eligible device tokens");
+          }
+          await Promise.all(
+            uniqueTokens.map(async (t) => {
+              const response = await fetch(`https://fcm.googleapis.com/v1/projects/${fcm.projectId}/messages:send`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${fcm.token}` },
                 body: JSON.stringify({
@@ -168,9 +172,18 @@ Deno.serve(async (req) => {
                     data: { type: "tournament_reminder", action: "view_announcements", link },
                   },
                 }),
-              }).catch((err) => console.error("[dispatch] push failed:", err)),
-            ),
+              });
+              if (!response.ok) {
+                const responseText = await response.text();
+                if (isDeadToken(response.status, responseText)) {
+                  await supabase.from("user_push_tokens").delete().eq("token", t.token);
+                }
+                throw new Error(`push: FCM ${response.status}: ${responseText.slice(0, 200)}`);
+              }
+            }),
           );
+        } else if (channels.includes("push") && recipients.length) {
+          throw new Error("push: Firebase credentials unavailable");
         }
       }
 

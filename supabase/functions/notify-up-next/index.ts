@@ -128,7 +128,7 @@ Deno.serve(async () => {
       if (claimedIds.length === 0) continue;
 
       const { title, body } = queueAlertText(alert);
-      const link = `/tournaments/${alert.match.tournament_id}`;
+      const link = `/tournaments/${alert.match.tournament_id}/matches/${alert.match.id}`;
 
       await supabase.from("notifications").insert(
         claimedIds.map((user_id) => ({ user_id, title, message: body, type: "court_queue", link })),

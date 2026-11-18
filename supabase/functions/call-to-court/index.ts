@@ -1,6 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
-import { isDeadToken, isFatalSendError } from "../_shared/fcm.ts";
 import { courtLabel } from "../_shared/courtQueue.ts";
 
 /**
@@ -8,12 +6,12 @@ import { courtLabel } from "../_shared/courtQueue.ts";
  * get an in-app notification + push ("Court 2 is ready for you").
  * POST { match_id } with the caller's JWT. Only users who pass
  * can_umpire_match() may call; one call per match per 90 s.
- * Not gated by notification prefs — it's an operational call, like a PA system.
+ * Direct participants are always candidates; followers are filtered by their
+ * match-call preferences in the authoritative dispatcher.
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FIREBASE_SERVICE_ACCOUNT = Deno.env.get("FIREBASE_SERVICE_ACCOUNT") ?? "";
 const COOLDOWN_MS = 90_000;
 
 const cors = {
@@ -22,27 +20,6 @@ const cors = {
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
-
-async function fcmToken(sa: { client_email: string; private_key: string }): Promise<string> {
-  const key = await importPKCS8(sa.private_key, "RS256");
-  const jwt = await new SignJWT({
-    iss: sa.client_email,
-    sub: sa.client_email,
-    aud: "https://oauth2.googleapis.com/token",
-    scope: "https://www.googleapis.com/auth/firebase.messaging",
-  })
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .setIssuedAt()
-    .setExpirationTime("1h")
-    .sign(key);
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-  const data = await res.json();
-  return res.ok ? data.access_token : "";
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -78,7 +55,12 @@ Deno.serve(async (req) => {
     if (last && Date.now() - Date.parse(last.called_at) < COOLDOWN_MS) {
       return json({ error: "Players were just called — wait a minute before calling again", cooldown: true }, 429);
     }
-    await admin.from("court_calls").insert({ match_id, called_by: uid });
+    const { data: call, error: callError } = await admin
+      .from("court_calls")
+      .insert({ match_id, called_by: uid })
+      .select("called_at")
+      .single();
+    if (callError || !call) throw callError ?? new Error("Failed to record court call");
 
     const recipients = [m.player1_id, m.player2_id, m.player3_id, m.player4_id].filter(Boolean) as string[];
     if (recipients.length === 0) return json({ success: true, notified: 0 });
@@ -86,47 +68,24 @@ Deno.serve(async (req) => {
     const where = m.court_number ? courtLabel(String(m.court_number)) : "Your court";
     const title = `📣 ${where} is ready for you`;
     const body = `${m.category ? m.category + " · " : ""}${m.team1_label || "Side 1"} vs ${m.team2_label || "Side 2"} — please come to the court now.`;
-    const link = `/tournaments/${m.tournament_id}`;
-
-    await admin.from("notifications").insert(
-      recipients.map((user_id) => ({ user_id, title, message: body, type: "court_call", link })),
+    const { data: dispatch, error: dispatchError } = await admin.rpc(
+      "dispatch_authoritative_match_alert",
+      {
+        p_match_id: match_id,
+        p_event_type: "match_call",
+        p_title: title,
+        p_body: body,
+        p_version: Date.parse(call.called_at),
+      },
     );
+    if (dispatchError) throw dispatchError;
 
-    let pushed = 0;
-    let sa: any = null;
-    try {
-      sa = FIREBASE_SERVICE_ACCOUNT ? JSON.parse(FIREBASE_SERVICE_ACCOUNT) : null;
-    } catch {
-      sa = null;
-    }
-    const access = sa ? await fcmToken(sa) : "";
-    if (access) {
-      const { data: tokens } = await admin.from("user_push_tokens").select("token").in("user_id", recipients);
-      for (const { token } of tokens ?? []) {
-        const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${access}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: {
-              token,
-              notification: { title, body },
-              data: { type: "court_call", link, match_id },
-              android: { priority: "high", notification: { channel_id: "notify_point" } },
-              webpush: { headers: { Urgency: "high" } },
-              apns: { headers: { "apns-priority": "10" } },
-            },
-          }),
-        });
-        if (res.ok) {
-          pushed++;
-          continue;
-        }
-        const text = await res.text();
-        if (isFatalSendError(res.status)) break;
-        if (isDeadToken(res.status, text)) await admin.from("user_push_tokens").delete().eq("token", token);
-      }
-    }
-    return json({ success: true, notified: recipients.length, pushed });
+    return json({
+      success: true,
+      notified: Number(dispatch?.delivered_count ?? recipients.length),
+      skipped: Number(dispatch?.skipped_count ?? 0),
+      push_queued: true,
+    });
   } catch (e: any) {
     console.error("call-to-court failed", e);
     return json({ error: e?.message ?? "Failed" }, 500);
