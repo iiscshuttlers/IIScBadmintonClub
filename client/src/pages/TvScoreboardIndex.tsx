@@ -47,7 +47,7 @@ export default function TvScoreboardIndex() {
           </div>
         ) : activeMatches.length === 0 ? (
           <div className="bg-slate-900/50 rounded-[2rem] p-12 text-center border border-slate-800/50 backdrop-blur-xl">
-            <Activity className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <Activity className="w-16 h-16 text-slate-600 dark:text-slate-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-slate-300 mb-2">No Active Matches</h3>
             <p className="text-slate-500 text-lg">There are currently no matches being umpired. Once an umpire starts a match, it will appear here.</p>
           </div>

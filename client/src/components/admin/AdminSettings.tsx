@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone, Download, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,9 +45,14 @@ export function AdminSettings() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("site_data").select("value").eq("key", "club_settings").maybeSingle();
-    if (data?.value) setSettings({ ...DEFAULTS, ...(data.value as Partial<ClubSettings>) });
-    setLoading(false);
+    try {
+      const val = await adminService.getClubSettings();
+      if (val) setSettings({ ...DEFAULTS, ...(val as Partial<ClubSettings>) });
+    } catch {
+      /* intentional — fallback to DEFAULTS if settings not yet seeded */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const [savingUpdate, setSavingUpdate] = useState(false);
@@ -60,13 +65,6 @@ export function AdminSettings() {
     }))) return;
     setSavingUpdate(true);
     try {
-      // Anchor to the ACTUAL released build, never to whatever this row held
-      // before. This used to do `(row.versionCode || 1) + 1`, so the row crept
-      // up by one per click while real releases advanced independently — it
-      // drifted ~20 versions *behind* the installed app, and the client check
-      // (`installedBuild < versionCode`) could never be true. Bumping past the
-      // released build would be worse still: it would nag users who are already
-      // fully up to date and have nothing to install.
       const { fetchSiteData } = await import("@/lib/siteData");
       const released = await fetch(
         `${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`,
@@ -84,29 +82,14 @@ export function AdminSettings() {
         ...(existing || {}),
         versionCode: nextVersion,
         versionName: released?.versionName ?? "Latest",
-        // The published package is shuttlers.iisc.com — the row previously held
-        // com.iiscshuttlers.app, which is not a real listing, so the button
-        // opened a dead Play Store page.
         downloadUrl:
           released?.downloadUrl ??
           "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
         changelog: "A new mandatory update is available. Please update the app to continue.",
-        // Bumped on every force so the client can re-prompt users who already
-        // dismissed this same version.
         forcedAt: Date.now(),
       };
 
-      await supabase.from("site_data").upsert({ key: "app_version", value: newAppVersion, updated_at: new Date().toISOString() }, { onConflict: "key" });
-      
-      await supabase.functions.invoke("send-announcement", {
-        body: { 
-          title: "Update Available", 
-          body: "A new version of IISc Badminton Club is available! Please open the app to update.",
-          data_type: "app_update"
-        },
-      });
-      
-      await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Forced app update prompt (v${nextVersion})`, created_at: new Date().toISOString() });
+      await adminService.saveAppVersion(newAppVersion, session?.user?.email || "admin", nextVersion);
       
       toast.success(`Update forced to v${nextVersion} — anyone on an older build will be prompted.`);
     } catch (err: any) {
@@ -125,8 +108,7 @@ export function AdminSettings() {
 
       setExporting(tableName);
       toast.loading(`Fetching ${label.toLowerCase()}...`, { id: "export-data" });
-      const { data, error } = await (supabase as any).from(tableName).select("*");
-      if (error) throw error;
+      const data = await adminService.exportTable(tableName);
       if (!data || data.length === 0) throw new Error(`No ${label.toLowerCase()} found`);
 
       const timestamp = new Date().toISOString().split("T")[0];
@@ -210,7 +192,7 @@ export function AdminSettings() {
         }
       }
 
-      await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Exported ${tableName} to ${format.toUpperCase()}`, created_at: new Date().toISOString() });
+      await adminService.logAction(`Exported ${tableName} to ${format.toUpperCase()}`, undefined, session?.user?.email || "admin");
       toast.success(`${label} exported as ${format.toUpperCase()}!`, { id: "export-data" });
     } catch (err: any) {
       toast.error(err.message || `Failed to export ${label.toLowerCase()}`, { id: "export-data" });
@@ -238,9 +220,7 @@ export function AdminSettings() {
   const save = async () => {
     setSaving(true);
     try {
-      await supabase.from("site_data").upsert({ key: "club_settings", value: settings as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
-      // Log admin action
-      await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: "Updated club settings", created_at: new Date().toISOString() });
+      await adminService.saveClubSettings(settings as any, session?.user?.email || "admin");
       toast.success("Settings saved");
       setDirty(false);
     } catch (err: any) {
@@ -508,30 +488,6 @@ export function AdminSettings() {
                 className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
               >
                 {exporting === "tournaments" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Export
-              </button>
-            </div>
-          </div>
-
-          {/* Teams */}
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border">
-            <div>
-              <p className="font-bold text-foreground text-sm">Doubles Teams</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Registered teams & stats.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select id="fmt-doubles_teams" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
-                 <option value="csv">CSV</option>
-                 <option value="xlsx">Excel</option>
-                 <option value="json">JSON</option>
-                 <option value="pdf">PDF</option>
-              </select>
-              <button
-                onClick={() => exportData("doubles_teams", "Teams")}
-                disabled={exporting !== null}
-                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
-              >
-                {exporting === "doubles_teams" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 Export
               </button>
             </div>

@@ -280,7 +280,7 @@ export function TournamentCard({
                 e.stopPropagation();
                 onRegister();
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-slate-950 text-xs font-black hover:brightness-105 active:scale-95 transition shadow-xs focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:brightness-105 active:scale-95 transition shadow-xs focus-visible:ring-2 focus-visible:ring-primary"
             >
               <ClipboardList className="w-3.5 h-3.5" />
               {myRole?.registration ? "Manage entry" : "Register"}

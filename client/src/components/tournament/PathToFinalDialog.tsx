@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Route, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { computePath, type PathMatch } from "@/lib/pathToFinal";
 
 /** Round-by-round likely opponents from a player's current match to the final. */
@@ -22,20 +22,8 @@ export function PathToFinalDialog({
     queryKey: ["path-to-final", tournamentId, category, playerId],
     enabled: open,
     queryFn: async () => {
-      const { data: matches, error } = await supabase
-        .from("tournament_matches")
-        .select("id, match_code, round, round_name, status, winner_side, advances_to_match, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label, tie_id")
-        .eq("tournament_id", tournamentId)
-        .eq("category", category)
-        .is("tie_id", null);
-      if (error) throw error;
-      const ids = Array.from(
-        new Set((matches ?? []).flatMap((m: any) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean)),
-      );
-      const { data: players } = ids.length
-        ? await supabase.from("players").select("id, tournament_elo, elo_rating").in("id", ids)
-        : { data: [] as any[] };
-      const elo = new Map((players ?? []).map((p: any) => [p.id, p.elo_rating ?? p.tournament_elo ?? undefined]));
+      const { matches, players } = await tournamentService.fetchPathToFinalData(tournamentId, category);
+      const elo = new Map<string, number | undefined>((players ?? []).map((p: any) => [p.id, p.elo_rating ?? p.tournament_elo ?? undefined]));
       return computePath((matches ?? []) as PathMatch[], playerId, (id) => elo.get(id));
     },
   });

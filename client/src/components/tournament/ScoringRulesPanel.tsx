@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
@@ -44,17 +44,17 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [mRes, rRes] = await Promise.all([
-      supabase.from("tournament_matches").select("category, round, round_name").eq("tournament_id", tournament.id),
-      supabase.from("tournament_round_rules").select("*").eq("tournament_id", tournament.id),
-    ]);
-    if (mRes.error || rRes.error) {
-      setLoadError(true);
-    } else {
+    try {
+      const [mRows, rRows] = await Promise.all([
+        tournamentService.fetchTournamentMatchesForRounds(tournament.id),
+        tournamentService.fetchTournamentRoundRules(tournament.id),
+      ]);
       setLoadError(false);
-      setMatches((mRes.data as any) ?? []);
-      setRules((rRes.data as any) ?? []);
+      setMatches(mRows as any);
+      setRules(rRows as any);
       setEdits({});
+    } catch {
+      setLoadError(true);
     }
     setLoading(false);
   }, [tournament.id]);
@@ -108,14 +108,11 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
   const saveRule = async (category: string, round: number, round_name: string | null) => {
     const vals = valueFor(category, round);
     const clamped = { points_to_win: Math.max(1, vals.points_to_win), best_of_sets: Math.max(1, vals.best_of_sets), golden_point: Math.max(1, vals.golden_point) };
-    const { error: upErr } = await supabase.from("tournament_round_rules").upsert({
+    await tournamentService.upsertTournamentRoundRule({
       tournament_id: tournament.id, category, round, round_name, ...clamped,
-    }, { onConflict: "tournament_id,category,round" });
-    if (upErr) throw upErr;
+    });
     // Push the rule onto existing matches so live/scheduled matches pick it up.
-    const { error: mErr } = await supabase.from("tournament_matches").update({ ...vals })
-      .eq("tournament_id", tournament.id).eq("category", category).eq("round", round);
-    if (mErr) throw mErr;
+    await tournamentService.updateMatchesScoringRule(tournament.id, category, round, vals);
   };
 
   const saveOne = async (category: string, round: number, round_name: string | null) => {

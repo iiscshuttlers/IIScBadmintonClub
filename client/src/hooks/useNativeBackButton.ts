@@ -10,7 +10,7 @@ function showExitToast(onDone: () => void) {
     bottom: "40px",
     left: "50%",
     transform: "translateX(-50%)",
-    background: "rgba(15,23,42,0.92)",
+    background: "rgba(19,20,23,0.92)",
     color: "#fff",
     padding: "10px 22px",
     borderRadius: "30px",

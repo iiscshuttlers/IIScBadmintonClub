@@ -67,7 +67,7 @@ export function StatusTab({
           />
           <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
             Mark Profile as Retired
-            <p className="text-xs text-rose-500/70 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
+            <p className="text-xs text-rose-400 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
           </label>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Send, Bug, Lightbulb, MessageSquare } from "lucide-react";
@@ -32,14 +32,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("user_feedback").insert({
-        user_id: session.user.id,
-        feedback_type: type,
-        message: message.trim(),
-        status: "new"
-      });
-
-      if (error) throw error;
+      await adminService.submitUserFeedback(session.user.id, type, message.trim());
 
       toast("Feedback Sent!", { description: "Thank you for helping us improve.", icon: "✅" });
       setMessage("");

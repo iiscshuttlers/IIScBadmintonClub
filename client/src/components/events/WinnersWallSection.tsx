@@ -1,3 +1,4 @@
+import { tournamentLink } from "@/lib/tournamentRoutes";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -104,11 +105,8 @@ export function WinnersWallSection() {
   const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    supabase
-      .from("players")
-      .select("id, full_name")
-      .is("deleted_at", null)
-      .then(({ data }) => {
+    playerService.getActivePlayerNames()
+      .then((data) => {
         if (data) {
           const map: Record<string, string> = {};
           data.forEach(p => {
@@ -416,8 +414,8 @@ export function WinnersWallSection() {
                             Photos
                           </button>
                         </a>
-                        <Link href={`/events/${event.slug}`} className="flex-1 sm:flex-none">
-                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold text-xs sm:text-sm transition-colors">
+                        <Link href={tournamentLink(event)} className="flex-1 sm:flex-none">
+                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/60 text-primary dark:text-primary font-bold text-xs sm:text-sm transition-colors">
                             Results
                             <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>

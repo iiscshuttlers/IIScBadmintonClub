@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Quote, Trophy, Calendar, BookOpen, Medal, Swords } from "lucide-react";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
 import { PlayerEndorsementsWidget } from "../PlayerEndorsementsWidget";
 import type { TournamentRun } from "@/hooks/useTournamentMatchHistory";
 
@@ -15,7 +15,7 @@ export function ProfileOverviewTabRight({
   splitStats,
   tournamentRuns,
 }: {
-  player: PlayerProfileType;
+  player: PlayerRow;
   validAchievements: string[];
   splitStats?: any;
   tournamentRuns?: TournamentRun[];
@@ -24,14 +24,14 @@ export function ProfileOverviewTabRight({
   const dynamicLosses = splitStats?.all?.losses ?? 0;
   const displayRecord = (dynamicWins > 0 || dynamicLosses > 0)
     ? `${dynamicWins}W - ${dynamicLosses}L`
-    : player.winLossRecord || "0W - 0L";
+    : player.win_loss_record || "0W - 0L";
   return (
     <>
       {/* Quote */}
       {player.quote && (
         <motion.div variants={itemVariants} className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-800 to-amber-500 rounded-[1.75rem] blur opacity-25 group-hover:opacity-50 transition duration-500" />
-          <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-[#070d1a] rounded-[1.75rem] p-7 shadow-lg shadow-blue-950/40 overflow-hidden border border-amber-500/20">
+          <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-slate-950 rounded-[1.75rem] p-7 shadow-lg shadow-blue-950/40 overflow-hidden border border-amber-500/20">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-400/0 via-amber-400/50 to-amber-400/0" />
             <Quote className="absolute -bottom-3 -right-3 w-24 h-24 text-amber-400/[0.12] -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
             <div className="relative z-10">
@@ -44,13 +44,13 @@ export function ProfileOverviewTabRight({
       )}
 
       {/* Bio & Details */}
-      {(player.bio || player.coach || player.startedPlayingYear != null || player.highestRanking != null || player.favoriteFormat) && (
+      {(player.bio || player.coach || player.started_playing_year != null || player.highest_ranking != null || player.favorite_format) && (
         <motion.section
           variants={itemVariants}
           className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 to-cyan-500" />
-          <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/60 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />{" "}
             About
           </h2>
@@ -60,13 +60,13 @@ export function ProfileOverviewTabRight({
             </p>
           )}
           {(player.coach ||
-            player.startedPlayingYear != null ||
-            player.highestRanking != null ||
-            player.favoriteFormat) && (
+            player.started_playing_year != null ||
+            player.highest_ranking != null ||
+            player.favorite_format) && (
             <div className={`${player.bio ? "mt-4 pt-4 border-t border-slate-200 dark:border-white/8" : ""} space-y-2.5`}>
               {player.coach && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Coach
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
@@ -74,33 +74,33 @@ export function ProfileOverviewTabRight({
                   </span>
                 </div>
               )}
-              {player.favoriteFormat && (
+              {player.favorite_format && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Favorite Format
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    {player.favoriteFormat}
+                    {player.favorite_format}
                   </span>
                 </div>
               )}
-              {player.startedPlayingYear != null && (
+              {player.started_playing_year != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Years Playing
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    {new Date().getFullYear() - player.startedPlayingYear} yrs
+                    {new Date().getFullYear() - player.started_playing_year} yrs
                   </span>
                 </div>
               )}
-              {player.highestRanking != null && (
+              {player.highest_ranking != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Career-High Rank
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    #{player.highestRanking}
+                    #{player.highest_ranking}
                   </span>
                 </div>
               )}
@@ -115,7 +115,7 @@ export function ProfileOverviewTabRight({
         className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
-        <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+        <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/60 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
           <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
         </h2>
 
@@ -135,7 +135,7 @@ export function ProfileOverviewTabRight({
         {/* Bracket Record */}
         {tournamentRuns && tournamentRuns.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-3 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-3 flex items-center gap-1.5">
               <Swords className="w-3 h-3 text-primary" /> Bracket Record
             </h3>
             <div className="space-y-2">
@@ -155,11 +155,11 @@ export function ProfileOverviewTabRight({
                         <p className="text-[11px] font-bold text-slate-800 dark:text-foreground/85 truncate leading-tight">
                           {run.tournament_name}
                         </p>
-                        <p className="text-[9px] text-muted-foreground dark:text-foreground/35 uppercase tracking-wider">
+                        <p className="text-[9px] text-muted-foreground dark:text-foreground/60 uppercase tracking-wider">
                           {run.category}
                         </p>
                       </div>
-                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-muted-foreground dark:text-foreground/40" : "bg-primary/15 text-primary dark:text-primary"}`}>
+                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-muted-foreground dark:text-foreground/60" : "bg-primary/15 text-primary dark:text-primary"}`}>
                         {resultLabel}
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export function ProfileOverviewTabRight({
                           style={{ width: `${winPct}%` }}
                         />
                       </div>
-                      <span className="text-[9px] font-mono text-muted-foreground dark:text-foreground/35 shrink-0">
+                      <span className="text-[9px] font-mono text-muted-foreground dark:text-foreground/60 shrink-0">
                         {run.wins}W – {run.losses}L
                       </span>
                     </div>
@@ -184,7 +184,7 @@ export function ProfileOverviewTabRight({
         {/* Achievements */}
         {validAchievements.length > 0 && (
           <div className="mb-5">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-4 flex items-center gap-1.5">
               <Medal className="w-3 h-3 text-amber-500 dark:text-amber-400" />{" "}
               Achievements
             </h3>
@@ -245,7 +245,7 @@ export function ProfileOverviewTabRight({
         )}
 
         {/* Tournament history */}
-        {player.tournamentHistory.length > 0 && (
+        {(player.tournament_history?.length ?? 0) > 0 && (
           <div
             className={
               validAchievements.length > 0
@@ -253,12 +253,12 @@ export function ProfileOverviewTabRight({
                 : ""
             }
           >
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/60 mb-4 flex items-center gap-1.5">
               <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
             </h3>
             <div className="relative ml-5 space-y-2.5">
               <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-500/50 to-indigo-500/50 rounded-full" />
-              {[...player.tournamentHistory]
+              {[...(player.tournament_history || [])]
                 .sort((a, b) => {
                   const yearA = parseInt(a.match(/\b(20\d{2})\b/)?.[1] || "0", 10);
                   const yearB = parseInt(b.match(/\b(20\d{2})\b/)?.[1] || "0", 10);
@@ -282,7 +282,7 @@ export function ProfileOverviewTabRight({
       </motion.section>
 
       <motion.section variants={itemVariants}>
-        <PlayerEndorsementsWidget playerId={player.userId || player.id} />
+        <PlayerEndorsementsWidget playerId={player.id} />
       </motion.section>
     </>
   );

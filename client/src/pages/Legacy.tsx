@@ -25,7 +25,8 @@ import { Button } from "@/components/ui/button";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
-import { supabase } from "@/lib/supabase";
+import { galleryService } from "@/services/galleryService";
+import { fetchPlayerList } from "@/services/playerService";
 import { SocialCTA } from "@/components/SocialCTA";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -37,7 +38,8 @@ import { useLocation } from "wouter";
 import { fetchRemoteGalleryImages, saveRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
 import { GalleryUploader } from "@/components/admin/GalleryUploader";
 import { useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Trash2, ListOrdered } from "lucide-react";
+import { RecordsBook } from "@/components/legacy/RecordsBook";
 import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -110,7 +112,7 @@ export default function Legacy() {
   const initialFilter = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("filter") : null;
 
   const [activeTab, setActiveTab] = useHashTab(
-    ["champions", "albums", "photos", "videos"] as const,
+    ["champions", "records", "albums", "photos", "videos"] as const,
     initialFilter ? "albums" : "champions"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -158,15 +160,7 @@ export default function Legacy() {
     });
 
     try {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "gallery_likes").maybeSingle();
-      const currentDb = (data?.value as Record<string, string[]>) || {};
-      const pathLikes = currentDb[path] || [];
-      const newPathLikes = isLikedLocally 
-        ? pathLikes.filter(id => id !== userId)
-        : Array.from(new Set([...pathLikes, userId]));
-      
-      const updatedDb = { ...currentDb, [path]: newPathLikes };
-      await supabase.from("site_data").upsert({ key: "gallery_likes", value: updatedDb }, { onConflict: "key" });
+      await galleryService.toggleLike(path, userId, isLikedLocally);
     } catch (err) {
       console.error("Failed to sync like", err);
     }
@@ -222,7 +216,7 @@ export default function Legacy() {
     toast(isCurrentlyGlobal ? "Removed global subscription for " + formatText(tag) : "Enabled global subscription for " + formatText(tag));
     
     try {
-      await supabase.from("site_data").upsert({ key: "gallery_default_subscriptions", value: nextDefaults }, { onConflict: "key" });
+      await galleryService.updateDefaultSubscriptions(nextDefaults);
     } catch (err) {
       console.error("Failed to sync global subscription", err);
     }
@@ -347,11 +341,8 @@ export default function Legacy() {
   // Fetch player list lazily when lightbox first opens
   useEffect(() => {
     if (selectedIndex !== null && tagPlayers.length === 0) {
-      supabase
-        .from("players")
-        .select("id, full_name")
-        .order("full_name")
-        .then(({ data }) => { if (data) setTagPlayers(data); });
+      fetchPlayerList()
+        .then((data) => { if (data) setTagPlayers(data); });
     }
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -360,13 +351,13 @@ export default function Legacy() {
     if (current.some((t) => t.id === player.id)) return;
     const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
     setGalleryTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updateGalleryTags(updated);
   };
 
   const removeTag = async (photoPath: string, playerId: string) => {
     const updated = { ...galleryTags, [photoPath]: (galleryTags[photoPath] || []).filter((t) => t.id !== playerId) };
     setGalleryTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updateGalleryTags(updated);
   };
 
   const requestTag = async (photoPath: string) => {
@@ -387,7 +378,7 @@ export default function Legacy() {
     
     const updated = { ...pendingTags, [photoPath]: [...currentPending, { id: currentUserPlayer.id, name: currentUserPlayer.full_name }] };
     setPendingTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updatePendingTags(updated);
     toast.success("Tag request sent!");
   };
 
@@ -396,13 +387,13 @@ export default function Legacy() {
     const currentTags = galleryTags[photoPath] || [];
     const updatedTags = { ...galleryTags, [photoPath]: [...currentTags, tag] };
     setGalleryTags(updatedTags);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updatedTags }, { onConflict: "key" });
 
     // Remove from pendingTags
     const currentPending = pendingTags[photoPath] || [];
     const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
     setPendingTags(updatedPending);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+
+    await galleryService.approvePendingTag(updatedTags, updatedPending);
   };
 
   const rejectTag = async (photoPath: string, tag: TagEntry) => {
@@ -410,7 +401,7 @@ export default function Legacy() {
     const currentPending = pendingTags[photoPath] || [];
     const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
     setPendingTags(updatedPending);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+    await galleryService.updatePendingTags(updatedPending);
   };
 
   const handleEditTitle = async (item: UnifiedGalleryItem) => {
@@ -607,7 +598,7 @@ export default function Legacy() {
         subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
       >
         <div className="flex justify-center w-full px-2">
-          <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
               <Button
                 asChild
                 variant="tab"
@@ -627,15 +618,29 @@ export default function Legacy() {
                 variant="tab"
                 size="tab"
                 className={`w-full sm:w-auto ${
-                  activeTab !== "champions"
+                  activeTab === "records"
+                    ? "bg-slate-900 text-emerald-400 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                }`}
+              >
+                <a href="#records" onClick={() => setActiveTab("records")}>
+                  <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Records
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="tab"
+                size="tab"
+                className={`w-full sm:w-auto ${
+                  activeTab !== "champions" && activeTab !== "records"
                     ? "bg-slate-900 text-blue-400 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
                 <a
-                  href={`#${activeTab === "champions" ? "albums" : activeTab}`}
+                  href={`#${activeTab === "champions" || activeTab === "records" ? "albums" : activeTab}`}
                   onClick={() => {
-                    if (activeTab === "champions") setActiveTab("albums");
+                    if (activeTab === "champions" || activeTab === "records") setActiveTab("albums");
                   }}
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
@@ -646,8 +651,9 @@ export default function Legacy() {
       </PageHeader>
 
       {activeTab === "champions" && <WinnersWallSection />}
+      {activeTab === "records" && <RecordsBook />}
 
-      {activeTab !== "champions" && (
+      {activeTab !== "champions" && activeTab !== "records" && (
         <section className="pt-6 pb-2 bg-slate-50/50 dark:bg-slate-950/50 relative border-b border-slate-100 dark:border-slate-800">
           <div className="container mx-auto px-4 flex justify-center">
             <div className="bg-slate-200/50 dark:bg-slate-900 p-1.5 rounded-2xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto shadow-inner">
@@ -1234,7 +1240,7 @@ export default function Legacy() {
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     )}
-                  <p className="text-foreground/30 text-[10px] mt-1 hidden sm:block">
+                  <p className="text-foreground/60 text-[10px] mt-1 hidden sm:block">
                     ← → to navigate &nbsp;·&nbsp; Esc to close
                   </p>
                 </>

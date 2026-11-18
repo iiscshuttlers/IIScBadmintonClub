@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Trophy } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentCategories, fetchTournamentMatchesResult } from "@/services/tournamentService";
 import { BracketVisual, type BracketMatch } from "@/components/tournament/BracketVisual";
 
 const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD", "BS", "GS", "BD", "GD"];
@@ -32,11 +32,7 @@ export function LiveBracketsSection({
         return;
       }
 
-      const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("id, categories")
-        .eq("id", tournamentId)
-        .single();
+      const tournament = await fetchTournamentCategories(tournamentId);
 
       if (!tournament) {
         setError("Tournament not found.");
@@ -44,12 +40,7 @@ export function LiveBracketsSection({
         return;
       }
 
-      const { data: rows, error: matchError } = await supabase
-        .from("tournament_matches")
-        .select("*")
-        .eq("tournament_id", tournament.id)
-        .order("round")
-        .order("match_number");
+      const { data: rows, error: matchError } = await fetchTournamentMatchesResult(tournament.id);
 
       if (matchError || !rows?.length) {
         setError("Tournament brackets are not available yet.");

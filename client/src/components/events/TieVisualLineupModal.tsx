@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
+import { umpireService } from '@/services/umpireService';
 import { 
   X, 
   Swords, 
@@ -69,19 +70,7 @@ export function TieVisualLineupModal({
     queryKey: ['visual_tie_rubbers', tie?.id],
     queryFn: async () => {
       if (!tie?.id) return [];
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select(`
-          *,
-          player1:players!tournament_matches_player1_id_fkey(id, full_name, avatar_url, gender),
-          player2:players!tournament_matches_player2_id_fkey(id, full_name, avatar_url, gender),
-          player3:players!tournament_matches_player3_id_fkey(id, full_name, avatar_url, gender),
-          player4:players!tournament_matches_player4_id_fkey(id, full_name, avatar_url, gender),
-          revealer:players!tournament_matches_revealed_by_fkey(id, full_name)
-        `)
-        .eq('tie_id', tie.id)
-        .order('playing_order', { ascending: true, nullsFirst: false });
-      if (error) throw error;
+      const data = await teamService.getTieRubbersWithPlayers(tie.id);
 
       // Sort by status priority (Live -> Upcoming -> Completed), then by playing_order / rubber_order
       const statusPriority = (status: string) => {
@@ -108,18 +97,7 @@ export function TieVisualLineupModal({
     queryKey: ['visual_tie_audits', tie?.id],
     queryFn: async () => {
       if (!tie?.id) return [];
-      const { data, error } = await supabase
-        .from('tie_lineup_audits')
-        .select(`
-          *,
-          referee:players!tie_lineup_audits_referee_id_fkey(full_name),
-          orig_player:players!tie_lineup_audits_original_player_id_fkey(full_name),
-          repl_player:players!tie_lineup_audits_replacement_player_id_fkey(full_name)
-        `)
-        .eq('tie_id', tie.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      return umpireService.fetchTieLineupAudits(tie.id);
     },
     enabled: isOpen && !!tie?.id
   });
@@ -142,7 +120,7 @@ export function TieVisualLineupModal({
         <div className="relative p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 shrink-0">
           <div className="flex items-center justify-between pb-3 border-b border-slate-700/50">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-black px-2.5 py-1 rounded-xl bg-primary text-slate-950">
+              <span className="font-mono text-xs font-black px-2.5 py-1 rounded-xl bg-primary text-primary-foreground">
                 {tie.tie_code}
               </span>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -158,7 +136,7 @@ export function TieVisualLineupModal({
                   type="button"
                   onClick={() => handleSetViewMode('court')}
                   className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                    viewMode === 'court' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                    viewMode === 'court' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" /> Court Cards
@@ -167,7 +145,7 @@ export function TieVisualLineupModal({
                   type="button"
                   onClick={() => handleSetViewMode('list')}
                   className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                    viewMode === 'list' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                    viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <ListFilter className="w-3.5 h-3.5" /> List
@@ -471,7 +449,7 @@ export function TieVisualLineupModal({
                       key={rubber.id || idx}
                       className="flex items-center gap-2 sm:gap-3 px-3 sm:px-3.5 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition text-sm"
                     >
-                      <span className="font-black text-[10px] px-2 py-0.5 rounded-lg bg-primary text-slate-950 shrink-0">
+                      <span className="font-black text-[10px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground shrink-0">
                         {rubber.category}
                       </span>
                       {rubber.playing_order && (
@@ -501,7 +479,7 @@ export function TieVisualLineupModal({
                     {/* Top Court Banner */}
                     <div className="px-4 py-2.5 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-slate-950">
+                        <span className="font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground">
                           {rubber.category}
                         </span>
                         <span className="font-bold text-slate-200">
@@ -595,7 +573,7 @@ export function TieVisualLineupModal({
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-slate-500 italic text-xs">
-                              <Lock className="w-4 h-4 text-slate-600" />
+                              <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                               <span>Secret Lineup</span>
                             </div>
                           )}
@@ -671,7 +649,7 @@ export function TieVisualLineupModal({
                           ) : (
                             <div className="flex items-center gap-2 text-slate-500 italic text-xs">
                               <span>Secret Lineup</span>
-                              <Lock className="w-4 h-4 text-slate-600" />
+                              <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                             </div>
                           )}
                         </div>

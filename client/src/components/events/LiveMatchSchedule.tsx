@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Trophy, Phone, MessageCircle, Download, Image, FileText } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Phone, MessageCircle, Download, Image, FileText } from "lucide-react";
 import { exportElementToImage, exportElementToPDF } from "@/utils/exportUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
+import { Link } from "wouter";
+import { fetchTournamentSeedRows } from "@/services/tournamentService";
+import { buildSeedIndex, courtLabel, matchState, toMatchView, type MatchRow, type SeedIndex } from "@/lib/matchView";
+import { MatchSideRow, MatchStatusBadge, scoreSummary } from "@/components/match/MatchPrimitives";
+import { matchPath } from "@/lib/tournamentRoutes";
+import { feedService } from "@/services/feedService";
+import { fetchTournamentContacts, fetchTournamentOfficialsWithContacts } from "@/services/playerPrivateService";
+import {
+  fetchTournamentById,
+  fetchTournamentMatches,
+  getUserTournamentRoles,
+} from "@/services/tournamentService";
 
 interface ScheduledMatch {
   id: string;
@@ -62,26 +73,30 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const [contactSearch, setContactSearch] = useState("");
   const [tournamentOver, setTournamentOver] = useState(false);
   const [myRoles, setMyRoles] = useState<Set<string>>(new Set());
+  const [seeds, setSeeds] = useState<SeedIndex>(() => new Map());
+
+  // Seeds are decoration: a failure leaves the schedule unchanged.
+  useEffect(() => {
+    if (!tournamentId) return;
+    let cancelled = false;
+    fetchTournamentSeedRows(tournamentId).then((data) => {
+      if (!cancelled && data) setSeeds(buildSeedIndex(data));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tournamentId]);
 
   useEffect(() => {
     if (!profile?.id) return;
     const loadPicks = async () => {
-      const { data: myVotes } = await supabase
-        .from("live_match_votes")
-        .select("live_match_id, pick")
-        .eq("user_id", profile.id);
-      if (myVotes) {
-        const p: Record<string, 1 | 2> = {};
-        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
-        setPicks(p);
-      }
-      const { data: siteData } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "poll_revealed_matches")
-        .single();
-      if (siteData?.value) {
-        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      try {
+        const myPicks = await feedService.getLiveMatchPicks(profile.id);
+        setPicks(myPicks);
+        const revealed = await feedService.getPollRevealedMatches();
+        setRevealedMatchIds(revealed);
+      } catch (err) {
+        console.error("Failed to load picks:", err);
       }
     };
     loadPicks();
@@ -90,43 +105,56 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const handlePick = async (matchId: string, team: 1 | 2) => {
     if (!profile?.id) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    await supabase.from("live_match_votes").upsert({
-      live_match_id: matchId,
-      user_id: profile.id,
-      pick: team
-    }, { onConflict: 'live_match_id,user_id' });
+    try {
+      await feedService.saveLiveMatchPick(matchId, profile.id, team);
+    } catch (err) {
+      console.error("Failed to save pick:", err);
+    }
   };
 
   const handleToggleReveal = async (matchId: string) => {
     if (!isAdmin) return;
-    const isRevealed = !!revealedMatchIds[matchId];
-    const nextState = { ...revealedMatchIds, [matchId]: !isRevealed };
+    const isRevealed = !revealedMatchIds[matchId];
+    const nextState = { ...revealedMatchIds, [matchId]: isRevealed };
     setRevealedMatchIds(nextState);
-    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+    try {
+      await feedService.setPollRevealedMatches(nextState);
+    } catch (err) {
+      console.error("Failed to update poll revealed matches:", err);
+    }
   };
 
   useEffect(() => {
     if (!tournamentId) { setLoading(false); return; }
-    supabase
-      .from("tournament_matches")
-      .select("id,category,match_code,round_name,team1_label,team2_label,court_number,scheduled_at,status,winner_side,sets_history,player1_id,player2_id,player3_id,player4_id")
-      .eq("tournament_id", tournamentId)
-      .order("scheduled_at", { ascending: false, nullsFirst: false })
-      .order("round", { ascending: false })
-      .order("match_number", { ascending: false })
-      .then(({ data }) => {
-        setSchedMatches((data as ScheduledMatch[]) ?? []);
+    fetchTournamentMatches(tournamentId)
+      .then((data) => {
+        const sorted = [...data].sort((a: any, b: any) => {
+          if (a.scheduled_at && b.scheduled_at) {
+            return new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime();
+          }
+          if (a.scheduled_at) return -1;
+          if (b.scheduled_at) return 1;
+          if (b.round !== a.round) return (b.round ?? 0) - (a.round ?? 0);
+          return (b.match_number ?? 0) - (a.match_number ?? 0);
+        });
+        setSchedMatches(sorted as ScheduledMatch[]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch matches:", err);
         setLoading(false);
       });
   }, [tournamentId]);
 
   useEffect(() => {
     if (!tournamentId) return;
-    supabase.from("tournaments").select("status").eq("id", tournamentId).single().then(({ data }) => {
+    fetchTournamentById(tournamentId).then((data) => {
       if (data?.status === "COMPLETED" || data?.status === "ARCHIVED") {
         setTournamentOver(true);
-        supabase.from("site_data").delete().eq("key", `tournament_contacts_${tournamentId}`);
+        feedService.deleteTournamentContacts(tournamentId).catch(() => {});
       }
+    }).catch((err) => {
+      console.error("Failed to fetch tournament status:", err);
     });
   }, [tournamentId]);
 
@@ -134,29 +162,22 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   useEffect(() => {
     if (!tournamentId || !profile?.id) return;
     (async () => {
-      // Check if contacts are enabled for this tournament
-      const { data: sd } = await supabase.from("site_data").select("value").eq("key", `tournament_contacts_${tournamentId}`).maybeSingle();
-      const enabled = sd?.value === true || (sd?.value as any)?.enabled === true;
-      setContactsEnabled(enabled);
+      try {
+        // Check if contacts are enabled for this tournament
+        const sd = await feedService.getTournamentContacts(tournamentId);
+        const enabled = sd === true || (sd as any)?.enabled === true;
+        setContactsEnabled(enabled);
 
-      // Load my roles for this tournament
-      const { data: myOff } = await supabase.from("tournament_officials").select("role").eq("tournament_id", tournamentId).eq("user_id", profile.id);
-      if (myOff) setMyRoles(new Set(myOff.map(o => o.role)));
+        // Load my roles for this tournament
+        const roles = await getUserTournamentRoles(tournamentId, profile.id);
+        setMyRoles(roles);
 
-      // Load officials with contacts
-      const { data: offRows } = await supabase
-        .from("tournament_officials")
-        .select("user_id, role")
-        .eq("tournament_id", tournamentId);
-      if (offRows?.length) {
-        const offIds = [...new Set(offRows.map(o => o.user_id))];
-        const { data: offPlayers } = await supabase.from("players").select("id, full_name, contact_number").in("id", offIds);
-        if (offPlayers) {
-          setOfficials(offRows.map(o => {
-            const p = offPlayers.find(pl => pl.id === o.user_id);
-            return { id: o.user_id, name: p?.full_name ?? "Unknown", contact_number: p?.contact_number ?? null, role: o.role };
-          }));
-        }
+        // Load officials with contacts
+        // Phone numbers are released by the server according to role.
+        const offList = await fetchTournamentOfficialsWithContacts(tournamentId);
+        setOfficials(offList);
+      } catch (err) {
+        console.error("Failed to load tournament contacts and officials:", err);
       }
     })();
   }, [tournamentId, profile?.id]);
@@ -172,12 +193,11 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
       if (m.player4_id) playerIds.add(m.player4_id);
     }
     if (!playerIds.size) return;
-    supabase.from("players").select("id, full_name, contact_number").in("id", [...playerIds]).then(({ data }) => {
-      if (data) {
-        const map: Record<string, ContactInfo> = {};
-        data.forEach(p => { map[p.id] = { id: p.id, name: p.full_name, contact_number: p.contact_number }; });
-        setContactMap(map);
-      }
+    if (!tournamentId) return;
+    fetchTournamentContacts(tournamentId, [...playerIds]).then((map) => {
+      setContactMap(map);
+    }).catch((err) => {
+      console.error("Failed to load player contacts map:", err);
     });
   }, [schedMatches]);
 
@@ -205,28 +225,43 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   );
 
   const renderMatchList = (matches: ScheduledMatch[]) => {
+    // Group by local calendar day (sortable key), label each day in words.
+    const dayKey = (iso: string) => {
+      const d = new Date(iso);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
     const grouped: Record<string, Record<string, ScheduledMatch[]>> = {};
+    const labels: Record<string, string> = {};
     for (const m of matches) {
-      const key = m.scheduled_at
-        ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
-        : "Unscheduled";
+      const key = m.scheduled_at ? dayKey(m.scheduled_at) : "Unscheduled";
+      if (!labels[key]) {
+        labels[key] = m.scheduled_at
+          ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
+          : "Unscheduled";
+      }
       if (!grouped[key]) grouped[key] = {};
       const catKey = m.category || "Other";
       if (!grouped[key][catKey]) grouped[key][catKey] = [];
       grouped[key][catKey].push(m);
     }
 
+    // Days run in order. With no date picked, open today (or the next day with
+    // matches, or the last day once play is over); a picked date is open.
+    const days = Object.keys(grouped).sort((a, b) => (a === "Unscheduled" ? 1 : b === "Unscheduled" ? -1 : a.localeCompare(b)));
+    const today = dayKey(new Date().toISOString());
+    const datedDays = days.filter((d) => d !== "Unscheduled");
+    const focusDay = activeDate !== "ALL"
+      ? null
+      : datedDays.find((d) => d >= today) ?? datedDays[datedDays.length - 1] ?? days[0];
+
     return (
       <div className="space-y-6 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-        {Object.entries(grouped).sort(([dateA], [dateB]) => {
-          if (dateA === "Unscheduled") return 1;
-          if (dateB === "Unscheduled") return -1;
-          return new Date(dateB).getTime() - new Date(dateA).getTime();
-        }).map(([date, categoriesGroup]) => {
-          const isOpen = activeDate !== "ALL" && activeDate === date;
+        {days.map((key) => [key, grouped[key]] as const).map(([key, categoriesGroup]) => {
+          const date = labels[key];
+          const isOpen = activeDate !== "ALL" || key === focusDay || days.length === 1;
           const totalMatchesForDate = Object.values(categoriesGroup).reduce((acc, matches) => acc + matches.length, 0);
           return (
-            <details key={date} open={isOpen} className="group mb-6 last:mb-0 relative">
+            <details key={key} open={isOpen} className="group mb-6 last:mb-0 relative">
               <summary className="flex items-center gap-3 mb-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none outline-none">
                 <Calendar className="w-4 h-4 text-primary" />
                 <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm flex-1">
@@ -281,22 +316,24 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                 {/* Print Header (Only visible in print) */}
                 <div className="hidden print:block mb-8 text-center border-b pb-4">
                   <h1 className="text-2xl font-black mb-1">IISc Badminton Club</h1>
-                  <h2 className="text-xl text-slate-600">Match Schedule - {date}</h2>
+                  <h2 className="text-xl text-slate-600 dark:text-slate-400">Match Schedule - {date}</h2>
                 </div>
 
                 {Object.entries(categoriesGroup).map(([cat, rawDayMatches]) => {
                   const catCls = CAT_COLORS[cat] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
                   const boxCls = CAT_BOX_COLORS[cat] ?? "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900";
                   
-                  const priority = (s: string) => {
-                    if (s === "in_progress") return 0;
-                    if (s === "completed" || s === "walkover") return 2;
+                  // Live first, then upcoming, then finished (shared status rules).
+                  const priority = (m: ScheduledMatch) => {
+                    const st = matchState(m);
+                    if (st === "live") return 0;
+                    if (st === "completed" || st === "walkover" || st === "cancelled") return 2;
                     return 1;
                   };
 
                   const dayMatches = [...rawDayMatches].sort((a, b) => {
-                    const pA = priority(a.status);
-                    const pB = priority(b.status);
+                    const pA = priority(a);
+                    const pB = priority(b);
                     if (pA !== pB) return pA - pB;
                     if (a.scheduled_at && b.scheduled_at) {
                       return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
@@ -310,8 +347,10 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                         {cat} Matches
                       </h5>
                       {dayMatches.map((m, idx) => {
-                        const isCompleted = m.status === "completed" || m.status === "walkover";
-                        const isLive = m.status === "in_progress";
+                        const view = toMatchView(m as unknown as MatchRow, seeds);
+                        const isCompleted = view.state === "completed" || view.state === "walkover" || view.state === "cancelled";
+                        const isLive = view.state === "live";
+                        const summary = scoreSummary(view);
                         const checkMatch = (label: string | undefined | null, pName: string | null) => {
                           if (!label || !pName) return false;
                           const l = label.toLowerCase();
@@ -335,32 +374,33 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 w-5">#{idx + 1}</span>
                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls} print:bg-transparent print:border-slate-300`}>{m.category}</span>
                             <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
-                            {m.court_number && (
-                              <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
-                                <MapPin className="w-3 h-3" /> Court {m.court_number}
+                            {view.court && (
+                              <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(view.court))}>
+                                <MapPin className="w-3 h-3" aria-hidden /> {courtLabel(view.court)}
                               </span>
                             )}
-                            {m.scheduled_at && (
+                            {view.scheduledAt && (
                               <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <Clock className="w-3 h-3" />
-                                {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                                <Clock className="w-3 h-3" aria-hidden />
+                                <span className="sr-only">Scheduled</span>
+                                {new Date(view.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                               </span>
                             )}
-                            {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
-                            {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
+                            <MatchStatusBadge view={view} />
+                            <Link
+                              href={matchPath(view.tournamentId || tournamentId || "", view.id)}
+                              className="ml-auto inline-flex items-center min-h-[44px] -my-3 px-2 text-[11px] font-black text-primary hover:underline print:hidden"
+                              aria-label={`Match details: ${view.sides[0].label} versus ${view.sides[1].label}`}
+                            >
+                              Details →
+                            </Link>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                              {m.team1_label ?? "TBD"}
-                            </span>
-                            <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                            <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                              {m.team2_label ?? "TBD"}
-                            </span>
+                          <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            <MatchSideRow side={view.sides[0]} index={0} view={view} />
+                            <MatchSideRow side={view.sides[1]} index={1} view={view} />
                           </div>
-                          {isCompleted && m.sets_history?.length ? (
-                            <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
-                          ) : null}
+                          {summary && <p className="sr-only">Score: {summary}</p>}
+                          {view.scoreText && <p className="mt-1.5 text-xs font-mono text-muted-foreground">{view.scoreText}</p>}
 
                           {/* Contact buttons */}
                           {(() => {
@@ -439,8 +479,6 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                               <MatchPredictionCard
                                 compact
                                 matchId={m.id}
-                                t1Ids={[]}
-                                t2Ids={[]}
                                 t1Label={m.team1_label ?? "TBD"}
                                 t2Label={m.team2_label ?? "TBD"}
                                 hasStarted={isLive || isCompleted}

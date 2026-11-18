@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -56,6 +56,7 @@ const ContentHub = lazyNamed(() => import("@/components/admin/ContentHub"), "Con
 // Standalone panels
 const UmpireTab = lazyNamed(() => import("@/components/umpire/UmpireTab"), "UmpireTab");
 const AdminStatsOverview = lazyNamed(() => import("@/components/admin/AdminStatsOverview"), "AdminStatsOverview");
+const AdminActionCards = lazyNamed(() => import("@/components/admin/AdminActionCards"), "AdminActionCards");
 const InboxPanel = lazyNamed(() => import("@/components/admin/InboxPanel"), "InboxPanel");
 const AdminSettings = lazyNamed(() => import("@/components/admin/AdminSettings"), "AdminSettings");
 const AdminActivityLog = lazyNamed(() => import("@/components/admin/AdminActivityLog"), "AdminActivityLog");
@@ -120,7 +121,7 @@ function loadPinnedTabs(): TabId[] {
 }
 
 function savePinnedTabs(pins: TabId[]) {
-  try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch {}
+  try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch { /* intentional — localStorage quota or restricted private mode, pinned tabs are non-critical */ }
 }
 
 const TAB_GROUPS: TabGroup[] = [
@@ -571,7 +572,17 @@ function SiteAdminInner() {
                     </div>
                   }
                 >
-                  {activeTab === "overview" && isAdmin && <AdminStatsOverview />}
+                  {activeTab === "overview" && isAdmin && (
+                    <>
+                      <AdminActionCards
+                        onOpenTab={(tab) => {
+                          const resolved = resolveTab(tab);
+                          if (resolved) handleTabChange(resolved);
+                        }}
+                      />
+                      <AdminStatsOverview />
+                    </>
+                  )}
                   {activeTab === "content" && <ContentHub />}
                   {activeTab === "tournament" && (
                     <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm dark:from-amber-950/20 dark:to-slate-900">

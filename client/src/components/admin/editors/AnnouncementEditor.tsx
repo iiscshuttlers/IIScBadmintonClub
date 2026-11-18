@@ -3,7 +3,7 @@ import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
   Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
@@ -26,11 +26,8 @@ export function AnnouncementEditor({
     const idx = data.indexOf(a);
     setPushingIdx(idx);
     try {
-      const { data: respData, error } = await supabase.functions.invoke("send-announcement", {
-        body: { title: a.title, body: a.content.slice(0, 120) },
-      });
-      if (error) throw error;
-      
+      const respData = await feedService.sendAnnouncementPush({ title: a.title, body: a.content.slice(0, 120) });
+
       if (respData?.message === "No push tokens registered" || respData?.total === 0) {
         toast.warning("Announcement saved, but no users have push notifications enabled.");
       } else if (respData?.failed > 0) {

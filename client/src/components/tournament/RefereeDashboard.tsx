@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { fetchRefereeMatches, notifyTournamentMatch, subscribeToRefereeBoard } from "@/services/tournamentService";
+import { teamService } from "@/services/teamService";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
@@ -69,24 +70,11 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
 
     try {
       // 1. Load tournament_matches
-      const matchesQuery = supabase
-        .from("tournament_matches")
-        .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, court_number, scheduled_at, status, score, winner_side, reminder_sent")
-        .eq("tournament_id", tournament.id)
-        .order("round", { ascending: true })
-        .order("match_number", { ascending: true });
+      const matchesQuery = fetchRefereeMatches(tournament.id);
 
       // 2. If team tournament, also load ties
       const tiesQuery = isTeamEvent
-        ? supabase
-            .from("tournament_ties" as any)
-            .select(`
-              *,
-              team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
-              team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
-            `)
-            .eq("tournament_id", tournament.id)
-            .order("created_at", { ascending: true })
+        ? teamService.getRefereeTies(tournament.id)
         : null;
 
       const [matchesRes, tiesRes] = await Promise.all([
@@ -115,13 +103,9 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
 
   // Live refresh: realtime on matches & ties
   useEffect(() => {
-    const channel = supabase
-      .channel(`referee_matches_${tournament.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_matches", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
-      .on("postgres_changes", { event: "*", schema: "public", table: "tournament_ties", filter: `tournament_id=eq.${tournament.id}` }, () => load(true))
-      .subscribe();
+    const unsubscribe = subscribeToRefereeBoard(tournament.id, () => load(true));
     const iv = setInterval(() => load(true), 30000);
-    return () => { supabase.removeChannel(channel); clearInterval(iv); };
+    return () => { unsubscribe(); clearInterval(iv); };
   }, [tournament.id, load]);
 
   const now = Date.now();
@@ -231,10 +215,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const remindMatch = async (m: MatchRow) => {
     setNotifyMatchId(m.id);
     try {
-      const { error } = await supabase.functions.invoke("match-notifier", {
-        body: { type: "manual", match_id: m.id },
-      });
-      if (error) throw error;
+      await notifyTournamentMatch(m.id, "manual");
       toast.success("Players notified", { description: "Sent via in-app, email & push." });
     } catch (e: any) {
       toast.error(e?.message || "Could not send reminder");

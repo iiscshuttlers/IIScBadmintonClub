@@ -6,6 +6,7 @@ import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { playWhistleSound, playVictorySound, playServeSound } from "@/lib/sounds";
 import { toast } from "sonner";
+import type { BwfMatchState } from "@/types/umpire";
 
 export function useGlobalNotifications() {
   const lastAnnouncementRef = useRef<string | null>(null);
@@ -30,14 +31,14 @@ export function useGlobalNotifications() {
         table: "site_data",
       },
       async (payload) => {
-        const row = payload.new as any;
+        const row = payload.new as { key?: string; value?: unknown } | null;
         if (!row) return;
 
         if (row.key === "announcements") {
           try {
             const notifyAnnouncements = localStorage.getItem("iisc_notify_announcements") !== "false";
             if (!notifyAnnouncements) return;
-            const data = row.value;
+            const data = row.value as { recent?: Array<{ title?: string }> } | null;
             if (data && data.recent && data.recent.length > 0) {
               const latest = data.recent[0];
               if (latest.title && latest.title !== lastAnnouncementRef.current) {
@@ -78,31 +79,19 @@ export function useGlobalNotifications() {
           }
         } else if (row.key === "live_matches") {
           try {
-            const liveMatches = row.value || {};
-            Object.values(liveMatches).forEach((match: any) => {
+            const liveMatches = (row.value || {}) as Record<string, BwfMatchState>;
+            Object.values(liveMatches).forEach((match) => {
               if (match.status === "playing" && !knownMatchesRef.current.has(match.id)) {
                 knownMatchesRef.current.add(match.id);
 
-                const notifyFriendly = localStorage.getItem("iisc_notify_friendly_matches") !== "false";
+                // Only tournament matches are announced.
+                if (match.isFriendly) return;
                 const notifyTourney = localStorage.getItem("iisc_notify_tournament_started") !== "false";
-
-                if (match.isFriendly && !notifyFriendly) return;
-                if (!match.isFriendly && !notifyTourney) return;
+                if (!notifyTourney) return;
 
                 playWhistleSound();
 
-                if (match.isFriendly) {
-                  const currentProfile = profileRef.current;
-                  if (!currentProfile) return;
-                  const participants = [match.t1?.p1Id, match.t1?.p2Id, match.t2?.p1Id, match.t2?.p2Id].filter(Boolean);
-                  if (participants.includes(currentProfile.id)) return;
-                  const buddies = currentProfile.buddies || [];
-                  const following = currentProfile.following || [];
-                  const isConnected = participants.some(pid => buddies.includes(pid) || following.includes(pid));
-                  if (!isConnected) return;
-                }
-
-                const title = match.isFriendly ? "🏸 Live Friendly Match!" : "🏆 Live Tournament Match!";
+                const title = "🏆 Live Tournament Match!";
                 const body = `${match.t1?.p1Name} vs ${match.t2?.p1Name} is now live!`;
 
                 if (Capacitor.isNativePlatform()) {
@@ -127,7 +116,7 @@ export function useGlobalNotifications() {
           }
         } else if (row.key === "latest_buddy_acceptance") {
           try {
-            const data = row.value;
+            const data = row.value as { senderId?: string; accepterName?: string; accepterId?: string } | null;
             const currentProfile = profileRef.current;
             if (data && currentProfile && data.senderId === currentProfile.id) {
               playVictorySound();
@@ -158,7 +147,7 @@ export function useGlobalNotifications() {
           try {
             const notifyAdmin = localStorage.getItem("iisc_notify_admin_push") !== "false";
             if (!notifyAdmin) return;
-            const data = row.value;
+            const data = row.value as { title?: string; body?: string; url?: string; timestamp?: number } | null;
             if (data && data.title && data.timestamp && data.timestamp !== lastAdminPushRef.current) {
               lastAdminPushRef.current = data.timestamp;
               playWhistleSound();
@@ -186,7 +175,7 @@ export function useGlobalNotifications() {
           try {
             const notifyMatchResults = localStorage.getItem("iisc_notify_match_results") !== "false";
             if (!notifyMatchResults) return;
-            const data = row.value;
+            const data = row.value as { message?: string; time?: number; title?: string } | null;
             if (data && data.message && data.time && data.time !== lastAdminPushRef.current) {
               lastAdminPushRef.current = data.time;
               playWhistleSound();

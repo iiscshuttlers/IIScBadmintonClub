@@ -59,7 +59,7 @@ export function StatCard({
       {expandable && (
         <ChevronDown
           className={`absolute bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 transition-transform duration-300 ${
-            expanded ? "rotate-180 text-primary" : "text-muted-foreground/60"
+            expanded ? "rotate-180 text-primary" : "text-muted-foreground"
           }`}
         />
       )}

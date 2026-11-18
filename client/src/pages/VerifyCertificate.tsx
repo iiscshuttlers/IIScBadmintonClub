@@ -87,7 +87,7 @@ export default function VerifyCertificate() {
             value={input}
             onChange={(e) => setInput(e.target.value.toUpperCase())}
             placeholder="IISC-XXXXXX"
-            className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 font-mono text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 font-mono text-sm font-bold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             autoFocus={!codeFromUrl}
           />
           <button

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { X, Search, Link2, Loader2, Sparkles, CheckCheck } from "lucide-react";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
-import { usePlayers } from "@/hooks/usePlayers";
+import { useAdminPlayers } from "@/hooks/usePlayers";
+import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
 
 function getCandidateScore(guest: any, player: any): number {
   const gEmail = (guest.email || "").trim().toLowerCase();
@@ -91,10 +92,11 @@ export function ResolveGuestsModal({
   const [guests, setGuests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mergingId, setMergingId] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<{ guestId: string; realId: string } | null>(null);
   const [autoLinking, setAutoLinking] = useState(false);
   const [selectedRealUserId, setSelectedRealUserId] = useState<Record<string, string>>({});
   
-  const { data: allPlayers, refetch: refetchPlayers } = usePlayers();
+  const { data: allPlayers, refetch: refetchPlayers } = useAdminPlayers();
 
   useEffect(() => {
     if (isOpen) {
@@ -104,109 +106,55 @@ export function ResolveGuestsModal({
 
   const loadGuests = async () => {
     setLoading(true);
-    // Find all ghost players who are in this tournament's teams or are captains
-    const { data, error } = await supabase
-      .from("tournament_team_members")
-      .select("player:players!player_id(id, full_name, email, iisc_email, created_at, is_guest)")
-      .eq("tournament_id", tournamentId)
-      .eq("status", "ACTIVE");
-      
-    if (error) {
-      toast.error("Failed to load guests.");
-      setLoading(false);
-      return;
-    }
+    try {
+      const initialGuests = await adminService.fetchTournamentTeamGuests(tournamentId);
 
-    // Filter out unique guest players
-    const guestMap = new Map();
-    data?.forEach(row => {
-      const p = row.player as any;
-      if (p && p.id && !guestMap.has(p.id)) {
-        guestMap.set(p.id, p);
+      if (initialGuests.length === 0) {
+        setGuests([]);
+        setLoading(false);
+        return;
       }
-    });
-    
-    // Also check captains
-    const { data: teamsData } = await supabase
-      .from("tournament_teams")
-      .select("captain:players!captain_id(id, full_name, email, iisc_email, created_at, is_guest)")
-      .eq("tournament_id", tournamentId);
-      
-    teamsData?.forEach(row => {
-      const p = row.captain as any;
-      if (p && p.id && !guestMap.has(p.id)) {
-        guestMap.set(p.id, p);
+
+      // Ensure we have registered players for matching
+      let registered: any[] = (allPlayers || []).filter(p => !p.is_guest);
+      if (registered.length === 0) {
+        const dbPlayers = await adminService.fetchCandidatePlayers();
+        if (dbPlayers) registered = dbPlayers;
       }
-    });
 
-    const playerIds = Array.from(guestMap.keys());
-    if (playerIds.length === 0) {
-      setGuests([]);
-      setLoading(false);
-      return;
-    }
+      // AUTO-LINK:
+      // If any guest's email matches a registered player's account email or IISc email,
+      // automatically link them!
+      const remainingGuests: any[] = [];
+      const initialSelected: Record<string, string> = {};
+      let autoLinkedCount = 0;
 
-    const { data: guestProfiles } = await supabase
-      .from("players")
-      .select("id, full_name, email, iisc_email, is_guest, created_at")
-      .in("id", playerIds)
-      .eq("is_guest", true);
+      for (const guest of initialGuests) {
+        const candidates = getSortedCandidatesForGuest(guest, registered);
+        const topMatch = candidates[0];
 
-    const initialGuests = guestProfiles || [];
+        // WP8: nothing is merged automatically. Strong candidates (email
+        // match ≥ 1000, likely ≥ 300) are only pre-selected for review.
 
-    // Ensure we have registered players for matching
-    let registered: any[] = (allPlayers || []).filter(p => !p.is_guest);
-    if (registered.length === 0) {
-      const { data: dbPlayers } = await supabase
-        .from("players")
-        .select("id, full_name, email, iisc_email, is_guest, elo_rating, nickname")
-        .eq("is_guest", false)
-        .is("deleted_at", null);
-      if (dbPlayers) registered = dbPlayers;
-    }
-
-    // AUTO-LINK:
-    // If any guest's email matches a registered player's account email or IISc email,
-    // automatically link them!
-    const remainingGuests: any[] = [];
-    const initialSelected: Record<string, string> = {};
-    let autoLinkedCount = 0;
-
-    for (const guest of initialGuests) {
-      const candidates = getSortedCandidatesForGuest(guest, registered);
-      const topMatch = candidates[0];
-
-      // Exact email match (score >= 1000)
-      if (topMatch && topMatch._score >= 1000) {
-        try {
-          const { error: mergeErr } = await supabase.rpc("merge_guest_player", {
-            guest_id: guest.id,
-            real_id: topMatch.id
-          });
-          if (!mergeErr) {
-            autoLinkedCount++;
-            continue; // Successfully auto-linked, omit from list
-          }
-        } catch (e) {
-          console.warn("Auto-merge failed:", e);
+        // Pre-select top candidate if it's a good match (score >= 300)
+        if (topMatch && topMatch._score >= 300) {
+          initialSelected[guest.id] = topMatch.id;
         }
+        remainingGuests.push(guest);
       }
 
-      // Pre-select top candidate if it's a good match (score >= 300)
-      if (topMatch && topMatch._score >= 300) {
-        initialSelected[guest.id] = topMatch.id;
+      if (autoLinkedCount > 0) {
+        toast.success(`Auto-linked ${autoLinkedCount} guest profile${autoLinkedCount > 1 ? "s" : ""} to registered IISc account${autoLinkedCount > 1 ? "s" : ""}!`);
+        refetchPlayers();
       }
-      remainingGuests.push(guest);
-    }
 
-    if (autoLinkedCount > 0) {
-      toast.success(`Auto-linked ${autoLinkedCount} guest profile${autoLinkedCount > 1 ? "s" : ""} to registered IISc account${autoLinkedCount > 1 ? "s" : ""}!`);
-      refetchPlayers();
+      setGuests(remainingGuests);
+      setSelectedRealUserId(initialSelected);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to load guests.");
+    } finally {
+      setLoading(false);
     }
-
-    setGuests(remainingGuests);
-    setSelectedRealUserId(initialSelected);
-    setLoading(false);
   };
 
   const handleMerge = async (guestId: string) => {
@@ -227,44 +175,8 @@ export function ResolveGuestsModal({
       return;
     }
 
-    setMergingId(guestId);
-    
-    const { error } = await supabase.rpc("merge_guest_player", {
-      guest_id: guestId,
-      real_id: realId
-    });
-
-    if (error) {
-      toast.error(error.message || "Failed to merge profiles.");
-      setMergingId(null);
-    } else {
-      toast.success(`Profile successfully linked to ${realUser.full_name}!`);
-      setGuests(prev => prev.filter(g => g.id !== guestId));
-      setMergingId(null);
-      refetchPlayers();
-    }
-  };
-
-  const handleAutoLinkAll = async () => {
-    setAutoLinking(true);
-    let linked = 0;
-    const registered = (allPlayers || []).filter(p => !p.is_guest);
-
-    for (const guest of guests) {
-      const realId = selectedRealUserId[guest.id];
-      if (realId) {
-        const { error } = await supabase.rpc("merge_guest_player", {
-          guest_id: guest.id,
-          real_id: realId
-        });
-        if (!error) linked++;
-      }
-    }
-
-    toast.success(`Successfully linked ${linked} profile${linked > 1 ? "s" : ""}!`);
-    setAutoLinking(false);
-    refetchPlayers();
-    loadGuests();
+    // Previewed, reasoned merge (WP8) instead of a direct one-click link.
+    setReviewing({ guestId, realId });
   };
 
   const registeredPlayers = (allPlayers || []).filter(p => !p.is_guest);
@@ -278,6 +190,19 @@ export function ResolveGuestsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {reviewing && (
+        <PlayerMergeDialog
+          open
+          onOpenChange={(o) => { if (!o) setReviewing(null); }}
+          guestId={reviewing.guestId}
+          realId={reviewing.realId}
+          onMerged={() => {
+            toast.success("Guest history linked");
+            setGuests((prev) => prev.filter((g) => g.id !== reviewing.guestId));
+            refetchPlayers();
+          }}
+        />
+      )}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
         
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
@@ -286,16 +211,6 @@ export function ResolveGuestsModal({
             <p className="text-sm text-slate-500 mt-1">Link ghost profiles to actual registered users.</p>
           </div>
           <div className="flex items-center gap-2">
-            {matchedCandidatesCount > 1 && (
-              <button
-                onClick={handleAutoLinkAll}
-                disabled={autoLinking}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-sm disabled:opacity-50"
-              >
-                {autoLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                Auto-Link All ({matchedCandidatesCount})
-              </button>
-            )}
             <button onClick={onClose} aria-label="Close" className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full">
               <X className="w-5 h-5" />
             </button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
@@ -149,10 +149,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     setPrefs((prev) => ({ ...prev, [key]: newValue }));
 
     try {
-      const { error } = await supabase
-        .from("players")
-        .update({ [key]: newValue } as any)
-        .eq("id", session.user.id);
+      const { error } = await playerService.updateNotificationPreferences(session.user.id, { [key]: newValue } as any);
       if (error) {
         setPrefs((prev) => ({ ...prev, [key]: !newValue }));
         throw error;

@@ -1,305 +1,238 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BwfMatchState } from "@/types/umpire";
 
-interface OfflineAction {
-  id: string;
-  action: 'create' | 'update' | 'delete';
-  entity: 'match' | 'profile' | 'notification';
-  entity_id: string;
-  data: Record<string, any>;
-  timestamp: number;
-  synced: boolean;
+const nativeState = vi.hoisted(() => ({
+  preferences: new Map<string, string>(),
+  appStateListeners: [] as Array<(state: { isActive: boolean }) => void>,
+}));
+
+vi.mock("@capacitor/preferences", () => ({
+  Preferences: {
+    get: vi.fn(async ({ key }: { key: string }) => ({
+      value: nativeState.preferences.get(key) ?? null,
+    })),
+    set: vi.fn(async ({ key, value }: { key: string; value: string }) => {
+      nativeState.preferences.set(key, value);
+    }),
+    remove: vi.fn(async ({ key }: { key: string }) => {
+      nativeState.preferences.delete(key);
+    }),
+  },
+}));
+
+vi.mock("@capacitor/app", () => ({
+  App: {
+    addListener: vi.fn((_event: string, listener: (state: { isActive: boolean }) => void) => {
+      nativeState.appStateListeners.push(listener);
+      return Promise.resolve({ remove: vi.fn() });
+    }),
+  },
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@/services/umpireService", () => ({
+  umpireService: {
+    upsertLiveMatch: vi.fn(),
+  },
+}));
+
+import { Preferences } from "@capacitor/preferences";
+import { umpireService } from "@/services/umpireService";
+import { useOfflineUmpireSync } from "@/hooks/useOfflineUmpireSync";
+import type { QueuedUmpireAction } from "@/lib/umpire/offlineQueue";
+
+const QUEUE_KEY = "umpire_offline_queue_v1";
+
+function setOnline(value: boolean) {
+  Object.defineProperty(navigator, "onLine", { configurable: true, value });
 }
 
-interface SyncResult {
-  success: boolean;
-  synced_count: number;
-  failed_count: number;
-  errors?: Array<{ action_id: string; error: string }>;
+function matchState(id: string, score: number): BwfMatchState {
+  return {
+    id,
+    status: "playing",
+    category: "MS",
+    bestOfSets: 3,
+    t1: { p1Name: "Player A", score, games: 0 },
+    t2: { p1Name: "Player B", score: 0, games: 0 },
+    serverTeam: 1,
+    serverPlayerIndex: 0,
+    receiverPlayerIndex: 0,
+    t1LastServedBy: 0,
+    t2LastServedBy: 0,
+    endsSwapped: false,
+    pointLog: [],
+    setsHistory: [],
+  } as BwfMatchState;
 }
 
-// Mock offline queue functions
-class OfflineQueue {
-  private queue: OfflineAction[] = [];
-
-  addAction(
-    action: string,
-    entity: string,
-    entityId: string,
-    data: Record<string, any>
-  ): OfflineAction {
-    const offlineAction: OfflineAction = {
-      id: `action-${Date.now()}`,
-      action: action as any,
-      entity: entity as any,
-      entity_id: entityId,
-      data,
-      timestamp: Date.now(),
-      synced: false,
-    };
-
-    this.queue.push(offlineAction);
-    return offlineAction;
-  }
-
-  getQueueLength(): number {
-    return this.queue.length;
-  }
-
-  getUnsyncedActions(): OfflineAction[] {
-    return this.queue.filter(a => !a.synced);
-  }
-
-  markAsSynced(actionId: string): void {
-    const action = this.queue.find(a => a.id === actionId);
-    if (action) {
-      action.synced = true;
-    }
-  }
-
-  removeAction(actionId: string): void {
-    this.queue = this.queue.filter(a => a.id !== actionId);
-  }
-
-  clearQueue(): void {
-    this.queue = [];
-  }
-
-  async simulateSync(): Promise<SyncResult> {
-    const unsyncedActions = this.getUnsyncedActions();
-    const results = {
-      success: true,
-      synced_count: 0,
-      failed_count: 0,
-      errors: [] as Array<{ action_id: string; error: string }>,
-    };
-
-    for (const action of unsyncedActions) {
-      try {
-        // Simulate network request
-        if (Math.random() > 0.1) {
-          // 90% success rate
-          this.markAsSynced(action.id);
-          results.synced_count++;
-        } else {
-          throw new Error('Network error');
-        }
-      } catch (error: any) {
-        results.failed_count++;
-        results.errors?.push({
-          action_id: action.id,
-          error: error.message,
-        });
-        results.success = false;
-      }
-    }
-
-    return results;
-  }
+function queuedAction(
+  id: string,
+  matchId: string,
+  ownerId: string,
+  score: number,
+): QueuedUmpireAction {
+  return {
+    id,
+    matchId,
+    ownerId,
+    timestamp: Date.now(),
+    matchState: matchState(matchId, score),
+  };
 }
 
-describe('Offline Sync', () => {
-  let queue: OfflineQueue;
+function seedQueue(items: QueuedUmpireAction[]) {
+  nativeState.preferences.set(QUEUE_KEY, JSON.stringify(items));
+}
 
+function readQueue(): QueuedUmpireAction[] {
+  return JSON.parse(nativeState.preferences.get(QUEUE_KEY) ?? "[]") as QueuedUmpireAction[];
+}
+
+describe("offline umpire sync integration", () => {
   beforeEach(() => {
-    queue = new OfflineQueue();
+    nativeState.preferences.clear();
+    nativeState.appStateListeners.length = 0;
+    vi.clearAllMocks();
+    setOnline(false);
   });
 
-  describe('Queue Operations', () => {
-    it('adds action to offline queue', () => {
-      const action = queue.addAction(
-        'create',
-        'match',
-        'match-1',
-        { score: [21, 15] }
-      );
+  it("persists and coalesces production snapshots without disturbing another owner", async () => {
+    seedQueue([queuedAction("other", "match-1", "umpire-2", 7)]);
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-      expect(action.action).toBe('create');
-      expect(action.entity).toBe('match');
-      expect(action.synced).toBe(false);
+    await waitFor(() => expect(result.current.queuedCount).toBe(0));
+
+    await act(async () => {
+      await result.current.queueMatchStateUpdate("match-1", matchState("match-1", 10));
+      await result.current.queueMatchStateUpdate("match-1", matchState("match-1", 11));
     });
 
-    it('tracks queue length', () => {
-      expect(queue.getQueueLength()).toBe(0);
-
-      queue.addAction('create', 'match', 'match-1', {});
-      expect(queue.getQueueLength()).toBe(1);
-
-      queue.addAction('create', 'match', 'match-2', {});
-      expect(queue.getQueueLength()).toBe(2);
-    });
-
-    it('retrieves unsynced actions', () => {
-      queue.addAction('create', 'match', 'match-1', {});
-      queue.addAction('update', 'profile', 'user-1', {});
-
-      const unsyncedActions = queue.getUnsyncedActions();
-      expect(unsyncedActions.length).toBe(2);
-      expect(unsyncedActions.every(a => !a.synced)).toBe(true);
-    });
-
-    it('marks action as synced', () => {
-      const action = queue.addAction('create', 'match', 'match-1', {});
-      expect(action.synced).toBe(false);
-
-      queue.markAsSynced(action.id);
-      const updated = queue.getUnsyncedActions().find(a => a.id === action.id);
-      expect(updated).toBeUndefined();
-    });
-
-    it('removes action from queue', () => {
-      const action = queue.addAction('create', 'match', 'match-1', {});
-      expect(queue.getQueueLength()).toBe(1);
-
-      queue.removeAction(action.id);
-      expect(queue.getQueueLength()).toBe(0);
-    });
-
-    it('clears entire queue', () => {
-      queue.addAction('create', 'match', 'match-1', {});
-      queue.addAction('update', 'profile', 'user-1', {});
-      expect(queue.getQueueLength()).toBe(2);
-
-      queue.clearQueue();
-      expect(queue.getQueueLength()).toBe(0);
-    });
+    const persisted = readQueue();
+    expect(persisted).toHaveLength(2);
+    expect(persisted.find((item) => item.ownerId === "umpire-2")?.id).toBe("other");
+    expect(persisted.find((item) => item.ownerId === "umpire-1")?.matchState.t1.score).toBe(11);
+    expect(result.current.queuedCount).toBe(1);
+    expect(result.current.syncStatus).toBe("saved-locally");
   });
 
-  describe('Action Types', () => {
-    it('handles create actions', () => {
-      const action = queue.addAction('create', 'match', 'match-1', {
-        player1: 'user-1',
-        player2: 'user-2',
-      });
+  it("acknowledges only the current owner's successfully flushed snapshots", async () => {
+    seedQueue([
+      queuedAction("mine", "match-1", "umpire-1", 12),
+      queuedAction("other", "match-1", "umpire-2", 8),
+    ]);
+    vi.mocked(umpireService.upsertLiveMatch).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-      expect(action.action).toBe('create');
-    });
+    await waitFor(() => expect(result.current.queuedCount).toBe(1));
+    await act(async () => result.current.flushOfflineQueue());
 
-    it('handles update actions', () => {
-      const action = queue.addAction('update', 'match', 'match-1', {
-        score: [21, 18],
-      });
-
-      expect(action.action).toBe('update');
-    });
-
-    it('handles delete actions', () => {
-      const action = queue.addAction('delete', 'match', 'match-1', {});
-
-      expect(action.action).toBe('delete');
-    });
+    expect(umpireService.upsertLiveMatch).toHaveBeenCalledTimes(1);
+    expect(umpireService.upsertLiveMatch).toHaveBeenCalledWith(
+      "match-1",
+      expect.objectContaining({ t1: expect.objectContaining({ score: 12 }) }),
+    );
+    expect(readQueue().map((item) => item.id)).toEqual(["other"]);
+    expect(result.current.queuedCount).toBe(0);
+    expect(result.current.syncStatus).toBe("confirmed");
   });
 
-  describe('Entity Types', () => {
-    it('handles match entities', () => {
-      const action = queue.addAction('create', 'match', 'match-1', {});
-      expect(action.entity).toBe('match');
-    });
+  it("keeps failed snapshots and retries them successfully", async () => {
+    seedQueue([queuedAction("retry-me", "match-1", "umpire-1", 13)]);
+    vi.mocked(umpireService.upsertLiveMatch)
+      .mockRejectedValueOnce(new Error("network unavailable"))
+      .mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-    it('handles profile entities', () => {
-      const action = queue.addAction('update', 'profile', 'user-1', {});
-      expect(action.entity).toBe('profile');
-    });
+    await waitFor(() => expect(result.current.queuedCount).toBe(1));
+    await act(async () => result.current.flushOfflineQueue());
 
-    it('handles notification entities', () => {
-      const action = queue.addAction('create', 'notification', 'notif-1', {});
-      expect(action.entity).toBe('notification');
-    });
+    expect(readQueue().map((item) => item.id)).toEqual(["retry-me"]);
+    expect(result.current.syncStatus).toBe("error");
+
+    await act(async () => result.current.flushOfflineQueue());
+
+    expect(umpireService.upsertLiveMatch).toHaveBeenCalledTimes(2);
+    expect(nativeState.preferences.has(QUEUE_KEY)).toBe(false);
+    expect(result.current.syncStatus).toBe("confirmed");
   });
 
-  describe('Sync Operations', () => {
-    it('successfully syncs actions', async () => {
-      queue.addAction('create', 'match', 'match-1', {});
-      queue.addAction('update', 'profile', 'user-1', {});
+  it("preserves a newer snapshot queued while an older snapshot is in flight", async () => {
+    seedQueue([queuedAction("old", "match-1", "umpire-1", 14)]);
+    let releaseWrite: (() => void) | undefined;
+    vi.mocked(umpireService.upsertLiveMatch).mockImplementation(
+      () => new Promise<void>((resolve) => { releaseWrite = resolve; }),
+    );
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-      const result = await queue.simulateSync();
+    await waitFor(() => expect(result.current.queuedCount).toBe(1));
+    let flushPromise: Promise<void> | undefined;
+    act(() => {
+      flushPromise = result.current.flushOfflineQueue();
+    });
+    await waitFor(() => expect(umpireService.upsertLiveMatch).toHaveBeenCalledTimes(1));
 
-      expect(result.synced_count).toBeGreaterThan(0);
+    await act(async () => {
+      await result.current.queueMatchStateUpdate("match-1", matchState("match-1", 15));
+    });
+    await act(async () => {
+      releaseWrite?.();
+      await flushPromise;
     });
 
-    it('reports sync failures', async () => {
-      queue.addAction('create', 'match', 'match-1', {});
-
-      const result = await queue.simulateSync();
-
-      if (result.failed_count > 0) {
-        expect(result.errors?.length).toBeGreaterThan(0);
-        expect(result.success).toBe(false);
-      }
-    });
-
-    it('handles partial sync success', async () => {
-      queue.addAction('create', 'match', 'match-1', {});
-      queue.addAction('create', 'match', 'match-2', {});
-
-      const result = await queue.simulateSync();
-
-      expect(result.synced_count + result.failed_count).toBe(2);
-    });
+    const remaining = readQueue();
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).not.toBe("old");
+    expect(remaining[0].matchState.t1.score).toBe(15);
+    expect(result.current.queuedCount).toBe(1);
   });
 
-  describe('Conflict Resolution', () => {
-    it('tracks action timestamps for conflict resolution', () => {
-      const action = queue.addAction('update', 'match', 'match-1', {
-        score: [21, 15],
-      });
+  it("flushes persisted snapshots when connectivity returns", async () => {
+    seedQueue([queuedAction("online", "match-1", "umpire-1", 16)]);
+    vi.mocked(umpireService.upsertLiveMatch).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-      expect(action.timestamp).toBeDefined();
-      expect(action.timestamp).toBeGreaterThan(0);
-    });
+    await waitFor(() => expect(result.current.isOffline).toBe(true));
+    setOnline(true);
+    act(() => window.dispatchEvent(new Event("online")));
 
-    it('newer actions override older ones', () => {
-      const action1 = queue.addAction('update', 'match', 'match-1', {
-        score: [15, 15],
-      });
-
-      // Simulate small delay
-      const delayedAction = queue.addAction('update', 'match', 'match-1', {
-        score: [21, 15],
-      });
-
-      expect(delayedAction.timestamp).toBeGreaterThanOrEqual(action1.timestamp);
-    });
+    await waitFor(() => expect(result.current.syncStatus).toBe("confirmed"));
+    expect(result.current.isOffline).toBe(false);
+    expect(nativeState.preferences.has(QUEUE_KEY)).toBe(false);
   });
 
-  describe('Offline Detection', () => {
-    it('allows queueing when offline', () => {
-      const action = queue.addAction('create', 'match', 'match-1', {});
-      expect(action.synced).toBe(false);
-      expect(queue.getQueueLength()).toBe(1);
-    });
+  it("flushes persisted snapshots when the native app resumes online", async () => {
+    seedQueue([queuedAction("resume", "match-1", "umpire-1", 17)]);
+    setOnline(true);
+    vi.mocked(umpireService.upsertLiveMatch).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-    it('preserves queue across offline periods', () => {
-      queue.addAction('create', 'match', 'match-1', {});
-      queue.addAction('update', 'profile', 'user-1', {});
+    await waitFor(() => expect(nativeState.appStateListeners).toHaveLength(1));
+    act(() => nativeState.appStateListeners[0]({ isActive: true }));
 
-      // Simulate offline duration
-      expect(queue.getQueueLength()).toBe(2);
-
-      // Queue should still exist when coming back online
-      expect(queue.getUnsyncedActions().length).toBe(2);
-    });
+    await waitFor(() => expect(result.current.syncStatus).toBe("confirmed"));
+    expect(umpireService.upsertLiveMatch).toHaveBeenCalledTimes(1);
+    expect(nativeState.preferences.has(QUEUE_KEY)).toBe(false);
   });
 
-  describe('Data Preservation', () => {
-    it('preserves action data during offline', () => {
-      const data = { score: [21, 15], duration: 45 };
-      const action = queue.addAction('create', 'match', 'match-1', data);
+  it("persists queue mutations through the Capacitor Preferences boundary", async () => {
+    const { result } = renderHook(() => useOfflineUmpireSync("umpire-1"));
 
-      expect(action.data).toEqual(data);
+    await act(async () => {
+      await result.current.queueMatchStateUpdate("match-1", matchState("match-1", 18));
     });
 
-    it('maintains action integrity', () => {
-      const action = queue.addAction('update', 'match', 'match-1', {
-        score: [21, 15],
-      });
-
-      const originalId = action.id;
-      queue.markAsSynced(action.id);
-
-      const unsyncedBefore = queue.getUnsyncedActions();
-      const foundAction = unsyncedBefore.find(a => a.id === originalId);
-
-      expect(foundAction).toBeUndefined();
-    });
+    expect(Preferences.set).toHaveBeenCalledWith(expect.objectContaining({ key: QUEUE_KEY }));
+    await act(async () => result.current.clearMatchFromQueue("match-1"));
+    expect(Preferences.remove).toHaveBeenCalledWith({ key: QUEUE_KEY });
   });
 });

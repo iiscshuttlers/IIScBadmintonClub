@@ -4,7 +4,7 @@ import { Camera, X, ChevronLeft, ChevronRight, ExternalLink, Flag } from "lucide
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { fetchRemoteGalleryImages } from "@/lib/galleryStorage";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 
 const itemVariants = {
@@ -25,11 +25,11 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
       toast.info("You've already reported this photo.");
       return;
     }
-    await supabase.from("admin_logs").insert({
-      admin_email: "user_report",
-      action: "report_photo",
-      details: `Reported photo: ${photo.title} (path: ${photo.path}) on player profile ${playerId}`,
-    });
+    await adminService.logAction(
+      "report_photo",
+      `Reported photo: ${photo.title} (path: ${photo.path}) on player profile ${playerId}`,
+      "user_report"
+    );
     setReportedPaths((prev) => new Set(prev).add(photo.path));
     toast.success("Photo reported. Our team will review it shortly.");
   };
@@ -75,7 +75,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0 flex items-center gap-2">
           <Camera className="w-3.5 h-3.5 text-blue-500" /> Through the Lens
         </span>
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />

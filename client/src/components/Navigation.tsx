@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence } from "framer-motion";
-import { getTournaments } from "@/lib/tournaments";
+import { liveHref, useAnyTournamentLive } from "@/hooks/queries/useAnyTournamentLive";
 import { fetchSiteData } from "@/lib/siteData";
 import { Avatar } from "@/components/ui/Avatar";
 // PersonalNavigation removed
@@ -84,7 +84,6 @@ export default function Navigation() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const [liveEventCount, setLiveEventCount] = useState(0);
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
@@ -101,7 +100,6 @@ export default function Navigation() {
     userName,
     userEmail,
     userAvatar,
-    pendingActionCount,
     myTeamId,
     teamActionCount,
   } = useNavigationAuth();
@@ -153,15 +151,11 @@ export default function Navigation() {
     return () => window.removeEventListener("openHolidays", openHolidays);
   }, []);
 
-  // Fetch live event count once on mount (lightweight, fire-and-forget)
-  useEffect(() => {
-    getTournaments()
-      .then((data: any[]) => {
-        const count = data.filter((e: any) => e.status === "live" || e.status === "active").length;
-        setLiveEventCount(count);
-      })
-      .catch(() => {});
-  }, []);
+  // Tournament matches on court right now (realtime-invalidated; no friendlies).
+  const anyLive = useAnyTournamentLive();
+  const liveCount = anyLive.count;
+  const eventsHref = liveCount > 0 ? liveHref(anyLive) : "/tournaments";
+  const eventsLiveLabel = liveCount > 0 ? `, ${liveCount} ${liveCount === 1 ? "match" : "matches"} live` : "";
 
 
   useEffect(() => {
@@ -248,8 +242,8 @@ export default function Navigation() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
         className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
-            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/20 dark:to-slate-950 border-b border-transparent"
+            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/15 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
+            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/10 dark:to-slate-950 border-b border-transparent"
         }`}
       >
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
@@ -287,9 +281,11 @@ export default function Navigation() {
               {currentLinks.map((link) => (
                 <NavLink
                   key={link.href}
-                  href={link.href === "/pulse" ? getPulseHref() : link.href}
+                  href={link.href === "/pulse" ? getPulseHref() : link.href === "/tournaments" ? eventsHref : link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
+                  live={link.href === "/tournaments" && liveCount > 0}
+                  ariaLabel={link.href === "/tournaments" && liveCount > 0 ? `${link.label}${eventsLiveLabel}` : undefined}
                   badge={
                     link.href === "/pulse"
                       ? hasUnreadAnnouncements
@@ -501,7 +497,7 @@ export default function Navigation() {
                 {updateInfo && (
                   <button
                     onClick={() => { openUpdateDialog(); setIsOpen(false); }}
-                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-primary/10 dark:bg-primary/30 hover:bg-primary/15 dark:hover:bg-primary/90/50 text-primary dark:text-primary font-bold text-sm transition-colors cursor-pointer border border-primary/40/60 dark:border-primary/50"
+                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-primary/10 dark:bg-primary/30 hover:bg-primary/15 dark:hover:bg-primary/40 text-primary dark:text-primary font-bold text-sm transition-colors cursor-pointer border border-primary/30 dark:border-primary/50"
                   >
                     <span className="flex items-center gap-2">
                       <Download className="h-4 w-4" /> Update Available
@@ -610,10 +606,18 @@ export default function Navigation() {
 
 
 
-              <Link href="/tournaments" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+              <Link href={eventsHref} className="flex-1 min-w-0">
+                <button
+                  aria-label={liveCount > 0 ? `Events${eventsLiveLabel}` : undefined}
+                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
+                >
                   <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Events</span>
+                  {liveCount > 0 && (
+                    <span className="absolute top-0.5 left-1/2 ml-1 pointer-events-none">
+                      <LivePill />
+                    </span>
+                  )}
                 </button>
               </Link>
 
@@ -675,17 +679,50 @@ export default function Navigation() {
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 
-function NavLink({ href, label, isActive, badge }: { href: string; label: string; isActive: boolean; badge?: number }) {
+/** Text "LIVE" pill for live tournament matches — distinct from the red announcements dot. */
+function LivePill() {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex items-center gap-0.5 rounded-full bg-red-600 px-1 py-px text-[8px] font-black leading-none tracking-wider text-white shadow ring-1 ring-white dark:ring-slate-950"
+    >
+      <span className="w-1 h-1 rounded-full bg-white motion-safe:animate-pulse" />
+      LIVE
+    </span>
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  isActive,
+  badge,
+  live,
+  ariaLabel,
+}: {
+  href: string;
+  label: string;
+  isActive: boolean;
+  badge?: number;
+  live?: boolean;
+  ariaLabel?: string;
+}) {
   return (
     <Link href={href}>
       <button
+        aria-label={ariaLabel}
         className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
-            : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
+            : "text-slate-600 dark:text-slate-300 hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
         {label}
+        {live && (
+          <span className="absolute -top-1.5 -right-2 pointer-events-none">
+            <LivePill />
+          </span>
+        )}
         {!!badge && (
           <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-on-accent px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
@@ -706,7 +743,7 @@ function MobileNavLink({
         onClick={onClick}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
             : "text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >

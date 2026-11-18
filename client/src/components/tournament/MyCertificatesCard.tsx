@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Award } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { type CertificateInput, PLACEMENT_META, certificateWording, expandCategory } from "@/lib/certificate";
 import { computeMyCertificates } from "@/lib/myCertificates";
@@ -22,15 +22,10 @@ export function MyCertificatesCard({ tournament }: { tournament: { id: string; n
     queryKey: ["my-certificates", tournament?.id, uid, tournament?.created_by === uid],
     enabled: !!uid && !!tournament?.id && finished,
     queryFn: async () => {
-      const ors = ["player1_id", "player2_id", "player3_id", "player4_id"].map((c) => `${c}.eq.${uid}`).join(",");
-      const [{ data: matches }, { data: officials }] = await Promise.all([
-        supabase
-          .from("tournament_matches")
-          .select("category, round_name, match_code, status, winner_side, player1_id, player2_id, player3_id, player4_id")
-          .eq("tournament_id", tournament!.id)
-          .or(ors),
-        supabase.from("tournament_officials").select("role").eq("tournament_id", tournament!.id).eq("user_id", uid!),
-      ]);
+      const { matches, officials } = await tournamentService.fetchPlayerCertificatesMatchesAndOfficials(
+        tournament!.id,
+        uid!,
+      );
       return computeMyCertificates({
         uid: uid!,
         name: profile?.full_name || "Player",

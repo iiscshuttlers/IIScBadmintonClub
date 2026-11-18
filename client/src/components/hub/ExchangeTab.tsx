@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
-import { supabase } from "@/lib/supabase";
+import { hubService } from "@/services/hubService";
+import { adminService } from "@/services/adminService";
+import { playerService } from "@/services/playerService";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
 import { Store, Plus, Search, Filter, Phone, Mail, Clock, Package, MapPin, ExternalLink, Image as ImageIcon, MoreVertical, CheckCircle2, Trash2, Flag } from "lucide-react";
@@ -94,11 +96,11 @@ export default function ExchangeTab() {
 
   const reportListing = async (id: string, title: string) => {
     if (reportedIds.has(id)) { toast.info("Already reported."); return; }
-    await supabase.from("admin_logs").insert({
-      admin_email: session?.user?.email ?? "anonymous",
-      action: "report_listing",
-      details: `Reported marketplace listing: "${title}" (id: ${id})`,
-    });
+    await adminService.logAction(
+      "report_listing",
+      `Reported marketplace listing: "${title}" (id: ${id})`,
+      session?.user?.email ?? "anonymous",
+    );
     setReportedIds(prev => new Set(prev).add(id));
     toast.success("Listing reported. Our team will review it.");
   };
@@ -106,20 +108,7 @@ export default function ExchangeTab() {
   const fetchListings = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('marketplace_listings')
-        .select(`
-          *,
-          seller:seller_id (
-            full_name,
-            avatar_url,
-            department
-          )
-        `)
-        .in('status', ['active', 'sold'])
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await hubService.getMarketplaceListings({ status: ['active', 'sold'] });
       setListings(data as unknown as Listing[]);
     } catch (err) {
       console.error("Error fetching marketplace:", err);
@@ -129,38 +118,33 @@ export default function ExchangeTab() {
   };
 
   const logAction = async (action: string) => {
-    await supabase.from("admin_logs").insert({
-      admin_email: session?.user?.email || "user",
-      action,
-      created_at: new Date().toISOString(),
-    });
+    await adminService.logAction(action, undefined, session?.user?.email || "user");
   };
 
   const markAsSold = async (id: string) => {
     setBusyId(id);
     setMenuOpenId(null);
     const listing = listings.find(l => l.id === id);
-    const { error } = await supabase.from('marketplace_listings').update({ status: 'sold' }).eq('id', id);
-    if (error) { toast.error("Failed to mark as sold"); } else {
+    try {
+      await hubService.updateMarketplaceListingStatus(id, 'sold');
       toast.success("Listing marked as sold!");
       setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'sold' } : l));
       if (listing) logAction(`Marked marketplace item sold: ${listing.title}`);
+    } catch (error) {
+      toast.error("Failed to mark as sold");
+    } finally {
+      setBusyId(null);
     }
-    setBusyId(null);
   };
 
   const fulfillRequest = async (id: string) => {
     setBusyId(id);
     try {
-      const { data: profile } = await supabase.from('players').select('id, full_name').eq('id', session?.user?.id).single();
+      if (!session?.user?.id) throw new Error("Could not fetch your profile.");
+      const profile = await playerService.fetchPlayer(session.user.id);
       if (!profile) throw new Error("Could not fetch your profile.");
       
-      const { error } = await supabase.rpc("fulfill_marketplace_request", {
-        listing_uuid: id,
-        claimer_id: profile.id,
-        claimer_name: profile.full_name
-      });
-      if (error) throw error;
+      await hubService.fulfillMarketplaceRequest(id, profile.id, profile.full_name);
       
       toast.success("Request fulfilled! You have claimed this request.");
       setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'sold', fulfilled_by_id: profile.id, fulfilled_by_name: profile.full_name } : l));
@@ -182,13 +166,16 @@ export default function ExchangeTab() {
     if (!ok) return;
     setBusyId(id);
     const listing = listings.find(l => l.id === id);
-    const { error } = await supabase.from('marketplace_listings').delete().eq('id', id);
-    if (error) { toast.error("Failed to delete listing"); } else {
+    try {
+      await hubService.deleteMarketplaceListing(id);
       toast.success("Listing deleted.");
       setListings(prev => prev.filter(l => l.id !== id));
       if (listing) await logAction(`Deleted marketplace listing "${listing.title}"`);
+    } catch {
+      toast.error("Failed to delete listing");
+    } finally {
+      setBusyId(null);
     }
-    setBusyId(null);
   };
 
   // Close menu when clicking outside
@@ -469,7 +456,7 @@ export default function ExchangeTab() {
                               {item.status !== 'sold' && (
                                 <button
                                   onClick={() => markAsSold(item.id)}
-                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/80/20 transition"
+                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition"
                                 >
                                   <CheckCircle2 className="w-4 h-4" /> Mark as Sold
                                 </button>

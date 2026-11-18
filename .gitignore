@@ -20,6 +20,10 @@ supabase/.temp/
 # Sensitive keys and variables
 .env
 .env.*
+# Tracked on purpose: public client config (Supabase anon key, Firebase web
+# config, Cloudinary cloud name + unsigned preset) for the GitHub Pages build.
+# Never put a secret in it; anything VITE_* ends up in the public bundle.
+!.env.production
 keystore.properties
 release-key.keystore
 google-services.json
@@ -37,3 +41,7 @@ playwright-report/
 test-results/
 .pnpm-store/
 client/.env.local
+
+# Stale Claude Code artifacts
+.claude/worktrees/
+.claude/scheduled_tasks.lock

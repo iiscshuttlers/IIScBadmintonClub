@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, FileText, Upload, AlertCircle, X, Download, Loader2, Info, Users, Shield } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { ChevronDown, ChevronUp, FileText, Upload, AlertCircle, X, Download, Loader2 } from "lucide-react";
+import { tournamentService } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { toast } from "sonner";
-import { LivePlayersSection } from "@/components/events/LivePlayersSection";
-import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
 
 interface TournamentDetailsTabProps {
   tournament: any;
   playerName: string | null;
 }
 
-const NOTICES_BUCKET = "tournament_notices";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 15 },
@@ -27,7 +24,6 @@ const fadeUp = {
 export function TournamentDetailsTab({ tournament, playerName }: TournamentDetailsTabProps) {
   const { isAdmin } = useAuth();
   const { confirm } = useConfirm();
-  const [activeTab, setActiveTab] = useState<"info" | "participants">("info");
   
   // Notices State
   const [files, setFiles] = useState<any[]>([]);
@@ -38,11 +34,8 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
   const fetchNotices = async () => {
     try {
       const folder = tournament?.id || "legacy";
-      const { data, error } = await supabase.storage.from(NOTICES_BUCKET).list(folder, {
-        sortBy: { column: "created_at", order: "desc" },
-      });
-      if (error) throw error;
-      setFiles(data?.filter((f) => f.name !== ".emptyFolderPlaceholder") || []);
+      const data = await tournamentService.listTournamentNotices(folder);
+      setFiles(data);
     } catch (err: any) {
       console.error("Error fetching notices:", err);
     } finally {
@@ -63,8 +56,7 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
       if (file.size > 5 * 1024 * 1024) throw new Error("File must be less than 5MB");
       const folder = tournament?.id || "legacy";
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const { error } = await supabase.storage.from(NOTICES_BUCKET).upload(`${folder}/${fileName}`, file);
-      if (error) throw error;
+      await tournamentService.uploadTournamentNotice(folder, fileName, file);
       await fetchNotices();
     } catch (err: any) {
       setUploadError(err.message || "Failed to upload notice");
@@ -85,8 +77,7 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
 
     try {
       const folder = tournament?.id || "legacy";
-      const { error } = await supabase.storage.from(NOTICES_BUCKET).remove([`${folder}/${fileName}`]);
-      if (error) throw error;
+      await tournamentService.deleteTournamentNotice(folder, fileName);
       toast.success("Notice deleted");
       await fetchNotices();
     } catch (err: any) {
@@ -94,35 +85,12 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
     }
   };
 
-    const isTeamEvent = tournament?.format_family === "TEAM" || tournament?.type === "team";
-
     return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pb-2 mb-6">
-        {[
-          { id: "info", label: "Info & Notices", icon: Info },
-          { id: "participants", label: isTeamEvent ? "Teams" : "Participants", icon: isTeamEvent ? Shield : Users },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-              activeTab === tab.id
-                ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20 scale-105"
-                : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <tab.icon className="w-4 h-4 mb-[1px]" />
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
       <div className="space-y-8">
         
         {/* Info Section */}
-        {activeTab === "info" && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden p-6">
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
               <div className="text-left">
@@ -197,7 +165,7 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
                 <div className="space-y-3">
                   {files.map((file, idx) => {
                     const folder = tournament?.id || "legacy";
-                    const fileUrl = supabase.storage.from(NOTICES_BUCKET).getPublicUrl(`${folder}/${file.name}`).data.publicUrl;
+                    const fileUrl = tournamentService.getTournamentNoticePublicUrl(folder, file.name);
                     return (
                       <div key={idx} className="group relative flex items-center justify-between p-3 sm:p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary/40 transition-colors">
                         <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0 rounded-2xl" />
@@ -229,29 +197,7 @@ export function TournamentDetailsTab({ tournament, playerName }: TournamentDetai
                   })}
                 </div>
               )}
-          </motion.div>
-        )}
-
-        {/* Teams / Participants Section */}
-        {activeTab === "participants" && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 animate-in fade-in slide-in-from-bottom-4">
-            <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-6">
-              {isTeamEvent ? "Teams" : "Participants"}
-            </h3>
-            {isTeamEvent ? (
-              <LiveTeamsSection
-                tournamentId={tournament?.id}
-                showParticipants={tournament?.show_participants}
-              />
-            ) : (
-              <LivePlayersSection 
-                tournamentId={tournament?.id} 
-                categories={tournament?.categories || []} 
-                showParticipants={tournament?.show_participants} 
-              />
-            )}
-          </div>
-        )}
+        </motion.div>
 
       </div>
     </div>

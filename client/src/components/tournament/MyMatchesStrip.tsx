@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Swords, Clock, Radio, CalendarPlus, Route } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { fetchMyTournamentMatches, fetchEloStakesContext } from "@/services/tournamentService";
 import { matchesToEvents, shareIcs } from "@/lib/calendarExport";
 import { PathToFinalDialog } from "@/components/tournament/PathToFinalDialog";
 import { computeStakes, formatRange, DEFAULT_ELO_CONFIG, type Stakes } from "@/lib/eloStakes";
@@ -45,18 +45,12 @@ export function MyMatchesStrip({
       return;
     }
     let cancelled = false;
-    supabase
-      .from("tournament_matches")
-      .select(
-        "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, player1_id, player2_id, player3_id, player4_id, tournaments(name, counts_for_elo)",
-      )
-      .or(
-        `player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`,
-      )
-      .order("scheduled_at", { ascending: true, nullsFirst: false })
-      .limit(50)
-      .then(({ data }: any) => {
+    fetchMyTournamentMatches(myPlayerId)
+      .then((data) => {
         if (!cancelled) setMyMatches(data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to load my tournament matches", err);
       });
     return () => {
       cancelled = true;
@@ -91,34 +85,29 @@ export function MyMatchesStrip({
     }
     let cancelled = false;
     (async () => {
-      const ids = Array.from(new Set(ranked.flatMap((m) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean)));
-      const [{ data: players }, { count }, { data: cfgRow }] = await Promise.all([
-        supabase.from("players").select("id, tournament_elo, elo_rating").in("id", ids),
-        supabase
-          .from("tournament_matches")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "completed")
-          .or(`player1_id.eq.${myPlayerId},player2_id.eq.${myPlayerId},player3_id.eq.${myPlayerId},player4_id.eq.${myPlayerId}`),
-        supabase.from("site_data").select("value").eq("key", "elo_config").maybeSingle(),
-      ]);
-      if (cancelled) return;
-      const v: any = (cfgRow as any)?.value ?? {};
-      const cfg = {
-        kNewbie: Number(v.k_factor_newbie) || DEFAULT_ELO_CONFIG.kNewbie,
-        kExperienced: Number(v.k_factor_experienced) || DEFAULT_ELO_CONFIG.kExperienced,
-        tournamentMultiplier: Number(v.tournament_multiplier) || DEFAULT_ELO_CONFIG.tournamentMultiplier,
-      };
-      const elo = new Map((players ?? []).map((p: any) => [p.id, p.elo_rating ?? p.tournament_elo ?? 1200]));
-      const e = (id?: string | null) => (id ? elo.get(id) ?? 1200 : null);
-      const out: Record<string, Stakes> = {};
-      for (const m of ranked) {
-        const onSide1 = m.player1_id === myPlayerId || m.player3_id === myPlayerId;
-        const me = myPlayerId;
-        const partner = onSide1 ? (m.player1_id === me ? m.player3_id : m.player1_id) : m.player2_id === me ? m.player4_id : m.player2_id;
-        const opps = (onSide1 ? [m.player2_id, m.player4_id] : [m.player1_id, m.player3_id]).filter(Boolean);
-        out[m.id] = computeStakes(e(me)!, e(partner), opps.map((o: string) => e(o)!), count ?? 0, cfg);
+      try {
+        const ids = Array.from(new Set(ranked.flatMap((m) => [m.player1_id, m.player2_id, m.player3_id, m.player4_id]).filter(Boolean))) as string[];
+        const { players, completedCount, eloConfig } = await fetchEloStakesContext(myPlayerId, ids);
+        if (cancelled) return;
+        const cfg = {
+          kNewbie: Number(eloConfig.k_factor_newbie) || DEFAULT_ELO_CONFIG.kNewbie,
+          kExperienced: Number(eloConfig.k_factor_experienced) || DEFAULT_ELO_CONFIG.kExperienced,
+          tournamentMultiplier: Number(eloConfig.tournament_multiplier) || DEFAULT_ELO_CONFIG.tournamentMultiplier,
+        };
+        const elo = new Map((players ?? []).map((p: any) => [p.id, p.elo_rating ?? p.tournament_elo ?? 1200]));
+        const e = (id?: string | null) => (id ? elo.get(id) ?? 1200 : null);
+        const out: Record<string, Stakes> = {};
+        for (const m of ranked) {
+          const onSide1 = m.player1_id === myPlayerId || m.player3_id === myPlayerId;
+          const me = myPlayerId;
+          const partner = onSide1 ? (m.player1_id === me ? m.player3_id : m.player1_id) : m.player2_id === me ? m.player4_id : m.player2_id;
+          const opps = (onSide1 ? [m.player2_id, m.player4_id] : [m.player1_id, m.player3_id]).filter(Boolean);
+          out[m.id] = computeStakes(e(me)!, e(partner), opps.map((o: string) => e(o)!), completedCount, cfg);
+        }
+        setStakes(out);
+      } catch (err) {
+        console.error("Failed to compute elo stakes", err);
       }
-      setStakes(out);
     })();
     return () => {
       cancelled = true;

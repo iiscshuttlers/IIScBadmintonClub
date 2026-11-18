@@ -69,7 +69,7 @@ export default function ChangePassword() {
           />
 
           {success ? (
-            <div className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/30 dark:border-primary/80/30">
+            <div className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/30 dark:border-primary/40">
               <CheckCircle2 className="w-10 h-10" />
               <div className="font-bold">Password Updated</div>
               <p className="text-sm opacity-80">Taking you back home...</p>

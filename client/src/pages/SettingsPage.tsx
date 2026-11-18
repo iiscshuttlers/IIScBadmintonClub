@@ -183,7 +183,7 @@ export default function SettingsPage() {
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5 text-left">{item.description}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-500" />
                   </div>
                 );
 
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700" />
+                      <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-500" />
                     </div>
                   </Link>
                 ))}
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                       <h3 className="text-sm font-semibold text-foreground">{item.label}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-500" />
                   </div>
                 );
 

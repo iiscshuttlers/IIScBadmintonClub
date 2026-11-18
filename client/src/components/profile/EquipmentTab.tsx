@@ -59,7 +59,7 @@ export function EquipmentTab({
               className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
               ${
                 index === primaryRacketIndex
-                  ? "bg-primary/10/30 dark:bg-primary/10 border-primary/50 dark:border-primary/80"
+                  ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary/60"
                   : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
               }`}
             >
@@ -174,7 +174,7 @@ export function EquipmentTab({
               className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
               ${
                 index === primaryShoeIndex
-                  ? "bg-primary/10/30 dark:bg-primary/10 border-primary/50 dark:border-primary/80"
+                  ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary/60"
                   : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
               }`}
             >

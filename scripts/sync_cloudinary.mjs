@@ -6,15 +6,21 @@ import crypto from "crypto";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const CLOUD_NAME = process.env.VITE_CLOUDINARY_CLOUD_NAME;
-const API_KEY = process.env.VITE_CLOUDINARY_API_KEY;
-const API_SECRET = process.env.VITE_CLOUDINARY_API_SECRET;
+// Server-only secrets must not use the VITE_ prefix: Vite builds any VITE_
+// variable the client code references into the public bundle. The old
+// VITE_-prefixed names still work as a fallback.
+const API_KEY = process.env.CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
+const API_SECRET = process.env.CLOUDINARY_API_SECRET || process.env.VITE_CLOUDINARY_API_SECRET;
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
   console.error("❌ Error: Missing Cloudinary credentials.");
-  console.error("Please add VITE_CLOUDINARY_CLOUD_NAME, VITE_CLOUDINARY_API_KEY, and VITE_CLOUDINARY_API_SECRET to your .env file.");
+  console.error("Please add VITE_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your .env file.");
   process.exit(1);
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { DefaultValues, UseFormReturn } from "react-hook-form";
 
 /**
  * Persists a standard React state form to localStorage.
@@ -65,7 +65,7 @@ export function useRHFDraft<T extends Record<string, any>>(key: string, methods:
     try {
       localStorage.removeItem(`draft_${key}`);
       if (defaultValues) {
-        methods.reset(defaultValues as any);
+        methods.reset(defaultValues as DefaultValues<T>);
       }
     } catch {
       // ignore

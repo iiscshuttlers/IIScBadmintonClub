@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 432,
+    "versionName": "4.32",
+    "date": "2026-11-14T15:26:37.857Z",
+    "changes": [
+      "- fix(pwa): fix SW notification deep-link dropping the base path on GitHub Pages"
+    ]
+  },
+  {
     "versionCode": 431,
     "versionName": "4.31",
     "date": "2026-10-19T17:56:03.066Z",

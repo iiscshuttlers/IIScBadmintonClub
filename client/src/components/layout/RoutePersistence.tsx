@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { App as CapacitorApp } from "@capacitor/app";
+import { rememberTournamentReturnRoute, routeKey } from "@/lib/routeContinuity";
 
 const ROUTE_KEY = "iiscshuttlers:last_route";
 
@@ -20,6 +21,7 @@ const NO_RESTORE = new Set(["/", "/join", "/404"]);
  */
 export function RoutePersistence() {
   const [location, setLocation] = useLocation();
+  const search = useSearch();
   const restored = useRef(false);
 
   // Restore once, on cold start only.
@@ -54,8 +56,9 @@ export function RoutePersistence() {
   useEffect(() => {
     const saveState = () => {
       try {
-        const full = location + window.location.search + window.location.hash;
+        const full = routeKey(location, window.location.search, window.location.hash);
         localStorage.setItem(ROUTE_KEY, full);
+        rememberTournamentReturnRoute(full);
       } catch {
         // ignore write failures
       }
@@ -71,7 +74,7 @@ export function RoutePersistence() {
     return () => {
       if (sub) sub.remove();
     };
-  }, [location]);
+  }, [location, search]);
 
   return null;
 }

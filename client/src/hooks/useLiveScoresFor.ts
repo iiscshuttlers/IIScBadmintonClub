@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 
 export interface LiveScorePeek {
   tournament_id: string;
-  score: any;
+  /** tournament_matches.score */
+  score: string | null;
   court_number?: number | string | null;
   team1_label?: string | null;
   team2_label?: string | null;
@@ -43,7 +44,7 @@ export function useLiveScoresFor(tournamentIds: string[]) {
       // Keep the latest in-progress match per tournament
       const seen = new Set<string>();
       const out: LiveScorePeek[] = [];
-      (data || []).forEach((m: any) => {
+      (data || []).forEach((m) => {
         if (seen.has(m.tournament_id)) return;
         seen.add(m.tournament_id);
         out.push({

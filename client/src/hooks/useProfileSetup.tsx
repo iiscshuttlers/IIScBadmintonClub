@@ -15,8 +15,19 @@ import { useProfileHighlightsState } from "./profile/useProfileHighlightsState";
 import { useProfileMediaState } from "./profile/useProfileMediaState";
 import { safeReplaceState, safeGetHash } from "@/lib/navUtils";
 import { useQueryClient } from "@tanstack/react-query";
+import { fetchMyPrivate, playerEmailInUse, withAdminPrivate } from "@/services/playerPrivateService";
+import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
+import type { PlayerRow, PlayerStats, ShoeItem } from "@/types";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
+
+/**
+ * The profile being edited (public columns, plus private ones the viewer may
+ * read). `status` is set by the availability picker on the personal page; this
+ * form only reads it to derive is_looking_to_play and never writes it, so a
+ * stale draft can't overwrite a newer picker choice.
+ */
+type LoadedProfile = PlayerRow;
 
 export function useProfileSetup() {
   const [, setLocation] = useLocation();
@@ -82,7 +93,7 @@ export function useProfileSetup() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [playerSlug, setPlayerSlug] = useState("");
-  const [originalStats, setOriginalStats] = useState<any>({});
+  const [originalStats, setOriginalStats] = useState<PlayerStats>({});
 
 
 
@@ -100,8 +111,8 @@ export function useProfileSetup() {
       if (error) throw error;
       setNewPassword("");
       toast("Password Updated", { description: "You can now log in using your email and password.", icon: "🔒" });
-    } catch (err: any) {
-      toast("Update failed", { description: err.message, icon: "❌" });
+    } catch (err) {
+      toast("Update failed", { description: err instanceof Error ? err.message : String(err), icon: "❌" });
     } finally {
       setPasswordLoading(false);
     }
@@ -117,7 +128,7 @@ export function useProfileSetup() {
     let mounted = true;
     const isSelfEdit = !paramId || (authProfile && authProfile.id === paramId);
 
-    let query = supabase.from("players").select("*");
+    let query = supabase.from("players").select(PLAYER_PUBLIC_COLUMNS);
     if (paramId && isAdmin && !isSelfEdit) {
       query = query.eq("id", paramId);
     } else if (authProfile?.id) {
@@ -127,7 +138,14 @@ export function useProfileSetup() {
     }
 
     Promise.resolve(query.maybeSingle())
-      .then(({ data: profile, error }) => {
+      .then(async ({ data: publicProfile, error }) => {
+        // Contact fields: own via self-only RPC, others' (admin edit) via admin RPC.
+        let profile = publicProfile as unknown as LoadedProfile | null;
+        if (publicProfile && !error) {
+          const own = await fetchMyPrivate();
+          if (own && own.id === profile.id) profile = { ...profile, ...own };
+          else if (isAdmin) profile = (await withAdminPrivate([profile]))[0];
+        }
         if (!mounted) return;
         if (profile && !error) {
           setTargetUserId(profile.id);
@@ -135,7 +153,7 @@ export function useProfileSetup() {
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
           setNickname(profile.nickname || "");
-          setStatus((profile as any).status || "looking");
+          setStatus(profile.status || "looking");
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
           if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {
@@ -155,19 +173,19 @@ export function useProfileSetup() {
           setFavoriteFormat(profile.favorite_format || "");
           setQuote(profile.quote || "");
           setAvatarUrl(profile.avatar_url || "");
-          setOriginalStats(profile.stats as any || {});
-          setCareerHighlights((profile.career_highlights as any) || []);
+          setOriginalStats(profile.stats || {});
+          setCareerHighlights((profile.career_highlights || []) as Array<{ year: string; title: string; description: string }>);
 
-          if ((profile.stats as any)?.media) {
-            const imgs = (profile.stats as any).media.filter((m: any) => m.type === "image");
-            const vids = (profile.stats as any).media.filter((m: any) => m.type === "video");
-            setMediaImages(imgs.map((i: any) => ({ url: i.url || "", caption: i.caption || "" })));
-            setMediaVideos(vids.map((v: any) => ({ url: v.url || "", caption: v.caption || "" })));
+          if (profile.stats?.media) {
+            const imgs = profile.stats.media.filter((m) => m.type === "image");
+            const vids = profile.stats.media.filter((m) => m.type === "video");
+            setMediaImages(imgs.map((i) => ({ url: i.url || "", caption: i.caption || "" })));
+            setMediaVideos(vids.map((v) => ({ url: v.url || "", caption: v.caption || "" })));
           }
 
-          if ((profile.racket_details as any)?.length > 0) {
-            setRackets((profile.racket_details as any).map((r: any) => ({ name: r.name || "", string: r.string || "", tension: (r.tension || "").replace(/[^0-9]/g, "") })));
-            const primIdx = (profile.racket_details as any).findIndex((r: any) => r.primary === true || r.name === profile.current_racket);
+          if (profile.racket_details?.length > 0) {
+            setRackets(profile.racket_details.map((r) => ({ name: r.name || "", string: r.string || "", tension: (r.tension || "").replace(/[^0-9]/g, "") })));
+            const primIdx = profile.racket_details.findIndex((r) => r.primary === true || r.name === profile.current_racket);
             setPrimaryRacketIndex(primIdx >= 0 ? primIdx : 0);
           } else if (profile.current_racket) {
             setRackets([{ name: profile.current_racket, string: "", tension: "" }]);
@@ -180,9 +198,9 @@ export function useProfileSetup() {
           if (profile.shoes) {
             try {
               if (profile.shoes.startsWith("[")) {
-                const parsedShoes = JSON.parse(profile.shoes);
-                setShoesList(parsedShoes.map((s: any) => ({ name: s.name || "" })));
-                const primShoeIdx = parsedShoes.findIndex((s: any) => s.primary === true);
+                const parsedShoes = JSON.parse(profile.shoes) as ShoeItem[];
+                setShoesList(parsedShoes.map((s) => ({ name: s.name || "" })));
+                const primShoeIdx = parsedShoes.findIndex((s) => s.primary === true);
                 setPrimaryShoeIndex(primShoeIdx >= 0 ? primShoeIdx : 0);
               } else {
                 setShoesList([{ name: profile.shoes }]);
@@ -251,10 +269,10 @@ export function useProfileSetup() {
       toast.dismiss();
       setAvatarUrl(`${publicUrl}?t=${Date.now()}`);
       toast.success("Avatar uploaded and compressed successfully!");
-    } catch (err: any) {
+    } catch (err) {
       toast.dismiss();
       console.error("Avatar upload failed:", err);
-      toast.error("Upload failed", { description: err.message });
+      toast.error("Upload failed", { description: err instanceof Error ? err.message : String(err) });
       setAvatarUrl("");
     } finally {
       setLoading(false);
@@ -272,8 +290,8 @@ export function useProfileSetup() {
     const packedStats = {
       ...originalStats,
       media: [
-        ...validImages.map((img) => ({ type: "image", url: img.url, caption: img.caption })),
-        ...validVideos.map((vid) => ({ type: "video", url: vid.url, caption: vid.caption })),
+        ...validImages.map((img) => ({ type: "image" as const, url: img.url, caption: img.caption })),
+        ...validVideos.map((vid) => ({ type: "video" as const, url: vid.url, caption: vid.caption })),
       ],
     };
     return {
@@ -343,7 +361,7 @@ export function useProfileSetup() {
     if (missing.length > 0) {
       if (!silent) {
         toast.error("Required fields missing", { description: `Please fill: ${missing.join(", ")}` });
-        if (activeTab !== "basic") setActiveTab("basic" as any);
+        if (activeTab !== "basic") setActiveTab("basic");
       }
       return;
     }
@@ -359,14 +377,9 @@ export function useProfileSetup() {
     if (!silent) {
       setLoading(true);
       if (iiscEmail) {
-        const { data: existingProfiles, error: emailError } = await supabase
-          .from("players")
-          .select("id")
-          .eq("iisc_email", iiscEmail)
-          .neq("id", targetUserId || session.user.id)
-          .limit(1);
+        const inUseBy = await playerEmailInUse(iiscEmail).catch(() => null);
 
-        if (!emailError && existingProfiles && existingProfiles.length > 0) {
+        if (inUseBy && inUseBy !== (targetUserId || session.user.id)) {
           toast.error("Duplicate profile", {
             description: "This IISc Email belongs to an existing profile.\nPlease log out and Sign In using that exact email, OR contact a club admin to manually link it."
           });
@@ -401,17 +414,17 @@ export function useProfileSetup() {
       if (!silent) {
         if (nextTab) {
           toast.success("Progress saved!");
-          setActiveTab(nextTab as any);
+          setActiveTab(nextTab as typeof activeTab);
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           if (isEditing) setLocation(`/player/${playerSlug}`);
           else setLocation(`/player/${session.user.id}`);
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       if (!silent) {
         console.error("Error saving profile:", err); 
-        toast.error("Failed to save", { description: err.message || "An error occurred." }); 
+        toast.error("Failed to save", { description: (err instanceof Error && err.message) || "An error occurred." }); 
       }
     } finally {
       if (!silent) setLoading(false);

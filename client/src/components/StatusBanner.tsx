@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { Link, useLocation } from "wouter";
 import { X } from "lucide-react";
 
@@ -180,24 +180,14 @@ export default function StatusBanner() {
       })
       .catch((err) => console.warn("StatusBanner data fetch failed:", err));
 
-    const channel = supabase.channel('club-settings-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.club_settings" },
-        (payload: any) => {
-          const newSettings = payload.new?.value;
-          if (newSettings?.maintenanceMode) {
-            setMaintenance({ mode: true, msg: newSettings.maintenanceMessage || "Site is under maintenance. Please check back shortly." });
-          } else {
-            setMaintenance({ mode: false, msg: "" });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return feedService.subscribeToClubSettings((payload: any) => {
+      const newSettings = payload.new?.value;
+      if (newSettings?.maintenanceMode) {
+        setMaintenance({ mode: true, msg: newSettings.maintenanceMessage || "Site is under maintenance. Please check back shortly." });
+      } else {
+        setMaintenance({ mode: false, msg: "" });
+      }
+    });
   }, []);
 
   if (location !== "/" && !maintenance.mode) return null;

@@ -177,7 +177,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <p className="text-muted-foreground text-xs flex items-center gap-1">
                 Built with
-                <span className="text-rose-500/70">♥</span>
+                <span className="text-rose-400">♥</span>
               </p>
               {versionName && (
                 <span className="text-muted-foreground text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">

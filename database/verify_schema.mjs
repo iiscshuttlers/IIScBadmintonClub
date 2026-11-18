@@ -17,8 +17,6 @@ async function verify() {
   console.log(res.rows.map(r => r.table_name).join(", "));
 
   try {
-    const matchesRes = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`);
-    console.log("Matches columns:", matchesRes.rows.map(r => r.column_name).join(", "));
   } catch (e) {
     console.log("Matches table query failed:", e.message);
   }

@@ -11,6 +11,9 @@ export interface TournamentRun {
   eliminated: boolean; // true = lost a match; false = still in or won it all
 }
 
+/** A run while it is being built; `_round` tracks the deepest round seen. */
+type RunInProgress = TournamentRun & { _round?: number };
+
 export function useTournamentMatchHistory(playerId: string | undefined) {
   return useQuery<TournamentRun[]>({
     queryKey: ["tournamentMatchHistory", playerId],
@@ -32,9 +35,9 @@ export function useTournamentMatchHistory(playerId: string | undefined) {
       if (!data) return [];
 
       // Group by tournament + category
-      const map = new Map<string, TournamentRun>();
+      const map = new Map<string, RunInProgress>();
 
-      for (const m of data as any[]) {
+      for (const m of data) {
         const key = `${m.tournament_id}__${m.category}`;
         const isTeam1 =
           m.player1_id === playerId || m.player3_id === playerId;
@@ -57,10 +60,10 @@ export function useTournamentMatchHistory(playerId: string | undefined) {
           if (playerWon) existing.wins++;
           else { existing.losses++; existing.eliminated = true; }
           // Keep the highest round as "deepest"
-          if (m.round > (existing as any)._round) {
+          if (m.round > existing._round) {
             existing.deepest_round_name = m.round_name ?? `Round ${m.round}`;
           }
-          (existing as any)._round = Math.max((existing as any)._round ?? 0, m.round);
+          existing._round = Math.max(existing._round ?? 0, m.round);
         }
       }
 

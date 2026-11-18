@@ -49,9 +49,13 @@ export function EquipmentArsenalSection({
     }, 800);
   };
 
+  const racketDetails = player.racket_details || player.racketDetails;
+  const currentRacket = player.current_racket || player.currentRacket;
+  const shoesList = player.shoesList;
+
   if (
-    !player.racketDetails?.length &&
-    !player.shoesList?.length &&
+    !racketDetails?.length &&
+    !shoesList?.length &&
     !player.shoes &&
     !player.apparel
   ) {
@@ -61,14 +65,14 @@ export function EquipmentArsenalSection({
   // Combine items for stagger animation
   const items: any[] = [];
   
-  if (player.racketDetails) {
-    player.racketDetails.forEach((r: any) => {
-      items.push({ type: 'racket', data: r, isMain: r.name === player.currentRacket });
+  if (racketDetails) {
+    racketDetails.forEach((r: any) => {
+      items.push({ type: 'racket', data: r, isMain: r.name === currentRacket });
     });
   }
   
-  if (player.shoesList && player.shoesList.length > 0) {
-    player.shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
+  if (shoesList && shoesList.length > 0) {
+    shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
   } else if (player.shoes) {
     items.push({ type: 'shoe', data: { name: player.shoes, primary: true } });
   }
@@ -81,7 +85,7 @@ export function EquipmentArsenalSection({
     <section className="py-8 relative" ref={containerRef}>
       <div className="flex items-center gap-3 mb-10 px-4">
         <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
           <InfoModal
             title="EQUIPMENT ARSENAL"
@@ -330,7 +334,7 @@ export function EquipmentArsenalSection({
                             <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-on-accent rounded-lg">Primary</span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground dark:text-foreground/45 font-medium">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground dark:text-foreground/60 font-medium">
                           <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.string}</span></span>
                           <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.tension}</span></span>
                         </div>
@@ -458,7 +462,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
     const isPlayerInString = (str?: string) => {
       if (!str) return false;
       const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
-      const playerName = (player.fullName || "").toLowerCase();
+      const playerName = (player.full_name || player.fullName || "").toLowerCase();
       const firstName = playerName.split(" ")[0];
       
       // If full name or first name matches, we count it
@@ -543,7 +547,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
         <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0">
           Career Highlights
         </span>
         <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
@@ -574,14 +578,14 @@ export function CareerHighlightsSection({ player }: { player: any }) {
                   </div>
                   {/* Card */}
                   <div className="flex-1 bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-xl p-4 border border-slate-200 dark:border-white/8 hover:border-white/15 hover:bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground dark:text-foreground/35 mb-1">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground dark:text-foreground/60 mb-1">
                       {h.year}
                     </div>
                     <div className="text-sm font-black text-slate-800 dark:text-foreground leading-snug">
                       {h.title}
                     </div>
                     {h.description && (
-                      <div className="text-xs text-muted-foreground dark:text-foreground/45 mt-1.5 leading-relaxed">
+                      <div className="text-xs text-muted-foreground dark:text-foreground/60 mt-1.5 leading-relaxed">
                         {h.description}
                       </div>
                     )}

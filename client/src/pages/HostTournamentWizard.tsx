@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
 import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { tournamentService, playerService } from '@/services';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { TeamFormatConfigPanel, RubberConfig } from '@/components/admin/TeamFormatConfigPanel';
@@ -326,14 +326,12 @@ export default function HostTournamentWizard() {
         }
       }
 
-      const { data, error } = await supabase.from('tournaments').insert(payload).select().single();
-      
-      if (error) throw error;
+      const data = await tournamentService.createTournament(payload as any);
 
       // Import CSV entrants if provided
       if (data?.id && previewData.length > 1 && formatFamily === 'OPEN_EVENT') {
         try {
-          const { data: players } = await supabase.from("players").select("id, full_name, email, iisc_email").is("deleted_at", null);
+          const players = await playerService.getActivePlayersForMatching();
           const matchPlayer = (name: string, email: string) => {
             if (!name && !email) return null;
             return (players ?? []).find(p => {
@@ -389,19 +387,19 @@ export default function HostTournamentWizard() {
           for (const [cat, entries] of Object.entries(byCat)) {
             let nextSeed = 1;
             for (const entry of entries) {
-              const { error: insertErr } = await supabase.from("tournament_participants").insert({
-                tournament_id: data.id,
-                category: cat,
-                player_id: entry.player_id,
-                partner_id: entry.partner_id,
-                display_name: entry.display_name,
-                seed: entry.seed ?? nextSeed,
-              });
-              if (insertErr) {
-                console.error(`Failed to import ${entry.display_name} in ${cat}:`, insertErr.message);
-                failed++;
-              } else {
+              try {
+                await tournamentService.addTournamentParticipant({
+                  tournament_id: data.id,
+                  category: cat,
+                  player_id: entry.player_id,
+                  partner_id: entry.partner_id,
+                  display_name: entry.display_name,
+                  seed: entry.seed ?? nextSeed,
+                });
                 imported++;
+              } catch (insertErr: any) {
+                console.error(`Failed to import ${entry.display_name} in ${cat}:`, insertErr?.message || insertErr);
+                failed++;
               }
               nextSeed++;
             }
@@ -421,7 +419,7 @@ export default function HostTournamentWizard() {
         
       // Auto-assign creator as organizer
       if (data?.id && session.user.id) {
-        await supabase.from("tournament_officials").insert({
+        await tournamentService.assignTournamentOfficial({
           tournament_id: data.id,
           user_id: session.user.id,
           role: "ORGANIZER",
@@ -429,12 +427,8 @@ export default function HostTournamentWizard() {
         });
       }
 
-      toast.success("Tournament created successfully!");
-      if (data?.id) {
-        navigate(`/tournament-setup/${data.id}`);
-      } else {
-        navigate('/admin');
-      }
+      toast.success("Tournament created as a draft");
+      navigate(data?.id ? `/tournament-admin?id=${data.id}` : '/tournament-admin');
       
     } catch (error: any) {
       console.error(error);
@@ -471,7 +465,7 @@ export default function HostTournamentWizard() {
             <span className={step >= 1 ? "text-primary font-black" : ""}>1. Details</span>
             <span className={step >= 2 ? "text-primary font-black text-center" : "text-center"}>2. Rules</span>
             <span className={step >= 3 ? "text-primary font-black text-center" : "text-center"}>3. Roster</span>
-            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Publish</span>
+            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Review</span>
           </div>
         </div>
 
@@ -736,8 +730,8 @@ export default function HostTournamentWizard() {
               <PageTransition key="step4">
                 <div className="text-center mb-8">
                   <CheckCircle2 className="w-16 h-16 text-[var(--success)] mx-auto mb-4" />
-                  <h2 className="text-2xl font-black mb-2">Ready to Go Live</h2>
-                  <p className="text-slate-500">Review your tournament settings before publishing.</p>
+                  <h2 className="text-2xl font-black mb-2">Looks good?</h2>
+                  <p className="text-slate-500">It starts as a draft that only admins can see. You'll go live from the Tournament Manager when you're ready.</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
@@ -783,7 +777,7 @@ export default function HostTournamentWizard() {
               className="gap-2 px-8 py-3 font-black shadow-lg shadow-primary/30"
             >
               {isPublishing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-              {step === 4 ? 'Publish' : 'Continue'} 
+              {step === 4 ? 'Create tournament' : 'Continue'} 
               {step !== 4 && <ChevronRight className="w-5 h-5" />}
             </Button>
           </div>

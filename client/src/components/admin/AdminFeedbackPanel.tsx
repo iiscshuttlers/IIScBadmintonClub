@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { MessageSquare, Bug, Lightbulb } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -12,15 +12,7 @@ export function AdminFeedbackPanel() {
 
   const fetchFeedback = async () => {
     try {
-      const { data, error } = await supabase
-        .from("user_feedback")
-        .select(`
-          *,
-          players:user_id ( full_name, email )
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await adminService.fetchUserFeedback();
       setFeedback(data || []);
     } catch (err) {
       console.error(err);
@@ -36,11 +28,7 @@ export function AdminFeedbackPanel() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from("user_feedback")
-        .update({ status: newStatus })
-        .eq("id", id);
-      if (error) throw error;
+      await adminService.updateUserFeedbackStatus(id, newStatus);
       toast("Status updated", { icon: "✅" });
       setFeedback((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)));
     } catch (err) {

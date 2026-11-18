@@ -14,18 +14,16 @@ import {
   Quote,
   LogOut,
   Settings,
-  Swords,
   Footprints,
   Flag,
   Bell,
   ActivitySquare,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { NotificationModal } from "@/components/events/NotificationModal";
+import { getPlayerSubscription, subscribeToPlayer, unsubscribeFromPlayer } from "@/services/playerService";
 
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
-import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
@@ -54,7 +52,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 // Extracted Hooks & Components
 import { TeaserOverlay } from "@/components/TeaserOverlay";
@@ -79,15 +76,13 @@ import { getBaseShareUrl } from "@/lib/utils";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
 import { renderWrappedShareCard } from "@/lib/wrappedShareCard";
+import { useQuery } from "@tanstack/react-query";
+import { resolvePlayerAlias } from "@/services/identityService";
+import { ClaimRecordCard } from "@/components/player-profile/ClaimRecordCard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
 };
 
 export default function PlayerProfile() {
@@ -105,7 +100,7 @@ export default function PlayerProfile() {
 
 
   // Own player profile
-  const [ownPlayerProfile, setOwnPlayerProfile] = useState<any | null>(null);
+  const [ownPlayerProfile, setOwnPlayerProfile] = useState<PlayerRow | null>(null);
   const [allPlayers, setAllPlayers] = useState<PlayerRow[]>([]);
 
   // Load user profile and players
@@ -115,7 +110,9 @@ export default function PlayerProfile() {
         try {
           const profile = await fetchPlayer(authSession.user.id);
           setOwnPlayerProfile(profile);
-        } catch {}
+        } catch (err) {
+          import('@sentry/react').then(({ captureException }) => captureException(err));
+        }
       }
     }
     loadOwnProfile();
@@ -126,24 +123,14 @@ export default function PlayerProfile() {
   }, []);
 
   // Use Custom Hooks
-  const { player, loading, eloRank, liveMatches, eloLogs, isMatchParticipant, silentRefresh } =
+  const { player, loading, eloRank, liveMatches, eloLogs } =
     usePlayerProfileQuery(id, ownPlayerProfile?.id);
 
   const {
     h2hRecord,
     recentOpponents,
     bestOpponent,
-    eloHistoryData,
-    eloChartFilter,
-    setEloChartFilter,
   } = useProfileAnalytics(id, player, liveMatches, eloLogs, ownPlayerProfile);
-
-  const {
-    handleWithdrawMatch,
-    handleConfirmMatch,
-    handleRejectMatch,
-    handleResendRequest,
-  } = useMatchActions(ownPlayerProfile, () => silentRefresh(), () => {}, liveMatches);
 
   const { archivedTournaments } = useArchivedTournaments();
 
@@ -156,7 +143,7 @@ export default function PlayerProfile() {
     const isPlayerInString = (str?: string) => {
       if (!str) return false;
       const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
-      const playerName = (player.fullName || "").toLowerCase();
+      const playerName = (player.full_name || "").toLowerCase();
       const firstName = playerName.split(" ")[0];
       return cleanStr.includes(playerName) || cleanStr.includes(firstName);
     };
@@ -211,32 +198,25 @@ export default function PlayerProfile() {
 
   const augmentedPlayer = useMemo(() => {
     if (!player) return null;
-    const manualTournaments = player.tournamentHistory || [];
+    const manualTournaments = player.tournament_history || [];
     const combinedTourneys = Array.from(new Set([...manualTournaments, ...dynamicTournamentData.tournaments]));
     return {
       ...player,
-      tournamentHistory: combinedTourneys
+      tournament_history: combinedTourneys
     };
   }, [player, dynamicTournamentData]);
 
   const { data: tournamentRuns } = useTournamentMatchHistory(id);
 
   const { splitStats, streakStats, profileCompleteness } = usePlayerStats(
-    (player as any) || null,
+    player || null,
     liveMatches,
     validAchievements,
     tournamentRuns || undefined
   );
 
-  const pendingMatches = useMemo(() => {
-    if (!player) return [];
-    return liveMatches.filter(
-      (m) => m.status === "pending" && isMatchParticipant(m, player.userId)
-    );
-  }, [liveMatches, player, isMatchParticipant]);
-
   const currentYearNow = new Date().getFullYear();
-  const profileYear = player?.joinedYear || (player?.created_at ? new Date(player.created_at).getFullYear() : currentYearNow);
+  const profileYear = player?.joined_year || (player?.created_at ? new Date(player.created_at).getFullYear() : currentYearNow);
   const minYear = profileYear;
   const wrappedYears = Array.from({ length: Math.max(1, currentYearNow - minYear + 1) }, (_, i) => currentYearNow - i);
 
@@ -254,7 +234,7 @@ export default function PlayerProfile() {
       const rankLine = rankParts.length > 0 ? `🏆 Ranking: ${rankParts.join(' · ')}` : '';
 
       const shareText = [
-        `🏸 ${player.fullName}'s Badminton Profile`,
+        `🏸 ${player.full_name}'s Badminton Profile`,
         rankLine,
         `📈 Win Rate: ${splitStats?.all?.winPct || 0}%`,
         `⚔️ Matches Played: ${splitStats?.all?.total || 0}`,
@@ -264,9 +244,9 @@ export default function PlayerProfile() {
       ].filter(Boolean).join('\n');
 
       let file: File | undefined;
-      if (player.avatar) {
+      if (player.avatar_url) {
         try {
-          const response = await fetch(player.avatar + '?download=true');
+          const response = await fetch(player.avatar_url + '?download=true');
           const blob = await response.blob();
           file = new File([blob], "profile_picture.jpg", { type: blob.type || "image/jpeg" });
         } catch (e) {
@@ -294,7 +274,7 @@ export default function PlayerProfile() {
         }
 
         await Share.share({
-          title: `${player.fullName} - Player Profile`,
+          title: `${player.full_name} - Player Profile`,
           text: shareText,
           url: localUri || shareUrl,
           dialogTitle: 'Share Profile'
@@ -308,7 +288,7 @@ export default function PlayerProfile() {
         const deepLinkUrl = isAndroid ? intentUrl : shareUrl;
 
         const shareData: any = {
-          title: `${player.fullName} - Player Profile`,
+          title: `${player.full_name} - Player Profile`,
           text: shareText,
           url: deepLinkUrl,
         };
@@ -335,8 +315,8 @@ export default function PlayerProfile() {
     try {
       const canvas = await renderWrappedShareCard({
         year: currentYear,
-        playerName: player.fullName,
-        avatarUrl: player.avatar,
+        playerName: player.full_name,
+        avatarUrl: player.avatar_url,
         totalMatches: splitStats?.all?.total || 0,
         winRate: `${splitStats?.all?.winPct || 0}%`,
         biggestRival: bestOpponent?.full_name || "N/A",
@@ -414,31 +394,28 @@ export default function PlayerProfile() {
 
   useEffect(() => {
     if (!currentUser?.id || !player?.id) return;
-    supabase
-      .from("user_player_subscriptions")
-      .select("notify_before_mins")
-      .eq("user_id", currentUser.id)
-      .eq("player_id", player.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    getPlayerSubscription(currentUser.id, player.id)
+      .then((data) => {
         if (data) {
           setIsSubscribed(true);
           setSubMins(data.notify_before_mins);
         }
-      });
+      })
+      .catch((err) => console.error("Failed to load subscription:", err));
   }, [currentUser?.id, player?.id]);
 
-  if (loading || !player) return <LoadingScreen />;
+  if (loading) return <LoadingScreen />;
+  if (!player) return <MissingPlayer id={id} onFound={(newId) => setLocation(`/player/${newId}${window.location.hash}`, { replace: true })} />;
 
   return (
-    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-[#0a1628] selection:bg-amber-500/30 overflow-x-hidden">
+    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-amber-500/30 overflow-x-hidden">
       {/* Background patterns */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
       </div>
 
-      <div className="relative z-10 w-full bg-white dark:bg-[#060d1b]">
+      <div className="relative z-10 w-full bg-white dark:bg-slate-950">
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <button
@@ -451,7 +428,7 @@ export default function PlayerProfile() {
 
           <div className="flex items-center gap-2 md:gap-3">
             {/* Subscribe & Report — shown to others only */}
-            {currentUser && currentUser.id !== player.userId && (
+            {currentUser && currentUser.id !== player.id && (
               <>
                 <button
                   onClick={() => setSubModalOpen(true)}
@@ -469,38 +446,29 @@ export default function PlayerProfile() {
                 <NotificationModal
                   isOpen={subModalOpen}
                   onClose={() => setSubModalOpen(false)}
-                  title={`Notify for ${player.fullName}'s Matches`}
+                  title={`Notify for ${player.full_name}'s Matches`}
                   defaultMins={subMins}
                   onSave={async (mins) => {
-                    const { error } = await supabase.from("user_player_subscriptions").upsert({
-                      user_id: currentUser.id,
-                      player_id: player.id,
-                      notify_before_mins: mins
-                    }, { onConflict: "user_id, player_id" });
-
-                    if (error) {
+                    try {
+                      await subscribeToPlayer(currentUser.id, player.id, mins);
+                      setIsSubscribed(true);
+                      setSubMins(mins);
+                      track("player_subscribed", { mins });
+                      toast.success(`Subscribed to ${player.full_name}!`);
+                    } catch {
                       toast.error("Failed to update subscription");
-                      return;
                     }
-                    setIsSubscribed(true);
-                    setSubMins(mins);
-                    track("player_subscribed", { mins });
-                    toast.success(`Subscribed to ${player.fullName}!`);
                   }}
                   isSubscribed={isSubscribed}
                   onRemove={async () => {
-                    const { error } = await supabase.from("user_player_subscriptions")
-                      .delete()
-                      .eq("user_id", currentUser.id)
-                      .eq("player_id", player.id);
-
-                    if (error) {
+                    try {
+                      await unsubscribeFromPlayer(currentUser.id, player.id);
+                      setIsSubscribed(false);
+                      track("player_unsubscribed");
+                      toast.success(`Unsubscribed from ${player.full_name}'s matches.`);
+                    } catch {
                       toast.error("Failed to remove subscription");
-                      return;
                     }
-                    setIsSubscribed(false);
-                    track("player_unsubscribed");
-                    toast.success(`Unsubscribed from ${player.fullName}'s matches.`);
                   }}
                 />
 
@@ -515,7 +483,7 @@ export default function PlayerProfile() {
             )}
 
             {/* Share, Wrapped, Export — own profile only */}
-            {currentUser && currentUser.id === player.userId && (
+            {currentUser && currentUser.id === player.id && (
               <>
                 <button aria-label="Share profile"
                   onClick={handleShare}
@@ -548,13 +516,13 @@ export default function PlayerProfile() {
                 </DropdownMenu>
                 <button
                   onClick={() => exportProfilePdf({
-                    playerName: player.fullName,
-                    avatarUrl: player.avatar,
+                    playerName: player.full_name,
+                    avatarUrl: player.avatar_url,
                     department: player.department,
-                    joinedYear: player.joinedYear,
-                    playingLevel: player.playingLevel,
-                    favoriteShot: player.favoriteShot,
-                    favoriteFormat: player.favoriteFormat,
+                    joinedYear: player.joined_year || 0,
+                    playingLevel: player.playing_level,
+                    favoriteShot: player.favorite_shot || "",
+                    favoriteFormat: player.favorite_format || "",
                     winRate: splitStats?.all?.winPct || 0,
                     totalMatches: splitStats?.all?.total || 0,
                     wins: splitStats?.all?.wins || 0,
@@ -565,7 +533,7 @@ export default function PlayerProfile() {
                       doubles: eloRank?.doubles,
                       mixed: eloRank?.mixed,
                     },
-                    instagram: player.social?.instagram,
+                    instagram: player.instagram || undefined,
                   })}
                   className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-slate-200 dark:border-white/10 whitespace-nowrap"
                 >
@@ -574,11 +542,11 @@ export default function PlayerProfile() {
                 </button>
               </>
             )}
-            {currentUser && currentUser.id === player.userId && (
+            {currentUser && currentUser.id === player.id && (
               <>
                 <Link href={`/player/${player.id}/personal`}>
                   <button
-                    className="px-3 md:px-4 py-2 md:py-2.5 h-10 md:h-12 bg-primary hover:bg-primary/90 text-slate-950 font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
+                    className="px-3 md:px-4 py-2 md:py-2.5 h-10 md:h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
                     title="Switch to Personal Training & Analytics Dashboard"
                   >
                     <ActivitySquare className="w-4 h-4" />
@@ -593,7 +561,7 @@ export default function PlayerProfile() {
                 </Link>
               </>
             )}
-            {currentUser && currentUser.id === player.userId && (
+            {currentUser && currentUser.id === player.id && (
               <button
                 onClick={() => signOut()}
                 className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
@@ -606,6 +574,13 @@ export default function PlayerProfile() {
 
         {/* Hero Section */}
         <PlayerHeroBanner player={augmentedPlayer || player} eloRank={eloRank?.overall || null} theme={theme} />
+
+        {/* Below the hero: its background layer would otherwise cover the card. */}
+        {player.is_guest && currentUser && ownPlayerProfile && !ownPlayerProfile.is_guest && ownPlayerProfile.id !== player.id && (
+          <div className="relative z-10">
+            <ClaimRecordCard guestId={player.id} guestName={player.full_name || "Guest"} requesterId={ownPlayerProfile.id} />
+          </div>
+        )}
 
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-8 mt-2 md:mt-8">
           <div className="flex flex-col lg:flex-row gap-6 justify-between items-start">
@@ -620,7 +595,7 @@ export default function PlayerProfile() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
+        <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-slate-950 sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center gap-2 md:gap-6 w-full md:min-w-max">
               {[
@@ -629,7 +604,7 @@ export default function PlayerProfile() {
                 "STATS",
                 "MATCHES",
                 "PHOTOS",
-                ...(currentUser && currentUser.id === player.userId ? ["TRAINING"] : [])
+                ...(currentUser && currentUser.id === player.id ? ["TRAINING"] : [])
               ].map((tab) => (
                 <button
                   key={tab}
@@ -666,67 +641,6 @@ export default function PlayerProfile() {
         animate="visible"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 pt-2 pb-24 space-y-6"
       >
-        {/* Pending Match Verification Banner */}
-        {(activeTab === "MATCHES" || activeTab === "OVERVIEW") &&
-          currentUser &&
-          currentUser.id === player.userId &&
-          pendingMatches.length > 0 && (
-            <motion.div
-              variants={itemVariants}
-              className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-5 relative overflow-hidden mt-8"
-            >
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0" />
-              <h3 className="text-amber-400 font-black mb-4 flex items-center gap-2 text-sm">
-                <Swords className="w-4 h-4" /> Pending Match Verifications (
-                {pendingMatches.length})
-              </h3>
-              <div className="space-y-3">
-                {pendingMatches.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/25 p-4 rounded-xl border border-amber-500/20"
-                  >
-                    <div className="text-sm font-semibold text-muted-foreground dark:text-foreground/80 text-center sm:text-left">
-                      <span className="font-bold">{m.player1?.full_name}</span>
-                      <span className="text-amber-400 font-black italic mx-2">VS</span>
-                      <span className="font-bold">{m.player2?.full_name}</span>
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      {m.submitted_by === player.id ? (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleWithdrawMatch(m.id)}
-                          className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                        >
-                          Withdraw
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => handleConfirmMatch(m.id)}
-                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                          >
-                            Confirm
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRejectMatch(m.id)}
-                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
         <TeaserOverlay isLocked={!authSession}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
             {/* ── LEFT COLUMN ── */}
@@ -743,10 +657,6 @@ export default function PlayerProfile() {
                   id={id!}
                   liveMatches={liveMatches}
                   ownPlayerProfile={ownPlayerProfile}
-                  handleWithdrawMatch={handleWithdrawMatch}
-                  handleConfirmMatch={handleConfirmMatch}
-                  handleRejectMatch={handleRejectMatch}
-                  handleResendRequest={handleResendRequest}
                 />
               )}
 
@@ -783,10 +693,6 @@ export default function PlayerProfile() {
                   id={id!}
                   liveMatches={liveMatches}
                   ownPlayerProfile={ownPlayerProfile}
-                  handleWithdrawMatch={handleWithdrawMatch}
-                  handleConfirmMatch={handleConfirmMatch}
-                  handleRejectMatch={handleRejectMatch}
-                  handleResendRequest={handleResendRequest}
                 />
               )}
 
@@ -824,11 +730,37 @@ export default function PlayerProfile() {
           open={reportOpen}
           onClose={() => setReportOpen(false)}
           reportedPlayerId={player.id}
-          reportedPlayerName={player.fullName}
+          reportedPlayerName={player.full_name}
           reporterId={authSession?.user?.id}
         />
       )}
 
+    </div>
+  );
+}
+
+/**
+ * A player ID that no longer exists: follow a merge alias (saved links to a
+ * merged guest record keep working), otherwise say it was not found.
+ */
+function MissingPlayer({ id, onFound }: { id: string | undefined; onFound: (id: string) => void }) {
+  const alias = useQuery({
+    queryKey: ["player_aliases", id],
+    queryFn: () => (id ? resolvePlayerAlias(id) : Promise.resolve(null)),
+    enabled: !!id,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    if (alias.data) onFound(alias.data);
+  }, [alias.data, onFound]);
+  if (alias.isPending || alias.data) return <LoadingScreen />;
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 text-center">
+      <div>
+        <h1 className="text-2xl font-black mb-2">Player not found</h1>
+        <p className="text-muted-foreground mb-4">This profile doesn't exist or has been removed.</p>
+        <Link href="/" className="inline-flex items-center min-h-[44px] px-4 rounded-xl bg-primary text-primary-foreground font-bold">Go home</Link>
+      </div>
     </div>
   );
 }

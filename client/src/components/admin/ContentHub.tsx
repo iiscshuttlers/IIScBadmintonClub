@@ -49,7 +49,7 @@ export function ContentHub() {
   return (
     <div className="space-y-6">
       {/* Sub-navigation */}
-      <div className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         {SUB_TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;

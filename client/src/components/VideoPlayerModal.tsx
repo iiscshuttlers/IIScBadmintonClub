@@ -76,8 +76,10 @@ export function VideoPlayerModal({ video, onClose }: Props) {
              if (a.length > 0) setTeamA(a);
              if (b.length > 0) setTeamB(b);
           }
-       }
-    } catch (e) {}
+        }
+    } catch {
+      /* intentional — fallback if video title is not in standard 'X vs Y' format */
+    }
   }, [video.title]);
 
   // Lock body scroll
@@ -177,7 +179,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
 
           {/* Keyboard shortcuts hint */}
           {!isInPip && (
-            <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-foreground/30 text-[11px] border-t border-white/5">
+            <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-foreground/60 text-[11px] border-t border-white/5">
               <span>Space / K — play/pause</span>
               <span>← / → — skip 10s</span>
               <span>F — fullscreen</span>
@@ -204,7 +206,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                     onClick={() => playerRef.current?.seekTo(ch.time)}
                   >
                     <Clock
-                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-primary" : "text-foreground/30"}`}
+                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-primary" : "text-foreground/60"}`}
                     />
                     <div className="min-w-0">
                       <p
@@ -212,7 +214,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                       >
                         {ch.title}
                       </p>
-                      <p className="text-foreground/30 text-xs tabular-nums mt-0.5">
+                      <p className="text-foreground/60 text-xs tabular-nums mt-0.5">
                         {fmt(ch.time)}
                       </p>
                     </div>

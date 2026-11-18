@@ -1,12 +1,16 @@
-import * as XLSX from "xlsx";
 import { toPng, toJpeg } from "html-to-image";
-import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 
+// xlsx (~480 KB) and jsPDF (~375 KB) load on the first export, not with every
+// page that imports this module (e.g. the public match schedule).
+const loadXlsx = () => import("xlsx");
+const loadJsPDF = async () => (await import("jspdf")).jsPDF;
+
 export const exportToExcel = async (filename: string, sheets: { name: string, data: any[][] }[], email: boolean = false, subject: string = "", body: string = "") => {
+  const XLSX = await loadXlsx();
   const wb = XLSX.utils.book_new();
   sheets.forEach(sheet => {
     const ws = XLSX.utils.aoa_to_sheet(sheet.data);
@@ -168,9 +172,10 @@ export const exportToImage = async (sheets: ExportSheetDef[], filename: string, 
 
 export const exportToPDF = async (sheets: ExportSheetDef[], filename: string, email: boolean = false, subject: string = "", body: string = "") => {
   if (!sheets || sheets.length === 0) { toast.error("No data to export"); return; }
-  
+
   try {
     toast.loading("Generating PDF...", { id: "export-pdf" });
+    const jsPDF = await loadJsPDF();
     
     const pages = [];
     for (let i = 0; i < sheets.length; i++) {
@@ -304,6 +309,7 @@ export const exportElementToPDF = async (
 ) => {
   try {
     toast.loading("Generating PDF...", { id: "export-elem-pdf" });
+    const jsPDF = await loadJsPDF();
     const dataUrl = await toPng(element, { 
       backgroundColor,
       pixelRatio: 2,

@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchLatestTournamentsForNotices, fetchRecentTournamentMatchesWithNames } from "@/services/tournamentService";
+import { hubService } from "@/services/hubService";
 import { fetchSiteData } from "@/lib/siteData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Trophy, Swords, Search, ShoppingBag, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
@@ -56,12 +56,7 @@ export function NoticeBoard() {
         }
 
         // 2. Tournaments
-        const { data: tournaments } = await supabase
-          .from("tournaments")
-          .select("*")
-          .neq("status", "deleted")
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const tournaments = await fetchLatestTournamentsForNotices();
 
         if (tournaments) {
           tournaments.forEach((t) => {
@@ -75,8 +70,8 @@ export function NoticeBoard() {
               iconWrapperClass = "bg-emerald-500/10 dark:bg-emerald-400/10";
               iconClass = "text-emerald-600 dark:text-emerald-400";
               badgeClass = "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300 ring-1 ring-inset ring-emerald-500/20 dark:ring-emerald-400/20";
-            } else if (t.status === "archived") {
-              badgeText = "Archived";
+            } else if (t.status === "archived" || t.status === "completed" || t.status === "cancelled") {
+              badgeText = t.status === "archived" ? "Archived" : t.status === "completed" ? "Completed" : "Cancelled";
               iconWrapperClass = "bg-slate-500/10 dark:bg-slate-400/10";
               iconClass = "text-slate-500 dark:text-slate-400";
               badgeClass = "bg-slate-500/15 text-slate-600 dark:bg-slate-400/20 dark:text-slate-400 ring-1 ring-inset ring-slate-500/20 dark:ring-slate-400/20";
@@ -101,11 +96,7 @@ export function NoticeBoard() {
         }
 
         // 3. Matches (Live / Scheduled / Recent)
-        const { data: matches } = await supabase
-          .from("tournament_matches")
-          .select("*, tournaments(name)")
-          .order("updated_at", { ascending: false })
-          .limit(15);
+        const matches = await fetchRecentTournamentMatchesWithNames();
 
         if (matches) {
           matches.forEach((m) => {
@@ -138,7 +129,7 @@ export function NoticeBoard() {
               type: "match",
               title: m.tournaments?.name || "Match",
               description,
-              date: new Date(m.updated_at || m.created_at),
+              date: new Date(m.ended_at || m.started_at || m.scheduled_at || m.created_at),
               badgeText,
               iconWrapperClass,
               iconClass,
@@ -150,12 +141,7 @@ export function NoticeBoard() {
         }
 
         // 4. Find & Lost
-        const { data: findLost } = await supabase
-          .from("find_lost_posts")
-          .select("*")
-          .eq("resolved", false)
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const findLost = await hubService.getOpenFindLostForNotices();
 
         if (findLost) {
           findLost.forEach((post) => {
@@ -179,12 +165,7 @@ export function NoticeBoard() {
         }
 
         // 5. Marketplace
-        const { data: marketplace } = await supabase
-          .from("marketplace_listings")
-          .select("*")
-          .eq("status", "active")
-          .order("created_at", { ascending: false })
-          .limit(5);
+        const marketplace = await hubService.getActiveListingsForNotices();
 
         if (marketplace) {
           marketplace.forEach((listing) => {

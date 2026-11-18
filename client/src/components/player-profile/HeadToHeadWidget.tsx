@@ -212,6 +212,12 @@ export function HeadToHeadWidget({
         >
           <Swords className="w-4 h-4" /> Compare Full Stats
         </Link>
+        <Link
+          href={`/h2h?a=${currentUserId}&b=${targetUserId}`}
+          className="mt-2 w-full min-h-[44px] rounded-xl border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-bold text-sm flex items-center justify-center gap-2"
+        >
+          Head-to-head by discipline, walkovers and as partners
+        </Link>
       </div>
     </motion.div>
   );

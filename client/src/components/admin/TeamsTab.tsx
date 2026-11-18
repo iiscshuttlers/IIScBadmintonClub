@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { Users, Plus, Trash2, ChevronDown, ChevronRight, Edit, Loader2, Upload } from "lucide-react";
+import { teamService } from "@/services/teamService";
 
-import { usePlayers } from "@/hooks/usePlayers";
+import { useAdminPlayers } from "@/hooks/usePlayers";
 import { ResolveGuestsModal } from "./ResolveGuestsModal";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
 
 export function TeamsTab({ tournament }: { tournament: any }) {
   const { openPlayerModal } = usePlayerModal();
   const [teams, setTeams] = useState<any[]>([]);
-  const { data: allPlayers, refetch: refetchPlayers } = usePlayers();
+  const { data: allPlayers, refetch: refetchPlayers } = useAdminPlayers();
   const [loading, setLoading] = useState(true);
   const [addingTeam, setAddingTeam] = useState(false);
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -33,44 +33,29 @@ export function TeamsTab({ tournament }: { tournament: any }) {
 
   const loadTeams = useCallback(async () => {
     setLoading(true);
-    const { data: teamsData, error: teamsError } = await supabase
-      .from("tournament_teams")
-      .select("*, captain:players!captain_id(full_name)")
-      .eq("tournament_id", tournament.id)
-      .eq("status", "ACTIVE")
-      .order("created_at", { ascending: true });
-    
-    if (teamsError) {
-      toast.error("Failed to load teams");
-      console.error(teamsError);
-      setLoading(false);
-      return;
-    } 
+    try {
+      const teamsData = await teamService.getTournamentTeams(tournament.id);
+      setTeams(teamsData || []);
 
-    setTeams(teamsData || []);
-
-    if (teamsData && teamsData.length > 0) {
-      const { data: membersData } = await supabase
-        .from("tournament_team_members")
-        .select("*, player:players!player_id(full_name, email, is_guest)")
-        .eq("tournament_id", tournament.id)
-        .eq("status", "ACTIVE");
-      
-      if (membersData) {
+      if (teamsData && teamsData.length > 0) {
+        const membersData = await teamService.getTournamentTeamMembers(tournament.id);
         const membersByTeam: Record<string, any[]> = {};
         teamsData.forEach(t => membersByTeam[t.id] = []);
-        membersData.forEach(m => {
+        (membersData || []).forEach(m => {
           if (membersByTeam[m.team_id]) {
             membersByTeam[m.team_id].push(m);
           }
         });
         setTeamMembers(membersByTeam);
+      } else {
+        setTeamMembers({});
       }
-    } else {
-      setTeamMembers({});
+    } catch (teamsError: any) {
+      toast.error("Failed to load teams");
+      console.error(teamsError);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [tournament.id]);
 
   useEffect(() => {
@@ -107,55 +92,56 @@ export function TeamsTab({ tournament }: { tournament: any }) {
       if (existingPlayer) {
         finalCaptainId = existingPlayer.id;
       } else {
-        const { data: newGuest, error: guestError } = await supabase.rpc("create_guest_player", {
-          p_full_name: finalCaptainId.trim(),
-          p_gender: null
-        });
-        if (guestError || !newGuest) {
+        try {
+          const newGuest = await teamService.createGuestPlayerByName(finalCaptainId.trim());
+          finalCaptainId = newGuest.id;
+          refetchPlayers();
+        } catch (guestError: any) {
           toast.error("Failed to create guest profile for captain: " + (guestError?.message || ""));
           return;
         }
-        finalCaptainId = newGuest.id;
-        refetchPlayers();
       }
     }
     
-    const { data: teamData, error } = await supabase.from("tournament_teams").insert({
-      tournament_id: tournament.id,
-      name: newTeam.name,
-      short_name: newTeam.short_name.toUpperCase().substring(0, 5),
-      captain_id: finalCaptainId || null
-    }).select("id").single();
+    try {
+      const teamData = await teamService.createTeam(
+        tournament.id,
+        newTeam.name,
+        newTeam.short_name.toUpperCase().substring(0, 5),
+        finalCaptainId || null
+      );
 
-    if (error) {
-      toast.error(error.message);
-    } else {
       if (finalCaptainId && teamData) {
-        const { error: memberError } = await supabase.from("tournament_team_members").insert({
-          team_id: teamData.id,
-          tournament_id: tournament.id,
-          player_id: finalCaptainId,
-          role: "CAPTAIN",
-          status: "ACTIVE"
-        });
-        if (memberError && memberError.code !== "23505") {
-          console.warn("Could not add captain to roster:", memberError);
+        try {
+          await teamService.addTeamMember({
+            teamId: teamData.id,
+            tournamentId: tournament.id,
+            playerId: finalCaptainId,
+            role: "CAPTAIN",
+          });
+        } catch (memberError: any) {
+          if (memberError?.code !== "23505") {
+            console.warn("Could not add captain to roster:", memberError);
+          }
         }
       }
       toast.success("Team added");
       setAddingTeam(false);
       setNewTeam({ name: "", short_name: "", captain_id: null });
       loadTeams();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   const handleDeleteTeam = async (teamId: string) => {
     if (await confirm({ title: "Delete Team?", message: "Are you sure you want to remove this team? All roster data will be lost.", confirmText: "Delete", confirmColor: "bg-red-600" })) {
-      const { error } = await supabase.from("tournament_teams").delete().eq("id", teamId);
-      if (error) toast.error(error.message);
-      else {
+      try {
+        await teamService.deleteTeamHard(teamId);
         toast.success("Team deleted");
         loadTeams();
+      } catch (error: any) {
+        toast.error(error.message);
       }
     }
   };
@@ -184,17 +170,15 @@ export function TeamsTab({ tournament }: { tournament: any }) {
           finalPlayerId = existingPlayer.id;
         } else {
           // Auto-create guest player
-          const { data: guestData, error: guestError } = await supabase.rpc("create_guest_player", {
-            p_full_name: finalPlayerId,
-            p_gender: null
-          });
-          if (guestError || !guestData) {
+          try {
+            const guestData = await teamService.createGuestPlayerByName(finalPlayerId);
+            finalPlayerId = guestData.id;
+            refetchPlayers();
+          } catch (guestError: any) {
             toast.error("Failed to create guest player: " + (guestError?.message || "Unknown error"));
             setAddingMemberLoading(false);
             return;
           }
-          finalPlayerId = guestData.id;
-          refetchPlayers();
         }
       }
 
@@ -206,16 +190,15 @@ export function TeamsTab({ tournament }: { tournament: any }) {
         return;
       }
 
-      const { error: insertError } = await supabase.from("tournament_team_members").insert({
-        team_id: teamId,
-        tournament_id: tournament.id,
-        player_id: finalPlayerId,
-        role: selectedRole,
-        status: "ACTIVE"
-      });
-
-      if (insertError) {
-        if (insertError.code === "23505") {
+      try {
+        await teamService.addTeamMember({
+          teamId,
+          tournamentId: tournament.id,
+          playerId: finalPlayerId,
+          role: selectedRole,
+        });
+      } catch (insertError: any) {
+        if (insertError?.code === "23505") {
           toast.error("Player is already assigned to a team in this tournament");
         } else {
           toast.error("Failed to add player: " + insertError.message);
@@ -225,7 +208,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
       }
 
       if (selectedRole === "CAPTAIN") {
-        await supabase.from("tournament_teams").update({ captain_id: finalPlayerId }).eq("id", teamId);
+        await teamService.updateTeamCaptain(teamId, finalPlayerId);
       }
 
       toast.success("Player added to roster");
@@ -242,25 +225,20 @@ export function TeamsTab({ tournament }: { tournament: any }) {
 
   const handleAddCaptainToRoster = async (teamId: string, captainId: string) => {
     try {
-      const { error } = await supabase.from("tournament_team_members").insert({
-        team_id: teamId,
-        tournament_id: tournament.id,
-        player_id: captainId,
+      await teamService.addTeamMember({
+        teamId,
+        tournamentId: tournament.id,
+        playerId: captainId,
         role: "CAPTAIN",
-        status: "ACTIVE"
       });
-      if (error) {
-        if (error.code === "23505") {
-          toast.error("Captain is already in a team in this tournament");
-        } else {
-          toast.error("Failed to add captain: " + error.message);
-        }
+      toast.success("Captain added to roster");
+      loadTeams();
+    } catch (error: any) {
+      if (error?.code === "23505") {
+        toast.error("Captain is already in a team in this tournament");
       } else {
-        toast.success("Captain added to roster");
-        loadTeams();
+        toast.error("Failed to add captain: " + (error?.message || ""));
       }
-    } catch (e: any) {
-      toast.error(e.message);
     }
   };
 
@@ -271,29 +249,29 @@ export function TeamsTab({ tournament }: { tournament: any }) {
       confirmText: "Remove", 
       confirmColor: "bg-red-600" 
     })) {
-      const { error } = await supabase.from("tournament_team_members").delete().eq("id", memberId);
-      if (error) {
-        toast.error("Failed to remove player: " + error.message);
-      } else {
+      try {
+        await teamService.deleteTeamMemberHard(memberId);
         if (teamCaptainId === memberPlayerId) {
-          await supabase.from("tournament_teams").update({ captain_id: null }).eq("id", teamId);
+          await teamService.updateTeamCaptain(teamId, null);
         }
         toast.success("Player removed from team");
         loadTeams();
+      } catch (error: any) {
+        toast.error("Failed to remove player: " + error.message);
       }
     }
   };
 
   const handleChangeRole = async (memberId: string, teamId: string, playerId: string, newRole: string) => {
-    const { error } = await supabase.from("tournament_team_members").update({ role: newRole }).eq("id", memberId);
-    if (error) {
-      toast.error("Failed to update role: " + error.message);
-    } else {
+    try {
+      await teamService.updateTeamMemberRole(memberId, newRole);
       if (newRole === "CAPTAIN") {
-        await supabase.from("tournament_teams").update({ captain_id: playerId }).eq("id", teamId);
+        await teamService.updateTeamCaptain(teamId, playerId);
       }
       toast.success("Role updated");
       loadTeams();
+    } catch (error: any) {
+      toast.error("Failed to update role: " + error.message);
     }
   };
 
@@ -334,54 +312,49 @@ export function TeamsTab({ tournament }: { tournament: any }) {
 
         // Find the player by account email OR IISc email (prefer registered non-guest account)
         const cleanEmail = email.trim().toLowerCase();
-        let { data: matchingPlayers } = await supabase
-          .from("players")
-          .select("id, is_guest")
-          .or(`email.ilike.${cleanEmail},iisc_email.ilike.${cleanEmail}`);
+        const matchingPlayers = await teamService.findPlayersByEmail(cleanEmail);
 
         let player = matchingPlayers?.find(p => !p.is_guest) || matchingPlayers?.[0] || null;
 
         if (!player) {
           // Player not found by either account email or iisc_email, auto-create a Guest Profile
-          const { data: newGuest, error: guestError } = await supabase.rpc("create_guest_player_with_email", {
-            p_email: email,
-            p_full_name: playerName + " (Guest)"
-          });
-          
-          if (guestError || !newGuest) {
+          try {
+            const newGuest = await teamService.createGuestPlayerWithEmail(email, playerName + " (Guest)");
+            player = { id: newGuest.id, is_guest: true };
+          } catch {
             errorCount++;
             errorMessages.add(`Failed to create guest profile for ${email}.`);
             continue;
           }
-          player = { id: newGuest.id, is_guest: true };
         }
 
         let teamId = teamCache[teamName];
         
         if (!teamId) {
           // Check if team exists
-          const { data: existingTeam } = await supabase.from("tournament_teams").select("id").eq("tournament_id", tournament.id).ilike("name", teamName).maybeSingle();
+          const existingTeam = await teamService.findExistingTeamByName(tournament.id, teamName);
           if (existingTeam) {
             teamId = existingTeam.id;
             // If REPLACE mode and we haven't processed this team yet in this import, clear the roster
             if (importMode === "replace") {
-              await supabase.from("tournament_team_members").delete().eq("team_id", teamId);
+              await teamService.deleteTeamMembersByTeamId(teamId);
             }
           } else {
             // Create team if it's the captain row or we just assign a dummy captain and fix later
             // For now, if creating a team, the first player becomes captain if not specified
             const teamShortName = (shortName || teamName).substring(0, 5).toUpperCase();
-            const { data: newTeamData, error: createError } = await supabase.from("tournament_teams").insert({
-              tournament_id: tournament.id,
-              name: teamName,
-              short_name: teamShortName,
-              captain_id: player.id // Defaulting this player to captain
-            }).select("id").single();
-            
-            if (createError) {
-              if (createError.code === '23505' && createError.message?.includes('short_name')) {
+            try {
+              const newTeamData = await teamService.createTeam(
+                tournament.id,
+                teamName,
+                teamShortName,
+                player.id
+              );
+              teamId = newTeamData.id;
+            } catch (createError: any) {
+              if (createError?.code === '23505' && createError?.message?.includes('short_name')) {
                 errorMessages.add(`Short Name '${teamShortName}' is already taken.`);
-              } else if (createError.code === '23505' && createError.message?.includes('name')) {
+              } else if (createError?.code === '23505' && createError?.message?.includes('name')) {
                 errorMessages.add(`Team Name '${teamName}' is already taken.`);
               } else {
                 errorMessages.add(`Error creating team '${teamName}'.`);
@@ -389,41 +362,42 @@ export function TeamsTab({ tournament }: { tournament: any }) {
               errorCount++;
               continue;
             }
-            teamId = newTeamData.id;
           }
           teamCache[teamName] = teamId;
         }
 
         // Add player to team roster
         if (role === "CAPTAIN") {
-          await supabase.from("tournament_teams").update({ captain_id: player.id }).eq("id", teamId);
+          await teamService.updateTeamCaptain(teamId, player.id);
         }
 
         const memberRole = role === "CAPTAIN" ? "CAPTAIN" : role === "VICE_CAPTAIN" ? "VICE_CAPTAIN" : role === "MANAGER" ? "MANAGER" : "PLAYER";
 
         if (importMode === "merge") {
-          const { error: memberError } = await supabase.from("tournament_team_members").insert({
-            team_id: teamId,
-            player_id: player.id,
-            tournament_id: tournament.id,
-            role: memberRole,
-            status: "ACTIVE"
-          });
-          if (memberError && memberError.code !== '23505') { // Ignore unique constraint violation on merge
-             errorCount++;
-             errorMessages.add(`Failed to add ${email} to ${teamName}.`);
-             continue;
+          try {
+            await teamService.addTeamMember({
+              teamId,
+              tournamentId: tournament.id,
+              playerId: player.id,
+              role: memberRole,
+            });
+          } catch (memberError: any) {
+            if (memberError?.code !== '23505') { // Ignore unique constraint violation on merge
+              errorCount++;
+              errorMessages.add(`Failed to add ${email} to ${teamName}.`);
+              continue;
+            }
           }
         } else {
           // Update or Replace modes will upsert the new role
-          const { error: upsertError } = await supabase.from("tournament_team_members").upsert({
-            team_id: teamId,
-            tournament_id: tournament.id,
-            player_id: player.id,
-            role: memberRole,
-            status: "ACTIVE"
-          }, { onConflict: "team_id,player_id" });
-          if (upsertError) {
+          try {
+            await teamService.upsertTeamMember({
+              teamId,
+              tournamentId: tournament.id,
+              playerId: player.id,
+              role: memberRole,
+            });
+          } catch {
             errorCount++;
             errorMessages.add(`Failed to update ${email}.`);
             continue;

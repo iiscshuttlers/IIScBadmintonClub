@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { isUuid, tournamentLink } from "@/lib/tournamentRoutes";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from '@capacitor/core';
-import { supabase } from "@/lib/supabase";
+import { fetchClubSettings } from "@/services/feedService";
 import { motion, type Variants } from "framer-motion";
 import { navGet, navSet } from "@/lib/navMemory";
 
@@ -167,8 +168,12 @@ export default function Pulse() {
   const [clubSettings, setClubSettings] = useState<any>({});
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "club_settings").maybeSingle();
-      if (data?.value) setClubSettings(data.value);
+      try {
+        const data = await fetchClubSettings();
+        if (data) setClubSettings(data);
+      } catch (err) {
+        console.error("Failed to load club settings:", err);
+      }
     };
     fetchSettings();
   }, []);
@@ -246,13 +251,15 @@ export default function Pulse() {
       </Card>
     );
 
-    const cardLink = isUpcoming 
+    // WP5: DB tournaments open their canonical page in every lifecycle state.
+    const canonicalLink = isUuid(item.id) ? tournamentLink(item) : null;
+    const cardLink = canonicalLink ?? (isUpcoming
       ? `/pulse#events` 
       : liveMode 
         ? `/pulse#live` 
-        : `/events/${item.slug || item.id}`;
+        : `/events/${item.slug || item.id}`);
 
-    if (isUpcoming || liveMode) {
+    if (!canonicalLink && (isUpcoming || liveMode)) {
       return (
         <a 
           href={cardLink} 
@@ -307,10 +314,10 @@ export default function Pulse() {
           <div className="mt-6 w-full flex justify-center mb-2 px-2">
             <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
               {[
-                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-rose-400 shadow-md scale-100" },
-                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-sky-400 shadow-md scale-100" },
-                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
-                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-fuchsia-400 shadow-md scale-100" },
+                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
               ].map((tab) => (
                 <Button
                   key={tab.id}

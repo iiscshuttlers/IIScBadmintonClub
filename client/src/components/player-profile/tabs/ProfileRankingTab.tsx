@@ -2,13 +2,16 @@ import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
 import { TrendingUp, Trophy, Info } from "lucide-react";
 
+import type { PlayerRow } from "@/types";
+import { RatingStory } from "@/components/player-profile/RatingStory";
+
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
 
 interface ProfileRankingTabProps {
-  player: any;
+  player: PlayerRow;
   authSession: any;
   liveMatches: any[];
   HeadToHeadWidget: any;
@@ -35,11 +38,11 @@ export function ProfileRankingTab({
 
   return (
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-6">
-      {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
+      {authSession?.user?.id && player.id && authSession.user.id !== player.id && (
         <HeadToHeadWidget
           currentUserId={authSession.user.id}
-          targetUserId={player.userId}
-          targetUserName={player.fullName || ""}
+          targetUserId={player.id}
+          targetUserName={player.full_name || ""}
           matches={liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed")}
         />
       )}
@@ -76,15 +79,20 @@ export function ProfileRankingTab({
       </div>
 
 
-      {(!authSession?.user?.id || player.userId === authSession.user.id) &&
+      <RatingStory
+        logs={eloHistoryData as any}
+        current={{ singles: player.singles_elo ?? null, doubles: player.doubles_elo ?? null, mixed: player.mixed_elo ?? null }}
+      />
+
+      {(!authSession?.user?.id || player.id === authSession.user.id) &&
         eloHistoryData.length <= 1 &&
         liveMatches.length < 5 && (
           <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 text-center">
             <Trophy className="w-12 h-12 text-slate-300 dark:text-foreground/10 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/40">
+            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/60">
               Not Enough Data
             </h3>
-            <p className="text-xs text-muted-foreground dark:text-foreground/20 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Play more matches to unlock ranking analytics.
             </p>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Trash2, CheckCircle2, Ban, Archive, ArchiveRestore, Bell, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { inputCls, labelCls, cardCls } from "./shared";
@@ -30,24 +30,12 @@ export function PollEditor({
     }))) return;
     setSendingPush(poll.id);
     try {
-      const payload = {
+      const fnData = await adminService.sendPushBroadcast({
         title: "New Community Poll!",
         body: poll.question,
         url: "/pulse",
-      };
-
-      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-announcement", {
-        body: {
-          ...payload,
-          admin_email: session?.user?.email ?? "admin",
-        },
+        admin_email: session?.user?.email ?? "admin",
       });
-      if (fnError) throw fnError;
-
-      await supabase.from("site_data").upsert(
-        { key: "admin_push", value: { ...payload, timestamp: Date.now() }, updated_at: new Date().toISOString() },
-        { onConflict: "key" }
-      );
 
       const sent = fnData?.sent ?? 0;
       toast.success(`Push notification sent to ${sent} devices!`);

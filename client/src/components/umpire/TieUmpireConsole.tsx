@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { umpireService } from '@/services/umpireService';
 import { 
   Eye, 
   CheckCircle2, 
@@ -82,89 +82,34 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   // Fetch lineups for both sides
   const { data: lineups = [], isLoading: lineupsLoading } = useQuery({
     queryKey: ['tie_lineups_both', tie.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tie_lineups')
-        .select(`
-          *,
-          player1:players!tie_lineups_player1_id_fkey(id, full_name),
-          player2:players!tie_lineups_player2_id_fkey(id, full_name),
-          revealer:players!tie_lineups_revealed_by_fkey(id, full_name)
-        `)
-        .eq('tie_id', tie.id);
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => umpireService.fetchTieLineupsBoth(tie.id),
     enabled: !!tie.id
   });
 
   // Fetch matches for this tie to see confirmed playing orders and match statuses
   const { data: tieMatches = [] } = useQuery({
     queryKey: ['tie_matches', tie.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select(`
-          *,
-          player1:players!tournament_matches_player1_id_fkey(id, full_name),
-          player2:players!tournament_matches_player2_id_fkey(id, full_name),
-          revealer:players!tournament_matches_revealed_by_fkey(id, full_name)
-        `)
-        .eq('tie_id', tie.id);
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => umpireService.fetchTieMatches(tie.id),
     enabled: !!tie.id
   });
 
   // Fetch team rosters for emergency substitutions
   const { data: teamAMembers = [] } = useQuery({
     queryKey: ['team_members_a', tie.team_a_id],
-    queryFn: async () => {
-      if (!tie.team_a_id) return [];
-      const { data, error } = await supabase
-        .from('tournament_team_members')
-        .select('*, players(*)')
-        .eq('team_id', tie.team_a_id)
-        .eq('status', 'ACTIVE');
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => umpireService.fetchTeamMembers(tie.team_a_id),
     enabled: !!tie.team_a_id
   });
 
   const { data: teamBMembers = [] } = useQuery({
     queryKey: ['team_members_b', tie.team_b_id],
-    queryFn: async () => {
-      if (!tie.team_b_id) return [];
-      const { data, error } = await supabase
-        .from('tournament_team_members')
-        .select('*, players(*)')
-        .eq('team_id', tie.team_b_id)
-        .eq('status', 'ACTIVE');
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => umpireService.fetchTeamMembers(tie.team_b_id),
     enabled: !!tie.team_b_id
   });
 
   // Fetch audit trail
   const { data: audits = [] } = useQuery({
     queryKey: ['tie_lineup_audits', tie.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tie_lineup_audits')
-        .select(`
-          *,
-          referee:players!tie_lineup_audits_referee_id_fkey(full_name),
-          orig_player:players!tie_lineup_audits_original_player_id_fkey(full_name),
-          repl_player:players!tie_lineup_audits_replacement_player_id_fkey(full_name)
-        `)
-        .eq('tie_id', tie.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => umpireService.fetchTieLineupAudits(tie.id),
     enabled: !!tie.id
   });
 
@@ -224,11 +169,10 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
         }
       }
 
-      const { error } = await supabase.rpc('reveal_tie_lineup', {
-        p_tie_id: tie.id,
-        p_rubber_order: rubberOrder
+      await umpireService.revealTieLineup({
+        tieId: tie.id,
+        rubberOrder,
       });
-      if (error) throw error;
     },
     onSuccess: (_, rubberOrder) => {
       toast.success(rubberOrder ? `Rubber #${rubberOrder} revealed successfully!` : "All rubbers revealed successfully!");
@@ -325,12 +269,11 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   // Set Playing Order Mutation
   const setPlayingOrderMutation = useMutation({
     mutationFn: async (orders: { rubber_order: number; playing_order: number }[]) => {
-      const { error } = await supabase.rpc('set_tie_playing_order', {
-        p_tie_id: tie.id,
-        p_playing_orders: orders,
-        p_reason: 'Playing order arbitrated and confirmed by match official'
+      await umpireService.setTiePlayingOrder({
+        tieId: tie.id,
+        playingOrders: orders,
+        reason: 'Playing order arbitrated and confirmed by match official',
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Official playing order confirmed and updated!");
@@ -358,17 +301,15 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
     setIsModifying(true);
     try {
-      const { error } = await supabase.rpc('emergency_modify_lineup', {
-        p_tie_id: tie.id,
-        p_side: modifyingRubber.side,
-        p_rubber_order: modifyingRubber.rubber.order,
-        p_pos: modifyingRubber.pos,
-        p_new_player_id: replacementPlayerId,
-        p_reason: modificationReason,
-        p_both_captains_agreed: true
+      await umpireService.emergencyModifyLineup({
+        tieId: tie.id,
+        side: modifyingRubber.side,
+        rubberOrder: modifyingRubber.rubber.order,
+        pos: modifyingRubber.pos,
+        newPlayerId: replacementPlayerId,
+        reason: modificationReason,
+        bothCaptainsAgreed: true,
       });
-
-      if (error) throw error;
 
       toast.success("Player replaced and logged with dual-captain consent in audit trail.");
       setModifyingRubber(null);
@@ -414,15 +355,13 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
   const addDeciderMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('add_decider_rubber_to_tie', {
-        p_tie_id: tie.id,
-        p_category: newDeciderCategory,
-        p_label: newDeciderLabel,
-        p_best_of_sets: newDeciderSets,
-        p_points_to_win: newDeciderPoints
+      return await umpireService.addDeciderRubber({
+        tieId: tie.id,
+        category: newDeciderCategory,
+        label: newDeciderLabel,
+        bestOfSets: newDeciderSets,
+        pointsToWin: newDeciderPoints,
       });
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data: any) => {
       toast.success(`Added ${data.label} to the tie! Captains can now submit their decider lineup.`);
@@ -436,11 +375,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
   const revealDeciderMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('reveal_decider_rubber', {
-        p_tie_id: tie.id
-      });
-      if (error) throw error;
-      return data;
+      return await umpireService.revealDeciderRubber(tie.id);
     },
     onSuccess: () => {
       toast.success("Decider rubber revealed! Match is now active.");
@@ -825,7 +760,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 >
                   <div className="flex items-center gap-3">
                     {/* Drag handle */}
-                    <div className="text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 transition-colors shrink-0">
+                    <div className="text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-400 transition-colors shrink-0">
                       <GripVertical className="w-4 h-4" />
                     </div>
 
@@ -960,7 +895,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                       variant="outline"
                       onClick={() => handleReveal(rubber.order)}
                       disabled={revealMutation.isPending}
-                      className="rounded-lg text-xs font-bold flex items-center gap-1 h-7 px-3 bg-white dark:bg-slate-900 hover:bg-primary hover:text-white transition"
+                      className="rounded-lg text-xs font-bold flex items-center gap-1 h-7 px-3 bg-white dark:bg-slate-900 hover:bg-primary hover:text-primary-foreground transition"
                     >
                       <Eye className="w-3.5 h-3.5" /> Reveal Rubber #{rubber.order}
                     </Button>

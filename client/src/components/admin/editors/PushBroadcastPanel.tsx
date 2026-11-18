@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { Bell, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,60 +18,16 @@ export function PushBroadcastPanel() {
     if (!customPush.title.trim()) { toast.error("Title is required"); return; }
     setPushing(true);
     try {
-      // 1. Call edge function → sends real FCM push to ALL registered devices
-      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-announcement", {
-        body: {
-          title: customPush.title.trim(),
-          body: customPush.body.trim() || customPush.title.trim(),
-          admin_email: session?.user?.email ?? "admin",
-        },
-      });
-      if (fnError) throw fnError;
-
-      // 2. Also write to site_data so users with the app open get it via Realtime
-      const payload = {
+      const fnData = await adminService.sendPushBroadcast({
         title: customPush.title.trim(),
         body: customPush.body.trim(),
-        url: customPush.url.trim(),
-        timestamp: Date.now(),
-      };
-      await supabase.from("site_data").upsert(
-        { key: "admin_push", value: payload, updated_at: new Date().toISOString() },
-        { onConflict: "key" }
-      );
-
-      // 3. Optionally add to home_banners if requested
-      if (showOnHome) {
-        const { data: bData } = await supabase.from("site_data").select("value").eq("key", "home_banners").maybeSingle();
-        const existingBanners = (bData?.value as any)?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
-        const newBanner = {
-          id: `broadcast_${Date.now()}`,
-          type: "custom",
-          title: customPush.title.trim(),
-          message: customPush.body.trim(),
-          color: "amber",
-          link_url: customPush.url.trim() || undefined,
-          link_label: "View",
-          active: true,
-          pinned: false,
-        };
-        await supabase.from("site_data").upsert(
-          { key: "home_banners", value: { banners: [...existingBanners, newBanner] }, updated_at: new Date().toISOString() },
-          { onConflict: "key" }
-        );
-      }
+        url: customPush.url.trim() || undefined,
+        admin_email: session?.user?.email ?? "admin",
+        showOnHome,
+      });
 
       const sent = fnData?.sent ?? 0;
       const failed = fnData?.failed ?? 0;
-
-      await (supabase as any).from("broadcast_history").insert({
-        sent_by: session?.user?.email ?? "admin",
-        title: customPush.title.trim(),
-        body: customPush.body.trim() || null,
-        url: customPush.url.trim() || null,
-        devices_sent: sent,
-        devices_failed: failed,
-      });
 
       toast.success(`Sent to ${sent} device${sent !== 1 ? "s" : ""}${failed > 0 ? ` (${failed} failed)` : ""}!`);
       setCustomPush({ title: "", body: "", url: "" });

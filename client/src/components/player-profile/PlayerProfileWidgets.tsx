@@ -90,7 +90,7 @@ export const FormPill = ({
     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
       ${
         result === "W"
-          ? "bg-gradient-to-br from-primary to-primary text-on-accent shadow-primary/40"
+          ? "bg-primary text-primary-foreground shadow-primary/40"
           : "bg-gradient-to-br from-rose-400 to-rose-600 text-on-accent shadow-rose-500/40"
       }`}
   >
@@ -492,7 +492,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
         .react-calendar-heatmap .color-scale-4 { fill: #059669; }
         .react-calendar-heatmap rect { rx: 2; ry: 2; transition: all 0.2s; cursor: pointer; }
         .react-calendar-heatmap rect:hover { stroke: #000; stroke-width: 1px; opacity: 0.8; }
-        .dark .react-calendar-heatmap .color-empty { fill: rgba(30, 41, 59, 0.5); }
+        .dark .react-calendar-heatmap .color-empty { fill: rgba(36, 37, 42, 0.8); }
         .dark .react-calendar-heatmap rect:hover { stroke: #fff; }
         .react-calendar-heatmap text { fill: #94a3b8; font-size: 8px; }
       `}</style>
@@ -502,7 +502,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-primary/30 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-primary/30 font-sans">
       <div
         className="relative overflow-hidden bg-slate-950"
         style={{ minHeight: "88vh" }}
@@ -665,7 +665,7 @@ export const DoublesSynergyWidget = ({
   const runnerUps = synergy.slice(1, 3);
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-primary/5 dark:from-teal-950/40 dark:to-primary/90/40 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
+    <div className="bg-gradient-to-br from-teal-50 to-primary/5 dark:from-teal-950/40 dark:to-primary/20 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
       <div className="absolute top-0 right-0 p-4 opacity-10">
         <Users className="w-24 h-24 text-teal-500" />
       </div>

@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ELO_TIERS } from "@/lib/tiers";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentOptions } from "@/services/tournamentService";
 
 export function DirectoryFilters({
   searchQuery,
@@ -46,12 +46,8 @@ export function DirectoryFilters({
 }) {
   const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
   useEffect(() => {
-    supabase
-      .from("tournaments")
-      .select("id, name")
-      .neq("status", "deleted")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
+    fetchTournamentOptions()
+      .then((data) => {
         if (data) setTournaments(data);
       });
   }, []);

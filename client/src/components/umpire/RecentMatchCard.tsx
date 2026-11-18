@@ -338,7 +338,7 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
               <button
                 type="button"
                 onClick={() => onEdit({ ...match, is_edit_mode: true })}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-black text-slate-950 bg-primary hover:bg-primary/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-primary/20"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black text-primary-foreground bg-primary hover:bg-primary/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-primary/20"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 Edit Score
@@ -350,7 +350,7 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
                 className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-900 border border-slate-800 cursor-not-allowed flex items-center gap-1.5"
                 title="Editing is locked 10 minutes after match completion. Contact an administrator to adjust scores."
               >
-                <Lock className="w-3.5 h-3.5 text-slate-600" />
+                <Lock className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                 Locked
               </button>
             )}

@@ -16,7 +16,10 @@ interface MyRoleRow {
   isCreator: boolean;
 }
 
-export function useMyTournamentRoles(userId?: string | null, tournaments: any[] = []) {
+export function useMyTournamentRoles(
+  userId?: string | null,
+  tournaments: Array<{ id: string; created_by?: string | null }> = [],
+) {
   const createdIds = tournaments.filter(t => t.created_by === userId).map(t => t.id);
 
   // NOTE: cache plain arrays (not Map/Set) — react-query is persisted to
@@ -44,7 +47,7 @@ export function useMyTournamentRoles(userId?: string | null, tournaments: any[] 
         .select("tournament_id, status")
         .eq("player_id", userId);
       if (!regError && regs) {
-        regs.forEach((r: any) => { ensure(r.tournament_id).registration = r.status; });
+        regs.forEach((r) => { ensure(r.tournament_id).registration = r.status as MyRoleRow["registration"]; });
       }
 
       const { data: officials, error: offError } = await supabase
@@ -52,7 +55,7 @@ export function useMyTournamentRoles(userId?: string | null, tournaments: any[] 
         .select("tournament_id, role")
         .eq("user_id", userId);
       if (!offError && officials) {
-        officials.forEach((o: any) => {
+        officials.forEach((o) => {
           const e = ensure(o.tournament_id);
           const role = o.role?.toUpperCase();
           if (role && !e.roles.includes(role)) e.roles.push(role);

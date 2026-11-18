@@ -3,12 +3,12 @@ import { useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import {
   Trophy, Search, Calendar, MapPin, Radio, Clock, CheckCircle2,
-  Loader2, SlidersHorizontal, ArrowRight, Sparkles, ArrowLeft,
-  PlusCircle, FolderKanban, Shield, Award, Users, RefreshCw
+  Loader2, SlidersHorizontal, ArrowRight, Sparkles,
+  Shield, Award, Users, RefreshCw
 } from "lucide-react";
 import { getTournaments } from "@/lib/tournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { LiveTab } from "@/components/pulse/LiveTab";
+import { canonicalFromHubQuery, tournamentLink, tournamentPath } from "@/lib/tournamentRoutes";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
@@ -50,7 +50,11 @@ export default function TournamentsHub() {
 
   const [, navigate] = useLocation();
   const locationSearch = useSearch();
-  const selectedId = new URLSearchParams(locationSearch).get("id") ?? "";
+  // WP5: the old `/tournaments?id=…` detail view now lives at /tournaments/:id.
+  const legacyDetailTarget = canonicalFromHubQuery(locationSearch);
+  useEffect(() => {
+    if (legacyDetailTarget) navigate(legacyDetailTarget, { replace: true });
+  }, [legacyDetailTarget, navigate]);
 
   const [all, setAll] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +65,8 @@ export default function TournamentsHub() {
   const [type, setType] = useState<TypeFilter>("all");
   const [ranked, setRanked] = useState<RankedFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("date_desc");
+  const [showFilters, setShowFilters] = useState(false);
+  const extraFilterCount = (type !== "all" ? 1 : 0) + (ranked !== "all" ? 1 : 0) + (sortBy !== "date_desc" ? 1 : 0);
 
   // Registration modal state
   const [registerFor, setRegisterFor] = useState<any | null>(null);
@@ -187,8 +193,7 @@ export default function TournamentsHub() {
   }, [visible, myRoles, session]);
 
   const openTournament = (t: any) => {
-    if (t.status === "completed" || t.status === "archived") navigate(`/events/${t.slug}`);
-    else navigate(`/tournaments?id=${t.id}`);
+    navigate(tournamentLink(t));
   };
 
   const handleRegisterClick = (t: any) => {
@@ -206,19 +211,11 @@ export default function TournamentsHub() {
     { key: "completed", label: "Completed", count: counts.completed },
   ];
 
-  // Detail view: a tournament is selected (?id=…)
-  if (selectedId) {
+  if (legacyDetailTarget) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
-        <div className="container mx-auto px-4 max-w-3xl pt-5">
-          <button
-            onClick={() => navigate("/tournaments")}
-            className="inline-flex items-center gap-1.5 text-sm font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> All tournaments
-          </button>
-        </div>
-        <LiveTab embedded={true} />
+      <div className="min-h-[60vh] flex items-center justify-center" role="status">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden />
+        <span className="sr-only">Opening tournament…</span>
       </div>
     );
   }
@@ -243,31 +240,35 @@ export default function TournamentsHub() {
             className="text-3xl sm:text-4xl md:text-5xl font-black mb-2.5 tracking-tight text-white"
             style={{ fontFamily: "Outfit, Inter, sans-serif" }}
           >
-            Tournaments Central
+            Tournaments
           </h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-medium mb-6">
-            Discover live championships, register for upcoming draws, or organize your own tournament.
+          <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-medium mb-4">
+            Follow live events, register for upcoming draws and look back at past results.
           </p>
 
-          {/* Phase C: Host & Manage CTAs in Header */}
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button
-              variant="heroSolid"
-              size="hero"
+          {/* Organisers: one quiet line (the top bar also has + Host). */}
+          <p className="text-xs sm:text-sm text-slate-400 font-medium">
+            Organising one?{" "}
+            <button
+              type="button"
               onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
+              className="font-black text-primary hover:underline underline-offset-2"
             >
-              <PlusCircle className="w-4 h-4" /> Host a tournament
-            </Button>
+              Host a tournament
+            </button>
             {isAuthed && (
-              <Button
-                variant="heroGhost"
-                size="hero"
-                onClick={() => navigate("/host-tournament")}
-              >
-                <FolderKanban className="w-4 h-4" /> My hosted tournaments
-              </Button>
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/host-tournament")}
+                  className="font-black text-slate-200 hover:text-primary hover:underline underline-offset-2"
+                >
+                  My tournaments
+                </button>
+              </>
             )}
-          </div>
+          </p>
         </div>
       </section>
 
@@ -371,7 +372,7 @@ export default function TournamentsHub() {
                           </button>
                         ) : isOfficiating ? (
                           <button
-                            onClick={() => navigate(`/tournaments?id=${t.id}&subtab=${role?.roles.has("REFEREE") ? "referee" : "umpire"}`)}
+                            onClick={() => navigate(tournamentPath(t.id, null, { panel: role?.roles.has("REFEREE") ? "referee" : "umpire" }))}
                             className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                           >
                             Officiate Matches →
@@ -431,8 +432,36 @@ export default function TournamentsHub() {
               ))}
             </div>
 
-            {/* Sort selector */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 ml-auto">
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              aria-expanded={showFilters}
+              className={`ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition ${
+                showFilters || extraFilterCount > 0
+                  ? "border-primary/50 text-primary bg-primary/10"
+                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/40"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Filters{extraFilterCount > 0 ? ` (${extraFilterCount})` : ""}
+            </button>
+          </div>
+
+          {/* Type, ranked and sort live behind the Filters button */}
+          {showFilters && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+            {([["all", "All types"], ["open", "Individual"], ["team", "Team"]] as [TypeFilter, string][]).map(([k, label]) => (
+              <Button key={k} size="pill" variant={type === k ? "pillActive" : "pillMuted"} onClick={() => setType(k)}>
+                {label}
+              </Button>
+            ))}
+            <span className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
+            {([["all", "Any"], ["ranked", "★ Ranked"], ["casual", "Casual"]] as [RankedFilter, string][]).map(([k, label]) => (
+              <Button key={k} size="pill" variant={ranked === k ? "pillActive" : "pillMuted"} onClick={() => setRanked(k)}>
+                {label}
+              </Button>
+            ))}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 sm:ml-auto">
               <span className="font-bold">Sort:</span>
               <select
                 value={sortBy}
@@ -445,24 +474,7 @@ export default function TournamentsHub() {
               </select>
             </div>
           </div>
-
-          {/* Type and Ranked filters */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
-            <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Filter
-            </span>
-            {([["all", "All types"], ["open", "Individual"], ["team", "Team"]] as [TypeFilter, string][]).map(([k, label]) => (
-              <Button key={k} size="pill" variant={type === k ? "pillActive" : "pillMuted"} onClick={() => setType(k)}>
-                {label}
-              </Button>
-            ))}
-            <span className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
-            {([["all", "Any"], ["ranked", "★ Ranked"], ["casual", "Casual"]] as [RankedFilter, string][]).map(([k, label]) => (
-              <Button key={k} size="pill" variant={ranked === k ? "pillActive" : "pillMuted"} onClick={() => setRanked(k)}>
-                {label}
-              </Button>
-            ))}
-          </div>
+          )}
         </div>
 
         {/* Results Area */}
@@ -475,7 +487,7 @@ export default function TournamentsHub() {
             <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load tournaments.</p>
             <button
               onClick={load}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-slate-950 text-xs font-black hover:brightness-110 transition shadow-sm"
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:brightness-110 transition shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Retry
             </button>

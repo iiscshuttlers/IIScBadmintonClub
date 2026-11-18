@@ -1,15 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService, type AdminLogEntry } from "@/services/adminService";
 import { Loader2, RefreshCw, ClipboardList, Clock } from "lucide-react";
 import { toast } from "sonner";
 
-interface LogEntry {
-  id: number;
-  admin_email: string;
-  action: string;
-  details?: any;
-  created_at: string;
-}
+type LogEntry = AdminLogEntry;
 
 export function AdminActivityLog() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -19,23 +13,19 @@ export function AdminActivityLog() {
 
   const load = useCallback(async (pageNum = 0) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("admin_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
-    if (!error && data) {
-      if (pageNum === 0) setLogs(data as any);
-      else setLogs((prev) => [...prev, ...(data as any)]);
-    } else if (error) {
-      // Table may not exist yet
-      if (error.code === "42P01") {
+    try {
+      const data = await adminService.getLogs(pageNum, PAGE_SIZE);
+      if (pageNum === 0) setLogs(data);
+      else setLogs((prev) => [...prev, ...data]);
+    } catch (error: any) {
+      if (error?.code === "42P01") {
         toast.error("admin_logs table not found. Run the DB migration first.");
       } else {
         toast.error("Failed to load logs");
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { load(0); }, [load]);

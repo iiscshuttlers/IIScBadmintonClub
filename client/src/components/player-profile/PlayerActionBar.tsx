@@ -7,13 +7,13 @@ import {
   Heart,
   Instagram,
 } from "lucide-react";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
 import { getEloTier } from "@/lib/tiers";
 
 interface PlayerActionBarProps {
-  player: PlayerProfileType;
+  player: PlayerRow;
   currentUser: any;
-  ownPlayerProfile: PlayerProfileType | null | undefined;
+  ownPlayerProfile: PlayerRow | null | undefined;
   setIsChallengeModalOpen: (v: boolean) => void;
   eloRank?: any;
 }
@@ -36,9 +36,9 @@ export function PlayerActionBar({
   return (
     <div className="flex flex-col gap-5 w-full lg:w-2/3">
       {/* Instagram link */}
-      {player.social?.instagram && (
+      {player.instagram && (
         <a
-          href={`https://instagram.com/${player.social.instagram.replace("@", "")}`}
+          href={`https://instagram.com/${player.instagram.replace("@", "")}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 w-max bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-900/50 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 font-bold rounded-2xl transition-all shadow-sm"
@@ -46,7 +46,7 @@ export function PlayerActionBar({
         >
           <Instagram className="w-5 h-5" />
           <span className="text-sm tracking-widest">
-            @{player.social.instagram.replace("@", "")}
+            @{player.instagram.replace("@", "")}
           </span>
         </a>
       )}
@@ -61,15 +61,15 @@ export function PlayerActionBar({
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          {player.playingLevel && (
+          {player.playing_level && (
             <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm">
-              {player.playingLevel}
+              {player.playing_level}
             </span>
           )}
-          {player.dominantHand && (
+          {player.dominant_hand && (
             <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
               <User className="w-4 h-4 text-violet-400" />{" "}
-              {player.dominantHand.split("-")[0]} Hand
+              {player.dominant_hand.split("-")[0]} Hand
             </span>
           )}
         </div>

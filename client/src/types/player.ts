@@ -53,6 +53,8 @@ export interface PlayerRow {
   mixed_record?: string | null;
   recent_form: string | null;
   is_looking_to_play: boolean | null;
+  /** Availability picker: looking (Available) | playing | resting | injured. */
+  status?: string | null;
   is_retired: boolean | null;
   role: 'master_admin' | 'admin' | 'umpire' | 'player';
   gender: string | null;
@@ -63,6 +65,9 @@ export interface PlayerRow {
   deleted_at: string | null;
   created_at?: string;
   default_match_reminder_mins?: number | null;
+  is_approved?: boolean | null;
+  current_ranking?: number | null;
+  highest_ranking?: number | null;
 }
 
 export interface RacketDetail {
@@ -132,59 +137,3 @@ export interface Partner {
   winRate?: number;
 }
 
-export interface PlayerProfileType {
-  id: string;
-  created_at?: string;
-  fullName: string;
-  nickname?: string;
-  avatar: string;
-  department: string;
-  joinedYear: number;
-  playingLevel: string;
-  dominantHand: string;
-  playingStyle: string;
-  gender?: string;
-  favoriteShot: string;
-  favoriteIdol: string;
-  favoriteFormat: string;
-  quote?: string;
-  currentRacket: string;
-  racketDetails: { name: string; string: string; tension: string }[];
-  tournamentHistory: string[];
-  achievements: string[];
-  winLossRecord: string;
-
-  is_retired?: boolean;
-
-  // New optional fields
-  nationality?: string;
-  homeState?: string;
-  height?: string;
-  startedPlayingYear?: number;
-  coach?: string;
-  bio?: string;
-  currentRanking?: number;
-  highestRanking?: number;
-  stats?: PlayerStats;
-  recentForm?: ("W" | "L")[];
-  recentMatches?: any[];
-  frequentPartners?: Partner[];
-  careerHighlights?: CareerHighlight[];
-  shoes?: string;
-  shoesList?: { name: string; primary: boolean }[];
-  apparel?: string;
-  social?: { instagram?: string; email?: string };
-  userId?: string;
-  following?: string[];
-  followers?: string[];
-  elo_rating?: number;
-  singles_elo?: number;
-  doubles_elo?: number;
-  mixed_elo?: number;
-  isApproved?: boolean;
-  role?: 'master_admin' | 'admin' | 'umpire' | 'player';
-  buddies?: string[];
-  singles_record?: string;
-  doubles_record?: string;
-  mixed_record?: string;
-}

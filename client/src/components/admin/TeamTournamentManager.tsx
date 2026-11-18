@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { Users, Calendar, Plus, Trophy, Loader2, ChevronDown, X, Award, Check, CalendarClock, MapPin, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { ClickableTeamName } from '@/contexts/TeamModalContext';
 
-export function TeamTournamentManager({ tournamentId }: { tournamentId: string }) {
+/**
+ * Team setup + tie list. The Tournament Manager now shows teams on its Teams
+ * tab, so it mounts this with view="fixtures" to show only the tie list.
+ */
+export function TeamTournamentManager({ tournamentId, view = "all" }: { tournamentId: string; view?: "all" | "fixtures" }) {
   const { confirm } = useConfirm();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'teams' | 'fixtures'>('teams');
+  const [activeTab, setActiveTab] = useState<'teams' | 'fixtures'>(view === 'fixtures' ? 'fixtures' : 'teams');
 
   // New Team Form State
   const [newTeamName, setNewTeamName] = useState('');
@@ -44,19 +48,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
     queryKey: ['resolving_tie_matches', resolvingTie?.tie?.id],
     queryFn: async () => {
       if (!resolvingTie?.tie?.id) return [];
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select(`
-          *,
-          player1:players!tournament_matches_player1_id_fkey(id, full_name),
-          player2:players!tournament_matches_player2_id_fkey(id, full_name),
-          player3:players!tournament_matches_player3_id_fkey(id, full_name),
-          player4:players!tournament_matches_player4_id_fkey(id, full_name)
-        `)
-        .eq('tie_id', resolvingTie.tie.id)
-        .order('rubber_order', { ascending: true, nullsFirst: false });
-      if (error) throw error;
-      return data || [];
+      return await teamService.getTieMatches(resolvingTie.tie.id);
     },
     enabled: !!resolvingTie?.tie?.id,
   });
@@ -87,28 +79,20 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['tournament_teams', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_teams')
-        .select('*, captain:players!captain_id(full_name, nickname, email)')
-        .eq('tournament_id', tournamentId)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data || [];
+      return await teamService.getTournamentTeams(tournamentId);
     }
   });
 
   const { data: ties, isLoading: tiesLoading } = useQuery({
     queryKey: ['tournament_ties', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('tournament_ties').select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name), matches:tournament_matches(id, status, court_number)').eq('tournament_id', tournamentId);
-      if (error) throw error;
-      const list = data || [];
+      const list = await teamService.getTournamentTies(tournamentId);
       const priority = (state: string) => {
         if (state === 'IN_PROGRESS') return 0;
         if (state === 'COMPLETED') return 2;
         return 1; // SCHEDULED, AWAITING_LINEUPS, AWAITING_REVEAL, etc.
       };
-      return list.sort((a: any, b: any) => {
+      return (list as any[]).sort((a: any, b: any) => {
         const pA = priority(a.state);
         const pB = priority(b.state);
         if (pA !== pB) return pA - pB;
@@ -119,18 +103,12 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
 
   const createTeam = useMutation({
     mutationFn: async () => {
-      // Lookup captain
-      const { data: player, error: playerErr } = await supabase.from('players').select('id').eq('email', captainEmail).single();
-      if (playerErr || !player) throw new Error("Captain not found with that email");
-
-      const { error } = await supabase.rpc('create_team', {
-        p_tournament_id: tournamentId,
-        p_name: newTeamName,
-        p_short_name: newTeamShort,
-        p_logo_url: null,
-        p_captain_id: player.id
+      await teamService.createTeamRpc({
+        tournamentId,
+        name: newTeamName,
+        shortName: newTeamShort,
+        captainEmail,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       toast.success('Team created successfully!');
@@ -144,16 +122,15 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
 
   const createTie = useMutation({
     mutationFn: async () => {
-      const { data: newTieId, error } = await supabase.rpc('create_tie', {
-        p_tournament_id: tournamentId,
-        p_tie_code: tieCode,
-        p_team_a_id: teamA || null,
-        p_team_b_id: teamB || null,
-        p_stage: stage,
-        p_advances_to_tie: advancesTo || null,
-        p_advances_to_slot: advancesSlot || null
+      const newTieId = await teamService.createTieRpc({
+        tournamentId,
+        tieCode,
+        teamAId: teamA || null,
+        teamBId: teamB || null,
+        stage,
+        advancesToTie: advancesTo || null,
+        advancesToSlot: advancesSlot || null,
       });
-      if (error) throw error;
 
       if (newTieId && (scheduledAtInput || courtInput)) {
         let isoAt: string | null = null;
@@ -161,24 +138,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           const d = new Date(scheduledAtInput);
           if (!isNaN(d.getTime())) isoAt = d.toISOString();
         }
-
-        if (isoAt) {
-          await supabase
-            .from('tournament_ties')
-            .update({ scheduled_at: isoAt })
-            .eq('id', newTieId);
-        }
-
-        if (courtInput || isoAt) {
-          const updates: Record<string, any> = {};
-          if (courtInput) updates.court_number = courtInput;
-          if (isoAt) updates.scheduled_at = isoAt;
-
-          await supabase
-            .from('tournament_matches')
-            .update(updates as any)
-            .eq('tie_id', newTieId);
-        }
+        await teamService.updateTieSchedule(newTieId, courtInput || null, isoAt);
       }
     },
     onSuccess: () => {
@@ -203,23 +163,11 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
         const d = new Date(editingScheduleTie.at);
         if (!isNaN(d.getTime())) isoAt = d.toISOString();
       }
-
-      const { error: tieErr } = await supabase
-        .from('tournament_ties')
-        .update({ scheduled_at: isoAt })
-        .eq('id', editingScheduleTie.tieId);
-      if (tieErr) throw tieErr;
-
-      if (editingScheduleTie.court || isoAt) {
-        const updates: Record<string, any> = {};
-        if (editingScheduleTie.court) updates.court_number = editingScheduleTie.court;
-        if (isoAt) updates.scheduled_at = isoAt;
-
-        await supabase
-          .from('tournament_matches')
-          .update(updates as any)
-          .eq('tie_id', editingScheduleTie.tieId);
-      }
+      await teamService.updateTieSchedule(
+        editingScheduleTie.tieId,
+        editingScheduleTie.court || null,
+        isoAt,
+      );
     },
     onSuccess: () => {
       toast.success('Tie schedule updated successfully!');
@@ -243,77 +191,13 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
       scoreB?: number | null;
       rubberScores?: Record<string, { winnerSide: number; score: string }>;
     }) => {
-      // 1. If individual rubber scores are provided, update each tournament_match row
-      if (rubberScores && Object.keys(rubberScores).length > 0) {
-        for (const [matchId, rData] of Object.entries(rubberScores)) {
-          const matchUpdate: Record<string, any> = {};
-          if (rData.score !== undefined && rData.score !== null) {
-            matchUpdate.score = rData.score.trim() || null;
-          }
-          if (rData.winnerSide === 1 || rData.winnerSide === 2) {
-            matchUpdate.winner_side = rData.winnerSide;
-            matchUpdate.status = 'completed';
-          } else if (rData.winnerSide === 0) {
-            // Keep existing winner_side or unmark if empty
-            if (rData.score.trim()) {
-              matchUpdate.status = 'completed';
-            }
-          }
-
-          if (Object.keys(matchUpdate).length > 0) {
-            await supabase
-              .from('tournament_matches')
-              .update(matchUpdate as any)
-              .eq('id', matchId);
-          }
-        }
-      }
-
-      // 2. If tie scores provided, update tie score columns
-      const updatePayload: Record<string, any> = {};
-      if (scoreA !== undefined && scoreA !== null) updatePayload.score_team_a = scoreA;
-      if (scoreB !== undefined && scoreB !== null) updatePayload.score_team_b = scoreB;
-
-      if (Object.keys(updatePayload).length > 0) {
-        await supabase
-          .from('tournament_ties')
-          .update(updatePayload as any)
-          .eq('id', tieId);
-      }
-
-      // 3. Resolve tie via set_tie_result RPC
-      const { error } = await supabase.rpc('set_tie_result', {
-        p_tie_id: tieId,
-        p_winner_team_id: winnerId,
-        p_note: 'Resolved by manager',
+      await teamService.resolveTieWithScores({
+        tieId,
+        winnerId,
+        scoreA: scoreA !== undefined && scoreA !== null ? String(scoreA) : undefined,
+        scoreB: scoreB !== undefined && scoreB !== null ? String(scoreB) : undefined,
+        rubberScores: rubberScores || {},
       });
-      if (error) throw error;
-
-      // 3. Handle bracket progression if advances_to_tie is configured
-      const { data: currentTie } = await supabase
-        .from('tournament_ties')
-        .select('*')
-        .eq('id', tieId)
-        .single();
-
-      if (currentTie?.advances_to_tie && currentTie?.advances_to_slot) {
-        const slotField = currentTie.advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
-        await supabase
-          .from('tournament_ties')
-          .update({ [slotField]: winnerId } as any)
-          .eq('id', currentTie.advances_to_tie);
-      }
-
-      if (currentTie?.loser_advances_to_tie && currentTie?.loser_advances_to_slot) {
-        const loserId = winnerId === currentTie.team_a_id ? currentTie.team_b_id : currentTie.team_a_id;
-        if (loserId) {
-          const loserSlotField = currentTie.loser_advances_to_slot === 'A' ? 'team_a_id' : 'team_b_id';
-          await supabase
-            .from('tournament_ties')
-            .update({ [loserSlotField]: loserId } as any)
-            .eq('id', currentTie.loser_advances_to_tie);
-        }
-      }
     },
     onSuccess: () => {
       toast.success("Tie resolved successfully");
@@ -328,7 +212,8 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none">
+      {view === 'all' && (
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button 
           onClick={() => setActiveTab('teams')}
           className={`pb-2.5 px-3 text-xs sm:text-sm font-black border-b-2 transition-all flex items-center gap-2 shrink-0 ${
@@ -352,6 +237,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           <span>Tie Fixtures</span>
         </button>
       </div>
+      )}
 
       {activeTab === 'teams' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -402,7 +288,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                 type="button"
                 onClick={() => createTeam.mutate()}
                 disabled={createTeam.isPending || !newTeamName || !captainEmail}
-                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:brightness-110 active:scale-[0.99] text-slate-950 font-black text-sm shadow-md shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:brightness-110 active:scale-[0.99] text-primary-foreground font-black text-sm shadow-md shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {createTeam.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Add Team
@@ -591,7 +477,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                 type="button"
                 onClick={() => createTie.mutate()}
                 disabled={createTie.isPending || !tieCode}
-                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:brightness-110 active:scale-[0.99] text-slate-950 font-black text-sm shadow-md shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:brightness-110 active:scale-[0.99] text-primary-foreground font-black text-sm shadow-md shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {createTie.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
                 Schedule Tie
@@ -691,19 +577,12 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => {
-                              setResolvingTie({
-                                tie,
-                                winnerId: tie.winner_team_id || tie.team_a_id,
-                                scoreA: tie.score_team_a ? String(tie.score_team_a) : '',
-                                scoreB: tie.score_team_b ? String(tie.score_team_b) : '',
-                                rubberScores: {},
-                              });
-                            }}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition"
+                            disabled
+                            title="Correct each rubber through its audited match flow. Tie-winner changes remain locked until coordinated recalculation is available."
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 cursor-not-allowed opacity-80"
                           >
-                            <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            {isCompleted ? 'Edit Scores' : 'Enter Scores / Resolve'}
+                            <Award className="w-3.5 h-3.5" />
+                            Tie correction locked
                           </button>
                         </div>
                       )}
@@ -764,7 +643,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                           type="button"
                           onClick={() => saveTieSchedule.mutate()}
                           disabled={saveTieSchedule.isPending}
-                          className="px-4 py-1.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                          className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                         >
                           {saveTieSchedule.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                           Save Schedule
@@ -1068,7 +947,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
                     rubberScores: resolvingTie.rubberScores,
                   });
                 }}
-                className="px-5 py-2.5 rounded-xl bg-primary hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-primary hover:brightness-110 active:scale-[0.98] text-primary-foreground font-black text-xs flex items-center gap-1.5 shadow-md shadow-primary/20 transition disabled:opacity-50"
               >
                 {resolveTie.isPending ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

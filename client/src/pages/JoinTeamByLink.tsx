@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
@@ -35,22 +35,7 @@ export default function JoinTeamByLink() {
     queryKey: ['team_invite_preview', token],
     queryFn: async () => {
       if (!token) throw new Error("No invite token provided");
-      const { data, error } = await supabase.rpc('get_team_by_invite_token' as any, {
-        p_token: token
-      });
-      if (error) throw error;
-      return data as {
-        team_id: string;
-        team_name: string;
-        short_name: string;
-        tournament_id: string;
-        tournament_name: string;
-        captain_name: string;
-        captain_avatar: string | null;
-        active_members: number;
-        max_roster: number;
-        is_full: boolean;
-      };
+      return await teamService.getTeamByInviteToken(token);
     },
     enabled: !!token,
     retry: 1
@@ -60,11 +45,7 @@ export default function JoinTeamByLink() {
   const joinMutation = useMutation({
     mutationFn: async () => {
       if (!token) throw new Error("Missing invite token");
-      const { data, error } = await supabase.rpc('join_team_by_token' as any, {
-        p_token: token
-      });
-      if (error) throw error;
-      return data;
+      return await teamService.joinTeamByToken(token);
     },
     onSuccess: (data: any) => {
       toast.success(data?.message || 'Successfully joined the team!');
@@ -165,7 +146,7 @@ export default function JoinTeamByLink() {
                 sessionStorage.setItem('redirect_after_auth', `/join-team/${token}`);
                 navigate('/join');
               }}
-              className="w-full h-12 text-sm font-bold bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20"
+              className="w-full h-12 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Log In to Join Team

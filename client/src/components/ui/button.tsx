@@ -22,10 +22,10 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         // Bespoke app patterns (centralized so pages stop hand-rolling them):
-        heroSolid: "bg-primary text-slate-950 shadow-lg hover:bg-primary/90",
+        heroSolid: "bg-primary text-primary-foreground shadow-lg hover:bg-primary/90",
         heroGhost:
           "bg-white/10 text-white border border-white/15 backdrop-blur-md hover:bg-white/20 dark:hover:bg-white/20",
-        pillActive: "bg-primary text-slate-950 shadow-xs hover:bg-primary/90",
+        pillActive: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         pillMuted:
           "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
         // Segmented-tab shape only; dynamic per-tab colors supplied via className.

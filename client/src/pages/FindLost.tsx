@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { supabase } from "@/lib/supabase";
+
+import { hubService } from "@/services/hubService";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -142,11 +143,8 @@ export default function FindLost() {
     try {
       const uploaded: string[] = [];
       for (const file of toUpload) {
-        const fileName = `findlost_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-        const { error } = await supabase.storage.from("find-lost").upload(fileName, file);
-        if (error) throw error;
-        const { data } = supabase.storage.from("find-lost").getPublicUrl(fileName);
-        uploaded.push(data.publicUrl);
+        const publicUrl = await hubService.uploadFindLostImage(file);
+        uploaded.push(publicUrl);
       }
       setForm((prev) => ({ ...prev, images: [...prev.images, ...uploaded] }));
       toast.success(`${uploaded.length} image(s) uploaded!`);
@@ -197,21 +195,17 @@ export default function FindLost() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const query = supabase
-      .from("find_lost_posts")
-      .select("*, author:players!author_id(full_name, avatar_url)")
-      .order("created_at", { ascending: false });
-
-    if (showResolved) {
-      query.eq("resolved", true);
-    } else {
-      query.eq("resolved", false);
+    try {
+      const data = await hubService.getFindLostPosts({
+        type: filter,
+        resolved: showResolved,
+      });
+      setPosts(data as unknown as Post[]);
+    } catch {
+      setPosts([]);
+    } finally {
+      setLoading(false);
     }
-    if (filter !== "all") query.eq("type", filter);
-
-    const { data, error } = await query;
-    if (!error && data) setPosts(data as Post[]);
-    setLoading(false);
   }, [filter, showResolved]);
 
   usePullToRefresh();
@@ -232,14 +226,10 @@ export default function FindLost() {
 
   // Real-time subscription for new posts → triggers push notification badge
   useEffect(() => {
-    const channel = supabase
-      .channel("find_lost_realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "find_lost_posts" }, (payload) => {
-        setPosts((prev) => [payload.new as Post, ...prev]);
-        toast.info("New Find & Lost post!", { description: (payload.new as Post).title });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return hubService.subscribeToFindLost((newPost) => {
+      setPosts((prev) => [newPost as Post, ...prev]);
+      toast.info("New Find & Lost post!", { description: (newPost as Post).title });
+    });
   }, []);
 
   const submit = async () => {
@@ -256,24 +246,20 @@ export default function FindLost() {
         image_urls: form.images.length > 0 ? form.images : null,
       };
 
-      let error;
       if (editingId) {
-        ({ error } = await supabase.from("find_lost_posts").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId));
+        await hubService.updateFindLostPost(editingId, { ...payload, updated_at: new Date().toISOString() });
       } else {
-        ({ error } = await supabase.from("find_lost_posts").insert({ ...payload, author_id: profile.id }));
+        await hubService.createFindLostPost({ ...payload, author_id: profile.id });
       }
       
-      if (error) throw error;
       toast.success(editingId ? "Post updated!" : "Post published!");
 
       if (!editingId) {
-        void supabase.functions.invoke("notify-find-lost", {
-          body: {
-            type: form.type,
-            title: form.title.trim(),
-            author_name: profile.full_name || "A user",
-            author_id: profile.id,
-          },
+        void hubService.notifyFindLost({
+          type: form.type,
+          title: form.title.trim(),
+          author_name: profile.full_name || "A user",
+          author_id: profile.id,
         }).catch((err) => console.error("Failed to broadcast Find & Lost notification:", err));
       }
 
@@ -289,32 +275,31 @@ export default function FindLost() {
   };
 
   const resolve = async (post: Post) => {
-    const { error } = await supabase.from("find_lost_posts").update({ resolved: true }).eq("id", post.id);
-    if (!error) {
+    try {
+      await hubService.updateFindLostPost(post.id, { resolved: true });
       toast.success("Marked as resolved!");
-      load(); // Reload to get updated state
-    } else {
-      toast.error(error.message || "Failed to resolve post");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to resolve post");
     }
   };
 
   const claimItem = async (post: Post, claimMsg?: string, claimContact?: string) => {
     if (!profile?.id) return;
     
-    const { error } = await supabase.rpc("claim_find_lost_item", {
-      post_uuid: post.id,
-      claimer_id: profile.id,
-      claimer_name: profile.full_name,
-      claim_msg: claimMsg || null,
-      claim_contact_info: claimContact || null
-    });
-    
-    if (!error) {
+    try {
+      await hubService.claimFindLostItemRpc({
+        postUuid: post.id,
+        claimerId: profile.id,
+        claimerName: profile.full_name,
+        claimMsg: claimMsg || null,
+        claimContactInfo: claimContact || null,
+      });
       toast.success(post.type === "lost" ? "Thanks for reporting this found!" : "Successfully claimed!");
       setClaimingPostId(null);
       setClaimContactInput("");
       load(); // Reload to get updated state
-    } else {
+    } catch (error: any) {
       toast.error(error.message || "Failed to claim item. Check if columns exist.");
     }
   };
@@ -322,15 +307,14 @@ export default function FindLost() {
   const unclaimItem = async (post: Post) => {
     if (!profile?.id) return;
     
-    const { error } = await supabase.rpc("unclaim_find_lost_item", {
-      post_uuid: post.id,
-      user_id: profile.id
-    });
-    
-    if (!error) {
+    try {
+      await hubService.unclaimFindLostItemRpc({
+        postUuid: post.id,
+        userId: profile.id,
+      });
       toast.success("Successfully unclaimed!");
       load();
-    } else {
+    } catch (error: any) {
       toast.error(error.message || "Failed to unclaim item.");
     }
   };
@@ -348,8 +332,9 @@ export default function FindLost() {
       return;
     }
     setPendingDelete(null);
-    const { error } = await supabase.from("find_lost_posts").delete().eq("id", post.id);
-    if (error) {
+    try {
+      await hubService.deleteFindLostPost(post.id);
+    } catch (error: any) {
       toast.error(error.message || "Failed to delete post");
       return;
     }
@@ -359,8 +344,9 @@ export default function FindLost() {
       .map(storagePathFromUrl)
       .filter((p): p is string => !!p);
     if (paths.length > 0) {
-      const { error: storageErr } = await supabase.storage.from("find-lost").remove(paths);
-      if (storageErr) console.error("Failed to delete post images from storage:", storageErr);
+      hubService.removeFindLostImages(paths).catch((storageErr) => {
+        console.error("Failed to delete post images from storage:", storageErr);
+      });
     }
 
     toast.success("Post deleted");

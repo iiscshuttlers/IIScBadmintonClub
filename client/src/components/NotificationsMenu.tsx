@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy, Timer } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchNotifications,
+  subscribeToNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification as deleteNotificationService,
+  clearAllNotifications,
+} from "@/services/playerService";
 import { playSmashSound, playPointSound, playServeSound, playWhistleSound, playVictorySound } from "@/lib/sounds";
 import {
   DropdownMenu,
@@ -19,53 +26,37 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
   useEffect(() => {
     if (!currentUser) return;
 
-    const fetchNotifications = async () => {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (!error && data) {
+    const loadNotifications = async () => {
+      try {
+        const data = await fetchNotifications(currentUser.id);
         setNotifications(data);
         setUnreadCount(data.filter((n) => !n.is_read).length);
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
       }
     };
 
-    fetchNotifications();
+    loadNotifications();
 
-    window.addEventListener("notifications_changed", fetchNotifications);
+    window.addEventListener("notifications_changed", loadNotifications);
 
     // Subscribe to new notifications
-    const channel = supabase
-      .channel(`notifications_channel_${currentUser.id}_${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${currentUser.id}`,
-        },
-        (payload) => {
-          setNotifications((prev) => [payload.new, ...prev]);
-          setUnreadCount((prev) => prev + 1);
+    const unsubscribe = subscribeToNotifications(currentUser.id, (newNotif) => {
+      setNotifications((prev) => [newNotif, ...prev]);
+      setUnreadCount((prev) => prev + 1);
 
-          // Play sound based on notification type
-          const type = payload.new.type || "";
-          if (type === "match_confirmation") playVictorySound();
-          else if (type === "new_match" || type === "match_logged") playServeSound();
-          else if (type === "serve" || type === "kudos" || type === "buddy_request") playServeSound();
-          else if (type === "elo_milestone" || type === "top10") playVictorySound();
-          else playWhistleSound();
-        }
-      )
-      .subscribe();
+      // Play sound based on notification type
+      const type = newNotif.type || "";
+      if (type === "match_confirmation") playVictorySound();
+      else if (type === "new_match" || type === "match_logged") playServeSound();
+      else if (type === "serve" || type === "buddy_request") playServeSound();
+      else if (type === "elo_milestone" || type === "top10") playVictorySound();
+      else playWhistleSound();
+    });
 
     return () => {
-      window.removeEventListener("notifications_changed", fetchNotifications);
-      supabase.removeChannel(channel);
+      window.removeEventListener("notifications_changed", loadNotifications);
+      unsubscribe();
     };
   }, [currentUser]);
 
@@ -73,11 +64,11 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
     if (!currentUser || unreadCount === 0) return;
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", currentUser.id)
-      .eq("is_read", false);
+    try {
+      await markAllNotificationsRead(currentUser.id);
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
   };
 
   const markAsRead = async (id: string, is_read: boolean) => {
@@ -86,7 +77,11 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    try {
+      await markNotificationRead(id);
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+    }
   };
 
   const handleNotificationClick = (n: any) => {
@@ -101,14 +96,22 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
     e.stopPropagation();
     setNotifications((prev) => prev.filter((x) => x.id !== n.id));
     if (!n.is_read) setUnreadCount((prev) => Math.max(0, prev - 1));
-    await supabase.from("notifications").delete().eq("id", n.id);
+    try {
+      await deleteNotificationService(n.id);
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    }
   };
 
   const clearAll = async () => {
     if (!currentUser || notifications.length === 0) return;
     setNotifications([]);
     setUnreadCount(0);
-    await supabase.from("notifications").delete().eq("user_id", currentUser.id);
+    try {
+      await clearAllNotifications(currentUser.id);
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
+    }
   };
 
   const getIcon = (type: string) => {
@@ -189,7 +192,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                 key={n.id}
                 onClick={() => handleNotificationClick(n)}
                 className={`group p-4 border-b border-slate-50 dark:border-slate-800/50 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${
-                  !n.is_read ? "bg-primary/10/50 dark:bg-primary/10" : ""
+                  !n.is_read ? "bg-primary/5 dark:bg-primary/10" : ""
                 }`}
               >
                 <div className="mt-0.5">{getIcon(n.type)}</div>

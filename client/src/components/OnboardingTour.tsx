@@ -132,7 +132,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -24, scale: 0.96 }}
           transition={{ duration: 0.22 }}
-          className="relative w-full max-w-sm bg-[#0f172a] rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+          className="relative w-full max-w-sm bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-white/10"
         >
           {/* Gradient header accent */}
           <div className={`h-1.5 w-full bg-gradient-to-r ${s.accent}`} />
@@ -182,7 +182,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
             <button
               onClick={next}
-              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r ${s.accent} text-foreground font-black text-sm shadow-lg transition hover:opacity-90`}
+              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-lg transition hover:opacity-90`}
             >
               {step === STEPS.length - 1 ? "Let's Go! 🏸" : "Next"}
               {step < STEPS.length - 1 && <ChevronRight className="w-4 h-4" />}

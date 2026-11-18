@@ -1,4 +1,5 @@
 import { useRef, useCallback } from "react";
+import type { Chapter, YouTubePlayer } from "@/hooks/useYoutubePlayer";
 
 export interface GestureDependencies {
   isLocked: boolean;
@@ -9,7 +10,7 @@ export interface GestureDependencies {
   speed: number;
   duration: number;
   currentTime: number;
-  chapters: any[];
+  chapters: Chapter[];
   brightness: number;
   abLoop: { start: number; end: number } | null;
   setAbLoop: React.Dispatch<React.SetStateAction<{ start: number; end: number } | null>>;
@@ -25,7 +26,7 @@ export interface GestureDependencies {
   skip: (s: number) => void;
   seekTo: (frac: number) => void;
   togglePlay: () => void;
-  playerRef: React.MutableRefObject<any>;
+  playerRef: React.MutableRefObject<YouTubePlayer | null>;
   setShowGestureHint: any;
   scrubDelta: number | null;
   zoomParams: { scale: number; x: number; y: number };
@@ -140,7 +141,7 @@ export function useVideoGestures({
       touchStartRef.current = { x, y, time: now };
       
       if (playerRef.current) {
-         try { initialVolRef.current = playerRef.current.getVolume(); } catch {}
+         try { initialVolRef.current = playerRef.current.getVolume(); } catch { /* intentional — player API may not be ready or exposed */ }
       }
       initialBrightRef.current = brightness;
 

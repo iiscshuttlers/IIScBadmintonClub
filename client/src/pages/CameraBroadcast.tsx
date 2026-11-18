@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { supabase } from "@/lib/supabase";
+import { fetchLiveMatchesRow, subscribeToCameraBroadcast } from "@/services/matchService";
+import { fetchTournamentMatchRow, fetchUncompletedTournamentMatches } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_YOUTUBE_STREAM_KEY } from "@/const";
 import {
@@ -132,12 +133,7 @@ export default function CameraBroadcast() {
     if (!isAuthorized) return;
 
     async function loadMatches() {
-      const { data } = await supabase
-        .from("tournament_matches")
-        .select("*")
-        .neq("status", "completed")
-        .order("round", { ascending: true })
-        .limit(20);
+      const data = await fetchUncompletedTournamentMatches();
 
       if (data && data.length > 0) {
         const mapped: MatchData[] = data.map((m) => {
@@ -171,22 +167,14 @@ export default function CameraBroadcast() {
 
     async function fetchSelected() {
       // Check site_data (live_matches) first for instant real-time scores
-      const { data: siteData } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "live_matches")
-        .maybeSingle();
+      const siteData = await fetchLiveMatchesRow();
 
       if (siteData?.value && siteData.value[selectedMatchId]) {
         setLiveMatch(parseBwfMatchStateToLiveMatch(siteData.value[selectedMatchId]));
       }
 
       // Fetch tournament_matches row for fallback & static details
-      const { data: tmData } = await supabase
-        .from("tournament_matches")
-        .select("*")
-        .eq("id", selectedMatchId)
-        .single();
+      const tmData = await fetchTournamentMatchRow(selectedMatchId);
 
       if (tmData) {
         if (!siteData?.value?.[selectedMatchId]) {
@@ -197,50 +185,25 @@ export default function CameraBroadcast() {
 
     fetchSelected();
 
-    // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
-    const instantBroadcastChannel = supabase.channel("court_live_scores");
-    instantBroadcastChannel
-      .on("broadcast", { event: "score_update" }, (e) => {
+    // Channel 1: court_live_scores broadcast; 2: site_data live_matches; 3: the tournament_matches row.
+    return subscribeToCameraBroadcast(selectedMatchId, {
+      onScoreUpdate: (e) => {
         if (e.payload && (e.payload.id === selectedMatchId || e.payload.dbId === selectedMatchId)) {
           setLiveMatch(parseBwfMatchStateToLiveMatch(e.payload));
         }
-      })
-      .subscribe();
-
-    // Channel 2: Listen to live_matches in site_data DB
-    const siteDataChannel = supabase
-      .channel(`camera_sitedata_${selectedMatchId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
-        (payload) => {
-          const liveMatches = (payload.new as any)?.value;
-          if (liveMatches && liveMatches[selectedMatchId]) {
-            setLiveMatch(parseBwfMatchStateToLiveMatch(liveMatches[selectedMatchId]));
-          }
+      },
+      onLiveMatchesChange: (payload) => {
+        const liveMatches = (payload.new as any)?.value;
+        if (liveMatches && liveMatches[selectedMatchId]) {
+          setLiveMatch(parseBwfMatchStateToLiveMatch(liveMatches[selectedMatchId]));
         }
-      )
-      .subscribe();
-
-    // Channel 3: Listen to tournament_matches table DB
-    const tmChannel = supabase
-      .channel(`camera_tm_${selectedMatchId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tournament_matches", filter: `id=eq.${selectedMatchId}` },
-        (payload) => {
-          if (payload.new) {
-            setLiveMatch((prev) => parseMatchScore(payload.new, prev));
-          }
+      },
+      onMatchChange: (payload) => {
+        if (payload.new) {
+          setLiveMatch((prev) => parseMatchScore(payload.new, prev));
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(instantBroadcastChannel);
-      supabase.removeChannel(siteDataChannel);
-      supabase.removeChannel(tmChannel);
-    };
+      },
+    });
   }, [selectedMatchId, isAuthorized]);
 
   function parseBwfMatchStateToLiveMatch(bwf: BwfMatchState, matchData?: MatchData): MatchData {

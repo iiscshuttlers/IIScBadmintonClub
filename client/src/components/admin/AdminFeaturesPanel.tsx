@@ -1,15 +1,16 @@
 /**
  * Admin Features Panel
- * Central dashboard for all new features: live scores, predictions,
- * weekly challenges, notification queue, public API, and DB health.
+ * Central dashboard for live scores, notification queue, public API and
+ * DB health. (The predictions and weekly-challenge sections were removed on
+ * 18 Nov 2026: their tables don't exist in production.)
  */
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
+import { MatchService } from "@/services/matchService";
 import {
-  Circle, TrendingUp, Zap, Bell, Globe, ShieldCheck,
-  RefreshCw, Trash2, Play, CheckCircle, XCircle, Loader2,
-  BarChart3, Trophy, Target, Coins
+  Circle, Zap, Bell, Globe, ShieldCheck,
+  RefreshCw, Trash2, Play, CheckCircle, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
@@ -33,26 +34,37 @@ function NotifQueuePanel() {
 
   const load = async () => {
     setLoading(true);
-    const [unsentRes, sentRes] = await Promise.all([
-      supabase.from("notification_queue").select("id", { count: "exact", head: true }).eq("sent", false),
-      supabase.from("notification_queue").select("id", { count: "exact", head: true }).eq("sent", true),
-    ]);
-    setStats({ unsent: unsentRes.count ?? 0, sent: sentRes.count ?? 0 });
-    setLoading(false);
+    try {
+      const s = await adminService.getNotificationQueueStats();
+      setStats(s);
+    } catch {
+      /* intentional */
+    } finally {
+      setLoading(false);
+    }
   };
 
   const flushNow = async () => {
     setFlushing(true);
-    const { error } = await supabase.functions.invoke("batch-notifications");
-    if (error) toast.error("Flush failed: " + error.message);
-    else { toast.success("Batch notifications sent!"); await load(); }
-    setFlushing(false);
+    try {
+      await adminService.flushNotificationQueue();
+      toast.success("Batch notifications sent!");
+      await load();
+    } catch (err: any) {
+      toast.error("Flush failed: " + err?.message);
+    } finally {
+      setFlushing(false);
+    }
   };
 
   const clearSent = async () => {
-    await supabase.from("notification_queue").delete().eq("sent", true);
-    toast.success("Cleared sent notifications");
-    await load();
+    try {
+      await adminService.clearSentNotifications();
+      toast.success("Cleared sent notifications");
+      await load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to clear notifications");
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -96,25 +108,34 @@ function LiveMatchesPanel() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await (supabase as any)
-      .from("live_matches")
-      .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .order("started_at", { ascending: false })
-      .limit(10);
-    setMatches(data ?? []);
-    setLoading(false);
+    try {
+      const data = await MatchService.getLiveMatchesAdminList(10);
+      setMatches(data);
+    } catch {
+      /* intentional */
+    } finally {
+      setLoading(false);
+    }
   };
 
   const endMatch = async (id: string) => {
-    await (supabase as any).from("live_matches").update({ status: "finished" }).eq("id", id);
-    toast.success("Match ended");
-    load();
+    try {
+      await MatchService.updateLiveMatchStatus(id, "finished");
+      toast.success("Match ended");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to end match");
+    }
   };
 
   const deleteMatch = async (id: string) => {
-    await (supabase as any).from("live_matches").delete().eq("id", id);
-    toast.success("Match deleted");
-    load();
+    try {
+      await MatchService.deleteLiveMatch(id);
+      toast.success("Match deleted");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete match");
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -155,197 +176,9 @@ function LiveMatchesPanel() {
   );
 }
 
-/* ── Match Predictions Admin ──────────────────────────────────────── */
-function PredictionsPanel() {
-  const [stats, setStats] = useState({ total: 0, correct: 0, topPlayer: "" });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      const [totalRes, correctRes, topRes] = await Promise.all([
-        (supabase as any).from("match_predictions").select("id", { count: "exact", head: true }),
-        (supabase as any).from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
-        (supabase as any).from("prediction_points").select("total_points, player:players!player_id(full_name)")
-          .order("total_points", { ascending: false }).limit(1).single(),
-      ]);
-      setStats({
-        total: totalRes.count ?? 0,
-        correct: correctRes.count ?? 0,
-        topPlayer: (topRes.data as any)?.player?.full_name ?? "—",
-      });
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  const resolveAll = async () => {
-    const { data: unresolved } = await (supabase as any)
-      .from("match_predictions")
-      .select("id, match_id, player_id, predicted_winner_id, points_wagered, match:matches!match_id(winner_id, status)")
-      .is("correct", null);
-
-    if (!unresolved || unresolved.length === 0) { toast.info("No unresolved predictions"); return; }
-
-    let resolved = 0;
-    for (const pred of unresolved as any[]) {
-      if (!pred.match?.winner_id || pred.match.status !== "confirmed") continue;
-      const correct = pred.predicted_winner_id === pred.match.winner_id;
-      const earned = correct ? pred.points_wagered * 2 : 0;
-      await (supabase as any).from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
-      await (supabase as any).from("prediction_points").upsert({
-        player_id: pred.player_id,
-        total_points: correct ? 100 + earned : 100 - pred.points_wagered,
-      }, { onConflict: "player_id" });
-      resolved++;
-    }
-    toast.success(`Resolved ${resolved} predictions`);
-  };
-
-  return (
-    <div className={cardCls}>
-      {sectionTitle(<TrendingUp className="w-4 h-4" />, "Match Predictions")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : (
-        <>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {[
-              { label: "Total Predictions", value: stats.total, color: "text-violet-600" },
-              { label: "Correct", value: stats.correct, color: "text-primary" },
-              { label: "Accuracy", value: stats.total > 0 ? `${Math.round((stats.correct / stats.total) * 100)}%` : "—", color: "text-amber-600" },
-            ].map((s) => (
-              <div key={s.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
-                <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">🏆 Top points: <strong>{stats.topPlayer}</strong></p>
-          <button onClick={resolveAll}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-on-accent text-sm font-black transition">
-            <Coins className="w-4 h-4" /> Resolve Pending Predictions
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ── Weekly Challenges Admin ──────────────────────────────────────── */
-function ChallengesAdminPanel() {
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newType, setNewType] = useState("matches");
-  const [newTarget, setNewTarget] = useState(5);
-  const [newPoints, setNewPoints] = useState(10);
-
-  const load = async () => {
-    const sunday = new Date();
-    sunday.setDate(sunday.getDate() - sunday.getDay());
-    const weekStart = sunday.toISOString().slice(0, 10);
-    const { data } = await (supabase as any)
-      .from("weekly_challenges")
-      .select("*, completions:challenge_progress(count)")
-      .eq("week_start", weekStart);
-    setChallenges(data ?? []);
-    setLoading(false);
-  };
-
-  const deleteChallenge = async (id: string) => {
-    await (supabase as any).from("weekly_challenges").delete().eq("id", id);
-    toast.success("Challenge deleted");
-    load();
-  };
-
-  const addChallenge = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle) return;
-    const sunday = new Date();
-    sunday.setDate(sunday.getDate() - sunday.getDay());
-    const weekStart = sunday.toISOString().slice(0, 10);
-    
-    const { error } = await (supabase as any).from("weekly_challenges").insert({
-      title: newTitle,
-      type: newType,
-      target: newTarget,
-      points: newPoints,
-      week_start: weekStart,
-    });
-    if (error) {
-      toast.error("Failed to add challenge: " + error.message);
-    } else {
-      toast.success("Challenge added");
-      setNewTitle("");
-      setIsAdding(false);
-      load();
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  return (
-    <div className={cardCls}>
-      {sectionTitle(<Target className="w-4 h-4" />, "Weekly Challenges (This Week)")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> :
-        challenges.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No challenges this week. They auto-generate when a player opens the Challenges tab.</p>
-        ) : (
-          <div className="space-y-2">
-            {challenges.map((c) => (
-              <div key={c.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{c.title}</p>
-                  <p className="text-xs text-muted-foreground">{c.type} · target {c.target} · {c.points} pts · {(c.completions as any)?.[0]?.count ?? 0} completions</p>
-                </div>
-                <button onClick={() => deleteChallenge(c.id)}
-                  className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-200 transition ml-2 shrink-0">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )
-      }
-      
-      {isAdding ? (
-        <form onSubmit={addChallenge} className="mt-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-3">
-          <input
-            autoFocus
-            type="text"
-            placeholder="Challenge Title (e.g., Weekend Warrior)"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary"
-            required
-          />
-          <div className="grid grid-cols-3 gap-2">
-            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary">
-              <option value="matches">Matches</option>
-              <option value="wins">Wins</option>
-              <option value="singles">Singles</option>
-              <option value="doubles">Doubles</option>
-              <option value="streak">Streak</option>
-            </select>
-            <input type="number" min="1" placeholder="Target" value={newTarget} onChange={(e) => setNewTarget(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
-            <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
-          </div>
-          <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 transition">Cancel</button>
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-primary-foreground rounded-lg transition">Save Challenge</button>
-          </div>
-        </form>
-      ) : (
-        <button onClick={() => setIsAdding(true)} className="w-full mt-4 py-2 border border-dashed border-primary/50 dark:border-primary/80 text-primary dark:text-primary rounded-xl text-sm font-bold hover:bg-primary/10 dark:hover:bg-primary/90/20 transition">
-          + Add Custom Challenge
-        </button>
-      )}
-    </div>
-  );
-}
-
 /* ── Public API Info ─────────────────────────────────────────────── */
 function PublicApiPanel() {
-  const base = "https://htejmhsqqlfedlajqqyv.supabase.co/functions/v1/public-api";
+  const base = `${import.meta.env.VITE_SUPABASE_URL || "https://htejmhsqqlfedlajqqyv.supabase.co"}/functions/v1/public-api`;
   const endpoints = [
     { path: "/leaderboard", desc: "Top 20 players by ELO" },
     { path: "/recent-matches", desc: "Last 20 confirmed matches" },
@@ -360,17 +193,13 @@ function PublicApiPanel() {
     setTesting(path);
     setResult(null);
     try {
-      // Use supabase.functions.invoke so the anon key/auth headers are automatically attached
-      const { data, error } = await supabase.functions.invoke("public-api" + path);
-      if (error) {
-        setResult("Error: " + error.message);
-      } else {
-        setResult(JSON.stringify(data, null, 2).slice(0, 500));
-      }
+      const data = await adminService.invokePublicApi(path);
+      setResult(JSON.stringify(data, null, 2).slice(0, 500));
     } catch (e: any) {
       setResult("Exception: " + e.message);
+    } finally {
+      setTesting(null);
     }
-    setTesting(null);
   };
 
   return (
@@ -405,10 +234,14 @@ function DbHealthPanel() {
 
   const run = async () => {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("verify-db-backups");
-    if (error) toast.error("Health check failed");
-    else setHealth(data);
-    setLoading(false);
+    try {
+      const data = await adminService.verifyDbBackups();
+      setHealth(data);
+    } catch {
+      toast.error("Health check failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -483,8 +316,11 @@ function DbHealthPanel() {
 function CronJobsPanel() {
   const jobs = [
     { name: "batch-notifications", schedule: "Every 15 min", desc: "Sends queued push notifications" },
-    { name: "match-confirmation-nudge", schedule: "Every 2 hours", desc: "Nudges players to confirm pending matches" },
-    { name: "challenge-expiry-reminders", schedule: "Sundays 8pm IST", desc: "Reminds players of expiring challenges" },
+    { name: "send-match-reminders", schedule: "Every 5 min", desc: "Reminds players and subscribers before their matches" },
+    { name: "dispatch-scheduled-notifications", schedule: "Every 2 min", desc: "Delivers scheduled announcements and alerts" },
+    { name: "notify-up-next", schedule: "Every minute", desc: "Tells players their match is next on court" },
+    { name: "lineup-deadline-reminders", schedule: "Every 5 min", desc: "Reminds team captains before lineup deadlines" },
+    { name: "take_ranking_snapshot", schedule: "Mondays 12:05am IST", desc: "Saves the weekly ranking snapshot" },
   ];
 
   return (
@@ -507,10 +343,11 @@ function CronJobsPanel() {
 }
 
 export function AdminFeaturesPanel() {
-  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
+  // Old ?tab=predictions / ?tab=challenges links fall back to "live".
+  const [section, setSection] = useState<"live" | "notifications" | "api" | "health">(() => {
     const params = safeGetSearchParams();
     const tab = params.get("tab") as any;
-    return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
+    return ["live", "notifications", "api", "health"].includes(tab) ? tab : "live";
   });
 
   useEffect(() => {
@@ -523,8 +360,6 @@ export function AdminFeaturesPanel() {
 
   const sections = [
     { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-red-500 text-red-500" /> },
-    { id: "predictions", label: "Predictions", icon: <TrendingUp className="w-3.5 h-3.5" /> },
-    { id: "challenges", label: "Challenges", icon: <Target className="w-3.5 h-3.5" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-3.5 h-3.5" /> },
     { id: "api", label: "Public API", icon: <Globe className="w-3.5 h-3.5" /> },
     { id: "health", label: "DB Health", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
@@ -561,16 +396,6 @@ export function AdminFeaturesPanel() {
         </div>
       )}
 
-      {section === "predictions" && <PredictionsPanel />}
-      {section === "challenges" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <ChallengesAdminPanel />
-          <div className={cardCls}>
-            {sectionTitle(<Zap className="w-4 h-4" />, "Player View Preview")}
-            <p className="text-sm text-muted-foreground">Weekly Challenges feature is currently disabled.</p>
-          </div>
-        </div>
-      )}
       {section === "notifications" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />

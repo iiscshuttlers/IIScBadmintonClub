@@ -1,3 +1,4 @@
+import { tournamentLink } from "@/lib/tournamentRoutes";
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -8,7 +9,6 @@ import { usePlayerMatches } from "@/hooks/usePlayerMatches";
 import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
 import { useLiveScoresFor } from "@/hooks/useLiveScoresFor";
 import { FeaturedTournamentHero } from "@/components/tournament/FeaturedTournamentHero";
-import { MyMatchesStrip } from "@/components/tournament/MyMatchesStrip";
 import { getTournaments } from "@/lib/tournaments";
 import { Button } from "@/components/ui/button";
 
@@ -40,7 +40,7 @@ export function HomePersonalDashboard() {
       .catch(() => {});
   }, []);
 
-  const { matches, pendingMatches, loading: matchesLoading } = usePlayerMatches(myPlayerId || undefined);
+  const { matches, loading: matchesLoading } = usePlayerMatches(myPlayerId || undefined);
   const { myRoles } = useMyTournamentRoles(session?.user?.id, tournaments);
 
   const activeTournaments = useMemo(() => tournaments.filter((t) => t.status === "active"), [tournaments]);
@@ -88,7 +88,7 @@ export function HomePersonalDashboard() {
         {myPlayerId && (
           <div className="flex items-center gap-2">
             <Link href={`/player/${myPlayerId}/personal`}>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition-all shadow-sm">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all shadow-sm">
                 Personal Space <ArrowRight className="w-3 h-3" />
               </button>
             </Link>
@@ -104,33 +104,15 @@ export function HomePersonalDashboard() {
             <span className="flex items-center gap-1 text-primary">
               <Swords className="w-3.5 h-3.5" /> Next / Pending
             </span>
-            {pendingMatches.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-black animate-pulse">
-                Action Required
-              </span>
-            )}
           </div>
-          {pendingMatches.length > 0 ? (
-            <div>
-              <p className="text-xs font-black text-white truncate">
-                Pending score confirmation
-              </p>
-              <Link href={`/player/${myPlayerId}/personal`}>
-                <span className="text-[11px] text-primary hover:underline font-bold mt-1 inline-block cursor-pointer">
-                  Review {pendingMatches.length} pending match →
-                </span>
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs font-bold text-slate-200">No pending matches</p>
-              <Link href="/pulse#directory">
-                <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
-                  Find hitting partners in Directory →
-                </span>
-              </Link>
-            </div>
-          )}
+          <div>
+            <p className="text-xs font-bold text-slate-200">No pending matches</p>
+            <Link href="/pulse#directory">
+              <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
+                Find hitting partners in Directory →
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* Card 2: Your Tournaments */}
@@ -194,16 +176,13 @@ export function HomePersonalDashboard() {
         </div>
       </div>
 
-      {/* My Matches — live / upcoming / completed */}
-      <MyMatchesStrip myPlayerId={myPlayerId} className="pt-3.5" />
-
       {/* Featured Tournament Card */}
       {featuredTournament && (
         <div className="pt-3.5">
           <FeaturedTournamentHero
             tournament={featuredTournament}
             liveScore={featuredLiveScore}
-            onOpen={() => setLocation(`/events/${featuredTournament.slug || featuredTournament.id}`)}
+            onOpen={() => setLocation(tournamentLink(featuredTournament))}
           />
         </div>
       )}

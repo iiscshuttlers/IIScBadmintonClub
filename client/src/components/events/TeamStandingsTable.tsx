@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { fetchTournamentStandingsConfig } from "@/services/tournamentService";
 import { useTeamStandings } from "@/hooks/useTeamStandings";
 import { Loader2, Trophy, ArrowUpDown, ArrowUp, ArrowDown, HelpCircle } from "lucide-react";
 import { TeamRosterModal } from "@/components/events/TeamRosterModal";
@@ -22,11 +22,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
     queryKey: ['tournament_standings_config', tournamentId],
     queryFn: async () => {
       if (!tournamentId) return null;
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select('id, name, tie_points_win, tie_points_draw, tie_format_config, bracket_format, format_family')
-        .eq('id', tournamentId)
-        .maybeSingle();
+      const { data, error } = await fetchTournamentStandingsConfig(tournamentId);
       if (error) {
         console.warn('Failed to load tournament standings config:', error);
         return null;

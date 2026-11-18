@@ -13,7 +13,7 @@ import {
   Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { teamService, tournamentService, playerService } from "@/services";
 import { resolveMemberGender } from "@/components/events/TeamRosterModal";
 import { useTeamModal } from "@/contexts/TeamModalContext";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
@@ -99,32 +99,13 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
       setLoading(true);
       try {
         // 0. Fetch tournament config for dynamic roster calculation
-        const { data: tourneyData } = await supabase
-          .from("tournaments")
-          .select("id, tie_format_config, max_rubbers_per_player, team_roster_min, ignore_gender_rules")
-          .eq("id", tournamentId)
-          .maybeSingle();
+        const tourneyData = await tournamentService.fetchTournamentById(tournamentId).catch(() => null);
 
         // 1. Fetch teams
-        const { data: rawTeams, error: teamsError } = await supabase
-          .from("tournament_teams")
-          .select("id, tournament_id, name, short_name, pool, seed, captain_id, status")
-          .eq("tournament_id", tournamentId)
-          .neq("status", "DELETED")
-          .order("name", { ascending: true });
-
-
-        if (teamsError) throw teamsError;
-        const validTeams = rawTeams || [];
+        const validTeams = await teamService.getTeamsForLiveDisplay(tournamentId);
 
         // 2. Fetch members with joined player info
-        const { data: rawMembers, error: membersError } = await supabase
-          .from("tournament_team_members")
-          .select("id, team_id, player_id, role, status, player:players!player_id(id, full_name, email, gender, is_guest, avatar_url)")
-          .eq("tournament_id", tournamentId)
-          .eq("status", "ACTIVE");
-
-        if (membersError) throw membersError;
+        const rawMembers = await teamService.getTournamentTeamMembers(tournamentId);
 
         // Group members by team_id
         const membersByTeam: Record<string, TeamMemberItem[]> = {};
@@ -162,10 +143,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
 
         // Fetch missing captains if any
         if (captainIdsToFetch.length > 0) {
-          const { data: captainPlayers } = await supabase
-            .from("players")
-            .select("id, full_name, email, gender, is_guest, avatar_url")
-            .in("id", captainIdsToFetch);
+          const captainPlayers = await playerService.getPlayersByIds(captainIdsToFetch);
 
           if (captainPlayers) {
             const capMap = new Map(captainPlayers.map(p => [p.id, p]));

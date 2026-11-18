@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { BarChart3, Clock, Download, FileText, Flag, Loader2, Medal, RefreshCw, Sparkles, Star, Trophy, Users } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { computeReport, matchesToCsv, type ReportMatch, type TournamentReport } from "@/lib/tournamentReport";
 import { summariseFeedback, type FeedbackSummary } from "@/lib/tournamentFeedback";
 
@@ -47,7 +46,8 @@ async function saveFile(fileName: string, data: string, mime: string, isBase64 =
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function buildPdf(name: string, r: TournamentReport, umpireNames: Record<string, string>, registered: number | null) {
+async function buildPdf(name: string, r: TournamentReport, umpireNames: Record<string, string>, registered: number | null) {
+  const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const left = 16;
   let y = 20;
@@ -116,48 +116,22 @@ export function TournamentReportPanel({
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tournament_matches")
-      .select(
-        "id, match_code, category, round, round_name, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, status, score, sets_history, winner_side, court_number, scheduled_at, started_at, ended_at, umpired_by",
-      )
-      .eq("tournament_id", tournament.id)
-      .order("category", { ascending: true })
-      .order("round", { ascending: true })
-      .order("match_number", { ascending: true });
-    if (error) {
+    try {
+      const data = await tournamentService.fetchTournamentReportPanelData(
+        tournament.id,
+        Boolean(tournament.require_app_registration),
+      );
+      setMatches(data.matches as ReportMatch[]);
+      setUmpireNames(data.umpireNames);
+      setFeedback(data.feedback.length ? summariseFeedback(data.feedback) : null);
+      setRegistered(data.registered);
+      setLoadError(false);
+    } catch (error) {
       console.error("report load failed", error);
       setLoadError(true);
+    } finally {
       setLoading(false);
-      return;
     }
-    const rows = (data ?? []) as ReportMatch[];
-    setMatches(rows);
-    setLoadError(false);
-
-    const umpIds = Array.from(new Set(rows.map((m) => m.umpired_by).filter(Boolean))) as string[];
-    if (umpIds.length) {
-      const { data: ump } = await supabase.from("players").select("id, full_name").in("id", umpIds);
-      setUmpireNames(Object.fromEntries((ump ?? []).map((p: any) => [p.id, p.full_name])));
-    }
-    // tournament_feedback is new; generated types catch up after `supabase db push`.
-    const { data: fb } = await (supabase as any)
-      .from("tournament_feedback")
-      .select("rating, tags, comment")
-      .eq("tournament_id", tournament.id);
-    setFeedback(fb ? summariseFeedback(fb) : null);
-
-    if (tournament.require_app_registration) {
-      const { count } = await supabase
-        .from("tournament_registrations")
-        .select("id", { count: "exact", head: true })
-        .eq("tournament_id", tournament.id)
-        .eq("status", "approved");
-      setRegistered(count ?? null);
-    } else {
-      setRegistered(null);
-    }
-    setLoading(false);
   }, [tournament.id, tournament.require_app_registration]);
 
   useEffect(() => {
@@ -180,7 +154,7 @@ export function TournamentReportPanel({
   const exportPdf = async () => {
     setExporting("pdf");
     try {
-      const pdf = buildPdf(tournament.name, report, umpireNames, registered);
+      const pdf = await buildPdf(tournament.name, report, umpireNames, registered);
       await saveFile(
         `${fileSafe(tournament.name)}-report.pdf`,
         pdf.output("datauristring").split(",")[1],

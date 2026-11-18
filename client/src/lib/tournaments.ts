@@ -1,6 +1,27 @@
 import { fetchSiteData } from "@/lib/siteData";
 import { supabase } from "@/lib/supabase";
 
+export interface FinalsWinner {
+  category: string;
+  winner: string;
+  runnerUp: string;
+}
+
+/** Winner/runner-up per category from decided finals; undefined when none are decided. */
+export function winnersFromFinals(
+  matches: Array<{ category?: string | null; match_code?: string | null; round_name?: string | null; winner_side?: number | null; team1_label?: string | null; team2_label?: string | null }>,
+): FinalsWinner[] | undefined {
+  const finals = matches.filter(
+    (m) => (m.round_name === "Final" || m.match_code?.includes("_F_")) && m.winner_side,
+  );
+  if (finals.length === 0) return undefined;
+  return finals.map((m) => ({
+    category: m.category ?? "",
+    winner: (m.winner_side === 1 ? m.team1_label : m.team2_label) ?? "",
+    runnerUp: (m.winner_side === 1 ? m.team2_label : m.team1_label) ?? "",
+  }));
+}
+
 export async function getTournaments() {
   const { data, error } = await supabase
     .from("tournaments")
@@ -19,17 +40,7 @@ export async function getTournaments() {
 
     // Only compute winners if the tournament is completed or archived
     if (t.status === "completed" || t.status === "archived") {
-      const finals = (t.tournament_matches || []).filter((m: any) => 
-        (m.round_name === "Final" || m.match_code?.includes("_F_")) && m.winner_side
-      );
-      
-      if (finals.length > 0) {
-        winners = finals.map((m: any) => ({
-          category: m.category,
-          winner: m.winner_side === 1 ? m.team1_label : m.team2_label,
-          runnerUp: m.winner_side === 1 ? m.team2_label : m.team1_label
-        }));
-      }
+      winners = winnersFromFinals(t.tournament_matches || []);
     }
 
     const tr = t as any;

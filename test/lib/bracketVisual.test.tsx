@@ -43,7 +43,7 @@ function renderPositions(matches: BracketMatch[]) {
       (s) => s.textContent === m.match_code,
     );
     expect(header, `card missing for ${m.match_code}`).toBeTruthy();
-    const card = header!.closest('div[style*="position: absolute"]') as HTMLElement;
+    const card = (header!.closest('div.absolute') || header!.closest('div[style*="position: absolute"]')) as HTMLElement;
     byCode.set(m.match_code, {
       left: parseFloat(card.style.left),
       top: parseFloat(card.style.top),

@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
-import { resolveTeamName } from "@/lib/teamNames";
-import { supabase } from "@/lib/supabase";
+import { 
+  fetchActiveTournamentId, 
+  getLiveMatchesFromSiteData, 
+  fetchMatchScoreAndSets, 
+  fetchRecentCompletedMatches, 
+  fetchStoredPointLog,
+  subscribeToLiveMatches 
+} from "@/services/matchService";
+import { teamService } from "@/services/teamService";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
@@ -36,12 +43,12 @@ export function UmpireTab({
     const pid = profile?.id;
     if (!tournamentId || !pid) { setIsTournamentOfficial(false); return; }
     (async () => {
-      const { data } = await supabase
-        .from("tournament_officials" as any)
-        .select("role")
-        .eq("tournament_id", tournamentId)
-        .eq("user_id", pid);
-      if (!cancelled) setIsTournamentOfficial(!!data && data.length > 0);
+      try {
+        const isOfficial = await teamService.checkIsOfficial(tournamentId, pid);
+        if (!cancelled) setIsTournamentOfficial(isOfficial);
+      } catch {
+        if (!cancelled) setIsTournamentOfficial(false);
+      }
     })();
     return () => { cancelled = true; };
   }, [tournamentId, profile?.id]);
@@ -90,7 +97,9 @@ export function UmpireTab({
         // Clear storage once matches progress past setup
         localStorage.removeItem(SETUP_STORAGE_KEY);
       }
-    } catch {}
+    } catch {
+      /* intentional — localStorage unavailable in private mode or quota exceeded */
+    }
   }, [activeMatches]);
 
   const [resolvedTournamentId, setResolvedTournamentId] = useState<string | undefined>(tournamentId);
@@ -102,16 +111,10 @@ export function UmpireTab({
       setHasActiveTournament(true);
       return;
     }
-    supabase
-      .from("tournaments")
-      .select("id")
-      .eq("status", "active")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        setHasActiveTournament(Boolean(data?.id));
-        setResolvedTournamentId(data?.id);
-      });
+    fetchActiveTournamentId().then((id) => {
+      setHasActiveTournament(Boolean(id));
+      setResolvedTournamentId(id ?? undefined);
+    });
   }, [tournamentId]);
 
   useEffect(() => {
@@ -119,43 +122,33 @@ export function UmpireTab({
     const key = sessionStorage.getItem("umpire_takeover_key");
     if (!key) return;
     sessionStorage.removeItem("umpire_takeover_key");
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "live_matches")
-      .maybeSingle()
-      .then(({ data }) => {
-        const m = data?.value?.[key] as BwfMatchState | undefined;
-        if (m && m.status && m.status !== "setup") {
-          setActiveMatches((prev) => [...prev, m]);
-        }
-      });
+    getLiveMatchesFromSiteData().then((val) => {
+      const m = val?.[key] as BwfMatchState | undefined;
+      if (m && m.status && m.status !== "setup") {
+        setActiveMatches((prev) => [...prev, m]);
+      }
+    });
   }, [session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "live_matches")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value && typeof data.value === 'object') {
-          const myMatches = Object.values(data.value).filter(
-            (m: any) => m && m.umpireId === session.user.id
-              && (!tournamentId || m.tournamentId === tournamentId)
-          ) as BwfMatchState[];
+    getLiveMatchesFromSiteData().then((val) => {
+      if (val && typeof val === 'object') {
+        const myMatches = Object.values(val).filter(
+          (m: any) => m && m.umpireId === session.user.id
+            && (!tournamentId || m.tournamentId === tournamentId)
+        ) as BwfMatchState[];
 
-          if (myMatches.length > 0) {
-            setActiveMatches((prev) => {
-              const existingIds = new Set(prev.map(p => (p as any).id));
-              const newMatches = myMatches.filter(m => !existingIds.has(m.id));
-              return [...prev, ...newMatches];
-            });
-          }
+        if (myMatches.length > 0) {
+          setActiveMatches((prev) => {
+            const existingIds = new Set(prev.map(p => (p as any).id));
+            const newMatches = myMatches.filter(m => !existingIds.has(m.id));
+            return [...prev, ...newMatches];
+          });
         }
-      });
+      }
+    });
 
     fetchSiteData<{ maintenanceMode?: boolean }>("club_settings", "settings.json").then(data => {
       if (data?.maintenanceMode) {
@@ -164,35 +157,22 @@ export function UmpireTab({
     });
 
     // The realtime subscription handles remote takeover requests or external updates
-    const sub = supabase
-      .channel("umpire_tab_matches")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_data",
-          filter: "key=eq.live_matches",
-        },
-        (payload) => {
-          const newValue = (payload.new as Record<string, unknown>)?.value as Record<string, BwfMatchState>;
-          if (newValue) {
-            setActiveMatches((prev) => {
-              return prev.map(m => {
-                const matchId = (m as any).id;
-                // Update match if it exists in DB, otherwise leave it (could be local setup state)
-                return newValue[matchId] && newValue[matchId].umpireId === session.user.id 
-                  ? newValue[matchId] 
-                  : m;
-              });
-            });
-          }
-        },
-      )
-      .subscribe();
+    const unsub = subscribeToLiveMatches((newValue) => {
+      if (newValue) {
+        setActiveMatches((prev) => {
+          return prev.map(m => {
+            const matchId = (m as any).id;
+            const updated = (newValue as Record<string, BwfMatchState>)[matchId];
+            return updated && updated.umpireId === session.user.id 
+              ? updated 
+              : m;
+          });
+        });
+      }
+    });
 
     return () => {
-      supabase.removeChannel(sub);
+      unsub();
     };
   }, [session?.user?.id]);
 
@@ -203,7 +183,7 @@ export function UmpireTab({
       const newMatches = prev.filter((_, i) => i !== indexToRemove);
       if (newMatches.length === 0) {
         setActiveMatchIndex(-1);
-        try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+        try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch { /* intentional — localStorage unavailable */ }
       } else if (activeMatchIndex === indexToRemove) {
         setActiveMatchIndex(Math.max(0, indexToRemove - 1));
       } else if (activeMatchIndex > indexToRemove) {
@@ -253,14 +233,12 @@ export function UmpireTab({
   };
 
   const startMatch = async (m: any) => {
-    try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+    try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch { /* intentional — localStorage unavailable */ }
     resetUmpireStore();
 
     if (m.status === "in_progress" && m.match_code) {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
-      const liveState = (data?.value && typeof data.value === 'object')
-        ? (data.value as Record<string, any>)[m.id]
-        : undefined;
+      const liveData = await getLiveMatchesFromSiteData();
+      const liveState = liveData?.[m.id];
 
       if (liveState) {
         setActiveMatches(prev => {
@@ -279,14 +257,13 @@ export function UmpireTab({
       // restart the match at 0-0, throwing away every game already played.
       // The tournament row still holds the score and completed sets, so
       // recover from that instead.
-      const { data: row } = await supabase
-        .from("tournament_matches")
-        .select("score, sets_history")
-        .eq("id", m.id)
-        .maybeSingle();
+      const row = await fetchMatchScoreAndSets(m.id);
 
       const { completed, current } = splitSets(row ?? { score: null, sets_history: null });
       if (completed.length > 0 || current[0] > 0 || current[1] > 0) {
+        // Server copy of the point log (kept since the point-log migration);
+        // used only if it agrees with the row's score. Failure is non-fatal.
+        const storedLog = await fetchStoredPointLog(m.id);
         const recovered = recoverMatchFromTournamentRow(
           m,
           row ?? { score: null, sets_history: null },
@@ -294,6 +271,7 @@ export function UmpireTab({
             id: session!.user.id,
             name: profile?.full_name || session!.user.email?.split("@")[0] || "Umpire",
           },
+          (storedLog as { points?: unknown } | null)?.points,
         );
         setActiveMatches(prev => {
           setActiveMatchIndex(prev.length);
@@ -301,7 +279,9 @@ export function UmpireTab({
         });
         toast(
           `Recovered ${completed.length > 0 ? completed.join(", ") + " | " : ""}${current[0]}-${current[1]}. ` +
-          "The point log and serve order could not be restored — check who is serving before continuing.",
+          (recovered.pointLog.length > 0
+            ? "The point log and serving side were restored — check which player is serving before continuing."
+            : "The point log and serve order could not be restored — check who is serving before continuing."),
           { duration: 10000, icon: "⚠️" },
         );
         return;
@@ -333,7 +313,7 @@ export function UmpireTab({
     <div className="w-full max-w-5xl mx-auto p-2 sm:p-4 space-y-6">
       {/* Tabs - Only show when there are in-progress or queued active matches */}
       {activeMatches.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
           {activeMatches.map((m, idx) => {
             let mLabel = `Match ${idx + 1}`;
             if ('category' in m) {
@@ -346,7 +326,7 @@ export function UmpireTab({
                 onClick={() => setActiveMatchIndex(idx)}
                 className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-black transition-all border ${
                   activeMatchIndex === idx
-                    ? "bg-primary text-slate-950 border-primary shadow-sm shadow-primary/20"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
                     : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                 }`}
               >
@@ -364,7 +344,7 @@ export function UmpireTab({
           })}
           <button
             onClick={() => {
-              try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+              try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch { /* intentional — localStorage unavailable */ }
               resetUmpireStore();
               setActiveMatchIndex(-1);
             }}
@@ -469,15 +449,10 @@ export function UmpireTab({
           </div>
 
           {/* Recent Submissions Log */}
-          {hasActiveTournament && canRunTournament ? (
+          {hasActiveTournament && canRunTournament && (
             <RecentUmpireMatches
               isTournament={true}
               tournamentId={resolvedTournamentId}
-              onEdit={startMatch}
-            />
-          ) : (
-            <RecentUmpireMatches
-              isTournament={false}
               onEdit={startMatch}
             />
           )}
@@ -532,88 +507,17 @@ function RecentUmpireMatches({
   useEffect(() => {
     if (!profile?.id) return;
     const fetchRecent = async () => {
-      let data: any[] = [];
-      if (isTournament) {
-        let query = supabase
-          .from("tournament_matches")
-          .select(`
-            id, 
-            match_code, 
-            rubber_label,
-            rubber_order,
-            court_number,
-            player1_id, 
-            player2_id, 
-            team1_partner_id:player3_id, 
-            team2_partner_id:player4_id, 
-            winner_id, 
-            winner_side,
-            score, 
-            sets_history, 
-            round:round_name, 
-            category, 
-            created_at:scored_at,
-            scored_at, 
-            scored_by,
-            team1_label, 
-            team2_label, 
-            player1:players!player1_id(full_name, gender), 
-            player2:players!player2_id(full_name, gender), 
-            partner1:players!player3_id(full_name, gender), 
-            partner2:players!player4_id(full_name, gender),
-            tie:tournament_ties(
-              id,
-              tie_code,
-              team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-              team_b:tournament_ties!tournament_ties_team_b_id_fkey(name, short_name)
-            )
-          `)
-          .in("status", ["completed", "walkover"]);
-
-        if (tournamentId) {
-          query = query.eq("tournament_id", tournamentId);
-        }
-
-        query = query.order("created_at", { ascending: false });
-
-        if (isAdmin) {
-          query = query.limit(500);
-        } else {
-          query = query.limit(100);
-        }
-        const res = await query;
-        if (res.error) {
-          console.error("Failed to load tournament submissions:", res.error);
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return;
-        }
-        data = res.data?.map(m => ({ 
-          ...m, 
-          created_at: m.scored_at || m.created_at || new Date().toISOString(),
-          is_friendly: false, 
-          is_tournament_match: true 
-        })) || [];
-      } else {
-        let query = supabase
-          .from("matches")
-          .select("*, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!team1_partner_id(full_name, gender), partner2:players!team2_partner_id(full_name, gender)")
-          .in("status", ["confirmed", "pending"])
-          .order("created_at", { ascending: false });
-
-        if (isAdmin) {
-          query = query.limit(500);
-        } else {
-          query = query.limit(100);
-        }
-        const res = await query;
-        if (res.error) {
-          console.error("Failed to load friendly match submissions:", res.error);
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return;
-        }
-        data = res.data || [];
+      try {
+        const data = await fetchRecentCompletedMatches({
+          isTournament,
+          tournamentId,
+          limit: isAdmin ? 500 : 100,
+        });
+        setRecent(data as any);
+      } catch (err) {
+        console.error("Failed to load match submissions:", err);
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
-      if (data) setRecent(data as any);
     };
 
     fetchRecent();
@@ -743,7 +647,7 @@ function RecentUmpireMatches({
                 onClick={() => setFilterScoredByMe(!filterScoredByMe)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
                   filterScoredByMe
-                    ? "bg-primary text-slate-950 border-primary font-black shadow-xs"
+                    ? "bg-primary text-primary-foreground border-primary font-black shadow-xs"
                     : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
                 }`}
               >
@@ -752,14 +656,14 @@ function RecentUmpireMatches({
               </button>
 
               {/* Category Pills */}
-              <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800 overflow-x-auto hide-scrollbar">
+              <div className="flex flex-wrap bg-slate-950/80 p-1 rounded-xl border border-slate-800">
                 {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
                   <button
                     key={f}
                     onClick={() => setFilterFormat(f)}
                     className={`px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                       filterFormat === f 
-                        ? "bg-primary text-slate-950 shadow-xs" 
+                        ? "bg-primary text-primary-foreground shadow-xs" 
                         : "text-slate-400 hover:text-slate-200"
                     }`}
                   >
@@ -773,7 +677,7 @@ function RecentUmpireMatches({
           {/* Results Grid */}
           {filteredMatches.length === 0 ? (
             <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/30">
-              <Filter className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <Filter className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-400">No submissions matching criteria</p>
               <p className="text-xs text-slate-500 mt-1">Try resetting category or search filters.</p>
             </div>

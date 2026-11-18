@@ -187,6 +187,54 @@ html {
   --grad-to: #6ee7a8;
   --grad-warm-from: #ff7a45;
   --grad-warm-to: #f43f8e;
+
+  /* Graphite surface ramp. ~1,400 components hard-code `dark:bg-slate-*`,
+     `dark:text-slate-*` and `dark:border-slate-*`; Tailwind v4 resolves those
+     through these variables, so re-pointing the slate scale here moves every
+     navy surface onto the same neutral graphite as the theme tokens above
+     (950 = --background, 900 = --card, 500 = --muted-foreground) without
+     touching each file. The lightness ramp mirrors slate, so a shade used as
+     text still reads as text. 500 is tuned to pass WCAG AA (4.5:1) on both
+     slate-900 cards and slate-800 chips. Dark-only: the app never leaves dark. */
+  --color-slate-50: #f7f7f8;
+  --color-slate-100: #ededef;
+  --color-slate-200: #dcdde0;
+  --color-slate-300: #c4c6cb;
+  --color-slate-400: #a1a4ab;
+  --color-slate-500: #8b8e97;
+  --color-slate-600: #63666e;
+  --color-slate-700: #383a41;
+  --color-slate-800: #24252a;
+  --color-slate-900: #131417;
+  --color-slate-950: #0a0a0b;
+}
+
+/* Event-family accents (see lib/tournamentTheme.ts + ThemeScope). Applied as
+   classes rather than inline styles so dark mode can swap in the lighter
+   shade: violet-600 text on a dark card is ~2.6:1, violet-400 is ~6.8:1. */
+.family-individual {
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --ring: #7c3aed;
+  --family-glow: rgba(124, 58, 237, 0.15);
+}
+.family-team {
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --ring: #059669;
+  --family-glow: rgba(5, 150, 105, 0.15);
+}
+.dark .family-individual {
+  --primary: #a78bfa;
+  --primary-foreground: #1e1037;
+  --ring: #a78bfa;
+  --family-glow: rgba(167, 139, 250, 0.16);
+}
+.dark .family-team {
+  --primary: #34d399;
+  --primary-foreground: #03281b;
+  --ring: #34d399;
+  --family-glow: rgba(52, 211, 153, 0.14);
 }
 
 /* Marquee scrolling animation — must be top-level, NOT inside @theme */
@@ -382,6 +430,16 @@ html {
     -webkit-user-select: none;
   }
 
+  /* Ensure option tags inside selects are readable across OS and themes */
+  select option {
+    background-color: #ffffff;
+    color: #0c0d10;
+  }
+  .dark select option {
+    background-color: #1b1c20;
+    color: #f8fafc;
+  }
+
   /* Completely hide web scrollbars for a native app feel */
   ::-webkit-scrollbar {
     display: none;
@@ -469,7 +527,7 @@ html {
   }
 
   .glass-card-dark {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(19, 20, 23, 0.6);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1153,7 +1211,7 @@ html {
   height: 6px;
 }
 .visible-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(19, 20, 23, 0.4);
   border-radius: 9999px;
 }
 .visible-scrollbar::-webkit-scrollbar-thumb {
@@ -1182,3 +1240,10 @@ html.dark .visible-scrollbar::-webkit-scrollbar-thumb:hover {
   }
 }
 
+
+/* The app is dark-only: the light shimmer above flashed white boxes on every
+   route load. Graphite stops = --muted / --border. */
+.dark .shimmer {
+  background: linear-gradient(90deg, #1d1e22 25%, #26272d 50%, #1d1e22 75%);
+  background-size: 200% 100%;
+}

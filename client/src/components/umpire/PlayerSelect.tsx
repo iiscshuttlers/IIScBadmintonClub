@@ -126,7 +126,7 @@ export function PlayerSelect({
         >
           {filtered.length === 0 ? (
             <div
-              className={`p-3 text-sm font-bold cursor-pointer text-primary ${activeIndex === 0 ? "bg-primary/80/50" : "hover:bg-primary/80/30"}`}
+              className={`p-3 text-sm font-bold cursor-pointer text-primary ${activeIndex === 0 ? "bg-primary/20" : "hover:bg-primary/10"}`}
               onClick={() => { onChange(search); setIsOpen(false); }}
             >
               Use "{search}" as Guest
@@ -148,8 +148,8 @@ export function PlayerSelect({
                     isAlreadyAdded
                       ? "cursor-not-allowed opacity-60 bg-slate-800/80"
                       : activeIndex === idx
-                      ? "bg-primary/20 text-primary cursor-pointer"
-                      : "hover:bg-primary/80/30 text-slate-200 cursor-pointer"
+                      ? "bg-primary text-primary-foreground font-black cursor-pointer"
+                      : "hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-200 cursor-pointer"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -158,24 +158,44 @@ export function PlayerSelect({
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isAlreadyAdded && (
-                        <span className="text-[10px] font-bold text-amber-400/90 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                          activeIndex === idx
+                            ? "text-amber-950 bg-amber-200/90 border-amber-300"
+                            : "text-amber-400/90 bg-amber-400/10 border-amber-400/20"
+                        }`}>
                           Already in team
                         </span>
                       )}
                       {p._isSuggested && !isAlreadyAdded && (
-                        <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                          activeIndex === idx
+                            ? "text-amber-950 bg-amber-200/90 border-amber-300"
+                            : "text-amber-400 bg-amber-400/10 border-amber-400/30"
+                        }`}>
                           Suggested Match
                         </span>
                       )}
                     </div>
                   </div>
                   {p.iisc_email && (
-                    <div className={`text-[11px] font-mono truncate mt-0.5 ${isAlreadyAdded ? "line-through text-slate-500" : "text-emerald-400/90"}`}>
+                    <div className={`text-[11px] font-mono truncate mt-0.5 ${
+                      isAlreadyAdded
+                        ? "line-through text-slate-500"
+                        : activeIndex === idx
+                        ? "text-primary-foreground/85"
+                        : "text-emerald-400/90"
+                    }`}>
                       IISc: {p.iisc_email}
                     </div>
                   )}
                   {p.email && p.email !== p.iisc_email && (
-                    <div className={`text-[11px] font-mono truncate mt-0.5 ${isAlreadyAdded ? "line-through text-slate-500" : "text-slate-400"}`}>
+                    <div className={`text-[11px] font-mono truncate mt-0.5 ${
+                      isAlreadyAdded
+                        ? "line-through text-slate-500"
+                        : activeIndex === idx
+                        ? "text-primary-foreground/75"
+                        : "text-slate-400"
+                    }`}>
                       {p.email}
                     </div>
                   )}

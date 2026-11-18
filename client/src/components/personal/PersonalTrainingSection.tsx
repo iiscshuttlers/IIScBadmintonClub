@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchAceTraining } from "@/services/aceService";
 import { Dumbbell, ActivitySquare, Target, AlertTriangle } from "lucide-react";
 
 export function TrainingSection() {
@@ -17,29 +18,19 @@ export function TrainingSection() {
       }
 
       try {
-        const aceUrl = import.meta.env.VITE_ACE_API_URL;
-        const aceSecret = import.meta.env.VITE_ACE_API_SECRET;
-        
-        if (!aceUrl || !aceSecret) {
+        // Goes through the ace-training edge function: the ACE secret stays on
+        // the server and the lookup uses the signed-in user's verified email.
+        const result = await fetchAceTraining();
+        if (result.reason === null) {
+          setData(result.data);
+        } else if (result.reason === "not_configured") {
           setError("ACE API configuration is missing.");
-          setLoading(false);
-          return;
+        } else if (result.reason === "not_signed_in") {
+          setError("You must be logged in with an email to view ACE training data.");
+        } else {
+          setError("Please create an account on the ACE app with the same email id.");
         }
-
-        const res = await fetch(`${aceUrl}?email=${encodeURIComponent(session.user.email)}`, {
-          headers: {
-            'Authorization': `Bearer ${aceSecret}`
-          }
-        });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `ACE server returned ${res.status}`);
-        }
-
-        const jsonData = await res.json();
-        setData(jsonData);
-      } catch (err: any) {
+      } catch {
         setError("Please create an account on the ACE app with the same email id.");
       } finally {
         setLoading(false);

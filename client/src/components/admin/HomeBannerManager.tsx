@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchSiteDataEntry } from "@/services/playerService";
+import { feedService } from "@/services/feedService";
 import { Plus, Trash2, Save, Loader2, Eye, EyeOff, Pin, PinOff, AlertTriangle, Info, Megaphone, ClipboardList, PartyPopper, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,11 +55,7 @@ export function HomeBannerManager() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "home_banners")
-      .maybeSingle()
+    fetchSiteDataEntry("home_banners")
       .then(({ data }) => {
         if (data?.value) {
           const val = data.value as any;
@@ -70,9 +67,7 @@ export function HomeBannerManager() {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("site_data")
-      .upsert({ key: "home_banners", value: banners as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    const { error } = await feedService.saveHomeBanners(banners as any);
     setSaving(false);
     if (error) toast.error("Failed to save: " + error.message);
     else toast.success("Home banners saved!");
@@ -123,9 +118,9 @@ export function HomeBannerManager() {
 
       {banners.length === 0 && (
         <div className="text-center py-12 bg-slate-900 rounded-2xl border border-slate-800">
-          <Megaphone className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+          <Megaphone className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-3" />
           <p className="font-bold text-slate-400">No banners yet</p>
-          <p className="text-sm text-slate-600 mt-1">Click "Add Banner" to create your first home page notice</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Click "Add Banner" to create your first home page notice</p>
         </div>
       )}
 
@@ -259,7 +254,7 @@ export function HomeBannerManager() {
             {/* Dismiss key */}
             <div>
               <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">
-                Dismiss Key <span className="text-slate-600 font-normal normal-case">(change this to "reset" dismissals for all users)</span>
+                Dismiss Key <span className="text-slate-600 dark:text-slate-400 font-normal normal-case">(change this to "reset" dismissals for all users)</span>
               </label>
               <input
                 value={banner.dismiss_key || ""}

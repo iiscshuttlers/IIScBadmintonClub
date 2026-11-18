@@ -23,7 +23,7 @@ import {
   ChevronRight,
   UserCheck
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { teamService, playerService } from '@/services';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -58,15 +58,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   const { data: team, isLoading: teamLoading } = useQuery({
     queryKey: ['team', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_teams')
-        .select('*, tournaments!tournament_teams_tournament_id_fkey(*)')
-        .eq('id', teamId!)
-        .maybeSingle();
-      if (error) {
-        console.error('Error fetching team:', error);
-        throw error;
-      }
+      const data = await teamService.getTeamById(teamId!);
       return data as any;
     },
     enabled: !!teamId,
@@ -78,22 +70,13 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   const { data: ties = [], isLoading: tiesLoading } = useQuery({
     queryKey: ['my_ties', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_ties')
-        .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)')
-        .or(`team_a_id.eq.${teamId},team_b_id.eq.${teamId}`)
-        .order('created_at', { ascending: true });
-      if (error) {
-        console.error('Error fetching ties:', error);
-        return [];
-      }
-      const list = (data || []) as any[];
+      const list = await teamService.getTeamTiesForTeam(teamId!);
       const priority = (state: string) => {
         if (state === 'IN_PROGRESS') return 0;
         if (state === 'COMPLETED') return 2;
         return 1;
       };
-      return list.sort((a: any, b: any) => {
+      return (list as any[]).sort((a: any, b: any) => {
         const pA = priority(a.state);
         const pB = priority(b.state);
         if (pA !== pB) return pA - pB;
@@ -108,62 +91,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['team_members', teamId, team?.captain_id],
     queryFn: async () => {
-      // Fetch with resilient foreign key relation
-      let rawMembers: any[] = [];
-      const { data, error } = await supabase
-        .from('tournament_team_members')
-        .select('*, player:players!player_id(*)')
-        .eq('team_id', teamId!);
-
-      if (error) {
-        // Fallback to explicit FK name if needed
-        const fallback = await supabase
-          .from('tournament_team_members')
-          .select('*, players:players!tournament_team_members_player_id_fkey(*)')
-          .eq('team_id', teamId!);
-        if (fallback.error) {
-          console.error('Error fetching members:', fallback.error);
-        } else {
-          rawMembers = fallback.data || [];
-        }
-      } else {
-        rawMembers = data || [];
-      }
-
-      // Normalize each member to have both .players and .player populated
-      const list: any[] = rawMembers.map((m: any) => {
-        const p = m.player || m.players;
-        return {
-          ...m,
-          player: p,
-          players: p
-        };
-      });
-
-      // If captain is designated on team but not present in tournament_team_members, fetch and prepend captain
-      const captainId = team?.captain_id;
-      if (captainId && !list.some((m: any) => m.player_id === captainId)) {
-        const { data: captainPlayer } = await supabase
-          .from('players')
-          .select('*')
-          .eq('id', captainId)
-          .maybeSingle();
-
-        if (captainPlayer) {
-          list.unshift({
-            id: `captain-${captainPlayer.id}`,
-            team_id: teamId,
-            player_id: captainPlayer.id,
-            role: 'CAPTAIN',
-            status: 'ACTIVE',
-            is_captain: true,
-            player: captainPlayer,
-            players: captainPlayer
-          });
-        }
-      }
-
-      return list;
+      return teamService.getTeamRosterWithCaptain(teamId!, team?.captain_id);
     },
     enabled: !!teamId,
     staleTime: 10000,
@@ -174,18 +102,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   const { data: searchResults = [], isLoading: isSearching } = useQuery({
     queryKey: ['player_search', playerSearchQuery],
     queryFn: async () => {
-      const q = playerSearchQuery.trim();
-      if (!q || q.length < 2) return [];
-      const { data, error } = await supabase
-        .from('players')
-        .select('id, full_name, nickname, email, avatar_url, elo_rating')
-        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%,nickname.ilike.%${q}%`)
-        .limit(10);
-      if (error) {
-        console.error('Error searching players:', error);
-        return [];
-      }
-      return (data || []) as any[];
+      return playerService.searchPlayersByQuery(playerSearchQuery);
     },
     enabled: playerSearchQuery.trim().length >= 2
   });
@@ -220,11 +137,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   const respondInvite = useMutation({
     mutationFn: async ({ accept }: { accept: boolean }) => {
       if (!myInvite) return;
-      const { error } = await supabase.rpc('respond_team_invite' as any, {
-        p_member_id: myInvite.id,
-        p_accept: accept
-      });
-      if (error) throw error;
+      await teamService.respondTeamInvite(myInvite.id, accept);
     },
     onSuccess: () => {
       toast.success('Responded to team invitation');
@@ -243,8 +156,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
       });
       if (!ok) return;
 
-      const { error } = await supabase.rpc('remove_team_member' as any, { p_member_id: memberId });
-      if (error) throw error;
+      await teamService.removeTeamMemberRpc(memberId);
     },
     onSuccess: () => {
       toast.success('Team member removed');
@@ -255,11 +167,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
   const invitePlayerMutation = useMutation({
     mutationFn: async (playerId: string) => {
-      const { error } = await supabase.rpc('invite_team_member' as any, {
-        p_team_id: teamId,
-        p_player_id: playerId
-      });
-      if (error) throw error;
+      await teamService.inviteTeamMemberRpc(teamId!, playerId);
     },
     onSuccess: () => {
       toast.success('Invitation sent successfully!');
@@ -279,11 +187,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
       });
       if (!ok) return;
 
-      const { data, error } = await supabase.rpc('generate_new_team_invite_token' as any, {
-        p_team_id: teamId
-      });
-      if (error) throw error;
-      return data;
+      return await teamService.generateNewTeamInviteToken(teamId!);
     },
     onSuccess: () => {
       toast.success('Generated a new invite link');
@@ -712,23 +616,23 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                       onClick={() => setActiveTieTab(tie.id)}
                       className={`px-4 py-2.5 rounded-2xl border text-xs font-black tracking-tight transition-all duration-200 flex items-center gap-2.5 shrink-0 shadow-xs cursor-pointer ${
                         isSelected 
-                          ? 'bg-primary text-slate-950 border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50 scale-[1.02]' 
+                          ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50 scale-[1.02]' 
                           : 'bg-slate-900/90 text-slate-100 hover:text-white border-slate-700/80 hover:border-slate-500 hover:bg-slate-800'
                       }`}
                     >
                       <span className={`font-mono text-[11px] px-1.5 py-0.5 rounded-md font-bold ${
                         isSelected 
-                          ? 'bg-slate-950/15 text-slate-950' 
+                          ? 'bg-primary-foreground/15 text-primary-foreground' 
                           : 'bg-slate-800 text-slate-300 border border-slate-700'
                       }`}>
                         {tie.tie_code}
                       </span>
                       <span className="font-bold">
-                        <span className={isSelected ? 'text-slate-950/70 font-semibold' : 'text-slate-400 font-semibold'}>vs</span>{' '}
+                        <span className={isSelected ? 'text-primary-foreground/70 font-semibold' : 'text-slate-400 font-semibold'}>vs</span>{' '}
                         {opponentObj?.short_name || opponentObj?.name || 'TBD'}
                       </span>
                       {isLocked ? (
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-slate-950' : 'text-emerald-400'}`} />
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-primary-foreground' : 'text-emerald-400'}`} />
                       ) : (
                         <span className={`w-2 h-2 rounded-full shrink-0 animate-pulse ${isSelected ? 'bg-slate-950' : 'bg-amber-400'}`} />
                       )}

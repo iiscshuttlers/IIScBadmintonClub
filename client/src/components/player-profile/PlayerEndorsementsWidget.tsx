@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchPlayerEndorsements, upsertPlayerEndorsement } from "@/services/socialService";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThumbsUp, Shield, Zap, Target, Star, Swords, Award, Brain, Heart, ChevronDown } from "lucide-react";
@@ -34,12 +34,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
 
   const fetchEndorsements = async () => {
     try {
-      const { data, error } = await supabase
-        .from("player_endorsements")
-        .select("category, trait, endorser_id")
-        .eq("endorsed_player_id", playerId);
-
-      if (error) throw error;
+      const data = await fetchPlayerEndorsements(playerId);
       setEndorsements(data || []);
     } catch (err) {
       console.error("Failed to fetch endorsements", err);
@@ -63,14 +58,12 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
     }
 
     try {
-      const { error } = await supabase.rpc("upsert_player_endorsement", {
-        p_endorsed_player_id: playerId,
-        p_endorser_id: profile.id,
-        p_category: category,
-        p_trait: trait
+      await upsertPlayerEndorsement({
+        endorsedPlayerId: playerId,
+        endorserId: profile.id,
+        category,
+        trait,
       });
-
-      if (error) throw error;
 
       // Optimistically update local state
       setEndorsements(prev => {
@@ -137,7 +130,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
   return (
     <div className="bg-white dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/40">
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/60">
           Skills & Endorsements
         </h3>
         {isOwnProfile && (visibleSkills.length < SKILLS.length || visibleBehaviors.length < BEHAVIORS.length) && (

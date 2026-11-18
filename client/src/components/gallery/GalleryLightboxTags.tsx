@@ -53,7 +53,7 @@ export function GalleryLightboxTags({
               {tag.name}
               {isAdmin && (
                 <button
-                  className="ml-1 text-foreground/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                  className="ml-1 text-foreground/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                   onClick={(e) => { e.stopPropagation(); removeTag(itemPath, tag.id); }}
                 >
                   <X className="w-3 h-3" />

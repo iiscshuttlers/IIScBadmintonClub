@@ -71,6 +71,68 @@ export interface SensorAnalytics {
   directionChanges: number;
 }
 
+/** A tournament_matches row as selected below (players and tournament embedded). */
+interface PersonalMatchRow {
+  id: string;
+  tournament_id: string;
+  category: string;
+  round_name: string;
+  score: string | null;
+  status: string;
+  winner_side: number | null;
+  scored_at: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  player1_id: string | null;
+  player2_id: string | null;
+  player3_id: string | null;
+  player4_id: string | null;
+  team1_label: string | null;
+  team2_label: string | null;
+  player1: { full_name: string } | null;
+  player2: { full_name: string } | null;
+  player3: { full_name: string } | null;
+  player4: { full_name: string } | null;
+  tournaments: { name: string; start_date: string | null } | null;
+}
+
+/** Row of the retired match_motion_stats table (no rows are loaded any more). */
+interface MotionRow {
+  match_id: string;
+  match_source: string;
+  created_at?: string | null;
+  sample_count?: number | null;
+  avg_magnitude?: number | null;
+  max_magnitude?: number | null;
+  idle_pct?: number | null;
+  walking_pct?: number | null;
+  running_pct?: number | null;
+  smash_sprint_pct?: number | null;
+}
+
+/** Row of the retired match_sensor_analytics table (no rows are loaded any more). */
+interface SensorRow {
+  match_id: string;
+  total_swings?: number | null;
+  smash_count?: number | null;
+  clear_count?: number | null;
+  drive_count?: number | null;
+  net_shot_count?: number | null;
+  avg_swing_speed?: number | null;
+  max_swing_speed?: number | null;
+  lateral_pct?: number | null;
+  forward_back_pct?: number | null;
+  vertical_pct?: number | null;
+  fatigue_index?: number | null;
+  first_half_intensity?: number | null;
+  second_half_intensity?: number | null;
+  accel_std?: number | null;
+  gyro_std?: number | null;
+  avg_shot_interval_ms?: number | null;
+  fastest_shot_interval_ms?: number | null;
+  direction_changes?: number | null;
+}
+
 function categoryGroup(category?: string): PersonalMatch["group"] {
   const cat = (category || "").toUpperCase();
   if (cat === "MS" || cat === "WS" || cat.includes("SINGLES")) return "Singles";
@@ -99,7 +161,7 @@ export function usePlayerPersonal(playerId: string | undefined) {
         .order("scored_at", { ascending: false });
 
       if (error) throw error;
-      const rows = (data as any[]) || [];
+      const rows = (data as unknown as PersonalMatchRow[]) || [];
 
       const matches: PersonalMatch[] = rows.map((m) => {
         const isTeam1 = m.player1_id === playerId || m.player3_id === playerId;
@@ -111,7 +173,7 @@ export function usePlayerPersonal(playerId: string | undefined) {
 
         const opponents = (isTeam1 ? [m.player2, m.player4] : [m.player1, m.player3])
           .filter(Boolean)
-          .map((p: any) => p.full_name)
+          .map((p) => p.full_name)
           .filter(Boolean);
 
         const startDate = m.tournaments?.start_date;
@@ -141,10 +203,10 @@ export function usePlayerPersonal(playerId: string | undefined) {
 
       // Motion/sensor analytics tables (match_motion_stats, match_sensor_analytics)
       // were retired, so there is no phone/watch sensor data to load.
-      const tMotionRows: any[] = [];
-      const tSensorRows: any[] = [];
-      const pMotionRows: any[] = [];
-      const pSensorRows: any[] = [];
+      const tMotionRows: MotionRow[] = [];
+      const tSensorRows: SensorRow[] = [];
+      const pMotionRows: MotionRow[] = [];
+      const pSensorRows: SensorRow[] = [];
 
       const motionRows = [...tMotionRows, ...pMotionRows];
       const sensorRows = [...tSensorRows, ...pSensorRows];

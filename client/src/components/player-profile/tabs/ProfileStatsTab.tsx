@@ -9,6 +9,7 @@ import {
   Radar,
   Tooltip,
 } from "recharts";
+import type { PlayerRow } from "@/types";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -16,7 +17,7 @@ const itemVariants = {
 };
 
 interface ProfileStatsTabProps {
-  player: any;
+  player: PlayerRow;
   liveMatches: any[];
   allPlayers: any[];
   id: string;
@@ -42,7 +43,7 @@ export function ProfileStatsTabLeft({
   return (
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-6">
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
-        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/45 flex items-center gap-2 mb-6">
+        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/60 flex items-center gap-2 mb-6">
           <Target className="w-4 h-4 text-primary dark:text-primary" /> Player
           Type Analysis
           <div className="group relative inline-flex ml-auto md:ml-2">
@@ -115,8 +116,8 @@ export function ProfileStatsTabLeft({
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(15, 23, 42, 0.95)",
-                      borderColor: "rgba(30, 41, 59, 0.8)",
+                      backgroundColor: "rgba(19, 20, 23, 0.95)",
+                      borderColor: "rgba(36, 37, 42, 0.9)",
                       borderRadius: "12px",
                       backdropFilter: "blur(8px)",
                       boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
@@ -138,8 +139,8 @@ export function ProfileStatsTabLeft({
       />
       <PerformanceTrends matches={liveMatches} playerId={id} />
       <WrappedCard
-        playerName={player.fullName}
-        avatarUrl={player.avatar}
+        playerName={player.full_name}
+        avatarUrl={player.avatar_url}
         elo={player.elo_rating ?? 1200}
         matches={liveMatches}
         playerId={id}

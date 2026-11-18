@@ -9,6 +9,22 @@ import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
 import { TieUmpireConsole } from "./TieUmpireConsole";
+import {
+  submitTournamentMatch,
+  adminUpdateTournamentMatch,
+  recordTournamentWalkover as recordTournamentWalkoverService,
+  notifyTournamentMatch,
+  deleteTournamentMatch,
+  deleteTournamentMatches,
+  invokeCallToCourt,
+  fetchRoundRulesForTournaments,
+  fetchTournamentRowOrNull,
+  fetchUmpireDoneMatches,
+  fetchUmpireOpenMatches,
+  fetchUmpirePickerTournaments,
+  subscribeToUmpireTournamentMatches,
+} from "@/services/tournamentService";
+import { teamService } from "@/services/teamService";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -36,6 +52,9 @@ export interface TournamentMatchForUmpire {
   reminder_sent?: boolean | null;
   winner_side?: number | null;
   score?: string | null;
+  umpired_by?: string | null;
+  result_revision?: number;
+  result_operation_id?: string | null;
 }
 
 interface Props {
@@ -94,6 +113,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const [rescheduleFor, setRescheduleFor] = useState<TournamentMatchForUmpire | null>(null);
   const [rescheduleAt, setRescheduleAt] = useState("");
   const [rescheduleCourt, setRescheduleCourt] = useState("");
+  const [rescheduleReason, setRescheduleReason] = useState("");
   const [savingReschedule, setSavingReschedule] = useState(false);
   const [activeTieForConsole, setActiveTieForConsole] = useState<{ tie: any; tournament: any } | null>(null);
   const [pendingTies, setPendingTies] = useState<any[]>([]);
@@ -107,7 +127,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const switchTournament = (id: string) => {
     setSelectedTournamentId(id);
     setShowTournamentPicker(false);
-    try { localStorage.setItem("umpire_selected_tournament", id); } catch {}
+    try { localStorage.setItem("umpire_selected_tournament", id); } catch { /* intentional — localStorage unavailable in private mode or quota exceeded */ }
   };
   const [directScoreFor, setDirectScoreFor] = useState<TournamentMatchForUmpire | null>(null);
   const [directSets, setDirectSets] = useState<{ t1: string; t2: string }[]>([{ t1: "", t2: "" }, { t1: "", t2: "" }]);
@@ -161,14 +181,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
     setSavingDirectScore(true);
     try {
-      const { error } = await (supabase.rpc as any)("submit_tournament_match", {
+      await submitTournamentMatch({
         p_match_id: directScoreFor.id,
         p_winner_side: winnerSide,
         p_score: scoreStr,
         p_sets: setsArr,
         p_umpire_id: session.user.id,
+        p_expected_revision: directScoreFor.result_revision ?? 0,
       });
-      if (error) throw error;
 
       toast.success("Score submitted", {
         description: `${directScoreFor.team1_label ?? "Team 1"} vs ${directScoreFor.team2_label ?? "Team 2"}: ${scoreStr}`,
@@ -187,6 +207,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const openReschedule = (m: TournamentMatchForUmpire) => {
     setRescheduleAt(toLocalDateTimeInput(m.scheduled_at));
     setRescheduleCourt(m.court_number ?? "");
+    setRescheduleReason("");
     setRescheduleFor(m);
   };
 
@@ -203,20 +224,18 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       toast.error("Pick a date and time for the match");
       return;
     }
+    if (!rescheduleReason.trim()) {
+      toast.error("Add a reason for the schedule change");
+      return;
+    }
     setSavingReschedule(true);
     try {
-      const { error } = await supabase
-        .from("tournament_matches")
-        .update({
-          scheduled_at: iso,
-          court_number: rescheduleCourt.trim() || null,
-          status: "scheduled",
-          // Let the reminder fire again for the new slot — players were told
-          // about the old one.
-          reminder_sent: false,
-        })
-        .eq("id", rescheduleFor.id);
-      if (error) throw error;
+      await adminUpdateTournamentMatch(rescheduleFor.id, {
+        scheduled_at: iso,
+        court_number: rescheduleCourt.trim() || null,
+        status: "scheduled",
+        reminder_sent: false,
+      }, rescheduleReason.trim());
 
       toast.success("Match rescheduled", {
         description: `${new Date(iso).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}` +
@@ -234,20 +253,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   /**
    * Record a no-show. side 1|2 = that team advances; 0 = double walkover, where
    * nobody advances and the next-round slot becomes a BYE.
-   *
-   * Goes through the record_tournament_walkover RPC rather than updating the row
-   * directly: the update needs to set winner_side/score AND advance the bracket
-   * atomically, and RLS blocks direct writes to tournament_matches.
    */
   const recordWalkover = async (m: TournamentMatchForUmpire, winnerSide: 0 | 1 | 2) => {
     setSavingWalkover(true);
     try {
-      // Cast: supabase-types-auto.ts is generated and doesn't yet list this RPC.
-      const { error } = await (supabase.rpc as any)("record_tournament_walkover", {
+      await recordTournamentWalkoverService({
         p_match_id: m.id,
         p_winner_side: winnerSide,
       });
-      if (error) throw error;
       toast.success(
         winnerSide === 0
           ? "Double walkover recorded — next round gets a bye"
@@ -268,10 +281,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     e.stopPropagation();
     try {
       setNotifyingId(matchId);
-      const { error } = await supabase.functions.invoke("match-notifier", {
-        body: { type: "manual", match_id: matchId }
-      });
-      if (error) throw error;
+      await notifyTournamentMatch(matchId, "manual");
       toast.success("Notification Sent", {
         description: "Players have been notified via email and push.",
       });
@@ -288,8 +298,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     if (!confirm(`Remove 3rd place match ${m.match_code}? This cannot be undone.`)) return;
     setDeletingMatchId(m.id);
     try {
-      const { error } = await supabase.from("tournament_matches").delete().eq("id", m.id);
-      if (error) throw error;
+      await deleteTournamentMatch(m.id);
       setAllMatches(prev => prev.filter(x => x.id !== m.id));
       toast.success("3rd place match removed");
     } catch (err: any) {
@@ -304,18 +313,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!silent) setLoading(true);
     // Fetch all active tournaments for the picker
-    let allTournamentsQuery = supabase
-      .from("tournaments")
-      .select("id, name")
-      .order("created_at", { ascending: false });
-
-    if (tournamentId) {
-      allTournamentsQuery = allTournamentsQuery.eq("id", tournamentId);
-    } else {
-      allTournamentsQuery = allTournamentsQuery.eq("status", "active");
-    }
-
-    const { data: allTournaments } = await allTournamentsQuery;
+    const allTournaments = await fetchUmpirePickerTournaments(tournamentId);
 
     if (!allTournaments?.length) { setLoading(false); return; }
 
@@ -327,35 +325,20 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       : allTournaments[0].id;
     if (!selectedTournamentId) {
       setSelectedTournamentId(activeTId);
-      try { localStorage.setItem("umpire_selected_tournament", activeTId); } catch {}
+      try { localStorage.setItem("umpire_selected_tournament", activeTId); } catch { /* intentional — localStorage unavailable in private mode or quota exceeded */ }
     }
 
     const tournamentIds = [activeTId];
 
     const [{ data: activeMatchData, error }, { data: doneMatchData }] = await Promise.all([
-      supabase
-        .from("tournament_matches")
-        .select("*")
-        .in("tournament_id", tournamentIds)
-        .in("status", ["scheduled", "in_progress", "pending"])
-        .order("round")
-        .order("match_number"),
-      supabase
-        .from("tournament_matches")
-        .select("*")
-        .in("tournament_id", tournamentIds)
-        .in("status", ["completed", "walkover"])
-        .order("scored_at", { ascending: false })
-        .limit(50),
+      fetchUmpireOpenMatches(tournamentIds),
+      fetchUmpireDoneMatches(tournamentIds),
     ]);
     const matchData = [...(activeMatchData ?? []), ...(doneMatchData ?? [])];
 
     if (error) { if (!silent) toast.error(error.message); setLoading(false); return; }
 
-    const { data: rules } = await supabase
-      .from("tournament_round_rules")
-      .select("*")
-      .in("tournament_id", tournamentIds);
+    const rules = await fetchRoundRulesForTournaments(tournamentIds);
 
     const enriched: TournamentMatchForUmpire[] = (matchData ?? []).map((m: any) => {
       const tournament = allTournaments.find((t) => t.id === m.tournament_id);
@@ -388,17 +371,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
     // Fetch team ties needing official attention (unrevealed or pending lineups)
     try {
-      const { data: tiesData } = await supabase
-        .from("tournament_ties" as any)
-        .select(`
-          *,
-          tournament:tournaments(name),
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
-        `)
-        .in("tournament_id", tournamentIds)
-        .neq("state", "COMPLETED")
-        .order("created_at", { ascending: true });
+      const tiesData = await teamService.getUmpirePendingTies(tournamentIds);
 
       setPendingTies(tiesData || []);
     } catch (tieErr) {
@@ -419,14 +392,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   // and an in-progress scoring session lives in UmpireEngine, so neither is
   // disturbed by a refetch.
   useEffect(() => {
-    const channel = supabase
-      .channel("umpire_tournament_matches")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tournament_matches" },
-        () => { load({ silent: true }); },
-      )
-      .subscribe();
+    const unsubscribe = subscribeToUmpireTournamentMatches(() => { load({ silent: true }); });
 
     const onFocus = () => {
       if (document.visibilityState === "visible") load({ silent: true });
@@ -435,7 +401,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     window.addEventListener("focus", onFocus);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
       document.removeEventListener("visibilitychange", onFocus);
       window.removeEventListener("focus", onFocus);
     };
@@ -763,11 +729,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       const t2Won = m.winner_side === 2 || m.team1_label === "BYE";
                       return (
                         <div className="flex items-center justify-between gap-2 mt-1.5">
-                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
                             {t1Won && <CheckCircle2 className="w-3 h-3 inline mr-0.5 -mt-0.5" />}{m.team1_label ?? "TBD"}
                           </span>
                           <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
-                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
                             {m.team2_label ?? "TBD"}{t2Won && <CheckCircle2 className="w-3 h-3 inline ml-0.5 -mt-0.5" />}
                           </span>
                         </div>
@@ -819,7 +785,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       if (inProgress > 0) parts.push(<span key="l" className="text-amber-400 font-bold">{inProgress} live</span>);
                       if (done > 0) parts.push(<span key="d" className="text-slate-500">{done} done</span>);
                       if (parts.length === 0) return <span>No matches</span>;
-                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600">·</span>, part], []);
+                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600 dark:text-slate-400">·</span>, part], []);
                     })()}
                   </p>
                 </div>
@@ -909,7 +875,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!confirm(`Remove all ${roundMatches.length} 3rd place match(es) for ${selectedCategory}?`)) return;
-                          Promise.all(roundMatches.map(m => supabase.from("tournament_matches").delete().eq("id", m.id)))
+                          deleteTournamentMatches(roundMatches.map(m => m.id))
                             .then(() => {
                               setAllMatches(prev => prev.filter(m => !roundMatches.some(rm => rm.id === m.id)));
                               toast.success("3rd place match(es) removed");
@@ -1051,6 +1017,19 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     })}
                   </div>
                 )}
+
+                <div className="space-y-1.5">
+                  <label htmlFor="reschedule-reason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Reason
+                  </label>
+                  <textarea
+                    id="reschedule-reason"
+                    value={rescheduleReason}
+                    onChange={(e) => setRescheduleReason(e.target.value)}
+                    placeholder="e.g. Court overrun moved this match to the next available slot"
+                    className="w-full min-h-[72px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                  />
+                </div>
               </div>
             );
           })}
@@ -1140,19 +1119,16 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             {selectedMatch.status !== "in_progress" && (
               <button
                 onClick={async () => {
-                  const { data, error } = await supabase.functions.invoke("call-to-court", {
-                    body: { match_id: selectedMatch.id },
-                  });
-                  if (error) {
-                    // Non-2xx: the function's JSON error is on error.context (a Response).
+                  try {
+                    const data = await invokeCallToCourt({ match_id: selectedMatch.id });
+                    toast.success(`Called ${(data as any)?.notified ?? 0} player(s) to court`);
+                  } catch (error: any) {
                     let detail = "";
                     try {
-                      detail = (await (error as any).context?.json?.())?.error ?? "";
+                      detail = (await error?.context?.json?.())?.error ?? "";
                     } catch { /* ignore */ }
-                    toast.error(detail || "Couldn't call the players");
-                    return;
+                    toast.error(detail || error?.message || "Couldn't call the players");
                   }
-                  toast.success(`Called ${(data as any)?.notified ?? 0} player(s) to court`);
                 }}
                 className="w-full py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-bold text-[10px] uppercase tracking-wider transition hover:bg-emerald-500/20 flex items-center justify-center gap-1.5"
               >
@@ -1164,16 +1140,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             {selectedMatch.tie_id && (
               <button
                 onClick={async () => {
-                  const { data: tieData } = await supabase
-                    .from('tournament_ties')
-                    .select('*, team_a:tournament_teams!tournament_ties_team_a_id_fkey(name), team_b:tournament_teams!tournament_ties_team_b_id_fkey(name)')
-                    .eq('id', selectedMatch.tie_id)
-                    .single();
-                  const { data: tourData } = await supabase
-                    .from('tournaments')
-                    .select('*')
-                    .eq('id', selectedMatch.tournament_id)
-                    .single();
+                  const tieData = await teamService.getTieWithTeamNames(selectedMatch.tie_id);
+                  const tourData = await fetchTournamentRowOrNull(selectedMatch.tournament_id);
                   if (tieData) {
                     setActiveTieForConsole({ tie: tieData, tournament: tourData });
                   }
@@ -1259,7 +1227,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               </p>
 
               <button
-                disabled={savingReschedule}
+                disabled={savingReschedule || !rescheduleReason.trim()}
                 onClick={saveReschedule}
                 className="w-full py-3 px-4 rounded-xl bg-blue-500 hover:bg-blue-400 text-black font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2">
                 {savingReschedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}

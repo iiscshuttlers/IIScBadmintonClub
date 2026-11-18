@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchMyTournamentRegistration,
+  upsertTournamentRegistration,
+  withdrawTournamentRegistration,
+} from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
@@ -29,6 +33,7 @@ interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
   tournament: RegTournament;
+  /** Called after registering or withdrawing, so the caller can refresh. */
   onRegistered?: () => void;
 }
 
@@ -62,12 +67,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
   const load = useCallback(async () => {
     if (!profile?.id) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("tournament_registrations")
-      .select("id, status, categories")
-      .eq("tournament_id", tournament.id)
-      .eq("player_id", profile.id)
-      .maybeSingle();
+    const data = await fetchMyTournamentRegistration(tournament.id, profile.id);
     setExisting((data as any) ?? null);
     setCats(((data as any)?.categories as string[]) ?? []);
     setPhone(((profile as any)?.phone as string) ?? "");
@@ -113,9 +113,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
       status: "pending" as const,
     };
     // Upsert so re-registering after a withdrawal/rejection reuses the unique row.
-    const { error } = await supabase
-      .from("tournament_registrations")
-      .upsert(row as any, { onConflict: "tournament_id,player_id" });
+    const { error } = await upsertTournamentRegistration(row as any);
     setSubmitting(false);
     if (error) return toast.error(error.message || "Could not register");
     toast.success("Registration submitted");
@@ -126,14 +124,12 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
   const withdraw = async () => {
     if (!existing) return;
     setSubmitting(true);
-    const { error } = await supabase
-      .from("tournament_registrations")
-      .update({ status: "withdrawn" })
-      .eq("id", existing.id);
+    const { error } = await withdrawTournamentRegistration(existing.id);
     setSubmitting(false);
     if (error) return toast.error(error.message || "Could not withdraw");
     toast.success("You've withdrawn from this event");
     load();
+    onRegistered?.();
   };
 
   if (!open) return null;

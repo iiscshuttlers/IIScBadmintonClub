@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { ThemeScope } from '@/components/tournament/ThemeScope';
 import { StatusChip } from '@/components/tournament/StatusChip';
 import { Shield, Users, Clock, CheckCircle2, ChevronRight, User } from 'lucide-react';
@@ -34,10 +34,7 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
     queryKey: ['team_squad_roster', teamAId],
     queryFn: async () => {
       if (!teamAId) return [];
-      const { data, error } = await supabase
-        .from('tournament_team_members')
-        .select('id, role, player_id, players!tournament_team_members_player_id_fkey(id, full_name, avatar_url, gender)')
-        .eq('team_id', teamAId);
+      const { data, error } = await teamService.getTeamSquadRoster(teamAId);
       if (error) {
         console.error('Error fetching squad A:', error);
         return [];
@@ -52,10 +49,7 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
     queryKey: ['team_squad_roster', teamBId],
     queryFn: async () => {
       if (!teamBId) return [];
-      const { data, error } = await supabase
-        .from('tournament_team_members')
-        .select('id, role, player_id, players!tournament_team_members_player_id_fkey(id, full_name, avatar_url, gender)')
-        .eq('team_id', teamBId);
+      const { data, error } = await teamService.getTeamSquadRoster(teamBId);
       if (error) {
         console.error('Error fetching squad B:', error);
         return [];

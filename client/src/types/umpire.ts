@@ -56,6 +56,7 @@ export type BwfMatchState = {
   umpireName: string;
   isFriendly: boolean;
   isTournamentMatch?: boolean;
+  tournamentId?: string;
   matchNumber?: string;
   category: string;
   inferredCategory?: string;
@@ -94,6 +95,37 @@ export type BwfMatchState = {
 
 export type CardType = "yellow" | "red" | "black";
 export type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
+
+export interface ScoreConflictState {
+  matchId: string;
+  tournamentId?: string;
+  matchNumber?: string;
+  category?: string;
+  team1Label: string;
+  team2Label: string;
+  localRevision: number;
+  serverRevision: number;
+  localWinnerSide: 1 | 2;
+  localScore: string;
+  localSets: string[];
+  serverWinnerSide?: 1 | 2 | null;
+  serverScore?: string | null;
+  serverSets?: string[] | null;
+  serverStatus: string;
+  operationId?: string;
+  correctionOperationId?: string;
+  lastActorName?: string;
+  lastActorId?: string;
+  lastUpdatedAt?: string;
+  downstreamStarted: boolean;
+  downstreamMatchCode?: string;
+}
+
+export interface ScoreCorrectionResult {
+  applied: boolean;
+  revision: number;
+  operationId: string;
+}
 
 // ── Court Visual ──────────────────────────────────────────────────────────────
 

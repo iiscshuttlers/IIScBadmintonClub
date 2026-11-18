@@ -6,8 +6,6 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDepartmentAcronym } from "@/data/departments";
 import { Button } from "@/components/ui/button";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 
 interface TournamentStandingsTabProps {
   matches: any[];
@@ -206,6 +204,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
         </Button>
         <Button variant="outline" size="sm" onClick={async () => {
           if (!tableRef.current) return;
+          const { default: html2canvas } = await import("html2canvas");
           const canvas = await html2canvas(tableRef.current, { backgroundColor: null, scale: 2 });
           const url = canvas.toDataURL("image/png");
           const a = document.createElement("a");
@@ -218,6 +217,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
         </Button>
         <Button variant="outline" size="sm" onClick={async () => {
           if (!tableRef.current) return;
+          const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
           const canvas = await html2canvas(tableRef.current, { scale: 2 });
           const imgData = canvas.toDataURL("image/jpeg", 0.95);
           const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width, canvas.height] });

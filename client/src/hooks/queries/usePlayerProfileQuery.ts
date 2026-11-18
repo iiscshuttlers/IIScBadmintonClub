@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { formatPlayerData, visibleMatchesForViewer, isMatchParticipant } from "@/lib/playerUtils";
+import { visibleMatchesForViewer } from "@/lib/playerUtils";
 import { fetchPlayerMatches } from "@/services/matchService";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
+import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId: string | undefined) {
   const profileQuery = useQuery({
@@ -11,12 +12,12 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
       if (!id) return null;
       const { data, error } = await supabase
         .from("players")
-        .select("*")
+        .select(PLAYER_PUBLIC_COLUMNS)
         .eq("id", id)
         .maybeSingle();
 
       if (error) throw error;
-      return data ? formatPlayerData(data) : null;
+      return (data ?? null) as unknown as PlayerRow | null;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -99,22 +100,11 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
   const rawMatches = matchesQuery.data || [];
   const liveMatches = visibleMatchesForViewer(rawMatches, ownPlayerProfileId);
 
-  const silentRefresh = async () => {
-    await Promise.all([
-      profileQuery.refetch(),
-      matchesQuery.refetch(),
-      rankQuery.refetch(),
-      eloLogsQuery.refetch(),
-    ]);
-  };
-
   return {
-    player: profileQuery.data as PlayerProfileType | null | undefined,
+    player: profileQuery.data as PlayerRow | null | undefined,
     loading,
     eloRank: liveMatches.some(m => m.status === 'confirmed' || m.status === 'completed') ? rankQuery.data : null,
     liveMatches,
     eloLogs: eloLogsQuery.data || [],
-    silentRefresh,
-    isMatchParticipant,
   };
 }

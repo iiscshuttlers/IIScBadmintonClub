@@ -152,7 +152,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
                 </button>
                 {/* Rotate */}
                 <button onClick={() => {
-                  try { if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); showHint("Orientation Unlocked"); } } catch {}
+                  try { if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); showHint("Orientation Unlocked"); } } catch { /* intentional — screen orientation unlock may be unsupported */ }
                   setShowClubControls(false);
                 }} className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/10 flex items-center gap-2">
                   <Smartphone className="w-4 h-4" /> Unlock Rotation

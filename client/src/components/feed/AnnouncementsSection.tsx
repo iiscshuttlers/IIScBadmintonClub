@@ -5,7 +5,7 @@ import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCi
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { SocialCTA } from "@/components/SocialCTA";
-import { supabase } from "@/lib/supabase";
+import { fetchLatestActiveTournament, subscribeToTournaments } from "@/services/tournamentService";
 import DOMPurify from "dompurify";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
@@ -107,40 +107,29 @@ export function AnnouncementsSection() {
   }
 
   const loadLiveTournament = useCallback(() => {
-    supabase
-      .from("tournaments")
-      .select("id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility")
-      .neq("status", "deleted")
-      .neq("status", "draft")
-      .neq("status", "archived")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data?.length) {
-          const t = data[0] as LiveTournament;
-          // Override form_status if deadline has passed
-          if (t.form_close_date && t.form_status !== "disabled") {
-            const closeTime = new Date(t.form_close_date).getTime();
-            if (!isNaN(closeTime) && Date.now() >= closeTime) {
-              t.form_status = "closed";
-            }
+    fetchLatestActiveTournament().then((data) => {
+      if (data) {
+        const t = data as LiveTournament;
+        // Override form_status if deadline has passed
+        if (t.form_close_date && t.form_status !== "disabled") {
+          const closeTime = new Date(t.form_close_date).getTime();
+          if (!isNaN(closeTime) && Date.now() >= closeTime) {
+            t.form_status = "closed";
           }
-          setLiveTournament(t);
-        } else {
-          setLiveTournament(null);
         }
-      });
+        setLiveTournament(t);
+      } else {
+        setLiveTournament(null);
+      }
+    });
   }, []);
 
   useEffect(() => {
     loadLiveTournament();
-    const channel = supabase
-      .channel("announcements_tournament_watch")
-      .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => {
-        loadLiveTournament();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const unsubscribe = subscribeToTournaments(() => {
+      loadLiveTournament();
+    });
+    return () => { unsubscribe(); };
   }, [loadLiveTournament]);
 
   const { data: queryData, isLoading: isQueryLoading } = useQuery({
@@ -260,8 +249,8 @@ export function AnnouncementsSection() {
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
     if (status === "ongoing") return "bg-blue-100 text-blue-700";
-    if (status === "past") return "bg-gray-100 text-muted-foreground";
-    return "bg-gray-100 text-muted-foreground";
+    if (status === "past") return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
+    return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
   }
 
   return (
@@ -361,7 +350,7 @@ export function AnnouncementsSection() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 animate-pulse"
+                  className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 animate-pulse"
                 >
                   <div className="h-6 w-3/4 rounded bg-gray-200" />
                   <div className="flex gap-3">
@@ -491,7 +480,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`w-full px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02] border border-primary/50"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
                           : `${cat.color} hover:shadow-sm`
                       }`}
                     >
@@ -505,7 +494,7 @@ export function AnnouncementsSection() {
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`w-full px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-1.5 ${
                           selectedCategory === cat.id
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02] border border-primary/50"
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
                             : `${cat.color} hover:shadow-sm`
                         }`}
                       >

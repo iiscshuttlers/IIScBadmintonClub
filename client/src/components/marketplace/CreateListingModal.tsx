@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { useRHFDraft } from "@/hooks/useFormDraft";
-import { supabase } from "@/lib/supabase";
+import { hubService } from "@/services/hubService";
 import { toast } from "sonner";
 import { Tag, MapPin, IndianRupee, Image as ImageIcon, CheckCircle, Package } from "lucide-react";
 
@@ -26,19 +26,16 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
     try {
       const priceVal = isGiveaway ? 0 : Math.max(0, parseFloat(data.price) || 0);
       
-      const { error } = await supabase.from('marketplace_listings').insert({
+      await hubService.createMarketplaceListing({
         seller_id: sellerId,
         title: data.title,
         description: data.description,
         price: priceVal,
         condition: data.condition,
         category: data.category,
-        image_url: data.image_url || null,
-        status: 'active',
-        listing_type: listingType
+        image_url: data.image_url || undefined,
+        listing_type: listingType,
       });
-
-      if (error) throw error;
       
       toast.success("Item listed successfully!");
       clearDraft();
@@ -141,7 +138,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {['Racket', 'Shoes', 'Shuttlecocks', 'Accessories', 'Other'].map(cat => (
                 <label key={cat} className="cursor-pointer">
                   <input type="radio" value={cat} {...register("category", { required: true })} className="peer sr-only" defaultChecked={cat === 'Racket'} />
-                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground ${listingType === 'sell' ? 'peer-checked:bg-primary peer-checked:border-primary' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-primary-foreground transition-all`}>
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground ${listingType === 'sell' ? 'peer-checked:bg-primary peer-checked:border-primary peer-checked:text-primary-foreground' : 'peer-checked:bg-indigo-600 peer-checked:border-indigo-600 peer-checked:text-white'} transition-all`}>
                     {cat}
                   </div>
                 </label>
@@ -174,10 +171,10 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className={`w-full mt-4 text-primary-foreground font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary shadow-primary/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
+            className={`w-full mt-4 font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/25' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/25'}`}
           >
             {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-black/20 border-t-black/80 rounded-full animate-spin" />
+              <div className={`w-5 h-5 border-2 rounded-full animate-spin ${listingType === 'sell' ? 'border-primary-foreground/30 border-t-primary-foreground' : 'border-white/30 border-t-white'}`} />
             ) : (
               <>
                 <CheckCircle className="w-5 h-5" /> {listingType === 'sell' ? 'Post Listing' : 'Post Request'}

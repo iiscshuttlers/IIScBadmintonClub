@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { Loader2, RefreshCw, History, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminHistory, HistoryEntry } from "@/contexts/AdminHistoryContext";
@@ -13,12 +13,8 @@ export function UndoHistory() {
 
   const load = useCallback(async (pageNum = 0) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("admin_history")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
-      
+    const { data, error } = await adminService.getAdminHistoryPage(pageNum, PAGE_SIZE);
+
     if (!error && data) {
       if (pageNum === 0) setHistory(data as any);
       else setHistory((prev) => [...prev, ...(data as any)]);

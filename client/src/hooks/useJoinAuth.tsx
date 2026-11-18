@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import type { Session } from "@supabase/supabase-js";
+
+/** The fields read from a thrown auth/network error (each is checked before use). */
+type AuthErrorLike = { message?: string; status?: number; name?: string } | null | undefined;
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -189,7 +192,8 @@ export function useJoinAuth() {
       if (new URLSearchParams(window.location.search).get("add_account") === "true") {
         setLocation("/");
       }
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as AuthErrorLike;
       const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       if (err?.status === 504 || err?.name === "AuthRetryableFetchError" || msg.includes("timed out")) {
         setErrorMsg("Server timed out. Please check your connection and try again.");
@@ -217,7 +221,8 @@ export function useJoinAuth() {
       });
       if (error) throw error;
       setInfoMsg("A new verification link has been sent to your email!");
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as AuthErrorLike;
       const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       setErrorMsg(msg || "Failed to resend verification link. Please try again.");
     } finally {
@@ -274,7 +279,8 @@ export function useJoinAuth() {
       } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
         setLocation("/");
       }
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as AuthErrorLike;
       const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       if (err?.status === 504 || err?.name === "AuthRetryableFetchError" || msg.includes("timed out")) {
         setErrorMsg("Server verification request timed out. The email service may be busy — please wait a moment and try signing in or requesting an OTP.");
@@ -300,7 +306,8 @@ export function useJoinAuth() {
       if (error) throw error;
       setMode("otp-verify");
       setInfoMsg("Login code sent! Check Junk/Spam for IISc emails. If it never arrives, please try a personal Gmail account.");
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as AuthErrorLike;
       const msg: string = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       setErrorMsg(msg.includes("not found") ? "No account found with this email. Please sign up first." : msg || "An error occurred. Please try again.");
     } finally {
@@ -317,7 +324,7 @@ export function useJoinAuth() {
       if (error) throw error;
       if (!data.session) setLoading(false);
       else if (new URLSearchParams(window.location.search).get("add_account") === "true") setLocation("/");
-    } catch (err: any) {
+    } catch {
       setErrorMsg("Invalid or expired code. Please try again.");
       setLoading(false);
     }
@@ -334,7 +341,8 @@ export function useJoinAuth() {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught as AuthErrorLike;
       const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       setErrorMsg(msg || "Failed to initialize Google Sign In.");
       setLoading(false);

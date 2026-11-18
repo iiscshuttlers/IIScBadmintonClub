@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAppMode } from "@/contexts/AppModeContext";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
+import { socialService } from "@/services/socialService";
 import { toast } from "sonner";
 import {
   User,
@@ -84,25 +85,21 @@ export default function PersonalProfilePage() {
     setLocation("/");
   };
 
-  const currentStatus = (profile as any)?.status || "looking";
+  const currentStatus = profile?.status || "looking";
 
   const updateStatus = async (newStatus: string) => {
     if (!profile?.id || updatingStatus) return;
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase.from("players").update({ status: newStatus } as any).eq("id", profile.id);
-      if (error) throw error;
+      await playerService.updatePlayerStatus(profile.id, newStatus);
 
       // Notify buddies
       if (newStatus === "playing" || newStatus === "looking") {
-        supabase.functions.invoke("notify-social", {
-          body: {
-            type: "status_update",
-            from_player_id: profile.id,
-            from_name: profile.full_name || "A buddy",
-            new_status: newStatus,
-          },
-        }).catch((err) => console.error("Failed to notify buddies of status update:", err));
+        void socialService.notifyStatusUpdate(
+          profile.id,
+          profile.full_name || "A buddy",
+          newStatus
+        );
       }
 
       await refreshProfile();
@@ -403,7 +400,7 @@ export default function PersonalProfilePage() {
                 />
               ) : (
                 <div 
-                  className="w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-white font-bold text-6xl shadow-xl transition-transform duration-200"
+                  className="w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white font-bold text-6xl shadow-xl transition-transform duration-200"
                   style={{ transform: `scale(${zoomLevel})` }}
                 >
                   {(profile?.full_name || "U")[0]?.toUpperCase()}

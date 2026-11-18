@@ -131,7 +131,8 @@ export async function enableWebPush(): Promise<boolean> {
     }
 
     return true;
-  } catch (err: any) {
+  } catch (caught) {
+    const err = caught as { name?: string; code?: string; message?: string };
     // Suppress expected errors on environments without valid FCM push credentials (AbortError, token-subscribe-failed, 401)
     if (
       err.name === "AbortError" ||
@@ -157,7 +158,7 @@ export function usePushNotifications(userId: string | undefined) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !userId) return;
 
-    let isRegistered = false;
+    const listenerHandles: Array<{ remove: () => Promise<void> | void }> = [];
 
     const createAndroidChannels = async () => {
       if (Capacitor.getPlatform() !== 'android') return;
@@ -182,7 +183,7 @@ export function usePushNotifications(userId: string | undefined) {
         // 1. Attach listeners FIRST — register() fires the "registration" event
         //    synchronously, so the listener must already be in place or the token
         //    is emitted before anyone is listening and never gets saved.
-        await PushNotifications.addListener("registration", async (token) => {
+        listenerHandles.push(await PushNotifications.addListener("registration", async (token) => {
           if (userId && token.value) {
             console.log("[Push] Token received, registering via edge function. platform:", Capacitor.getPlatform());
             try {
@@ -218,14 +219,14 @@ export function usePushNotifications(userId: string | undefined) {
             console.warn("[Push] Registration event fired but userId or token is missing. userId:", userId);
             Sentry.captureMessage(`[Push] Registration event fired but userId or token is missing. userId: ${userId}`, "warning");
           }
-        });
+        }));
 
-        await PushNotifications.addListener("registrationError", (error) => {
+        listenerHandles.push(await PushNotifications.addListener("registrationError", (error) => {
           console.error("Error on registration: " + JSON.stringify(error));
           Sentry.captureMessage(`Error on registration: ${JSON.stringify(error)}`, "error");
-        });
+        }));
 
-        await PushNotifications.addListener(
+        listenerHandles.push(await PushNotifications.addListener(
           "pushNotificationReceived",
           async (notification) => {
             console.log("Push received: " + JSON.stringify(notification));
@@ -233,7 +234,7 @@ export function usePushNotifications(userId: string | undefined) {
             // We just need to play the appropriate custom sound if needed.
             
             // Get channelId either from data or the root
-            const channelId = notification.data?.channelId || (notification as any).channelId || "notify_whistle";
+            const channelId = notification.data?.channelId || (notification as typeof notification & { channelId?: string }).channelId || "notify_whistle";
 
             // Play the corresponding foreground sound
             if (channelId === "notify_smash") playSmashSound();
@@ -242,52 +243,7 @@ export function usePushNotifications(userId: string | undefined) {
             else if (channelId === "notify_victory") playVictorySound();
             else playWhistleSound();
           },
-        );
-
-        await PushNotifications.addListener(
-          "pushNotificationActionPerformed",
-          (notification) => {
-            console.log("Push action performed: " + JSON.stringify(notification));
-            const data = notification.notification.data || (notification as any).data;
-            // Capacitor builds use a relative base ("./"), but the webview
-            // serves the app from the origin root. Stripping the trailing slash
-            // would leave ".", making every href below relative and compounding
-            // the current path — tapping a notification from /player/a would
-            // navigate to /player/player/b. Only web bases are real prefixes.
-            const rawBase = import.meta.env.BASE_URL || "/";
-            const baseUrl = rawBase.startsWith(".") ? "" : rawBase.replace(/\/$/, "");
-
-            // Newer senders include an in-app path; it wins over type routing.
-            if (userId && data && typeof data.link === "string" && /^\/(?!\/)/.test(data.link)) {
-              window.location.href = `${baseUrl}${data.link}`;
-              return;
-            }
-
-            if (userId && data) {
-              const type = data.type;
-              const action = data.action;
-              const matchId = data.matchId || data.match_id;
-
-              if ((type === "player_profile" || type === "buddy_request" || type === "follow" || type === "status_update" || type === "elo_milestone") && data.player_id) {
-                window.location.href = `${baseUrl}/player/${data.player_id}`;
-              } else if (action === "view_match" || type === "match_confirmation" || type === "match_logged" || type === "kudos") {
-                window.location.href = `${baseUrl}/my-matches${matchId ? `?highlight=${matchId}` : ""}`;
-              } else if (type === "challenge_expiry" || type === "new_challenge" || action === "view_challenges" || data.tab === "challenges") {
-                window.location.href = `${baseUrl}/my-matches`;
-              } else if (type === "find_lost" || type === "find_lost_post" || action === "view_find_lost") {
-                window.location.href = `${baseUrl}/hub?tab=lost-found`;
-              } else if (type === "live_score" || action === "view_live_score") {
-                window.location.href = `${baseUrl}/pulse`;
-              } else if (type === "announcement" || type === "weekly_digest" || action === "view_announcements") {
-                window.location.href = `${baseUrl}/pulse#announcements`;
-              } else if (matchId) {
-                window.location.href = `${baseUrl}/my-matches?highlight=${matchId}`;
-              } else {
-                window.location.href = `${baseUrl}/pulse`;
-              }
-            }
-          },
-        );
+        ));
 
         // 2. Create Android channels before registering
         await createAndroidChannels();
@@ -305,7 +261,6 @@ export function usePushNotifications(userId: string | undefined) {
         }
 
         await PushNotifications.register();
-        isRegistered = true;
       } catch (err) {
         console.warn("Failed to register push notifications", err);
         Sentry.captureException(err, { extra: { context: "PushNotifications.register" } });
@@ -323,9 +278,7 @@ export function usePushNotifications(userId: string | undefined) {
 
     return () => {
       clearInterval(refreshInterval);
-      if (isRegistered) {
-        PushNotifications.removeAllListeners();
-      }
+      for (const handle of listenerHandles) void handle.remove();
     };
   }, [userId]);
 

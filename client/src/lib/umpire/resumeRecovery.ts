@@ -1,4 +1,4 @@
-import type { BwfMatchState } from "@/types/umpire";
+import type { BwfMatchState, PointLogEntry } from "@/types/umpire";
 
 const CAT_MAP: Record<string, string> = {
   MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
@@ -49,6 +49,39 @@ export function splitSets(row: TournamentScoreRow): { completed: string[]; curre
 }
 
 /**
+ * Restore the point log from the server copy (tournament_match_point_logs,
+ * compact `[game, side, t1, t2, server, ts]` entries) — but only when it
+ * agrees with the tournament row: same number of completed games and the
+ * same running score at its last entry. Otherwise null (partial recovery).
+ * Entries carry no `prev` serve snapshot, so undo falls back to score-only.
+ */
+export function restorePointLog(
+  stored: unknown,
+  completedGames: number,
+  current: [number, number],
+): { pointLog: PointLogEntry[]; serverTeam: 1 | 2 } | null {
+  if (!Array.isArray(stored) || stored.length === 0) return null;
+  const log: PointLogEntry[] = [];
+  for (const e of stored) {
+    if (!Array.isArray(e) || e.length < 5) return null;
+    const [game, side, t1, t2, server, ts] = e.map(Number);
+    if (![game, side, t1, t2, server].every(Number.isFinite)) return null;
+    log.push({
+      gameNum: game,
+      team: side === 1 ? 1 : side === 2 ? 2 : "let",
+      t1Score: t1,
+      t2Score: t2,
+      serverTeam: server === 2 ? 2 : 1,
+      ts: Number.isFinite(ts) ? ts : 0,
+    });
+  }
+  const last = log[log.length - 1];
+  if (last.gameNum !== completedGames + 1) return null;
+  if (last.t1Score !== current[0] || last.t2Score !== current[1]) return null;
+  return { pointLog: log, serverTeam: last.serverTeam };
+}
+
+/**
  * Rebuild a playable match from what the tournament row still records, for a
  * match whose live snapshot is gone. Scores and games survive in the row;
  * the point log and serve state do not, so the serve is reset and the umpire
@@ -58,8 +91,10 @@ export function recoverMatchFromTournamentRow(
   row: TournamentRowForRecovery,
   scores: TournamentScoreRow,
   umpire: { id: string; name: string },
+  storedPoints?: unknown,
 ): BwfMatchState {
   const { completed, current } = splitSets(scores);
+  const restored = restorePointLog(storedPoints, completed.length, current);
 
   const gamesOf = (side: 0 | 1) =>
     completed.filter(s => {
@@ -102,7 +137,8 @@ export function recoverMatchFromTournamentRow(
     },
     // Serve state is not stored on the tournament row. Start from the standard
     // opening line-up; the umpire corrects it from Settings if it is wrong.
-    serverTeam: 1,
+    // The stored log knows which side served last; the player index is not stored.
+    serverTeam: restored?.serverTeam ?? 1,
     serverPlayerIndex: 0,
     receiverPlayerIndex: 0,
     t1RightCourt: 0,
@@ -111,7 +147,7 @@ export function recoverMatchFromTournamentRow(
     t2LastServedBy: 1,
     // Ends change after every completed game.
     endsSwapped: completed.length % 2 === 1,
-    pointLog: [],
+    pointLog: restored?.pointLog ?? [],
     status: "playing",
     setsHistory: completed,
   } as BwfMatchState;

@@ -22,10 +22,10 @@ export function usePlayerMatches(playerId: string, limit = 50) {
 export function useLiveSiteData(key: string, refetchInterval: number | false = false) {
   return useQuery({
     queryKey: ["site_data", key],
-    queryFn: async () => {
+    queryFn: async (): Promise<unknown> => {
       const { data, error } = await supabase.from("site_data").select("value").eq("key", key).single();
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.value as any;
+      return data?.value;
     },
     staleTime: 1000 * 60 * 60, // 1 hour (revalidated by real-time)
     refetchInterval: typeof refetchInterval === 'number' 

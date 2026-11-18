@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Flag, Trophy, Flame, MapPinned, Medal, Lock } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchUmpiredMatches } from "@/services/matchService";
 import { computeUmpireRecord, type UmpiredMatch } from "@/lib/umpireRecord";
 
 const BADGE_ICON: Record<string, typeof Flag> = {
@@ -25,13 +25,7 @@ export function OfficiatingRecord({ playerId }: { playerId: string }) {
   const { data } = useQuery({
     queryKey: ["umpired-matches", playerId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tournament_matches")
-        .select("id, tournament_id, category, round_name, team1_label, team2_label, score, status, started_at, ended_at, scheduled_at, tournaments(name)")
-        .eq("umpired_by", playerId)
-        .in("status", ["completed", "walkover"])
-        .limit(1000);
-      if (error) throw error;
+      const data = await fetchUmpiredMatches(playerId);
       return (data ?? []) as unknown as UmpiredMatch[];
     },
     staleTime: 5 * 60_000,

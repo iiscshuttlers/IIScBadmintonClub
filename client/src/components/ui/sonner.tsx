@@ -17,7 +17,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description:
             "!text-slate-300 !opacity-100 font-medium text-xs mt-0.5",
           actionButton:
-            "!bg-primary !text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl hover:!bg-primary/90 transition shadow-sm",
+            "!bg-primary !text-primary-foreground font-black text-xs px-3 py-1.5 rounded-xl hover:!bg-primary/90 transition shadow-sm",
           cancelButton:
             "!bg-slate-800 !text-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl hover:!bg-slate-700 transition",
         },

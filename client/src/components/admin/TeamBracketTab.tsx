@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
-import { supabase } from '@/lib/supabase';
 import { Trophy, Swords, Trash2, Calendar, Edit3, CheckCircle2, AlertCircle, Loader2, Layers, Filter, Eye, X, Settings2, Radio, Clock, ShieldCheck, GitFork, LayoutList, CalendarClock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/contexts/ConfirmContext';
@@ -11,6 +10,8 @@ import { TieUmpireConsole } from '@/components/umpire/TieUmpireConsole';
 import { TieVisualLineupModal } from '@/components/events/TieVisualLineupModal';
 import { BracketVisual, type BracketMatch } from '@/components/tournament/BracketVisual';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { teamService } from '@/services/teamService';
+import { updateTournament } from '@/services/tournamentService';
 
 export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any; isMasterAdmin: boolean }) {
   const { confirm } = useConfirm();
@@ -33,18 +34,18 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: tData }, { data: tieData }] = await Promise.all([
-      supabase.from("tournament_teams").select("*").eq("tournament_id", tournament.id).eq("status", "ACTIVE").order("seed"),
-      supabase.from("tournament_ties").select(`
-        *,
-        team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
-        team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url),
-        matches:tournament_matches(id, status, court_number, rubber_order, match_code)
-      `).eq("tournament_id", tournament.id).order("round_number").order("tie_code")
-    ]);
-    setTeams(tData ?? []);
-    setTies(tieData ?? []);
-    setLoading(false);
+    try {
+      const [tData, tieData] = await Promise.all([
+        teamService.getTournamentTeams(tournament.id),
+        teamService.getTournamentTies(tournament.id)
+      ]);
+      setTeams(tData ?? []);
+      setTies(tieData ?? []);
+    } catch (e: any) {
+      toast.error("Failed to load bracket data");
+    } finally {
+      setLoading(false);
+    }
   }, [tournament.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -58,31 +59,19 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       if (!isNaN(d.getTime())) isoAt = d.toISOString();
     }
 
-    // 1. Update tie scheduled_at
-    const { error: tieErr } = await supabase
-      .from('tournament_ties')
-      .update({ scheduled_at: isoAt })
-      .eq('id', editingScheduleTie.tieId);
-
-    // 2. Also update all rubbers under this tie if court or time was provided
-    if (editingScheduleTie.court !== undefined || isoAt) {
-      const rubberUpdates: Record<string, any> = {};
-      if (editingScheduleTie.court !== undefined) rubberUpdates.court_number = editingScheduleTie.court.trim() || null;
-      if (isoAt) rubberUpdates.scheduled_at = isoAt;
-
-      await supabase
-        .from('tournament_matches')
-        .update(rubberUpdates as any)
-        .eq('tie_id', editingScheduleTie.tieId);
-    }
-
-    setSavingSchedule(false);
-    if (tieErr) {
-      toast.error(tieErr.message);
-    } else {
+    try {
+      await teamService.updateTieSchedule(
+        editingScheduleTie.tieId,
+        editingScheduleTie.court !== undefined ? editingScheduleTie.court.trim() || null : null,
+        isoAt
+      );
       toast.success("Tie schedule saved!");
       setEditingScheduleTie(null);
       await load();
+    } catch (tieErr: any) {
+      toast.error(tieErr.message);
+    } finally {
+      setSavingSchedule(false);
     }
   };
 
@@ -105,13 +94,13 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
         confirmVariant: "danger"
       });
       if (!ok) return;
-      await supabase.from("tournament_ties").delete().eq("tournament_id", tournament.id);
+      await teamService.deleteTournamentTies(tournament.id);
     }
 
     // 1. Update pool assignments on tournament_teams
     if (Object.keys(poolAssignments).length > 0) {
       for (const [teamId, pool] of Object.entries(poolAssignments)) {
-        await supabase.from("tournament_teams").update({ pool }).eq("id", teamId);
+        await teamService.updateTeamPool(teamId, pool);
       }
     }
 
@@ -122,11 +111,11 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       ...tieDeciderConfig
     };
 
-    await supabase.from("tournaments").update({
+    await updateTournament(tournament.id, {
       tie_format_config: updatedConfig,
       tie_points_win: tieDeciderConfig.tie_points_win ?? 2,
       tie_points_draw: tieDeciderConfig.tie_points_draw ?? 1
-    }).eq("id", tournament.id);
+    });
 
     // 3. Insert generated ties
     const tieInserts = generatedTies.map(t => ({
@@ -144,17 +133,18 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       _temp_loser_advances_to: t.loser_advances_to_tie_code || null
     }));
 
-    const { data: insertedTies, error } = await supabase.from("tournament_ties").insert(
-      tieInserts.map(({ _temp_advances_to, _temp_loser_advances_to, ...rest }) => rest)
-    ).select();
-
-    if (error) {
+    let insertedTies: any[] = [];
+    try {
+      insertedTies = await teamService.insertTournamentTies(
+        tieInserts.map(({ _temp_advances_to, _temp_loser_advances_to, ...rest }) => rest)
+      );
+    } catch (error: any) {
       toast.error(`Error creating ties: ${error.message}`);
       return;
     }
 
     // 4. Link advances_to_tie & loser_advances_to_tie
-    if (insertedTies) {
+    if (insertedTies && insertedTies.length > 0) {
       const codeToId = new Map(insertedTies.map((t: any) => [t.tie_code, t.id]));
       
       for (const tie of tieInserts) {
@@ -172,7 +162,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
         }
 
         if (Object.keys(updatePayload).length > 0) {
-          await supabase.from("tournament_ties").update(updatePayload).eq("id", currentId);
+          await teamService.updateTournamentTie(currentId, updatePayload);
         }
       }
 
@@ -231,7 +221,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       }
 
       if (matchInserts.length > 0) {
-        await supabase.from("tournament_matches").insert(matchInserts);
+        await teamService.insertTournamentMatches(matchInserts);
       }
     }
 
@@ -247,7 +237,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       confirmVariant: "danger"
     });
     if (!ok) return;
-    await supabase.from("tournament_ties").delete().eq("tournament_id", tournament.id);
+    await teamService.deleteTournamentTies(tournament.id);
     toast.success("Bracket cleared.");
     await load();
   };
@@ -415,14 +405,12 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
           {ties.some(t => t.stage === 'POOL') && ties.some(t => t.stage === 'KNOCKOUT') && (
             <button
               onClick={async () => {
-                const { data, error } = await supabase.rpc('populate_playoff_qualifiers_from_standings', {
-                  p_tournament_id: tournament.id
-                });
-                if (error) {
-                  toast.error(`Failed to advance qualifiers: ${error.message}`);
-                } else {
+                try {
+                  await teamService.populatePlayoffQualifiers(tournament.id);
                   toast.success("Pool qualifiers advanced into playoff bracket successfully!");
                   await load();
+                } catch (error: any) {
+                  toast.error(`Failed to advance qualifiers: ${error.message}`);
                 }
               }}
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 rounded-xl font-bold transition-colors text-xs"
@@ -454,7 +442,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
               }
               setModalOpen(true);
             }} 
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-primary text-slate-950 hover:opacity-90 rounded-xl font-bold shadow-md transition-opacity text-xs"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold shadow-md transition-opacity text-xs"
           >
             <Swords className="w-4 h-4" /> {ties.length > 0 ? "Regenerate Bracket" : "Generate Bracket"}
           </button>
@@ -490,7 +478,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                       isActive
                         ? isLivePill
                           ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-[1.02]'
-                          : 'bg-primary text-slate-950 shadow-md shadow-primary/20 scale-[1.02]'
+                          : 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -520,7 +508,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                   viewMode === 'visual'
-                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
+                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground shadow-sm scale-[1.02]'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
@@ -534,7 +522,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
                   viewMode === 'list'
-                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-slate-950 shadow-sm scale-[1.02]'
+                    ? 'bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground shadow-sm scale-[1.02]'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
@@ -904,7 +892,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                     <button
                       type="button"
                       onClick={() => setSelectedTieForConsole(tie)}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-slate-950 hover:opacity-90 transition-all shadow-xs"
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-xs"
                     >
                       <Eye className="w-3.5 h-3.5" /> Umpire Reveal &amp; Lineup
                     </button>
@@ -966,7 +954,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                         type="button"
                         onClick={saveTieSchedule}
                         disabled={savingSchedule}
-                        className="px-4 py-1.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                        className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                       >
                         {savingSchedule ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                         Save Schedule

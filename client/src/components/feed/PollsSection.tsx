@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart2, CheckCircle2, Plus, Trash2, Save, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -209,21 +208,17 @@ function CreatePollForm({
       tournament_id: tournamentId,
     };
 
-    const { data: existing } = await supabase.from("site_data").select("value").eq("key", "polls").maybeSingle();
-    const polls: Poll[] = existing?.value?.polls || [];
-    polls.unshift(poll);
-
-    await supabase.from("site_data").upsert({ key: "polls", value: { polls } }, { onConflict: "key" });
+    const existingPolls = await feedService.getPolls();
+    existingPolls.unshift(poll);
+    await feedService.savePolls(existingPolls);
     
     if (notify) {
       toast.info("Sending push notification...");
       try {
-        await supabase.functions.invoke("send-announcement", {
-          body: {
-            title: "New Community Poll!",
-            body: question.trim(),
-            admin_email: session?.user?.email ?? "admin",
-          },
+        await feedService.sendAnnouncement({
+          title: "New Community Poll!",
+          body: question.trim(),
+          admin_email: session?.user?.email ?? "admin",
         });
       } catch (err) {
         toast.error("Failed to send push notification");
@@ -302,9 +297,14 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
   const [showCreate, setShowCreate] = useState(false);
 
   const fetchPolls = useCallback(async () => {
-    const { data } = await supabase.from("site_data").select("value").eq("key", "polls").maybeSingle();
-    setPolls(data?.value?.polls || []);
-    setLoading(false);
+    try {
+      const data = await feedService.getPolls();
+      setPolls(data);
+    } catch {
+      setPolls([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchPolls(); }, [fetchPolls]);
@@ -326,8 +326,7 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
       };
     }));
 
-    const { data } = await supabase.from("site_data").select("value").eq("key", "polls").maybeSingle();
-    const allPolls: Poll[] = data?.value?.polls || [];
+    const allPolls = await feedService.getPolls();
     const updated = allPolls.map(p => {
       if (p.id !== pollId) return p;
       return {
@@ -340,20 +339,20 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
         }))
       };
     });
-    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    await feedService.savePolls(updated);
   };
 
   const handleToggleReveal = async (pollId: string, reveal: boolean) => {
     const updated = polls.map(p => p.id === pollId ? { ...p, results_revealed: reveal } : p);
     setPolls(updated);
-    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    await feedService.savePolls(updated);
     toast.success(reveal ? "Poll results revealed to users" : "Poll results hidden");
   };
 
   const handleArchive = async (pollId: string, archive: boolean) => {
     const updated = polls.map(p => p.id === pollId ? { ...p, is_archived: archive } : p);
     setPolls(updated);
-    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    await feedService.savePolls(updated);
     toast.success(archive ? "Poll archived" : "Poll restored");
   };
 
@@ -367,7 +366,7 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
     if (!ok) return;
     const updated = polls.filter(p => p.id !== pollId);
     setPolls(updated);
-    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    await feedService.savePolls(updated);
     toast.success("Poll deleted");
   };
 
@@ -381,12 +380,10 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
     if (!ok) return;
     toast.info("Sending push notification...");
     try {
-      await supabase.functions.invoke("send-announcement", {
-        body: {
-          title: "New Community Poll!",
-          body: poll.question,
-          admin_email: session?.user?.email ?? "admin",
-        },
+      await feedService.sendAnnouncement({
+        title: "New Community Poll!",
+        body: poll.question,
+        admin_email: session?.user?.email ?? "admin",
       });
       toast.success("Push notification sent!");
     } catch (err) {

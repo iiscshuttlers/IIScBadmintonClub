@@ -1,95 +1,118 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Preferences } from "@capacitor/preferences";
 import { App } from "@capacitor/app";
 import type { BwfMatchState } from "@/types/umpire";
+import { umpireService } from "@/services/umpireService";
+import {
+  enqueueLatestSnapshot,
+  parseOfflineQueue,
+  removeAcknowledgedSnapshots,
+  removeSnapshotsForMatch,
+  type QueuedUmpireAction,
+} from "@/lib/umpire/offlineQueue";
 
 const OFFLINE_QUEUE_KEY = "umpire_offline_queue_v1";
 
-export interface QueuedUmpireAction {
-  id: string;
-  matchId: string;
-  timestamp: number;
-  matchState: BwfMatchState;
-}
+export type OfflineSyncStatus = "idle" | "saved-locally" | "syncing" | "confirmed" | "error";
 
-export function useOfflineUmpireSync() {
+export function useOfflineUmpireSync(ownerId: string) {
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [queuedCount, setQueuedCount] = useState<number>(0);
+  const [syncStatus, setSyncStatus] = useState<OfflineSyncStatus>("idle");
+  const mutationChainRef = useRef<Promise<void>>(Promise.resolve());
+  const flushPromiseRef = useRef<Promise<void> | null>(null);
+  const readQueue = useCallback(async () => {
+    const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
+    return parseOfflineQueue(value);
+  }, []);
+
+  const writeQueue = useCallback(async (items: QueuedUmpireAction[]) => {
+    if (items.length === 0) await Preferences.remove({ key: OFFLINE_QUEUE_KEY });
+    else await Preferences.set({ key: OFFLINE_QUEUE_KEY, value: JSON.stringify(items) });
+    setQueuedCount(items.filter((item) => item.ownerId === ownerId).length);
+  }, [ownerId]);
+
+  const mutateQueue = useCallback((mutate: (items: QueuedUmpireAction[]) => QueuedUmpireAction[]) => {
+    const operation = mutationChainRef.current.then(async () => {
+      const items = await readQueue();
+      await writeQueue(mutate(items));
+    });
+    mutationChainRef.current = operation.catch(() => undefined);
+    return operation;
+  }, [readQueue, writeQueue]);
 
   const updateQueueCount = useCallback(async () => {
     try {
-      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
-      const items: QueuedUmpireAction[] = value ? JSON.parse(value) : [];
-      setQueuedCount(items.length);
+      const items = await readQueue();
+      // Persist the quarantine marker when upgrading unattributed legacy entries.
+      await writeQueue(items);
     } catch {
       setQueuedCount(0);
     }
-  }, []);
+  }, [readQueue, writeQueue]);
 
-  const queueMatchStateUpdate = useCallback(async (matchState: BwfMatchState) => {
+  const queueMatchStateUpdate = useCallback(async (matchId: string, matchState: BwfMatchState) => {
     try {
-      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
-      const items: QueuedUmpireAction[] = value ? JSON.parse(value) : [];
-      
-      const index = items.findIndex(i => i.matchId === matchState.id);
       const action: QueuedUmpireAction = {
         id: crypto.randomUUID(),
-        matchId: matchState.id,
+        matchId,
+        ownerId,
         timestamp: Date.now(),
         matchState,
       };
-
-      if (index >= 0) {
-        items[index] = action;
-      } else {
-        items.push(action);
-      }
-
-      await Preferences.set({ key: OFFLINE_QUEUE_KEY, value: JSON.stringify(items) });
-      setQueuedCount(items.length);
+      await mutateQueue((items) => enqueueLatestSnapshot(items, action));
+      setSyncStatus("saved-locally");
     } catch (e) {
       console.error("Failed to queue offline match state update", e);
+      setSyncStatus("error");
+      throw e;
     }
-  }, []);
+  }, [mutateQueue, ownerId]);
+
+  const clearMatchFromQueue = useCallback(async (matchId: string) => {
+    try {
+      await mutateQueue((items) => removeSnapshotsForMatch(items, matchId, ownerId));
+    } catch (e) {
+      console.error("Failed to clear match from offline queue", e);
+    }
+  }, [mutateQueue, ownerId]);
 
   const flushOfflineQueue = useCallback(async () => {
-    try {
-      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
-      if (!value) return;
-      
-      const items: QueuedUmpireAction[] = JSON.parse(value);
-      if (items.length === 0) return;
+    if (flushPromiseRef.current) return flushPromiseRef.current;
 
-      toast.info(`Syncing ${items.length} offline score update(s)...`);
+    const flush = (async () => {
+      try {
+        await mutationChainRef.current;
+        const snapshot = (await readQueue()).filter((item) => item.ownerId === ownerId);
+        if (snapshot.length === 0) {
+          setSyncStatus("idle");
+          return;
+        }
 
-      const { data } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "live_matches")
-        .maybeSingle();
+        setSyncStatus("syncing");
+        toast.info(`Syncing ${snapshot.length} offline score update(s)...`);
+        const acknowledgedIds = new Set<string>();
+        for (const item of snapshot) {
+          await umpireService.upsertLiveMatch(item.matchId, item.matchState);
+          acknowledgedIds.add(item.id);
+        }
 
-      const liveMatches: Record<string, BwfMatchState> = (data?.value as any) || {};
-
-      for (const item of items) {
-        liveMatches[item.matchId] = item.matchState;
+        await mutateQueue((current) => removeAcknowledgedSnapshots(current, acknowledgedIds));
+        setSyncStatus("confirmed");
+        toast.success("Offline scores confirmed by the server");
+      } catch (e) {
+        console.error("Failed to flush offline umpire queue", e);
+        setSyncStatus("error");
+        toast.error("Offline sync error: " + ((e instanceof Error && e.message) || "Check connection"));
+      } finally {
+        flushPromiseRef.current = null;
       }
+    })();
 
-      const { error } = await supabase
-        .from("site_data")
-        .upsert({ key: "live_matches", value: liveMatches }, { onConflict: "key" });
-
-      if (error) throw error;
-
-      await Preferences.remove({ key: OFFLINE_QUEUE_KEY });
-      setQueuedCount(0);
-      toast.success("Offline scores successfully synced!");
-    } catch (e: any) {
-      console.error("Failed to flush offline umpire queue", e);
-      toast.error("Offline sync error: " + (e?.message || "Check connection"));
-    }
-  }, []);
+    flushPromiseRef.current = flush;
+    return flush;
+  }, [mutateQueue, ownerId, readQueue]);
 
   useEffect(() => {
     updateQueueCount();
@@ -123,7 +146,9 @@ export function useOfflineUmpireSync() {
   return {
     isOffline,
     queuedCount,
+    syncStatus,
     queueMatchStateUpdate,
+    clearMatchFromQueue,
     flushOfflineQueue,
   };
 }

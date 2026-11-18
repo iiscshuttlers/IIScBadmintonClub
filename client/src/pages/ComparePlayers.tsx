@@ -8,15 +8,13 @@ import { fetchPlayerMatches } from "@/services/matchService";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
-import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
-import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler, Sparkles, Loader2 } from "lucide-react";
+import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
 import { calculateRanksMap } from "@/lib/rankingUtils";
-import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
+import { generateMatchPrediction } from "@/lib/aiPredictor";
 import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
-import { toast } from "sonner";
 import {
   LineChart,
   Line,
@@ -30,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "@/components/feed/MatchCard";
 import { InfoModal } from "@/components/InfoModal";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
+import { eligibilityOf, relation, winnerOf, type ComparisonRow } from "@/lib/comparison";
 
 export default function ComparePlayers() {
   const [match, rawParams] = useRoute("/compare/:p1/:p2");
@@ -80,16 +79,18 @@ export default function ComparePlayers() {
       setPlayer2(p2Data);
 
       // Fetch head to head matches
-      const matchesData = await fetchPlayerMatches(p1, 200);
+      const matchesData = await fetchPlayerMatches(p1, 1000);
 
       if (matchesData) {
         // Reverse because we need ascending order for trend charts
         const ascMatches = [...matchesData].reverse();
         // Filter specifically for head to head (they are on opposing teams)
+        // Shared WP8 policy: opposite sides, finished, with a recorded winner.
+        // Walkovers and unfinished/disputed rows are left to the full
+        // head-to-head page so these totals always reconcile with the list.
         const h2h = ascMatches.filter(m => {
-          const p1Team = m.player1_id === p1 || m.team1_partner_id === p1 ? 1 : (m.player2_id === p1 || m.team2_partner_id === p1 ? 2 : 0);
-          const p2Team = m.player1_id === p2 || m.team1_partner_id === p2 ? 1 : (m.player2_id === p2 || m.team2_partner_id === p2 ? 2 : 0);
-          return p1Team !== 0 && p2Team !== 0 && p1Team !== p2Team;
+          const row = toComparisonRow(m);
+          return relation(row, { ids: [p1] }, { ids: [p2] })?.kind === "against" && eligibilityOf(row).eligibility === "counted";
         });
         setMatches(h2h);
       }
@@ -116,7 +117,7 @@ export default function ComparePlayers() {
 
   for (const m of matches) {
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+    const winnerTeam = winnerOf(toComparisonRow(m));
     
     if (winnerTeam === p1Team) p1Wins++;
     else p2Wins++;
@@ -138,7 +139,7 @@ export default function ComparePlayers() {
   for (let i = matches.length - 1; i >= 0; i--) {
     const m = matches[i];
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+    const winnerTeam = winnerOf(toComparisonRow(m));
     
     if (winnerTeam === p1Team) {
       if (p2Streak > 0) break;
@@ -159,7 +160,7 @@ export default function ComparePlayers() {
     let fP1Wins = 0, fP2Wins = 0;
     for (const m of fmtMatches) {
       const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-      const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+      const winnerTeam = winnerOf(toComparisonRow(m));
       if (winnerTeam === p1Team) fP1Wins++; else fP2Wins++;
     }
     return { format: fmt, p1Wins: fP1Wins, p2Wins: fP2Wins, total: fmtMatches.length };
@@ -216,8 +217,11 @@ export default function ComparePlayers() {
           <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-200 dark:border-slate-700">
             <Trophy className="w-5 h-5 text-amber-500" />
           </div>
-          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Encounters</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Counted meetings</div>
           <div className="text-xl font-black text-muted-foreground dark:text-slate-300">{matches.length}</div>
+          <Link href={`/h2h?a=${player1.id}&b=${player2.id}`} className="mt-1 inline-flex items-center min-h-[44px] px-2 text-[11px] font-bold text-primary underline">
+            Full head-to-head
+          </Link>
         </div>
 
         <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-blue-500 rounded-3xl overflow-hidden relative">
@@ -406,8 +410,6 @@ export default function ComparePlayers() {
                   key={m.id}
                   match={m}
                   currentUser={session?.user}
-                  isKudosed={false}
-                  kudosCount={0}
                   hideActions={true}
                 />
               ))}
@@ -427,23 +429,6 @@ export default function ComparePlayers() {
 
 function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { player1: PlayerRow, player2: PlayerRow, p1Wins: number, p2Wins: number, matches: MatchWithPlayers[] }) {
   const prediction = generateMatchPrediction(player1, player2, p1Wins, p2Wins, matches);
-  const hasGeminiKey = !!import.meta.env.VITE_GEMINI_API_KEY;
-  
-  const [deepAnalysis, setDeepAnalysis] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleGenerateDeepAnalysis = async () => {
-    setIsLoading(true);
-    try {
-      const result = await fetchGeminiPunditAnalysis(player1, player2, p1Wins, p2Wins);
-      setDeepAnalysis(result);
-      toast.success("Deep AI analysis generated successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to generate analysis.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <Card className="p-6 bg-gradient-to-br from-indigo-900 to-violet-900 text-on-accent rounded-3xl shadow-2xl mb-8 relative overflow-hidden border border-indigo-500/30">
@@ -470,31 +455,28 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
         </div>
       </div>
 
-      {deepAnalysis ? (
-        <div className="bg-indigo-950/80 backdrop-blur border border-indigo-500/50 rounded-2xl p-5 text-sm leading-relaxed text-indigo-50 shadow-inner">
-          <div className="flex items-center gap-2 mb-3 text-primary font-bold">
-            <Sparkles className="w-4 h-4" /> Gemini Deep Analysis
-          </div>
-          <div className="whitespace-pre-wrap">{deepAnalysis}</div>
-        </div>
-      ) : (
-        <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
-          "{prediction.punditCommentary}"
-          
-          {false && hasGeminiKey && (
-            <div className="mt-4 pt-4 border-t border-indigo-800/50 flex justify-center">
-              <button
-                onClick={handleGenerateDeepAnalysis}
-                disabled={isLoading}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-on-accent px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
-                {isLoading ? "Consulting AI..." : "Generate Deep AI Analysis"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
+        "{prediction.punditCommentary}"
+      </div>
     </Card>
   );
+}
+
+/** Adapt a profile match (friendly or tournament, partner columns mapped) to the shared comparison row. */
+function toComparisonRow(m: any): ComparisonRow {
+  const friendly = m.is_friendly === true || (m.is_friendly == null && m.winner_side == null && !m.tournament_id);
+  return {
+    id: m.id,
+    source: friendly ? "friendly" : "tournament",
+    status: m.status,
+    winnerSide: m.winner_side === 1 || m.winner_side === 2 ? m.winner_side : null,
+    winnerId: m.winner_id ?? null,
+    side1: [m.player1_id, m.team1_partner_id ?? m.player3_id].filter(Boolean),
+    side2: [m.player2_id, m.team2_partner_id ?? m.player4_id].filter(Boolean),
+    category: m.category ?? null,
+    date: m.ended_at ?? m.created_at ?? null,
+    score: m.score ?? null,
+    round: null,
+    event: null,
+  };
 }

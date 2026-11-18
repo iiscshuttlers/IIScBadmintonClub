@@ -36,6 +36,8 @@ import { HostTournamentCta } from "@/components/home/HostTournamentCta";
 import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
 import { HomePersonalDashboard } from "@/components/home/HomePersonalDashboard";
+import { HomeLiveStrip } from "@/components/home/HomeLiveStrip";
+import { HomeMatchRail } from "@/components/home/HomeMatchRail";
 import { useAuth } from "@/contexts/AuthContext";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -99,7 +101,7 @@ export default function Home() {
       role: "Convener",
       name: convenerData?.convener?.name || "Raja Janmejay",
       description: convenerData?.convener?.description || "Leading the club with vision and passion for the sport",
-      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.png`,
+      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.webp`,
     },
     {
       role: "Co-Convener",
@@ -172,6 +174,10 @@ export default function Home() {
           <div className="container mx-auto px-4 max-w-5xl">
             
             <HomeAnnouncementBar isAdmin={isAdmin} />
+
+            <HomeLiveStrip />
+
+            <HomeMatchRail />
 
             <HomePersonalDashboard />
 

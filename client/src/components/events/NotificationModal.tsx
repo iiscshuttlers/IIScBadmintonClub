@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bell, Clock } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { setUserMatchAlert, removeUserMatchAlert } from "@/services/matchService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -76,13 +76,7 @@ export function NotificationModal({
       if (onSave) {
         await onSave(totalMins);
       } else if (matchId && session?.user?.id) {
-        const { error } = await supabase.from("user_match_notifications").upsert({
-          match_id: matchId,
-          user_id: session.user.id,
-          notify_before_mins: totalMins
-        }, { onConflict: 'match_id, user_id' });
-        
-        if (error) throw error;
+        await setUserMatchAlert(matchId, session.user.id, totalMins);
       }
       
       const timeMsg = notificationTimeStr ? ` (at ${notificationTimeStr})` : '';
@@ -104,12 +98,7 @@ export function NotificationModal({
       if (onRemove) {
         await onRemove();
       } else if (matchId && session?.user?.id) {
-        const { error } = await supabase.from("user_match_notifications")
-          .delete()
-          .eq("match_id", matchId)
-          .eq("user_id", session.user.id);
-        
-        if (error) throw error;
+        await removeUserMatchAlert(matchId, session.user.id);
       }
       
       toast.success("Alert removed successfully.");
@@ -149,7 +138,7 @@ export function NotificationModal({
               />
               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Hours</span>
             </div>
-            <span className="text-2xl font-black text-slate-600 mb-4">:</span>
+            <span className="text-2xl font-black text-slate-600 dark:text-slate-400 mb-4">:</span>
             <div className="flex flex-col items-center gap-1">
               <Input
                 type="number"

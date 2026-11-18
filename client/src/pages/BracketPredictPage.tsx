@@ -3,7 +3,7 @@ import { useRoute } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, Lock, Medal, Sparkles, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -22,9 +22,6 @@ import {
   type Picks,
 } from "@/lib/bracketPredict";
 
-// bracket_predictions is new; generated types catch up after `supabase db push`.
-const sb = supabase as any;
-
 const CAT: Record<string, string> = {
   MS: "Men's Singles", WS: "Women's Singles", MD: "Men's Doubles", WD: "Women's Doubles", XD: "Mixed Doubles",
 };
@@ -40,18 +37,14 @@ export default function BracketPredictPage() {
     queryKey: ["predict", tournamentId],
     enabled: !!tournamentId,
     queryFn: async () => {
-      const [{ data: t }, { data: ms, error }] = await Promise.all([
-        supabase.from("tournaments").select("name, format_family").eq("id", tournamentId).maybeSingle(),
-        supabase
-          .from("tournament_matches")
-          .select("id, match_code, round, round_name, match_number, status, winner_side, advances_to_match, advances_to_position, player1_id, player2_id, team1_label, team2_label, category")
-          .eq("tournament_id", tournamentId)
-          .is("tie_id", null),
+      const [t, ms] = await Promise.all([
+        tournamentService.fetchTournamentById(tournamentId),
+        tournamentService.fetchTournamentMatches(tournamentId),
       ]);
-      if (error) throw error;
       const byCat: Record<string, PMatch[]> = {};
-      for (const m of (ms ?? []) as any[]) (byCat[m.category] ??= []).push(m);
-      return { name: (t as any)?.name ?? "Tournament", byCat };
+      const nonTieMatches = (ms ?? []).filter((m: any) => !m.tie_id);
+      for (const m of nonTieMatches) (byCat[(m as any).category] ??= []).push(m as any);
+      return { name: t?.name ?? "Tournament", byCat };
     },
   });
 
@@ -91,15 +84,8 @@ export default function BracketPredictPage() {
     queryKey: ["predict-mine", tournamentId, cat, me],
     enabled: !!tournamentId && !!cat && !!me,
     queryFn: async () => {
-      const { data, error } = await sb
-        .from("bracket_predictions")
-        .select("picks")
-        .eq("tournament_id", tournamentId)
-        .eq("category", cat)
-        .eq("user_id", me)
-        .maybeSingle();
-      if (error) throw error;
-      return { picks: ((data?.picks ?? {}) as Picks) };
+      const picks = await tournamentService.fetchBracketPredictions(tournamentId, cat, me!);
+      return { picks: picks as Picks };
     },
   });
 
@@ -108,8 +94,7 @@ export default function BracketPredictPage() {
     queryKey: ["predict-board", tournamentId, cat],
     enabled: !!tournamentId && !!cat && !!me && started,
     queryFn: async () => {
-      const { data, error } = await sb.rpc("bracket_leaderboard", { p_tournament: tournamentId, p_category: cat });
-      if (error) throw error;
+      const data = await tournamentService.fetchBracketLeaderboard(tournamentId, cat);
       return (data ?? []) as { user_id: string; full_name: string | null; picks: Picks }[];
     },
   });
@@ -134,20 +119,25 @@ export default function BracketPredictPage() {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
-      const { error } = await sb
-        .from("bracket_predictions")
-        .upsert({ tournament_id: tournamentId, category: cat, user_id: me, picks: next, updated_at: new Date().toISOString() });
-      setSaving(false);
-      if (error) {
-        const lockedNow = /has started/i.test(error.message);
+      try {
+        await tournamentService.saveBracketPredictions({
+          tournament_id: tournamentId,
+          category: cat,
+          user_id: me,
+          picks: next,
+        });
+        setSaving(false);
+        qc.invalidateQueries({ queryKey: ["predict-mine", tournamentId, cat, me] });
+      } catch (err: any) {
+        setSaving(false);
+        const lockedNow = /has started/i.test(err?.message || "");
         toast.error(lockedNow ? "That match has just started, so its pick is locked." : "Couldn't save your picks");
         if (lockedNow) {
-          // Our view was stale: reload matches and fall back to what's saved.
           loadedFor.current = "";
           qc.invalidateQueries({ queryKey: ["predict", tournamentId] });
           qc.invalidateQueries({ queryKey: ["predict-mine", tournamentId, cat, me] });
         }
-      } else qc.invalidateQueries({ queryKey: ["predict-mine", tournamentId, cat, me] });
+      }
     }, 600);
   };
 
@@ -205,7 +195,7 @@ export default function BracketPredictPage() {
         {error && <p className="text-sm text-muted-foreground">Couldn't load this tournament.</p>}
         {!me && <p className="rounded-xl border border-border bg-muted/40 p-3 text-sm">Sign in to make your predictions.</p>}
 
-        <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1" role="tablist" aria-label="Category">
+        <div className="flex flex-wrap gap-2 pb-1" role="tablist" aria-label="Category">
           {categories.map((c) => (
             <button
               key={c}

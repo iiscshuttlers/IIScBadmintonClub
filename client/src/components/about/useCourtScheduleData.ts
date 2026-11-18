@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { fetchSiteDataEntry } from "@/services/playerService";
+import { hubService } from "@/services/hubService";
+import { fetchCourtMatchesBetween } from "@/services/tournamentService";
 import { fetchSiteData } from "@/lib/siteData";
 import type { Holiday, CourtReservation, ScheduledMatch } from "./courtSchedule.types";
 
@@ -27,11 +29,7 @@ export function useCourtScheduleData(selectedDate: string) {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const { data } = await supabase
-          .from("site_data")
-          .select("value")
-          .eq("key", "court_reservations")
-          .maybeSingle();
+        const { data } = await fetchSiteDataEntry("court_reservations");
 
         if (data?.value && Array.isArray(data.value)) {
           setReservations(data.value as unknown as CourtReservation[]);
@@ -45,25 +43,9 @@ export function useCourtScheduleData(selectedDate: string) {
 
     fetchReservations();
 
-    const channel = supabase
-      .channel("court-reservations-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_data",
-          filter: "key=eq.court_reservations",
-        },
-        () => {
-          fetchReservations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return hubService.subscribeToCourtReservations(() => {
+      fetchReservations();
+    });
   }, []);
 
   // Fetch matches scheduled for the selected date
@@ -75,27 +57,7 @@ export function useCourtScheduleData(selectedDate: string) {
         const startOfDay = `${selectedDate}T00:00:00.000Z`;
         const endOfDay = `${selectedDate}T23:59:59.999Z`;
 
-        const { data: matchData } = await supabase
-          .from("tournament_matches")
-          .select(`
-            id,
-            tournament_id,
-            match_code,
-            category,
-            court_number,
-            scheduled_at,
-            status,
-            team1_label,
-            team2_label,
-            tournaments (
-              id,
-              name,
-              tournament_type
-            )
-          `)
-          .gte("scheduled_at", startOfDay)
-          .lte("scheduled_at", endOfDay)
-          .not("court_number", "is", null);
+        const matchData = await fetchCourtMatchesBetween(startOfDay, endOfDay);
 
         if (!isCancelled && matchData) {
           const formatted: ScheduledMatch[] = matchData.map((m: any) => ({

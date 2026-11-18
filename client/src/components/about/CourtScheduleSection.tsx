@@ -21,7 +21,7 @@ import {
   CalendarRange,
   Trophy
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { hubService } from "@/services/hubService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -645,14 +645,7 @@ export function CourtScheduleSection() {
         nextReservations = [...reservations, ...newReservations];
       }
 
-      const { error } = await supabase
-        .from("site_data")
-        .upsert(
-          { key: "court_reservations", value: nextReservations as any },
-          { onConflict: "key" }
-        );
-
-      if (error) throw error;
+      await hubService.saveCourtReservations(nextReservations as any);
 
       setReservations(nextReservations);
       toast.success(
@@ -675,14 +668,7 @@ export function CourtScheduleSection() {
   const handleDeleteReservation = async (reservationId: string) => {
     try {
       const nextReservations = reservations.filter((r) => r.id !== reservationId);
-      const { error } = await supabase
-        .from("site_data")
-        .upsert(
-          { key: "court_reservations", value: nextReservations as any },
-          { onConflict: "key" }
-        );
-
-      if (error) throw error;
+      await hubService.saveCourtReservations(nextReservations as any);
 
       setReservations(nextReservations);
       toast.success("Booking removed");

@@ -133,13 +133,13 @@ export function AdminAllFeaturesPanel() {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"}`}
             >
               <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"}`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -155,8 +155,8 @@ export function AdminAllFeaturesPanel() {
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                   statusFilter === status
-                    ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {status === "all" ? "All" : status === "coming-soon" ? "Coming Soon" : status.charAt(0).toUpperCase() + status.slice(1)}

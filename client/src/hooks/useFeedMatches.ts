@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchFeedMatches } from "@/services/matchService";
 
-export function useFeedMatches(ownProfile: any, initialLimit = 100, initialTournament = "all") {
+export function useFeedMatches(
+  ownProfile: { following?: string[] | null; buddies?: string[] | null } | null | undefined,
+  initialLimit = 100,
+  initialTournament = "all",
+) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(initialLimit);
   const [tournamentFilter, setTournamentFilter] = useState<string>(initialTournament);
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
-  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
+  // Exact disciplines (MS/WS/MD/WD/XD); the old singles/doubles/mixed values still work.
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "MS" | "WS" | "MD" | "WD" | "XD" | "singles" | "doubles" | "mixed">("all");
+  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week" | "month">("all");
 
   const activeReqIdRef = useRef(0);
 
@@ -16,6 +21,7 @@ export function useFeedMatches(ownProfile: any, initialLimit = 100, initialTourn
       const reqId = ++activeReqIdRef.current;
       if (!silent) setLoading(true);
       try {
+        // Tournament matches only on Pulse (owner decision 5).
         const data = await fetchFeedMatches(limitCount, categoryFilter, timeFilter, tournamentFilter);
         if (reqId === activeReqIdRef.current && data) {
           setMatches(data);

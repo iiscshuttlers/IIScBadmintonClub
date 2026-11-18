@@ -1,8 +1,9 @@
 import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { Link } from "wouter";
+import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
+import { getLiveMatchPicks, saveLiveMatchPick, fetchPollRevealedMatches, updatePollRevealedMatches } from "@/services/feedService";
 import {
   Activity,
   Trophy,
@@ -19,7 +20,8 @@ import {
   Bell,
   Swords,
   Gavel,
-  ClipboardList
+  ClipboardList,
+  Settings2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveMatches } from "@/hooks/useLiveMatches";
@@ -30,49 +32,130 @@ import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
+import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
+import { MatchCentre } from "@/components/match/MatchCentre";
+import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
+import { TournamentStatsTab } from "@/components/match/TournamentStatsTab";
+import { ChipStrip } from "@/components/match/ChipStrip";
+import { PulseMatchItem } from "@/components/pulse/PulseMatchItem";
+import {
+  canonicalForLiveSubTab,
+  isLiveTabOffered,
+  liveSubTabFor,
+  type LiveSubTab,
+  type TournamentPanel,
+  type TournamentTab,
+} from "@/lib/tournamentRoutes";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
 import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
 import { TeamTiesSection } from "@/components/events/TeamTiesSection";
 import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
 import { MatchSection } from "@/components/pulse/MatchSection";
-import { MatchCard } from "@/components/feed/MatchCard";
+import { LIVE_STATUSES, disciplineOf } from "@/lib/matchView";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
-import { shareMatch } from "@/lib/shareMatch";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { OrganizerDashboard } from "@/components/events/OrganizerDashboard";
-import { LayoutDashboard } from "lucide-react";
-import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
-import { RankedBadge } from "@/components/tournament/RankedBadge";
+import { LayoutDashboard, BarChart3 } from "lucide-react";
+import { TournamentNextMatch } from "@/components/tournament/TournamentNextMatch";
+import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
+import { CollapsibleSection } from "@/components/ui/CollapsibleSection";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { RefereeDashboard } from "@/components/tournament/RefereeDashboard";
 import { RegisterModal } from "@/components/tournament/RegisterModal";
 import { getEventFamily } from "@/lib/tournamentTheme";
 
-export interface LiveTabProps {
-  embedded?: boolean;
+/**
+ * Canonical tournament page mode (WP5). The tournament is fixed by the route
+ * and is never substituted; tab state lives in the URL path, not `?subtab=`.
+ */
+export interface LiveTabRoute {
+  tournament: any;
+  /** Date-aware lifecycle status used to decide whether Live is offered. */
+  lifecycle: string;
+  tab: TournamentTab;
+  panel: TournamentPanel | null;
+  navigate: (to: { tab: TournamentTab; panel: TournamentPanel | null }) => void;
+  /** Rendered between the tab bar and the tab content (e.g. winners on Results). */
+  beforeContent?: ReactNode;
 }
 
-export function LiveTab({ embedded = false }: LiveTabProps = {}) {
+export interface LiveTabProps {
+  embedded?: boolean;
+  route?: LiveTabRoute;
+}
+
+/** Horizontal row that keeps the current item (aria-current="page") scrolled into view. */
+function ScrollRow({ activeKey, className, children, ...rest }: { activeKey: string; className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = ref.current;
+    const el = row?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (row && el) row.scrollTo({ left: el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
+  }, [activeKey]);
+  return <div ref={ref} className={`relative ${className ?? ""}`} {...rest}>{children}</div>;
+}
+
+/** "12–14 Dec · Gymkhana Courts · Team event · Ranked" — one muted line instead of badges. */
+function tournamentFacts(t: any): string {
+  const day = (d: string) => new Date(`${d.slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  let dates = "";
+  if (t?.start_date) dates = day(t.start_date);
+  if (t?.end_date && t.end_date.slice(0, 10) !== t.start_date?.slice(0, 10)) dates = dates ? `${dates} – ${day(t.end_date)}` : day(t.end_date);
+  return [
+    dates,
+    t?.venue,
+    t?.format_family === "TEAM" ? "Team event" : null,
+    t?.counts_for_elo === false ? "Friendly (not ranked)" : "Ranked",
+  ].filter(Boolean).join(" · ");
+}
+
+export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings" | "ties" | "organizer" | "referee">("subtab", "matches");
-  const [activeTournament, setActiveTournament] = useState<any | null>(null);
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [querySubTab, setQuerySubTab] = useQueryState<LiveSubTab>("subtab", "matches");
+  const isRouteTeam = route?.tournament?.format_family === "TEAM";
+  const activeSubTab: LiveSubTab = route ? liveSubTabFor(route.tab, route.panel, isRouteTeam) : querySubTab;
+  const setActiveSubTab = (sub: LiveSubTab) => {
+    if (route) route.navigate(canonicalForLiveSubTab(sub, route.tab));
+    else setQuerySubTab(sub);
+  };
+  const [activeTournament, setActiveTournament] = useState<any | null>(route?.tournament ?? null);
+  /** Broadcast cards shown on the Live tab; the Match Centre opens on Upcoming when there are some. */
+  const [broadcastLiveCount, setBroadcastLiveCount] = useState(0);
+  // Same query the Tournaments hub uses, so the Register button can say "pending" / "registered".
+  const { myRoles, refetch: refetchMyRoles } = useMyTournamentRoles(
+    session?.user?.id ?? null,
+    activeTournament ? [activeTournament] : [],
+  );
+  const myRegistration = activeTournament ? myRoles.get(activeTournament.id)?.registration : undefined;
+  const [tournaments, setTournaments] = useState<any[]>(route ? [route.tournament] : []);
+
+  // Route mode: keep the routed tournament in sync (e.g. after a refetch).
+  useEffect(() => {
+    if (!route) return;
+    setActiveTournament(route.tournament);
+    setTournaments([route.tournament]);
+    setTournamentFilter(route.tournament.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route?.tournament]);
 
   useEffect(() => {
+    if (route) return; // the route owns tournament selection; never fall back
     const searchParams = new URLSearchParams(window.location.search);
     const queryTournamentId = searchParams.get("id") || searchParams.get("tournament_id");
 
     async function loadTournaments() {
-      const { data } = await supabase
-        .from("tournaments")
-        .select("*")
-        .neq("status", "deleted")
-        .order("created_at", { ascending: false });
+      const data = await fetchTournaments();
 
       if (data && data.length > 0) {
         setTournaments(data);
@@ -84,15 +167,14 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
             return;
           }
         }
-        const active = data.find((t: any) => t.status === "active");
-        if (active) {
-          setActiveTournament(active);
-          setTournamentFilter(active.id);
-        } else {
-          // Prefer team tournament if available, else latest
-          const preferred = data.find((t: any) => t.format_family === "TEAM") || data[0];
-          setActiveTournament(preferred);
-          setTournamentFilter(preferred.id);
+        // Live shows what's on now (or next). Completed/archived events live on
+        // the Tournaments page; falling back to them made Live look stale.
+        const current =
+          data.find((t: any) => t.status === "active") ||
+          data.find((t: any) => t.status === "upcoming");
+        if (current) {
+          setActiveTournament(current);
+          setTournamentFilter(current.id);
         }
       }
     }
@@ -117,8 +199,14 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
 
   // Dynamic URL syncing for Tournament Matches — use replace so filters
   // don't create back-button history entries; only the primary subtab does.
-  const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming", true);
-  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL", true);
+  const [queryMatchStatus, setQueryMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming", true);
+  const matchStatus: "upcoming" | "completed" = route ? (route.tab === "results" ? "completed" : "upcoming") : queryMatchStatus;
+  const setMatchStatus = (status: "upcoming" | "completed") => {
+    if (route) route.navigate({ tab: status === "completed" ? "results" : "live", panel: null });
+    else setQueryMatchStatus(status);
+  };
+  // Canonical URLs use `cat` (shared with the Players view); Pulse keeps `m_cat`.
+  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">(route ? "cat" : "m_cat", "ALL", true);
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -130,12 +218,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     const pid = ownProfile?.id;
     if (!activeTournamentId || !pid) { setLiveOfficialRoles(new Set()); return; }
     (async () => {
-      const { data } = await supabase
-        .from("tournament_officials" as any)
-        .select("role")
-        .eq("tournament_id", activeTournamentId)
-        .eq("user_id", pid);
-      if (!cancelled) setLiveOfficialRoles(new Set((data ?? []).map((d: any) => d.role)));
+      const roles = await fetchUserTournamentRoles(activeTournamentId, pid);
+      if (!cancelled) setLiveOfficialRoles(new Set(roles));
     })();
     return () => { cancelled = true; };
   }, [activeTournamentId, ownProfile?.id]);
@@ -144,9 +228,11 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   const isLiveReferee = liveOfficialRoles.has("REFEREE");
   const canReferee = isAdmin || isLiveOrganizer || isLiveReferee;
 
-  const initialTournamentId = typeof window !== "undefined"
-    ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
-    : "all";
+  const initialTournamentId = route
+    ? route.tournament.id
+    : typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
+      : "all";
 
   const {
     loading,
@@ -157,8 +243,6 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     courtUtil,
     matchOfTheDayId,
     weeklyRecap,
-    categoryFilter,
-    setCategoryFilter,
     timeFilter,
     setTimeFilter,
     tournamentFilter,
@@ -206,22 +290,13 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   useEffect(() => {
     if (!ownProfile?.id) return;
     const loadPicks = async () => {
-      const { data: myVotes } = await supabase
-        .from("live_match_votes")
-        .select("live_match_id, pick")
-        .eq("user_id", ownProfile.id);
-      if (myVotes) {
-        const p: Record<string, 1 | 2> = {};
-        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
-        setPicks(p);
-      }
-      const { data: siteData } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "poll_revealed_matches")
-        .single();
-      if (siteData?.value) {
-        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      try {
+        const myVotes = await getLiveMatchPicks(ownProfile.id);
+        setPicks(myVotes);
+        const revealed = await fetchPollRevealedMatches();
+        setRevealedMatchIds(revealed);
+      } catch (err) {
+        console.error("Failed to load picks/revealed matches:", err);
       }
     };
     loadPicks();
@@ -230,11 +305,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   const handlePick = async (matchId: string, team: 1 | 2) => {
     if (!ownProfile?.id) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    await supabase.from("live_match_votes").upsert({
-      live_match_id: matchId,
-      user_id: ownProfile.id,
-      pick: team
-    }, { onConflict: 'live_match_id,user_id' });
+    await saveLiveMatchPick(matchId, ownProfile.id, team);
   };
 
   const handleToggleReveal = async (matchId: string) => {
@@ -242,10 +313,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     const isRevealed = !!revealedMatchIds[matchId];
     const nextState = { ...revealedMatchIds, [matchId]: !isRevealed };
     setRevealedMatchIds(nextState);
-    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+    await updatePollRevealedMatches(nextState);
   };
-
-  const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">
@@ -282,8 +351,14 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
             No Live Tournament
           </h3>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-            There is no active live tournament at the moment. Check the Events tab for upcoming tournaments.
+            Nothing is being played right now. Past results and upcoming events are on the Tournaments page.
           </p>
+          <Link
+            href="/tournaments"
+            className="mt-5 inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-black"
+          >
+            <Trophy className="w-4 h-4" aria-hidden /> Browse tournaments
+          </Link>
         </div>
       </div>
     );
@@ -324,13 +399,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
               {activeTournament.subtitle && (
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
               )}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                <EventTypeBadge
-                  tournament_type={activeTournament.tournament_type}
-                  format_family={activeTournament.format_family}
-                />
-                <RankedBadge ranked={activeTournament.counts_for_elo} />
-              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">{tournamentFacts(activeTournament)}</p>
             </>
           ) : (
             tournaments.length > 1 && (
@@ -353,13 +422,32 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
               </div>
             )
           )}
-          {activeTournament.require_app_registration && activeTournament.status !== "completed" && session && (
-            <button
-              onClick={() => setShowRegister(true)}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
-            >
-              <ClipboardList className="w-4 h-4" /> Register for this event
-            </button>
+          {activeTournament.require_app_registration && (activeTournament.status === "upcoming" || activeTournament.status === "active") && (
+            session ? (
+              myRegistration === "pending" || myRegistration === "approved" ? (
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/40 bg-primary/10 text-primary text-sm font-black hover:bg-primary/15 transition"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  {myRegistration === "approved" ? "You're registered" : "Registration pending"} · View
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
+                >
+                  <ClipboardList className="w-4 h-4" /> Register for this event
+                </button>
+              )
+            ) : (
+              <Link
+                href="/join"
+                className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/40 text-primary text-sm font-black hover:bg-primary/10 transition"
+              >
+                <ClipboardList className="w-4 h-4" /> Sign in to register
+              </Link>
+            )
           )}
         </div>
       )}
@@ -368,6 +456,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         <RegisterModal
           open={showRegister}
           onClose={() => setShowRegister(false)}
+          onRegistered={() => refetchMyRoles()}
           tournament={{
             id: activeTournament.id,
             name: activeTournament.name,
@@ -379,49 +468,127 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
-        {[
-          { id: "details", label: "Details", icon: FileText },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords, activeClass: "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-600/20 scale-105 font-black", inactiveClass: "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600/20 border border-indigo-600/20", iconClass: "text-indigo-600" }] : []),
-          { id: "matches", label: "Matches", icon: Activity },
-          { id: "polls", label: "Polls", icon: ListChecks },
-          { id: "schedule", label: "Schedule", icon: Calendar },
-          { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
-          ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy, activeClass: "bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/20 scale-105 font-black", inactiveClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20", iconClass: "text-amber-500" }] : []),
-          { id: "brackets", label: "Brackets", icon: LayoutList },
-          ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
-          ...(canReferee ? [{
-            id: "referee",
-            label: "Referee",
-            icon: Gavel,
-            activeClass: "bg-rose-600 text-white shadow-md ring-2 ring-rose-600/20 scale-105 font-black",
-            inactiveClass: "bg-rose-600/10 text-rose-600 dark:text-rose-400 hover:bg-rose-600/20 border border-rose-600/20",
-            iconClass: "text-rose-600"
-          }] : []),
-          ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
-            id: "organizer",
-            label: "Organizer", 
-            icon: LayoutDashboard,
-            activeClass: "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-600/20 scale-105 font-black",
-            inactiveClass: "bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/20 border border-emerald-600/20",
-            iconClass: "text-emerald-600"
-          }] : []),
-        ].map((tab: any) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveSubTab(tab.id as any)}
-            className={`flex-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-              activeSubTab === tab.id
-                ? (tab.activeClass || "bg-red-500 text-white shadow-md ring-2 ring-red-500/20 scale-105")
-                : (tab.inactiveClass || "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white")
-            }`}
+      {route && activeTournament && session && (
+        <TournamentNextMatch tournamentId={activeTournament.id} tournamentName={activeTournament.name} />
+      )}
+
+      {/* Score strip on every tab except Live, which already leads with live cards. */}
+      {route && activeTournamentId && route.tab !== "live" && <LiveScoreTicker tournamentId={activeTournamentId} />}
+
+      {/* One scrollable row: sections first, then personal views, then staff tools in one menu. */}
+      {(() => {
+        const canUmpire = isUmpire || isAdmin || isLiveUmpire;
+        const canOrganize = isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id;
+        type Item = { key: string; label: string; icon: any; isActive: boolean; onSelect: () => void };
+        let sections: Item[];
+        let staff: Item[];
+        if (route) {
+          const go = (to: { tab: any; panel: any }) => () => route.navigate(to);
+          const isTabActive = (tab: string) => !route.panel && (route.tab === tab || (tab === "results" && route.tab === "stats"));
+          sections = [
+            ...(isLiveTabOffered(route.lifecycle, route.tab) ? [{ key: "live", label: "Live", icon: Activity, isActive: isTabActive("live"), onSelect: go({ tab: "live", panel: null }) }] : []),
+            { key: "overview", label: "Overview", icon: FileText, isActive: isTabActive("overview"), onSelect: go({ tab: "overview", panel: null }) },
+            { key: "players", label: isRouteTeam ? "Teams" : "Players", icon: Users, isActive: isTabActive("players"), onSelect: go({ tab: "players", panel: null }) },
+            { key: "draw", label: isRouteTeam ? "Ties & standings" : "Draw", icon: isRouteTeam ? Swords : LayoutList, isActive: isTabActive("draw"), onSelect: go({ tab: "draw", panel: null }) },
+            { key: "schedule", label: "Schedule", icon: Calendar, isActive: isTabActive("schedule"), onSelect: go({ tab: "schedule", panel: null }) },
+            { key: "results", label: "Results", icon: Trophy, isActive: isTabActive("results"), onSelect: go({ tab: "results", panel: null }) },
+            ...(session ? [{ key: "my-matches", label: "My matches", icon: UserCheck, isActive: route.panel === "my-matches", onSelect: go({ tab: route.tab, panel: "my-matches" }) }] : []),
+            { key: "polls", label: "Predict", icon: ListChecks, isActive: route.panel === "polls", onSelect: go({ tab: route.tab, panel: "polls" }) },
+          ];
+          staff = [
+            ...(canUmpire ? [{ key: "umpire", label: "Umpire", icon: Tv2, isActive: route.panel === "umpire", onSelect: go({ tab: route.tab, panel: "umpire" }) }] : []),
+            ...(canReferee ? [{ key: "referee", label: "Referee", icon: Gavel, isActive: route.panel === "referee", onSelect: go({ tab: route.tab, panel: "referee" }) }] : []),
+            ...(canOrganize ? [{ key: "organizer", label: "Organiser", icon: LayoutDashboard, isActive: route.panel === "organizer", onSelect: go({ tab: route.tab, panel: "organizer" }) }] : []),
+          ];
+        } else {
+          const all: Item[] = [
+            { id: "details", label: "Details", icon: FileText },
+            ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords }] : []),
+            { id: "matches", label: "Matches", icon: Activity },
+            { id: "polls", label: "Polls", icon: ListChecks },
+            { id: "schedule", label: "Schedule", icon: Calendar },
+            { id: "my-matches", label: "My Matches", icon: Activity },
+            ...(activeTournament?.format_family === "TEAM" ? [{ id: "standings", label: "Points Table", icon: Trophy }] : []),
+            { id: "brackets", label: "Brackets", icon: LayoutList },
+            ...((isUmpire || isAdmin || isLiveUmpire) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
+            ...(canReferee ? [{
+              id: "referee",
+              label: "Referee",
+              icon: Gavel
+            }] : []),
+            ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{
+              id: "organizer",
+              label: "Organizer",
+              icon: LayoutDashboard
+            }] : []),
+          ].map((t: any) => ({ ...t, key: t.id, isActive: activeSubTab === t.id, onSelect: () => setActiveSubTab(t.id) }));
+          sections = all.filter((t) => !["umpire", "referee", "organizer"].includes(t.key));
+          staff = all.filter((t) => ["umpire", "referee", "organizer"].includes(t.key));
+        }
+        const pill = (active: boolean) =>
+          `shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${active
+            ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
+            : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"}`;
+        const activeStaff = staff.find((t) => t.isActive);
+        const activeKey = [...sections, ...staff].find((t) => t.isActive)?.key ?? "";
+        return (
+          <ScrollRow
+            activeKey={activeKey}
+            role="navigation"
+            aria-label="Tournament sections"
+            className="-mx-4 px-4 flex items-center gap-2 overflow-x-auto flex-nowrap pt-1 pb-2 mb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            <tab.icon className={`w-4 h-4 mb-[1px] ${activeSubTab !== tab.id && tab.iconClass && !tab.inactiveClass ? tab.iconClass : ""}`} />
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-      
+            {sections.map((tab) => (
+              <button key={tab.key} onClick={tab.onSelect} aria-current={tab.isActive ? "page" : undefined} className={pill(tab.isActive)}>
+                <tab.icon className="w-4 h-4 mb-[1px]" aria-hidden />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+            {staff.length === 1 && (
+              <button onClick={staff[0].onSelect} aria-current={staff[0].isActive ? "page" : undefined} className={pill(staff[0].isActive)}>
+                {(() => { const Icon = staff[0].icon; return <Icon className="w-4 h-4 mb-[1px]" aria-hidden />; })()}
+                <span>{staff[0].label}</span>
+              </button>
+            )}
+            {staff.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button aria-current={activeStaff ? "page" : undefined} className={pill(!!activeStaff)}>
+                    <Settings2 className="w-4 h-4 mb-[1px]" aria-hidden />
+                    <span>{activeStaff ? activeStaff.label : "Manage"}</span>
+                    <ChevronDown className="w-3.5 h-3.5" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  {staff.map((t) => (
+                    <DropdownMenuItem key={t.key} onClick={t.onSelect}>
+                      <t.icon /> {t.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </ScrollRow>
+        );
+      })()}
+
+      {route?.beforeContent}
+
+      {/* Players / Teams (canonical route only) */}
+      {route && activeSubTab === "players" && activeTournament && (
+        <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 sm:p-6">
+          {isRouteTeam ? (
+            <LiveTeamsSection tournamentId={activeTournament.id} showParticipants={activeTournament.show_participants} />
+          ) : (
+            <LivePlayersSection
+              tournamentId={activeTournament.id}
+              categories={activeTournament.categories || []}
+              showParticipants={activeTournament.show_participants}
+            />
+          )}
+        </div>
+      )}
+
       {/* 0. Details */}
       {!loading && activeSubTab === "details" && (
         <div className="mb-6">
@@ -439,10 +606,45 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         </div>
       )}
 
+      {/* Sports-site plan item 8: tournament stats, live from finished matches. */}
+      {route && route.tab === "stats" && !route.panel && activeTournamentId && (
+        <TournamentStatsTab
+          tournamentId={activeTournamentId}
+          finished={route.lifecycle === "completed" || route.lifecycle === "archived"}
+        />
+      )}
+
+      {/* WP6: canonical Live / Results tabs use the Match Centre. */}
+      {route && activeSubTab === "matches" && activeTournamentId && (
+        <>
+          {route.tab === "live" && (
+            <div className="-mx-4 sm:mx-0 mb-6">
+              <LiveScoreSection tournamentId={activeTournamentId} onLiveCount={setBroadcastLiveCount} />
+            </div>
+          )}
+          <MatchCentre
+            key={route.tab}
+            tournamentId={activeTournamentId}
+            mode={route.tab === "results" ? "results" : "live"}
+            liveShownAbove={route.tab === "live" && broadcastLiveCount > 0}
+          />
+          {route.tab === "results" && !isRouteTeam && (
+            <div className="mb-6">
+              <CollapsibleSection title="Stats" icon={<BarChart3 />} summary="Leaders, streaks and records from finished matches">
+                <TournamentStatsTab
+                  tournamentId={activeTournamentId}
+                  finished={route.lifecycle === "completed" || route.lifecycle === "archived"}
+                />
+              </CollapsibleSection>
+            </div>
+          )}
+        </>
+      )}
+
       {/* 1. Matches (Scores & Log merged) and My Matches */}
-      {!loading && (activeSubTab === "matches" || activeSubTab === "my-matches") && (
+      {!loading && ((activeSubTab === "matches" && !route) || activeSubTab === "my-matches") && (
         <div className="mb-6">
-          {activeSubTab === "matches" && (
+          {activeSubTab === "matches" && (!route || route.tab === "live") && (
             <div className="-mx-4 sm:mx-0 mb-6">
               <LiveScoreSection />
             </div>
@@ -466,7 +668,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
           </div>
 
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex w-full sm:flex-1 relative">
+            {!route && <div className="flex w-full sm:flex-1 relative">
               <select
                 value={tournamentFilter}
                 onChange={(e) => {
@@ -496,35 +698,21 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            </div>}
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
-              <div className="relative flex-1 sm:flex-none">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value as any)}
-                  className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="singles">Singles</option>
-                  <option value="doubles">Doubles</option>
-                  <option value="mixed">Mixed Doubles</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-              <div className="relative flex-1 sm:flex-none">
-                <select
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+            {/* One-tap time range (Match Centre style); disciplines are the chips below. */}
+            <div className="w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700 min-w-0">
+              <ChipStrip
+                label="Time"
+                options={[
+                  { value: "all", label: "All time" },
+                  { value: "today", label: "Today" },
+                  { value: "week", label: "This week" },
+                  { value: "month", label: "This month" },
+                ]}
+                value={timeFilter}
+                onChange={(v) => setTimeFilter(v as typeof timeFilter)}
+              />
             </div>
           </div>
 
@@ -565,10 +753,15 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                     (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
                       (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
                       (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
-                  
+
                   if (isLiveNow) {
                     // Handled by LiveScoreSection, exclude from here
-                  } else if (match.status === 'scheduled' || match.status === 'pending') {
+                  } else if (
+                    match.status === 'scheduled' ||
+                    match.status === 'pending' ||
+                    // Tournament rows: status column decides (a live match is not "completed").
+                    (match.is_friendly === false && LIVE_STATUSES.has(String(match.status ?? '').toLowerCase()))
+                  ) {
                     upcomingMatches.push(match);
                   } else {
                     completedMatches.push(match);
@@ -580,22 +773,22 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                     if (m.status === 'scheduled') return 0;
                     if (m.status === 'in_progress') return 0;
                     if (m.status === 'pending') return 1;
-                    return 2; 
+                    return 2;
                   };
                   const rankA = getRank(a);
                   const rankB = getRank(b);
                   if (rankA !== rankB) return rankA - rankB;
-                  
-                  if (rankA === 0) { 
+
+                  if (rankA === 0) {
                     if (!a.scheduled_at && !b.scheduled_at) return 0;
                     if (!a.scheduled_at) return 1;
                     if (!b.scheduled_at) return -1;
                     return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
                   }
-                  
+
                   return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                 });
-                
+
                 upcomingMatches.sort((a, b) => {
                   if (!a.scheduled_at && !b.scheduled_at) return 0;
                   if (!a.scheduled_at) return 1;
@@ -629,99 +822,33 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                       (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
                       (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
 
-                  const isKudosed = (m: any) => {
-                    if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
-                    return (
-                      (Array.isArray(m.kudos_users) &&
-                        session?.user?.id &&
-                        m.kudos_users.includes(session.user.id)) ||
-                      !!localStorage.getItem(`liked_${m.id}`)
-                    );
-                  };
-
-                  const handleKudos = async (match: any) => {
-                    const storageKey = `liked_${match.id}`;
-                    const isCurrentlyLiked = isKudosed(match);
-
-                    if (!isCurrentlyLiked) {
-                      localStorage.setItem(storageKey, "1");
-                      setKudosState((prev) => ({ ...prev, [match.id]: true }));
-                      toast.success("Match liked! ❤️");
-                    } else {
-                      localStorage.removeItem(storageKey);
-                      setKudosState((prev) => ({ ...prev, [match.id]: false }));
-                      toast.success("Like removed");
-                    }
-
-                    if (session?.user?.id) {
-                      supabase
-                        .rpc("toggle_match_kudos", { p_match_id: match.id })
-                        .then(({ error }) => {
-                          if (error)
-                            console.warn("Failed to sync kudos live:", error);
-                        });
-
-                      if (!isCurrentlyLiked) {
-                        const giverName = ownProfile?.full_name ?? "Someone";
-                        supabase.functions
-                          .invoke("notify-kudos", {
-                            body: { match_id: match.id, giver_name: giverName },
-                          })
-                          .catch(() => { });
-                      }
-                    }
-                  };
-
-                  const handleShare = (match: any) => shareMatch(match);
-                  
-                  const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
-                  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : 0;
-                  const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
-                  let finalKudosCount = baseCount;
-                  
-                  if (isLikedLocally && !isIncludedInBackend) {
-                    finalKudosCount += 1;
-                  } else if (!isLikedLocally && isIncludedInBackend) {
-                    finalKudosCount -= 1;
-                  }
-
                   return (
                     <ErrorBoundary key={`eb-${match.id}`}>
-                      <MatchCard
+                      <PulseMatchItem
                         key={match.id}
                         match={match}
-                        currentUser={session?.user}
-                        isLiveNow={isLiveNow}
                         isMatchOfTheDay={isMatchOfTheDay}
                         upsetDiff={upsetDiff}
-                        isKudosed={isLikedLocally || isIncludedInBackend}
-                        kudosCount={finalKudosCount}
-                        onKudos={() => handleKudos(match)}
-                        onShare={() => handleShare(match)}
-                        index={i}
-                        isExpanded={expandedMatchId === match.id}
-                        onToggleExpand={(expanded) => setExpandedMatchId(expanded ? match.id : null)}
-                      >
-                        {match.match_code && (
-                          <div className="mt-1 pt-1 border-t border-slate-100/50 dark:border-slate-800/50">
+                        prediction={
+                          match.match_code ? (
                             <MatchPredictionCard
                               compact
                               matchId={match.id}
-                              t1Ids={[]}
-                              t2Ids={[]}
                               t1Label={match.team1_label ?? "TBD"}
                               t2Label={match.team2_label ?? "TBD"}
                               hasStarted={isLiveNow || match.status === 'completed' || match.status === 'walkover'}
                               myPick={picks[match.id]}
                               profileId={ownProfile?.id}
                               onPick={(team) => handlePick(match.id, team)}
-                              isResultsRevealed={isLiveNow || !!revealedMatchIds[match.id]}
+                              // Revealed once play starts (the poll's own rule), so finished matches too.
+                              isResultsRevealed={isLiveNow || match.status === 'completed' || match.status === 'walkover' || !!revealedMatchIds[match.id]}
                               isAdmin={isAdmin}
-                              onToggleRevealResults={() => handleToggleReveal(match.id)}
+                              // Finished matches always show results, so there is nothing to toggle.
+                              onToggleRevealResults={match.status === 'completed' || match.status === 'walkover' ? undefined : () => handleToggleReveal(match.id)}
                             />
-                          </div>
-                        )}
-                      </MatchCard>
+                          ) : null
+                        }
+                      />
                     </ErrorBoundary>
                   );
                 };
@@ -732,10 +859,10 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                       <>
                         <MyCertificatesCard tournament={activeTournament} />
                         <MatchSection
-                          title="My Matches" 
-                          icon={<Activity className="w-5 h-5 text-violet-500" />} 
-                          matches={myMatchesList} 
-                          defaultExpanded={true} 
+                          title="My Matches"
+                          icon={<Activity className="w-5 h-5 text-violet-500" />}
+                          matches={myMatchesList}
+                          defaultExpanded={true}
                           renderMatchCard={renderCard}
                           headerAction={
                             <button
@@ -763,11 +890,10 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                             <button
                               key={status}
                               onClick={() => setMatchStatus(status)}
-                              className={`flex-1 py-4 text-sm font-black capitalize transition-colors ${
-                                matchStatus === status 
-                                  ? "text-primary border-b-2 border-primary bg-slate-50/50 dark:bg-slate-800/50" 
-                                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                              }`}
+                              className={`flex-1 py-4 text-sm font-black capitalize transition-colors ${matchStatus === status
+                                ? "text-primary border-b-2 border-primary bg-slate-50/50 dark:bg-slate-800/50"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                                }`}
                             >
                               {status}
                               <span className="ml-2 text-xs text-muted-foreground opacity-70">
@@ -777,41 +903,22 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                           ))}
                         </div>
                         <div className="p-4 sm:p-5">
-                          <div className="mb-5 bg-slate-100/50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                            <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1">
-                              {(["ALL", "MS", "MD", "XD", "WS", "WD"] as const).map(cat => (
-                                <button
-                                  key={cat}
-                                  onClick={() => setMatchCat(cat)}
-                                  className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-black transition-all ${
-                                    matchCat === cat
-                                      ? "bg-primary text-primary-foreground shadow-sm"
-                                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
-                                  }`}
-                                >
-                                  {cat}
-                                </button>
-                              ))}
-                            </div>
+                          <div className="mb-5">
+                            <ChipStrip
+                              label="Discipline"
+                              options={(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((c) => ({ value: c, label: c === "ALL" ? "All" : c }))}
+                              value={matchCat}
+                              onChange={(v) => setMatchCat(v as typeof matchCat)}
+                            />
                           </div>
                           <div className="space-y-4">
                             {(() => {
-                               const list = matchStatus === "upcoming" ? upcomingMatches : completedMatches;
-                               const filteredList = list.filter(m => {
-                                 if (matchCat === "ALL") return true;
-                                 const c = (m.match_code || m.matchNumber || "").toUpperCase();
-                                 if (c.startsWith(matchCat)) return true;
-                                 const cat = (m.category || "").toUpperCase();
-                                 if (matchCat === "MS" && (cat.includes("MEN'S SINGLES") || cat === "MS" || cat === "SINGLES")) return true;
-                                 if (matchCat === "MD" && (cat.includes("MEN'S DOUBLES") || cat === "MD" || cat === "DOUBLES")) return true;
-                                 if (matchCat === "WS" && (cat.includes("WOMEN'S SINGLES") || cat === "WS")) return true;
-                                 if (matchCat === "WD" && (cat.includes("WOMEN'S DOUBLES") || cat === "WD")) return true;
-                                 if (matchCat === "XD" && (cat.includes("MIXED") || cat === "XD")) return true;
-                                 return false;
-                               });
-                               
-                               if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-slate-400">No matches found in this section.</div>;
-                               return filteredList.map((m, i) => renderCard(m, i));
+                              const list = matchStatus === "upcoming" ? upcomingMatches : completedMatches;
+                              // One discipline rule everywhere (category text or match-code prefix).
+                              const filteredList = list.filter(m => matchCat === "ALL" || disciplineOf(m.category, m.match_code) === matchCat);
+
+                              if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-slate-400">No matches found in this section.</div>;
+                              return filteredList.map((m, i) => renderCard(m, i));
                             })()}
                           </div>
                         </div>
@@ -858,7 +965,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                   <button
                     type="button"
                     onClick={() => setActiveSubTab("ties")}
-                    className="px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-primary/90 transition shadow-sm inline-flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider hover:bg-primary/90 transition shadow-sm inline-flex items-center gap-2 cursor-pointer"
                   >
                     <Swords className="w-4 h-4" /> Switch to Ties &amp; Lineups
                   </button>
@@ -917,7 +1024,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                 Points Table Not Available
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Points tables and league standings are only available for <strong>Team Tournaments</strong>. 
+                Points tables and league standings are only available for <strong>Team Tournaments</strong>.
                 {activeTournament?.name ? ` "${activeTournament.name}"` : " This event"} is an individual (open event) tournament where players advance via knockout brackets.
               </p>
               <div className="mt-5 flex justify-center gap-3">
@@ -952,6 +1059,11 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
       {/* 6. Team Ties & Lineups */}
       {!loading && activeSubTab === "ties" && (
         <div className="mb-6">
+          {route && activeTournamentId && (
+            <div className="mb-6">
+              <TeamStandingsTable tournamentId={activeTournamentId} tournament={activeTournament} />
+            </div>
+          )}
           {activeTournamentId ? (
             <TeamTiesSection tournamentId={activeTournamentId} tournament={activeTournament} />
           ) : (
@@ -991,9 +1103,9 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
       {(isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) && activeSubTab === "organizer" && (
         <div className="mb-6">
           {activeTournamentId ? (
-            <OrganizerDashboard 
-              tournamentId={activeTournamentId} 
-              tournament={activeTournament} 
+            <OrganizerDashboard
+              tournamentId={activeTournamentId}
+              tournament={activeTournament}
             />
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">

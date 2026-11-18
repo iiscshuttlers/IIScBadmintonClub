@@ -8,6 +8,36 @@ import { getEloTier } from "@/lib/tiers";
 import type { PlayerRow } from "@/types";
 import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
 import { navGet, navSet, navRemove } from "@/lib/navMemory";
+import { fetchTournamentEntryIds } from "@/services/tournamentService";
+
+function isCategoryMatch(cat?: string | null, filter?: string | null): boolean {
+  if (!filter || filter === "All") return true;
+  const c = (cat || "").toLowerCase().trim();
+  const f = (filter || "").toLowerCase().trim();
+
+  if (f === "men's singles" || f === "ms") {
+    return c.includes("ms") || c.includes("men's singles") || c.includes("mens singles");
+  }
+  if (f === "women's singles" || f === "ws") {
+    return c.includes("ws") || c.includes("women's singles") || c.includes("womens singles");
+  }
+  if (f === "singles") {
+    return c.includes("s") || c.includes("singles");
+  }
+  if (f === "men's doubles" || f === "md") {
+    return c.includes("md") || c.includes("men's doubles") || c.includes("mens doubles") || (c.includes("doubles") && !c.includes("women") && !c.includes("wd") && !c.includes("mixed") && !c.includes("xd"));
+  }
+  if (f === "women's doubles" || f === "wd") {
+    return c.includes("wd") || c.includes("women's doubles") || c.includes("womens doubles");
+  }
+  if (f === "mixed doubles" || f === "mixed" || f === "xd") {
+    return c.includes("xd") || c.includes("mixed");
+  }
+  if (f === "doubles") {
+    return c.includes("d") || c.includes("doubles");
+  }
+  return c === f;
+}
 
 export function DirectoryWrapper() {
   const { profile, isAdmin } = useAuth();
@@ -69,7 +99,24 @@ export function DirectoryWrapper() {
     } catch { /* ignore */ }
   }, [searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter]);
 
-  const { data: allMatches = [] } = useAllTournamentMatches();
+  const { data: allMatches = [], isLoading: matchesLoading } = useAllTournamentMatches();
+  const [participants, setParticipants] = useState<Array<{ player_id: string; partner_id: string | null; tournament_id: string; category: string }>>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+
+  useEffect(() => {
+    if (tournamentFilter === "All") {
+      setParticipants([]);
+      return;
+    }
+    setParticipantsLoading(true);
+    fetchTournamentEntryIds(tournamentFilter)
+      .then((data) => {
+        setParticipantsLoading(false);
+        if (data) {
+          setParticipants(data);
+        }
+      });
+  }, [tournamentFilter]);
 
   const fetchPlayers = async () => {
     try {
@@ -105,31 +152,17 @@ export function DirectoryWrapper() {
       participantIds = new Set();
       for (const m of allMatches) {
         if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) continue;
-        if (categoryFilter !== "All") {
-          const catLower = (m.category || "").toLowerCase();
-          const filterLower = (categoryFilter || "").toLowerCase();
-          let matches = false;
-          
-          if (filterLower === "men's singles") {
-            matches = catLower.includes("ms") || catLower.includes("men's singles") || catLower.includes("mens singles");
-          } else if (filterLower === "women's singles") {
-            matches = catLower.includes("ws") || catLower.includes("women's singles") || catLower.includes("womens singles");
-          } else if (filterLower === "men's doubles") {
-            matches = catLower.includes("md") || catLower.includes("men's doubles") || catLower.includes("mens doubles") || (catLower.includes("doubles") && !catLower.includes("women") && !catLower.includes("wd") && !catLower.includes("mixed") && !catLower.includes("xd"));
-          } else if (filterLower === "women's doubles") {
-            matches = catLower.includes("wd") || catLower.includes("women's doubles") || catLower.includes("womens doubles");
-          } else if (filterLower === "mixed doubles") {
-            matches = catLower.includes("xd") || catLower.includes("mixed");
-          } else {
-            matches = catLower === filterLower;
-          }
-
-          if (!matches) continue;
-        }
+        if (categoryFilter !== "All" && !isCategoryMatch(m.category, categoryFilter)) continue;
         if (m.player1_id) participantIds.add(m.player1_id);
         if (m.player2_id) participantIds.add(m.player2_id);
         if (m.player3_id) participantIds.add(m.player3_id);
         if (m.player4_id) participantIds.add(m.player4_id);
+      }
+      for (const p of participants) {
+        if (tournamentFilter !== "All" && p.tournament_id !== tournamentFilter) continue;
+        if (categoryFilter !== "All" && !isCategoryMatch(p.category, categoryFilter)) continue;
+        if (p.player_id) participantIds.add(p.player_id);
+        if (p.partner_id) participantIds.add(p.partner_id);
       }
     }
 
@@ -156,27 +189,7 @@ export function DirectoryWrapper() {
           let losses = 0;
           for (const m of allMatches) {
             if (m.tournament_id !== tournamentFilter) continue;
-            if (categoryFilter !== "All") {
-              const catLower = (m.category || "").toLowerCase();
-              const filterLower = (categoryFilter || "").toLowerCase();
-              let matches = false;
-              
-              if (filterLower === "men's singles") {
-                matches = catLower.includes("ms") || catLower.includes("men's singles") || catLower.includes("mens singles");
-              } else if (filterLower === "women's singles") {
-                matches = catLower.includes("ws") || catLower.includes("women's singles") || catLower.includes("womens singles");
-              } else if (filterLower === "men's doubles") {
-                matches = catLower.includes("md") || catLower.includes("men's doubles") || catLower.includes("mens doubles") || (catLower.includes("doubles") && !catLower.includes("women") && !catLower.includes("wd") && !catLower.includes("mixed") && !catLower.includes("xd"));
-              } else if (filterLower === "women's doubles") {
-                matches = catLower.includes("wd") || catLower.includes("women's doubles") || catLower.includes("womens doubles");
-              } else if (filterLower === "mixed doubles") {
-                matches = catLower.includes("xd") || catLower.includes("mixed");
-              } else {
-                matches = catLower === filterLower;
-              }
-
-              if (!matches) continue;
-            }
+            if (categoryFilter !== "All" && !isCategoryMatch(m.category, categoryFilter)) continue;
             
             const isTeam1 = m.player1_id === p.id || m.player3_id === p.id;
             const isTeam2 = m.player2_id === p.id || m.player4_id === p.id;
@@ -244,7 +257,9 @@ export function DirectoryWrapper() {
         if (sortBy === "level") return (a.playing_level || "").localeCompare(b.playing_level || "");
         return 0;
       });
-  }, [players, searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter, allMatches]);
+  }, [players, searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter, allMatches, participants]);
+
+  const isDirectoryLoading = loading || (tournamentFilter !== "All" && (matchesLoading || participantsLoading));
 
   return (
     <div className="w-full h-full p-4 lg:p-6 bg-slate-50 dark:bg-slate-950 min-h-screen max-w-7xl mx-auto">
@@ -252,7 +267,7 @@ export function DirectoryWrapper() {
         players={players}
         otherPlayersCount={players.length - (profile ? 1 : 0)}
         filteredPlayers={filteredPlayers}
-        loading={loading}
+        loading={isDirectoryLoading}
         fetchError={fetchError}
         fetchPlayers={fetchPlayers}
         visibleCount={visibleCount}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,12 +27,7 @@ export function WatchTieButton({
     queryKey: ['tie_watcher', tieId, userId],
     queryFn: async () => {
       if (!userId || !tieId) return false;
-      const { data, error } = await supabase
-        .from('tie_lineup_watchers' as any)
-        .select('id')
-        .eq('tie_id', tieId)
-        .eq('user_id', userId)
-        .maybeSingle();
+      const { data, error } = await teamService.getTieWatcher(tieId, userId);
 
       if (error) {
         // Table might not exist or error, fallback to false
@@ -50,20 +45,9 @@ export function WatchTieButton({
         return;
       }
       if (isWatching) {
-        const { error } = await supabase
-          .from('tie_lineup_watchers' as any)
-          .delete()
-          .eq('tie_id', tieId)
-          .eq('user_id', userId);
-        if (error) throw error;
+        await teamService.unwatchTie(tieId, userId);
       } else {
-        const { error } = await supabase
-          .from('tie_lineup_watchers' as any)
-          .insert({
-            tie_id: tieId,
-            user_id: userId,
-          });
-        if (error) throw error;
+        await teamService.watchTie(tieId, userId);
       }
     },
     onMutate: async () => {

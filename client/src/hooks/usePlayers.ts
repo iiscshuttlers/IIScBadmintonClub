@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { playerService } from "@/services/playerService";
+import { withAdminPrivate } from "@/services/playerPrivateService";
 
 export function usePlayers() {
   return useQuery({
@@ -10,12 +11,17 @@ export function usePlayers() {
   });
 }
 
-export function useOtherPlayersSlim(currentUserId?: string) {
+/**
+ * Player directory plus contact details for site administrators (admin RPC).
+ * Not persisted to browser storage.
+ */
+export function useAdminPlayers() {
   return useQuery({
-    queryKey: ["players", "other_slim", currentUserId],
-    queryFn: () => currentUserId ? playerService.getOtherPlayersSlim(currentUserId) : Promise.resolve([]),
-    enabled: !!currentUserId,
-    staleTime: 1000 * 60 * 15,
+    queryKey: ["players", "directory", "admin-private"],
+    queryFn: async () => withAdminPrivate(await playerService.getAllPlayers()),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    meta: { persist: false },
   });
 }
 
@@ -35,22 +41,6 @@ export function useFollowers(profileId?: string) {
   });
 }
 
-export function usePendingMatches(profileId?: string) {
-  return useQuery({
-    queryKey: ["matches", "pending", profileId],
-    queryFn: () => profileId ? playerService.getPendingMatches(profileId) : Promise.resolve([]),
-    enabled: !!profileId,
-  });
-}
-
-export function useAllMatches() {
-  return useQuery({
-    queryKey: ["matches", "all_completed"],
-    queryFn: () => playerService.getAllCompletedMatches(),
-    staleTime: 1000 * 60 * 10,
-  });
-}
-
 export function useAllTournamentMatches() {
   return useQuery({
     queryKey: ["tournament_matches", "all_completed"],
@@ -63,7 +53,7 @@ export function useAllTournamentMatches() {
       if (error) throw error;
       
       // Transform to match what TournamentStandingsTab expects
-      return (data || []).map((m: any) => {
+      return (data || []).map((m) => {
         let w_partner = null;
         let l_id = null;
         let l_partner = null;

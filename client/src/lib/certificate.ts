@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
@@ -293,6 +292,8 @@ function downloadBlob(blob:Blob,fileName:string) {
 }
 export async function saveCertificatePdf(input:CertificateInput,canvas?:HTMLCanvasElement) {
   const c=canvas??await drawCertificate(input);
+  // Loaded on demand: pages that only show certificate text shouldn't pull in jsPDF.
+  const {jsPDF}=await import("jspdf");
   const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4",compress:true});
   pdf.addImage(c.toDataURL("image/jpeg",.98),"JPEG",0,0,297,210);
   pdf.setProperties({title:`${certificateWording(input).heading} - ${input.recipient}`,

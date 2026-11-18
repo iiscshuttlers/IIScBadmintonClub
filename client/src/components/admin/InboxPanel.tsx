@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { MessageSquare, ShieldAlert, AlertTriangle } from "lucide-react";
+import { MessageSquare, ShieldAlert } from "lucide-react";
 import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
 import { ModerationPanel } from "./ModerationPanel";
-import { DisputePanel } from "./DisputePanel";
 
 /**
- * Inbox — unifies the three admin review queues (user feedback, player
- * reports/moderation, match disputes) into one panel with sub-tabs. The
- * underlying panels are unchanged.
+ * Inbox — unifies the admin review queues (user feedback and player
+ * reports/moderation) into one panel with sub-tabs. The underlying panels
+ * are unchanged.
  */
-type SubTab = "feedback" | "reports" | "disputes";
+type SubTab = "feedback" | "reports";
 
 const SUB_TABS: { id: SubTab; label: string; icon: typeof MessageSquare }[] = [
   { id: "feedback", label: "Feedback", icon: MessageSquare },
   { id: "reports", label: "Reports", icon: ShieldAlert },
-  { id: "disputes", label: "Disputes", icon: AlertTriangle },
 ];
 
 export function InboxPanel() {
@@ -45,7 +43,6 @@ export function InboxPanel() {
 
       {tab === "feedback" && <AdminFeedbackPanel />}
       {tab === "reports" && <ModerationPanel />}
-      {tab === "disputes" && <DisputePanel />}
     </div>
   );
 }
