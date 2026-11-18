@@ -35,6 +35,25 @@ vi.mock('firebase/app', () => ({
   getApp: vi.fn(),
 }));
 
+// lib/firebase.ts calls getStorage() at import time; without these mocks the
+// real SDK throws "No Firebase App" into every test that imports it.
+vi.mock('firebase/storage', () => ({
+  getStorage: vi.fn(() => ({})),
+  ref: vi.fn(),
+  uploadBytes: vi.fn(),
+  uploadBytesResumable: vi.fn(),
+  getDownloadURL: vi.fn(),
+  deleteObject: vi.fn(),
+}));
+
+vi.mock('firebase/messaging', () => ({
+  getMessaging: vi.fn(() => ({})),
+  getToken: vi.fn(),
+  onMessage: vi.fn(() => () => {}),
+  deleteToken: vi.fn(),
+  isSupported: vi.fn(async () => false),
+}));
+
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),

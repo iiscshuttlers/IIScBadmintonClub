@@ -35,8 +35,14 @@ jobs:
           cache: 'pnpm'
           
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-        
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check and undefined-reference gate
+        run: pnpm run check
+
+      - name: Unit tests
+        run: pnpm exec vitest run
+
       - name: Build
         env:
           GITHUB_PAGES: "true"

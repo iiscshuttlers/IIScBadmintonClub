@@ -1,0 +1,46 @@
+name: CI
+
+# Same checks as the deploy job, run on every branch and pull request so
+# problems surface before they reach main. Deploys happen only from deploy.yml.
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check and undefined-reference gate
+        run: pnpm run check
+
+      - name: Unit tests
+        run: pnpm exec vitest run
+
+      - name: Build
+        env:
+          GITHUB_PAGES: "true"
+        run: pnpm run build
