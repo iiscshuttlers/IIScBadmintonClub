@@ -730,7 +730,13 @@ function MiniMatchCard({
 
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
-export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {}) {
+/**
+ * Real-time broadcast cards for matches being scored right now.
+ * On a tournament page (tournamentId set) the section disappears while nothing
+ * is broadcasting, and reports how many cards it shows via onLiveCount so the
+ * Match Centre below doesn't repeat them.
+ */
+export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?: string; onLiveCount?: (count: number) => void } = {}) {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const matchAlerts = useUserMatchAlerts(session?.user?.id);
   const [, navigate] = useLocation();
@@ -1141,9 +1147,14 @@ export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {
     return bPinned - aPinned;
   });
 
+  const visibleLiveCount = activeMatchList.filter(m => m.status !== "setup").length;
+  useEffect(() => {
+    onLiveCount?.(visibleLiveCount);
+  }, [visibleLiveCount, onLiveCount]);
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-2">
-      {activeMatchList.filter(m => m.status !== "setup").length > 0 && (
+      {visibleLiveCount > 0 && (
         <div className="flex flex-wrap items-center justify-center gap-2 mb-2 px-4">
           <button
             onClick={() => {
@@ -1182,7 +1193,7 @@ export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {
         </div>
       )}
 
-      <MatchSection 
+      {!(tournamentId && visibleLiveCount === 0) && <MatchSection 
         title="Live Matches" 
         icon={<Activity className="w-5 h-5 text-red-500 animate-pulse" />} 
         matches={activeMatchList.filter(m => m.status !== "setup")} 
@@ -1205,8 +1216,7 @@ export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {
             togglePinScore={togglePinScore}
           />
         )}
-      />
-
+      />}
 
       {takeoverTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

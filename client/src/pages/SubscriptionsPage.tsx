@@ -369,10 +369,8 @@ export default function SubscriptionsPage() {
                   <User className="w-4 h-4 text-primary" />
                   Player Subscriptions ({playerSubs.length})
                 </h2>
-                <Link href="/players">
-                  <span className="text-xs font-bold text-primary hover:underline cursor-pointer">
-                    Player Directory
-                  </span>
+                <Link href="/pulse#directory" className="text-xs font-bold text-primary hover:underline">
+                  Player Directory
                 </Link>
               </div>
 

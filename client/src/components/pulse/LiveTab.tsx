@@ -60,6 +60,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { OrganizerDashboard } from "@/components/events/OrganizerDashboard";
 import { LayoutDashboard, BarChart3 } from "lucide-react";
 import { TournamentNextMatch } from "@/components/tournament/TournamentNextMatch";
+import { useMyTournamentRoles } from "@/hooks/useMyTournamentRoles";
 import { CollapsibleSection } from "@/components/ui/CollapsibleSection";
 import {
   DropdownMenu,
@@ -129,6 +130,14 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
     else setQuerySubTab(sub);
   };
   const [activeTournament, setActiveTournament] = useState<any | null>(route?.tournament ?? null);
+  /** Broadcast cards shown on the Live tab; the Match Centre opens on Upcoming when there are some. */
+  const [broadcastLiveCount, setBroadcastLiveCount] = useState(0);
+  // Same query the Tournaments hub uses, so the Register button can say "pending" / "registered".
+  const { myRoles, refetch: refetchMyRoles } = useMyTournamentRoles(
+    session?.user?.id ?? null,
+    activeTournament ? [activeTournament] : [],
+  );
+  const myRegistration = activeTournament ? myRoles.get(activeTournament.id)?.registration : undefined;
   const [tournaments, setTournaments] = useState<any[]>(route ? [route.tournament] : []);
 
   // Route mode: keep the routed tournament in sync (e.g. after a refetch).
@@ -415,12 +424,22 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           )}
           {activeTournament.require_app_registration && (activeTournament.status === "upcoming" || activeTournament.status === "active") && (
             session ? (
-              <button
-                onClick={() => setShowRegister(true)}
-                className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
-              >
-                <ClipboardList className="w-4 h-4" /> Register for this event
-              </button>
+              myRegistration === "pending" || myRegistration === "approved" ? (
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/40 bg-primary/10 text-primary text-sm font-black hover:bg-primary/15 transition"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  {myRegistration === "approved" ? "You're registered" : "Registration pending"} · View
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
+                >
+                  <ClipboardList className="w-4 h-4" /> Register for this event
+                </button>
+              )
             ) : (
               <Link
                 href="/join"
@@ -437,6 +456,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
         <RegisterModal
           open={showRegister}
           onClose={() => setShowRegister(false)}
+          onRegistered={() => refetchMyRoles()}
           tournament={{
             id: activeTournament.id,
             name: activeTournament.name,
@@ -599,10 +619,15 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
         <>
           {route.tab === "live" && (
             <div className="-mx-4 sm:mx-0 mb-6">
-              <LiveScoreSection tournamentId={activeTournamentId} />
+              <LiveScoreSection tournamentId={activeTournamentId} onLiveCount={setBroadcastLiveCount} />
             </div>
           )}
-          <MatchCentre key={route.tab} tournamentId={activeTournamentId} mode={route.tab === "results" ? "results" : "live"} />
+          <MatchCentre
+            key={route.tab}
+            tournamentId={activeTournamentId}
+            mode={route.tab === "results" ? "results" : "live"}
+            liveShownAbove={route.tab === "live" && broadcastLiveCount > 0}
+          />
           {route.tab === "results" && !isRouteTeam && (
             <div className="mb-6">
               <CollapsibleSection title="Stats" icon={<BarChart3 />} summary="Leaders, streaks and records from finished matches">

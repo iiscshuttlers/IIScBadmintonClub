@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Activity, CalendarClock, LayoutGrid, RefreshCw, WifiOff, AlertTriangle, Loader2 } from "lucide-react";
 import { useQueryState } from "@/hooks/useQueryState";
 import {
@@ -271,8 +271,28 @@ function CourtQueues({ views }: { views: MatchView[] }) {
   );
 }
 
-export function MatchCentre({ tournamentId, mode }: { tournamentId: string; mode: "live" | "results" }) {
-  const [view, setView] = useQueryState<LiveView>("view", "live");
+export function MatchCentre({
+  tournamentId,
+  mode,
+  liveShownAbove = false,
+}: {
+  tournamentId: string;
+  mode: "live" | "results";
+  /** Live broadcast cards are already on screen above: open on Upcoming instead of repeating them. */
+  liveShownAbove?: boolean;
+}) {
+  const [view, setViewParam] = useQueryState<LiveView>("view", "live");
+  const [viewChosen, setViewChosen] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).has("view");
+    } catch {
+      return false;
+    }
+  });
+  const setView = (v: LiveView) => {
+    setViewChosen(true);
+    setViewParam(v);
+  };
   const [catRaw, setCat] = useQueryState<string>("cat", "ALL", true);
   const [court, setCourt] = useQueryState<string>("court", "", true);
   const [date, setDate] = useQueryState<string>("date", "", true);
@@ -306,7 +326,8 @@ export function MatchCentre({ tournamentId, mode }: { tournamentId: string; mode
   const live = useMemo(() => filtered.filter((v) => bucketOf(v) === "live").sort(compareCourtQueue), [filtered]);
   const upcoming = useMemo(() => filtered.filter((v) => bucketOf(v) === "upcoming").sort(compareUpcoming), [filtered]);
 
-  const effectiveView: LiveView = mode === "results" ? "live" : (["live", "upcoming", "courts"] as const).includes(view) ? view : "live";
+  const preferredView: LiveView = !viewChosen && liveShownAbove ? "upcoming" : view;
+  const effectiveView: LiveView = mode === "results" ? "live" : (["live", "upcoming", "courts"] as const).includes(preferredView) ? preferredView : "live";
 
   const tabs: Array<{ id: LiveView; label: string; icon: typeof Activity; count: number }> = [
     { id: "live", label: "Live", icon: Activity, count: live.length },

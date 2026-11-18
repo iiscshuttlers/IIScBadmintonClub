@@ -33,6 +33,7 @@ interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
   tournament: RegTournament;
+  /** Called after registering or withdrawing, so the caller can refresh. */
   onRegistered?: () => void;
 }
 
@@ -128,6 +129,7 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
     if (error) return toast.error(error.message || "Could not withdraw");
     toast.success("You've withdrawn from this event");
     load();
+    onRegistered?.();
   };
 
   if (!open) return null;

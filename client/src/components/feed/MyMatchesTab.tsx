@@ -131,6 +131,9 @@ export function MyMatchesTab() {
                         Browse Tournaments
                       </button>
                     </Link>
+                    <Link href="/pulse#directory" className="px-4 py-2 text-xs font-bold border border-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                      Player Directory
+                    </Link>
                   </div>
                 </>
               ) : (

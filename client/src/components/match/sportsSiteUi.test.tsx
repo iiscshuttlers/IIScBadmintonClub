@@ -254,4 +254,25 @@ describe("MatchCentre", () => {
     expect(screen.getByRole("heading", { name: "Unassigned fixtures" })).toBeInTheDocument();
     expect(screen.getByText("1 fixture")).toBeInTheDocument();
   });
+
+  it("opens on Upcoming when live broadcast cards are already shown above", () => {
+    window.history.replaceState({}, "", "/");
+    liveViews.views = [
+      view({ id: "m1", court: "1", state: "live" }),
+      view({ id: "m2", court: "2", state: "scheduled", scheduledAt: "2026-11-14T11:00:00Z" }),
+    ];
+    render(<MatchCentre tournamentId="t1" mode="live" liveShownAbove />);
+    expect(screen.getByRole("tab", { name: /Upcoming/i })).toHaveAttribute("aria-selected", "true");
+
+    // The viewer can still pick Live, and that choice sticks.
+    fireEvent.click(screen.getByRole("tab", { name: /^Live/i }));
+    expect(screen.getByRole("tab", { name: /^Live/i })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("opens on Live when nothing is shown above", () => {
+    window.history.replaceState({}, "", "/");
+    liveViews.views = [view({ id: "m1", court: "1", state: "live" })];
+    render(<MatchCentre tournamentId="t1" mode="live" />);
+    expect(screen.getByRole("tab", { name: /^Live/i })).toHaveAttribute("aria-selected", "true");
+  });
 });

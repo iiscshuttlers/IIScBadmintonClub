@@ -169,11 +169,10 @@ export function FeaturedTournamentHero({
           <div className="shrink-0 flex items-center justify-end">
             <button
               type="button"
-              aria-label={`Enter tournament hub for ${t.name}`}
+              aria-label={`Open ${t.name}`}
               className="w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-primary text-primary-foreground font-black text-xs sm:text-sm hover:brightness-105 active:scale-95 transition shadow-md focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <span className="sm:hidden">Enter Hub</span>
-              <span className="hidden sm:inline">Enter Tournament Hub</span>
+              <span>Open</span>
               <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
             </button>
           </div>
