@@ -86,7 +86,7 @@ export function PlayerMatchBanner({ tournamentId, onNavigateToTie }: PlayerMatch
                 {isDoubles && (
                   <div className="flex items-center gap-1.5 font-medium">
                     <User className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Partner: <strong>{partner?.full_name || partner?.display_name || 'Assigned Teammate'}</strong></span>
+                    <span>Partner: <strong>{partner?.full_name || partner?.nickname || 'Assigned Teammate'}</strong></span>
                   </div>
                 )}
                 {item.tie?.court && (

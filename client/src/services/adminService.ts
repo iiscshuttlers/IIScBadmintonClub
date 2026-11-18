@@ -392,16 +392,25 @@ export const adminService = {
    * `players:user_id ( full_name, email )`. Throws on error.
    */
   async fetchUserFeedback() {
+    // user_feedback has no foreign key to players, so it can't embed them: the
+    // old `players:user_id ( full_name, email )` embed failed the whole query
+    // (and email is a private column). Names come from the public columns and
+    // email through the admin-only private-data RPC; rows keep the same
+    // `players: { full_name, email }` shape the panel reads.
     const { data, error } = await supabase
       .from("user_feedback")
-      .select(`
-          *,
-          players:user_id ( full_name, email )
-        `)
+      .select("*")
       .order("created_at", { ascending: false });
-
     if (error) throw error;
-    return data;
+
+    const rows = data ?? [];
+    const ids = [...new Set(rows.map((r) => r.user_id).filter((id): id is string => !!id))];
+    if (!ids.length) return rows.map((r) => ({ ...r, players: null }));
+
+    const { data: names } = await supabase.from("players").select("id, full_name").in("id", ids);
+    const withEmail = await withAdminPrivate((names ?? []).map((p) => ({ id: p.id, full_name: p.full_name })));
+    const byId = new Map(withEmail.map((p) => [p.id, { full_name: p.full_name, email: p.email ?? null }]));
+    return rows.map((r) => ({ ...r, players: (r.user_id && byId.get(r.user_id)) || null }));
   },
 
   /** Sets the status of one user_feedback row. Throws on error. */

@@ -963,8 +963,8 @@ export const teamService = {
             team_a:tournament_teams!tournament_ties_team_a_id_fkey(name, short_name),
             team_b:tournament_teams!tournament_ties_team_b_id_fkey(name, short_name)
           ),
-          player1:players!tie_lineups_player1_id_fkey(full_name, display_name),
-          player2:players!tie_lineups_player2_id_fkey(full_name, display_name)
+          player1:players!tie_lineups_player1_id_fkey(full_name, nickname),
+          player2:players!tie_lineups_player2_id_fkey(full_name, nickname)
         `)
       .or(`player1_id.eq.${userId},player2_id.eq.${userId}`);
 
@@ -1094,10 +1094,8 @@ export const teamService = {
               rubber_label,
               playing_order,
               status,
-              winner_team,
-              set1_team1, set1_team2,
-              set2_team1, set2_team2,
-              set3_team1, set3_team2,
+              winner_side,
+              score,
               player1:players!tournament_matches_player1_id_fkey(full_name),
               player2:players!tournament_matches_player2_id_fkey(full_name),
               player3:players!tournament_matches_player3_id_fkey(full_name),

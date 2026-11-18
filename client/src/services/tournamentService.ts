@@ -624,13 +624,18 @@ export async function withdrawTournamentRegistration(id: string) {
   return { error };
 }
 
-/** `confirmed` registrations of a tournament with the player (id, full_name). Throws on error. */
+/**
+ * Approved registrations of a tournament with the player (id, full_name).
+ * Throws on error. (It used to select `category` and filter status
+ * "confirmed"; the column is `categories` and the statuses are
+ * pending | approved | rejected | withdrawn, so the query always failed.)
+ */
 export async function fetchConfirmedRegistrations(tournamentId: string) {
   const { data, error } = await supabase
     .from("tournament_registrations")
-    .select("id, status, category, player:players!player_id(id, full_name)")
+    .select("id, status, categories, player:players!tournament_registrations_player_id_fkey(id, full_name)")
     .eq("tournament_id", tournamentId)
-    .eq("status", "confirmed");
+    .eq("status", "approved");
   if (error) throw error;
   return data || [];
 }

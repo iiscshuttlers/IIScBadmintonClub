@@ -208,12 +208,14 @@ export const subscriptionService = {
    * Deletes the user's alert for one match. The result is not checked: the
    * subscriptions page reports success either way (removeUserMatchAlert throws).
    */
+  /** Throws on failure, so the page's "Failed to remove alert" path runs. */
   async removeMatchSubscription(userId: string, matchId: string): Promise<void> {
-    await supabase
+    const { error } = await supabase
       .from("user_match_notifications")
       .delete()
       .eq("user_id", userId)
       .eq("match_id", matchId);
+    if (error) throw error;
   },
 
   async fetchFollowingMatches(userId: string, followingPlayerIds: string[] = []): Promise<FollowingMatchesResponse> {

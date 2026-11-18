@@ -63,13 +63,9 @@ interface TieMatchItem {
   rubber_label: string;
   playing_order?: number | null;
   status: string;
-  winner_team?: string | null;
-  set1_team1?: number | null;
-  set1_team2?: number | null;
-  set2_team1?: number | null;
-  set2_team2?: number | null;
-  set3_team1?: number | null;
-  set3_team2?: number | null;
+  winner_side?: number | null;
+  /** Already formatted, e.g. "21-17, 20-22, 21-15". */
+  score?: string | null;
   player1?: { full_name: string } | null;
   player2?: { full_name: string } | null;
   player3?: { full_name: string } | null;
@@ -707,10 +703,9 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
           {expanded && (
             <div className="mt-2.5 space-y-2">
               {tie.rubbers.map((rubber) => {
-                const s1 = rubber.set1_team1 !== null ? `${rubber.set1_team1}-${rubber.set1_team2}` : null;
-                const s2 = rubber.set2_team1 !== null ? `${rubber.set2_team1}-${rubber.set2_team2}` : null;
-                const s3 = rubber.set3_team1 !== null ? `${rubber.set3_team1}-${rubber.set3_team2}` : null;
-                const scoreStr = [s1, s2, s3].filter(Boolean).join(", ");
+                // tournament_matches has no per-set columns; `score` is the
+                // stored "21-17, 20-22, 21-15" string.
+                const scoreStr = rubber.score?.trim() || "";
 
                 return (
                   <div 
