@@ -1,7 +1,15 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { PlayerRow } from "@/types";
 import type { Json } from "@/lib/supabase-types-auto";
 import { withAdminPrivate } from "@/services/playerPrivateService";
+
+// match_predictions, prediction_points, weekly_challenges and challenge_progress
+// are not in the production schema: they are missing from the types generated
+// on 18 Nov 2026 and no migration creates them, so the prediction and
+// weekly-challenge admin calls below fail at runtime. They go through this
+// untyped client until those panels are removed or the tables are restored.
+const legacyTables = supabase as unknown as SupabaseClient;
 
 export interface AdminLogEntry {
   id: number;
@@ -409,9 +417,9 @@ export const adminService = {
 
   async getPredictionAdminStats(): Promise<{ total: number; correct: number; topPlayer: string }> {
     const [totalRes, correctRes, topRes] = await Promise.all([
-      supabase.from("match_predictions").select("id", { count: "exact", head: true }),
-      supabase.from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
-      supabase.from("prediction_points").select("total_points, player:players!player_id(full_name)")
+      legacyTables.from("match_predictions").select("id", { count: "exact", head: true }),
+      legacyTables.from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
+      legacyTables.from("prediction_points").select("total_points, player:players!player_id(full_name)")
         .order("total_points", { ascending: false }).limit(1).maybeSingle(),
     ]);
     return {
@@ -422,7 +430,7 @@ export const adminService = {
   },
 
   async resolveMatchPredictions(): Promise<number> {
-    const { data: unresolved } = await supabase
+    const { data: unresolved } = await legacyTables
       .from("match_predictions")
       .select("id, match_id, player_id, predicted_winner_id, points_wagered, match:matches!match_id(winner_id, status)")
       .is("correct", null);
@@ -434,8 +442,8 @@ export const adminService = {
       if (!pred.match?.winner_id || pred.match.status !== "confirmed") continue;
       const correct = pred.predicted_winner_id === pred.match.winner_id;
       const earned = correct ? pred.points_wagered * 2 : 0;
-      await supabase.from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
-      await supabase.from("prediction_points").upsert({
+      await legacyTables.from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
+      await legacyTables.from("prediction_points").upsert({
         player_id: pred.player_id,
         total_points: correct ? 100 + earned : 100 - pred.points_wagered,
       }, { onConflict: "player_id" });
@@ -445,7 +453,7 @@ export const adminService = {
   },
 
   async getWeeklyChallengesForWeek(weekStart: string): Promise<any[]> {
-    const { data, error } = await supabase
+    const { data, error } = await legacyTables
       .from("weekly_challenges")
       .select("*, completions:challenge_progress(count)")
       .eq("week_start", weekStart);
@@ -454,7 +462,7 @@ export const adminService = {
   },
 
   async createWeeklyChallenge(payload: { title: string; description?: string; type: string; target: number; points: number; week_start: string }): Promise<void> {
-    const { error } = await supabase.from("weekly_challenges").insert({
+    const { error } = await legacyTables.from("weekly_challenges").insert({
       description: payload.description ?? "",
       ...payload,
     });
@@ -462,7 +470,7 @@ export const adminService = {
   },
 
   async deleteWeeklyChallenge(id: string): Promise<void> {
-    const { error } = await supabase.from("weekly_challenges").delete().eq("id", id);
+    const { error } = await legacyTables.from("weekly_challenges").delete().eq("id", id);
     if (error) throw error;
   },
 
