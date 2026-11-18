@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import type { BwfMatchState } from "@/types/umpire";
 
 type VoteTally = { t1: number; t2: number };
-type StatProb = { t1: number; t2: number } | null;
 
 function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
   t1Pct: number; t2Pct: number; t1Label: string; t2Label: string; label?: string; tooltip?: string;
@@ -42,8 +41,6 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
 
 export function MatchPredictionCard({
   matchId,
-  t1Ids,
-  t2Ids,
   t1Label,
   t2Label,
   hasStarted,
@@ -56,8 +53,6 @@ export function MatchPredictionCard({
   compact = false
 }: {
   matchId: string;
-  t1Ids: string[];
-  t2Ids: string[];
   t1Label: string;
   t2Label: string;
   hasStarted: boolean;
@@ -69,13 +64,7 @@ export function MatchPredictionCard({
   onToggleRevealResults?: () => void;
   compact?: boolean;
 }) {
-  const [statProb, setStatProb] = useState<StatProb>(null);
   const [tally, setTally] = useState<VoteTally>({ t1: 0, t2: 0 });
-
-  // Load stat probability once
-  useEffect(() => {
-    feedService.fetchStatProb(t1Ids, t2Ids).then(setStatProb);
-  }, [matchId, t1Ids, t2Ids]);
 
   // Load vote tally + realtime (always, so after voting bars update live)
   useEffect(() => {
@@ -142,16 +131,6 @@ export function MatchPredictionCard({
 
           {shouldShowResults ? (
             <>
-              {statProb && !compact && (
-                <ProbBar
-                  t1Pct={statProb.t1}
-                  t2Pct={statProb.t2}
-                  t1Label={t1Label}
-                  t2Label={t2Label}
-                  label="Based on history"
-                  tooltip="Calculated from past match history between these players. If they haven't faced each other, it defaults to their overall win rates."
-                />
-              )}
               {totalVotes === 0 ? (
                 <p className={`${compact ? "text-[10px] mt-1" : "text-xs mt-2"} text-center text-muted-foreground font-medium`}>No votes yet</p>
               ) : (
@@ -325,8 +304,6 @@ export function MatchPredictions() {
             <MatchPredictionCard
               key={m.id}
               matchId={m.id}
-              t1Ids={[m.t1.p1Id, m.t1.p2Id].filter(Boolean) as string[]}
-              t2Ids={[m.t2.p1Id, m.t2.p2Id].filter(Boolean) as string[]}
               t1Label={m.t1.p2Name ? `${m.t1.p1Name} & ${m.t1.p2Name}` : m.t1.p1Name}
               t2Label={m.t2.p2Name ? `${m.t2.p1Name} & ${m.t2.p2Name}` : m.t2.p1Name}
               hasStarted={m.status === "playing"}

@@ -1,29 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchPlayerMatches, fetchPendingMatchesForPlayer } from '@/services/matchService';
+import { fetchPlayerMatches } from '@/services/matchService';
 import type { MatchWithPlayers } from '@/types';
 
 export function usePlayerMatches(playerId: string | undefined) {
   const [matches, setMatches] = useState<MatchWithPlayers[]>([]);
-  const [pendingMatches, setPendingMatches] = useState<MatchWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const refetch = useCallback(async () => {
     if (!playerId) {
       setMatches([]);
-      setPendingMatches([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const [allMatches, pending] = await Promise.all([
-        fetchPlayerMatches(playerId, 200),
-        fetchPendingMatchesForPlayer(playerId)
-      ]);
+      const allMatches = await fetchPlayerMatches(playerId, 200);
       setMatches(allMatches);
-      setPendingMatches(pending);
     } catch (err) {
       setError(err as Error);
       console.error('usePlayerMatches error:', err);
@@ -36,5 +30,5 @@ export function usePlayerMatches(playerId: string | undefined) {
     refetch();
   }, [refetch]);
 
-  return { matches, pendingMatches, loading, error, refetch };
+  return { matches, loading, error, refetch };
 }

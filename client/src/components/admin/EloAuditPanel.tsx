@@ -88,7 +88,7 @@ export function EloAuditPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { logs, players, matches, tourneyMatches, recentLogs } = await adminService.getEloAuditData();
+      const { logs, players, tourneyMatches, recentLogs } = await adminService.getEloAuditData();
 
       setLogs(logs as AuditEntry[]);
 
@@ -96,16 +96,6 @@ export function EloAuditPanel() {
         const playerMap = new Map((players as any[]).map(p => [p.id, p]));
         const winMap: Record<string, number> = {};
         const lossMap: Record<string, number> = {};
-        if (matches) {
-          (matches as any[]).forEach((m) => {
-            if (!m.winner_id) return;
-            const team1 = [m.player1_id, m.team1_partner_id].filter(Boolean);
-            const team2 = [m.player2_id, m.team2_partner_id].filter(Boolean);
-            const isTeam1Win = team1.includes(m.winner_id);
-            (isTeam1Win ? team1 : team2).forEach((id: string) => { winMap[id] = (winMap[id] || 0) + 1; });
-            (isTeam1Win ? team2 : team1).forEach((id: string) => { lossMap[id] = (lossMap[id] || 0) + 1; });
-          });
-        }
         if (tourneyMatches) {
           (tourneyMatches as any[]).forEach((tm) => {
           if (!tm.winner_side) return;
@@ -232,14 +222,13 @@ export function EloAuditPanel() {
     setEloHistory([]);
 
     try {
-      const { logData, allLogsData, matchData, tourneyMatchData } = await adminService.getPlayerEloHistory(player.id);
+      const { logData, allLogsData, tourneyMatchData } = await adminService.getPlayerEloHistory(player.id);
       if (!logData || logData.length === 0) {
         setHistoryLoading(false);
         return;
       }
 
       const matchMap: Record<string, any> = {};
-      (matchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: false }; });
       (tourneyMatchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: true }; });
 
       const logsByMatch: Record<string, any[]> = {};

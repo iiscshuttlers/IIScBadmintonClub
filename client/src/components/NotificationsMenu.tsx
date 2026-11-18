@@ -49,7 +49,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       const type = newNotif.type || "";
       if (type === "match_confirmation") playVictorySound();
       else if (type === "new_match" || type === "match_logged") playServeSound();
-      else if (type === "serve" || type === "kudos" || type === "buddy_request") playServeSound();
+      else if (type === "serve" || type === "buddy_request") playServeSound();
       else if (type === "elo_milestone" || type === "top10") playVictorySound();
       else playWhistleSound();
     });

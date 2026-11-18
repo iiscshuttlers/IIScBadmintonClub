@@ -40,7 +40,7 @@ export function HomePersonalDashboard() {
       .catch(() => {});
   }, []);
 
-  const { matches, pendingMatches, loading: matchesLoading } = usePlayerMatches(myPlayerId || undefined);
+  const { matches, loading: matchesLoading } = usePlayerMatches(myPlayerId || undefined);
   const { myRoles } = useMyTournamentRoles(session?.user?.id, tournaments);
 
   const activeTournaments = useMemo(() => tournaments.filter((t) => t.status === "active"), [tournaments]);
@@ -104,33 +104,15 @@ export function HomePersonalDashboard() {
             <span className="flex items-center gap-1 text-primary">
               <Swords className="w-3.5 h-3.5" /> Next / Pending
             </span>
-            {pendingMatches.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 text-[10px] font-black animate-pulse">
-                Action Required
-              </span>
-            )}
           </div>
-          {pendingMatches.length > 0 ? (
-            <div>
-              <p className="text-xs font-black text-white truncate">
-                Pending score confirmation
-              </p>
-              <Link href={`/player/${myPlayerId}/personal`}>
-                <span className="text-[11px] text-primary hover:underline font-bold mt-1 inline-block cursor-pointer">
-                  Review {pendingMatches.length} pending match →
-                </span>
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs font-bold text-slate-200">No pending matches</p>
-              <Link href="/pulse#directory">
-                <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
-                  Find hitting partners in Directory →
-                </span>
-              </Link>
-            </div>
-          )}
+          <div>
+            <p className="text-xs font-bold text-slate-200">No pending matches</p>
+            <Link href="/pulse#directory">
+              <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
+                Find hitting partners in Directory →
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* Card 2: Your Tournaments */}

@@ -756,12 +756,6 @@ export const teamService = {
     return data as { success: boolean; message: string; team_id?: string };
   },
 
-  async registerDoublesTeam(payload: TablesInsert<'doubles_teams'>) {
-    const { data, error } = await supabase.from('doubles_teams').insert(payload).select().single();
-    if (error) throw error;
-    return data;
-  },
-
   async createTeamRpc(params: {
     tournamentId: string;
     name: string;

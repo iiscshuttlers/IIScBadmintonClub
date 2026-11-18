@@ -17,30 +17,6 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     const channel = supabase
       .channel("system_realtime_db")
       
-      // Match Updates: Surgical optimistic update for scores to prevent thundering herd
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "matches" },
-        (payload) => {
-          queryClient.setQueriesData({ queryKey: ["matches"] }, (oldData: any) => {
-            if (Array.isArray(oldData)) {
-              return oldData.map((m) => (m.id === payload.new.id ? { ...m, ...payload.new } : m));
-            }
-            return oldData;
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "matches" },
-        () => jitteredInvalidate(["matches"])
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "matches" },
-        () => jitteredInvalidate(["matches"])
-      )
-      
       // Notification Updates
       .on(
         "postgres_changes",

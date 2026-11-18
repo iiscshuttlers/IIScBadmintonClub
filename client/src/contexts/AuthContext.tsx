@@ -12,8 +12,6 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 import { toast } from "sonner";
-import { Badge } from "@capawesome/capacitor-badge";
-import { useMatchNotifications } from "@/hooks/useMatchNotifications";
 import { isBiometricEnabled } from "@/lib/biometricAuth";
 
 import type { PlayerRow } from "@/types";
@@ -140,9 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
-  // Global App Badge & Realtime Notifications for pending matches
-  useMatchNotifications(profile?.id);
 
   const isInitializing = sessionLoading || (!!session && fetchedUserId !== session?.user?.id);
 

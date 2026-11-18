@@ -222,4 +222,4 @@ export function sampleNote(sample: number): string | null {
 }
 
 export const RESULT_POLICY_TEXT =
-  "Won–lost counts confirmed friendly results and completed tournament results that have a recorded winner. Walkovers are shown separately and never counted as wins or losses. Pending, in-progress, disputed and cancelled matches are listed but not counted. Retirements are counted as the result that was recorded.";
+  "Won–lost counts completed tournament results that have a recorded winner. Walkovers are shown separately and never counted as wins or losses. Pending, in-progress, disputed and cancelled matches are listed but not counted. Retirements are counted as the result that was recorded.";

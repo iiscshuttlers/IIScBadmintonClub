@@ -2,9 +2,9 @@ import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Bell, Clock, MapPin, PlayCircle } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Share2, Video, Edit2, BarChart2, Trash2, Bell, Clock, MapPin, PlayCircle } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
-import { deleteMatchRecord } from "@/services/matchService";
+import { deleteTournamentMatch } from "@/services/tournamentService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -25,9 +25,6 @@ interface MatchCardProps {
   isLiveNow?: boolean;
   isMatchOfTheDay?: boolean;
   upsetDiff?: number;
-  isKudosed: boolean;
-  kudosCount: number;
-  onKudos?: () => void;
   onShare?: () => void;
   index?: number;
   hideActions?: boolean;
@@ -54,9 +51,6 @@ export function MatchCard({
   isLiveNow = false,
   isMatchOfTheDay = false,
   upsetDiff = 0,
-  isKudosed,
-  kudosCount,
-  onKudos,
   onShare,
   index = 0,
   hideActions = false,
@@ -98,7 +92,7 @@ export function MatchCard({
     if (!highlightUrl) highlightUrl = parts[1];
   }
 
-  // Strip team annotation appended by umpire_submit_match (e.g. "21-15 [Mixed Doubles: ...]")
+  // Strip a trailing team annotation (e.g. "21-15 [Mixed Doubles: ...]")
   displayScore = displayScore.replace(/\s*\[.*$/, "").trim();
 
   const getDisplayCategory = () => {
@@ -249,7 +243,7 @@ export function MatchCard({
     });
     if (!ok) return;
     try {
-      await deleteMatchRecord(match.id, match.is_friendly === false);
+      await deleteTournamentMatch(match.id);
       toast.success("Match deleted");
       const el = document.getElementById(`match-card-${match.id}`);
       if (el) el.style.display = 'none';
@@ -274,9 +268,7 @@ export function MatchCard({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.2}
       onDragEnd={(e, info) => {
-        if (info.offset.x > 100 && onKudos) {
-          onKudos();
-        } else if (info.offset.x < -100 && onShare) {
+        if (info.offset.x < -100 && onShare) {
           onShare();
         }
       }}
@@ -314,7 +306,7 @@ export function MatchCard({
               <div className="flex flex-row items-center justify-between w-full min-w-0">
                 <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>
                   {match.status === "finished" || hasWinner ? <Trophy className="w-3 h-3 shrink-0" /> : <Swords className="w-3 h-3 shrink-0" />}
-                  <span className="truncate">{match.is_friendly === false ? "Tournament" : "Friendly"}</span>
+                  <span className="truncate">Tournament</span>
                   <span className="text-slate-600 dark:text-slate-400 shrink-0">•</span>
                   <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
                 </div>
@@ -392,7 +384,7 @@ export function MatchCard({
             <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
               <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
                 <Swords className="w-3.5 h-3.5" />
-                {match.is_friendly === false ? "Tournament" : "Friendly"}
+                Tournament
               </span>
               {(match.match_code || match.match_number) && (
                 <span className={`text-xs font-black ${getMatchCodeColor(match.match_code).text} ${getMatchCodeColor(match.match_code).bg} px-2 py-0.5 rounded-full border transition-colors`}>
@@ -529,7 +521,7 @@ export function MatchCard({
         isOpen={isEditVideoOpen}
         onClose={() => setIsEditVideoOpen(false)}
         matchId={match.id}
-        tableName={match.is_friendly === false ? "tournament_matches" : "matches"}
+        tableName="tournament_matches"
         initialUrl={highlightUrl || ""}
         onSuccess={(url) => setCurrentVideoUrl(url)}
       />
@@ -544,7 +536,6 @@ export function MatchCard({
         match={match}
         isOpen={isScorecardOpen}
         onClose={() => setIsScorecardOpen(false)}
-        currentUser={currentUser}
       />
 
       {currentUser && (
@@ -569,20 +560,8 @@ export function MatchCard({
 
           {/* Action Buttons Row */}
           <div className="flex items-center justify-between w-full">
-            {/* Left: Like */}
-            <div className="flex items-center justify-start flex-1 min-w-0">
-              <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onKudos) onKudos(); }}
-                className={`flex items-center justify-start gap-1.5 px-2 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${isKudosed
-                    ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-                    : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
-              >
-                <Heart className={`w-3.5 h-3.5 flex-shrink-0 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-                <span className="truncate">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
-              </button>
-            </div>
+            {/* Left: spacer keeps the scoreboard button centred */}
+            <div className="flex-1 min-w-0" />
 
             {/* Center: Scoreboard */}
             <div className="flex items-center justify-center flex-1 min-w-0">

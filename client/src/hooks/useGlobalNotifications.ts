@@ -84,26 +84,14 @@ export function useGlobalNotifications() {
               if (match.status === "playing" && !knownMatchesRef.current.has(match.id)) {
                 knownMatchesRef.current.add(match.id);
 
-                const notifyFriendly = localStorage.getItem("iisc_notify_friendly_matches") !== "false";
+                // Only tournament matches are announced.
+                if (match.isFriendly) return;
                 const notifyTourney = localStorage.getItem("iisc_notify_tournament_started") !== "false";
-
-                if (match.isFriendly && !notifyFriendly) return;
-                if (!match.isFriendly && !notifyTourney) return;
+                if (!notifyTourney) return;
 
                 playWhistleSound();
 
-                if (match.isFriendly) {
-                  const currentProfile = profileRef.current;
-                  if (!currentProfile) return;
-                  const participants = [match.t1?.p1Id, match.t1?.p2Id, match.t2?.p1Id, match.t2?.p2Id].filter(Boolean);
-                  if (participants.includes(currentProfile.id)) return;
-                  const buddies = currentProfile.buddies || [];
-                  const following = currentProfile.following || [];
-                  const isConnected = participants.some(pid => buddies.includes(pid) || following.includes(pid));
-                  if (!isConnected) return;
-                }
-
-                const title = match.isFriendly ? "🏸 Live Friendly Match!" : "🏆 Live Tournament Match!";
+                const title = "🏆 Live Tournament Match!";
                 const body = `${match.t1?.p1Name} vs ${match.t2?.p1Name} is now live!`;
 
                 if (Capacitor.isNativePlatform()) {

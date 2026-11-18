@@ -1,6 +1,4 @@
-import { useState, useMemo } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { useMemo } from "react";
 import { MatchCard as FeedMatchCard } from "@/components/feed/MatchCard";
 import { shareMatch } from "@/lib/shareMatch";
 import type { PersonalMatch } from "@/hooks/usePlayerPersonal";
@@ -9,58 +7,16 @@ import { Sigma, Swords, Users, Trophy } from "lucide-react";
 export type FormatTab = "All" | "Singles" | "Doubles" | "Mixed Doubles";
 
 export function PersonalMatchCardItem({ match, currentUser }: { match: any; currentUser: any }) {
-  const [liked, setLiked] = useState<boolean | null>(null);
-
-  const isLikedLocally = liked !== null ? liked : !!localStorage.getItem(`liked_${match.id}`);
-  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.kudos_count || 0);
-  const isIncludedInBackend = Array.isArray(match.kudos_users) && currentUser?.id && match.kudos_users.includes(currentUser.id);
-
-  let finalKudosCount = baseCount;
-  if (isLikedLocally && !isIncludedInBackend) {
-    finalKudosCount += 1;
-  } else if (!isLikedLocally && isIncludedInBackend) {
-    finalKudosCount = Math.max(0, finalKudosCount - 1);
-  }
-
-  const isKudosed = isLikedLocally || isIncludedInBackend;
-
-  const handleKudos = async () => {
-    const storageKey = `liked_${match.id}`;
-    const isCurrentlyLiked = isKudosed;
-
-    if (!isCurrentlyLiked) {
-      localStorage.setItem(storageKey, "1");
-      setLiked(true);
-      toast.success("Match liked! ❤️");
-    } else {
-      localStorage.removeItem(storageKey);
-      setLiked(false);
-      toast.success("Like removed");
-    }
-
-    if (currentUser?.id) {
-      supabase
-        .rpc("toggle_match_kudos", { p_match_id: match.id })
-        .then(({ error }) => {
-          if (error) console.warn("Failed to sync kudos live:", error);
-        });
-    }
-  };
-
   return (
     <FeedMatchCard
       match={match}
       currentUser={currentUser}
-      isKudosed={isKudosed}
-      kudosCount={finalKudosCount}
-      onKudos={handleKudos}
       onShare={() => shareMatch(match)}
     />
   );
 }
 
 export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, currentUser }: { matches: PersonalMatch[]; fullMatches: any[]; formatTab: FormatTab; setFormatTab: (tab: FormatTab) => void; currentUser: any }) {
-  const [matchTypeFilter, setMatchTypeFilter] = useState<"ALL" | "TOURNAMENT" | "FRIENDLY">("ALL");
 
   const getGroup = (c?: string) => {
     const cat = (c || "").toUpperCase();
@@ -105,13 +61,9 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
       // Format filter
       if (formatTab !== "All" && getGroup(m.category) !== formatTab) return false;
 
-      // Type filter
-      if (matchTypeFilter === "TOURNAMENT" && m.is_friendly !== false) return false;
-      if (matchTypeFilter === "FRIENDLY" && m.is_friendly === false) return false;
-
       return true;
     });
-  }, [fullMatches, formatTab, matchTypeFilter]);
+  }, [fullMatches, formatTab]);
 
   return (
     <div className="space-y-4">
@@ -145,23 +97,8 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
         })}
       </div>
 
-      {/* Match Type Pills Filter */}
-      <div className="flex items-center justify-between gap-3 pt-1">
-        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-          {(["ALL", "TOURNAMENT", "FRIENDLY"] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => setMatchTypeFilter(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                matchTypeFilter === type
-                  ? "bg-white dark:bg-slate-700 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {type === "ALL" ? "All Types" : type === "TOURNAMENT" ? "Tournaments" : "Friendlies"}
-            </button>
-          ))}
-        </div>
+      {/* Match count */}
+      <div className="flex items-center justify-end gap-3 pt-1">
         <div className="text-xs font-semibold text-muted-foreground">
           Showing {filtered.length} match{filtered.length === 1 ? "" : "es"}
         </div>

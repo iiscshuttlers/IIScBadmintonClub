@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildAdminActionCards, countDelayedMatches, countScheduleConflicts } from "./adminActions";
 
-const base = { disputedResults: 0, guestIdentities: 0, unsyncedOnThisDevice: 0 };
+const base = { guestIdentities: 0, unsyncedOnThisDevice: 0 };
 
 describe("buildAdminActionCards", () => {
   it("produces no cards when nothing needs action", () => {
@@ -33,9 +33,9 @@ describe("buildAdminActionCards", () => {
   });
 
   it("removes a card once its count is resolved", () => {
-    const before = buildAdminActionCards({ ...base, disputedResults: 1, tournaments: [] });
-    const after = buildAdminActionCards({ ...base, disputedResults: 0, tournaments: [] });
-    expect(before.map((c) => c.id)).toEqual(["disputes"]);
+    const before = buildAdminActionCards({ ...base, guestIdentities: 1, tournaments: [] });
+    const after = buildAdminActionCards({ ...base, guestIdentities: 0, tournaments: [] });
+    expect(before.map((c) => c.id)).toEqual(["guests"]);
     expect(after).toEqual([]);
   });
 

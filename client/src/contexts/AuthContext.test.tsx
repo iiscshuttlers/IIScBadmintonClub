@@ -31,10 +31,6 @@ vi.mock('@/hooks/usePushNotifications', () => ({
   usePushNotifications: vi.fn(),
 }));
 
-vi.mock('@/hooks/useMatchNotifications', () => ({
-  useMatchNotifications: vi.fn(),
-}));
-
 vi.mock('@/lib/biometricAuth', () => ({
   isBiometricEnabled: vi.fn().mockReturnValue(false),
 }));

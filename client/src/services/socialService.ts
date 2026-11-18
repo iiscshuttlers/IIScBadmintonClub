@@ -91,20 +91,8 @@ export const socialService = {
     });
     if (error) console.warn("Failed to persist ping notification:", error.message);
   },
-
-  async toggleMatchKudos(matchId: string, giverName: string, isCurrentlyLiked: boolean) {
-    const { error } = await supabase.rpc("toggle_match_kudos", { p_match_id: matchId });
-    if (error) console.warn("Failed to sync kudos live:", error);
-
-    if (!isCurrentlyLiked) {
-      void supabase.functions.invoke("notify-kudos", {
-        body: { match_id: matchId, giver_name: giverName },
-      }).catch(() => {});
-    }
-  },
 };
 
 export const fetchPlayerEndorsements = socialService.fetchPlayerEndorsements;
 export const upsertPlayerEndorsement = socialService.upsertPlayerEndorsement;
 export const sendPingNotification = socialService.sendPingNotification;
-export const toggleMatchKudos = socialService.toggleMatchKudos;

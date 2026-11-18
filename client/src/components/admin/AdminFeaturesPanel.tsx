@@ -316,8 +316,11 @@ function DbHealthPanel() {
 function CronJobsPanel() {
   const jobs = [
     { name: "batch-notifications", schedule: "Every 15 min", desc: "Sends queued push notifications" },
-    { name: "match-confirmation-nudge", schedule: "Every 2 hours", desc: "Nudges players to confirm pending matches" },
-    { name: "challenge-expiry-reminders", schedule: "Sundays 8pm IST", desc: "Reminds players of expiring challenges" },
+    { name: "send-match-reminders", schedule: "Every 5 min", desc: "Reminds players and subscribers before their matches" },
+    { name: "dispatch-scheduled-notifications", schedule: "Every 2 min", desc: "Delivers scheduled announcements and alerts" },
+    { name: "notify-up-next", schedule: "Every minute", desc: "Tells players their match is next on court" },
+    { name: "lineup-deadline-reminders", schedule: "Every 5 min", desc: "Reminds team captains before lineup deadlines" },
+    { name: "take_ranking_snapshot", schedule: "Mondays 12:05am IST", desc: "Saves the weekly ranking snapshot" },
   ];
 
   return (

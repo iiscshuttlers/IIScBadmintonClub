@@ -8,8 +8,6 @@ import {
   setUserMatchNotification,
   getLiveMatchesFromSiteData,
   requestTakeoverLiveMatch,
-  umpireSubmitMatch,
-  confirmFriendlyMatch,
   setMatchAlert,
   setAdminPush,
   subscribeToLiveMatches,
@@ -714,8 +712,6 @@ function MiniMatchCard({
         <div className="mt-auto">
           <MatchPredictionCard
             matchId={m.id}
-            t1Ids={[m.player1_id, m.player3_id].filter(Boolean)}
-            t2Ids={[m.player2_id, m.player4_id].filter(Boolean)}
             t1Label={[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
             t2Label={[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
             hasStarted={m.status !== "scheduled" && m.status !== "pending"}
@@ -1091,51 +1087,25 @@ export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {
     }
   };
 
-  // ── Admin: enter final score → submit confirmed match + remove broadcast ──
+  // ── Admin: enter final score → submit tournament result + remove broadcast ──
   const handleSubmit = async (m: BwfMatchState, winner: 1 | 2, setsText: string) => {
     const sets = setsText.split(",").map(s => s.trim()).filter(Boolean);
-    const winnerId = winner === 1 ? m.t1.p1Id : m.t2.p1Id;
-    let finalScoreStr = sets.join(", ");
-    if (m.category !== "Singles") {
-      finalScoreStr += ` [${m.t1.p1Name}+${m.t1.p2Name ?? ""} vs ${m.t2.p1Name}+${m.t2.p2Name ?? ""}]`;
-    }
     try {
-      let submitId: string | null = null;
-      try {
-        submitId = await umpireSubmitMatch({
-          umpire_id:        session?.user?.id || "",
-          player1_id:       m.t1.p1Id,
-          player2_id:       m.t2.p1Id,
-          team1_partner_id: m.t1.p2Id || "",
-          team2_partner_id: m.t2.p2Id || "",
-          winner_id:        winnerId,
-          match_score:      finalScoreStr,
-          match_category:   m.category,
-          match_round:      m.matchNumber || (m.isFriendly ? "Friendly" : "Tournament"),
-          is_friendly:      m.isFriendly,
-          sets_history:     sets,
-          started_at:       new Date(m.pointLog?.[0]?.ts || Date.now()).toISOString(),
-          ended_at:         new Date().toISOString(),
-        });
-      } catch (error: any) {
-        if (!m.isFriendly && m.id) {
-          console.warn("umpire_submit_match failed, but continuing for tournament match:", error);
-        } else {
-          throw error;
-        }
+      if (m.isFriendly || !m.id) {
+        // Friendly matches are not recorded anywhere; only end the broadcast.
+        await handleKill(m.id);
+        toast.info("Broadcast ended. Friendly results are not saved.");
+        return;
       }
-      
-      if (!m.isFriendly && m.id) {
-        await submitTournamentMatch({
-          p_match_id: m.id,
-          p_winner_side: winner,
-          p_score: sets.join(", "),
-          p_sets: sets,
-          p_umpire_id: null,
-        });
-      }
-      if (submitId && m.isFriendly) await confirmFriendlyMatch(submitId, "umpire_bypass");
-      const notifMsg = `🏆 ${m.isFriendly ? "Friendly" : "Tournament"} Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
+
+      await submitTournamentMatch({
+        p_match_id: m.id,
+        p_winner_side: winner,
+        p_score: sets.join(", "),
+        p_sets: sets,
+        p_umpire_id: null,
+      });
+      const notifMsg = `🏆 Tournament Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
       await setMatchAlert(notifMsg);
 
       await handleKill(m.id);

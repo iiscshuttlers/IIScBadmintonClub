@@ -100,7 +100,6 @@ export default function Navigation() {
     userName,
     userEmail,
     userAvatar,
-    pendingActionCount,
     myTeamId,
     teamActionCount,
   } = useNavigationAuth();

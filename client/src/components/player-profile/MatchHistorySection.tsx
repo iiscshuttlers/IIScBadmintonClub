@@ -51,10 +51,6 @@ interface MatchHistorySectionProps {
   id: string;
   liveMatches: any[];
   ownPlayerProfile: any;
-  handleWithdrawMatch: (matchId: string) => Promise<void>;
-  handleConfirmMatch?: (matchId: string) => Promise<void>;
-  handleRejectMatch?: (matchId: string) => Promise<void>;
-  handleResendRequest?: (match: any) => Promise<void>;
   defaultOpen?: boolean;
 }
 
@@ -62,10 +58,6 @@ export function MatchHistorySection({
   id,
   liveMatches,
   ownPlayerProfile,
-  handleWithdrawMatch,
-  handleConfirmMatch,
-  handleRejectMatch,
-  handleResendRequest,
   defaultOpen = true,
 }: MatchHistorySectionProps) {
   const [, setLocation] = useLocation();
@@ -75,13 +67,7 @@ export function MatchHistorySection({
   >("tournament");
 
   const confirmedMatches = liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed");
-  const pendingMatchesList = liveMatches
-    .filter((m) => m.status === "pending")
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-  if (confirmedMatches.length === 0 && pendingMatchesList.length === 0)
+  if (confirmedMatches.length === 0)
     return null;
 
   const getGenderColor = (gender?: string | null) => {
@@ -129,11 +115,6 @@ export function MatchHistorySection({
               <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
                 {confirmedMatches.length} matches
               </span>
-              {pendingMatchesList.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
-                  {pendingMatchesList.length} pending
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -197,170 +178,6 @@ export function MatchHistorySection({
               )}
 
               {/* Filter Tabs temporarily removed to show only tournament matches */}
-
-              {/* Pending Matches Banner */}
-              {pendingMatchesList.length > 0 && (
-                <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 mb-4 ml-2">
-                  <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">
-                    ⏳ {pendingMatchesList.length} Pending Verification
-                  </div>
-                  <div className="space-y-2">
-                    {pendingMatchesList.map((m, idx) => {
-                      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
-                      let partner = null;
-                      let me = null;
-                      if (isTeam1 && (m.team1_partner_id || m.partner1)) {
-                        partner = m.player1_id === id ? m.partner1 : m.player1;
-                        me = m.player1_id === id ? m.player1 : m.partner1;
-                      } else if (!isTeam1 && (m.team2_partner_id || m.partner2)) {
-                        partner = m.player2_id === id ? m.partner2 : m.player2;
-                        me = m.player2_id === id ? m.player2 : m.partner2;
-                      } else {
-                        me = isTeam1 ? m.player1 : m.player2;
-                      }
-
-                      let opponents: any[] = [];
-                      const oppTeamLabel = isTeam1 ? m.team2_label : m.team1_label;
-                      if (isTeam1) {
-                        if (m.player2) opponents.push(m.player2);
-                        if (m.partner2) opponents.push(m.partner2);
-                      } else {
-                        if (m.player1) opponents.push(m.player1);
-                        if (m.partner1) opponents.push(m.partner1);
-                      }
-                      
-                      if (opponents.length === 0) {
-                        const labelStr = (oppTeamLabel || "").toUpperCase();
-                        if (labelStr.includes("BYE") || labelStr === "BYE") {
-                          opponents.push({ id: "bye", full_name: "BYE", gender: "unknown" });
-                        } else if (labelStr) {
-                          opponents.push({ id: "tbd", full_name: oppTeamLabel, gender: "unknown" });
-                        }
-                      }
-
-                      // Dynamic format label
-                      let formatLabel = "S";
-                      const allGenders = [me?.gender, partner?.gender, ...opponents.map(o => o?.gender)]
-                        .map(g => (g || '').toLowerCase())
-                        .filter(Boolean);
-                        
-                      if (partner || opponents.length > 1) {
-                        const hasMale = allGenders.includes('male');
-                        const hasFemale = allGenders.includes('female');
-                        if (hasMale && hasFemale) {
-                          formatLabel = "XD";
-                        } else if (hasFemale) {
-                          formatLabel = "WD";
-                        } else {
-                          formatLabel = "MD";
-                        }
-                      } else {
-                        if (me?.gender?.toLowerCase() === 'female' || opponents[0]?.gender?.toLowerCase() === 'female') {
-                          formatLabel = "WS";
-                        } else {
-                          formatLabel = "MS";
-                        }
-                      }
-
-                      const isSubmitter =
-                        ownPlayerProfile &&
-                        m.submitted_by === ownPlayerProfile.id;
-                      const isOpponent =
-                        isMatchParticipant(m, ownPlayerProfile?.id) &&
-                        !isSubmitter;
-
-                      return (
-                        <div
-                          key={`pen-${m.id || idx}`}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30"
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">
-                              ?
-                            </div>
-                            <div className="flex-1 min-w-0 py-1">
-                              <div className="flex flex-col gap-1.5">
-                                {partner && (
-                                  <div className="flex items-center gap-2 mb-0.5 leading-none">
-                                    <span className="text-[10px] font-black text-blue-500 dark:text-blue-400 w-6 text-right">with</span>
-                                    <span className={`text-xs font-bold truncate ${getGenderColor(partner.gender)}`}>
-                                      {partner.full_name}
-                                    </span>
-                                  </div>
-                                )}
-                                {opponents.map((opp, i) => (
-                                  <div key={i} className="flex items-center gap-2 leading-none">
-                                    {i === 0 ? (
-                                      <span className="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase w-6 text-right">vs</span>
-                                    ) : (
-                                      <span className="text-[10px] font-black text-rose-400/80 dark:text-rose-500/80 uppercase w-6 text-right">&</span>
-                                    )}
-                                    <span className={`font-black truncate ${getGenderColor(opp?.gender)}`}>
-                                      {opp?.full_name ?? "Unknown"}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="mt-2 flex flex-col gap-1 items-start">
-                                <BeautifulScoreDisplay score={m.match_score || m.score} />
-                              </div>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground shrink-0">
-                              {new Date(m.created_at).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                            {isSubmitter && (
-                              <>
-                                <button
-                                  onClick={() => handleWithdrawMatch(m.id)}
-                                  className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors border border-rose-200 dark:border-rose-800/50"
-                                >
-                                  Withdraw Match
-                                </button>
-                                {handleResendRequest && (
-                                  <button
-                                    onClick={() => handleResendRequest(m)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary/20 dark:bg-primary/30 dark:hover:bg-primary/40 text-primary dark:text-primary transition-colors border border-primary/40 dark:border-primary/50"
-                                  >
-                                    Resend Request
-                                  </button>
-                                )}
-                              </>
-                            )}
-                            {isOpponent &&
-                              handleConfirmMatch &&
-                              handleRejectMatch && (
-                                <>
-                                  <button
-                                    onClick={() => handleConfirmMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-primary-foreground transition-colors"
-                                  >
-                                    Confirm
-                                  </button>
-                                  <button
-                                    onClick={() => handleRejectMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-muted-foreground dark:text-slate-200 transition-colors"
-                                  >
-                                    Reject
-                                  </button>
-                                </>
-                              )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* Match List — BWF table style */}
               <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">

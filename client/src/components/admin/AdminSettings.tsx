@@ -492,30 +492,6 @@ export function AdminSettings() {
               </button>
             </div>
           </div>
-
-          {/* Teams */}
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border">
-            <div>
-              <p className="font-bold text-foreground text-sm">Doubles Teams</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Registered teams & stats.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select id="fmt-doubles_teams" className="text-xs p-1.5 rounded-lg border border-border bg-background text-foreground outline-none">
-                 <option value="csv">CSV</option>
-                 <option value="xlsx">Excel</option>
-                 <option value="json">JSON</option>
-                 <option value="pdf">PDF</option>
-              </select>
-              <button
-                onClick={() => exportData("doubles_teams", "Teams")}
-                disabled={exporting !== null}
-                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
-              >
-                {exporting === "doubles_teams" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Export
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

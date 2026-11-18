@@ -25,15 +25,6 @@ export function useAdminPlayers() {
   });
 }
 
-export function useOtherPlayersSlim(currentUserId?: string) {
-  return useQuery({
-    queryKey: ["players", "other_slim", currentUserId],
-    queryFn: () => currentUserId ? playerService.getOtherPlayersSlim(currentUserId) : Promise.resolve([]),
-    enabled: !!currentUserId,
-    staleTime: 1000 * 60 * 15,
-  });
-}
-
 export function usePlayerBuddies(profileId: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["players", "buddies", profileId],
@@ -47,22 +38,6 @@ export function useFollowers(profileId?: string) {
     queryKey: ["players", "followers", profileId],
     queryFn: () => profileId ? playerService.getFollowers(profileId) : Promise.resolve([]),
     enabled: !!profileId,
-  });
-}
-
-export function usePendingMatches(profileId?: string) {
-  return useQuery({
-    queryKey: ["matches", "pending", profileId],
-    queryFn: () => profileId ? playerService.getPendingMatches(profileId) : Promise.resolve([]),
-    enabled: !!profileId,
-  });
-}
-
-export function useAllMatches() {
-  return useQuery({
-    queryKey: ["matches", "all_completed"],
-    queryFn: () => playerService.getAllCompletedMatches(),
-    staleTime: 1000 * 60 * 10,
   });
 }
 

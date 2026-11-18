@@ -2,25 +2,16 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { adminService } from "@/services/adminService";
 import {
-  Users, Trophy, Activity, Clock, TrendingUp, TrendingDown,
-  Zap, CheckCircle, XCircle, AlertTriangle, BarChart3, Download, Database
+  Users, Activity, Zap, AlertTriangle, BarChart3, Database
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { format, subDays, parseISO } from "date-fns";
-import { Capacitor } from "@capacitor/core";
 
 interface Stats {
   totalPlayers: number;
   approvedPlayers: number;
   pendingPlayers: number;
-  totalMatches: number;
-  matchesThisWeek: number;
-  pendingMatches: number;
   avgElo: number;
   topPlayer: { name: string; elo: number } | null;
-  biggestGainerWeek: { name: string; gain: number } | null;
   eloDistribution: { label: string; count: number; color: string }[];
-  matchVolumeData: { date: string; matches: number }[];
   dbLatency: number;
 }
 
@@ -43,24 +34,9 @@ export function AdminStatsOverview() {
       try {
         const {
           players,
-          totalMatchesCount,
-          weekMatches,
-          pendingMatchesCount,
           pendingPlayersCount,
           dbLatency,
         } = await adminService.fetchAdminStatsOverview();
-
-        // Calculate Match Volume for last 7 days
-        const volumeMap: Record<string, number> = {};
-        for (let i = 6; i >= 0; i--) {
-          const d = format(subDays(new Date(), i), "MMM d");
-          volumeMap[d] = 0;
-        }
-        weekMatches.forEach((m) => {
-          const d = format(parseISO(m.created_at), "MMM d");
-          if (volumeMap[d] !== undefined) volumeMap[d]++;
-        });
-        const matchVolumeData = Object.entries(volumeMap).map(([date, matches]) => ({ date, matches }));
 
         // ELO distribution
         const eloDistribution = TIER_BANDS.map((band) => ({
@@ -75,29 +51,13 @@ export function AdminStatsOverview() {
 
         const topPlayer = players.sort((a, b) => (b.elo_rating ?? 0) - (a.elo_rating ?? 0))[0];
 
-        // Biggest gainer this week
-        const gains: Record<string, number> = {};
-        for (const m of weekMatches) {
-          if (m.elo_change_p1 != null) gains[m.player1_id] = (gains[m.player1_id] ?? 0) + m.elo_change_p1;
-          if (m.elo_change_p2 != null) gains[m.player2_id] = (gains[m.player2_id] ?? 0) + m.elo_change_p2;
-        }
-        const topGainerId = Object.entries(gains).sort((a, b) => b[1] - a[1])[0]?.[0];
-        const topGainerData = topGainerId
-          ? { name: players.find((p) => p.id === topGainerId)?.full_name ?? "Unknown", gain: gains[topGainerId] }
-          : null;
-
         setStats({
           totalPlayers: players.filter((p) => p.is_approved).length,
           approvedPlayers: players.filter((p) => p.is_approved).length,
           pendingPlayers: pendingPlayersCount,
-          totalMatches: totalMatchesCount,
-          matchesThisWeek: weekMatches.length,
-          pendingMatches: pendingMatchesCount,
           avgElo,
           topPlayer: topPlayer ? { name: topPlayer.full_name, elo: topPlayer.elo_rating ?? 1200 } : null,
-          biggestGainerWeek: topGainerData,
           eloDistribution,
-          matchVolumeData,
           dbLatency,
         });
       } catch (e) {
@@ -124,12 +84,8 @@ export function AdminStatsOverview() {
   const kpis = [
     { label: "Approved Players", value: stats.approvedPlayers, icon: Users, color: "text-primary", bg: "bg-primary/10 dark:bg-primary/20" },
     { label: "Pending Approval", value: stats.pendingPlayers, icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/20", alert: stats.pendingPlayers > 0 },
-    { label: "Total Matches", value: stats.totalMatches, icon: Trophy, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/20" },
-    { label: "Matches This Week", value: stats.matchesThisWeek, icon: Activity, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-950/20" },
-    { label: "Pending Matches", value: stats.pendingMatches, icon: Clock, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-950/20", alert: stats.pendingMatches > 0 },
     { label: "Avg ELO", value: stats.avgElo, icon: BarChart3, color: "text-teal-500", bg: "bg-teal-50 dark:bg-teal-950/20" },
     { label: "Top Player", value: stats.topPlayer?.name?.split(" ")[0] ?? "—", sub: stats.topPlayer ? `${stats.topPlayer.elo} ELO` : "", icon: Zap, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/20" },
-    { label: "Biggest Gainer (7d)", value: stats.biggestGainerWeek?.name?.split(" ")[0] ?? "—", sub: stats.biggestGainerWeek ? `+${stats.biggestGainerWeek.gain} ELO` : "No matches yet", icon: TrendingUp, color: "text-primary", bg: "bg-primary/10 dark:bg-primary/20" },
     { label: "DB Latency", value: `${stats.dbLatency}ms`, icon: Database, color: stats.dbLatency > 500 ? "text-rose-500" : "text-sky-500", bg: stats.dbLatency > 500 ? "bg-rose-50 dark:bg-rose-950/20" : "bg-sky-50 dark:bg-sky-950/20" },
   ];
 
@@ -197,28 +153,6 @@ export function AdminStatsOverview() {
               </span>
             </div>
           ))}
-        </div>
-      </div>
-      
-      {/* Match Volume Over Time */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
-        <h3 className="text-sm font-black text-muted-foreground dark:text-foreground mb-6 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-violet-500" /> Match Volume (Last 7 Days)
-        </h3>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={stats.matchVolumeData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
-              <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
-              <RechartsTooltip 
-                contentStyle={{ backgroundColor: '#131417', borderColor: '#24252a', borderRadius: '12px', color: '#f8fafc', fontWeight: 'bold' }}
-                itemStyle={{ color: '#a78bfa' }}
-                cursor={{ stroke: '#334155', strokeWidth: 1, strokeDasharray: '4 4' }}
-              />
-              <Line type="monotone" dataKey="matches" name="Matches" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </div>

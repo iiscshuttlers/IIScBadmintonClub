@@ -146,7 +146,7 @@ export function MatchScorecard({
   showShare?: boolean;
   /** Extra labels in the header row, e.g. "Match of the day", "Upset". Text, not interactive. */
   badges?: React.ReactNode;
-  /** Interactive extras (kudos, polls) rendered below the card, outside the link. */
+  /** Interactive extras (e.g. polls) rendered below the card, outside the link. */
   footer?: React.ReactNode;
 }) {
   const summary = scoreSummary(view);

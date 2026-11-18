@@ -109,20 +109,6 @@ export const feedService = {
     }
   },
 
-  async getRivalryHeadToHead(player1Id: string, player2Id: string) {
-    const { data, error } = await supabase
-      .from("matches")
-      .select("*")
-      .or(
-        `and(player1_id.eq.${player1Id},player2_id.eq.${player2Id}),and(player1_id.eq.${player2Id},player2_id.eq.${player1Id})`,
-      )
-      .in("status", ["confirmed", "walkover"])
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data ?? [];
-  },
-
   async getLiveMatchVotes(matchIds: string[], userId?: string) {
     if (!matchIds.length) return { votes: [], myVotes: [] };
     const { data: votes } = await supabase
@@ -281,66 +267,6 @@ export const feedService = {
     };
   },
 
-  async fetchStatProb(t1Ids: string[], t2Ids: string[]): Promise<{ t1: number; t2: number } | null> {
-    if (!t1Ids.length || !t2Ids.length) return null;
-
-    const { data } = await supabase
-      .from("matches")
-      .select("player1_id, team1_partner_id, player2_id, team2_partner_id, winner_id")
-      .or(
-        `and(player1_id.in.(${t1Ids.join(",")}),player2_id.in.(${t2Ids.join(",")})),` +
-        `and(player1_id.in.(${t2Ids.join(",")}),player2_id.in.(${t1Ids.join(",")}))`
-      )
-      .limit(100);
-
-    if (!data || data.length === 0) {
-      const allIds = [...t1Ids, ...t2Ids];
-      const { data: allMatches } = await supabase
-        .from("matches")
-        .select("player1_id, team1_partner_id, player2_id, team2_partner_id, winner_id")
-        .or(
-          allIds.map(id => `player1_id.eq.${id},player2_id.eq.${id},team1_partner_id.eq.${id},team2_partner_id.eq.${id}`).join(",")
-        )
-        .limit(200);
-      if (!allMatches || allMatches.length === 0) return null;
-
-      const winRate = (ids: string[]) => {
-        let wins = 0, total = 0;
-        for (const match of allMatches) {
-          const isT1 = ids.includes(match.player1_id) || ids.includes(match.team1_partner_id ?? "");
-          const isT2 = ids.includes(match.player2_id) || ids.includes(match.team2_partner_id ?? "");
-          if (!isT1 && !isT2) continue;
-          total++;
-          if (ids.includes(match.winner_id ?? "")) wins++;
-        }
-        return total === 0 ? 0.5 : wins / total;
-      };
-
-      const r1 = winRate(t1Ids), r2 = winRate(t2Ids);
-      const sum = r1 + r2;
-      if (sum === 0) return { t1: 50, t2: 50 };
-      const t1 = Math.round((r1 / sum) * 100);
-      return { t1, t2: 100 - t1 };
-    }
-
-    let t1Wins = 0, t2Wins = 0;
-    for (const match of data) {
-      const matchT1Ids = [match.player1_id, match.team1_partner_id].filter(Boolean);
-      const winnerIsMatchT1 = matchT1Ids.includes(match.winner_id);
-      const matchT1IsOurT1 = t1Ids.some(id => matchT1Ids.includes(id));
-      if (winnerIsMatchT1) {
-        matchT1IsOurT1 ? t1Wins++ : t2Wins++;
-      } else {
-        matchT1IsOurT1 ? t2Wins++ : t1Wins++;
-      }
-    }
-    const total = t1Wins + t2Wins || 1;
-    return {
-      t1: Math.round((t1Wins / total) * 100),
-      t2: Math.round((t2Wins / total) * 100),
-    };
-  },
-
   async fetchVoteTally(matchId: string): Promise<{ t1: number; t2: number }> {
     const { data } = await supabase
       .from("live_match_votes")
@@ -400,26 +326,12 @@ export const feedService = {
 
     const matchIds = [...new Set(votes.map(v => v.live_match_id))];
 
-    const [{ data: matches }, { data: tourneyMatches }] = await Promise.all([
-      supabase
-        .from("matches")
-        .select("id, player1_id, player2_id, team1_partner_id, team2_partner_id, winner_id")
-        .in("id", matchIds),
-      supabase
-        .from("tournament_matches")
-        .select("id, player1_id, player2_id, player3_id, player4_id, winner_side")
-        .in("id", matchIds),
-    ]);
+    const { data: tourneyMatches } = await supabase
+      .from("tournament_matches")
+      .select("id, player1_id, player2_id, player3_id, player4_id, winner_side")
+      .in("id", matchIds);
 
     const matchWinnerMap: Record<string, 1 | 2> = {};
-
-    if (matches) {
-      for (const m of matches) {
-        if (!m.winner_id) continue;
-        const isT1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-        matchWinnerMap[m.id] = isT1Winner ? 1 : 2;
-      }
-    }
 
     if (tourneyMatches) {
       for (const m of tourneyMatches) {

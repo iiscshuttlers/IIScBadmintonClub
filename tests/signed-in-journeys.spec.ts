@@ -180,7 +180,6 @@ function expectNoPrivatePlayerReads(seen: Seen) {
 test("member compares two players: reconciled totals, walkover kept separate", async ({ page }) => {
   const seen = await installApi(page, MEMBER, {
     tournament_matches: () => H2H_MATCHES,
-    matches: () => [],
   });
   await page.goto(`/h2h?a=${MEMBER}&b=${RIVAL}`);
   await expect(page.getByRole("heading", { name: "Head-to-head" })).toBeVisible();
@@ -221,13 +220,13 @@ test("admin dashboard lists actionable items that link to their fix", async ({ p
     tournaments: () => [{ id: TOURNAMENT, name: "Club Open", status: "active", start_date: day(-2), end_date: day(2) }],
     tournament_officials: () => [],
     tournament_matches: () => [],
-    matches: () => 2,
   });
   await page.goto("/admin#overview");
   await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible();
   const officials = page.getByRole("button", { name: /Club Open: no umpire or referee assigned/ });
   await expect(officials).toBeVisible();
-  await expect(page.getByRole("button", { name: /2 disputed results awaiting a decision/ })).toBeVisible();
+  // Friendly-match disputes were removed with the friendly matches table.
+  await expect(page.getByRole("button", { name: /disputed results/ })).toHaveCount(0);
   await officials.click();
   await expect(page).toHaveURL(new RegExp(`/tournament-admin\\?id=${TOURNAMENT}&tab=officials`));
   expectNoPrivatePlayerReads(seen);

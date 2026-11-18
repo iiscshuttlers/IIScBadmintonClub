@@ -28,10 +28,6 @@ export function GlossarySection() {
           title: "Buddy System",
           desc: "Mark close friends as Buddies. See who's online and looking to play.",
         },
-        {
-          title: "Match Kudos",
-          desc: "Swipe right on any match in the feed to instantly give Kudos to your friends.",
-        },
       ],
     },
     {

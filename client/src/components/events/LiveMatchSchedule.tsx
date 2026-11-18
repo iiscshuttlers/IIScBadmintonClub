@@ -469,8 +469,6 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                               <MatchPredictionCard
                                 compact
                                 matchId={m.id}
-                                t1Ids={[]}
-                                t2Ids={[]}
                                 t1Label={m.team1_label ?? "TBD"}
                                 t2Label={m.team2_label ?? "TBD"}
                                 hasStarted={isLive || isCompleted}

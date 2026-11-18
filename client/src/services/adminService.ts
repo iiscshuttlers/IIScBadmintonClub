@@ -33,18 +33,6 @@ export interface PushBroadcastResult {
   total?: number;
 }
 
-export interface PendingGuestMatch {
-  id: string;
-  created_at: string;
-  score: string;
-  category: string;
-  winner_id: string;
-  player1: { id: string; full_name: string; is_guest?: boolean } | null;
-  player2: { id: string; full_name: string; is_guest?: boolean } | null;
-  partner1?: { id: string; full_name: string; is_guest?: boolean } | null;
-  partner2?: { id: string; full_name: string; is_guest?: boolean } | null;
-}
-
 export const adminService = {
   async logAction(action: string, details?: string | Record<string, unknown> | null, adminEmail = "admin"): Promise<void> {
     const { error } = await supabase.from("admin_logs").insert({
@@ -75,7 +63,7 @@ export const adminService = {
   },
 
   async getEloAuditData() {
-    const [logsRes, playersRes, matchesRes, tourneyMatchesRes, recentLogsRes] = await Promise.all([
+    const [logsRes, playersRes, tourneyMatchesRes, recentLogsRes] = await Promise.all([
       supabase
         .from("admin_logs")
         .select("id, admin_email, action, details, created_at")
@@ -86,10 +74,6 @@ export const adminService = {
         .from("players")
         .select("id, full_name, elo_rating, singles_elo, doubles_elo, mixed_elo, gender, department, singles_matches_played, doubles_matches_played, mixed_matches_played")
         .order("elo_rating", { ascending: false }),
-      supabase
-        .from("matches")
-        .select("player1_id, player2_id, team1_partner_id, team2_partner_id, winner_id")
-        .in("status", ["confirmed", "walkover"]),
       supabase
         .from("tournament_matches")
         .select("id, player1_id, player2_id, player3_id, player4_id, winner_id, winner_side, match_number, match_code, category, created_at")
@@ -103,13 +87,11 @@ export const adminService = {
 
     if (logsRes.error) throw logsRes.error;
     if (playersRes.error) throw playersRes.error;
-    if (matchesRes.error) throw matchesRes.error;
     if (tourneyMatchesRes.error) throw tourneyMatchesRes.error;
 
     return {
       logs: logsRes.data || [],
       players: (playersRes.data || []) as unknown as PlayerRow[],
-      matches: matchesRes.data || [],
       tourneyMatches: tourneyMatchesRes.data || [],
       recentLogs: recentLogsRes.data || [],
     };
@@ -124,7 +106,7 @@ export const adminService = {
       .limit(50);
 
     if (logErr) throw logErr;
-    if (!logData || logData.length === 0) return { logs: [], matches: {}, tourneyMatches: {} };
+    if (!logData || logData.length === 0) return { logs: [], tourneyMatches: {} };
 
     const matchIds = [...new Set(logData.map((l) => l.match_uuid).filter(Boolean))];
     let allLogsData: Array<Record<string, unknown>> = [];
@@ -153,18 +135,6 @@ export const adminService = {
       }
     }
 
-    const { data: matchData } = await supabase
-      .from("matches")
-      .select(`
-        id, score, category, created_at,
-        player1:players!player1_id(id, full_name),
-        player2:players!player2_id(id, full_name),
-        partner1:players!team1_partner_id(id, full_name),
-        partner2:players!team2_partner_id(id, full_name),
-        player1_id, player2_id, team1_partner_id, team2_partner_id
-      `)
-      .in("id", matchIds);
-
     const { data: tourneyMatchData } = await supabase
       .from("tournament_matches")
       .select(`
@@ -180,7 +150,6 @@ export const adminService = {
     return {
       logData: logData || [],
       allLogsData,
-      matchData: matchData || [],
       tourneyMatchData: tourneyMatchData || [],
     };
   },
@@ -261,36 +230,11 @@ export const adminService = {
     return data;
   },
 
-  async getPendingGuestMatches(): Promise<PendingGuestMatch[]> {
-    const { data, error } = await supabase
-      .from("matches")
-      .select(
-        "id, created_at, score, category, winner_id, " +
-          "player1:players!player1_id(id,full_name,is_guest), " +
-          "player2:players!player2_id(id,full_name,is_guest), " +
-          "partner1:players!team1_partner_id(id,full_name,is_guest), " +
-          "partner2:players!team2_partner_id(id,full_name,is_guest)",
-      )
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    const matches = ((data as unknown as PendingGuestMatch[]) ?? []).filter((row) =>
-      [row.player1, row.player2, row.partner1, row.partner2].some((p) => p?.is_guest),
-    );
-    return matches;
-  },
-
   async claimGuestPlayer(guestId: string, realPlayerId: string): Promise<void> {
     const { error } = await supabase.rpc("claim_guest_player", {
       p_guest_id: guestId,
       p_real_player_id: realPlayerId,
     });
-    if (error) throw error;
-  },
-
-  async rejectGuestMatch(matchId: string): Promise<void> {
-    const { error } = await supabase.from("matches").delete().eq("id", matchId);
     if (error) throw error;
   },
 
@@ -433,45 +377,6 @@ export const adminService = {
     if (error) throw error;
   },
 
-  async fetchAdminStats(since7d: string) {
-    const [playersRes, matchesRes, weekMatchesRes, pendingMatchRes, pendingPlayersRes] =
-      await Promise.all([
-        supabase.from("players").select("id, full_name, elo_rating, is_approved").is("deleted_at", null),
-        supabase.from("matches").select("id", { count: "exact", head: true }).in("status", ["confirmed", "walkover"]),
-        supabase.from("matches").select("id, player1_id, player2_id, elo_change_p1, elo_change_p2, created_at").in("status", ["confirmed", "walkover"]).gte("created_at", since7d),
-        supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", false).is("deleted_at", null),
-      ]);
-
-    return {
-      players: playersRes.data ?? [],
-      matchesCount: matchesRes.count ?? 0,
-      weekMatches: weekMatchesRes.data ?? [],
-      pendingMatchesCount: pendingMatchRes.count ?? 0,
-      pendingPlayersCount: pendingPlayersRes.count ?? 0,
-    };
-  },
-
-  async fetchDisputedMatches(): Promise<any[]> {
-    const { data, error } = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(id,full_name,avatar_url), player2:players!player2_id(id,full_name,avatar_url), partner1:players!team1_partner_id(id,full_name,avatar_url), partner2:players!team2_partner_id(id,full_name,avatar_url)")
-      .eq("status", "disputed")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return data ?? [];
-  },
-
-  async resolveDispute(matchId: string, action: "uphold" | "override", newWinnerId?: string): Promise<void> {
-    if (action === "uphold") {
-      const { error } = await supabase.from("matches").update({ status: "confirmed", dispute_reason: null } as any).eq("id", matchId);
-      if (error) throw error;
-    } else if (action === "override" && newWinnerId) {
-      const { error } = await supabase.from("matches").update({ status: "confirmed", winner_id: newWinnerId, dispute_reason: null } as any).eq("id", matchId);
-      if (error) throw error;
-    }
-  },
-
   async fetchRecycleBin(): Promise<any[]> {
     const { data, error } = await supabase
       .from("recycle_bin")
@@ -608,41 +513,24 @@ export const adminService = {
 
   async fetchAdminStatsOverview() {
     const startTime = performance.now();
-    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [playersRes, matchesRes, weekMatchesRes, pendingMatchRes, pendingPlayersRes] =
+    const [playersRes, pendingPlayersRes] =
       await Promise.all([
         supabase.from("players").select("id, full_name, elo_rating, is_approved").is("deleted_at", null),
-        supabase.from("matches").select("id", { count: "exact", head: true }).in("status", ["confirmed", "walkover"]),
-        supabase.from("matches").select("id, player1_id, player2_id, elo_change_p1, elo_change_p2, created_at").in("status", ["confirmed", "walkover"]).gte("created_at", since7d),
-        supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", false).is("deleted_at", null),
       ]);
 
     if (playersRes.error) throw playersRes.error;
-    if (weekMatchesRes.error) throw weekMatchesRes.error;
 
     return {
       players: playersRes.data ?? [],
-      totalMatchesCount: matchesRes.count ?? 0,
-      weekMatches: weekMatchesRes.data ?? [],
-      pendingMatchesCount: pendingMatchRes.count ?? 0,
       pendingPlayersCount: pendingPlayersRes.count ?? 0,
       dbLatency: Math.round(performance.now() - startTime),
     };
   },
 
-  async fetchDisputes() {
-    return this.fetchDisputedMatches();
-  },
-
   async fetchRecycleBinItems() {
     return this.fetchRecycleBin();
-  },
-
-  async confirmFriendlyMatch(matchUuid: string, confirmerId = "umpire_bypass") {
-    const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: confirmerId });
-    if (error) throw error;
   },
 
   async recalculateTournamentElo() {

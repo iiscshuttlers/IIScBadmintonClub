@@ -1,18 +1,14 @@
 import { supabase } from '@/lib/supabase';
 import type { RealtimePostgresChangesPayload, SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Json, Tables } from '@/lib/supabase-types-auto';
-import { MATCH_SELECT_WITH_PLAYERS } from '@/types';
+import type { Json, Tables } from '@/lib/supabase-types-auto';
 import type { MatchWithPlayers } from '@/types';
-import { deleteTournamentMatch } from './tournamentService';
 
 // live_matches is not in the production schema (missing from the types
 // generated on 18 Nov 2026), and updateMatchVideoUrl picks its table at
 // runtime. Both go through this untyped client.
 const untypedTables = supabase as unknown as SupabaseClient;
 
-type UmpireSubmitMatchArgs = Database["public"]["Functions"]["umpire_submit_match"]["Args"];
-
-/** The date fields the merged friendly + tournament feeds are sorted by. */
+/** The date fields the tournament match feeds are sorted by. */
 type FeedSortDates = {
   ended_at?: string | null;
   scheduled_at?: string | null;
@@ -56,18 +52,8 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
       })) as unknown as MatchWithPlayers[];
     }
   } catch {
-    /* intentional — fallback to dual tables if view is unavailable on remote database */
+    /* intentional — fall back to tournament_matches if the view is unavailable on the remote database */
   }
-
-  const filter = `player1_id.eq.${playerId},player2_id.eq.${playerId},team1_partner_id.eq.${playerId},team2_partner_id.eq.${playerId}`;
-  const { data: friendlyData, error: friendlyError } = await supabase
-    .from("matches")
-    .select(MATCH_SELECT_WITH_PLAYERS)
-    .in("status", ["confirmed", "pending"])
-    .or(filter)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (friendlyError) throw friendlyError;
 
   const tFilter = `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`;
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
@@ -95,7 +81,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
       team2_partner_id: m.player4_id,
     }));
 
-  const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
+  const allMatches = [...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
     const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
     const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -104,34 +90,13 @@ export async function fetchPlayerMatches(playerId: string, limit = 200): Promise
   return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
 }
 
-export async function fetchPendingMatchesForPlayer(playerId: string): Promise<MatchWithPlayers[]> {
-  const filter = `player1_id.eq.${playerId},player2_id.eq.${playerId},team1_partner_id.eq.${playerId},team2_partner_id.eq.${playerId}`;
-  const { data, error } = await supabase
-    .from("matches")
-    .select(MATCH_SELECT_WITH_PLAYERS)
-    .eq("status", "pending")
-    .neq("submitted_by", playerId)
-    .or(filter);
-  if (error) throw error;
-  return (data ?? []) as unknown as MatchWithPlayers[];
-}
-
 export async function fetchFeedMatches(
   limit = 100,
   categoryFilter = "all",
   timeFilter = "all",
   tournamentFilter = "all",
-  opts: { includeFriendlies?: boolean } = {},
 ): Promise<MatchWithPlayers[]> {
-  // Pulse's match list is tournament-only (owner decision 5, 14 Nov 2026);
-  // other callers keep the original mixed feed.
-  const includeFriendlies = opts.includeFriendlies ?? true;
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
-
-  let friendlyQuery = supabase
-    .from("matches")
-    .select(MATCH_SELECT_WITH_PLAYERS)
-    .in("status", ["confirmed"]);
 
   let tourneyCompletedQuery = supabase
     .from("tournament_matches")
@@ -148,7 +113,6 @@ export async function fetchFeedMatches(
   const isTournamentSpecific = !!tournamentFilter && tournamentFilter !== "all";
 
   if (isTournamentSpecific) {
-    friendlyQuery = friendlyQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // Don't fetch friendly matches for a specific tournament
     tourneyCompletedQuery = tourneyCompletedQuery.eq("tournament_id", tournamentFilter);
     tourneyUpcomingQuery = tourneyUpcomingQuery.eq("tournament_id", tournamentFilter);
   }
@@ -158,18 +122,14 @@ export async function fetchFeedMatches(
     const disc = `category.eq.${categoryFilter},match_code.like.${categoryFilter}_%`;
     tourneyCompletedQuery = tourneyCompletedQuery.or(disc);
     tourneyUpcomingQuery = tourneyUpcomingQuery.or(disc);
-    friendlyQuery = friendlyQuery.eq("category", categoryFilter);
   } else if (categoryFilter !== "all") {
     if (categoryFilter === "singles") {
-      friendlyQuery = friendlyQuery.not("category", "ilike", "%Doubles%");
       tourneyCompletedQuery = tourneyCompletedQuery.not("category", "ilike", "%Doubles%");
       tourneyUpcomingQuery = tourneyUpcomingQuery.not("category", "ilike", "%Doubles%");
     } else if (categoryFilter === "doubles") {
-      friendlyQuery = friendlyQuery.ilike("category", "%Doubles%").not("category", "ilike", "%Mixed%");
       tourneyCompletedQuery = tourneyCompletedQuery.ilike("category", "%Doubles%").not("category", "ilike", "%Mixed%");
       tourneyUpcomingQuery = tourneyUpcomingQuery.ilike("category", "%Doubles%").not("category", "ilike", "%Mixed%");
     } else if (categoryFilter === "mixed") {
-      friendlyQuery = friendlyQuery.ilike("category", "%Mixed%");
       tourneyCompletedQuery = tourneyCompletedQuery.ilike("category", "%Mixed%");
       tourneyUpcomingQuery = tourneyUpcomingQuery.ilike("category", "%Mixed%");
     }
@@ -179,34 +139,28 @@ export async function fetchFeedMatches(
     const now = new Date();
     if (timeFilter === "today") {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      friendlyQuery = friendlyQuery.gte("created_at", today);
       tourneyCompletedQuery = tourneyCompletedQuery.gte("created_at", today);
       tourneyUpcomingQuery = tourneyUpcomingQuery.gte("scheduled_at", today);
     } else if (timeFilter === "week") {
       const weekAgo = new Date();
       weekAgo.setDate(now.getDate() - 7);
-      friendlyQuery = friendlyQuery.gte("created_at", weekAgo.toISOString());
       tourneyCompletedQuery = tourneyCompletedQuery.gte("created_at", weekAgo.toISOString());
       tourneyUpcomingQuery = tourneyUpcomingQuery.gte("scheduled_at", weekAgo.toISOString());
     } else if (timeFilter === "month") {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      friendlyQuery = friendlyQuery.gte("created_at", monthStart);
       tourneyCompletedQuery = tourneyCompletedQuery.gte("created_at", monthStart);
       tourneyUpcomingQuery = tourneyUpcomingQuery.gte("scheduled_at", monthStart);
     }
   }
 
     const [
-      { data: friendlyData, error: friendlyError },
       { data: completedData, error: completedError },
       { data: upcomingData, error: upcomingError }
     ] = await Promise.all([
-      isTournamentSpecific || !includeFriendlies ? Promise.resolve({ data: [], error: null }) : friendlyQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyCompletedQuery.order("created_at", { ascending: false }).limit(limit),
       tourneyUpcomingQuery.order("scheduled_at", { ascending: true }).limit(limit)
     ]);
   
-    if (friendlyError) throw friendlyError;
     if (completedError) throw completedError;
     if (upcomingError) throw upcomingError;
   
@@ -224,7 +178,7 @@ export async function fetchFeedMatches(
         team2_partner_id: m.player4_id,
       }));
   
-    const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
+    const allMatches = [...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
       const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
       const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
       return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -233,43 +187,9 @@ export async function fetchFeedMatches(
     return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
   }
 
-export async function confirmMatch(matchId: string, confirmerId: string) {
-  const { data, error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId, confirmer_id: confirmerId });
-  if (error) throw error;
-  return data;
-}
-
 import type { BwfMatchState } from "@/types/umpire";
 
 export class MatchService {
-  static async updateMatch(
-    matchUuid: string,
-    winnerId: string | undefined,
-    matchScore: string,
-    matchCategory: string,
-    setsHistory: string[]
-  ) {
-    const { error } = await supabase.rpc("umpire_update_match", {
-      match_uuid: matchUuid,
-      winner_id: winnerId,
-      match_score: matchScore,
-      match_category: matchCategory,
-      sets_history: setsHistory
-    });
-    if (error) throw error;
-  }
-
-  static async submitMatch(payload: UmpireSubmitMatchArgs) {
-    const { data: submitId, error: submitError } = await supabase.rpc("umpire_submit_match", payload);
-    if (submitError) throw submitError;
-    return submitId;
-  }
-
-  static async confirmFriendlyMatch(matchUuid: string) {
-    const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: "umpire_bypass" });
-    if (error) throw error;
-  }
-
   private static liveMatchDebounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
   /** Latest state per match that has not reached the database yet. */
   private static pendingLiveMatches: Record<string, BwfMatchState> = {};
@@ -382,34 +302,9 @@ export class MatchService {
     return fetchPlayerMatches(playerId, limit);
   }
 
-  static async fetchPendingMatchesForPlayer(playerId: string) {
-    return fetchPendingMatchesForPlayer(playerId);
-  }
-
   static async fetchFeedMatches(limit = 50) {
     return fetchFeedMatches(limit);
   }
-
-  static async countPendingMatchesForPlayer(playerId: string) {
-    return countPendingMatchesForPlayer(playerId);
-  }
-}
-
-export async function fetchFriendlyMatchesForAdmin(limit = 500) {
-  const { data, error } = await supabase
-    .from("matches")
-    .select(`
-      *,
-      player1:players!matches_player1_id_fkey(id, full_name, avatar_url, gender),
-      player2:players!matches_player2_id_fkey(id, full_name, avatar_url, gender),
-      partner1:players!team1_partner_id(id, full_name, avatar_url, gender),
-      partner2:players!team2_partner_id(id, full_name, avatar_url, gender)
-    `)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
 }
 
 export async function fetchTournamentMatchesForAdmin(tournamentId: string, category: string) {
@@ -431,37 +326,6 @@ export async function fetchTournamentMatchesForAdmin(tournamentId: string, categ
 
   if (error) throw error;
   return data ?? [];
-}
-
-export async function deleteFriendlyMatch(id: string): Promise<void> {
-  const { error } = await supabase.from("matches").delete().eq("id", id);
-  if (error) throw error;
-}
-
-
-
-export async function deleteMatchRecord(id: string, isTournament: boolean): Promise<void> {
-  if (isTournament) {
-    return deleteTournamentMatch(id);
-  }
-  return deleteFriendlyMatch(id);
-}
-
-export async function rejectFriendlyMatch(id: string): Promise<void> {
-  const { error } = await supabase.from("matches").update({ status: "rejected" }).eq("id", id);
-  if (error) throw error;
-}
-
-export async function fileMatchDispute(matchId: string, disputeReason: string, fallbackUserId: string): Promise<void> {
-  await supabase.from("notifications").insert({
-    user_id: fallbackUserId,
-    title: "⚠️ Match Disputed",
-    message: `Match #${matchId.slice(0, 8)} disputed by a player: "${disputeReason}"`,
-    type: "match_dispute",
-    link: `/feed`,
-  });
-  const { error } = await (supabase.from("matches").update as any)({ is_disputed: true, dispute_reason: disputeReason }).eq("id", matchId);
-  if (error) throw error;
 }
 
 export async function fetchTodayTournamentMatches(): Promise<any[]> {
@@ -536,31 +400,6 @@ export async function requestTakeoverLiveMatch(matchId: string, requester: { id:
     status: "pending",
   };
   const { error } = await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
-  if (error) throw error;
-}
-
-export async function umpireSubmitMatch(params: {
-  umpire_id: string;
-  player1_id: string;
-  player2_id: string;
-  team1_partner_id?: string;
-  team2_partner_id?: string;
-  winner_id: string;
-  match_score: string;
-  match_category: string;
-  match_round: string;
-  is_friendly: boolean;
-  sets_history: string[];
-  started_at: string;
-  ended_at: string;
-}): Promise<string | null> {
-  const { data, error } = await supabase.rpc("umpire_submit_match", params as UmpireSubmitMatchArgs);
-  if (error) throw error;
-  return data as string | null;
-}
-
-export async function confirmFriendlyMatch(matchUuid: string, confirmerId: string = "umpire_bypass"): Promise<void> {
-  const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: confirmerId });
   if (error) throw error;
 }
 
@@ -814,29 +653,9 @@ export async function fetchRecentCompletedMatches(params: {
       is_friendly: false,
       is_tournament_match: true,
     }));
-  } else {
-    const { data, error } = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!team1_partner_id(full_name, gender), partner2:players!team2_partner_id(full_name, gender)")
-      .in("status", ["confirmed", "pending"])
-      .order("created_at", { ascending: false })
-      .limit(params.limit);
-
-    if (error) throw error;
-    return data || [];
   }
-}
-
-export async function countPendingMatchesForPlayer(playerId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from("matches")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "pending")
-    .or(`submitted_by.neq.${playerId},submitted_by.is.null`)
-    .or(`player1_id.eq.${playerId},player2_id.eq.${playerId},team1_partner_id.eq.${playerId},team2_partner_id.eq.${playerId}`);
-
-  if (error) return 0;
-  return count ?? 0;
+  // Only tournament submissions exist; friendly matches were removed.
+  return [];
 }
 
 export async function getLiveMatchesAdminList(limit = 10): Promise<any[]> {
@@ -863,16 +682,6 @@ export async function deleteLiveMatch(id: string): Promise<void> {
     .delete()
     .eq("id", id);
   if (error) throw error;
-}
-
-export async function fetchMatchById(id: string): Promise<Tables<"matches">> {
-  const { data, error } = await supabase
-    .from("matches")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
 }
 
 export async function fetchLiveFeedMatches(limit = 5): Promise<any[]> {
@@ -913,54 +722,6 @@ export async function updateLiveMatchScore(matchId: string, payload: Record<stri
     .update(payload)
     .eq("id", matchId);
   if (error) throw error;
-}
-
-export async function submitFriendlyMatch(params: {
-  submitter_id: string;
-  opponent_id: string;
-  match_winner_id: string;
-  match_score: string;
-  submitter_partner_id?: string | null;
-  opponent_partner_id?: string | null;
-}): Promise<void> {
-  const { error } = await supabase.rpc("submit_friendly_match", {
-    submitter_id: params.submitter_id,
-    opponent_id: params.opponent_id,
-    match_winner_id: params.match_winner_id,
-    match_score: params.match_score,
-    submitter_partner_id: params.submitter_partner_id ?? null,
-    opponent_partner_id: params.opponent_partner_id ?? null,
-  });
-  if (error) throw error;
-}
-
-export async function logFriendlyMatch(
-  rpcPayload: {
-    submitter_id: string;
-    opponent_id: string;
-    match_winner_id: string;
-    match_score: string;
-    submitter_partner_id?: string | null;
-    opponent_partner_id?: string | null;
-  },
-  isTournament = false,
-  currentUserId?: string
-): Promise<void> {
-  const { error: rpcError } = await supabase.rpc("submit_friendly_match", rpcPayload);
-  if (rpcError) throw rpcError;
-
-  if (isTournament && currentUserId) {
-    const { data: latestMatches } = await supabase
-      .from("matches")
-      .select("id")
-      .eq("submitted_by", currentUserId)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1);
-    if (latestMatches?.length === 1) {
-      await supabase.from("matches").update({ is_friendly: false, round: "Tournament" } as any).eq("id", latestMatches[0].id);
-    }
-  }
 }
 
 export async function createLiveMatch(payload: Record<string, unknown>): Promise<void> {

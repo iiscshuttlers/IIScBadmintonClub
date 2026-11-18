@@ -14,7 +14,6 @@ import {
   Quote,
   LogOut,
   Settings,
-  Swords,
   Footprints,
   Flag,
   Bell,
@@ -25,7 +24,6 @@ import { getPlayerSubscription, subscribeToPlayer, unsubscribeFromPlayer } from 
 
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
-import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
@@ -54,7 +52,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 // Extracted Hooks & Components
 import { TeaserOverlay } from "@/components/TeaserOverlay";
@@ -86,11 +83,6 @@ import { ClaimRecordCard } from "@/components/player-profile/ClaimRecordCard";
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
 };
 
 export default function PlayerProfile() {
@@ -131,7 +123,7 @@ export default function PlayerProfile() {
   }, []);
 
   // Use Custom Hooks
-  const { player, loading, eloRank, liveMatches, eloLogs, isMatchParticipant, silentRefresh } =
+  const { player, loading, eloRank, liveMatches, eloLogs } =
     usePlayerProfileQuery(id, ownPlayerProfile?.id);
 
   const {
@@ -139,13 +131,6 @@ export default function PlayerProfile() {
     recentOpponents,
     bestOpponent,
   } = useProfileAnalytics(id, player, liveMatches, eloLogs, ownPlayerProfile);
-
-  const {
-    handleWithdrawMatch,
-    handleConfirmMatch,
-    handleRejectMatch,
-    handleResendRequest,
-  } = useMatchActions(ownPlayerProfile, () => silentRefresh(), () => {}, liveMatches);
 
   const { archivedTournaments } = useArchivedTournaments();
 
@@ -229,13 +214,6 @@ export default function PlayerProfile() {
     validAchievements,
     tournamentRuns || undefined
   );
-
-  const pendingMatches = useMemo(() => {
-    if (!player) return [];
-    return liveMatches.filter(
-      (m) => m.status === "pending" && isMatchParticipant(m, player.id)
-    );
-  }, [liveMatches, player, isMatchParticipant]);
 
   const currentYearNow = new Date().getFullYear();
   const profileYear = player?.joined_year || (player?.created_at ? new Date(player.created_at).getFullYear() : currentYearNow);
@@ -663,67 +641,6 @@ export default function PlayerProfile() {
         animate="visible"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 pt-2 pb-24 space-y-6"
       >
-        {/* Pending Match Verification Banner */}
-        {(activeTab === "MATCHES" || activeTab === "OVERVIEW") &&
-          currentUser &&
-          currentUser.id === player.id &&
-          pendingMatches.length > 0 && (
-            <motion.div
-              variants={itemVariants}
-              className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-5 relative overflow-hidden mt-8"
-            >
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0" />
-              <h3 className="text-amber-400 font-black mb-4 flex items-center gap-2 text-sm">
-                <Swords className="w-4 h-4" /> Pending Match Verifications (
-                {pendingMatches.length})
-              </h3>
-              <div className="space-y-3">
-                {pendingMatches.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/25 p-4 rounded-xl border border-amber-500/20"
-                  >
-                    <div className="text-sm font-semibold text-muted-foreground dark:text-foreground/80 text-center sm:text-left">
-                      <span className="font-bold">{m.player1?.full_name}</span>
-                      <span className="text-amber-400 font-black italic mx-2">VS</span>
-                      <span className="font-bold">{m.player2?.full_name}</span>
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      {m.submitted_by === player.id ? (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleWithdrawMatch(m.id)}
-                          className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                        >
-                          Withdraw
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => handleConfirmMatch(m.id)}
-                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                          >
-                            Confirm
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRejectMatch(m.id)}
-                            className="flex-1 sm:flex-none rounded-xl text-xs font-black"
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
         <TeaserOverlay isLocked={!authSession}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
             {/* ── LEFT COLUMN ── */}
@@ -740,10 +657,6 @@ export default function PlayerProfile() {
                   id={id!}
                   liveMatches={liveMatches}
                   ownPlayerProfile={ownPlayerProfile}
-                  handleWithdrawMatch={handleWithdrawMatch}
-                  handleConfirmMatch={handleConfirmMatch}
-                  handleRejectMatch={handleRejectMatch}
-                  handleResendRequest={handleResendRequest}
                 />
               )}
 
@@ -780,10 +693,6 @@ export default function PlayerProfile() {
                   id={id!}
                   liveMatches={liveMatches}
                   ownPlayerProfile={ownPlayerProfile}
-                  handleWithdrawMatch={handleWithdrawMatch}
-                  handleConfirmMatch={handleConfirmMatch}
-                  handleRejectMatch={handleRejectMatch}
-                  handleResendRequest={handleResendRequest}
                 />
               )}
 

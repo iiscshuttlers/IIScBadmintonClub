@@ -454,15 +454,10 @@ export function UmpireTab({
           </div>
 
           {/* Recent Submissions Log */}
-          {hasActiveTournament && canRunTournament ? (
+          {hasActiveTournament && canRunTournament && (
             <RecentUmpireMatches
               isTournament={true}
               tournamentId={resolvedTournamentId}
-              onEdit={startMatch}
-            />
-          ) : (
-            <RecentUmpireMatches
-              isTournament={false}
               onEdit={startMatch}
             />
           )}

@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ isAdmin: false }) }));
 vi.mock("@/contexts/ConfirmContext", () => ({ useConfirm: () => ({ confirm: async () => false }) }));
 vi.mock("@/hooks/useUserMatchAlerts", () => ({ useUserMatchAlerts: () => [] }));
-vi.mock("@/services/matchService", () => ({ deleteMatchRecord: vi.fn() }));
+vi.mock("@/services/tournamentService", () => ({ deleteTournamentMatch: vi.fn() }));
 vi.mock("./EditVideoModal", () => ({ EditVideoModal: () => null }));
 vi.mock("./VideoPlayerModal", () => ({ VideoPlayerModal: () => null }));
 vi.mock("./MatchScorecardModal", () => ({ MatchScorecardModal: () => null }));
@@ -44,7 +44,7 @@ function row(over: Record<string, unknown> = {}) {
 
 function renderCard(match: Record<string, unknown>, isExpanded = true) {
   return render(
-    <MatchCard match={match} currentUser={null} isKudosed={false} kudosCount={0} isExpanded={isExpanded} />,
+    <MatchCard match={match} currentUser={null} isExpanded={isExpanded} />,
   );
 }
 

@@ -24,29 +24,6 @@ export const playerService = {
     return (data ?? []) as unknown as PlayerRow[];
   },
 
-  async getAllCompletedMatches() {
-    const { data, error } = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(full_name, avatar_url, gender), player2:players!player2_id(full_name, avatar_url, gender), partner1:players!team1_partner_id(full_name, avatar_url, gender), partner2:players!team2_partner_id(full_name, avatar_url, gender)")
-      .in("status", ["confirmed", "walkover"])
-      .order("created_at", { ascending: false });
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async getOtherPlayersSlim(currentUserId: string) {
-    const { data, error } = await supabase
-      .from("players")
-      .select("id, full_name, avatar_url, gender, is_guest")
-      .neq("id", currentUserId)
-      .is("deleted_at", null)
-      .order("full_name");
-    
-    if (error) throw error;
-    return data;
-  },
-
   async getBuddies(profileId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from("players")
@@ -66,27 +43,6 @@ export const playerService = {
 
     if (error) throw error;
     return data;
-  },
-
-  async getPendingMatches(profileId: string) {
-    const fullRes = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .eq("status", "pending")
-      .neq("submitted_by", profileId)
-      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`);
-    
-    if (!fullRes.error) return fullRes.data || [];
-
-    const fallbackRes = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .eq("status", "pending")
-      .neq("submitted_by", profileId)
-      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
-    
-    if (fallbackRes.error) throw fallbackRes.error;
-    return fallbackRes.data || [];
   },
 
   async updateFollowing(userId: string, newFollowingIds: string[]) {
@@ -349,29 +305,6 @@ export const playerService = {
     return data ?? [];
   },
 
-  async fetchSearchDoublesTeams(q: string) {
-    const { data, error } = await supabase
-      .from("doubles_teams")
-      .select("id, team_name, player1_id, player2_id, elo_rating")
-      .ilike("team_name", `%${q}%`)
-      .limit(4);
-    if (error) throw error;
-    return data ?? [];
-  },
-
-  async fetchSearchMatches(matchingIds: string[]) {
-    if (!matchingIds.length) return [];
-    const { data, error } = await supabase
-      .from("matches")
-      .select("id, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .in("status", ["confirmed", "walkover"])
-      .or(`player1_id.in.(${matchingIds.join(",")}),player2_id.in.(${matchingIds.join(",")})`)
-      .order("created_at", { ascending: false })
-      .limit(4);
-    if (error) throw error;
-    return data ?? [];
-  },
-
   async fetchSiteDataEntry(key: string) {
     const { data } = await supabase.from("site_data").select("value").eq("key", key).maybeSingle();
     return { data };
@@ -397,8 +330,6 @@ export const deleteNotification = playerService.deleteNotification;
 export const clearAllNotifications = playerService.clearAllNotifications;
 export const deleteAccount = playerService.deleteAccount;
 export const fetchSearchPlayers = playerService.fetchSearchPlayers;
-export const fetchSearchDoublesTeams = playerService.fetchSearchDoublesTeams;
-export const fetchSearchMatches = playerService.fetchSearchMatches;
 export const fetchSiteDataEntry = playerService.fetchSiteDataEntry;
 
 

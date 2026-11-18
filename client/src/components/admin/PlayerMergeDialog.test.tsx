@@ -22,7 +22,7 @@ const base = {
   guest: { id: "g", name: "Asha (guest)" },
   target: { id: "r", name: "Asha Rao" },
   references: [
-    { table: "matches", column: "player1_id", rows: 3 },
+    { table: "tournament_participants", column: "player_id", rows: 3 },
     { table: "tournament_matches", column: "player2_id", rows: 2 },
   ],
   conflicts: [],
@@ -45,7 +45,7 @@ describe("PlayerMergeDialog", () => {
     merge.mockResolvedValue({ applied: true });
     renderDialog();
     expect(await screen.findByText("Records that will move (5)")).toBeTruthy();
-    expect(screen.getByText(/Friendly matches/)).toBeTruthy();
+    expect(screen.getByText(/Tournament entries/)).toBeTruthy();
     const btn = screen.getByRole("button", { name: /Link history/ }) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
     fireEvent.change(screen.getByLabelText(/How was ownership verified/), { target: { value: "Confirmed in person" } });
@@ -55,7 +55,7 @@ describe("PlayerMergeDialog", () => {
   });
 
   it("blocks a merge that would make a player play themself", async () => {
-    preview.mockResolvedValue({ ...base, blockers: ["history_conflict"], conflicts: [{ table: "matches", rows: 1, kind: "same_row" }] });
+    preview.mockResolvedValue({ ...base, blockers: ["history_conflict"], conflicts: [{ table: "tournament_matches", rows: 1, kind: "same_row" }] });
     renderDialog();
     expect(await screen.findByText(/play themself/)).toBeTruthy();
     fireEvent.change(screen.getByLabelText(/How was ownership verified/), { target: { value: "x" } });

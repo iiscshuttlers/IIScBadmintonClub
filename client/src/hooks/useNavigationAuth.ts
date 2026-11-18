@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { countPendingMatchesForPlayer } from "@/services/matchService";
 import { teamService } from "@/services/teamService";
 
 type SavedAccount = {
@@ -35,7 +34,6 @@ export function useNavigationAuth() {
     signOut: globalSignOut,
   } = useAuth();
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
-  const [pendingActionCount, setPendingActionCount] = useState(0);
   const [myTeamId, setMyTeamId] = useState<string | null>(null);
   const [teamActionCount, setTeamActionCount] = useState(0);
 
@@ -71,18 +69,12 @@ export function useNavigationAuth() {
   }, [session, profile]);
 
   useEffect(() => {
-    if (!profile?.id) {
-      setPendingActionCount(0);
-      return;
-    }
+    if (!profile?.id) return;
     
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
     const fetchPending = async () => {
       try {
-        const count = await countPendingMatchesForPlayer(profile.id);
-        setPendingActionCount(count);
-
         const { myTeamId: teamId, pendingLineups } = await teamService.getUserTeamAndPendingLineups(profile.id);
         setMyTeamId(teamId);
         setTeamActionCount(pendingLineups);
@@ -126,7 +118,6 @@ export function useNavigationAuth() {
     userName: session ? userName : "",
     userEmail: session?.user?.email ?? "",
     userAvatar: profile?.avatar_url ?? null,
-    pendingActionCount,
     myTeamId,
     teamActionCount,
   };

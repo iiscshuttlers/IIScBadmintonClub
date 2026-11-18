@@ -272,8 +272,6 @@ export default function HeadToHeadPage() {
               <p className="mt-2 text-muted-foreground">{RESULT_POLICY_TEXT}</p>
               <p className="mt-2 text-muted-foreground">
                 A pair is the same pair whichever partner is listed first, but a different partner makes a different pair.
-                Friendly matches are placed in a discipline from the players' recorded genders; if that isn't known they
-                appear only under "All".
               </p>
             </details>
           </>

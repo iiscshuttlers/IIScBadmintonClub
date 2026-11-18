@@ -132,10 +132,6 @@ interface ProfileOverviewTabProps {
   id: string;
   liveMatches: any[];
   ownPlayerProfile: PlayerRow | null | undefined;
-  handleWithdrawMatch: (id: string) => void;
-  handleConfirmMatch: (id: string) => void;
-  handleRejectMatch: (id: string) => void;
-  handleResendRequest: (match: object) => Promise<void>;
 }
 
 export function ProfileOverviewTab({
@@ -149,10 +145,6 @@ export function ProfileOverviewTab({
   id,
   liveMatches,
   ownPlayerProfile,
-  handleWithdrawMatch,
-  handleConfirmMatch,
-  handleRejectMatch,
-  handleResendRequest,
 }: ProfileOverviewTabProps) {
   const streak = splitStats?.all?.streak;
   const isWinStreak = streak?.startsWith("W");
@@ -571,10 +563,6 @@ export function ProfileOverviewTab({
             id={id}
             liveMatches={liveMatches}
             ownPlayerProfile={ownPlayerProfile}
-            handleWithdrawMatch={handleWithdrawMatch}
-            handleConfirmMatch={handleConfirmMatch}
-            handleRejectMatch={handleRejectMatch}
-            handleResendRequest={handleResendRequest}
           />
         </>
       )}

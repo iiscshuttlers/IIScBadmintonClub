@@ -22,7 +22,7 @@ export function useFeedMatches(
       if (!silent) setLoading(true);
       try {
         // Tournament matches only on Pulse (owner decision 5).
-        const data = await fetchFeedMatches(limitCount, categoryFilter, timeFilter, tournamentFilter, { includeFriendlies: false });
+        const data = await fetchFeedMatches(limitCount, categoryFilter, timeFilter, tournamentFilter);
         if (reqId === activeReqIdRef.current && data) {
           setMatches(data);
         }

@@ -14,7 +14,6 @@ export type AdminActionKind =
   | "missing_officials"
   | "schedule_conflicts"
   | "delayed_matches"
-  | "disputed_results"
   | "unresolved_identities"
   | "unsynced_scores"
   | "sync_visibility";
@@ -43,7 +42,6 @@ export interface TournamentActionInput {
 
 export interface AdminActionInput {
   tournaments: TournamentActionInput[];
-  disputedResults: number;
   guestIdentities: number;
   /** null means the device queue could not be inspected; it must not be presented as zero. */
   unsyncedOnThisDevice: number | null;
@@ -102,18 +100,6 @@ export function buildAdminActionCards(input: AdminActionInput): AdminActionCard[
         actionLabel: "Review schedule",
       });
     }
-  }
-  if (input.disputedResults > 0) {
-    cards.push({
-      id: "disputes",
-      kind: "disputed_results",
-      severity: "high",
-      title: `${plural(input.disputedResults, "disputed result")} awaiting a decision`,
-      detail: "Players have disputed these friendly-match results. Uphold or override each one.",
-      count: input.disputedResults,
-      href: "#inbox",
-      actionLabel: "Review disputes",
-    });
   }
   if (input.guestIdentities > 0) {
     cards.push({

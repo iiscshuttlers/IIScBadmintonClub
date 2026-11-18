@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
 import { getLiveMatchPicks, saveLiveMatchPick, fetchPollRevealedMatches, updatePollRevealedMatches } from "@/services/feedService";
-import { toggleMatchKudos } from "@/services/socialService";
-import { toast } from "sonner";
 import {
   Activity,
   Trophy,
@@ -276,8 +274,6 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
     setRevealedMatchIds(nextState);
     await updatePollRevealedMatches(nextState);
   };
-
-  const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">
@@ -717,48 +713,6 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                       (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
                       (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
 
-                  const isKudosed = (m: any) => {
-                    if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
-                    return (
-                      (Array.isArray(m.kudos_users) &&
-                        session?.user?.id &&
-                        m.kudos_users.includes(session.user.id)) ||
-                      !!localStorage.getItem(`liked_${m.id}`)
-                    );
-                  };
-
-                  const handleKudos = async (match: any) => {
-                    const storageKey = `liked_${match.id}`;
-                    const isCurrentlyLiked = isKudosed(match);
-
-                    if (!isCurrentlyLiked) {
-                      localStorage.setItem(storageKey, "1");
-                      setKudosState((prev) => ({ ...prev, [match.id]: true }));
-                      toast.success("Match liked! ❤️");
-                    } else {
-                      localStorage.removeItem(storageKey);
-                      setKudosState((prev) => ({ ...prev, [match.id]: false }));
-                      toast.success("Like removed");
-                    }
-
-                    if (session?.user?.id) {
-                      const giverName = ownProfile?.full_name ?? "Someone";
-                      toggleMatchKudos(match.id, giverName, isCurrentlyLiked);
-                    }
-                  };
-
-
-                  const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
-                  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : 0;
-                  const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
-                  let finalKudosCount = baseCount;
-
-                  if (isLikedLocally && !isIncludedInBackend) {
-                    finalKudosCount += 1;
-                  } else if (!isLikedLocally && isIncludedInBackend) {
-                    finalKudosCount -= 1;
-                  }
-
                   return (
                     <ErrorBoundary key={`eb-${match.id}`}>
                       <PulseMatchItem
@@ -766,16 +720,11 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                         match={match}
                         isMatchOfTheDay={isMatchOfTheDay}
                         upsetDiff={upsetDiff}
-                        isKudosed={isLikedLocally || isIncludedInBackend}
-                        kudosCount={finalKudosCount}
-                        onKudos={() => handleKudos(match)}
                         prediction={
                           match.match_code ? (
                             <MatchPredictionCard
                               compact
                               matchId={match.id}
-                              t1Ids={[]}
-                              t2Ids={[]}
                               t1Label={match.team1_label ?? "TBD"}
                               t2Label={match.team2_label ?? "TBD"}
                               hasStarted={isLiveNow || match.status === 'completed' || match.status === 'walkover'}

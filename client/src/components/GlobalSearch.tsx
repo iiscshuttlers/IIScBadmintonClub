@@ -2,13 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users, Trophy, Radio, Home, BarChart3, Settings, CornerDownLeft } from "lucide-react";
-import { fetchSearchPlayers, fetchSearchDoublesTeams, fetchSearchMatches, fetchSiteDataEntry } from "@/services/playerService";
+import { fetchSearchPlayers, fetchSiteDataEntry } from "@/services/playerService";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { track } from "@/lib/analytics";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 
 interface SearchResult {
-  type: "player" | "match" | "announcement" | "event" | "team" | "action";
+  type: "player" | "announcement" | "event" | "action";
   id: string;
   title: string;
   subtitle?: string;
@@ -90,7 +90,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const { myPlayerId } = useNavigationAuth();
 
   // Render/navigation order — groups are shown in this order.
-  const TYPE_ORDER = ["action", "player", "team", "match", "announcement", "event"] as const;
+  const TYPE_ORDER = ["action", "player", "announcement", "event"] as const;
   const ordered = TYPE_ORDER.flatMap((t) => results.filter((r) => r.type === t));
 
   // Focus input when opened; seed with default quick actions.
@@ -167,7 +167,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
       const lq = q.toLowerCase();
 
-      const [playersRes, annRes, eventsRes, teamsRes] = await Promise.all([
+      const [playersRes, annRes, eventsRes] = await Promise.all([
         // We fetch all active players once to support client-side fuzzy matching
         (async () => {
           if (cachedSearchPlayers) return null;
@@ -177,7 +177,6 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         })(),
         fetchSiteDataEntry("announcements"),
         fetchSiteDataEntry("events"),
-        fetchSearchDoublesTeams(q),
       ]);
 
       // Filter players using fuzzy match
@@ -191,28 +190,6 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         subtitle: `${p.department ?? ""}${p.department ? " · " : ""}${p.overall_rank ? `Rank #${p.overall_rank}` : "Unranked"}`,
         avatar: p.avatar_url,
         href: `/player/${p.id}`,
-      }));
-
-      // Use the ID list to filter matches with parameterised .in() — no raw interpolation
-      const matchingIds = matchedPlayers.slice(0, 20).map((r: any) => r.id);
-      let matchResults: SearchResult[] = [];
-      if (matchingIds.length > 0) {
-        const matchRows = await fetchSearchMatches(matchingIds);
-        matchResults = (matchRows || []).map((m: any) => ({
-          type: "match" as const,
-          id: m.id,
-          title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
-          subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
-          href: m.player1_id ? `/player/${m.player1_id}` : `/pulse`,
-        }));
-      }
-
-      const teamResults: SearchResult[] = (teamsRes || []).map((t: any) => ({
-        type: "team",
-        id: t.id,
-        title: t.team_name,
-        subtitle: undefined,
-        href: `/doubles/${t.player1_id}/${t.player2_id}`,
       }));
 
       const annList: SearchResult[] = [];
@@ -277,7 +254,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         }
       }
 
-      setResults([...matchingActions(q), ...playerResults, ...matchResults, ...teamResults, ...annList, ...eventList]);
+      setResults([...matchingActions(q), ...playerResults, ...annList, ...eventList]);
     } catch (e) {
       console.error("Search error:", e);
     } finally {
@@ -310,9 +287,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const iconFor = (r: SearchResult) => {
     if (r.type === "action") return actionIcon(r.id);
     if (r.type === "player") return <User className="w-4 h-4 shrink-0 text-primary" />;
-    if (r.type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
     if (r.type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
-    if (r.type === "team") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
     return <Megaphone className="w-4 h-4 shrink-0 text-amber-500" />;
   };
 
@@ -373,10 +348,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             )}
 
             {/* Group by type (actions first) */}
-            {(["action", "player", "team", "match", "announcement", "event"] as const).map((type) => {
+            {(["action", "player", "announcement", "event"] as const).map((type) => {
               const group = results.filter((r) => r.type === type);
               if (!group.length) return null;
-              const labels = { action: query ? "Jump to" : "Quick actions", player: "Players", team: "Teams", match: "Matches", announcement: "Announcements", event: "Events" };
+              const labels = { action: query ? "Jump to" : "Quick actions", player: "Players", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
                   <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-slate-50/80 dark:bg-slate-800/50">

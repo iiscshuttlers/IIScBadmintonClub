@@ -154,7 +154,6 @@ export function mergeBlockerText(code: string): string {
 }
 
 const TABLE_LABELS: Record<string, string> = {
-  matches: "Friendly matches",
   tournament_matches: "Tournament matches",
   tournament_participants: "Tournament entries",
   tournament_team_members: "Team memberships",

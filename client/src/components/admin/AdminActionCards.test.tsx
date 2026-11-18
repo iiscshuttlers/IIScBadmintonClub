@@ -33,12 +33,12 @@ describe("AdminActionCards", () => {
 
   it("links tournament cards to the resolving screen and tab cards to the admin tab", () => {
     const onOpenTab = vi.fn();
-    state.data = [card({}), card({ id: "disputes", kind: "disputed_results", title: "1 disputed result awaiting a decision", href: "#inbox" })];
+    state.data = [card({}), card({ id: "guests", kind: "unresolved_identities", title: "1 guest identity to resolve", href: "#guests" })];
     render(<AdminActionCards onOpenTab={onOpenTab} />);
     fireEvent.click(screen.getByRole("button", { name: /no umpire or referee/ }));
     expect(setLocation).toHaveBeenCalledWith("/tournament-admin?id=t1&tab=officials");
-    fireEvent.click(screen.getByRole("button", { name: /disputed result/ }));
-    expect(onOpenTab).toHaveBeenCalledWith("inbox");
+    fireEvent.click(screen.getByRole("button", { name: /guest identity/ }));
+    expect(onOpenTab).toHaveBeenCalledWith("guests");
   });
 
   it("never shows an empty list as 'all clear' when the check failed", () => {

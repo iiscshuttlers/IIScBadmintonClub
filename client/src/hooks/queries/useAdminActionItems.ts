@@ -79,9 +79,8 @@ export function useAdminActionItems(enabled: boolean) {
     refetchOnWindowFocus: true,
     retry: 1,
     queryFn: async (): Promise<AdminActionCard[]> => {
-      const [tournaments, disputedResults, guestIdentities, unsynced] = await Promise.all([
+      const [tournaments, guestIdentities, unsynced] = await Promise.all([
         tournamentInputs(),
-        countRows(supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "disputed")),
         countRows(
           supabase.from("players").select("id", { count: "exact", head: true }).eq("is_guest", true).is("deleted_at", null),
         ),
@@ -90,7 +89,6 @@ export function useAdminActionItems(enabled: boolean) {
       // Plain array of plain objects: the query cache is persisted.
       return buildAdminActionCards({
         tournaments,
-        disputedResults,
         guestIdentities,
         unsyncedOnThisDevice: unsynced,
       });

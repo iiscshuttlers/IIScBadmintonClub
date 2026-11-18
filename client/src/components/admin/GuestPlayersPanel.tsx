@@ -3,7 +3,7 @@ import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import {
   UserPlus, Loader2, RefreshCw, Trash2, Ghost, CheckCircle,
-  Trophy, ShieldCheck, AlertTriangle, Link2, Search, ArrowRight, Tag,
+  AlertTriangle, Link2, Search, ArrowRight, Tag,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
@@ -34,24 +34,11 @@ interface RealPlayer {
   department?: string | null;
 }
 
-interface PendingGuestMatch {
-  id: string;
-  created_at: string;
-  score: string;
-  category: string;
-  winner_id: string;
-  player1: { id: string; full_name: string; is_guest?: boolean } | null;
-  player2: { id: string; full_name: string; is_guest?: boolean } | null;
-  partner1?: { id: string; full_name: string; is_guest?: boolean } | null;
-  partner2?: { id: string; full_name: string; is_guest?: boolean } | null;
-}
-
 export function GuestPlayersPanel() {
   const { session } = useAuth();
   const { confirm } = useConfirm();
   const { recordAction } = useAdminHistory();
   const [guests, setGuests] = useState<GuestRow[]>([]);
-  const [pending, setPending] = useState<PendingGuestMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"Male" | "Female" | "">("");
@@ -80,14 +67,10 @@ export function GuestPlayersPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [g, guestMatches] = await Promise.all([
-        adminService.getGuestPlayers(),
-        adminService.getPendingGuestMatches(),
-      ]);
+      const g = await adminService.getGuestPlayers();
       setGuests(g);
-      setPending(guestMatches);
     } catch (err: any) {
-      toast.error("Failed to load guests or pending matches");
+      toast.error("Failed to load guests");
     } finally {
       setLoading(false);
     }
@@ -142,32 +125,6 @@ export function GuestPlayersPanel() {
     } finally { setBusyId(null); }
   };
 
-  const approveMatch = async (m: PendingGuestMatch) => {
-    setBusyId(m.id);
-    try {
-      await adminService.confirmFriendlyMatch(m.id);
-      toast.success("Match approved — ELO applied");
-      await logAction(`Approved guest match ${m.id}`);
-      setPending((prev) => prev.filter((x) => x.id !== m.id));
-      load();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to approve match");
-    } finally { setBusyId(null); }
-  };
-
-  const rejectMatch = async (m: PendingGuestMatch) => {
-    if (!(await confirm({ title: "Reject Match", description: "Reject and delete this pending match?", confirmVariant: "danger" }))) return;
-    setBusyId(m.id);
-    try {
-      await adminService.rejectGuestMatch(m.id);
-      toast.success("Match rejected");
-      await logAction(`Rejected guest match ${m.id}`);
-      setPending((prev) => prev.filter((x) => x.id !== m.id));
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to reject match");
-    } finally { setBusyId(null); }
-  };
-
   // WP8: linking a guest goes through a server-side preview and a reasoned,
   // audited merge that moves all history (friendly, tournament, entries,
   // teams, rating log) and keeps saved links working.
@@ -185,9 +142,6 @@ export function GuestPlayersPanel() {
     setSelectedReal(null);
     setClaimSearch("");
   };
-
-  const sideName = (a?: { full_name: string } | null, b?: { full_name: string } | null) =>
-    b ? `${a?.full_name} + ${b.full_name}` : a?.full_name ?? "—";
 
   const filteredReal = realPlayers.filter(
     (p) => !claimSearch || p.full_name.toLowerCase().includes(claimSearch.toLowerCase())
@@ -255,60 +209,6 @@ export function GuestPlayersPanel() {
             Add
           </button>
         </div>
-      </div>
-
-      {/* ── Pending guest matches ─────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-amber-500" /> Matches Awaiting Approval
-            {pending.length > 0 && (
-              <span className="text-sm font-bold bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">
-                {pending.length}
-              </span>
-            )}
-          </h2>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-7 h-7 animate-spin text-primary" /></div>
-        ) : pending.length === 0 ? (
-          <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <CheckCircle className="w-9 h-9 text-primary mx-auto mb-2" />
-            <p className="text-sm font-bold text-muted-foreground">No guest matches awaiting approval.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {pending.map((m) => {
-              const isBusy = busyId === m.id;
-              const displayScore = m.score?.split(" | ")[0]?.split(" [")[0] ?? m.score;
-              return (
-                <div key={m.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-900/40 p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="font-black text-sm text-slate-800 dark:text-foreground truncate flex-1">{sideName(m.player1, m.partner1)}</span>
-                    <div className="text-center shrink-0">
-                      <div className="text-xs font-black font-mono text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{displayScore}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{m.category || "Friendly"}</div>
-                    </div>
-                    <span className="font-black text-sm text-slate-800 dark:text-foreground truncate flex-1 text-right">{sideName(m.player2, m.partner2)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button disabled={isBusy} onClick={() => approveMatch(m)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition disabled:opacity-50">
-                      {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
-                      Approve & apply ELO
-                    </button>
-                    <button disabled={isBusy} onClick={() => rejectMatch(m)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-rose-600 hover:border-rose-300 text-sm font-bold transition disabled:opacity-50">
-                      <Trash2 className="w-4 h-4" /> Reject
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ── Guest Roster + Claim side by side ────────────────── */}

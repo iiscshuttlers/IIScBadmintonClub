@@ -22,19 +22,14 @@ import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
-import MatchAlert from "./components/MatchAlert";
 import { LegacyPulseRedirect } from "./components/routing/LegacyPulseRedirect";
-// Lazy: the log-match modal mounts for every signed-in user but is invisible
-// until opened, so keep it (and canvas-confetti + its form deps) out of the
-// eager entry chunk.
-const LogMatchModal = lazy(() => import("./components/LogMatchModal"));
 import { useAppUpdate, AppUpdateProvider, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { useNotificationDeepLinks } from "./hooks/useNotificationDeepLinks";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
-import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useOverflowGuard } from "./hooks/useOverflowGuard";
+import { useTopTenAlert } from "./hooks/useTopTenAlert";
 import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
 import { useEngagementReminders } from "./hooks/useEngagementReminders";
 import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
@@ -98,7 +93,6 @@ const TournamentSetupChecklist = lazy(() => import("./pages/TournamentSetupCheck
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
 const OfficiatePage = lazy(() => import("./pages/OfficiatePage"));
 
 
@@ -296,8 +290,6 @@ function AppRoutes() {
             window.location.replace(`${import.meta.env.BASE_URL}player/${encodeURIComponent(params.id)}`);
             return null;
           }} />
-          
-          <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 
           {/* Test route is excluded from production builds. */}
           {import.meta.env.DEV && <Route path="/test-umpire-engine" component={() => (
@@ -448,9 +440,7 @@ function GlobalAuthGuard() {
 
 function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate, skipUpdate } = useAppUpdate();
-  const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
-  const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
-  const { profile, session } = useAuth();
+  const { session } = useAuth();
   const [location, setLocation] = useLocation();
   const { mode } = useAppMode();
 
@@ -458,8 +448,8 @@ function AppContent() {
   useNativeBackButton();
   useNotificationDeepLinks();
   usePullToRefresh();
-  useOfflineSync();
   useOverflowGuard();
+  useTopTenAlert();
 
   // Handle deep links from QR codes and NFC scans
   useEffect(() => {
@@ -540,20 +530,6 @@ function AppContent() {
     };
   }, [setLocation]);
 
-  useEffect(() => {
-    const handleOpenLogMatch = (e: any) => {
-      if (e.detail?.player2_id) {
-        setDefaultOpponentId(e.detail.player2_id);
-      } else {
-        setDefaultOpponentId(undefined);
-      }
-      setIsLogMatchOpen(true);
-    };
-    window.addEventListener("openLogMatchModal", handleOpenLogMatch);
-    return () =>
-      window.removeEventListener("openLogMatchModal", handleOpenLogMatch);
-  }, []);
-
 
 
   return (
@@ -590,21 +566,6 @@ function AppContent() {
               <BackToTop />
             </Router>
             <Toaster />
-            <MatchAlert />
-            {profile && isLogMatchOpen && (
-              <Suspense fallback={null}>
-                <LogMatchModal
-                  isOpen={isLogMatchOpen}
-                  onClose={() => {
-                    setIsLogMatchOpen(false);
-                    setDefaultOpponentId(undefined);
-                  }}
-                  currentUser={profile as any}
-                  onSuccess={() => setIsLogMatchOpen(false)}
-                  defaultOpponentId={defaultOpponentId}
-                />
-              </Suspense>
-            )}
             {isDialogOpen && updateInfo && (
               <UpdateDialog 
                 info={updateInfo} 

@@ -124,21 +124,17 @@ describe("PulseMatchItem", () => {
     tie_id: null,
   };
 
-  it("uses the shared scorecard with badges, likes outside the link, and the old anchor id", () => {
-    const onKudos = vi.fn();
+  it("uses the shared scorecard with badges, the poll outside the link, and the old anchor id", () => {
     const { container } = render(
-      <PulseMatchItem match={row} isMatchOfTheDay upsetDiff={180} isKudosed={false} kudosCount={3} onKudos={onKudos} prediction={<p>poll</p>} />,
+      <PulseMatchItem match={row} isMatchOfTheDay upsetDiff={180} prediction={<p>poll</p>} />,
     );
     expect(container.querySelector("#match-card-m9")).not.toBeNull();
     expect(screen.getByText("Match of the day")).toBeInTheDocument();
     expect(screen.getByText("Upset +180")).toBeInTheDocument();
     expect(screen.getByText("XD")).toBeInTheDocument();
-    const like = screen.getByRole("button", { name: "Like this match, 3 likes" });
-    expect(like.closest("a")).toBeNull();
-    fireEvent.click(like);
-    expect(onKudos).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Like this match/ })).toBeNull();
     expect(screen.getByRole("button", { name: /Share result/ })).toBeInTheDocument();
-    expect(screen.getByText("poll")).toBeInTheDocument();
+    expect(screen.getByText("poll").closest("a")).toBeNull();
   });
 });
 

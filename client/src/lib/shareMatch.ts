@@ -101,7 +101,7 @@ export async function shareMatch(match: any) {
       displayScore,
       winnerEloChange: isTeam1Winner ? match.elo_change_p1 : match.elo_change_p2,
       loserEloChange: isTeam1Winner ? match.elo_change_p2 : match.elo_change_p1,
-      matchType: match.is_friendly !== false ? "Friendly" : "Tournament",
+      matchType: "Tournament",
       matchDate: matchDateObj,
       category: match.category,
       tournamentName: tournamentName,

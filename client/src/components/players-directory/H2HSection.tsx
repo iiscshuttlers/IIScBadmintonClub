@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabase";
 import { Swords, Trophy, Activity, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
-import { RivalriesDashboard } from "./RivalriesDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
@@ -15,9 +14,7 @@ export function H2HSection() {
   const [players, setPlayers] = useState<any[]>([]);
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
-  const [matches, setMatches] = useState<any[]>([]);
   const [tournamentMatches, setTournamentMatches] = useState<any[]>([]);
-  const [matchTab, setMatchTab] = useState<"club" | "tournament">("tournament");
   const [loading, setLoading] = useState(true);
 
   const rankMap = useMemo(() => calculateRanksMap(players), [players]);
@@ -45,14 +42,6 @@ export function H2HSection() {
       });
 
     supabase
-      .from("matches")
-      .select("*")
-      .in("status", ["confirmed", "walkover"])
-      .then(({ data }) => {
-        if (data) setMatches(data);
-      });
-
-    supabase
       .from("tournament_matches")
       .select("*, tournaments(name)")
       .eq("status", "completed")
@@ -60,24 +49,6 @@ export function H2HSection() {
         if (data) setTournamentMatches(data);
       });
   }, [session?.user?.id]);
-
-  const h2hMatches = useMemo(() => {
-    if (!p1Id || !p2Id || !matches.length) return [];
-    return matches
-      .filter(
-        (m) =>
-          (m.player1_id === p1Id && m.player2_id === p2Id) ||
-          (m.player1_id === p2Id && m.player2_id === p1Id) ||
-          ((m.player1_id === p1Id || m.team1_partner_id === p1Id) &&
-            (m.player2_id === p2Id || m.team2_partner_id === p2Id)) ||
-          ((m.player2_id === p1Id || m.team2_partner_id === p1Id) &&
-            (m.player1_id === p2Id || m.team1_partner_id === p2Id)),
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
-  }, [matches, p1Id, p2Id]);
 
   const h2hTournamentMatches = useMemo(() => {
     if (!p1Id || !p2Id || !tournamentMatches.length) return [];
@@ -101,45 +72,9 @@ export function H2HSection() {
   }).length;
   const t2TournamentWins = h2hTournamentMatches.length - t1TournamentWins;
 
-  const topRivalries = useMemo(() => {
-    if (!matches.length || !players.length) return [];
-
-    const pairCounts: Record<
-      string,
-      { p1: string; p2: string; count: number; matches: any[] }
-    > = {};
-
-    matches.forEach((m) => {
-      if (m.team1_partner_id || m.team2_partner_id) return; // Skip doubles for pure rivalries
-      const pid1 = m.player1_id;
-      const pid2 = m.player2_id;
-      if (!pid1 || !pid2) return;
-
-      const key = pid1 < pid2 ? `${pid1}_${pid2}` : `${pid2}_${pid1}`;
-      if (!pairCounts[key])
-        pairCounts[key] = { p1: pid1, p2: pid2, count: 0, matches: [] };
-      pairCounts[key].count++;
-      pairCounts[key].matches.push(m);
-    });
-
-    return Object.values(pairCounts)
-      .filter((r) => r.count > 1) // Must have played at least twice
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  }, [matches, players]);
-
-  const clubP1Wins = h2hMatches.filter(
-    (m) =>
-      m.winner_id === p1Id ||
-      (m.winner_id &&
-        m.team1_partner_id === p1Id &&
-        m.winner_id === m.player1_id),
-  ).length;
-  const clubP2Wins = h2hMatches.length - clubP1Wins;
-  
-  const p1Wins = clubP1Wins + t1TournamentWins;
-  const p2Wins = clubP2Wins + t2TournamentWins;
-  const totalMatchesPlayed = h2hMatches.length + h2hTournamentMatches.length;
+  const p1Wins = t1TournamentWins;
+  const p2Wins = t2TournamentWins;
+  const totalMatchesPlayed = h2hTournamentMatches.length;
 
   const p1 = players.find((p) => p.id === p1Id);
   const p2 = players.find((p) => p.id === p2Id);
@@ -208,22 +143,12 @@ export function H2HSection() {
     let maxP1Streak = 0, currentP1Streak = 0;
     let maxP2Streak = 0, currentP2Streak = 0;
 
-    const combinedMatches = [
-      ...h2hMatches.map(m => ({ ...m, type: 'club' })),
-      ...h2hTournamentMatches.map(m => ({ ...m, type: 'tourn' }))
-    ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const orderedMatches = [...h2hTournamentMatches]
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-    for (const m of combinedMatches) {
-      let isP1Winner = false;
-      let isT1 = false;
-      
-      if (m.type === 'tourn') {
-          isT1 = m.player1_id === p1Id || m.player3_id === p1Id;
-          isP1Winner = (isT1 && m.winner_side === 1) || (!isT1 && m.winner_side === 2);
-      } else {
-          isP1Winner = m.winner_id === p1Id || (m.winner_id && m.team1_partner_id === p1Id && m.winner_id === m.player1_id);
-          isT1 = m.player1_id === p1Id || m.team1_partner_id === p1Id;
-      }
+    for (const m of orderedMatches) {
+      const isT1 = m.player1_id === p1Id || m.player3_id === p1Id;
+      const isP1Winner = (isT1 && m.winner_side === 1) || (!isT1 && m.winner_side === 2);
 
       if (isP1Winner) {
         currentP1Streak++;
@@ -235,10 +160,7 @@ export function H2HSection() {
         currentP1Streak = 0;
       }
 
-      let scorePart = m.score || "";
-      if (m.type === 'club') {
-          scorePart = scorePart.split(" | ")[0];
-      }
+      const scorePart = m.score || "";
       const sets = scorePart.split(",").map((s: string) => s.trim());
       for (const s of sets) {
         const pts = s.split("-").map((p: string) => parseInt(p, 10));
@@ -255,7 +177,7 @@ export function H2HSection() {
     }
 
     return { p1Points, p2Points, maxP1Streak, maxP2Streak };
-  }, [h2hMatches, p1Id]);
+  }, [h2hTournamentMatches, p1Id]);
 
   if (loading)
     return (
@@ -266,9 +188,6 @@ export function H2HSection() {
 
   return (
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-4">
-      
-      <RivalriesDashboard />
-
       <div className="max-w-4xl mx-auto space-y-4">
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground dark:text-foreground flex items-center justify-center gap-2">
@@ -468,7 +387,7 @@ export function H2HSection() {
           </div>
         </div>
 
-        {(h2hMatches.length > 0 || h2hTournamentMatches.length > 0) && (
+        {h2hTournamentMatches.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2 w-full">
               <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
@@ -476,11 +395,7 @@ export function H2HSection() {
               </h3>
             </div>
 
-            {matchTab === "tournament" && h2hTournamentMatches.length === 0 && (
-              <p className="text-center text-muted-foreground text-sm py-6">No tournament matches between these players yet.</p>
-            )}
-
-            {matchTab === "tournament" && h2hTournamentMatches.map((m, i) => {
+            {h2hTournamentMatches.map((m, i) => {
               const mp1 = players.find(p => p.id === m.player1_id);
               const mp2 = players.find(p => p.id === m.player2_id);
               const mp3 = players.find(p => p.id === m.player3_id);
@@ -542,153 +457,6 @@ export function H2HSection() {
                 </div>
               );
             })}
-
-            {matchTab === "club" && h2hMatches.map((m, i) => {
-              const mp1 = players.find(p => p.id === m.player1_id);
-              const mp2 = players.find(p => p.id === m.player2_id);
-              const mp3 = players.find(p => p.id === m.team1_partner_id);
-              const mp4 = players.find(p => p.id === m.team2_partner_id);
-              
-              const p1g = mp1?.gender?.toLowerCase();
-              const p2g = mp2?.gender?.toLowerCase();
-              const p3g = mp3?.gender?.toLowerCase();
-              const p4g = mp4?.gender?.toLowerCase();
-              
-              let matchFormat = m.category;
-              if (m.category === "Doubles") {
-                const t1HasM = p1g === "male" || p3g === "male";
-                const t1HasF = p1g === "female" || p3g === "female";
-                const t2HasM = p2g === "male" || p4g === "male";
-                const t2HasF = p2g === "female" || p4g === "female";
-                
-                if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
-                else if (p1g === "male" && p3g === "male" && p2g === "male" && p4g === "male") matchFormat = "MD";
-                else if (p1g === "female" && p3g === "female" && p2g === "female" && p4g === "female") matchFormat = "WD";
-              } else if (m.category === "Singles") {
-                if (p1g === "male" && p2g === "male") matchFormat = "MS";
-                else if (p1g === "female" && p2g === "female") matchFormat = "WS";
-              }
-
-              const team1Won = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-
-              return (
-                <div
-                  key={i}
-                  className="group relative overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800/40 shadow-sm transition-all duration-200 mb-2"
-                >
-                  {/* Header: date + format */}
-                  <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 sm:justify-center sm:relative">
-                    <div className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground whitespace-nowrap sm:absolute sm:left-3">
-                      {new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </div>
-                    {matchFormat && (
-                      <span className="text-[9px] font-black uppercase tracking-widest bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200/70 dark:border-indigo-800/50">
-                        {matchFormat}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Teams */}
-                  <div className="px-3 pb-2 pt-1">
-                    <div className="relative flex flex-col">
-                      {/* Team 1 row */}
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
-                        {team1Won ? <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
-                          {mp1?.full_name}{mp3 ? ` & ${mp3.full_name}` : ""}
-                        </span>
-                        <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
-                      </div>
-
-                      {/* VS divider */}
-                      <div className="flex items-center justify-center gap-3 py-1">
-                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700/50" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500">vs</span>
-                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700/50" />
-                      </div>
-
-                      {/* Team 2 row */}
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${!team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
-                        {!team1Won ? <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${!team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
-                          {mp2?.full_name}{mp4 ? ` & ${mp4.full_name}` : ""}
-                        </span>
-                        <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
-                      </div>
-                    </div>
-
-                    {/* Score chips */}
-                    <div className="mt-1.5 flex flex-wrap gap-1 border-t border-slate-100 dark:border-slate-700/50 pt-2 pl-2 sm:justify-center sm:pl-0">
-                      <BeautifulScoreDisplay score={m.score.split(" | ")[0]} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-
-        {/* Top Rivalries */}
-        {topRivalries.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 space-y-3 mt-6">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-rose-500" /> Club-Wide Top
-              Rivalries
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {topRivalries.map((r, i) => {
-                const player1 = players.find((p) => p.id === r.p1);
-                const player2 = players.find((p) => p.id === r.p2);
-                if (!player1 || !player2) return null;
-                const p1Wins = r.matches.filter(
-                  (m) => m.winner_id === r.p1,
-                ).length;
-                const p2Wins = r.count - p1Wins;
-
-                return (
-                  <div
-                    key={i}
-                    onClick={() => {
-                      setP1Id(r.p1);
-                      setP2Id(r.p2);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition group border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                  >
-                    <div className="flex flex-col items-center flex-1">
-                      <img
-                        src={player1.avatar_url}
-                        className="w-8 h-8 rounded-full mb-1 object-cover"
-                      />
-                      <span className="text-[10px] font-bold text-center line-clamp-1">
-                        {player1.full_name}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col items-center px-2">
-                      <div className="text-base font-black text-slate-800 dark:text-slate-200">
-                        {p1Wins} <span className="text-muted-foreground">-</span>{" "}
-                        {p2Wins}
-                      </div>
-                      <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">
-                        {r.count} matches
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col items-center flex-1">
-                      <img
-                        src={player2.avatar_url}
-                        className="w-8 h-8 rounded-full mb-1 object-cover"
-                      />
-                      <span className="text-[10px] font-bold text-center line-clamp-1">
-                        {player2.full_name}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>

@@ -8,7 +8,6 @@ import { fetchPlayerMatches } from "@/services/matchService";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
-import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
 import { Trophy, Swords, Calendar, PlaySquare, ChevronDown, User, MapPin, Activity, Flame, Shield, Users, Crown, ChevronLeft, TrendingUp, Ruler } from "lucide-react";
@@ -411,8 +410,6 @@ export default function ComparePlayers() {
                   key={m.id}
                   match={m}
                   currentUser={session?.user}
-                  isKudosed={false}
-                  kudosCount={0}
                   hideActions={true}
                 />
               ))}
