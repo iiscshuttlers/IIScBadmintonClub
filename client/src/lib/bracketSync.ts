@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { generateSingleElimBracket } from "@/lib/bracketGenerator";
+import { PARTICIPANT_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 /**
  * Re-derives Round 1 bracket placements from the current participants list and
@@ -37,7 +38,7 @@ export async function syncBracketNames({
 }: SyncBracketNamesOptions): Promise<SyncBracketNamesResult> {
   const { data: pData, error: pErr } = await supabase
     .from("tournament_participants")
-    .select("*")
+    .select(PARTICIPANT_PUBLIC_COLUMNS)
     .eq("tournament_id", tournamentId)
     .eq("category", category);
 

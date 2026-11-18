@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings2, X, Save, ShieldCheck, Trophy, Layers, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { updateTournament } from '@/services/tournamentService';
 import { toast } from 'sonner';
 import { calculateMinRosterRequirements } from '@/lib/teamLineupRules';
 
@@ -108,13 +108,11 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
         allow_same_event_repeat_in_decider: allowSameEventRepeatInDecider
       };
 
-      const { error } = await supabase.from('tournaments').update({
+      await updateTournament(tournament.id, {
         tie_format_config: updatedConfig,
         tie_points_win: winPoints,
         tie_points_draw: drawPoints
-      }).eq('id', tournament.id);
-
-      if (error) throw error;
+      });
 
       toast.success("Tournament format & decider settings updated successfully!");
       onSaved();

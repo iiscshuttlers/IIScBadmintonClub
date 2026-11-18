@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
+import { fetchPlayerList } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { toast } from "sonner";
@@ -39,28 +40,21 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [offRes, plRes] = await Promise.all([
-      supabase
-        .from("tournament_officials")
-        .select("id, role, user_id, user:players!tournament_officials_user_id_fkey(id, full_name, avatar_url)")
-        .eq("tournament_id", tournament.id)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("players")
-        .select("id, full_name, avatar_url")
-        .is("deleted_at", null)
-        .order("full_name", { ascending: true }),
-    ]);
-    if (offRes.error) {
-      console.error("Failed to load officials", offRes.error);
+    try {
+      const [offData, plData] = await Promise.all([
+        tournamentService.fetchTournamentOfficials(tournament.id),
+        fetchPlayerList(),
+      ]);
+      setLoadError(false);
+      setOfficials((offData as any) ?? []);
+      setPlayers((plData as any) ?? []);
+    } catch (err) {
+      console.error("Failed to load officials", err);
       toast.error("Could not load officials");
       setLoadError(true);
-    } else {
-      setLoadError(false);
-      setOfficials((offRes.data as any) ?? []);
+    } finally {
+      setLoading(false);
     }
-    setPlayers((plRes.data as any) ?? []);
-    setLoading(false);
   }, [tournament.id]);
 
   useEffect(() => {
@@ -68,8 +62,8 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   }, [load]);
 
   useEffect(() => {
-    supabase.from("site_data").select("value").eq("key", `tournament_contacts_${tournament.id}`).maybeSingle().then(({ data }) => {
-      setContactsEnabled(data?.value === true || (data?.value as any)?.enabled === true);
+    tournamentService.getTournamentContacts(tournament.id).then((enabled) => {
+      setContactsEnabled(enabled);
       setContactsLoading(false);
     });
   }, [tournament.id]);
@@ -77,7 +71,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const toggleContacts = async () => {
     const next = !contactsEnabled;
     setContactsEnabled(next);
-    await supabase.from("site_data").upsert({ key: `tournament_contacts_${tournament.id}`, value: next }, { onConflict: "key" });
+    await tournamentService.setTournamentContacts(tournament.id, next);
     toast.success(next ? "Player contacts visible on match cards" : "Player contacts hidden");
   };
 
@@ -104,15 +98,16 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("tournament_officials").insert(rows);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message || "Could not assign official");
-      return;
+    try {
+      await tournamentService.assignTournamentOfficials(rows);
+      setSaving(false);
+      toast.success(`Assigned ${rows.length} role${rows.length > 1 ? "s" : ""}`);
+      setSelectedPlayers([]);
+      load();
+    } catch (err: any) {
+      setSaving(false);
+      toast.error(err.message || "Could not assign official");
     }
-    toast.success(`Assigned ${rows.length} role${rows.length > 1 ? "s" : ""}`);
-    setSelectedPlayers([]);
-    load();
   };
 
   const removeOfficial = async (o: OfficialRow) => {
@@ -123,13 +118,13 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
       confirmVariant: "danger",
     });
     if (!ok) return;
-    const { error } = await supabase.from("tournament_officials").delete().eq("id", o.id);
-    if (error) {
+    try {
+      await tournamentService.deleteTournamentOfficial(o.id);
+      toast.success("Official removed");
+      setOfficials((prev) => prev.filter((x) => x.id !== o.id));
+    } catch (error: any) {
       toast.error(error.message || "Could not remove official");
-      return;
     }
-    toast.success("Official removed");
-    setOfficials((prev) => prev.filter((x) => x.id !== o.id));
   };
 
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";

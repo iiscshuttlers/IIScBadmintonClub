@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Quote, Trophy, Calendar, BookOpen, Medal, Swords } from "lucide-react";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
 import { PlayerEndorsementsWidget } from "../PlayerEndorsementsWidget";
 import type { TournamentRun } from "@/hooks/useTournamentMatchHistory";
 
@@ -15,7 +15,7 @@ export function ProfileOverviewTabRight({
   splitStats,
   tournamentRuns,
 }: {
-  player: PlayerProfileType;
+  player: PlayerRow;
   validAchievements: string[];
   splitStats?: any;
   tournamentRuns?: TournamentRun[];
@@ -24,7 +24,7 @@ export function ProfileOverviewTabRight({
   const dynamicLosses = splitStats?.all?.losses ?? 0;
   const displayRecord = (dynamicWins > 0 || dynamicLosses > 0)
     ? `${dynamicWins}W - ${dynamicLosses}L`
-    : player.winLossRecord || "0W - 0L";
+    : player.win_loss_record || "0W - 0L";
   return (
     <>
       {/* Quote */}
@@ -44,7 +44,7 @@ export function ProfileOverviewTabRight({
       )}
 
       {/* Bio & Details */}
-      {(player.bio || player.coach || player.startedPlayingYear != null || player.highestRanking != null || player.favoriteFormat) && (
+      {(player.bio || player.coach || player.started_playing_year != null || player.highest_ranking != null || player.favorite_format) && (
         <motion.section
           variants={itemVariants}
           className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
@@ -60,9 +60,9 @@ export function ProfileOverviewTabRight({
             </p>
           )}
           {(player.coach ||
-            player.startedPlayingYear != null ||
-            player.highestRanking != null ||
-            player.favoriteFormat) && (
+            player.started_playing_year != null ||
+            player.highest_ranking != null ||
+            player.favorite_format) && (
             <div className={`${player.bio ? "mt-4 pt-4 border-t border-slate-200 dark:border-white/8" : ""} space-y-2.5`}>
               {player.coach && (
                 <div className="flex justify-between items-center text-sm">
@@ -74,33 +74,33 @@ export function ProfileOverviewTabRight({
                   </span>
                 </div>
               )}
-              {player.favoriteFormat && (
+              {player.favorite_format && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Favorite Format
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    {player.favoriteFormat}
+                    {player.favorite_format}
                   </span>
                 </div>
               )}
-              {player.startedPlayingYear != null && (
+              {player.started_playing_year != null && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Years Playing
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    {new Date().getFullYear() - player.startedPlayingYear} yrs
+                    {new Date().getFullYear() - player.started_playing_year} yrs
                   </span>
                 </div>
               )}
-              {player.highestRanking != null && (
+              {player.highest_ranking != null && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground dark:text-foreground/60 font-medium">
                     Career-High Rank
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    #{player.highestRanking}
+                    #{player.highest_ranking}
                   </span>
                 </div>
               )}
@@ -245,7 +245,7 @@ export function ProfileOverviewTabRight({
         )}
 
         {/* Tournament history */}
-        {player.tournamentHistory.length > 0 && (
+        {(player.tournament_history?.length ?? 0) > 0 && (
           <div
             className={
               validAchievements.length > 0
@@ -258,7 +258,7 @@ export function ProfileOverviewTabRight({
             </h3>
             <div className="relative ml-5 space-y-2.5">
               <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-500/50 to-indigo-500/50 rounded-full" />
-              {[...player.tournamentHistory]
+              {[...(player.tournament_history || [])]
                 .sort((a, b) => {
                   const yearA = parseInt(a.match(/\b(20\d{2})\b/)?.[1] || "0", 10);
                   const yearB = parseInt(b.match(/\b(20\d{2})\b/)?.[1] || "0", 10);
@@ -282,7 +282,7 @@ export function ProfileOverviewTabRight({
       </motion.section>
 
       <motion.section variants={itemVariants}>
-        <PlayerEndorsementsWidget playerId={player.userId || player.id} />
+        <PlayerEndorsementsWidget playerId={player.id} />
       </motion.section>
     </>
   );

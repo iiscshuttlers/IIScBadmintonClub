@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { Save, Loader2, Trophy, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,14 +33,15 @@ export function TournamentEditor() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "tournament_config")
-      .maybeSingle();
-    if (data?.value)
-      setConfig({ ...DEFAULT_TOURNAMENT_CONFIG, ...(data.value as Partial<TournamentConfig>) });
-    setLoading(false);
+    try {
+      const val = await adminService.getTournamentSiteConfig();
+      if (val)
+        setConfig({ ...DEFAULT_TOURNAMENT_CONFIG, ...(val as Partial<TournamentConfig>) });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load tournament config");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -55,15 +56,12 @@ export function TournamentEditor() {
   const save = async () => {
     setSaving(true);
     try {
-      await supabase.from("site_data").upsert(
-        { key: "tournament_config", value: config as any, updated_at: new Date().toISOString() },
-        { onConflict: "key" },
+      await adminService.saveTournamentSiteConfig(config);
+      await adminService.logAction(
+        `Updated tournament config (${config.name})`,
+        null,
+        session?.user?.email || "admin",
       );
-      await supabase.from("admin_logs").insert({
-        admin_email: session?.user?.email || "admin",
-        action: `Updated tournament config (${config.name})`,
-        created_at: new Date().toISOString(),
-      });
       toast.success("Tournament details saved");
       setDirty(false);
     } catch (err: any) {

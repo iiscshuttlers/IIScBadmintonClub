@@ -142,7 +142,7 @@ export function TieVisualLineupModal({
         <div className="relative p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 shrink-0">
           <div className="flex items-center justify-between pb-3 border-b border-slate-700/50">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-black px-2.5 py-1 rounded-xl bg-primary text-slate-950">
+              <span className="font-mono text-xs font-black px-2.5 py-1 rounded-xl bg-primary text-primary-foreground">
                 {tie.tie_code}
               </span>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -158,7 +158,7 @@ export function TieVisualLineupModal({
                   type="button"
                   onClick={() => handleSetViewMode('court')}
                   className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                    viewMode === 'court' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                    viewMode === 'court' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" /> Court Cards
@@ -167,7 +167,7 @@ export function TieVisualLineupModal({
                   type="button"
                   onClick={() => handleSetViewMode('list')}
                   className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                    viewMode === 'list' ? 'bg-primary text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                    viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <ListFilter className="w-3.5 h-3.5" /> List
@@ -471,7 +471,7 @@ export function TieVisualLineupModal({
                       key={rubber.id || idx}
                       className="flex items-center gap-2 sm:gap-3 px-3 sm:px-3.5 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition text-sm"
                     >
-                      <span className="font-black text-[10px] px-2 py-0.5 rounded-lg bg-primary text-slate-950 shrink-0">
+                      <span className="font-black text-[10px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground shrink-0">
                         {rubber.category}
                       </span>
                       {rubber.playing_order && (
@@ -501,7 +501,7 @@ export function TieVisualLineupModal({
                     {/* Top Court Banner */}
                     <div className="px-4 py-2.5 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-slate-950">
+                        <span className="font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground">
                           {rubber.category}
                         </span>
                         <span className="font-bold text-slate-200">

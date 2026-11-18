@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Live Match Spectator Mode
  * Scoreboard showing live matches with real-time Supabase subscription.
@@ -8,7 +7,14 @@
  * as a friendly match for ELO calculation.
  */
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchLiveFeedMatches,
+  subscribeToLiveFeedMatches,
+  updateLiveMatchScore,
+  submitFriendlyMatch,
+  createLiveMatch,
+} from "@/services/matchService";
+import { playerService } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { Zap, Circle, Plus, Minus, X, Users, Trophy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -56,33 +62,19 @@ export function LiveScoreWidget({ onClose }: Props) {
 
   useEffect(() => {
     const fetchLive = async () => {
-      const { data } = await supabase
-        .from("live_matches")
-        .select(`
-          *,
-          player1:players!player1_id(full_name, avatar_url),
-          player2:players!player2_id(full_name, avatar_url),
-          partner1:players!partner1_id(full_name, avatar_url),
-          partner2:players!partner2_id(full_name, avatar_url)
-        `)
-        .eq("status", "live")
-        .order("started_at", { ascending: false })
-        .limit(5);
-      setLiveMatches((data ?? []) as LiveMatch[]);
+      try {
+        const data = await fetchLiveFeedMatches(5);
+        setLiveMatches((data ?? []) as LiveMatch[]);
+      } catch {
+        /* intentional error handling */
+      }
     };
 
     fetchLive();
 
-    const channel = supabase
-      .channel("live_matches_feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "live_matches" },
-        () => fetchLive(),
-      )
-      .subscribe();
+    const unsubscribe = subscribeToLiveFeedMatches(() => fetchLive());
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { unsubscribe(); };
   }, []);
 
   const updateScore = async (matchId: string, side: "p1" | "p2", delta: 1 | -1) => {
@@ -123,18 +115,15 @@ export function LiveScoreWidget({ onClose }: Props) {
 
     const matchDone = sets_p1 >= 2 || sets_p2 >= 2;
 
-    await supabase
-      .from("live_matches")
-      .update({
-        score_p1: scoreP1,
-        score_p2: scoreP2,
-        sets_p1,
-        sets_p2,
-        set_number: setNumber,
-        status: matchDone ? "finished" : "live",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", matchId);
+    await updateLiveMatchScore(matchId, {
+      score_p1: scoreP1,
+      score_p2: scoreP2,
+      sets_p1,
+      sets_p2,
+      set_number: setNumber,
+      status: matchDone ? "finished" : "live",
+      updated_at: new Date().toISOString(),
+    });
 
     if (matchDone) {
       const winnerId = sets_p1 > sets_p2 ? match.player1_id : match.player2_id;
@@ -162,7 +151,7 @@ export function LiveScoreWidget({ onClose }: Props) {
 
     setSubmittingElo(true);
     try {
-      const { error } = await supabase.rpc("submit_friendly_match", {
+      await submitFriendlyMatch({
         submitter_id: match.scorer_id,
         opponent_id: match.player2_id,
         match_winner_id: winnerId,
@@ -170,7 +159,6 @@ export function LiveScoreWidget({ onClose }: Props) {
         submitter_partner_id: isDoubles ? match.partner1_id ?? null : null,
         opponent_partner_id: isDoubles ? match.partner2_id ?? null : null,
       });
-      if (error) throw error;
       toast.success("Match submitted for ELO! The opponent needs to confirm it.");
     } catch (err: any) {
       toast.error(err?.message || "Failed to submit for ELO");
@@ -342,13 +330,7 @@ export function StartLiveScoringButton() {
 
   useEffect(() => {
     if (open) {
-      supabase
-        .from("players")
-        .select("id, full_name")
-        .eq("is_approved", true)
-        .is("deleted_at", null)
-        .order("full_name")
-        .then(({ data }) => setPlayers(data ?? []));
+      playerService.getApprovedPlayersSlim().then((data) => setPlayers(data ?? []));
     }
   }, [open]);
 
@@ -374,15 +356,16 @@ export function StartLiveScoringButton() {
       payload.partner1_id = partner1Id;
       payload.partner2_id = partner2Id;
     }
-    const { error } = await supabase.from("live_matches").insert(payload);
-    setLoading(false);
-    if (error) {
+    try {
+      await createLiveMatch(payload);
+      toast.success("Live match started! Everyone watching the feed will see the score.");
+      reset();
+      setOpen(false);
+    } catch {
       toast.error("Failed to start live scoring");
-      return;
+    } finally {
+      setLoading(false);
     }
-    toast.success("Live match started! Everyone watching the feed will see the score.");
-    reset();
-    setOpen(false);
   };
 
   if (!profile?.id) return null;

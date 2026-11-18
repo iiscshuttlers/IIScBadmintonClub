@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
+import { matchOutcome } from "@/lib/matchView";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,14 +147,14 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   const cardW = isMobile ? 155 : 200;
 
   const statusIcon = (m: BracketMatch) => {
-    if (m.status === "completed") return <CheckCircle2 size={12} className="text-primary shrink-0" />;
-    if (m.status === "in_progress") return <Play size={12} className="text-red-400 shrink-0 animate-pulse" />;
+    if (matchOutcome(m).decided) return <CheckCircle2 size={12} className="text-primary shrink-0" />;
+    if (matchOutcome(m).state === "live") return <Play size={12} className="text-red-400 shrink-0 animate-pulse" />;
     return <Clock size={12} className="text-muted-foreground shrink-0" />;
   };
 
   const statusLabel = (m: BracketMatch) => {
-    if (m.status === "completed") return "Done";
-    if (m.status === "in_progress") return "Live";
+    const o = matchOutcome(m);
+    if (o.decided || o.state === "live" || o.state === "cancelled") return o.statusLabel;
     if (m.team1_label === "BYE" || m.team2_label === "BYE") return "Advance";
     return "";
   };
@@ -205,8 +206,9 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
         >
           <div className="flex items-stretch gap-2 px-4 py-3" style={{ minWidth: "max-content" }}>
             {roadmap.map((m, idx) => {
-              const isCompleted = m.status === "completed";
-              const isLive = m.status === "in_progress";
+              const outcome = matchOutcome(m);
+              const isCompleted = outcome.decided;
+              const isLive = outcome.state === "live";
 
               const t1 = m.team1_label ?? "TBD";
               const t2 = m.team2_label ?? "TBD";
@@ -229,12 +231,8 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
               const playerWon = isCompleted && ((effectivePlayerIsT1 && m.winner_side === 1) || (!effectivePlayerIsT1 && m.winner_side === 2));
               const playerLost = isCompleted && !playerWon;
 
-              const sets = m.sets_history?.length && Array.isArray(m.sets_history)
-                ? m.sets_history.map((s) => {
-                    if (typeof s !== "string") return { me: 0, opp: 0 };
-                    const [a, b] = s.split("-").map(Number);
-                    return effectivePlayerIsT1 ? { me: a, opp: b } : { me: b, opp: a };
-                  })
+              const sets = outcome.games.length
+                ? outcome.games.map((g) => (effectivePlayerIsT1 ? { me: g.side1, opp: g.side2 } : { me: g.side2, opp: g.side1 }))
                 : null;
 
               const borderColor = isLive
@@ -342,7 +340,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
             {roadmap.length > 0 && (() => {
               const last = roadmap[roadmap.length - 1];
               if (last.round_name?.toLowerCase() === "final") return null;
-              const isEliminated = last.status === "completed" && (() => {
+              const isEliminated = matchOutcome(last).decided && (() => {
                 const t1 = last.team1_label ?? "";
                 const t2 = last.team2_label ?? "";
                 const playerIsT1 = t1.includes(player);
@@ -432,7 +430,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       const matchesInRound = matches.filter((m) => m.round === r);
       if (
         matchesInRound.length >= 16 && 
-        matchesInRound.every((m) => m.status === "completed")
+        matchesInRound.every((m) => matchOutcome(m).decided)
       ) {
         toHide.push(r);
       } else {
@@ -1042,12 +1040,14 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {positions.map(({ match: m }) => {
-                  const isCompleted = m.status === "completed";
-                  const isLive = m.status === "in_progress";
+                  // Shared status rules (WP6): walkovers are decided, live never shows a winner.
+                  const outcome = matchOutcome(m);
+                  const isCompleted = outcome.decided;
+                  const isLive = outcome.state === "live";
                   const t1 = m.team1_label ?? "TBD";
                   const t2 = m.team2_label ?? "TBD";
-                  const t1Won = isCompleted && m.winner_side === 1;
-                  const t2Won = isCompleted && m.winner_side === 2;
+                  const t1Won = outcome.t1Won;
+                  const t2Won = outcome.t2Won;
 
                   return (
                     <div key={m.id} className={cn(
@@ -1068,12 +1068,12 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                           {t2Won && <Trophy size={12} className="text-amber-400 shrink-0" />}
                         </div>
                       </div>
-                      {(m.score || isLive) && (
+                      {(m.score || isLive || isCompleted || outcome.state === "cancelled") && (
                         <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800/50 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                           {isLive ? (
                             <span className="text-amber-500 animate-pulse flex items-center gap-1"><Play size={10} /> Live Match</span>
                           ) : (
-                            <span className="text-slate-400">{m.score}</span>
+                            <span className="text-slate-400">{outcome.statusLabel}{m.score ? ` · ${m.score}` : ""}</span>
                           )}
                         </div>
                       )}
@@ -1135,23 +1135,19 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
             {/* Match cards */}
             {roundData.map(({ ri, positions }) =>
               positions.map(({ match: m, y }) => {
-                const isCompleted = m.status === "completed";
-                const isLive = m.status === "in_progress";
+                // Shared status rules (WP6): walkovers are decided, live never shows a winner.
+                const outcome = matchOutcome(m);
+                const isCompleted = outcome.decided;
+                const isLive = outcome.state === "live";
                 const t1 = m.team1_label ?? "TBD";
                 const t2 = m.team2_label ?? "TBD";
-                const t1Won = isCompleted && m.winner_side === 1;
-                const t2Won = isCompleted && m.winner_side === 2;
+                const t1Won = outcome.t1Won;
+                const t2Won = outcome.t2Won;
                 
                 const isMatchOnPath = pathSet.has(m.id);
                 const opacity = enablePathHighlight && selectedPlayer && !isMatchOnPath ? 0.3 : 1;
                 
-                const sets = m.sets_history?.length && Array.isArray(m.sets_history)
-                  ? m.sets_history.map((s) => {
-                      if (typeof s !== "string") return { t1: 0, t2: 0 };
-                      const [a, b] = s.split("-").map(Number);
-                      return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
-                    })
-                  : null;
+                const sets = outcome.games.length ? outcome.games.map((g) => ({ t1: g.side1, t2: g.side2 })) : null;
 
                 return (
                   <div
@@ -1170,8 +1166,8 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800/50 text-muted-foreground'}`}>
                         <span>{m.match_code}</span>
                         <span className="flex items-center gap-1">
-                          {isCompleted ? (
-                            <span className="text-slate-500">Done</span>
+                          {isCompleted || outcome.state === "cancelled" ? (
+                            <span className="text-slate-500">{outcome.statusLabel}</span>
                           ) : (
                             isLive ? (
                               <span className="flex items-center gap-1 text-amber-500 font-bold">
@@ -1275,25 +1271,21 @@ interface MatchCardProps {
 }
 
 function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category }: MatchCardProps) {
-  const isCompleted = m.status === "completed";
-  const isLive = m.status === "in_progress";
+  // Shared status rules (WP6): walkovers are decided, live never shows a winner.
+  const outcome = matchOutcome(m);
+  const isCompleted = outcome.decided;
+  const isLive = outcome.state === "live";
   const t1 = m.team1_label ?? "TBD";
   const t2 = m.team2_label ?? "TBD";
-  const t1Won = isCompleted && m.winner_side === 1;
-  const t2Won = isCompleted && m.winner_side === 2;
+  const t1Won = outcome.t1Won;
+  const t2Won = outcome.t2Won;
   
   const isT1Selected = selectedPlayer && t1.trim().toLowerCase() === selectedPlayer.trim().toLowerCase();
   const isT2Selected = selectedPlayer && t2.trim().toLowerCase() === selectedPlayer.trim().toLowerCase();
   
   const opacity = enablePathHighlight && selectedPlayer && !isHighlighted ? 0.3 : 1;
   
-  const sets = m.sets_history?.length && Array.isArray(m.sets_history)
-    ? m.sets_history.map((s) => {
-        if (typeof s !== "string") return { t1: 0, t2: 0 };
-        const [a, b] = s.split("-").map(Number);
-        return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
-      })
-    : null;
+  const sets = outcome.games.length ? outcome.games.map((g) => ({ t1: g.side1, t2: g.side2 })) : null;
 
   return (
     <div
@@ -1316,8 +1308,8 @@ tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-
 'bg-slate-800/50 text-muted-foreground'}`}>
           <span>{m.match_code}</span>
           <span className="flex items-center gap-1">
-            {isCompleted ? (
-              <span className="text-slate-500">Done</span>
+            {isCompleted || outcome.state === "cancelled" ? (
+              <span className="text-slate-500">{outcome.statusLabel}</span>
             ) : (
               isLive ? (
                 <span className="flex items-center gap-1 text-amber-500 font-bold">

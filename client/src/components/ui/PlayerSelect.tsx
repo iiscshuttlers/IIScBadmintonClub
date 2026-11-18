@@ -123,13 +123,17 @@ export function PlayerSelect({
                 }}
                 className={`p-2 text-xs font-bold cursor-pointer flex items-center justify-between gap-2 ${
                   selectedIndex === idx
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground font-black"
                     : "hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <span className="truncate">{p.full_name}</span>
                 {p.is_guest && (
-                  <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300">
+                  <span className={`shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    selectedIndex === idx
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300"
+                  }`}>
                     Guest
                   </span>
                 )}

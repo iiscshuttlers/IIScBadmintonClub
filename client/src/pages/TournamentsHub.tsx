@@ -3,12 +3,12 @@ import { useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import {
   Trophy, Search, Calendar, MapPin, Radio, Clock, CheckCircle2,
-  Loader2, SlidersHorizontal, ArrowRight, Sparkles, ArrowLeft,
+  Loader2, SlidersHorizontal, ArrowRight, Sparkles,
   PlusCircle, FolderKanban, Shield, Award, Users, RefreshCw
 } from "lucide-react";
 import { getTournaments } from "@/lib/tournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { LiveTab } from "@/components/pulse/LiveTab";
+import { canonicalFromHubQuery, tournamentLink, tournamentPath } from "@/lib/tournamentRoutes";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
@@ -50,7 +50,11 @@ export default function TournamentsHub() {
 
   const [, navigate] = useLocation();
   const locationSearch = useSearch();
-  const selectedId = new URLSearchParams(locationSearch).get("id") ?? "";
+  // WP5: the old `/tournaments?id=…` detail view now lives at /tournaments/:id.
+  const legacyDetailTarget = canonicalFromHubQuery(locationSearch);
+  useEffect(() => {
+    if (legacyDetailTarget) navigate(legacyDetailTarget, { replace: true });
+  }, [legacyDetailTarget, navigate]);
 
   const [all, setAll] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,8 +191,7 @@ export default function TournamentsHub() {
   }, [visible, myRoles, session]);
 
   const openTournament = (t: any) => {
-    if (t.status === "completed" || t.status === "archived") navigate(`/events/${t.slug}`);
-    else navigate(`/tournaments?id=${t.id}`);
+    navigate(tournamentLink(t));
   };
 
   const handleRegisterClick = (t: any) => {
@@ -206,19 +209,11 @@ export default function TournamentsHub() {
     { key: "completed", label: "Completed", count: counts.completed },
   ];
 
-  // Detail view: a tournament is selected (?id=…)
-  if (selectedId) {
+  if (legacyDetailTarget) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
-        <div className="container mx-auto px-4 max-w-3xl pt-5">
-          <button
-            onClick={() => navigate("/tournaments")}
-            className="inline-flex items-center gap-1.5 text-sm font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> All tournaments
-          </button>
-        </div>
-        <LiveTab embedded={true} />
+      <div className="min-h-[60vh] flex items-center justify-center" role="status">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden />
+        <span className="sr-only">Opening tournament…</span>
       </div>
     );
   }
@@ -371,7 +366,7 @@ export default function TournamentsHub() {
                           </button>
                         ) : isOfficiating ? (
                           <button
-                            onClick={() => navigate(`/tournaments?id=${t.id}&subtab=${role?.roles.has("REFEREE") ? "referee" : "umpire"}`)}
+                            onClick={() => navigate(tournamentPath(t.id, null, { panel: role?.roles.has("REFEREE") ? "referee" : "umpire" }))}
                             className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                           >
                             Officiate Matches →
@@ -475,7 +470,7 @@ export default function TournamentsHub() {
             <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load tournaments.</p>
             <button
               onClick={load}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-slate-950 text-xs font-black hover:brightness-110 transition shadow-sm"
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:brightness-110 transition shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Retry
             </button>

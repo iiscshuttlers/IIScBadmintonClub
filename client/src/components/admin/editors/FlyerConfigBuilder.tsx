@@ -179,7 +179,7 @@ export function FlyerConfigBuilder({
         ))}
         <button
           onClick={addItem}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 rounded-lg transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition"
         >
           <Plus className="w-3.5 h-3.5" /> Add Item
         </button>

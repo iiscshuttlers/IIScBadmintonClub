@@ -665,7 +665,7 @@ export const DoublesSynergyWidget = ({
   const runnerUps = synergy.slice(1, 3);
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-primary/5 dark:from-teal-950/40 dark:to-primary/90/40 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
+    <div className="bg-gradient-to-br from-teal-50 to-primary/5 dark:from-teal-950/40 dark:to-primary/20 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
       <div className="absolute top-0 right-0 p-4 opacity-10">
         <Users className="w-24 h-24 text-teal-500" />
       </div>

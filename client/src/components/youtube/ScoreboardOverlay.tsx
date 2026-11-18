@@ -88,7 +88,7 @@ export function ScoreboardOverlay({
               </button>
             ))}
           </div>
-          <div className="flex flex-col gap-1 bg-primary/80/80 backdrop-blur-sm border border-primary/30 p-2 rounded-xl mt-1">
+          <div className="flex flex-col gap-1 bg-primary/20 backdrop-blur-sm border border-primary/30 p-2 rounded-xl mt-1">
             <span className="text-[10px] text-primary/50 font-bold uppercase tracking-widest pl-1 mb-1">Score Team B</span>
             {teamB.map((name, i) => (
               <button key={i} onClick={(e) => { e.stopPropagation(); handleAddPoint('B', i + 2); }} className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs px-3 py-1.5 rounded-lg shadow-lg transition-colors flex items-center justify-between gap-3 text-left">

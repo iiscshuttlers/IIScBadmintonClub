@@ -28,9 +28,13 @@ describe("headToHead", () => {
     expect(r.meetings.map((m) => m.id)).toEqual(["3", "2", "1"]);
   });
 
-  it("matches doubles pairs by any shared player", () => {
-    const r = headToHead([h("d", "a", "b", 2, 1, { player3_id: "x", player4_id: "y" })], ["x", "z"], ["y"]);
-    expect([r.aWins, r.bWins]).toEqual([0, 1]);
+  it("matches doubles pairs exactly, in either order", () => {
+    const m = h("d", "a", "b", 2, 1, { player3_id: "x", player4_id: "y" });
+    expect(headToHead([m], ["x", "a"], ["y", "b"]).bWins).toBe(1);
+    // A different partner is a different pair.
+    expect(headToHead([m], ["x", "z"], ["y", "b"]).meetings).toHaveLength(0);
+    // A single player still matches any side they were on.
+    expect(headToHead([m], ["x"], ["y"]).bWins).toBe(1);
   });
 
   it("builds recent form", () => {

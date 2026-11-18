@@ -8,7 +8,7 @@ import { getDepartmentAcronym } from "@/data/departments";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { getBaseShareUrl } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { sendPingNotification } from "@/services/socialService";
 import { useAvailablePlayers } from "@/hooks/useAvailability";
 import { useLocation } from "wouter";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -151,23 +151,7 @@ export function PlayerCard({
     } else {
       setIsPinged(true);
       
-      // Broadcast the ping to all listening clients (real-time, only works if app is open)
-      supabase.channel("global-notifications").send({
-        type: "broadcast",
-        event: "ping",
-        payload: {
-          target_id: player.id,
-          sender_name: currentUserName || "A player",
-        },
-      });
-
-      // Also persist a notification so it appears in the notification panel
-      supabase.rpc("send_ping_notification", {
-        p_target_id: player.id,
-        p_sender_name: currentUserName || "A player",
-      }).then(({ error }) => {
-        if (error) console.warn("Failed to persist ping notification:", error.message);
-      });
+      sendPingNotification(player.id, currentUserName || "A player");
 
       toast.success(
         `Ping sent to ${player.full_name}! They will be notified.`,
@@ -334,7 +318,7 @@ export function PlayerCard({
               className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
               title="Share profile"
             >
-              <div className="p-1.5 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
+              <div className="p-1.5 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20">
                 <Share2 className="w-3.5 h-3.5" />
               </div>
             </button>

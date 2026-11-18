@@ -75,7 +75,9 @@ export function useMatchNotification() {
                       }],
                     });
                   }
-                } catch(e){}
+                } catch (err) {
+                  import('@sentry/react').then(({ captureException }) => captureException(err));
+                }
               } else {
                 showWebNotification("✅ Match Confirmed!", "Your recent match has been confirmed. Check your new ELO!", () => {});
               }
@@ -207,7 +209,9 @@ export function useMatchNotification() {
                         }],
                       });
                     }
-                  } catch(e){}
+                  } catch (err) {
+                    import('@sentry/react').then(({ captureException }) => captureException(err));
+                  }
                 } else {
                   showWebNotification("🎉 Top 10 Reached!", "You've just entered the Top 10! Keep up the great work!", () => {});
                 }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, type Variants } from "framer-motion";
 import { Users, Sword, Shield } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -174,31 +173,28 @@ export function DirectoryTab({
         <div className="bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto max-w-sm">
           <button
             onClick={() => setViewMode("individuals")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-              viewMode === "individuals"
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === "individuals"
                 ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <Users className="w-4 h-4" /> Individuals
           </button>
           <button
             onClick={() => setViewMode("teams")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-              viewMode === "teams"
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === "teams"
                 ? "bg-violet-600 text-white shadow-sm"
-                : "text-muted-foreground hover:text-on-accent"
-            }`}
+                : "text-muted-foreground hover:text-foreground"
+              }`}
           >
             <Shield className="w-4 h-4" /> Teams
           </button>
           <button
             onClick={() => setViewMode("h2h")}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-              viewMode === "h2h"
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === "h2h"
                 ? "bg-amber-500 text-white shadow-sm"
-                : "text-muted-foreground hover:text-on-accent"
-            }`}
+                : "text-muted-foreground hover:text-foreground"
+              }`}
           >
             <Sword className="w-4 h-4" /> H2H
           </button>
@@ -212,11 +208,10 @@ export function DirectoryTab({
             {ownProfile && (
               <button
                 onClick={() => (isAvailable ? clearAvailable() : setAvailable(120))}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
-                  isAvailable
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${isAvailable
                     ? "bg-success/15 text-success border border-success/30"
                     : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
-                }`}
+                  }`}
               >
                 <span className={`w-2 h-2 rounded-full ${isAvailable ? "bg-success animate-pulse" : "bg-slate-400"}`} />
                 {isAvailable ? "You're available to play — tap to stop" : "I'm available to play now"}
@@ -226,11 +221,10 @@ export function DirectoryTab({
             <button
               onClick={() => setAvailableOnly((v) => !v)}
               aria-pressed={availableOnly}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
-                availableOnly
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${availableOnly
                   ? "bg-success text-white border border-success"
                   : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground border border-transparent"
-              }`}
+                }`}
             >
               <span className={`w-2 h-2 rounded-full ${availableOnly ? "bg-white animate-pulse" : "bg-success"}`} />
               Ready to play now
@@ -243,182 +237,184 @@ export function DirectoryTab({
           </div>
 
           {/* Recommended Opponents (Matchmaking) */}
-          {!loading && ownProfile && recommended.length > 0 && !availableOnly && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
-              <Sword className="w-5 h-5 text-primary dark:text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
-                Recommended Matches
-              </h3>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Players with similar skill looking to play right now
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recommended.map((player) => (
-              <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => {
-                setLocation(`/player/${player.id}`);
-              }}>
-                <PlayerCard
-                  player={player}
-                  isOwn={false}
-                  isAdmin={isAdmin}
-                  onDelete={handleAdminDelete}
-                  onEdit={handleAdminEdit}
-                  onLogMatch={() => {
-                    setSelectedOpponentId(player.id);
-                    setIsLogMatchOpen(true);
-                  }}
-                  isFollowing={followingIds.has(player.id)}
-                  onToggleFollow={handleToggleFollow}
-                  currentUserName={ownProfile?.full_name}
-                  currentUserId={ownProfile?.id}
-                  isPersonalView={isPersonalView}
-                  allRanks={rankMap[player.id]}
-                  activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Directory grid (others) */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="h-56 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col p-5"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full shimmer shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-full rounded shimmer" />
-                  <div className="h-3 w-2/3 rounded shimmer" />
+          {!loading && ownProfile && recommended.length > 0 && !availableOnly && !searchQuery && levelFilter === "All" && departmentFilter === "All" && tournamentFilter === "All" && categoryFilter === "All" && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
+                  <Sword className="w-5 h-5 text-primary dark:text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
+                    Recommended Opponents
+                  </h3>
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+                    Players with similar skill looking to play right now
+                  </p>
                 </div>
               </div>
-              <div className="space-y-3 mt-auto">
-                <div className="h-3 w-1/2 rounded shimmer" />
-                <div className="h-8 w-full rounded-xl shimmer" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recommended.map((player) => (
+                  <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => {
+                    setLocation(`/player/${player.id}`);
+                  }}>
+                    <PlayerCard
+                      player={player}
+                      isOwn={false}
+                      isAdmin={isAdmin}
+                      onDelete={handleAdminDelete}
+                      onEdit={handleAdminEdit}
+                      onLogMatch={() => {
+                        setSelectedOpponentId(player.id);
+                        setIsLogMatchOpen(true);
+                      }}
+                      isFollowing={followingIds.has(player.id)}
+                      onToggleFollow={handleToggleFollow}
+                      currentUserName={ownProfile?.full_name}
+                      currentUserId={ownProfile?.id}
+                      isPersonalView={isPersonalView}
+                      allRanks={rankMap[player.id]}
+                      activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      ) : fetchError ? (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
-          <p className="text-muted-foreground dark:text-slate-300 font-bold">
-            {isSupabaseConfigured
-              ? "No connection to server"
-              : "Player directory is not configured"}
-          </p>
-          <p className="text-muted-foreground text-sm max-w-md">
-            {isSupabaseConfigured
-              ? "This app requires internet to load player data."
-              : "The deployed site is missing Supabase environment variables."}
-          </p>
-          <button
-            onClick={() => fetchPlayers()}
-            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-sm font-bold rounded-xl transition"
-          >
-            Retry
-          </button>
-        </div>
-      ) : filteredPlayers.length > 0 ? (
-        <>
-          {searchQuery || levelFilter !== "All" || departmentFilter !== "All" ? null : (
-            <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-4 flex items-center gap-2">
-              <Users className="w-4 h-4" /> All Members
-            </h2>
           )}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 gap-3"
-          >
-            {filteredPlayers
-              .filter(p => !blockedIds.has(p.id))
-              .filter(p => !availableOnly || availableMap.has(p.id))
-              .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
-              .slice(0, visibleCount)
-              .map((player) => (
-              <motion.div
-                key={player.id}
-                variants={itemVariants}
-                className="group h-full cursor-pointer"
-                onClick={() => {
-                  setLocation(`/player/${player.id}`);
-                }}
-              >
-                <PlayerCard
-                  player={player}
-                  isAdmin={isAdmin}
-                  onDelete={handleAdminDelete}
-                  onEdit={handleAdminEdit}
-                  onLogMatch={
-                    ownProfile
-                      ? () => {
-                          setSelectedOpponentId(player.id);
-                          setIsLogMatchOpen(true);
-                        }
-                      : undefined
-                  }
-                  isFollowing={followingIds.has(player.id)}
-                  onToggleFollow={ownProfile ? handleToggleFollow : undefined}
-                  currentUserName={ownProfile?.full_name}
-                  currentUserId={ownProfile?.id}
-                  isPersonalView={isPersonalView}
-                  allRanks={rankMap[player.id]}
-                  activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
 
-          {visibleCount < filteredPlayers.length && (
-            <div className="mt-12 text-center">
+          {/* Directory grid (others) */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(12)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-56 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col p-5"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-full shimmer shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-full rounded shimmer" />
+                      <div className="h-3 w-2/3 rounded shimmer" />
+                    </div>
+                  </div>
+                  <div className="space-y-3 mt-auto">
+                    <div className="h-3 w-1/2 rounded shimmer" />
+                    <div className="h-8 w-full rounded-xl shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
+              <p className="text-muted-foreground dark:text-slate-300 font-bold">
+                {isSupabaseConfigured
+                  ? "No connection to server"
+                  : "Player directory is not configured"}
+              </p>
+              <p className="text-muted-foreground text-sm max-w-md">
+                {isSupabaseConfigured
+                  ? "This app requires internet to load player data."
+                  : "The deployed site is missing Supabase environment variables."}
+              </p>
               <button
-                onClick={() => setVisibleCount((prev) => prev + 24)}
-                className="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
+                onClick={() => fetchPlayers()}
+                className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-sm font-bold rounded-xl transition"
               >
-                Load More Players
+                Retry
               </button>
+            </div>
+          ) : filteredPlayers.length > 0 ? (
+            <>
+              {searchQuery || levelFilter !== "All" || departmentFilter !== "All" ? null : (
+                <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-4 flex items-center gap-2">
+                  <Users className="w-4 h-4" /> All Members
+                </h2>
+              )}
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 md:grid-cols-2 gap-3"
+              >
+                {filteredPlayers
+                  .filter(p => !blockedIds.has(p.id))
+                  .filter(p => !availableOnly || availableMap.has(p.id))
+                  .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
+                  .slice(0, visibleCount)
+                  .map((player) => (
+                    <motion.div
+                      key={player.id}
+                      variants={itemVariants}
+                      className="group h-full cursor-pointer"
+                      onClick={() => {
+                        setLocation(`/player/${player.id}`);
+                      }}
+                    >
+                      <PlayerCard
+                        player={player}
+                        isAdmin={isAdmin}
+                        onDelete={handleAdminDelete}
+                        onEdit={handleAdminEdit}
+                        onLogMatch={
+                          ownProfile
+                            ? () => {
+                              setSelectedOpponentId(player.id);
+                              setIsLogMatchOpen(true);
+                            }
+                            : undefined
+                        }
+                        isFollowing={followingIds.has(player.id)}
+                        onToggleFollow={ownProfile ? handleToggleFollow : undefined}
+                        currentUserName={ownProfile?.full_name}
+                        currentUserId={ownProfile?.id}
+                        isPersonalView={isPersonalView}
+                        allRanks={rankMap[player.id]}
+                        activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
+                      />
+                    </motion.div>
+                  ))}
+              </motion.div>
+
+              {visibleCount < filteredPlayers.length && (
+                <div className="mt-12 text-center">
+                  <button
+                    onClick={() => setVisibleCount((prev) => prev + 24)}
+                    className="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
+                  >
+                    Load More Players
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+              <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <Users className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground dark:text-slate-300 font-bold text-lg">
+                No players found
+              </p>
+              <p className="text-muted-foreground mt-2 text-sm max-w-sm text-center">
+                {searchQuery
+                  ? `No one matches "${searchQuery}". Try a different name or department.`
+                  : "There are no players matching these filters."}
+              </p>
+              {(searchQuery || levelFilter !== "All" || departmentFilter !== "All" || (tournamentFilter && tournamentFilter !== "All") || (categoryFilter && categoryFilter !== "All")) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setLevelFilter("All");
+                    setDepartmentFilter("All");
+                    setTournamentFilter?.("All");
+                    setCategoryFilter?.("All");
+                  }}
+                  className="mt-6 px-6 py-2 bg-primary/15 hover:bg-primary/20 text-primary font-bold rounded-xl transition"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           )}
         </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-          <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <p className="text-muted-foreground dark:text-slate-300 font-bold text-lg">
-            No players found
-          </p>
-          <p className="text-muted-foreground mt-2 text-sm max-w-sm text-center">
-            {searchQuery
-              ? `No one matches "${searchQuery}". Try a different name or department.`
-              : "There are no players matching these filters."}
-          </p>
-          {(searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setLevelFilter("All");
-                setDepartmentFilter("All");
-              }}
-              className="mt-6 px-6 py-2 bg-primary/15 hover:bg-primary/20 text-primary font-bold rounded-xl transition"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      )}
-      </>
       ) : viewMode === "teams" ? (
         <div className="mt-4">
           <TeamsTab searchQuery={searchQuery} tournamentFilter={tournamentFilter} />

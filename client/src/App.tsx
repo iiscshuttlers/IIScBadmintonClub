@@ -23,6 +23,7 @@ import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import MatchAlert from "./components/MatchAlert";
+import { LegacyPulseRedirect } from "./components/routing/LegacyPulseRedirect";
 // Lazy: the log-match modal mounts for every signed-in user but is invisible
 // until opened, so keep it (and canvas-confetti + its form deps) out of the
 // eager entry chunk.
@@ -30,6 +31,7 @@ const LogMatchModal = lazy(() => import("./components/LogMatchModal"));
 import { useAppUpdate, AppUpdateProvider, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
+import { useNotificationDeepLinks } from "./hooks/useNotificationDeepLinks";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useOverflowGuard } from "./hooks/useOverflowGuard";
@@ -60,6 +62,10 @@ const Hub = lazy(() => import("./pages/Hub"));
 const Legacy = lazy(() => import("./pages/Legacy"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
 const TournamentsHub = lazy(() => import("./pages/TournamentsHub"));
+const TournamentPage = lazy(() => import("./pages/TournamentPage"));
+const VenueScoreboardPage = lazy(() => import("./pages/VenueScoreboardPage"));
+const TournamentMatchPage = lazy(() => import("./pages/TournamentMatchPage"));
+const MatchShortRedirect = lazy(() => import("./pages/TournamentMatchPage").then((m) => ({ default: m.MatchShortRedirect })));
 const Pulse = lazy(() => import("./pages/Pulse"));
 
 
@@ -74,6 +80,7 @@ const MyMatchesPage = lazy(() => import("./pages/MyMatchesPage"));
 const TournamentStandingsPage = lazy(() => import("./pages/TournamentStandingsPage"));
 
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
+const HeadToHeadPage = lazy(() => import("./pages/HeadToHeadPage"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
@@ -138,9 +145,11 @@ function AppRoutes() {
             <Switch>
               <Route path="/" component={Home} />
           <Route path="/pulse">
-            <GuestGate feature="Pulse">
-              <Pulse />
-            </GuestGate>
+            <LegacyPulseRedirect>
+              <GuestGate feature="Pulse">
+                <Pulse />
+              </GuestGate>
+            </LegacyPulseRedirect>
           </Route>
           
           <Route path="/tv" component={TvScoreboardIndex} />
@@ -168,10 +177,12 @@ function AppRoutes() {
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/tournaments" component={TournamentsHub} />
-          <Route path="/tournaments/:id" component={({ params }: { params: { id: string } }) => {
-            window.location.replace(`${import.meta.env.BASE_URL}tournaments?id=${encodeURIComponent(params.id)}`);
-            return null;
-          }} />
+          {/* WP5 canonical routes — docs/decisions/wp5-canonical-routes.md */}
+          <Route path="/tournaments/:id/matches/:matchId/:mtab?" component={TournamentMatchPage} />
+          <Route path="/tournaments/:id/venue" component={VenueScoreboardPage} />
+          <Route path="/tournaments/:id/scoreboard" component={VenueScoreboardPage} />
+          <Route path="/tournaments/:id/:tab?" component={TournamentPage} />
+          <Route path="/matches/:matchId" component={MatchShortRedirect} />
           <Route path="/team-hub/:id">
             <ProtectedRoute>
               <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -209,6 +220,13 @@ function AppRoutes() {
                 <PlayerPersonalPage />
               </ProtectedRoute>
             </Suspense>
+          </Route>
+          <Route path="/h2h">
+            <GuestGate feature="Head-to-head">
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <HeadToHeadPage />
+              </ErrorBoundary>
+            </GuestGate>
           </Route>
           <Route path="/compare/:p1/:p2">
             <GuestGate feature="Compare Players">
@@ -281,25 +299,36 @@ function AppRoutes() {
           
           <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 
-          {/* Test route exclusively for Playwright E2E */}
-          <Route path="/test-umpire-engine" component={() => (
+          {/* Test route is excluded from production builds. */}
+          {import.meta.env.DEV && <Route path="/test-umpire-engine" component={() => (
              <UmpireEngine 
                initialMatchState={{
                  id: "test-match-123",
+                 umpireId: "test-user-123",
+                 umpireName: "Test Umpire",
+                 isFriendly: true,
                  status: "playing",
-                 t1: { p1Name: "P1", score: 0, games: 0 },
-                 t2: { p1Name: "P2", score: 0, games: 0 },
+                 t1: { p1Id: "test-player-1", p1Name: "P1", score: 0, games: 0 },
+                 t2: { p1Id: "test-player-2", p1Name: "P2", score: 0, games: 0 },
                  serverTeam: 1,
+                 serverPlayerIndex: 0,
+                 receiverPlayerIndex: 0,
+                 t1LastServedBy: 0,
+                 t2LastServedBy: 0,
+                 endsSwapped: false,
                  bestOfSets: 3,
+                 pointsToWin: 21,
+                 goldenPoint: 30,
                  category: "MS",
-                 pointLog: []
-               } as any}
+                 pointLog: [],
+                 setsHistory: [],
+               }}
                userId="test-user-123"
                userName="Test Umpire"
                userEmail="test@test.com"
                onClose={() => {}}
              />
-          )} />
+          )} />}
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
@@ -427,6 +456,7 @@ function AppContent() {
 
   useInactivityLogout();
   useNativeBackButton();
+  useNotificationDeepLinks();
   usePullToRefresh();
   useOfflineSync();
   useOverflowGuard();

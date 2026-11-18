@@ -133,7 +133,7 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
           </Button>
           <a
             href={`/tournament-admin?id=${tournamentId}`}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition flex-1 sm:flex-initial text-center whitespace-nowrap shadow-sm"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition flex-1 sm:flex-initial text-center whitespace-nowrap shadow-sm"
           >
             Full Admin Panel <ExternalLink className="w-3.5 h-3.5 ml-1" />
           </a>
@@ -673,7 +673,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
           </Button>
           <a
             href={`/tournament-admin?id=${tournamentId}`}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition flex-1 sm:flex-initial text-center whitespace-nowrap shadow-sm"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition flex-1 sm:flex-initial text-center whitespace-nowrap shadow-sm"
           >
             Full Admin Panel <ExternalLink className="w-3.5 h-3.5 ml-1" />
           </a>
@@ -1406,7 +1406,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                             setSelectedTieForConsole(tie);
                             setShowBottleneckModal(false);
                           }}
-                          className="text-xs font-bold rounded-xl bg-primary text-slate-950 hover:bg-primary/90"
+                          className="text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                           <Eye className="w-3.5 h-3.5 mr-1" />
                           Manage & Reveal

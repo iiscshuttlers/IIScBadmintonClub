@@ -31,41 +31,8 @@ import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { getEventFamily } from "@/lib/tournamentTheme";
-import { CertificateButton, CertificateDialog } from "@/components/tournament/CertificateDialog";
-import type { CertificateInput, Placement } from "@/lib/certificate";
-
-const PODIUM_PLACEMENTS: Placement[] = ["winner", "runnerUp", "third", "fourth"];
-
-const PODIUM_CONFIGS = [
-  {
-    label: "🥇 Champion",
-    border: "border-amber-300",
-    bg: "bg-amber-50 dark:bg-amber-950/20",
-    text: "text-amber-700 dark:text-amber-400",
-    ring: "ring-amber-400",
-  },
-  {
-    label: "🥈 Runner-up",
-    border: "border-slate-300",
-    bg: "bg-slate-50 dark:bg-slate-800",
-    text: "text-muted-foreground dark:text-slate-300",
-    ring: "ring-slate-400",
-  },
-  {
-    label: "🥉 Third Place",
-    border: "border-orange-300",
-    bg: "bg-orange-50 dark:bg-orange-950/20",
-    text: "text-orange-700 dark:text-orange-400",
-    ring: "ring-orange-400",
-  },
-  {
-    label: "Fourth Place",
-    border: "border-blue-200",
-    bg: "bg-blue-50 dark:bg-blue-950/20",
-    text: "text-blue-400 dark:text-blue-400",
-    ring: "",
-  },
-];
+import { TournamentWinnersPanel } from "@/components/tournament/TournamentWinnersPanel";
+import { isUuid, tournamentPath } from "@/lib/tournamentRoutes";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -82,7 +49,6 @@ export default function TournamentDetail() {
   const params = routeParams ?? { slug: "" };
   const slug = params.slug;
   const { archivedTournaments, loading: archivedLoading } = useArchivedTournaments();
-  const [certificate, setCertificate] = useState<CertificateInput | null>(null);
   let tournament: ArchivedTournament | undefined = getArchivedTournament(slug, archivedTournaments);
   
   const { data: events, isLoading } = useQuery({
@@ -90,12 +56,6 @@ export default function TournamentDetail() {
     queryFn: getTournaments,
     enabled: !tournament && !archivedLoading, // Only fetch if not a legacy tournament and after archive loading
   });
-
-  useEffect(() => {
-    if (tournament && (tournament.status === "active" || tournament.status === "draft")) {
-      setLocation(`/pulse?t=${tournament.status}#tournament`);
-    }
-  }, [tournament?.id, tournament?.status, setLocation]);
 
   if (!tournament && events) {
     const sb = events.find(e => e.slug === slug || e.id === slug);
@@ -117,7 +77,21 @@ export default function TournamentDetail() {
     }
   }
 
-  if ((isLoading || archivedLoading) && !tournament) {
+  // WP5: every DB tournament (UUID id) lives at its canonical URL across its
+  // whole lifecycle; only legacy JSON-archive records stay on /events/:slug.
+  // `tournament` is only set from rows RLS let us read, so this never
+  // confirms a hidden draft.
+  const canonicalRedirect = tournament && isUuid(tournament.id)
+    ? tournamentPath(tournament.id)
+    : tournament && (tournament.status === "active" || tournament.status === "draft")
+      ? "/tournaments"
+      : null;
+
+  useEffect(() => {
+    if (canonicalRedirect) setLocation(canonicalRedirect, { replace: true });
+  }, [canonicalRedirect, setLocation]);
+
+  if (canonicalRedirect || ((isLoading || archivedLoading) && !tournament)) {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
@@ -243,133 +217,11 @@ export default function TournamentDetail() {
                   </p>
                 </div>
 
-                {/* Winners grid */}
-                {tournament.winners && (
-                  <div className="space-y-6">
-                    {Object.entries(
-                      tournament.winners.reduce(
-                        (acc, curr) => {
-                          const [group, ...rest] = curr.category.includes(":")
-                            ? curr.category.split(":")
-                            : ["Overall", curr.category];
-                          const catName =
-                            rest.length > 0
-                              ? rest.join(":").trim()
-                              : curr.category;
-                          if (!acc[group]) acc[group] = [];
-                          acc[group].push({ ...curr, category: catName });
-                          return acc;
-                        },
-                        {} as Record<string, typeof tournament.winners>,
-                      ),
-                    ).map(([group, results]) => (
-                      <div key={group} className="space-y-4">
-                        {group !== "Overall" && (
-                          <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                            <h3 className="text-lg font-black text-blue-900 dark:text-foreground">
-                              {group}
-                            </h3>
-                          </div>
-                        )}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {results!.map((result) => (
-                            <div
-                              key={result.category}
-                              className="rounded-2xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 p-5 shadow-sm hover:shadow-md transition-shadow"
-                            >
-                              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-black text-xs uppercase tracking-wider mb-3">
-                                <Medal className="w-3.5 h-3.5" />
-                                {result.category}
-                              </div>
-                              {(() => {
-                                const open = (recipient: string, placement: Placement) =>
-                                  setCertificate({
-                                    recipient,
-                                    placement,
-                                    category: group !== "Overall" ? `${group}: ${result.category}` : result.category,
-                                    tournamentName: tournament!.name,
-                                    date: tournament!.startDate,
-                                  });
-                                const row = (name: string, placement: Placement, medal: string, cls: string, key?: string) => (
-                                  <p key={key} className={`${cls} flex items-center justify-between gap-2`}>
-                                    <span className="flex items-center gap-2 min-w-0">
-                                      {medal} <span className="truncate">{name}</span>
-                                    </span>
-                                    <CertificateButton recipient={name} placement={placement} onOpen={open} />
-                                  </p>
-                                );
-                                return (
-                                  <>
-                                    {row(result.winner, "winner", "🥇", "font-bold text-blue-950 dark:text-foreground")}
-                                    {result.runnerUp &&
-                                      row(result.runnerUp, "runnerUp", "🥈", "mt-1 text-sm font-semibold text-muted-foreground")}
-                                    {result.bronze?.map((name) =>
-                                      row(name, "third", "🥉", "mt-1 text-sm font-semibold text-muted-foreground", `b-${name}`),
-                                    )}
-                                    {result.fourthPlace?.map((name) =>
-                                      row(name, "fourth", "4️⃣", "mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400", `f-${name}`),
-                                    )}
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Podium grid */}
-                {tournament.podium && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                      <h3 className="text-lg font-black text-blue-900 dark:text-foreground">
-                        Final Standings
-                      </h3>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {tournament.podium.map((team, index) => {
-                        const cfg = PODIUM_CONFIGS[index] ?? PODIUM_CONFIGS[3];
-                        return (
-                          <div
-                            key={team}
-                            className={`rounded-2xl border ${cfg.border} ${cfg.bg} px-5 py-4 hover:shadow-sm transition-shadow`}
-                          >
-                            <p
-                              className={`text-xs font-black uppercase tracking-wider ${cfg.text}`}
-                            >
-                              {cfg.label}
-                            </p>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <p className="text-lg font-bold text-blue-950 dark:text-foreground">{team}</p>
-                              <CertificateButton
-                                recipient={team}
-                                placement={PODIUM_PLACEMENTS[index] ?? "fourth"}
-                                onOpen={(recipient, placement) =>
-                                  setCertificate({
-                                    recipient,
-                                    placement,
-                                    category: "Team Championship",
-                                    tournamentName: tournament!.name,
-                                    date: tournament!.startDate,
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <TournamentWinnersPanel tournament={tournament} />
               </CardContent>
             </Card>
 
             {/^[0-9a-f-]{36}$/i.test(tournament.id ?? "") && <UpNextPanel tournamentId={tournament.id} />}
-            <CertificateDialog input={certificate} tournamentId={tournament?.id} onClose={() => setCertificate(null)} />
 
             {tournament.id && (
               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -502,7 +354,7 @@ export default function TournamentDetail() {
                   <Link
                     href={tournament.galleryFolder ? `/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}#albums` : `/legacy#albums`}
                   >
-                    <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                    <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <ImageIcon className="w-4 h-4" />
                       View Gallery
                     </button>

@@ -3,14 +3,11 @@ import { Link, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, Star } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { FEEDBACK_TAGS } from "@/lib/tournamentFeedback";
-
-// tournament_feedback is new; generated types catch up after `supabase db push`.
-const sb = supabase as any;
 
 /** Post-event rating: 1–5 stars, optional "what stood out" tags and a comment. */
 export default function RateTournamentPage() {
@@ -23,12 +20,11 @@ export default function RateTournamentPage() {
     queryKey: ["rate", tournamentId, me],
     enabled: !!tournamentId && !!me,
     queryFn: async () => {
-      const [{ data: t }, { data: played }, { data: mine }] = await Promise.all([
-        supabase.from("tournaments").select("name").eq("id", tournamentId).maybeSingle(),
-        sb.rpc("played_in_tournament", { p_tournament: tournamentId, p_uid: me }),
-        sb.from("tournament_feedback").select("rating, tags, comment").eq("tournament_id", tournamentId).eq("user_id", me).maybeSingle(),
+      const [t, fb] = await Promise.all([
+        tournamentService.fetchTournamentById(tournamentId),
+        tournamentService.fetchTournamentFeedback(tournamentId, me!),
       ]);
-      return { name: (t as any)?.name ?? "this tournament", played: !!played, mine };
+      return { name: t?.name ?? "this tournament", played: fb.played, mine: fb.mine };
     },
   });
 
@@ -51,17 +47,20 @@ export default function RateTournamentPage() {
   const submit = async () => {
     if (!rating || !me) return;
     setSaving(true);
-    const { error } = await sb.from("tournament_feedback").upsert({
-      tournament_id: tournamentId,
-      user_id: me,
-      rating,
-      tags,
-      comment: comment.trim() || null,
-      updated_at: new Date().toISOString(),
-    });
-    setSaving(false);
-    if (error) toast.error("Couldn't save your rating");
-    else setDone(true);
+    try {
+      await tournamentService.submitTournamentFeedback({
+        tournament_id: tournamentId,
+        user_id: me,
+        rating,
+        tags,
+        comment: comment.trim() || null,
+      });
+      setDone(true);
+    } catch {
+      toast.error("Couldn't save your rating");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggle = (t: string) => setTags((xs) => (xs.includes(t) ? xs.filter((x) => x !== t) : [...xs, t]));

@@ -9,7 +9,7 @@ import {
   Trophy,
   Swords,
 } from "lucide-react";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
 import { InfoModal } from "@/components/InfoModal";
 
 const itemVariants = {
@@ -122,7 +122,7 @@ function CircularProgress({
 }
 
 interface ProfileOverviewTabProps {
-  player: PlayerProfileType;
+  player: PlayerRow;
   splitStats: any;
   streakStats: { max: number; current: number };
   bestOpponent: any;
@@ -131,7 +131,7 @@ interface ProfileOverviewTabProps {
   CareerHighlightsSection: any;
   id: string;
   liveMatches: any[];
-  ownPlayerProfile: PlayerProfileType | null | undefined;
+  ownPlayerProfile: PlayerRow | null | undefined;
   handleWithdrawMatch: (id: string) => void;
   handleConfirmMatch: (id: string) => void;
   handleRejectMatch: (id: string) => void;
@@ -452,7 +452,7 @@ export function ProfileOverviewTab({
               {
                 Icon: Crosshair,
                 label: "Playing Style",
-                value: player.playingStyle,
+                value: player.playing_style,
                 accent: "from-amber-400 to-orange-500",
                 iconBg: "bg-amber-500/[0.12]",
                 iconColor: "text-amber-500",
@@ -460,7 +460,7 @@ export function ProfileOverviewTab({
               {
                 Icon: Zap,
                 label: "Signature Shot",
-                value: player.favoriteShot,
+                value: player.favorite_shot,
                 accent: "from-rose-400 to-pink-500",
                 iconBg: "bg-rose-500/[0.12]",
                 iconColor: "text-rose-500",
@@ -468,7 +468,7 @@ export function ProfileOverviewTab({
               {
                 Icon: User,
                 label: "Dominant Hand",
-                value: player.dominantHand,
+                value: player.dominant_hand,
                 accent: "from-blue-400 to-cyan-500",
                 iconBg: "bg-blue-500/[0.12]",
                 iconColor: "text-blue-500",
@@ -476,7 +476,7 @@ export function ProfileOverviewTab({
               {
                 Icon: Sparkles,
                 label: "Badminton Idol",
-                value: player.favoriteIdol,
+                value: player.favorite_idol,
                 accent: "from-violet-400 to-purple-500",
                 iconBg: "bg-violet-500/[0.12]",
                 iconColor: "text-violet-500",
@@ -484,7 +484,7 @@ export function ProfileOverviewTab({
               {
                 Icon: Activity,
                 label: "Favorite Format",
-                value: player.favoriteFormat,
+                value: player.favorite_format,
                 accent: "from-primary to-teal-500",
                 iconBg: "bg-primary/[0.12]",
                 iconColor: "text-primary",

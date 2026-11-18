@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
@@ -36,6 +36,33 @@ import { useTeamModal } from '@/contexts/TeamModalContext';
 import { PlayerMatchBanner } from '@/components/events/PlayerMatchBanner';
 import { TeamLogo } from '@/components/events/TeamLogo';
 import { StatusChip } from '@/components/tournament/StatusChip';
+import { toMatchView, type MatchRow, type MatchView } from '@/lib/matchView';
+import { MatchSideRow, MatchStatusBadge, MatchTimes, scoreSummary } from '@/components/match/MatchPrimitives';
+import { matchPath } from '@/lib/tournamentRoutes';
+
+/**
+ * Rubber-level match view (WP6): status from the `status` column, winners only
+ * for completed/walkover, games via parseGames. Sides are the revealed lineup;
+ * an unrevealed lineup stays hidden.
+ */
+export function rubberView(rubber: any, isRevealed: boolean, tournamentId: string): MatchView {
+  const isDoubles = rubber.category?.includes('D') || rubber.category?.includes('Doubles');
+  const nameOf = (p: any): string | null => p?.full_name || p?.display_name || null;
+  const sideLabel = (a: any, b: any) =>
+    [nameOf(a), isDoubles ? nameOf(b) : null].filter(Boolean).join(' / ') || null;
+  const view = toMatchView({
+    ...rubber,
+    tournament_id: rubber.tournament_id ?? tournamentId,
+    court_number: rubber.court_number != null ? String(rubber.court_number) : null,
+    team1_label: isRevealed ? sideLabel(rubber.player1, rubber.player3) : 'Hidden lineup',
+    team2_label: isRevealed ? sideLabel(rubber.player2, rubber.player4) : 'Hidden lineup',
+  } as MatchRow);
+  if (!isRevealed) {
+    view.sides[0].isTbd = true;
+    view.sides[1].isTbd = true;
+  }
+  return view;
+}
 
 interface Props {
   tournamentId: string;
@@ -64,40 +91,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     queryKey: ['pulse_user_captain_team', tournamentId, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id || !tournamentId) return null;
-      // 1. Check if user is captain of any team in this tournament
-      const { data: captainTeams } = await supabase
-        .from('tournament_teams')
-        .select('*, tournaments(*)')
-        .eq('tournament_id', tournamentId)
-        .eq('captain_id', session.user.id);
-
-      let team = captainTeams && captainTeams[0];
-      let isCaptain = !!team;
-
-      // 2. If not found in captain_id, check tournament_team_members
-      if (!team) {
-        const { data: memberRows } = await supabase
-          .from('tournament_team_members')
-          .select('*, tournament_teams(*, tournaments(*))')
-          .eq('tournament_id', tournamentId)
-          .eq('player_id', session.user.id)
-          .eq('status', 'ACTIVE');
-        if (memberRows && memberRows[0]) {
-          team = memberRows[0].tournament_teams;
-          isCaptain = memberRows[0].role === 'CAPTAIN' || team?.captain_id === session.user.id;
-        }
-      }
-
-      if (!team) return null;
-
-      // Fetch active roster for this team
-      const { data: members } = await supabase
-        .from('tournament_team_members')
-        .select('*, players!tournament_team_members_player_id_fkey(*)')
-        .eq('team_id', team.id)
-        .eq('status', 'ACTIVE');
-
-      return { team, isCaptain, members: members || [] };
+      return await teamService.getUserCaptainTeam(tournamentId, session.user.id);
     },
     enabled: !!session?.user?.id && !!tournamentId
   });
@@ -106,25 +100,15 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
   const { data: ties = [], isLoading: tiesLoading } = useQuery({
     queryKey: ['pulse_team_ties', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_ties')
-        .select(`
-          *,
-          team_a:tournament_teams!tournament_ties_team_a_id_fkey(id, name, short_name, logo_url),
-          team_b:tournament_teams!tournament_ties_team_b_id_fkey(id, name, short_name, logo_url)
-        `)
-        .eq('tournament_id', tournamentId)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      const list = data || [];
+      const list = await teamService.getTournamentTies(tournamentId);
       const priority = (state: string) => {
         if (state === 'IN_PROGRESS') return 0;
         if (state === 'COMPLETED') return 2;
         return 1;
       };
-      return list.sort((a: any, b: any) => {
-        const pA = priority(a.state);
-        const pB = priority(b.state);
+      return [...list].sort((a: any, b: any) => {
+        const pA = priority(a.state || a.status);
+        const pB = priority(b.state || b.status);
         if (pA !== pB) return pA - pB;
         return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
       });
@@ -137,20 +121,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
   const { data: allRubberMatches = [], isLoading: matchesLoading } = useQuery({
     queryKey: ['pulse_rubber_matches', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select(`
-          *,
-          player1:players!tournament_matches_player1_id_fkey(id, full_name, avatar_url),
-          player2:players!tournament_matches_player2_id_fkey(id, full_name, avatar_url),
-          player3:players!tournament_matches_player3_id_fkey(id, full_name, avatar_url),
-          player4:players!tournament_matches_player4_id_fkey(id, full_name, avatar_url),
-          revealer:players!tournament_matches_revealed_by_fkey(id, full_name)
-        `)
-        .eq('tournament_id', tournamentId)
-        .not('tie_id', 'is', null);
-      if (error) throw error;
-      return data || [];
+      return await teamService.getTournamentRubbers(tournamentId);
     },
     enabled: !!tournamentId,
     refetchInterval: 5000
@@ -160,17 +131,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
   const { data: allAudits = [] } = useQuery({
     queryKey: ['pulse_tie_audits', tournamentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tie_lineup_audits')
-        .select(`
-          *,
-          referee:players!tie_lineup_audits_referee_id_fkey(full_name),
-          orig_player:players!tie_lineup_audits_original_player_id_fkey(full_name),
-          repl_player:players!tie_lineup_audits_replacement_player_id_fkey(full_name)
-        `)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      return await teamService.getTieLineupAudits(tournamentId);
     },
     enabled: !!tournamentId,
     refetchInterval: 5000
@@ -182,13 +143,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     queryKey: ['tts_is_assigned_official', tournamentId, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return false;
-      const { data } = await supabase
-        .from('tournament_officials')
-        .select('role')
-        .eq('tournament_id', tournamentId)
-        .eq('user_id', session.user.id)
-        .in('role', ['ORGANIZER', 'REFEREE', 'UMPIRE']);
-      return !!data && data.length > 0;
+      return await teamService.checkIsOfficial(tournamentId, session.user.id);
     },
     enabled: !!session?.user?.id && !!tournamentId,
   });
@@ -225,13 +180,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     const loadingKey = `${tie.id}-${side}`;
     setOverrideLoading(loadingKey);
     try {
-      const { data: members, error } = await supabase
-        .from('tournament_team_members')
-        .select('*, players!tournament_team_members_player_id_fkey(*)')
-        .eq('team_id', teamId)
-        .eq('status', 'ACTIVE');
-      
-      if (error) { toast.error(error.message || 'Could not load the team roster.'); return; }
+      const members = await teamService.getTeamRoster(teamId);
 
       // Ensure team object has tournaments relationship populated for tie format
       const fullTeam = {
@@ -377,7 +326,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                     isActive
                       ? isLivePill
                         ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-[1.02]'
-                        : 'bg-primary text-slate-950 shadow-md shadow-primary/20 scale-[1.02]'
+                        : 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
@@ -740,8 +689,9 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   <div className="space-y-3">
                     {tieMatches.map((rubber: any, index: number) => {
                       const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
-                      const isDoubles = rubber.category?.includes('D') || rubber.category?.includes('Doubles');
                       const playingSeq = rubber.playing_order || index + 1;
+                      const view = rubberView(rubber, isRevealed, tournamentId);
+                      const summary = scoreSummary(view);
 
                       // Check for emergency substitution audits for this rubber
                       const rubberSubAudits = tieAudits.filter((a: any) => 
@@ -758,12 +708,12 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                           }`}
                         >
                           {/* Rubber Header */}
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
                               <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-mono font-black text-xs flex items-center justify-center">
                                 #{playingSeq}
                               </span>
-                              <span className="font-black text-xs text-slate-800 dark:text-slate-200">
+                              <span className="font-black text-xs text-slate-800 dark:text-slate-200 break-words">
                                 {rubber.rubber_label || rubber.match_code}
                               </span>
                               <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -776,41 +726,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                               )}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              {rubber.status === 'in_progress' ? (
-                                <StatusChip state="live" compact />
-                              ) : rubber.status === 'completed' ? (
-                                <StatusChip state="completed" compact />
-                              ) : (
-                                <StatusChip state="scheduled" compact />
-                              )}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <MatchStatusBadge view={view} />
                             </div>
                           </div>
 
-                          {/* Head-to-Head Lineup Display */}
+                          {/* Head-to-Head Lineup + per-game scores (shared primitives) */}
                           {isRevealed ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1">
-                              {/* Side A Lineup */}
-                              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                                <div>
-                                  <div>{rubber.player1?.full_name || rubber.player1?.display_name || "TBD"}</div>
-                                  {isDoubles && rubber.player3 && (
-                                    <div className="text-slate-500">{rubber.player3?.full_name || rubber.player3?.display_name}</div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Side B Lineup */}
-                              <div className="flex items-center justify-end sm:justify-start gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-                                <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
-                                <div>
-                                  <div>{rubber.player2?.full_name || rubber.player2?.display_name || "TBD"}</div>
-                                  {isDoubles && rubber.player4 && (
-                                    <div className="text-slate-500">{rubber.player4?.full_name || rubber.player4?.display_name}</div>
-                                  )}
-                                </div>
-                              </div>
+                            <div className="bg-white dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                              <MatchSideRow side={view.sides[0]} index={0} view={view} />
+                              <MatchSideRow side={view.sides[1]} index={1} view={view} />
                             </div>
                           ) : (
                             <div className="py-2.5 px-3 rounded-xl bg-slate-100/50 dark:bg-slate-800/30 text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
@@ -818,13 +743,24 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                               <span>Secret Lineup · Awaiting official reveal by referee/organizer</span>
                             </div>
                           )}
+                          {summary && <p className="sr-only">Score: {summary}</p>}
 
-                          {/* Score if available */}
-                          {rubber.score && (
+                          {/* Raw score text only when it is not a list of games */}
+                          {view.scoreText && (
                             <div className="mt-1.5 text-center text-xs font-mono font-black text-primary">
-                              {rubber.score}
+                              {view.scoreText}
                             </div>
                           )}
+
+                          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3">
+                            <MatchTimes view={view} compact />
+                            <Link
+                              href={matchPath(view.tournamentId, view.id)}
+                              className="ml-auto inline-flex items-center min-h-[44px] px-2 text-xs font-black text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
+                            >
+                              Match details →
+                            </Link>
+                          </div>
 
                           {/* Reveal Metadata */}
                           {isRevealed && (rubber.revealer?.full_name || rubber.revealed_at) && (
@@ -886,7 +822,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   <button
                     type="button"
                     onClick={() => setScoreDetailTie(null)}
-                    className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
@@ -894,7 +830,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                 </div>
                 <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <div className="flex items-center justify-end gap-2 min-w-0 text-right">
-                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">{tie.team_a?.name || "Team A"}</span>
+                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white break-words min-w-0">{tie.team_a?.name || "Team A"}</span>
                     <TeamLogo name={tie.team_a?.name || "Team A"} shortName={tie.team_a?.short_name} logoUrl={tie.team_a?.logo_url} size="sm" />
                   </div>
                   <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center gap-1.5 shrink-0">
@@ -904,7 +840,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   </div>
                   <div className="flex items-center gap-2 min-w-0">
                     <TeamLogo name={tie.team_b?.name || "Team B"} shortName={tie.team_b?.short_name} logoUrl={tie.team_b?.logo_url} size="sm" />
-                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">{tie.team_b?.name || "Team B"}</span>
+                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white break-words min-w-0">{tie.team_b?.name || "Team B"}</span>
                   </div>
                 </div>
               </div>
@@ -919,14 +855,9 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                 ) : (
                   rubbers.map((rubber: any, index: number) => {
                     const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
-                    const isDoubles = rubber.category?.includes('D') || rubber.category?.includes('Doubles');
                     const playingSeq = rubber.playing_order || index + 1;
-                    const sideAName = isRevealed
-                      ? [rubber.player1?.full_name, isDoubles ? rubber.player3?.full_name : null].filter(Boolean).join(' / ') || "TBD"
-                      : "Hidden";
-                    const sideBName = isRevealed
-                      ? [rubber.player2?.full_name, isDoubles ? rubber.player4?.full_name : null].filter(Boolean).join(' / ') || "TBD"
-                      : "Hidden";
+                    const view = rubberView(rubber, isRevealed, tournamentId);
+                    const summary = scoreSummary(view);
                     return (
                       <div key={rubber.id} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
                         <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -934,19 +865,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                             <span className="w-5 h-5 rounded-md bg-primary/10 text-primary font-mono font-black text-[10px] flex items-center justify-center shrink-0">#{playingSeq}</span>
                             <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0">{rubber.category}</span>
                           </div>
-                          {rubber.status === 'in_progress' ? (
-                            <StatusChip state="live" compact />
-                          ) : rubber.status === 'completed' ? (
-                            <StatusChip state="completed" compact />
-                          ) : (
-                            <StatusChip state="scheduled" compact />
-                          )}
+                          <MatchStatusBadge view={view} />
                         </div>
-                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs">
-                          <span className={`text-right font-bold truncate ${isRevealed ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 italic'}`}>{sideAName}</span>
-                          <span className="font-mono font-black text-primary whitespace-nowrap px-1.5">{rubber.score || 'vs'}</span>
-                          <span className={`text-left font-bold truncate ${isRevealed ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 italic'}`}>{sideBName}</span>
+                        <div className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs">
+                          <MatchSideRow side={view.sides[0]} index={0} view={view} />
+                          <MatchSideRow side={view.sides[1]} index={1} view={view} />
                         </div>
+                        {summary && <p className="sr-only">Score: {summary}</p>}
+                        {view.scoreText && (
+                          <div className="mt-1 text-center font-mono text-xs font-black text-primary">{view.scoreText}</div>
+                        )}
                       </div>
                     );
                   })
@@ -957,7 +885,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
               <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
                 <Button
                   onClick={() => { setActiveVisualTie(tie); setScoreDetailTie(null); }}
-                  className="w-full rounded-xl font-black text-xs h-9 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full rounded-xl font-black text-xs h-11 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Swords className="w-3.5 h-3.5" /> Open Full Tie Details
                 </Button>

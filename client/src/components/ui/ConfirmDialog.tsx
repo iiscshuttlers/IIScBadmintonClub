@@ -115,7 +115,7 @@ export function ConfirmDialog({
               className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition shadow-md active:scale-95 text-center ${
                 isDanger
                   ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20"
-                  : "bg-primary hover:bg-primary/90 text-slate-950 shadow-primary/20"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
               }`}
             >
               {confirmLabel}

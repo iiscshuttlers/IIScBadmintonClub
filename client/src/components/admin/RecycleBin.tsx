@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Trash2, RotateCcw, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -57,14 +57,14 @@ export function RecycleBin() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("recycle_bin")
-      .select("*")
-      .gt("expires_at", new Date().toISOString())
-      .order("deleted_at", { ascending: false });
-    if (error) toast.error("Failed to load recycle bin: " + error.message);
-    else setItems(data ?? []);
-    setLoading(false);
+    try {
+      const data = await adminService.fetchRecycleBinItems();
+      setItems((data as RecycleBinItem[]) ?? []);
+    } catch (error: any) {
+      toast.error("Failed to load recycle bin: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -73,12 +73,7 @@ export function RecycleBin() {
   const restore = async (item: RecycleBinItem) => {
     setActionId(item.id);
     try {
-      const { error } = await (supabase as any)
-        .from(item.table_name)
-        .insert(item.record_data);
-      if (error) throw error;
-
-      await supabase.from("recycle_bin").delete().eq("id", item.id);
+      await adminService.restoreRecycleBinItem(item);
 
       await recordAction({
         action_type: "create",
@@ -106,18 +101,16 @@ export function RecycleBin() {
       confirmLabel: 'Permanently Delete'
     }))) return;
     setActionId(item.id);
-    const { error } = await supabase
-      .from("recycle_bin")
-      .delete()
-      .eq("id", item.id);
-    if (error) {
-      toast.error("Delete failed: " + error.message);
-    } else {
+    try {
+      await adminService.deleteRecycleBinItem(item.id);
       setItems((prev) => prev.filter((i) => i.id !== item.id));
       await refreshRecycleBin();
       toast.success("Permanently deleted");
+    } catch (error: any) {
+      toast.error("Delete failed: " + error.message);
+    } finally {
+      setActionId(null);
     }
-    setActionId(null);
   };
 
   const tableNames = [...new Set(items.map((i) => i.table_name))];
@@ -233,7 +226,7 @@ export function RecycleBin() {
                   <button
                     onClick={() => restore(item)}
                     disabled={isLoading}
-                    className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border border-primary/40 dark:border-primary/80 text-xs font-bold hover:bg-primary/15 dark:hover:bg-primary/90/50 transition disabled:opacity-50"
+                    className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border border-primary/40 dark:border-primary/60 text-xs font-bold hover:bg-primary/15 dark:hover:bg-primary/40 transition disabled:opacity-50"
                   >
                     {isLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

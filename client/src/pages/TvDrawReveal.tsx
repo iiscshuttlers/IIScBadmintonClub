@@ -3,7 +3,7 @@ import { Link, useRoute } from "wouter";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Pause, Play, RotateCcw, Shuffle, Maximize2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { buildDraw, type DrawMatch } from "@/lib/drawReveal";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -25,12 +25,9 @@ function TournamentPicker() {
   const { data, isLoading } = useQuery({
     queryKey: ["tv-draw-tournaments"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tournaments")
-        .select("id, name, status, start_date, format_family")
-        .in("status", ["draft", "active", "upcoming", "live"])
-        .order("start_date", { ascending: true, nullsFirst: false });
-      if (error) throw error;
+      const data = await tournamentService.fetchTournaments({
+        status: ["draft", "active", "upcoming", "live"],
+      });
       return (data ?? []).filter((t: any) => t.format_family !== "TEAM");
     },
   });
@@ -79,15 +76,10 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
     queryKey: ["tv-draw", tournamentId],
     queryFn: async () => {
       const [t, m] = await Promise.all([
-        supabase.from("tournaments").select("id, name").eq("id", tournamentId).maybeSingle(),
-        supabase
-          .from("tournament_matches")
-          .select("id, category, round, round_name, match_number, team1_label, team2_label, tie_id")
-          .eq("tournament_id", tournamentId),
+        tournamentService.fetchTournamentById(tournamentId),
+        tournamentService.fetchTournamentMatches(tournamentId),
       ]);
-      if (t.error) throw t.error;
-      if (m.error) throw m.error;
-      return { name: (t.data as any)?.name ?? "Tournament", draws: buildDraw((m.data ?? []) as DrawMatch[]) };
+      return { name: t?.name ?? "Tournament", draws: buildDraw((m ?? []) as DrawMatch[]) };
     },
   });
 

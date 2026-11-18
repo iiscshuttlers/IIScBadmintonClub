@@ -1,7 +1,8 @@
+import { matchPath, tournamentLink } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
 import { fetchTournamentConfig, getTournaments } from "@/lib/tournaments";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
   Tooltip,
@@ -153,11 +154,11 @@ export default function ScheduleCalendar() {
   useEffect(() => {
     async function loadEvents() {
       try {
-        const [eventsData, holidaysData, dbTournaments, matchSnap, tourneyCfg] = await Promise.all([
+        const [eventsData, holidaysData, dbTournaments, scheduledMatches, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
           getTournaments().catch(() => []),
-          supabase.from("tournament_matches").select("*, tournaments(name, id)").not("scheduled_at", "is", null),
+          tournamentService.fetchScheduledTournamentMatches().catch(() => []),
           fetchTournamentConfig().catch(() => null),
         ]);
 
@@ -182,14 +183,14 @@ export default function ScheduleCalendar() {
                 title: t.name,
                 type: "event",
                 location: t.venue || "Gymkhana",
-                link: t.status === "active" ? "/pulse#live" : `/events/${t.slug || t.id}`,
+                link: tournamentLink(t),
               });
             }
           });
         }
 
-        if (matchSnap && matchSnap.data) {
-          matchSnap.data.forEach((m: any) => {
+        if (scheduledMatches && scheduledMatches.length > 0) {
+          scheduledMatches.forEach((m: any) => {
             if (!m.scheduled_at) return;
             const localDate = new Date(m.scheduled_at);
             const matchDate = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
@@ -202,7 +203,7 @@ export default function ScheduleCalendar() {
               time: timeStr,
               type: "event",
               location: m.court_number ? `Court ${m.court_number}` : "Gymkhana",
-              link: m.tournaments?.id ? `/pulse#live` : undefined,
+              link: m.tournaments?.id && m.id ? matchPath(m.tournaments.id, m.id) : undefined,
             });
           });
         }

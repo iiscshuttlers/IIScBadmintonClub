@@ -49,9 +49,13 @@ export function EquipmentArsenalSection({
     }, 800);
   };
 
+  const racketDetails = player.racket_details || player.racketDetails;
+  const currentRacket = player.current_racket || player.currentRacket;
+  const shoesList = player.shoesList;
+
   if (
-    !player.racketDetails?.length &&
-    !player.shoesList?.length &&
+    !racketDetails?.length &&
+    !shoesList?.length &&
     !player.shoes &&
     !player.apparel
   ) {
@@ -61,14 +65,14 @@ export function EquipmentArsenalSection({
   // Combine items for stagger animation
   const items: any[] = [];
   
-  if (player.racketDetails) {
-    player.racketDetails.forEach((r: any) => {
-      items.push({ type: 'racket', data: r, isMain: r.name === player.currentRacket });
+  if (racketDetails) {
+    racketDetails.forEach((r: any) => {
+      items.push({ type: 'racket', data: r, isMain: r.name === currentRacket });
     });
   }
   
-  if (player.shoesList && player.shoesList.length > 0) {
-    player.shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
+  if (shoesList && shoesList.length > 0) {
+    shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
   } else if (player.shoes) {
     items.push({ type: 'shoe', data: { name: player.shoes, primary: true } });
   }
@@ -458,7 +462,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
     const isPlayerInString = (str?: string) => {
       if (!str) return false;
       const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
-      const playerName = (player.fullName || "").toLowerCase();
+      const playerName = (player.full_name || player.fullName || "").toLowerCase();
       const firstName = playerName.split(" ")[0];
       
       // If full name or first name matches, we count it

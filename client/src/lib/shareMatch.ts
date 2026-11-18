@@ -4,6 +4,8 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 import { toast } from "sonner";
 import { getBaseShareUrl } from "@/lib/utils";
 import { renderMatchShareCard } from "@/lib/matchShareCard";
+import { matchViewToShareInput } from "@/lib/matchViewShare";
+import type { MatchView } from "@/lib/matchView";
 
 import { supabase } from "@/lib/supabase";
 
@@ -110,47 +112,84 @@ export async function shareMatch(match: any) {
       return;
     }
 
-    if (Capacitor.isNativePlatform()) {
-      const base64 = canvas.toDataURL("image/png").split(",")[1];
-      const { uri } = await Filesystem.writeFile({
-        path: "match-share.png",
-        data: base64,
-        directory: Directory.Cache,
-      });
-      await Share.share({
-        title: "IISc Badminton Club Match",
-        text,
-        files: [uri],
-        dialogTitle: "Share Match Result",
-      });
-      toast.success("Match Recap shared!");
-    } else {
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          fallbackShare();
-          return;
-        }
-        const file = new File([blob], "match-recap.png", { type: "image/png" });
-        if (navigator.canShare?.({ files: [file] })) {
-          try {
-            await navigator.share({ title: "IISc Badminton Club Match", text, url: shareUrl, files: [file] });
-            toast.success("Match Recap shared!");
-            return;
-          } catch (e: any) {
-            if (e?.name === "AbortError") return; // user dismissed the share sheet
-          }
-        }
-        // No file-share support (e.g. desktop) — download the image instead
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "match-recap.png";
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success("Match recap downloaded!");
-      }, "image/png");
-    }
+    await shareCanvas(canvas, { text, shareUrl, fallback: fallbackShare });
   } catch (err: any) {
     if (!err?.message?.includes("cancel")) fallbackShare();
+  }
+}
+
+/** Native share sheet, Web Share with the PNG, else download the image. */
+async function shareCanvas(
+  canvas: HTMLCanvasElement,
+  { text, shareUrl, fallback }: { text: string; shareUrl: string; fallback: () => void },
+): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    const base64 = canvas.toDataURL("image/png").split(",")[1];
+    const { uri } = await Filesystem.writeFile({
+      path: "match-share.png",
+      data: base64,
+      directory: Directory.Cache,
+    });
+    await Share.share({
+      title: "IISc Badminton Club Match",
+      text,
+      files: [uri],
+      dialogTitle: "Share Match Result",
+    });
+    toast.success("Match Recap shared!");
+    return;
+  }
+  canvas.toBlob(async (blob) => {
+    if (!blob) {
+      fallback();
+      return;
+    }
+    const file = new File([blob], "match-recap.png", { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ title: "IISc Badminton Club Match", text, url: shareUrl, files: [file] });
+        toast.success("Match Recap shared!");
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return; // user dismissed the share sheet
+      }
+    }
+    // No file-share support (e.g. desktop) — download the image instead
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "match-recap.png";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Match recap downloaded!");
+  }, "image/png");
+}
+
+/**
+ * Share a tournament match result (MatchView) as the same PNG card the feed
+ * uses, linking to the canonical public match page.
+ */
+export async function shareTournamentMatch(view: MatchView, tournamentName?: string | null): Promise<void> {
+  const input = matchViewToShareInput(view, { tournamentName });
+  if (!input) return;
+  const { data, text, url } = input;
+  const fallback = () => {
+    if (Capacitor.isNativePlatform()) {
+      Share.share({ title: "IISc Badminton Club Match", text, url, dialogTitle: "Share Match Result" });
+    } else if (navigator.share) {
+      navigator.share({ title: "IISc Badminton Club Match", text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${text}
+${url}`);
+      toast.success("Match result copied to clipboard!");
+    }
+  };
+  try {
+    const canvas = await renderMatchShareCard(data);
+    if (!canvas) return fallback();
+    await shareCanvas(canvas, { text: `${text}
+${url}`, shareUrl: url, fallback });
+  } catch (err: any) {
+    if (!err?.message?.includes("cancel")) fallback();
   }
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Shield, ShieldAlert, ShieldCheck, User, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
+import { adminService } from "@/services/adminService";
 import { PlayerRow as Player } from "@/types/player";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -28,13 +29,8 @@ export function RoleManagerPanel() {
   const loadPlayers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .order("full_name");
-
-      if (error) throw error;
-      setPlayers((data || []) as any);
+      const data = await playerService.fetchPlayerList();
+      setPlayers(data);
     } catch (err: any) {
       toast.error("Failed to load players: " + err.message);
     } finally {
@@ -62,8 +58,7 @@ export function RoleManagerPanel() {
 
     setActionId(id);
     try {
-      const { error } = await supabase.rpc("set_player_role", { p_id: id, p_role: newRole });
-      if (error) throw error;
+      await adminService.updatePlayerRole(id, newRole);
 
       setPlayers(p => p.map(player => player.id === id ? { ...player, role: newRole as any } : player));
       toast.success(`Role updated successfully`);

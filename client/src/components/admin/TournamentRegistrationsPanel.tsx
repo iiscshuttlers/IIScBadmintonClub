@@ -132,7 +132,7 @@ export function TournamentRegistrationsPanel({ tournament }: { tournament: { id:
                 }`}
               >
                 {f.label}
-                <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>
+                <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-slate-200 dark:bg-slate-700"}`}>
                   {counts[f.key] ?? 0}
                 </span>
               </Button>

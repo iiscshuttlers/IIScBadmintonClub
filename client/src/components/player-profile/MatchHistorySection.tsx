@@ -440,7 +440,7 @@ export function MatchHistorySection({
                       }
 
                       const scoreBg = won 
-                        ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/80/40" 
+                        ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/50" 
                         : "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40";
 
                       return (

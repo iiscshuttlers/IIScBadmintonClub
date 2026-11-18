@@ -102,9 +102,14 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => jitteredInvalidate(["presence"])
       )
 
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") {
           console.log("🟢 Connected to System Realtime");
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          if (err) {
+            import('@sentry/react').then(({ captureException }) => captureException(err));
+          }
         }
       });
 

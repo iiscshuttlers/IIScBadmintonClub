@@ -1,3 +1,4 @@
+import { tournamentLink } from "@/lib/tournamentRoutes";
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -88,7 +89,7 @@ export function HomePersonalDashboard() {
         {myPlayerId && (
           <div className="flex items-center gap-2">
             <Link href={`/player/${myPlayerId}/personal`}>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition-all shadow-sm">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all shadow-sm">
                 Personal Space <ArrowRight className="w-3 h-3" />
               </button>
             </Link>
@@ -203,7 +204,7 @@ export function HomePersonalDashboard() {
           <FeaturedTournamentHero
             tournament={featuredTournament}
             liveScore={featuredLiveScore}
-            onOpen={() => setLocation(`/events/${featuredTournament.slug || featuredTournament.id}`)}
+            onOpen={() => setLocation(tournamentLink(featuredTournament))}
           />
         </div>
       )}

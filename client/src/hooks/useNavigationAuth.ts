@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { countPendingMatchesForPlayer } from "@/services/matchService";
+import { teamService } from "@/services/teamService";
 
 type SavedAccount = {
   id: string;
@@ -78,49 +80,14 @@ export function useNavigationAuth() {
 
     const fetchPending = async () => {
       try {
-        const { count } = await supabase
-          .from("matches")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending")
-          .or(`submitted_by.neq.${profile.id},submitted_by.is.null`)
-          .or(
-            `player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`,
-          );
+        const count = await countPendingMatchesForPlayer(profile.id);
+        setPendingActionCount(count);
 
-        if (count != null) {
-          setPendingActionCount(count);
-        }
-
-        // Fetch user's team membership and pending lineup actions
-        const { data: memberTeam } = (await supabase
-          .from("tournament_team_members" as any)
-          .select("team_id, role, team:tournament_teams(id, captain_id)")
-          .eq("player_id", profile.id)
-          .eq("status", "ACTIVE")
-          .limit(1)
-          .maybeSingle()) as { data: any };
-
-        if (memberTeam?.team_id) {
-          setMyTeamId(memberTeam.team_id);
-          const isCap = memberTeam.role === "CAPTAIN" || (memberTeam.team as any)?.captain_id === profile.id;
-          if (isCap) {
-            // Count ties for this team where lineup is not locked
-            const { count: pendingLineups } = await supabase
-              .from("tournament_ties" as any)
-              .select("*", { count: "exact", head: true })
-              .or(`team_a_id.eq.${memberTeam.team_id},team_b_id.eq.${memberTeam.team_id}`)
-              .neq("state", "COMPLETED")
-              .or(`and(team_a_id.eq.${memberTeam.team_id},lineup_locked_a.eq.false),and(team_b_id.eq.${memberTeam.team_id},lineup_locked_b.eq.false)`);
-
-            setTeamActionCount(pendingLineups || 0);
-          } else {
-            setTeamActionCount(0);
-          }
-        } else {
-          setMyTeamId(null);
-          setTeamActionCount(0);
-        }
+        const { myTeamId: teamId, pendingLineups } = await teamService.getUserTeamAndPendingLineups(profile.id);
+        setMyTeamId(teamId);
+        setTeamActionCount(pendingLineups);
       } catch {
+        /* intentional — background polling fails silently when offline */
         if (intervalId) clearInterval(intervalId);
       }
     };

@@ -140,7 +140,7 @@ export function useVideoGestures({
       touchStartRef.current = { x, y, time: now };
       
       if (playerRef.current) {
-         try { initialVolRef.current = playerRef.current.getVolume(); } catch {}
+         try { initialVolRef.current = playerRef.current.getVolume(); } catch { /* intentional — player API may not be ready or exposed */ }
       }
       initialBrightRef.current = brightness;
 

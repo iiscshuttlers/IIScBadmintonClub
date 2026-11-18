@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Video, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { updateMatchVideoUrl } from "@/services/matchService";
 import { toast } from "sonner";
 
 interface EditVideoModalProps {
@@ -23,12 +22,7 @@ export function EditVideoModal({ isOpen, onClose, matchId, tableName, initialUrl
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from(tableName)
-        .update({ video_url: url.trim() })
-        .eq("id", matchId);
-      
-      if (error) throw error;
+      await updateMatchVideoUrl(matchId, tableName, url.trim());
       
       toast.success("Video link updated!");
       onSuccess(url.trim());

@@ -18,7 +18,7 @@ export function EventsTab() {
         </div>
         <a
           href="/tournaments"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition-all shadow-sm flex-shrink-0"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all shadow-sm flex-shrink-0"
         >
           Go to Tournaments Hub →
         </a>
@@ -31,7 +31,7 @@ export function EventsTab() {
         </div>
         <a
           href="/tournaments"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:bg-primary/90 transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all shadow-sm"
         >
           <Trophy className="w-4 h-4" /> Go to Tournaments Hub →
         </a>

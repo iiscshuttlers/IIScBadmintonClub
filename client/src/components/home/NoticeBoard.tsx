@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { fetchSiteData } from "@/lib/siteData";
@@ -7,6 +6,7 @@ import { Bell, Trophy, Swords, Search, ShoppingBag, Clock, ExternalLink, Chevron
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { FIND_LOST_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 type NoticeType = "announcement" | "tournament" | "match" | "find_lost" | "marketplace";
 
@@ -138,7 +138,7 @@ export function NoticeBoard() {
               type: "match",
               title: m.tournaments?.name || "Match",
               description,
-              date: new Date(m.updated_at || m.created_at),
+              date: new Date(m.ended_at || m.started_at || m.scheduled_at || m.created_at),
               badgeText,
               iconWrapperClass,
               iconClass,
@@ -152,7 +152,7 @@ export function NoticeBoard() {
         // 4. Find & Lost
         const { data: findLost } = await supabase
           .from("find_lost_posts")
-          .select("*")
+          .select(FIND_LOST_PUBLIC_COLUMNS)
           .eq("resolved", false)
           .order("created_at", { ascending: false })
           .limit(5);

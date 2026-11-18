@@ -25,7 +25,8 @@ import { Button } from "@/components/ui/button";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
-import { supabase } from "@/lib/supabase";
+import { galleryService } from "@/services/galleryService";
+import { fetchPlayerList } from "@/services/playerService";
 import { SocialCTA } from "@/components/SocialCTA";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -158,15 +159,7 @@ export default function Legacy() {
     });
 
     try {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "gallery_likes").maybeSingle();
-      const currentDb = (data?.value as Record<string, string[]>) || {};
-      const pathLikes = currentDb[path] || [];
-      const newPathLikes = isLikedLocally 
-        ? pathLikes.filter(id => id !== userId)
-        : Array.from(new Set([...pathLikes, userId]));
-      
-      const updatedDb = { ...currentDb, [path]: newPathLikes };
-      await supabase.from("site_data").upsert({ key: "gallery_likes", value: updatedDb }, { onConflict: "key" });
+      await galleryService.toggleLike(path, userId, isLikedLocally);
     } catch (err) {
       console.error("Failed to sync like", err);
     }
@@ -222,7 +215,7 @@ export default function Legacy() {
     toast(isCurrentlyGlobal ? "Removed global subscription for " + formatText(tag) : "Enabled global subscription for " + formatText(tag));
     
     try {
-      await supabase.from("site_data").upsert({ key: "gallery_default_subscriptions", value: nextDefaults }, { onConflict: "key" });
+      await galleryService.updateDefaultSubscriptions(nextDefaults);
     } catch (err) {
       console.error("Failed to sync global subscription", err);
     }
@@ -347,11 +340,8 @@ export default function Legacy() {
   // Fetch player list lazily when lightbox first opens
   useEffect(() => {
     if (selectedIndex !== null && tagPlayers.length === 0) {
-      supabase
-        .from("players")
-        .select("id, full_name")
-        .order("full_name")
-        .then(({ data }) => { if (data) setTagPlayers(data); });
+      fetchPlayerList()
+        .then((data) => { if (data) setTagPlayers(data); });
     }
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -360,13 +350,13 @@ export default function Legacy() {
     if (current.some((t) => t.id === player.id)) return;
     const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
     setGalleryTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updateGalleryTags(updated);
   };
 
   const removeTag = async (photoPath: string, playerId: string) => {
     const updated = { ...galleryTags, [photoPath]: (galleryTags[photoPath] || []).filter((t) => t.id !== playerId) };
     setGalleryTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updateGalleryTags(updated);
   };
 
   const requestTag = async (photoPath: string) => {
@@ -387,7 +377,7 @@ export default function Legacy() {
     
     const updated = { ...pendingTags, [photoPath]: [...currentPending, { id: currentUserPlayer.id, name: currentUserPlayer.full_name }] };
     setPendingTags(updated);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updated }, { onConflict: "key" });
+    await galleryService.updatePendingTags(updated);
     toast.success("Tag request sent!");
   };
 
@@ -396,13 +386,13 @@ export default function Legacy() {
     const currentTags = galleryTags[photoPath] || [];
     const updatedTags = { ...galleryTags, [photoPath]: [...currentTags, tag] };
     setGalleryTags(updatedTags);
-    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updatedTags }, { onConflict: "key" });
 
     // Remove from pendingTags
     const currentPending = pendingTags[photoPath] || [];
     const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
     setPendingTags(updatedPending);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+
+    await galleryService.approvePendingTag(updatedTags, updatedPending);
   };
 
   const rejectTag = async (photoPath: string, tag: TagEntry) => {
@@ -410,7 +400,7 @@ export default function Legacy() {
     const currentPending = pendingTags[photoPath] || [];
     const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
     setPendingTags(updatedPending);
-    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+    await galleryService.updatePendingTags(updatedPending);
   };
 
   const handleEditTitle = async (item: UnifiedGalleryItem) => {

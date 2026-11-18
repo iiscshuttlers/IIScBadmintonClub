@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { toast } from "sonner";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Loader2, Archive, RotateCcw } from "lucide-react";
@@ -44,14 +44,14 @@ export function TournamentArchiveTab({
   const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from("tournament_matches")
-      .select("*")
-      .eq("tournament_id", tournament.id)
-      .order("round")
-      .order("match_number")
-      .then(({ data }) => {
+    tournamentService
+      .fetchTournamentMatches(tournament.id)
+      .then((data) => {
         setMatches((data as TournamentMatch[]) ?? []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        toast.error(err?.message || "Failed to load matches");
         setLoading(false);
       });
   }, [tournament.id]);
@@ -65,15 +65,15 @@ export function TournamentArchiveTab({
     });
     if (!ok) return;
     setArchiving(true);
-    const { error } = await supabase.rpc("archive_tournament", { p_tournament_id: tournament.id });
-    if (error) {
-      toast.error(error.message);
+    try {
+      await tournamentService.archiveTournament(tournament.id);
+      toast.success("Tournament archived");
+      onArchived();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to archive tournament");
+    } finally {
       setArchiving(false);
-      return;
     }
-    toast.success("Tournament archived");
-    onArchived();
-    setArchiving(false);
   };
 
   if (loading) {
@@ -123,17 +123,15 @@ export function TournamentArchiveTab({
                 });
                 if (!ok) return;
                 setArchiving(true);
-                const { error } = await supabase
-                  .from("tournaments")
-                  .update({ status: "completed", archived_at: null })
-                  .eq("id", tournament.id);
-                if (error) {
-                  toast.error(error.message);
+                try {
+                  await tournamentService.updateTournament(tournament.id, { status: "completed", archived_at: null });
+                  toast.success("Tournament unarchived");
+                  onArchived();
+                } catch (error: any) {
+                  toast.error(error.message || "Failed to unarchive tournament");
+                } finally {
                   setArchiving(false);
-                  return;
                 }
-                toast.success("Tournament unarchived");
-                onArchived();
               }}
               disabled={archiving}
               className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50"

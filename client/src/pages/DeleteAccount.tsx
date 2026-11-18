@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { deleteAccount } from "@/services/playerService";
 import { disableBiometricLogin } from "@/lib/biometricAuth";
 import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -19,7 +19,7 @@ const CONSEQUENCES = [
 
 export default function DeleteAccount() {
   usePageMeta({ title: "Delete Account", description: "Permanently delete your IISc Badminton Club account" });
-  const { session, profile } = useAuth();
+  const { session, profile, signOut } = useAuth();
   const [, navigate] = useLocation();
   const [step, setStep] = useState<"confirm" | "final" | "done">("confirm");
   const [confirmText, setConfirmText] = useState("");
@@ -69,41 +69,16 @@ export default function DeleteAccount() {
     }
     setLoading(true);
     try {
-      // 1. Log the deletion request
-      await supabase.from("admin_logs").insert({
-        admin_email: session.user.email ?? "unknown",
-        action: "user_self_deletion",
-        details: reason ? `Reason: ${reason}` : "No reason given",
+      await deleteAccount({
+        userId: session.user.id,
+        profileId: profile?.id,
+        userEmail: session.user.email,
+        reason,
       });
-
-      // 2. Delete player profile (cascade deletes matches, find_lost_posts via FK)
-      if (profile?.id) {
-        await supabase.from("players").delete().eq("id", profile.id);
-      }
-
-      // 3. Remove push tokens
-      await supabase.from("user_push_tokens").delete().eq("user_id", session.user.id);
-
-      // 4. Hard-delete the auth.users record via the admin edge function
-      // This satisfies Google Play's requirement for complete account deletion.
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (currentSession?.access_token) {
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${currentSession.access_token}`,
-          },
-          body: JSON.stringify({ userId: session.user.id }),
-        }).catch(() => {
-          // Auth deletion may fail if the user is already partially deleted;
-          // the profile is gone so we still proceed to sign out.
-        });
-      }
 
       // 5. Sign out locally
       await disableBiometricLogin();
-      await supabase.auth.signOut();
+      await signOut();
 
       setStep("done");
     } catch (err: any) {
@@ -242,7 +217,7 @@ export default function DeleteAccount() {
 
             <p className="text-center text-xs text-muted-foreground dark:text-muted-foreground">
               If you just need a break, consider{" "}
-              <button onClick={async () => { await disableBiometricLogin(); await supabase.auth.signOut(); navigate("/"); }}
+              <button onClick={async () => { await disableBiometricLogin(); await signOut(); navigate("/"); }}
                 className="text-primary dark:text-primary font-bold hover:underline inline-flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> signing out
               </button>{" "}

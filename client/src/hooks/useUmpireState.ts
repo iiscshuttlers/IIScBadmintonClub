@@ -5,11 +5,24 @@ import { useUmpireStore } from "@/store/umpireStore";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { supabase } from "@/lib/supabase";
 import { MatchService } from "@/services/matchService";
+import {
+  startTournamentMatchChecked,
+  submitTournamentMatch,
+  fetchTournamentMatchConflictContext,
+  applyTournamentMatchCorrection,
+} from "@/services/tournamentService";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { ScoringLogic, type MatchFormat } from "@/lib/umpire/scoringLogic";
 import type { PlayerSlim as Player } from "@/types";
-import { MatchEditState, BwfMatchState, PointLogEntry, CardType, CardTarget } from "@/types/umpire";
+import {
+  MatchEditState,
+  BwfMatchState,
+  PointLogEntry,
+  CardType,
+  CardTarget,
+  ScoreConflictState,
+} from "@/types/umpire";
 import { usePlayers, usePlayerBuddies } from "@/hooks/usePlayers";
 import { computeAddPoint, computeDeductPoint, computeForceEndSet, computeEditSet } from "@/lib/umpire/umpireMutations";
 import { useUmpireHelpers } from "@/hooks/useUmpireHelpers";
@@ -26,6 +39,7 @@ export interface UmpireStateProps {
   tournamentMatch?: TournamentMatchForUmpire | null;
   onClose: () => void;
   onMatchSaved?: (matchId: string, matchSource: "friendly" | "tournament") => void;
+  onClearOfflineQueue?: (matchId: string) => Promise<void>;
 }
 
 export function useUmpireState({
@@ -37,7 +51,8 @@ export function useUmpireState({
   initialMatchState,
   tournamentMatch,
   onClose,
-  onMatchSaved
+  onMatchSaved,
+  onClearOfflineQueue,
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
   const { isUmpire: isRoleUmpire } = useAuth();
@@ -66,13 +81,14 @@ export function useUmpireState({
   } = useUmpireStore();
 
   const [hasSaved, setHasSaved] = useState(false);
+  const [conflictState, setConflictState] = useState<ScoreConflictState | null>(null);
+  const [isResolvingConflict, setIsResolvingConflict] = useState(false);
 
   useEffect(() => {
     if (storeMatch?.status === "playing") {
       setHasSaved(false);
     }
   }, [storeMatch?.status]);
-
 
   const match = storeMatch || (() => {
     
@@ -180,6 +196,7 @@ export function useUmpireState({
           umpireName: userName,
           isFriendly: false,
           isTournamentMatch: true,
+          tournamentId: tournamentMatch.tournament_id,
           matchNumber: tournamentMatch.match_code,
           category: catMap[tournamentMatch.category] ?? "Singles",
           pointsToWin: tournamentMatch.points_to_win,
@@ -445,6 +462,31 @@ export function useUmpireState({
         MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
       };
       const cat = tournamentMatch ? (catMap[tournamentMatch.category] ?? "Singles") : match.category;
+      if (tournamentMatch) {
+        try {
+          await startTournamentMatchChecked({
+            p_match_id: tournamentMatch.id,
+            p_expected_court: tournamentMatch.court_number,
+            p_expected_scheduled_at: tournamentMatch.scheduled_at,
+          });
+        } catch (error: any) {
+          const message = error?.message ?? "Could not start the tournament match";
+          if (message.includes("court_in_use:") || message.includes("court_conflict:")) {
+            toast.error("Court is not available", { description: message.split(":").slice(1).join(":").trim() });
+          } else if (message.includes("player_in_use:")) {
+            toast.error("A player is already on court", { description: message.split(":").slice(1).join(":").trim() });
+          } else if (message.includes("player_rest_conflict:")) {
+            toast.error("Minimum rest has not elapsed", { description: message.split(":").slice(1).join(":").trim() });
+          } else if (message.includes("match_schedule_changed:")) {
+            toast.error("Schedule changed", { description: "Refresh the match list before starting." });
+          } else if (message.includes("scorer_locked:")) {
+            toast.error("Another scorer is active", { description: "Ask the referee to review the assignment before taking over." });
+          } else {
+            toast.error(message);
+          }
+          return;
+        }
+      }
       await updateMatch({
         status: "playing",
         category: cat,
@@ -719,18 +761,18 @@ export function useUmpireState({
           const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
           const scoreStr = match.setsHistory.join(", ");
           try {
-            const { error } = await supabase.rpc("submit_tournament_match", {
+            const submission = await submitTournamentMatch({
               p_match_id: matchId,
               p_winner_side: winnerSide,
               p_score: scoreStr,
               p_sets: match.setsHistory,
               p_umpire_id: userId || null,
+              p_expected_revision: tournamentMatch?.result_revision ?? 0,
             });
-            if (error) throw error;
             
             // Close UI immediately
             onMatchSaved?.(matchId, "tournament");
-            toast.success("Tournament match result saved!");
+            toast.success(submission.applied ? "Tournament match result saved!" : "Tournament match result was already saved");
             setHasSaved(true);
             
             // Clear from live matches immediately
@@ -746,6 +788,7 @@ export function useUmpireState({
               }).then(({ error: timesError }) => {
                 if (timesError) console.error("Failed to persist match start/end times", timesError);
               });
+              if (!submission.applied) return;
               const notifMsg = `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`;
               try {
                 await supabase.from("site_data").upsert({
@@ -778,7 +821,27 @@ export function useUmpireState({
             })();
 
           } catch (err: any) {
-            toast.error("Failed to save tournament match: " + err.message);
+            const message = String(err?.message || err);
+            if (message.includes("result_conflict") || message.includes("result_revision_conflict")) {
+              try {
+                const conflictCtx = await fetchTournamentMatchConflictContext({
+                  matchId,
+                  localRevision: tournamentMatch?.result_revision ?? 0,
+                  localWinnerSide: winnerSide,
+                  localScore: scoreStr,
+                  localSets: match.setsHistory,
+                  team1Label: match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""),
+                  team2Label: match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""),
+                });
+                setConflictState(conflictCtx);
+                toast.warning("Revision conflict detected: The server has a different result for this match.");
+              } catch (ctxErr) {
+                console.error("Failed to load conflict context", ctxErr);
+                toast.error("This result changed on another device. Reload the match before submitting again.");
+              }
+            } else {
+              toast.error("Failed to save tournament match: " + message);
+            }
           }
           return;
         }
@@ -964,6 +1027,83 @@ export function useUmpireState({
       onClose();
     };
 
+    const resolveConflictKeepServer = useCallback(async () => {
+      if (!conflictState) return;
+      setIsResolvingConflict(true);
+      try {
+        if (conflictState.matchId) {
+          await onClearOfflineQueue?.(conflictState.matchId);
+          await MatchService.removeLiveMatch(match.id).catch(console.error);
+        }
+        setConflictState(null);
+        toast.info("Retained server result.");
+        handleClose();
+      } catch (err: any) {
+        toast.error("Failed to dismiss conflict: " + (err?.message || err));
+      } finally {
+        setIsResolvingConflict(false);
+      }
+    }, [conflictState, onClearOfflineQueue, match.id, handleClose]);
+
+    const resolveConflictApplyCorrection = useCallback(async (reason: string) => {
+      if (!conflictState) return;
+      setIsResolvingConflict(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Authentication required. Please sign in again.");
+
+        const correctionOperationId = conflictState.correctionOperationId ?? crypto.randomUUID();
+        if (!conflictState.correctionOperationId) {
+          setConflictState((current) => current ? { ...current, correctionOperationId } : current);
+        }
+
+        await applyTournamentMatchCorrection({
+          matchId: conflictState.matchId,
+          winnerSide: conflictState.localWinnerSide,
+          score: conflictState.localScore,
+          sets: conflictState.localSets,
+          expectedRevision: conflictState.serverRevision,
+          reason,
+          operationId: correctionOperationId,
+        });
+
+        if (conflictState.matchId) {
+          await onClearOfflineQueue?.(conflictState.matchId);
+          await MatchService.removeLiveMatch(match.id).catch(console.error);
+        }
+
+        setConflictState(null);
+        setHasSaved(true);
+        toast.success("Tournament match score corrected and audited!");
+        onMatchSaved?.(conflictState.matchId, "tournament");
+        handleClose();
+      } catch (err: any) {
+        const msg = String(err?.message || err);
+        if (msg.includes("result_revision_conflict")) {
+          try {
+            const refreshed = await fetchTournamentMatchConflictContext({
+              matchId: conflictState.matchId,
+              localRevision: conflictState.localRevision,
+              localWinnerSide: conflictState.localWinnerSide,
+              localScore: conflictState.localScore,
+              localSets: conflictState.localSets,
+              team1Label: conflictState.team1Label,
+              team2Label: conflictState.team2Label,
+            });
+            setConflictState(refreshed);
+            toast.error("The server score was updated again by another official. Review the latest version.");
+          } catch {
+            toast.error("Result conflict changed on server. Please refresh.");
+          }
+        } else {
+          toast.error("Failed to apply correction: " + msg);
+          throw err;
+        }
+      } finally {
+        setIsResolvingConflict(false);
+      }
+    }, [conflictState, onClearOfflineQueue, match.id, userId, onMatchSaved, handleClose]);
+
   
     // ── Helpers ────────────────────────────────────────────────────────────────
     const currentGameNum = match.t1.games + match.t2.games + 1;
@@ -985,10 +1125,7 @@ export function useUmpireState({
     const cardBadge = (target: CardTarget) => {
       const c = cards[target];
       if (!c.length) return null;
-      const last = c[c.length - 1];
-      return (
-        <span className={`inline-block w-2.5 h-2.5 rounded-sm ml-1 ${last === "yellow" ? "bg-yellow-400" : last === "red" ? "bg-red-500" : "bg-slate-900 border border-white"}`} title={`${c.length} card(s)`} />
-      );
+      return { last: c[c.length - 1], count: c.length };
     };
   
 
@@ -1064,6 +1201,12 @@ export function useUmpireState({
     serverScore,
     receiverScore,
     cardBadge,
-    isSaving
+    isSaving,
+    conflictState,
+    setConflictState,
+    isResolvingConflict,
+    resolveConflictKeepServer,
+    resolveConflictApplyCorrection,
+    canCorrectMatch: isAdmin || isRoleUmpire || isTournamentUmpire || Boolean(tournamentMatch?.umpired_by === userId),
   };
 }

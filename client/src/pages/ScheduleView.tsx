@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -86,26 +86,15 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
   useEffect(() => {
     if (!profile?.id) return;
     const loadPicks = async () => {
-      // Load user picks
-      const { data: myVotes } = await supabase
-        .from("live_match_votes")
-        .select("live_match_id, pick")
-        .eq("user_id", profile.id);
-      if (myVotes) {
-        const p: Record<string, 1 | 2> = {};
-        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
+      try {
+        const [p, revealed] = await Promise.all([
+          feedService.fetchUserLiveVotes(profile.id),
+          feedService.getPollRevealedMatches(),
+        ]);
         setPicks(p);
-      }
-
-      // Load revealed matches state
-      const { data: siteData } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "poll_revealed_matches")
-        .single();
-      
-      if (siteData?.value) {
-        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+        setRevealedMatchIds(revealed);
+      } catch (err) {
+        console.error("Failed to load live picks", err);
       }
     };
     loadPicks();
@@ -117,11 +106,11 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
     // Optimistic update
     setPicks(prev => ({ ...prev, [matchId]: team }));
 
-    await supabase.from("live_match_votes").upsert({
-      live_match_id: matchId,
-      user_id: profile.id,
-      pick: team
-    }, { onConflict: 'live_match_id,user_id' });
+    try {
+      await feedService.voteLiveMatch(matchId, profile.id, team);
+    } catch (err) {
+      console.error("Failed to record vote", err);
+    }
   };
 
   if (!tournamentData) return (

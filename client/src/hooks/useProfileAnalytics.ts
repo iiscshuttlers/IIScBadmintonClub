@@ -1,14 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
-import type { PlayerProfileType } from "@/types";
+import type { PlayerRow } from "@/types";
 
 export function useProfileAnalytics(
   id: string | undefined,
-  player: PlayerProfileType | null,
+  _player: PlayerRow | null,
   liveMatches: any[],
-  eloLogs: any[],
-  ownPlayerProfile: PlayerProfileType | null | undefined
+  _eloLogs: any[],
+  ownPlayerProfile: PlayerRow | null | undefined
 ) {
-  const [eloChartFilter, setEloChartFilter] = useState<"ALL" | "S" | "D" | "XD">("ALL");
   const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
@@ -72,59 +71,9 @@ export function useProfileAnalytics(
     return bestOpp;
   }, [liveMatches, id]);
 
-  const eloHistoryData = useMemo(() => {
-    if (!id || !player) return [];
-
-    let currentElo = 1200;
-    if (eloChartFilter === "ALL" && player.elo_rating) currentElo = player.elo_rating;
-    if (eloChartFilter === "S" && player.singles_elo) currentElo = player.singles_elo;
-    if (eloChartFilter === "D" && player.doubles_elo) currentElo = player.doubles_elo;
-    if (eloChartFilter === "XD" && player.mixed_elo) currentElo = player.mixed_elo;
-
-    const history = [];
-
-    const filteredLogs = eloLogs.filter((log) => {
-      if (eloChartFilter === "S" && log.category !== "Singles") return false;
-      if ((eloChartFilter === "D" || eloChartFilter === "XD") && log.category !== "Doubles") return false;
-      return true;
-    });
-
-    if (filteredLogs.length > 0) {
-      history.push({
-        name: "Start",
-        elo: eloChartFilter === "ALL" ? 1200 : filteredLogs[0].previous_elo,
-      });
-
-      let rollingAllElo = 1200;
-      filteredLogs.forEach((log) => {
-        if (eloChartFilter === "ALL") {
-          rollingAllElo += Math.trunc((log.elo_change || 0) / 3);
-        }
-        history.push({
-          name: new Date(log.created_at).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          }),
-          elo: eloChartFilter === "ALL" ? rollingAllElo : log.new_elo,
-        });
-      });
-
-      if (history.length > 0) {
-        history[history.length - 1].elo = currentElo;
-      }
-    } else {
-      history.push({ name: "Current", elo: currentElo });
-    }
-
-    return history;
-  }, [eloLogs, id, player, eloChartFilter]);
-
   return {
     h2hRecord,
     recentOpponents,
     bestOpponent,
-    eloHistoryData,
-    eloChartFilter,
-    setEloChartFilter,
   };
 }

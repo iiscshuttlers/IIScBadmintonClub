@@ -1,5 +1,7 @@
 package shuttlers.iisc.com;
 
+import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.service.quicksettings.Tile;
@@ -20,11 +22,22 @@ public class UmpireTileService extends TileService {
     }
 
     @Override
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     public void onClick() {
         super.onClick();
         
         Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("iiscshuttlers://umpire"));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivityAndCollapse(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+            startActivityAndCollapse(pendingIntent);
+        } else {
+            startActivityAndCollapse(intent);
+        }
     }
 }

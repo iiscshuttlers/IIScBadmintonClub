@@ -70,7 +70,7 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
             id, full_name, nickname, department, avatar_url,
             elo_rating, singles_elo, doubles_elo, mixed_elo,
             win_loss_record, playing_level, playing_style,
-            dominant_hand, is_guest, current_racket, email, role
+            dominant_hand, is_guest, current_racket, role
           `)
           .eq("id", playerId)
           .maybeSingle();

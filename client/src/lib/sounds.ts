@@ -13,7 +13,7 @@ function createCtx() {
   if (_ctx && _ctx.state !== "closed") return;
   try {
     _ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  } catch (_) {}
+  } catch { /* intentional — audio synthesis unsupported or blocked by browser */ }
 }
 
 // Call this once at app startup. Listens for the first real gesture and
@@ -40,13 +40,13 @@ export function initSounds() {
       _ctx.resume().then(() => {
         _gestureReceived = true;
         _pendingOnUnlock.splice(0).forEach((fn) => {
-          try { fn(); } catch (_) {}
+          try { fn(); } catch { /* intentional — sound callback failed during unlock */ }
         });
       }).catch(() => {});
     } else if (_ctx?.state === "running") {
       _gestureReceived = true;
       _pendingOnUnlock.splice(0).forEach((fn) => {
-        try { fn(); } catch (_) {}
+        try { fn(); } catch { /* intentional — sound callback failed during unlock */ }
       });
     }
     ["click", "keydown", "touchend"].forEach((e) =>

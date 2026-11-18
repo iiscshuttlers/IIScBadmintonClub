@@ -164,7 +164,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
         ctx.drawImage(logoImg, W/2 - logoSize/2, H/2 - logoSize/2, logoSize, logoSize);
         ctx.restore();
       }
-    } catch (e) {}
+    } catch { /* intentional — watermark logo is decorative only, generation proceeds without it */ }
 
     // ── Header ──
     const headerH = 200;

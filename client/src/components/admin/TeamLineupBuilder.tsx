@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { teamService } from '@/services/teamService';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Lock, Save, Loader2, ArrowUp, ArrowDown, Send, CheckCircle2, ShieldAlert, AlertTriangle, GripVertical } from 'lucide-react';
@@ -30,12 +30,7 @@ export function TeamLineupBuilder({
     queryKey: ['lineup_tourney_config', tournamentId],
     queryFn: async () => {
       if (!tournamentId) return null;
-      const { data } = await supabase
-        .from('tournaments')
-        .select('id, tie_format_config, max_rubbers_per_player, ignore_gender_rules')
-        .eq('id', tournamentId)
-        .maybeSingle();
-      return data;
+      return await teamService.getTournamentConfigForLineup(tournamentId);
     },
     enabled: !!tournamentId && !team?.tournaments?.tie_format_config
   });
@@ -58,12 +53,7 @@ export function TeamLineupBuilder({
   const { data: existingLineups = [], isLoading } = useQuery({
     queryKey: ['tie_lineups', tie.id, side],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tie_lineups')
-        .select('*')
-        .eq('tie_id', tie.id)
-        .eq('side', side);
-      if (error) throw error;
+      const data = await teamService.getTieLineups(tie.id, side);
       
       const newAssignments: any = {};
       data.forEach((d: any) => {
@@ -84,12 +74,7 @@ export function TeamLineupBuilder({
   const { data: tieMatches = [] } = useQuery({
     queryKey: ['lineup_tie_matches', tie.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tournament_matches')
-        .select('*')
-        .eq('tie_id', tie.id);
-      if (error) throw error;
-      return data || [];
+      return await teamService.getMatchesByTieId(tie.id);
     },
     enabled: !!tie.id
   });
@@ -124,14 +109,12 @@ export function TeamLineupBuilder({
       if (isDeciderDoubles && !deciderPlayer2) {
         throw new Error("Please select Player 2 (partner) for the decider match.");
       }
-      const { data, error } = await (supabase.rpc as any)('submit_decider_lineup', {
-        p_tie_id: tie.id,
-        p_side: side,
-        p_player1_id: deciderPlayer1,
-        p_player2_id: isDeciderDoubles ? deciderPlayer2 : null
-      });
-      if (error) throw error;
-      return data;
+      return await teamService.submitDeciderLineup(
+        tie.id,
+        side,
+        deciderPlayer1,
+        isDeciderDoubles ? deciderPlayer2 : null
+      );
     },
     onSuccess: (data: any) => {
       toast.success(data.both_ready ? "Decider lineup locked! Awaiting match official to reveal." : "Decider lineup submitted! Waiting for opponent captain.");
@@ -193,28 +176,14 @@ export function TeamLineupBuilder({
         throw new Error("Please assign players to at least one rubber before submitting.");
       }
 
-      // Save assignments via upsert loop
-      const { data: authData } = await supabase.auth.getSession();
-      const currentUserId = authData?.session?.user?.id;
-
       const inserts = payload.map(p => ({
-        tie_id: tie.id,
-        side,
         rubber_order: p.rubber_order,
         proposed_playing_order: p.proposed_playing_order,
         player1_id: p.player1_id,
         player2_id: p.player2_id || null,
-        submitted_by: currentUserId || p.player1_id
       }));
 
-      // Direct upsert with conflict on tie_id, side, rubber_order
-      for (const row of inserts) {
-        const { error } = await supabase.from('tie_lineups').upsert(row, {
-          onConflict: 'tie_id,side,rubber_order'
-        });
-        if (error) throw error;
-      }
-
+      await teamService.saveTieLineups(tie.id, side, inserts);
       setSubmissionCount(prev => prev + 1);
     },
     onSuccess: () => {
@@ -231,11 +200,7 @@ export function TeamLineupBuilder({
       if (submissionCount === 0) {
         await submitLineup.mutateAsync();
       }
-      const { error } = await supabase.rpc('lock_tie_lineup', {
-        p_tie_id: tie.id,
-        p_side: side
-      });
-      if (error) throw error;
+      await teamService.lockTieLineup(tie.id, side);
     },
     onSuccess: () => {
       toast.success('Lineup locked successfully! Awaiting match official to review and reveal.');
@@ -589,7 +554,7 @@ export function TeamLineupBuilder({
               }
             }} 
             disabled={submitLineup.isPending || lockLineupMutation.isPending || !validationResult.isValid}
-            className="rounded-xl font-black bg-primary hover:brightness-110 active:scale-[0.99] text-slate-950 text-xs flex items-center justify-center gap-2 h-10 px-4 shadow-md shadow-primary/20 transition-all disabled:opacity-50"
+            className="rounded-xl font-black bg-primary hover:brightness-110 active:scale-[0.99] text-primary-foreground text-xs flex items-center justify-center gap-2 h-10 px-4 shadow-md shadow-primary/20 transition-all disabled:opacity-50"
           >
             {lockLineupMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
             <span>Lock Lineup</span>

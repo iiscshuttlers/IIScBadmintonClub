@@ -34,5 +34,77 @@ export const socialService = {
     }
     
     return newFollowingIds;
-  }
+  },
+
+  async notifyStatusUpdate(playerId: string, playerName: string, newStatus: string): Promise<void> {
+    try {
+      await supabase.functions.invoke("notify-social", {
+        body: {
+          type: "status_update",
+          from_player_id: playerId,
+          from_name: playerName,
+          new_status: newStatus,
+        },
+      });
+    } catch {
+      /* intentional — best-effort social notification */
+    }
+  },
+
+  async fetchPlayerEndorsements(playerId: string) {
+    const { data, error } = await supabase
+      .from("player_endorsements")
+      .select("category, trait, endorser_id")
+      .eq("endorsed_player_id", playerId);
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  async upsertPlayerEndorsement(params: {
+    endorsedPlayerId: string;
+    endorserId: string;
+    category: "skill" | "behavior";
+    trait: string;
+  }) {
+    const { error } = await supabase.rpc("upsert_player_endorsement", {
+      p_endorsed_player_id: params.endorsedPlayerId,
+      p_endorser_id: params.endorserId,
+      p_category: params.category,
+      p_trait: params.trait,
+    });
+    if (error) throw error;
+  },
+
+  async sendPingNotification(targetId: string, senderName: string) {
+    supabase.channel("global-notifications").send({
+      type: "broadcast",
+      event: "ping",
+      payload: {
+        target_id: targetId,
+        sender_name: senderName || "A player",
+      },
+    });
+
+    const { error } = await supabase.rpc("send_ping_notification", {
+      p_target_id: targetId,
+      p_sender_name: senderName || "A player",
+    });
+    if (error) console.warn("Failed to persist ping notification:", error.message);
+  },
+
+  async toggleMatchKudos(matchId: string, giverName: string, isCurrentlyLiked: boolean) {
+    const { error } = await supabase.rpc("toggle_match_kudos", { p_match_id: matchId });
+    if (error) console.warn("Failed to sync kudos live:", error);
+
+    if (!isCurrentlyLiked) {
+      void supabase.functions.invoke("notify-kudos", {
+        body: { match_id: matchId, giver_name: giverName },
+      }).catch(() => {});
+    }
+  },
 };
+
+export const fetchPlayerEndorsements = socialService.fetchPlayerEndorsements;
+export const upsertPlayerEndorsement = socialService.upsertPlayerEndorsement;
+export const sendPingNotification = socialService.sendPingNotification;
+export const toggleMatchKudos = socialService.toggleMatchKudos;

@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { ChevronDown } from "lucide-react";
+import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 export function H2HSection() {
   const { session } = useAuth();
@@ -24,7 +25,7 @@ export function H2HSection() {
   useEffect(() => {
     supabase
       .from("players")
-      .select("*")
+      .select(PLAYER_PUBLIC_COLUMNS)
       .then(({ data }) => {
         if (data) {
           setPlayers(data.sort((a, b) => b.elo_rating - a.elo_rating));

@@ -3,7 +3,15 @@ import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, FileUp, Filter
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchFriendlyMatchesForAdmin,
+  fetchTournamentMatchesForAdmin,
+  deleteFriendlyMatch as removeFriendlyMatch,
+  rejectFriendlyMatch,
+  fetchMatchById,
+} from "@/services/matchService";
+import { fetchTournaments, undoTournamentMatch as undoTournamentMatchRpc } from "@/services/tournamentService";
+import { adminService } from "@/services/adminService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +40,7 @@ export function MatchesManager() {
 
   useEffect(() => {
     // Load tournaments (including deleted ones so admins can clean up dummy matches)
-    supabase.from("tournaments").select("id, name, status, categories").order("created_at", { ascending: false }).then(({data}) => {
+    fetchTournaments().then((data) => {
       if (data && data.length > 0) {
         setTournaments(data);
         setSelectedTournamentId(data[0].id);
@@ -63,24 +71,9 @@ export function MatchesManager() {
     setLoading(true);
     try {
       if (activeTab === "friendly") {
-        const { data, error } = await supabase
-          .from("matches")
-          .select(`
-            *,
-            player1:players!matches_player1_id_fkey(id, full_name, avatar_url, gender),
-            player2:players!matches_player2_id_fkey(id, full_name, avatar_url, gender),
-            partner1:players!team1_partner_id(id, full_name, avatar_url, gender),
-            partner2:players!team2_partner_id(id, full_name, avatar_url, gender)
-          `)
-          .order("created_at", { ascending: false })
-          .limit(500);
-        
-        if (error) throw error;
-        
-        if (data) {
-          const filtered = data.filter(m => getFriendlyFormat(m) === activeFormat);
-          setMatches(filtered);
-        }
+        const data = await fetchFriendlyMatchesForAdmin(500);
+        const filtered = data.filter(m => getFriendlyFormat(m) === activeFormat);
+        setMatches(filtered);
       } else {
         if (!selectedTournamentId) {
           setMatches([]);
@@ -88,24 +81,7 @@ export function MatchesManager() {
           return;
         }
         
-        const { data, error } = await supabase
-          .from("tournament_matches")
-          .select(`
-            *,
-            tournaments(name),
-            player1:players!tournament_matches_player1_id_fkey(id, full_name, avatar_url),
-            player2:players!tournament_matches_player2_id_fkey(id, full_name, avatar_url),
-            player3:players!tournament_matches_player3_id_fkey(id, full_name, avatar_url),
-            player4:players!tournament_matches_player4_id_fkey(id, full_name, avatar_url)
-          `)
-          .eq("tournament_id", selectedTournamentId)
-          .eq("category", activeFormat)
-          .not("winner_side", "is", null)
-          .not("score", "is", null)
-          .order("scored_at", { ascending: false });
-          
-        if (error) throw error;
-        
+        const data = await fetchTournamentMatchesForAdmin(selectedTournamentId, activeFormat);
         if (data) {
           const mapped = data.map(tm => ({
             id: tm.id,
@@ -157,12 +133,11 @@ export function MatchesManager() {
     setActionId(id);
     try {
       if (isRejected) {
-        const { error } = await supabase.from("matches").delete().eq("id", id);
-        if (error) throw error;
+        await removeFriendlyMatch(id);
         toast.success("Match permanently deleted");
       } else {
-        const { data: matchData, error: fetchErr } = await supabase.from("matches").select("*").eq("id", id).single();
-        if (fetchErr || !matchData) {
+        const matchData = await fetchMatchById(id);
+        if (!matchData) {
           toast.error("Could not fetch match data");
           setActionId(null);
           return;
@@ -188,18 +163,9 @@ export function MatchesManager() {
     }))) return;
     setActionId(id);
     try {
-      const { error } = await supabase.from("tournament_matches").update({
-        score: null,
-        sets_history: [],
-        winner_side: null,
-        status: "pending",
-        locked: false,
-        scored_at: null,
-      }).eq("id", id);
-      if (error) throw error;
+      await undoTournamentMatchRpc(id);
       
-      const { error: calcErr } = await supabase.rpc("recalculate_tournament_elo");
-      if (calcErr) throw calcErr;
+      await adminService.recalculateTournamentElo();
 
       toast.success("Tournament match undone and ELO recalculated");
       load();
@@ -218,15 +184,15 @@ export function MatchesManager() {
     }))) return;
     setActionId("recalc");
     const start = Date.now();
-    const { error } = await supabase.rpc("recalculate_all_elo");
-    if (error) {
-      toast.error("Recalculation failed: " + error.message);
-      await supabase.from("admin_logs").insert({ admin_email: "admin", action: "elo_recalculate_failed", details: error.message });
-    } else {
+    try {
+      await adminService.recalculateAllElo();
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
       toast.success("Friendly ELO Recalculation complete!");
-      await supabase.from("admin_logs").insert({ admin_email: "admin", action: "elo_recalculate_all", details: `Completed in ${elapsed}s` });
+      await adminService.logAction("elo_recalculate_all", `Completed in ${elapsed}s`, "admin");
       load();
+    } catch (error: any) {
+      toast.error("Recalculation failed: " + error.message);
+      await adminService.logAction("elo_recalculate_failed", error.message, "admin");
     }
     setActionId(null);
   };
@@ -241,9 +207,8 @@ export function MatchesManager() {
     setActionId(id);
     const match = matches.find((m) => m.id === id);
     const prevStatus = match?.status ?? "confirmed";
-    const { error } = await supabase.from("matches").update({ status: "rejected" }).eq("id", id);
-    if (error) toast.error("Failed to revoke: " + error.message);
-    else {
+    try {
+      await rejectFriendlyMatch(id);
       toast.success("Match revoked");
       setMatches((prev) => prev.map((m) => (m.id === id ? { ...m, status: "rejected" } : m)));
       await recordAction({
@@ -254,6 +219,8 @@ export function MatchesManager() {
         after_state: { status: "rejected" },
         label: `Revoked match: ${match?.player1?.full_name ?? id} vs ${match?.player2?.full_name ?? ""}`,
       });
+    } catch (error: any) {
+      toast.error("Failed to revoke: " + error.message);
     }
     setActionId(null);
   };

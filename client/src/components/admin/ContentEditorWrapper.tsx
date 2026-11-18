@@ -145,7 +145,7 @@ export function ContentEditorWrapper<T>({
                     <div className="bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary/70 font-bold px-3 py-2 rounded-t-lg border-b border-primary/40 dark:border-primary/50">
                       Your New Changes
                     </div>
-                    <div className="bg-primary/10/50 dark:bg-primary/20 p-4 rounded-b-lg text-muted-foreground dark:text-slate-300 whitespace-pre overflow-x-auto border border-primary/30 dark:border-primary/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+                    <div className="bg-primary/5 dark:bg-primary/20 p-4 rounded-b-lg text-muted-foreground dark:text-slate-300 whitespace-pre overflow-x-auto border border-primary/30 dark:border-primary/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
                       {JSON.stringify(data, null, 2)}
                     </div>
                   </div>

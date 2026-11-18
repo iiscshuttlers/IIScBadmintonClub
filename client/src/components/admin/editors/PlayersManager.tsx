@@ -4,7 +4,8 @@ import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, Sunset, ArrowUp, ArrowDown
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
+import { playerService } from "@/services/playerService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
   Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
@@ -43,28 +44,14 @@ export function PlayersManager() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const playersRes = await supabase
-        .from("players")
-        .select(
-          "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired, gender",
-        )
-        .order("created_at", { ascending: false });
-
-      if (!playersRes.error && playersRes.data) {
-        setPlayers(playersRes.data as Player[]);
-      }
+      const playersRes = await adminService.getPlayersForAdmin();
+      setPlayers(playersRes as Player[]);
 
       // Fetch auth users without blocking UI
       const fetchAuthUsers = async () => {
         try {
-          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
-          const funcRes = await Promise.race([
-            supabase.functions.invoke("admin-users", { method: "GET" }),
-            timeout
-          ]) as any;
-          if (!funcRes.error && funcRes.data?.users) {
-            setAuthUsers(funcRes.data.users as AuthUser[]);
-          }
+          const users = await adminService.fetchAuthUsers();
+          setAuthUsers(users as AuthUser[]);
         } catch (err) {
           console.warn("Auth users fetch failed or timed out:", err);
         }
@@ -85,10 +72,8 @@ export function PlayersManager() {
   const approve = async (id: string) => {
     setActionId(id);
     const player = players.find((p) => p.id === id);
-    const { error } = await supabase.rpc("admin_approve_players", { p_ids: [id], p_approved: true });
-    if (error) {
-      toast("Approve failed: " + error.message, { icon: "❌" });
-    } else {
+    try {
+      await adminService.approvePlayers([id], true);
       toast("Player approved!", { icon: "✅" });
       setPlayers((p) =>
         p.map((pl) => (pl.id === id ? { ...pl, is_approved: true } : pl)),
@@ -101,6 +86,8 @@ export function PlayersManager() {
         after_state: { is_approved: true },
         label: `Approved player: ${player?.full_name ?? id}`,
       });
+    } catch (error: any) {
+      toast("Approve failed: " + error.message, { icon: "❌" });
     }
     setActionId(null);
   };
@@ -108,10 +95,8 @@ export function PlayersManager() {
   const revoke = async (id: string) => {
     setActionId(id);
     const player = players.find((p) => p.id === id);
-    const { error } = await supabase.rpc("admin_approve_players", { p_ids: [id], p_approved: false });
-    if (error) {
-      toast("Revoke failed: " + error.message, { icon: "❌" });
-    } else {
+    try {
+      await adminService.approvePlayers([id], false);
       toast("Approval revoked.", { icon: "⚠️" });
       setPlayers((p) =>
         p.map((pl) => (pl.id === id ? { ...pl, is_approved: false } : pl)),
@@ -124,6 +109,8 @@ export function PlayersManager() {
         after_state: { is_approved: false },
         label: `Revoked approval: ${player?.full_name ?? id}`,
       });
+    } catch (error: any) {
+      toast("Revoke failed: " + error.message, { icon: "❌" });
     }
     setActionId(null);
   };
@@ -139,12 +126,12 @@ export function PlayersManager() {
       confirmStyle: 'default',
       onConfirm: async () => {
         const ids = pendingPlayers.map(p => p.id);
-        const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids, p_approved: true });
-        if (error) {
-          toast.error("Bulk approve failed: " + error.message);
-        } else {
+        try {
+          await adminService.approvePlayers(ids, true);
           toast.success(`Approved ${pendingPlayers.length} players!`);
           setPlayers(p => p.map(pl => ids.includes(pl.id) ? { ...pl, is_approved: true } : pl));
+        } catch (error: any) {
+          toast.error("Bulk approve failed: " + error.message);
         }
       }
     });
@@ -186,13 +173,13 @@ export function PlayersManager() {
       confirmStyle: 'danger',
       onConfirm: async () => {
         setActionId(id);
-        const { data, error: fetchErr } = await supabase.from("players").select("*").eq("id", id).single();
-        if (fetchErr || !data) {
-          toast.error("Could not fetch player data");
-          setActionId(null);
-          return;
-        }
         try {
+          const data = await playerService.fetchPlayer(id);
+          if (!data) {
+            toast.error("Could not fetch player data");
+            setActionId(null);
+            return;
+          }
           await softDelete("players", id, data, `Player Profile: ${name}`);
           toast("Profile moved to recycle bin.", { icon: "🗑️" });
           setPlayers((p) => p.filter((pl) => pl.id !== id));
@@ -219,16 +206,13 @@ export function PlayersManager() {
       confirmStyle: 'danger',
       onConfirm: async () => {
         setActionId(id);
-        const { error } = await supabase.functions.invoke("admin-users", {
-          method: "DELETE",
-          body: { userId: id },
-        });
-        if (error) {
-          toast("Delete failed: " + error.message, { icon: "❌" });
-        } else {
+        try {
+          await adminService.deleteAuthUser(id);
           toast("Account permanently deleted.", { icon: "🗑️" });
           setAuthUsers((u) => u.filter((user) => user.id !== id));
           setPlayers((p) => p.filter((pl) => pl.id !== id));
+        } catch (error: any) {
+          toast("Delete failed: " + error.message, { icon: "❌" });
         }
         setActionId(null);
       }
@@ -243,15 +227,12 @@ export function PlayersManager() {
       confirmStyle: 'warning',
       onConfirm: async () => {
         setActionId(id);
-        const { error } = await supabase.functions.invoke("admin-users", {
-          method: "POST",
-          body: { action: "verify", userId: id },
-        });
-        if (error) {
-          toast("Verify failed: " + error.message, { icon: "❌" });
-        } else {
+        try {
+          await adminService.verifyAuthUser(id);
           toast("Email verified successfully.", { icon: "✅" });
           setAuthUsers((u) => u.map((user) => user.id === id ? { ...user, email_confirmed_at: new Date().toISOString() } : user));
+        } catch (error: any) {
+          toast("Verify failed: " + error.message, { icon: "❌" });
         }
         setActionId(null);
       }
@@ -260,11 +241,11 @@ export function PlayersManager() {
 
   const resendVerifyEmail = async (id: string, email: string) => {
     setActionId(id);
-    const { error } = await supabase.auth.resend({ type: 'signup', email });
-    if (error) {
-      toast("Resend failed: " + error.message, { icon: "❌" });
-    } else {
+    try {
+      await adminService.resendAuthVerification(email);
       toast("Verification email resent.", { icon: "✉️" });
+    } catch (error: any) {
+      toast("Resend failed: " + error.message, { icon: "❌" });
     }
     setActionId(null);
   };
@@ -303,16 +284,8 @@ export function PlayersManager() {
 
   const doRetirePlayer = async (id: string, name: string, currentlyRetired: boolean) => {
     setActionId(id);
-    const { data, error } = await supabase
-      .from("players")
-      .update({ is_retired: !currentlyRetired })
-      .eq("id", id)
-      .select();
-    if (error) {
-      toast.error("Failed to update retirement status: " + error.message);
-    } else if (!data || data.length === 0) {
-      toast.error("Permission Denied: Database RLS policy blocked the update.");
-    } else {
+    try {
+      await adminService.updatePlayerRetirement(id, !currentlyRetired);
       toast.success(currentlyRetired ? `${name} unretired.` : `${name} marked as retired.`, { icon: currentlyRetired ? "✅" : "🏅" });
       setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, is_retired: !currentlyRetired } : pl)));
       await recordAction({
@@ -323,6 +296,8 @@ export function PlayersManager() {
         after_state: { is_retired: !currentlyRetired },
         label: `${currentlyRetired ? "Unretired" : "Retired"} player: ${name}`,
       });
+    } catch (error: any) {
+      toast.error("Failed to update retirement status: " + error.message);
     }
     setActionId(null);
   };
@@ -357,8 +332,8 @@ export function PlayersManager() {
     const ok = await confirm({ title: "Confirm", description: `Bulk ${approved ? 'approve' : 'revoke'} ${selectedPlayers.length} players?`, confirmLabel: "Confirm", confirmVariant: approved ? "primary" : "danger" });
     if (!ok) return;
     setLoading(true);
-    const { error } = await supabase.rpc("admin_approve_players", { p_ids: selectedPlayers, p_approved: approved });
-    if (error) { toast.error(error.message); } else {
+    try {
+      await adminService.approvePlayers(selectedPlayers, approved);
       toast.success("Success");
       for (const id of selectedPlayers) {
         await recordAction({
@@ -370,6 +345,8 @@ export function PlayersManager() {
           label: `Bulk ${approved ? 'Approved' : 'Revoked'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
         });
       }
+    } catch (error: any) {
+      toast.error(error.message);
     }
     await load();
     setSelectedPlayers([]);
@@ -380,8 +357,8 @@ export function PlayersManager() {
     const ok = await confirm({ title: "Confirm", description: `Bulk ${retired ? 'retire' : 'restore'} ${selectedPlayers.length} players?`, confirmLabel: "Confirm", confirmVariant: "danger" });
     if (!ok) return;
     setLoading(true);
-    const { error } = await supabase.from("players").update({ is_retired: retired }).in("id", selectedPlayers);
-    if (error) { toast.error(error.message); } else {
+    try {
+      await adminService.bulkRetirePlayers(selectedPlayers, retired);
       toast.success("Success");
       for (const id of selectedPlayers) {
         await recordAction({
@@ -393,6 +370,8 @@ export function PlayersManager() {
           label: `Bulk ${retired ? 'Retired' : 'Restored'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
         });
       }
+    } catch (error: any) {
+      toast.error(error.message);
     }
     await load();
     setSelectedPlayers([]);
@@ -407,9 +386,9 @@ export function PlayersManager() {
     for (const id of selectedPlayers) {
        const player = players.find(p => p.id === id);
        if (!player) continue;
-       const { data, error: fetchErr } = await supabase.from("players").select("*").eq("id", id).single();
-       if (fetchErr || !data) { failed++; continue; }
        try {
+         const data = await playerService.fetchPlayer(id);
+         if (!data) { failed++; continue; }
          await softDelete("players", id, data, `Player Profile: ${player.full_name}`);
          success++;
        } catch (err: any) {
@@ -774,7 +753,7 @@ export function PlayersManager() {
                         <button onClick={() => resendVerifyEmail(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sky-600 bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50 text-xs font-bold transition disabled:opacity-50">
                           Resend Email
                         </button>
-                        <button onClick={() => forceVerify(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/80/50 text-xs font-bold transition disabled:opacity-50">
+                        <button onClick={() => forceVerify(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/40 text-xs font-bold transition disabled:opacity-50">
                           Force Verify
                         </button>
                       </>

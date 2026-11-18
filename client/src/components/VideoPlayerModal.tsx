@@ -76,8 +76,10 @@ export function VideoPlayerModal({ video, onClose }: Props) {
              if (a.length > 0) setTeamA(a);
              if (b.length > 0) setTeamB(b);
           }
-       }
-    } catch (e) {}
+        }
+    } catch {
+      /* intentional — fallback if video title is not in standard 'X vs Y' format */
+    }
   }, [video.title]);
 
   // Lock body scroll

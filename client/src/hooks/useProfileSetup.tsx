@@ -15,6 +15,8 @@ import { useProfileHighlightsState } from "./profile/useProfileHighlightsState";
 import { useProfileMediaState } from "./profile/useProfileMediaState";
 import { safeReplaceState, safeGetHash } from "@/lib/navUtils";
 import { useQueryClient } from "@tanstack/react-query";
+import { fetchMyPrivate, playerEmailInUse, withAdminPrivate } from "@/services/playerPrivateService";
+import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -117,7 +119,7 @@ export function useProfileSetup() {
     let mounted = true;
     const isSelfEdit = !paramId || (authProfile && authProfile.id === paramId);
 
-    let query = supabase.from("players").select("*");
+    let query = supabase.from("players").select(PLAYER_PUBLIC_COLUMNS);
     if (paramId && isAdmin && !isSelfEdit) {
       query = query.eq("id", paramId);
     } else if (authProfile?.id) {
@@ -127,7 +129,14 @@ export function useProfileSetup() {
     }
 
     Promise.resolve(query.maybeSingle())
-      .then(({ data: profile, error }) => {
+      .then(async ({ data: publicProfile, error }) => {
+        // Contact fields: own via self-only RPC, others' (admin edit) via admin RPC.
+        let profile: any = publicProfile;
+        if (publicProfile && !error) {
+          const own = await fetchMyPrivate();
+          if (own && own.id === (publicProfile as any).id) profile = { ...(publicProfile as any), ...own };
+          else if (isAdmin) profile = (await withAdminPrivate([publicProfile as any]))[0];
+        }
         if (!mounted) return;
         if (profile && !error) {
           setTargetUserId(profile.id);
@@ -359,14 +368,9 @@ export function useProfileSetup() {
     if (!silent) {
       setLoading(true);
       if (iiscEmail) {
-        const { data: existingProfiles, error: emailError } = await supabase
-          .from("players")
-          .select("id")
-          .eq("iisc_email", iiscEmail)
-          .neq("id", targetUserId || session.user.id)
-          .limit(1);
+        const inUseBy = await playerEmailInUse(iiscEmail).catch(() => null);
 
-        if (!emailError && existingProfiles && existingProfiles.length > 0) {
+        if (inUseBy && inUseBy !== (targetUserId || session.user.id)) {
           toast.error("Duplicate profile", {
             description: "This IISc Email belongs to an existing profile.\nPlease log out and Sign In using that exact email, OR contact a club admin to manually link it."
           });

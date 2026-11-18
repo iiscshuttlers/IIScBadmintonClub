@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Save, Clock, Trash2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import {
+  fetchMatchReminder,
+  setMatchReminder,
+  removeMatchReminder,
+  updateDefaultMatchReminderMins,
+} from '@/services/matchService';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics';
 
@@ -33,13 +38,9 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
       }
     } else {
       // Fetch match specific
-      supabase.from("match_reminders")
-        .select("remind_before_mins")
-        .eq("match_id", matchId)
-        .eq("user_id", userId)
-        .maybeSingle()
-        .then(({ data, error }) => {
-          if (data && !error) {
+      fetchMatchReminder(matchId, userId)
+        .then((data) => {
+          if (data) {
             setEnabled(true);
             setMinutes(data.remind_before_mins.toString());
           } else {
@@ -50,6 +51,9 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
               setMinutes("30");
             }
           }
+        })
+        .catch(() => {
+          setEnabled(false);
         });
     }
   }, [isOpen, matchId, userId, isGlobal, initialGlobalMins]);
@@ -65,35 +69,16 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
       }
 
       if (isGlobal) {
-        const { error } = await supabase
-          .from("players")
-          .update({ default_match_reminder_mins: enabled ? parsedMins : null })
-          .eq("id", userId);
-        
-        if (error) throw error;
+        await updateDefaultMatchReminderMins(userId, enabled ? parsedMins : null);
         track(enabled ? "match_reminder_set" : "match_reminder_cleared", { scope: "global", mins: enabled ? parsedMins : null });
         toast.success(enabled ? `Global reminders set for ${parsedMins} minutes before match` : "Global match reminders disabled");
       } else {
         if (enabled) {
-          const { error } = await supabase
-            .from("match_reminders")
-            .upsert({
-              match_id: matchId,
-              user_id: userId,
-              remind_before_mins: parsedMins,
-              sent_at: null // reset sent status
-            }, { onConflict: 'match_id,user_id' });
-          if (error) throw error;
+          await setMatchReminder(matchId, userId, parsedMins);
           track("match_reminder_set", { scope: "match", mins: parsedMins });
           toast.success(`Reminder set for ${parsedMins} minutes before this match`);
         } else {
-          // Disable -> delete record
-          const { error } = await supabase
-            .from("match_reminders")
-            .delete()
-            .eq("match_id", matchId)
-            .eq("user_id", userId);
-          if (error && error.code !== 'PGRST116') throw error; // Ignore not found
+          await removeMatchReminder(matchId, userId);
           toast.success("Reminder removed for this match");
         }
       }

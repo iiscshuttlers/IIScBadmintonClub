@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "@/components/feed/MatchCard";
 import { InfoModal } from "@/components/InfoModal";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
+import { eligibilityOf, relation, winnerOf, type ComparisonRow } from "@/lib/comparison";
 
 export default function ComparePlayers() {
   const [match, rawParams] = useRoute("/compare/:p1/:p2");
@@ -80,16 +81,18 @@ export default function ComparePlayers() {
       setPlayer2(p2Data);
 
       // Fetch head to head matches
-      const matchesData = await fetchPlayerMatches(p1, 200);
+      const matchesData = await fetchPlayerMatches(p1, 1000);
 
       if (matchesData) {
         // Reverse because we need ascending order for trend charts
         const ascMatches = [...matchesData].reverse();
         // Filter specifically for head to head (they are on opposing teams)
+        // Shared WP8 policy: opposite sides, finished, with a recorded winner.
+        // Walkovers and unfinished/disputed rows are left to the full
+        // head-to-head page so these totals always reconcile with the list.
         const h2h = ascMatches.filter(m => {
-          const p1Team = m.player1_id === p1 || m.team1_partner_id === p1 ? 1 : (m.player2_id === p1 || m.team2_partner_id === p1 ? 2 : 0);
-          const p2Team = m.player1_id === p2 || m.team1_partner_id === p2 ? 1 : (m.player2_id === p2 || m.team2_partner_id === p2 ? 2 : 0);
-          return p1Team !== 0 && p2Team !== 0 && p1Team !== p2Team;
+          const row = toComparisonRow(m);
+          return relation(row, { ids: [p1] }, { ids: [p2] })?.kind === "against" && eligibilityOf(row).eligibility === "counted";
         });
         setMatches(h2h);
       }
@@ -116,7 +119,7 @@ export default function ComparePlayers() {
 
   for (const m of matches) {
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+    const winnerTeam = winnerOf(toComparisonRow(m));
     
     if (winnerTeam === p1Team) p1Wins++;
     else p2Wins++;
@@ -138,7 +141,7 @@ export default function ComparePlayers() {
   for (let i = matches.length - 1; i >= 0; i--) {
     const m = matches[i];
     const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-    const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+    const winnerTeam = winnerOf(toComparisonRow(m));
     
     if (winnerTeam === p1Team) {
       if (p2Streak > 0) break;
@@ -159,7 +162,7 @@ export default function ComparePlayers() {
     let fP1Wins = 0, fP2Wins = 0;
     for (const m of fmtMatches) {
       const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-      const winnerTeam = m.winner_side ? m.winner_side : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2);
+      const winnerTeam = winnerOf(toComparisonRow(m));
       if (winnerTeam === p1Team) fP1Wins++; else fP2Wins++;
     }
     return { format: fmt, p1Wins: fP1Wins, p2Wins: fP2Wins, total: fmtMatches.length };
@@ -216,8 +219,11 @@ export default function ComparePlayers() {
           <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-200 dark:border-slate-700">
             <Trophy className="w-5 h-5 text-amber-500" />
           </div>
-          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Encounters</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Counted meetings</div>
           <div className="text-xl font-black text-muted-foreground dark:text-slate-300">{matches.length}</div>
+          <Link href={`/h2h?a=${player1.id}&b=${player2.id}`} className="mt-1 inline-flex items-center min-h-[44px] px-2 text-[11px] font-bold text-primary underline">
+            Full head-to-head
+          </Link>
         </div>
 
         <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-blue-500 rounded-3xl overflow-hidden relative">
@@ -497,4 +503,23 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
       )}
     </Card>
   );
+}
+
+/** Adapt a profile match (friendly or tournament, partner columns mapped) to the shared comparison row. */
+function toComparisonRow(m: any): ComparisonRow {
+  const friendly = m.is_friendly === true || (m.is_friendly == null && m.winner_side == null && !m.tournament_id);
+  return {
+    id: m.id,
+    source: friendly ? "friendly" : "tournament",
+    status: m.status,
+    winnerSide: m.winner_side === 1 || m.winner_side === 2 ? m.winner_side : null,
+    winnerId: m.winner_id ?? null,
+    side1: [m.player1_id, m.team1_partner_id ?? m.player3_id].filter(Boolean),
+    side2: [m.player2_id, m.team2_partner_id ?? m.player4_id].filter(Boolean),
+    category: m.category ?? null,
+    date: m.ended_at ?? m.created_at ?? null,
+    score: m.score ?? null,
+    round: null,
+    event: null,
+  };
 }

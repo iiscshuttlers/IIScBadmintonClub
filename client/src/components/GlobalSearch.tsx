@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users, Trophy, Radio, Home, BarChart3, Settings, CornerDownLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fetchSearchPlayers, fetchSearchDoublesTeams, fetchSearchMatches, fetchSiteDataEntry } from "@/services/playerService";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { track } from "@/lib/analytics";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
@@ -161,7 +160,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           }]);
           setLoading(false);
           return;
-        } catch (e) {}
+        } catch {
+          /* intentional — query is not a valid URL, proceed to search */
+        }
       }
 
       const lq = q.toLowerCase();
@@ -170,25 +171,13 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         // We fetch all active players once to support client-side fuzzy matching
         (async () => {
           if (cachedSearchPlayers) return null;
-          const res = await supabase.from("search_players_view").select("id, full_name, avatar_url, department, overall_rank");
-          if (res.data) cachedSearchPlayers = res.data;
+          const data = await fetchSearchPlayers();
+          if (data) cachedSearchPlayers = data;
           return null;
         })(),
-        supabase
-          .from("site_data")
-          .select("value")
-          .eq("key", "announcements")
-          .maybeSingle(),
-        supabase
-          .from("site_data")
-          .select("value")
-          .eq("key", "events")
-          .maybeSingle(),
-        supabase
-          .from("doubles_teams")
-          .select("id, team_name, player1_id, player2_id, elo_rating")
-          .ilike("team_name", `%${q}%`)
-          .limit(4),
+        fetchSiteDataEntry("announcements"),
+        fetchSiteDataEntry("events"),
+        fetchSearchDoublesTeams(q),
       ]);
 
       // Filter players using fuzzy match
@@ -208,13 +197,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
       const matchingIds = matchedPlayers.slice(0, 20).map((r: any) => r.id);
       let matchResults: SearchResult[] = [];
       if (matchingIds.length > 0) {
-        const { data: matchRows } = await supabase
-          .from("matches")
-          .select("id, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-          .in("status", ["confirmed", "walkover"])
-          .or(`player1_id.in.(${matchingIds.join(",")}),player2_id.in.(${matchingIds.join(",")})`)
-          .order("created_at", { ascending: false })
-          .limit(4);
+        const matchRows = await fetchSearchMatches(matchingIds);
         matchResults = (matchRows || []).map((m: any) => ({
           type: "match" as const,
           id: m.id,
@@ -224,7 +207,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         }));
       }
 
-      const teamResults: SearchResult[] = (teamsRes.data || []).map((t: any) => ({
+      const teamResults: SearchResult[] = (teamsRes || []).map((t: any) => ({
         type: "team",
         id: t.id,
         title: t.team_name,
@@ -233,17 +216,24 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
       }));
 
       const annList: SearchResult[] = [];
-      if (annRes.data?.value?.recent) {
-        for (const ann of annRes.data.value.recent) {
+      const announcementValue = annRes.data?.value;
+      const recentAnnouncements =
+        announcementValue && typeof announcementValue === "object" && !Array.isArray(announcementValue)
+          && Array.isArray(announcementValue.recent)
+          ? announcementValue.recent
+          : [];
+      if (recentAnnouncements.length > 0) {
+        for (const ann of recentAnnouncements) {
+          if (!ann || typeof ann !== "object" || Array.isArray(ann)) continue;
           if (
-            ann.title?.toLowerCase().includes(lq) ||
-            ann.content?.toLowerCase().includes(lq)
+            (typeof ann.title === "string" && ann.title.toLowerCase().includes(lq)) ||
+            (typeof ann.content === "string" && ann.content.toLowerCase().includes(lq))
           ) {
             annList.push({
               type: "announcement",
-              id: ann.title,
-              title: ann.title,
-              subtitle: ann.category,
+              id: typeof ann.title === "string" ? ann.title : crypto.randomUUID(),
+              title: typeof ann.title === "string" ? ann.title : "Announcement",
+              subtitle: typeof ann.category === "string" ? ann.category : undefined,
               href: "/pulse",
             });
             if (annList.length >= 3) break;
@@ -254,20 +244,33 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
       // Search events from site_data
       const eventList: SearchResult[] = [];
       const eventsData = eventsRes.data?.value;
+      const eventsObject = eventsData && typeof eventsData === "object" && !Array.isArray(eventsData)
+        ? eventsData
+        : null;
       const eventArray = Array.isArray(eventsData)
         ? eventsData
-        : (eventsData?.upcoming || eventsData?.events || eventsData?.all || []);
+        : eventsObject && Array.isArray(eventsObject.upcoming)
+        ? eventsObject.upcoming
+        : eventsObject && Array.isArray(eventsObject.events)
+        ? eventsObject.events
+        : eventsObject && Array.isArray(eventsObject.all)
+        ? eventsObject.all
+        : [];
       for (const ev of eventArray) {
+        if (!ev || typeof ev !== "object" || Array.isArray(ev)) continue;
+        const title = typeof ev.title === "string" ? ev.title : "Event";
+        const category = typeof ev.category === "string" ? ev.category : undefined;
+        const venue = typeof ev.venue === "string" ? ev.venue : undefined;
         if (
-          ev.title?.toLowerCase().includes(lq) ||
-          ev.category?.toLowerCase().includes(lq) ||
-          ev.venue?.toLowerCase().includes(lq)
+          title.toLowerCase().includes(lq) ||
+          category?.toLowerCase().includes(lq) ||
+          venue?.toLowerCase().includes(lq)
         ) {
           eventList.push({
             type: "event",
-            id: ev.id || ev.title,
-            title: ev.title,
-            subtitle: `${ev.category ?? "Event"}${ev.venue ? ` · ${ev.venue}` : ""}`,
+            id: typeof ev.id === "string" ? ev.id : title,
+            title,
+            subtitle: `${category ?? "Event"}${venue ? ` · ${venue}` : ""}`,
             href: "/events",
           });
           if (eventList.length >= 3) break;

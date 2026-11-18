@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import { fetchDoublesPairData } from "@/services/playerService";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
@@ -8,6 +8,7 @@ import { TeaserOverlay } from "@/components/TeaserOverlay";
 import { useAuth } from "@/contexts/AuthContext";
 
 import type { PlayerRow as Player } from "@/types";
+import { eligibilityOf } from "@/lib/comparison";
 
 interface Match {
   id: string;
@@ -53,36 +54,25 @@ export default function DoublesPairProfile() {
     if (!p1 || !p2) return;
     const load = async () => {
       setLoading(true);
-      const [r1, r2] = await Promise.all([
-        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p1).single(),
-        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p2).single(),
-      ]);
-      
-      if (r1.data) setPlayer1(r1.data as any);
-      if (r2.data) setPlayer2(r2.data as any);
-
-      // Fetch all completed matches where p1 OR p2 appear in any player slot
-      // Then filter client-side for matches where they are on the SAME team:
-      //   Team 1 = player1_id + player3_id
-      //   Team 2 = player2_id + player4_id
-      const { data: rows, error } = await supabase
-        .from("tournament_matches")
-        .select("id,winner_id,winner_side,player1_id,player2_id,player3_id,player4_id,match_code,score,team1_label,team2_label,status,created_at,scheduled_at,tournaments(name),player1:players!player1_id(full_name),player2:players!player2_id(full_name),player3:players!player3_id(full_name),player4:players!player4_id(full_name)")
-        .in("status", ["completed", "walkover"])
-        .or(`player1_id.eq.${p1},player3_id.eq.${p1},player2_id.eq.${p1},player4_id.eq.${p1},player1_id.eq.${p2},player3_id.eq.${p2},player2_id.eq.${p2},player4_id.eq.${p2}`)
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (error) console.error("DoublesPairProfile query error:", error);
-      console.log("[DoublesPair] p1:", p1, "p2:", p2);
-      console.log("[DoublesPair] broad query rows:", rows?.length ?? 0, rows);
+      try {
+        const { player1: r1, player2: r2, rows } = await fetchDoublesPairData(p1, p2);
+        if (r1) setPlayer1(r1 as any);
+        if (r2) setPlayer2(r2 as any);
 
       // Keep only matches where p1 & p2 are on the SAME team
       // Team 1 = player1_id + player3_id, Team 2 = player2_id + player4_id
       const sameTeam = (rows ?? []).filter((m: any) => {
         const t1 = [m.player1_id, m.player3_id];
         const t2 = [m.player2_id, m.player4_id];
-        return (t1.includes(p1) && t1.includes(p2)) || (t2.includes(p1) && t2.includes(p2));
+        const together = (t1.includes(p1) && t1.includes(p2)) || (t2.includes(p1) && t2.includes(p2));
+        // Shared WP8 policy: only finished results with a recorded winner count
+        // (no unfinished match is shown as a loss).
+        return together && eligibilityOf({
+          id: m.id, source: "tournament", status: m.status,
+          winnerSide: m.winner_side === 1 || m.winner_side === 2 ? m.winner_side : null,
+          winnerId: m.winner_id ?? null, side1: t1.filter(Boolean), side2: t2.filter(Boolean),
+          category: m.category ?? null, date: null, score: null, round: null, event: null,
+        }).eligibility === "counted";
       });
 
       console.log("[DoublesPair] same-team filtered:", sameTeam.length);
@@ -110,6 +100,10 @@ export default function DoublesPairProfile() {
       });
       setPairMatches(mapped);
       setLoading(false);
+      } catch (err) {
+        console.error("DoublesPairProfile query error:", err);
+        setLoading(false);
+      }
     };
     load();
   }, [p1, p2]);
@@ -175,12 +169,16 @@ export default function DoublesPairProfile() {
                 <InfoModal
                   title="DOUBLES PAIR"
                   items={[
-                    { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." }
+                    { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." },
+                    { badge: "ELO", title: "Pair record, not a rating", desc: "A pair has a won–lost record only. Elo ratings are individual: each partner's own doubles or mixed (XD) rating changes after every rated match. Walkovers and unfinished matches are not counted here." }
                   ]}
                   triggerClassName="text-emerald-200 hover:text-white"
                 />
               </div>
-              <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} matches together</p>
+              <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} counted matches together</p>
+              <Link href={`/h2h?mode=pairs&a=${p1},${p2}`} className="inline-flex items-center min-h-[44px] px-3 text-sm font-bold text-white underline">
+                Compare this pair with another pair
+              </Link>
             </div>
           </div>
         </div>

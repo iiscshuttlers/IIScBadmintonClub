@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { isUuid, tournamentLink } from "@/lib/tournamentRoutes";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from '@capacitor/core';
-import { supabase } from "@/lib/supabase";
+import { fetchClubSettings } from "@/services/feedService";
 import { motion, type Variants } from "framer-motion";
 import { navGet, navSet } from "@/lib/navMemory";
 
@@ -167,8 +168,12 @@ export default function Pulse() {
   const [clubSettings, setClubSettings] = useState<any>({});
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "club_settings").maybeSingle();
-      if (data?.value) setClubSettings(data.value);
+      try {
+        const data = await fetchClubSettings();
+        if (data) setClubSettings(data);
+      } catch (err) {
+        console.error("Failed to load club settings:", err);
+      }
     };
     fetchSettings();
   }, []);
@@ -246,13 +251,15 @@ export default function Pulse() {
       </Card>
     );
 
-    const cardLink = isUpcoming 
+    // WP5: DB tournaments open their canonical page in every lifecycle state.
+    const canonicalLink = isUuid(item.id) ? tournamentLink(item) : null;
+    const cardLink = canonicalLink ?? (isUpcoming
       ? `/pulse#events` 
       : liveMode 
         ? `/pulse#live` 
-        : `/events/${item.slug || item.id}`;
+        : `/events/${item.slug || item.id}`);
 
-    if (isUpcoming || liveMode) {
+    if (!canonicalLink && (isUpcoming || liveMode)) {
       return (
         <a 
           href={cardLink} 

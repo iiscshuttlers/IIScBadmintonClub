@@ -94,15 +94,16 @@ export async function validateStoredSession(): Promise<void> {
         const storageKey = `sb-${new URL(supabaseUrl || placeholderUrl).hostname.split(".")[0]}-auth-token`;
         localStorage.removeItem(storageKey);
       } catch {
-        /* ignore */
+        /* intentional — localStorage restricted or unavailable in private mode */
       }
     }
   } catch (err) {
+    import('@sentry/react').then(({ captureException }) => captureException(err));
     console.warn("[Auth] Session validation crashed — clearing session:", err);
     try {
       await supabase.auth.signOut({ scope: "local" });
     } catch {
-      /* ignore */
+      /* intentional — signOut fallback after validation crash */
     }
   }
 }

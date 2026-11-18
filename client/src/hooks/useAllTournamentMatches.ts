@@ -16,7 +16,7 @@ export interface TournamentMatchStat {
 export function useAllTournamentMatches() {
   return useQuery<TournamentMatchStat[]>({
     queryKey: ["allTournamentMatches"],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tournament_matches")

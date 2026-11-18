@@ -14,7 +14,7 @@ export async function queueOfflineAction(action: OfflineAction) {
   try {
     const { value } = await Preferences.get({ key: "offline_match_actions" });
     queue = JSON.parse(value || "[]");
-  } catch (e) {}
+  } catch { /* intentional — uninitialized or corrupt queue in Preferences, defaults to empty array */ }
   queue.push(action);
   await Preferences.set({ key: "offline_match_actions", value: JSON.stringify(queue) });
 }

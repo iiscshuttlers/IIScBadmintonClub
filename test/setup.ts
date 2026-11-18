@@ -2,6 +2,20 @@ import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+// Node 26 exposes an incomplete experimental global localStorage unless it is
+// started with --localstorage-file. Keep tests deterministic with an in-memory
+// Storage implementation owned by each test worker.
+const storageValues = new Map<string, string>();
+const storageMock: Storage = {
+  get length() { return storageValues.size; },
+  clear: () => storageValues.clear(),
+  getItem: (key) => storageValues.get(key) ?? null,
+  key: (index) => [...storageValues.keys()][index] ?? null,
+  removeItem: (key) => { storageValues.delete(key); },
+  setItem: (key, value) => { storageValues.set(String(key), String(value)); },
+};
+Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storageMock });
+
 afterEach(() => {
   cleanup();
 });

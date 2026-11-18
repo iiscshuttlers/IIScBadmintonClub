@@ -106,7 +106,7 @@ export const FAMILY_CLASS: Record<EventFamily, string> = {
 export const SEMANTIC = {
   brand: {
     text: "text-primary",
-    bg: "bg-primary text-slate-950",
+    bg: "bg-primary text-primary-foreground",
     border: "border-primary/30",
   },
   live: {

@@ -1,5 +1,8 @@
+import { tournamentLink } from "@/lib/tournamentRoutes";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
+import { fetchPlayerList } from "@/services/playerService";
+import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
@@ -138,25 +141,29 @@ export function SendReminderSheet({
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [plRes, partRes, offRes, matchRes] = await Promise.all([
-      supabase.from("players").select("id, full_name, avatar_url").is("deleted_at", null).order("full_name"),
-      supabase.from("tournament_participants").select("player_id").eq("tournament_id", tournament.id),
-      supabase.from("tournament_officials").select("user_id").eq("tournament_id", tournament.id),
-      supabase.from("tournament_matches")
-        .select("id, match_code, category, round_name, court_number, scheduled_at, status, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id")
-        .eq("tournament_id", tournament.id)
-        .in("status", ["scheduled", "in_progress"])
-        .order("scheduled_at", { ascending: true, nullsFirst: false }),
-    ]);
-    setPlayers((plRes.data as any) ?? []);
-    setParticipantIds(
-      Array.from(new Set(((partRes.data as any[]) ?? []).map((r) => r.player_id).filter(Boolean))),
-    );
-    setOfficialIds(
-      Array.from(new Set(((offRes.data as any[]) ?? []).map((r) => r.user_id).filter(Boolean))),
-    );
-    setAllMatches((matchRes.data as MatchForReminder[]) ?? []);
-    setLoading(false);
+    try {
+      const [plData, partData, offData, matchData] = await Promise.all([
+        fetchPlayerList(),
+        tournamentService.fetchTournamentParticipants(tournament.id),
+        tournamentService.fetchTournamentOfficials(tournament.id),
+        tournamentService.fetchTournamentMatches(tournament.id),
+      ]);
+      setPlayers((plData as any) ?? []);
+      setParticipantIds(
+        Array.from(new Set((partData ?? []).map((r) => r.player_id).filter(Boolean))),
+      );
+      setOfficialIds(
+        Array.from(new Set((offData ?? []).map((r: any) => r.user_id).filter(Boolean))),
+      );
+      const filteredMatches = (matchData ?? []).filter((m) =>
+        m.status === "scheduled" || m.status === "in_progress"
+      );
+      setAllMatches(filteredMatches as MatchForReminder[]);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load reminder data");
+    } finally {
+      setLoading(false);
+    }
   }, [tournament.id]);
 
   useEffect(() => {
@@ -314,12 +321,11 @@ export function SendReminderSheet({
         status: queuedChannels.length === 0 ? "sent" : "pending",
         sent_at: queuedChannels.length === 0 ? new Date().toISOString() : null,
       };
-      const { error: qErr } = await supabase.from("scheduled_notifications").insert(queueRow as any);
-      if (qErr) throw qErr;
+      await adminService.queueScheduledNotification(queueRow);
 
       // 2. Immediate in-app fan-out (works today without the dispatcher).
       if (deliverInAppNow) {
-        const link = tournament.slug ? `/events/${tournament.slug}` : "/pulse";
+        const link = tournament.id ? tournamentLink(tournament) : "/pulse";
         const rows = recipients.map((uid) => ({
           user_id: uid,
           title: title.trim(),
@@ -328,8 +334,7 @@ export function SendReminderSheet({
           link,
           is_read: false,
         }));
-        const { error: nErr } = await supabase.from("notifications").insert(rows);
-        if (nErr) throw nErr;
+        await adminService.createInAppNotifications(rows);
         window.dispatchEvent(new Event("notifications_changed"));
       }
 

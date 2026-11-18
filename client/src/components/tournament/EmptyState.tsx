@@ -59,7 +59,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs hover:brightness-105 active:scale-95 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs hover:brightness-105 active:scale-95 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <PlusCircle className="w-4 h-4" /> {actionLabel}
         </button>

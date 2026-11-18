@@ -17,6 +17,8 @@ import { useMatchNotifications } from "@/hooks/useMatchNotifications";
 import { isBiometricEnabled } from "@/lib/biometricAuth";
 
 import type { PlayerRow } from "@/types";
+import { fetchMyPrivate, resolveMyPlayerId } from "@/services/playerPrivateService";
+import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
 
 export type PlayerProfile = PlayerRow;
 
@@ -47,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [fetchedUserId, setFetchedUserId] = useState<string | null>(null);
   const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole | null>(() => {
-    try { return (localStorage.getItem(VIEW_AS_KEY) as ViewAsRole) || null; } catch { return null; }
+    try { return (localStorage.getItem(VIEW_AS_KEY) as ViewAsRole) || null; } catch { /* intentional — best-effort view-as role load */ return null; }
   });
 
   const setViewAsRole = (role: ViewAsRole | null) => {
@@ -55,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (role) localStorage.setItem(VIEW_AS_KEY, role);
       else localStorage.removeItem(VIEW_AS_KEY);
-    } catch {}
+    } catch { /* intentional — best-effort view-as role persist */ }
   };
 
   const fetchProfile = async (userId: string, email?: string) => {
@@ -76,27 +78,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       let { data, error } = await timeout(
-        supabase.from("players").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("players").select(PLAYER_PUBLIC_COLUMNS).eq("id", userId).maybeSingle(),
         8000,
       );
 
+      // Account whose player row has a different ID: the server matches the
+      // caller's own verified email (clients can no longer filter by email).
       if (!data && email) {
-        const res = await timeout(
-          supabase.from("players").select("*").eq("email", email).maybeSingle(),
-          8000,
-        );
-        if (res.data) {
-          data = res.data;
-          error = res.error;
+        const linkedId = await timeout(resolveMyPlayerId(), 8000);
+        if (linkedId) {
+          const res = await timeout(
+            supabase.from("players").select(PLAYER_PUBLIC_COLUMNS).eq("id", linkedId).maybeSingle(),
+            8000,
+          );
+          if (res.data) {
+            data = res.data;
+            error = res.error;
+          }
         }
       }
 
       if (!error && data) {
-        setProfile(data as unknown as PlayerRow);
+        // Own contact details come from a self-only RPC.
+        const own = await timeout(fetchMyPrivate(), 8000).catch(() => null);
+        setProfile({ ...(data as object), ...(own && own.id === (data as any).id ? own : {}) } as unknown as PlayerRow);
       } else {
         setProfile(null);
       }
     } catch (err) {
+      import('@sentry/react').then(({ captureException }) => captureException(err));
       console.warn("Failed to fetch profile in AuthProvider", err);
       setProfile(null);
     } finally {

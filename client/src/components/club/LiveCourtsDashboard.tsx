@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { hubService } from "@/services/hubService";
 import { Activity, Users, MonitorPlay, AlertTriangle } from "lucide-react";
 
 export function LiveCourtsDashboard() {
@@ -8,23 +9,14 @@ export function LiveCourtsDashboard() {
 
   useEffect(() => {
     const fetchCourts = async () => {
-      const { data, error } = await supabase
-        .from('club_courts')
-        .select(`
-          *,
-          matches (
-            id,
-            score,
-            player1:players!matches_player1_id_fkey(name),
-            player2:players!matches_player2_id_fkey(name),
-            partner1:players!matches_partner1_id_fkey(name),
-            partner2:players!matches_partner2_id_fkey(name)
-          )
-        `)
-        .order('court_number', { ascending: true });
-
-      if (data && !error) setCourts(data);
-      setLoading(false);
+      try {
+        const data = await hubService.getClubCourts();
+        setCourts(data);
+      } catch (err) {
+        console.error("Failed to fetch courts:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchCourts();

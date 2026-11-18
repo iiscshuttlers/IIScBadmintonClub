@@ -1,8 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
 import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock, ChevronDown, ChevronUp, ChevronRight, Pin } from "lucide-react";
 import { toast } from "sonner";
-import { MatchService } from "@/services/matchService";
+import {
+  MatchService,
+  fetchTodayTournamentMatches,
+  fetchUpcomingPlayerTournamentMatches,
+  setUserMatchNotification,
+  getLiveMatchesFromSiteData,
+  requestTakeoverLiveMatch,
+  umpireSubmitMatch,
+  confirmFriendlyMatch,
+  setMatchAlert,
+  setAdminPush,
+  subscribeToLiveMatches,
+} from "@/services/matchService";
+import { feedService } from "@/services/feedService";
+import { submitTournamentMatch } from "@/services/tournamentService";
 import { getCourtColor, cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
@@ -155,20 +168,14 @@ function MatchBroadcastCard({
       const title = `${tournamentLine}${roundLine ? ` • ${roundLine}` : ""}`;
       const body = `${t1Label} vs ${t2Label} | ${scoreStr}${setsStr}`;
 
-      const { error: fnError } = await supabase.functions.invoke("send-announcement", {
-        body: {
-          title,
-          body,
-          admin_email: session?.user?.email ?? "umpire",
-          data: { type: "live_score" },
-        },
+      await feedService.sendAnnouncement({
+        title,
+        body,
+        admin_email: session?.user?.email ?? "umpire",
+        data: { type: "live_score" },
       });
-      if (fnError) throw fnError;
 
-      await supabase.from("site_data").upsert(
-        { key: "admin_push", value: { title, body, url: "/feed/live", timestamp: Date.now() }, updated_at: new Date().toISOString() },
-        { onConflict: "key" }
-      );
+      await setAdminPush(title, body);
 
       toast.success("Score notification sent to all players!");
     } catch (err: any) {
@@ -382,7 +389,7 @@ function MatchBroadcastCard({
         <div className="flex flex-col items-center gap-2 sm:gap-3">
           <div className="flex flex-row items-stretch justify-center w-full gap-2 sm:gap-4">
             {/* Team 1 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   <span className="text-[11px] sm:text-sm font-bold truncate">{match.t1.p1Name}</span>
@@ -411,7 +418,7 @@ function MatchBroadcastCard({
             </div>
 
             {/* Team 2 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
@@ -727,7 +734,7 @@ function MiniMatchCard({
 
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
-export function LiveScoreSection() {
+export function LiveScoreSection({ tournamentId }: { tournamentId?: string } = {}) {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const matchAlerts = useUserMatchAlerts(session?.user?.id);
   const [, navigate] = useLocation();
@@ -742,60 +749,48 @@ export function LiveScoreSection() {
   const [activeTab, setActiveTab] = useState<"my" | "today">("my");
 
   useEffect(() => {
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "poll_revealed_matches")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value) setRevealedMatchIds(data.value as Record<string, boolean>);
-      });
+    feedService.getPollRevealedMatches().then((revealed) => {
+      setRevealedMatchIds(revealed);
+    }).catch(console.error);
 
-    const sub = supabase
-      .channel("poll_revealed_matches_livescore")
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.poll_revealed_matches" },
-        (payload) => { if ((payload.new as any)?.value) setRevealedMatchIds((payload.new as any).value); })
-      .subscribe();
+    const unsubscribe = feedService.subscribeToPollRevealedMatches((revealed) => {
+      setRevealedMatchIds(revealed);
+    });
 
-    return () => { supabase.removeChannel(sub); };
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const toggleRevealMatchPoll = async (matchId: string) => {
     const nextState = { ...revealedMatchIds, [matchId]: !revealedMatchIds[matchId] };
     setRevealedMatchIds(nextState);
-    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+    try {
+      await feedService.setPollRevealedMatches(nextState);
+    } catch (err) {
+      console.error("Failed to update poll revealed matches:", err);
+    }
   };
 
   useEffect(() => {
     const allMatches = [...todayMatches, ...myMatches];
     if (!profile?.id || allMatches.length === 0) return;
     const ids = Array.from(new Set(allMatches.map(m => m.id)));
-    supabase
-      .from("live_match_votes")
-      .select("live_match_id, pick")
-      .eq("user_id", profile.id)
-      .in("live_match_id", ids)
-      .then(({ data }) => {
-        if (!data) return;
-        const map: Record<string, 1 | 2> = {};
-        for (const row of data) map[row.live_match_id] = row.pick as 1 | 2;
-        setPicks(map);
-      });
+    feedService.getLiveMatchPicks(profile.id, ids).then((map) => {
+      setPicks(map);
+    }).catch(console.error);
   }, [profile?.id, todayMatches, myMatches]);
 
   const handlePick = async (matchId: string, team: 1 | 2) => {
     if (!profile?.id || picks[matchId]) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    const { error } = await supabase.from("live_match_votes").upsert({
-      live_match_id: matchId,
-      user_id: profile.id,
-      pick: team,
-    }, { onConflict: "live_match_id,user_id" });
-    if (error) {
-      if (error.code === '23505') {
+    try {
+      await feedService.saveLiveMatchPick(matchId, profile.id, team);
+    } catch (error: any) {
+      if (error?.code === '23505') {
         toast.success("Your vote is already recorded!");
       } else {
-        toast.error(`Failed to submit vote: ${error.message}`);
+        toast.error(`Failed to submit vote: ${error?.message || "error"}`);
         setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
       }
     }
@@ -804,22 +799,9 @@ export function LiveScoreSection() {
   useEffect(() => {
     const loadTodayMatches = async () => {
       try {
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999).toISOString();
-        
-        const { data } = await supabase
-          .from("tournament_matches")
-          .select("*, tournaments(name, id), player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!player3_id(full_name), partner2:players!player4_id(full_name)")
-          .not("scheduled_at", "is", null)
-          .gte("scheduled_at", startOfDay)
-          .lte("scheduled_at", endOfDay)
-          .in("status", ["scheduled", "in_progress"]);
-          
-        if (data) {
-          data.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-          setTodayMatches(data);
-        }
+        const data = await fetchTodayTournamentMatches();
+        data.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+        setTodayMatches(data);
       } catch (e) {
         console.error("Failed to load today matches", e);
       } finally {
@@ -838,20 +820,13 @@ export function LiveScoreSection() {
       }
       setMyMatchesLoading(true);
       try {
-        const { data } = await supabase
-          .from("tournament_matches")
-          .select("*, tournaments(name, id), player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!player3_id(full_name), partner2:players!player4_id(full_name)")
-          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},player3_id.eq.${profile.id},player4_id.eq.${profile.id}`)
-          .in("status", ["scheduled", "in_progress", "pending"]);
-          
-        if (data) {
-          data.sort((a, b) => {
-            if (!a.scheduled_at) return 1;
-            if (!b.scheduled_at) return -1;
-            return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
-          });
-          setMyMatches(data);
-        }
+        const data = await fetchUpcomingPlayerTournamentMatches(profile.id);
+        data.sort((a, b) => {
+          if (!a.scheduled_at) return 1;
+          if (!b.scheduled_at) return -1;
+          return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+        });
+        setMyMatches(data);
       } catch (e) {
         console.error("Failed to load my matches", e);
       } finally {
@@ -879,13 +854,7 @@ export function LiveScoreSection() {
   const handleSaveNotif = async (mins: number) => {
     if (!session?.user?.id || !notifMatchTarget) return;
     try {
-      const { error } = await supabase.from("user_match_notifications").upsert({
-        user_id: session.user.id,
-        match_id: notifMatchTarget,
-        notify_before_mins: mins
-      }, { onConflict: "user_id, match_id" });
-      
-      if (error) throw error;
+      await setUserMatchNotification(session.user.id, notifMatchTarget, mins);
     } catch (e: any) {
       toast.error("Failed to set alert: " + e.message);
     }
@@ -908,46 +877,32 @@ export function LiveScoreSection() {
   };
 
   const sendTakeoverRequest = async (matchId: string) => {
-    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
-    if (!data?.value) return;
-    
-    const lm = data.value as Record<string, BwfMatchState>;
-    if (!lm[matchId]) return;
-
-    lm[matchId].takeoverRequest = {
-      requesterId: session?.user?.id || "",
-      requesterName: profile?.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || "Guest",
-      status: "pending"
-    };
-
-    await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
-    toast.success("Takeover request sent!");
+    try {
+      const requesterName = profile?.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || "Guest";
+      await requestTakeoverLiveMatch(matchId, {
+        id: session?.user?.id || "",
+        name: requesterName,
+      });
+      toast.success("Takeover request sent!");
+    } catch (err: any) {
+      toast.error("Failed to send takeover request: " + (err?.message || "error"));
+    }
   };
 
   const fetchLiveMatches = async () => {
     try {
-      const { data, error } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "live_matches")
-        .single();
-        
-      if (error && error.code !== 'PGRST116') {
-        if (pollRef.current) clearInterval(pollRef.current);
-        return;
-      }
-      
-      if (data?.value) {
+      const data = await getLiveMatchesFromSiteData();
+      if (data) {
         // Seed baseline scores so the first load doesn't trigger sounds
-      const matches: Record<string, BwfMatchState> = data.value as any;
-      if (killedMatchesRef.current) {
-        Array.from(killedMatchesRef.current).forEach(id => delete matches[id]);
+        const matches: Record<string, BwfMatchState> = data as any;
+        if (killedMatchesRef.current) {
+          Array.from(killedMatchesRef.current).forEach(id => delete matches[id]);
+        }
+        Object.values(matches).forEach((m) => {
+          prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
+        });
+        setLiveMatches(matches);
       }
-      Object.values(matches).forEach((m) => {
-        prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
-      });
-      setLiveMatches(matches);
-    }
     } catch (e) {
       if (pollRef.current) clearInterval(pollRef.current);
     }
@@ -968,52 +923,38 @@ export function LiveScoreSection() {
     fetchLiveMatches();
 
     // Realtime subscription for immediate updates
-    const sub = supabase
-      .channel("live_matches_channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_data",
-          filter: "key=eq.live_matches",
-        },
-        (payload) => {
-          if (payload.new && (payload.new as any).value) {
-            const newMatches: Record<string, BwfMatchState> = (payload.new as any).value;
-            if (killedMatchesRef.current) {
-              Array.from(killedMatchesRef.current).forEach(id => delete newMatches[id]);
-            }
-            // Play smash sound whenever any match score changes
-            Object.values(newMatches).forEach((m) => {
-              const prev = prevScoresRef.current[m.id];
-              if (prev && m.status === "playing" && (m.t1.score !== prev.t1 || m.t2.score !== prev.t2)) {
-                playSmashSound();
-              }
-              prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
-              
-              // Check if our takeover request was approved or rejected
-              if (takeoverTarget && takeoverTarget.id === m.id && m.takeoverRequest?.requesterId === session?.user?.id) {
-                if (m.takeoverRequest.status === "approved") {
-                  toast.success(`${m.umpireName} approved your request!`);
-                  handleForceTakeover(m.id);
-                } else if (m.takeoverRequest.status === "rejected") {
-                  toast.error(`${m.umpireName} rejected your takeover request.`);
-                  setTakeoverTarget(null);
-                }
-              }
-            });
-            setLiveMatches(newMatches);
+    const unsubscribe = subscribeToLiveMatches((payloadValue) => {
+      const newMatches: Record<string, BwfMatchState> = payloadValue as any;
+      if (killedMatchesRef.current) {
+        Array.from(killedMatchesRef.current).forEach(id => delete newMatches[id]);
+      }
+      // Play smash sound whenever any match score changes
+      Object.values(newMatches).forEach((m) => {
+        const prev = prevScoresRef.current[m.id];
+        if (prev && m.status === "playing" && (m.t1.score !== prev.t1 || m.t2.score !== prev.t2)) {
+          playSmashSound();
+        }
+        prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
+        
+        // Check if our takeover request was approved or rejected
+        if (takeoverTarget && takeoverTarget.id === m.id && m.takeoverRequest?.requesterId === session?.user?.id) {
+          if (m.takeoverRequest.status === "approved") {
+            toast.success(`${m.umpireName} approved your request!`);
+            handleForceTakeover(m.id);
+          } else if (m.takeoverRequest.status === "rejected") {
+            toast.error(`${m.umpireName} rejected your takeover request.`);
+            setTakeoverTarget(null);
           }
-        },
-      )
-      .subscribe();
+        }
+      });
+      setLiveMatches(newMatches);
+    });
 
     // Polling fallback every 5s in case realtime subscription lags
     pollRef.current = setInterval(fetchLiveMatches, 5_000);
 
     return () => {
-      supabase.removeChannel(sub);
+      unsubscribe();
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
@@ -1128,8 +1069,8 @@ export function LiveScoreSection() {
 
       // 3. Verify deletion by checking the database
       await new Promise(resolve => setTimeout(resolve, 500)); // Wait for realtime sync
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
-      if (data?.value && data.value[matchId]) {
+      const data = await getLiveMatchesFromSiteData();
+      if (data && data[matchId]) {
         throw new Error("Deletion verification failed - match still exists in database");
       }
 
@@ -1159,22 +1100,24 @@ export function LiveScoreSection() {
       finalScoreStr += ` [${m.t1.p1Name}+${m.t1.p2Name ?? ""} vs ${m.t2.p1Name}+${m.t2.p2Name ?? ""}]`;
     }
     try {
-      const { data: submitId, error } = await supabase.rpc("umpire_submit_match", {
-        umpire_id:        session?.user?.id || "",
-        player1_id:       m.t1.p1Id,
-        player2_id:       m.t2.p1Id,
-        team1_partner_id: m.t1.p2Id || "",
-        team2_partner_id: m.t2.p2Id || "",
-        winner_id:        winnerId,
-        match_score:      finalScoreStr,
-        match_category:   m.category,
-        match_round:      m.matchNumber || (m.isFriendly ? "Friendly" : "Tournament"),
-        is_friendly:      m.isFriendly,
-        sets_history:     sets,
-        started_at:       new Date(m.pointLog?.[0]?.ts || Date.now()).toISOString(),
-        ended_at:         new Date().toISOString(),
-      });
-      if (error) {
+      let submitId: string | null = null;
+      try {
+        submitId = await umpireSubmitMatch({
+          umpire_id:        session?.user?.id || "",
+          player1_id:       m.t1.p1Id,
+          player2_id:       m.t2.p1Id,
+          team1_partner_id: m.t1.p2Id || "",
+          team2_partner_id: m.t2.p2Id || "",
+          winner_id:        winnerId,
+          match_score:      finalScoreStr,
+          match_category:   m.category,
+          match_round:      m.matchNumber || (m.isFriendly ? "Friendly" : "Tournament"),
+          is_friendly:      m.isFriendly,
+          sets_history:     sets,
+          started_at:       new Date(m.pointLog?.[0]?.ts || Date.now()).toISOString(),
+          ended_at:         new Date().toISOString(),
+        });
+      } catch (error: any) {
         if (!m.isFriendly && m.id) {
           console.warn("umpire_submit_match failed, but continuing for tournament match:", error);
         } else {
@@ -1183,21 +1126,17 @@ export function LiveScoreSection() {
       }
       
       if (!m.isFriendly && m.id) {
-        const { error: tsErr } = await supabase.rpc("submit_tournament_match", {
+        await submitTournamentMatch({
           p_match_id: m.id,
           p_winner_side: winner,
           p_score: sets.join(", "),
           p_sets: sets,
           p_umpire_id: null,
         });
-        if (tsErr) {
-          console.warn("submit_tournament_match error:", tsErr);
-          throw tsErr;
-        }
       }
-      if (submitId && m.isFriendly) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId, confirmer_id: "umpire_bypass" });
+      if (submitId && m.isFriendly) await confirmFriendlyMatch(submitId, "umpire_bypass");
       const notifMsg = `🏆 ${m.isFriendly ? "Friendly" : "Tournament"} Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
-      await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
+      await setMatchAlert(notifMsg);
 
       await handleKill(m.id);
       toast.success("Match submitted & saved to profiles");
@@ -1209,6 +1148,11 @@ export function LiveScoreSection() {
   const activeMatchList = Object.values(liveMatches).filter(match => {
     // Don't show killed matches even if they somehow make it back into liveMatches due to subscription timing
     if (killedMatchesRef.current.has(match.id)) return false;
+
+    if (tournamentId) {
+      const tournamentFromSchedule = todayMatches.find((row) => row.id === match.id)?.tournament_id;
+      if (match.tournamentId !== tournamentId && tournamentFromSchedule !== tournamentId) return false;
+    }
 
     if (!match.isFriendly) return true; // Tournaments are public
     if (isAdmin) return true;

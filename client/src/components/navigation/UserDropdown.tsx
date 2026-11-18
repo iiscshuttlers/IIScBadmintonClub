@@ -6,11 +6,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PreferencesModal } from "@/components/QuickSettings";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { playerService } from "@/services/playerService";
 import { toast } from "sonner";
 
 const STATUS_CONFIG = [
-  { id: "looking", short: "Available", dot: "bg-primary", active: "bg-primary/20 text-primary dark:text-primary/70 ring-1 ring-primary/40" },
+  { id: "looking", short: "Available", dot: "bg-primary", active: "bg-primary/20 text-primary dark:text-primary ring-1 ring-primary/40" },
   { id: "playing", short: "Playing", dot: "bg-amber-400",   active: "bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/40" },
   { id: "resting", short: "Resting", dot: "bg-indigo-400",  active: "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-400/40" },
   { id: "injured", short: "Injured", dot: "bg-rose-400",    active: "bg-rose-500/20 text-rose-700 dark:text-rose-300 ring-1 ring-rose-400/40" },
@@ -34,8 +34,7 @@ export default function SubBarProfileButton({
     if (!profile?.id || updatingStatus) return;
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase.from("players").update({ status: newStatus } as any).eq("id", profile.id);
-      if (error) throw error;
+      await playerService.updatePlayerStatus(profile.id, newStatus);
       await refreshProfile();
     } catch (err: any) {
       toast.error(err?.message || "Failed to update status");
@@ -50,39 +49,39 @@ export default function SubBarProfileButton({
           {userAvatar ? (
             <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary to-teal-600 text-on-accent flex items-center justify-center font-black text-xs">
+            <div className="w-full h-full bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-black text-xs">
               {userName ? userName[0].toUpperCase() : "U"}
             </div>
           )}
           {pendingActionCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-on-accent shadow ring-1 ring-white dark:ring-slate-950">
+            <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow ring-1 ring-white dark:ring-slate-950">
               {pendingActionCount > 9 ? "9+" : pendingActionCount}
             </span>
           )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0 border-0 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/40 dark:shadow-black/60">
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-teal-600 to-primary dark:from-slate-900 dark:via-slate-800 dark:to-primary/90 px-4 pt-3 pb-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 text-white px-4 pt-3 pb-4">
           <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
           <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
           <div className="relative flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black tracking-widest text-foreground/50">IISc BADMINTON CLUB</span>
-            <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-foreground/50 hover:text-foreground/90 transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">Sign out</button>
+            <span className="text-[10px] font-black tracking-widest text-white/70">IISc BADMINTON CLUB</span>
+            <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-white/80 hover:text-white transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">Sign out</button>
           </div>
           <div className="relative flex items-center gap-3">
             <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border-2 border-white/30 shadow-lg shadow-black/20">
               {userAvatar ? (
                 <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-white/20 text-foreground flex items-center justify-center font-black text-xl">
+                <div className="w-full h-full bg-white/20 text-white flex items-center justify-center font-black text-xl">
                   {userName ? userName[0].toUpperCase() : "U"}
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-black text-foreground text-base leading-tight truncate">{userName}</p>
-              <p className="text-foreground/55 text-xs truncate mt-0.5">{userEmail}</p>
-              <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-foreground/70 hover:text-foreground bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full transition-all">
+              <p className="font-black text-white text-base leading-tight truncate">{userName}</p>
+              <p className="text-white/75 text-xs truncate mt-0.5">{userEmail}</p>
+              <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/90 hover:text-white bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-full transition-all">
                 View profile →
               </Link>
             </div>

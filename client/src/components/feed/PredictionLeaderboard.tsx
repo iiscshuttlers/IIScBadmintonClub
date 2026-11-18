@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { Award, Trophy, Sparkles, HelpCircle, Loader2 } from "lucide-react";
 
 export interface PredictorStat {
@@ -19,89 +19,7 @@ export function PredictionLeaderboard() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const { data: votes } = await supabase
-          .from("live_match_votes")
-          .select("user_id, live_match_id, pick");
-
-        if (!votes || votes.length === 0) {
-          setLoading(false);
-          return;
-        }
-
-        const matchIds = [...new Set(votes.map(v => v.live_match_id))];
-
-        const { data: matches } = await supabase
-          .from("matches")
-          .select("id, player1_id, player2_id, team1_partner_id, team2_partner_id, winner_id")
-          .in("id", matchIds);
-
-        const { data: tourneyMatches } = await supabase
-          .from("tournament_matches")
-          .select("id, player1_id, player2_id, player3_id, player4_id, winner_side")
-          .in("id", matchIds);
-
-        const matchWinnerMap: Record<string, 1 | 2> = {};
-
-        if (matches) {
-          for (const m of matches) {
-            if (!m.winner_id) continue;
-            const isT1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-            matchWinnerMap[m.id] = isT1Winner ? 1 : 2;
-          }
-        }
-
-        if (tourneyMatches) {
-          for (const m of tourneyMatches) {
-            if (!m.winner_side) continue;
-            matchWinnerMap[m.id] = m.winner_side as 1 | 2;
-          }
-        }
-
-        const userStatsMap: Record<string, { total: number; correct: number }> = {};
-
-        for (const vote of votes) {
-          if (!userStatsMap[vote.user_id]) {
-            userStatsMap[vote.user_id] = { total: 0, correct: 0 };
-          }
-          userStatsMap[vote.user_id].total++;
-
-          const actualWinner = matchWinnerMap[vote.live_match_id];
-          if (actualWinner && vote.pick === actualWinner) {
-            userStatsMap[vote.user_id].correct++;
-          }
-        }
-
-        const userIds = Object.keys(userStatsMap);
-        const { data: players } = await supabase
-          .from("players")
-          .select("id, full_name, avatar_url")
-          .in("id", userIds);
-
-        const playerMap: Record<string, { name: string; avatarUrl?: string }> = {};
-        if (players) {
-          for (const p of players) playerMap[p.id] = { name: p.full_name, avatarUrl: p.avatar_url };
-        }
-
-        const stats: PredictorStat[] = userIds.map(uid => {
-          const s = userStatsMap[uid];
-          const acc = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
-          const badges: string[] = [];
-
-          if (s.correct >= 10 && acc >= 70) badges.push("🔮 Master Predictor");
-          else if (s.correct >= 5) badges.push("🏆 Oracle");
-          else if (s.total >= 5) badges.push("⚡ Active Voter");
-
-          return {
-            userId: uid,
-            name: playerMap[uid]?.name || "Anonymous Player",
-            avatarUrl: playerMap[uid]?.avatarUrl,
-            totalVotes: s.total,
-            correctVotes: s.correct,
-            accuracy: acc,
-            badges,
-          };
-        }).sort((a, b) => b.correctVotes - a.correctVotes || b.accuracy - a.accuracy);
-
+        const stats = await feedService.fetchPredictionLeaderboard();
         setLeaderboard(stats.slice(0, 10));
       } catch (e) {
         console.error("Failed to load prediction leaderboard", e);

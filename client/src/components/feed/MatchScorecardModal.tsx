@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Swords, TrendingUp, TrendingDown, Calendar, Flag, CheckCircle2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { fileMatchDispute } from "@/services/matchService";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
 
@@ -55,16 +54,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
     if (!disputeReason.trim()) { toast.error("Please explain the dispute"); return; }
     setDisputing(true);
     try {
-      // Insert into notifications for admins — they'll see it in the admin panel
-      await supabase.from("notifications").insert({
-        user_id: match.player1_id, // admin will filter by type
-        title: "⚠️ Match Disputed",
-        message: `Match #${match.id.slice(0, 8)} disputed by a player: "${disputeReason}"`,
-        type: "match_dispute",
-        link: `/feed`,
-      });
-      // Flag the match
-      await supabase.from("matches").update({ is_disputed: true, dispute_reason: disputeReason }).eq("id", match.id);
+      await fileMatchDispute(match.id, disputeReason, match.player1_id);
       setDisputed(true);
       setShowDisputeForm(false);
       toast.success("Dispute filed. Admins will review.");

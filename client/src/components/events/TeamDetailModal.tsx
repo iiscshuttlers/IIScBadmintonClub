@@ -133,7 +133,7 @@ export function TeamDetailModal({
         // 2. Fetch team members with joined player info
         const { data: rawMembers } = await supabase
           .from("tournament_team_members")
-          .select("id, player_id, role, status, player:players!player_id(id, full_name, email, gender, is_guest, avatar_url, elo_rating)")
+          .select("id, player_id, role, status, player:players!player_id(id, full_name, gender, is_guest, avatar_url, elo_rating)")
           .eq("team_id", team!.id)
           .eq("status", "ACTIVE");
 
@@ -156,7 +156,7 @@ export function TeamDetailModal({
         if (captainId && !list.some(m => m.player_id === captainId)) {
           const { data: captainPlayer } = await supabase
             .from("players")
-            .select("id, full_name, email, gender, is_guest, avatar_url, elo_rating")
+            .select("id, full_name, gender, is_guest, avatar_url, elo_rating")
             .eq("id", captainId)
             .maybeSingle();
 

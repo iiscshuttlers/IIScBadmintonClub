@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import {
   Users, Trophy, Activity, Clock, TrendingUp, TrendingDown,
   Zap, CheckCircle, XCircle, AlertTriangle, BarChart3, Download, Database
@@ -41,21 +41,14 @@ export function AdminStatsOverview() {
     const load = async () => {
       setLoading(true);
       try {
-        const startTime = performance.now();
-        const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-        const [playersRes, matchesRes, weekMatchesRes, pendingMatchRes, pendingPlayersRes] =
-          await Promise.all([
-            supabase.from("players").select("id, full_name, elo_rating, is_approved").is("deleted_at", null),
-            supabase.from("matches").select("id", { count: "exact", head: true }).in("status", ["confirmed", "walkover"]),
-            supabase.from("matches").select("id, player1_id, player2_id, elo_change_p1, elo_change_p2, created_at").in("status", ["confirmed", "walkover"]).gte("created_at", since7d),
-            supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "pending"),
-            supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", false).is("deleted_at", null),
-          ]);
-
-        const players = playersRes.data ?? [];
-        const matches = matchesRes.data ?? []; // Not full matches, just count
-        const weekMatches = weekMatchesRes.data ?? [];
+        const {
+          players,
+          totalMatchesCount,
+          weekMatches,
+          pendingMatchesCount,
+          pendingPlayersCount,
+          dbLatency,
+        } = await adminService.fetchAdminStatsOverview();
 
         // Calculate Match Volume for last 7 days
         const volumeMap: Record<string, number> = {};
@@ -96,16 +89,16 @@ export function AdminStatsOverview() {
         setStats({
           totalPlayers: players.filter((p) => p.is_approved).length,
           approvedPlayers: players.filter((p) => p.is_approved).length,
-          pendingPlayers: pendingPlayersRes.count ?? 0,
-          totalMatches: matchesRes.count ?? 0,
+          pendingPlayers: pendingPlayersCount,
+          totalMatches: totalMatchesCount,
           matchesThisWeek: weekMatches.length,
-          pendingMatches: pendingMatchRes.count ?? 0,
+          pendingMatches: pendingMatchesCount,
           avgElo,
           topPlayer: topPlayer ? { name: topPlayer.full_name, elo: topPlayer.elo_rating ?? 1200 } : null,
           biggestGainerWeek: topGainerData,
           eloDistribution,
           matchVolumeData,
-          dbLatency: Math.round(performance.now() - startTime),
+          dbLatency,
         });
       } catch (e) {
         console.error("AdminStatsOverview error:", e);

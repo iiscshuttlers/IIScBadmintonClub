@@ -5,7 +5,7 @@ import {
   Clock, Lock, ChevronRight, ChevronLeft, Check, WifiOff,
 } from "lucide-react";
 import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
-import { supabase } from "@/lib/supabase";
+import { logFriendlyMatch } from "@/services/matchService";
 import { Preferences } from "@capacitor/preferences";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
@@ -97,14 +97,18 @@ export default function LogMatchModal({
     try {
       const stored = JSON.parse(localStorage.getItem("recent_opponents") || "[]");
       if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
-    } catch (e) {}
+    } catch {
+      /* intentional — invalid JSON in localStorage or storage unavailable */
+    }
 
     const updateQueueCount = async () => {
       try {
         const { value } = await Preferences.get({ key: "offline_matches" });
         const q = JSON.parse(value || "[]");
         setOfflineQueueCount(q.length);
-      } catch (e) {}
+      } catch {
+        /* intentional — preferences unavailable or invalid JSON */
+      }
     };
 
     const handleOnline = () => {
@@ -289,7 +293,9 @@ export default function LogMatchModal({
     try {
       const newRecents = Array.from(new Set([opponentId, ...recentOpponentIds])).slice(0, 3);
       localStorage.setItem("recent_opponents", JSON.stringify(newRecents));
-    } catch (e) {}
+    } catch {
+      /* intentional — localStorage unavailable in private mode or quota exceeded */
+    }
 
     const rpcPayload = {
       submitter_id: currentUser.id,
@@ -309,7 +315,9 @@ export default function LogMatchModal({
         try {
           const { value } = await Preferences.get({ key: "offline_matches" });
           existingQueue = JSON.parse(value || "[]");
-        } catch (e) {}
+        } catch {
+          /* intentional — preferences unavailable or corrupt data fallback to empty array */
+        }
         existingQueue.push({ ...rpcPayload, match_category: matchCategory, timestamp: Date.now() });
         await Preferences.set({ key: "offline_matches", value: JSON.stringify(existingQueue) });
         toast.success("Offline (Gym Mode) — match queued, will sync when reconnected.", { duration: 5000 });
@@ -323,16 +331,7 @@ export default function LogMatchModal({
     setLoading(true);
     setError(null);
     try {
-      const { error: rpcError } = await supabase.rpc("submit_friendly_match", rpcPayload);
-      if (rpcError) throw rpcError;
-
-      if (matchCategory === "tournament") {
-        const { data: latestMatches } = await supabase
-          .from("matches").select("id").eq("submitted_by", currentUser.id)
-          .eq("status", "pending").order("created_at", { ascending: false }).limit(1);
-        if (latestMatches?.length === 1)
-          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" } as any).eq("id", latestMatches[0].id);
-      }
+      await logFriendlyMatch(rpcPayload, matchCategory === "tournament", currentUser.id);
 
       const involvesGuest = [opponentId, partnerId, opponentPartnerId]
         .filter(Boolean)
@@ -538,7 +537,7 @@ export default function LogMatchModal({
                   ))}
 
                   {sets.length < 3 && (
-                    <button type="button" onClick={addSet} className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-primary hover:text-primary transition px-2 py-1.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/80/20">
+                    <button type="button" onClick={addSet} className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-primary hover:text-primary transition px-2 py-1.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20">
                       <Plus className="w-3.5 h-3.5" /> Add Set
                     </button>
                   )}

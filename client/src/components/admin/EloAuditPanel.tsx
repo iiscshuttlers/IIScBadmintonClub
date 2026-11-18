@@ -4,6 +4,7 @@ import {
   Download, Filter, Search, FileSpreadsheet, FileImage, FileText, X, AlertTriangle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import { InfoModal } from "@/components/InfoModal";
 import { exportToExcel, exportToPDF, exportToImage } from "@/utils/exportUtils";
@@ -86,45 +87,27 @@ export function EloAuditPanel() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [logsRes, playersRes, matchesRes, tourneyMatchesRes, recentLogsRes] = await Promise.all([
-      supabase.from("admin_logs")
-        .select("id, admin_email, action, details, created_at")
-        .ilike("action", "elo%")
-        .order("created_at", { ascending: false })
-        .limit(50),
-      supabase.from("players")
-        .select("id, full_name, elo_rating, singles_elo, doubles_elo, mixed_elo, gender, department, singles_matches_played, doubles_matches_played, mixed_matches_played")
-        .order("elo_rating", { ascending: false }),
-      supabase.from("matches")
-        .select("player1_id, player2_id, team1_partner_id, team2_partner_id, winner_id")
-        .in("status", ["confirmed", "walkover"]),
-      supabase.from("tournament_matches")
-        .select("id, player1_id, player2_id, player3_id, player4_id, winner_id, winner_side, match_number, match_code, category, created_at")
-        .eq("status", "completed"),
-      supabase.from("elo_calculation_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
+    try {
+      const { logs, players, matches, tourneyMatches, recentLogs } = await adminService.getEloAuditData();
 
-    if (!logsRes.error && logsRes.data) setLogs(logsRes.data as AuditEntry[]);
+      setLogs(logs as AuditEntry[]);
 
-    if (!playersRes.error && playersRes.data) {
-      const playerMap = new Map((playersRes.data as any[]).map(p => [p.id, p]));
-      const winMap: Record<string, number> = {};
-      const lossMap: Record<string, number> = {};
-      if (!matchesRes.error && matchesRes.data) {
-        (matchesRes.data as any[]).forEach((m) => {
-          if (!m.winner_id) return;
-          const team1 = [m.player1_id, m.team1_partner_id].filter(Boolean);
-          const team2 = [m.player2_id, m.team2_partner_id].filter(Boolean);
-          const isTeam1Win = team1.includes(m.winner_id);
-          (isTeam1Win ? team1 : team2).forEach((id: string) => { winMap[id] = (winMap[id] || 0) + 1; });
-          (isTeam1Win ? team2 : team1).forEach((id: string) => { lossMap[id] = (lossMap[id] || 0) + 1; });
-        });
-      }
-      if (!tourneyMatchesRes.error && tourneyMatchesRes.data) {
-        (tourneyMatchesRes.data as any[]).forEach((tm) => {
+      if (players && players.length > 0) {
+        const playerMap = new Map((players as any[]).map(p => [p.id, p]));
+        const winMap: Record<string, number> = {};
+        const lossMap: Record<string, number> = {};
+        if (matches) {
+          (matches as any[]).forEach((m) => {
+            if (!m.winner_id) return;
+            const team1 = [m.player1_id, m.team1_partner_id].filter(Boolean);
+            const team2 = [m.player2_id, m.team2_partner_id].filter(Boolean);
+            const isTeam1Win = team1.includes(m.winner_id);
+            (isTeam1Win ? team1 : team2).forEach((id: string) => { winMap[id] = (winMap[id] || 0) + 1; });
+            (isTeam1Win ? team2 : team1).forEach((id: string) => { lossMap[id] = (lossMap[id] || 0) + 1; });
+          });
+        }
+        if (tourneyMatches) {
+          (tourneyMatches as any[]).forEach((tm) => {
           if (!tm.winner_side) return;
           // Ignore BYE matches
           const isByeMatch = 
@@ -141,14 +124,14 @@ export function EloAuditPanel() {
           (isTeam1Win ? team2 : team1).forEach((id: string) => { lossMap[id] = (lossMap[id] || 0) + 1; });
         });
       }
-      setPlayers((playersRes.data as any[]).map((p) => ({
+      setPlayers((players as any[]).map((p) => ({
         ...p,
         wins: winMap[p.id] || 0,
         losses: lossMap[p.id] || 0,
       })));
 
-      if (!recentLogsRes.error && recentLogsRes.data) {
-        const mappedLogs = (recentLogsRes.data as any[]).map((l) => ({
+      if (recentLogs && recentLogs.length > 0) {
+        const mappedLogs = (recentLogs as any[]).map((l) => ({
           ...l,
           player: playerMap.get(l.player_id) || { id: l.player_id, full_name: "Player" },
         }));
@@ -158,7 +141,7 @@ export function EloAuditPanel() {
           groupedByMatch[l.match_uuid].push(l);
         });
 
-        const tourneyMatchMap = new Map((tourneyMatchesRes.data as any[] || []).map(tm => [tm.id, tm]));
+        const tourneyMatchMap = new Map((tourneyMatches as any[] || []).map(tm => [tm.id, tm]));
 
         const uniqueMatches: any[] = [];
         const seen = new Set();
@@ -176,8 +159,8 @@ export function EloAuditPanel() {
           }
         });
 
-        if (uniqueMatches.length === 0 && tourneyMatchesRes.data && tourneyMatchesRes.data.length > 0) {
-          const fallbackEntries = (tourneyMatchesRes.data as any[]).map((tm) => {
+        if (uniqueMatches.length === 0 && tourneyMatches && tourneyMatches.length > 0) {
+          const fallbackEntries = (tourneyMatches as any[]).map((tm) => {
             const p1 = playerMap.get(tm.player1_id);
             const p2 = playerMap.get(tm.player2_id);
             const p3 = playerMap.get(tm.player3_id);
@@ -208,9 +191,12 @@ export function EloAuditPanel() {
         }
       }
     }
-
+  } catch (err: any) {
+    toast.error(err?.message || "Failed to load ELO audit data");
+  } finally {
     setLoading(false);
-  }, []);
+  }
+}, []);
 
   useEffect(() => { load(); }, [load]);
 
@@ -219,24 +205,25 @@ export function EloAuditPanel() {
   const executeRecalculate = async () => {
     setShowRecalcModal(false);
     setRecalcLoading(true);
-    const { error } = await supabase.rpc('recalculate_all_elo');
-    if (error) {
-      await supabase.from("admin_logs").insert({
-        admin_email: session?.user?.email || "unknown",
-        action: "elo_recalculation_failed",
-        details: error.message
-      });
-      toast.error("Error recalculating ELO: " + error.message);
-    } else {
-      await supabase.from("admin_logs").insert({
-        admin_email: session?.user?.email || "unknown",
-        action: "elo_recalculation",
-        details: "Manually triggered full recalculation of all ELOs"
-      });
+    try {
+      await adminService.recalculateAllElo();
+      await adminService.logAction(
+        "elo_recalculation",
+        "Manually triggered full recalculation of all ELOs",
+        session?.user?.email || "unknown",
+      );
       toast.success("Successfully recalculated all ELO histories!");
       load();
+    } catch (error: any) {
+      await adminService.logAction(
+        "elo_recalculation_failed",
+        error.message,
+        session?.user?.email || "unknown",
+      );
+      toast.error("Error recalculating ELO: " + error.message);
+    } finally {
+      setRecalcLoading(false);
     }
-    setRecalcLoading(false);
   };
 
   const loadPlayerHistory = useCallback(async (player: PlayerSnapshot) => {
@@ -244,77 +231,22 @@ export function EloAuditPanel() {
     setHistoryLoading(true);
     setEloHistory([]);
 
-    const { data: logData, error: logErr } = await supabase
-      .from("elo_calculation_logs")
-      .select("*")
-      .eq("player_id", player.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (logErr || !logData || logData.length === 0) { 
-      setHistoryLoading(false); 
-      return; 
-    }
-
-    const matchIds = [...new Set((logData as any[]).map((l) => l.match_uuid).filter(Boolean))];
-    
-    let allLogsData: any[] = [];
-    if (matchIds.length > 0) {
-      const { data } = await supabase
-        .from("elo_calculation_logs")
-        .select(`*`)
-        .in("match_uuid", matchIds);
-      
-      if (data) {
-        const playerIdsToFetch = [...new Set((data as any[]).map(l => l.player_id).filter(Boolean))];
-        const { data: playersData } = await supabase
-          .from("players")
-          .select("id, full_name")
-          .in("id", playerIdsToFetch);
-        
-        const playersMap: Record<string, any> = {};
-        (playersData || []).forEach(p => { playersMap[p.id] = p; });
-
-        allLogsData = data.map(l => ({
-          ...l,
-          player: playersMap[l.player_id] || { id: l.player_id, full_name: "Unknown" }
-        }));
+    try {
+      const { logData, allLogsData, matchData, tourneyMatchData } = await adminService.getPlayerEloHistory(player.id);
+      if (!logData || logData.length === 0) {
+        setHistoryLoading(false);
+        return;
       }
-    }
 
-    const { data: matchData } = await supabase
-      .from("matches")
-      .select(`
-        id, score, category, created_at,
-        player1:players!player1_id(id, full_name),
-        player2:players!player2_id(id, full_name),
-        partner1:players!team1_partner_id(id, full_name),
-        partner2:players!team2_partner_id(id, full_name),
-        player1_id, player2_id, team1_partner_id, team2_partner_id
-      `)
-      .in("id", matchIds);
+      const matchMap: Record<string, any> = {};
+      (matchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: false }; });
+      (tourneyMatchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: true }; });
 
-    const { data: tourneyMatchData } = await supabase
-      .from("tournament_matches")
-      .select(`
-        id, category, created_at, match_number, match_code,
-        player1:players!player1_id(id, full_name),
-        player2:players!player2_id(id, full_name),
-        player3:players!player3_id(id, full_name),
-        player4:players!player4_id(id, full_name),
-        player1_id, player2_id, player3_id, player4_id
-      `)
-      .in("id", matchIds);
-
-    const matchMap: Record<string, any> = {};
-    (matchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: false }; });
-    (tourneyMatchData || []).forEach((m: any) => { matchMap[m.id] = { ...m, is_tourney: true }; });
-
-    const logsByMatch: Record<string, any[]> = {};
-    allLogsData.forEach((l: any) => {
-      if (!logsByMatch[l.match_uuid]) logsByMatch[l.match_uuid] = [];
-      logsByMatch[l.match_uuid].push(l);
-    });
+      const logsByMatch: Record<string, any[]> = {};
+      allLogsData.forEach((l: any) => {
+        if (!logsByMatch[l.match_uuid]) logsByMatch[l.match_uuid] = [];
+        logsByMatch[l.match_uuid].push(l);
+      });
 
     const enriched: EloLogEntry[] = (logData as any[]).map((log) => {
       const m = matchMap[log.match_uuid];
@@ -346,8 +278,12 @@ export function EloAuditPanel() {
       };
     });
 
-    setEloHistory(enriched);
-    setHistoryLoading(false);
+      setEloHistory(enriched);
+    } catch (err: any) {
+      toast.error("Failed to load player ELO history");
+    } finally {
+      setHistoryLoading(false);
+    }
   }, []);
 
   const renderExpandedTable = (entry: EloLogEntry, highlightPlayerId?: string) => (
@@ -369,7 +305,7 @@ export function EloAuditPanel() {
               const catChange = pl.elo_change || 0;
               const isHighlight = pl.player_id === highlightPlayerId;
               return (
-                <tr key={pl.id || pl.player_id || pl.player?.full_name} className={isHighlight ? "bg-primary/10/30 dark:bg-primary/10" : ""}>
+                <tr key={pl.id || pl.player_id || pl.player?.full_name} className={isHighlight ? "bg-primary/10 dark:bg-primary/20" : ""}>
                   <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
                     {pl.player?.full_name || "Unknown"}
                     {isWin ? <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded uppercase font-black">W</span> : <span className="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-1 py-0.5 rounded uppercase font-black">L</span>}
@@ -563,7 +499,7 @@ export function EloAuditPanel() {
             <button 
               onClick={() => setShowRecalcModal(true)}
               disabled={recalcLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/20 dark:hover:bg-primary/80/50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/20 dark:hover:bg-primary/40 transition-colors disabled:opacity-50"
             >
               {recalcLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Recalculate All ELOs
@@ -823,7 +759,7 @@ function SnapshotTab({
                 <button
                   key={g}
                   onClick={() => setGenderFilter(g)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-on-accent"}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"}`}
                 >
                   {g === "all" ? "All" : g}
                 </button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { disciplineOf } from "@/lib/matchView";
 
 export function MatchSection({ 
   title, 
@@ -23,6 +24,8 @@ export function MatchSection({
 
   const filteredMatches = matches.filter(m => {
     if (category === "ALL") return true;
+    // Shared discipline recognition first (category text or match-code prefix).
+    if (disciplineOf(m.category, m.match_code) === category) return true;
     const c = (m.match_code || m.matchNumber || "").toUpperCase();
     if (c.startsWith(category)) return true;
     // Fallback if match_code is empty, try to infer from category string
@@ -38,7 +41,17 @@ export function MatchSection({
   return (
     <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
       <div 
-        className="px-5 py-4 flex items-center justify-between cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+        className="px-5 py-4 min-h-[44px] flex items-center justify-between cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
@@ -65,7 +78,8 @@ export function MatchSection({
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
-                  className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-black transition-all ${
+                  aria-pressed={category === cat}
+                  className={`flex-1 sm:flex-none px-3 py-2 min-h-[44px] rounded-xl text-xs font-black transition-all ${
                     category === cat
                       ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"

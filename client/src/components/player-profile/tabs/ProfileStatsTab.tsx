@@ -9,6 +9,7 @@ import {
   Radar,
   Tooltip,
 } from "recharts";
+import type { PlayerRow } from "@/types";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -16,7 +17,7 @@ const itemVariants = {
 };
 
 interface ProfileStatsTabProps {
-  player: any;
+  player: PlayerRow;
   liveMatches: any[];
   allPlayers: any[];
   id: string;
@@ -138,8 +139,8 @@ export function ProfileStatsTabLeft({
       />
       <PerformanceTrends matches={liveMatches} playerId={id} />
       <WrappedCard
-        playerName={player.fullName}
-        avatarUrl={player.avatar}
+        playerName={player.full_name}
+        avatarUrl={player.avatar_url}
         elo={player.elo_rating ?? 1200}
         matches={liveMatches}
         playerId={id}

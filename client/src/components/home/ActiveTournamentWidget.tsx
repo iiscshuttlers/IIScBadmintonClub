@@ -1,3 +1,4 @@
+import { matchShortPath } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
@@ -516,7 +517,8 @@ export function ActiveTournamentWidget() {
                     };
                     const isLive = m.status === "in_progress";
                     const tabStatus = isCompleted ? "completed" : isLive ? "live" : "upcoming";
-                    const href = `/pulse?tab=matches&m_status=${tabStatus}&m_cat=ALL#match-card-${m.id}`;
+                    // The day's match query spans tournaments, so resolve the owner server-side.
+                    const href = matchShortPath(m.id);
 
                     return (
                       <Link

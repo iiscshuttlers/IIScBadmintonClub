@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import {
   UserPlus, Loader2, RefreshCw, Trash2, Ghost, CheckCircle,
@@ -9,6 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
+import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
+import { ClaimRequestsSection } from "@/components/admin/ClaimRequestsSection";
+import { MergeReversalPanel } from "@/components/admin/MergeReversalPanel";
 
 interface ExternalLabel {
   label: string;
@@ -62,6 +65,7 @@ export function GuestPlayersPanel() {
   const [selectedReal, setSelectedReal] = useState<RealPlayer | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [realPlayersLoaded, setRealPlayersLoaded] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
 
   // Link external labels state
   const [externalLabels, setExternalLabels] = useState<ExternalLabel[]>([]);
@@ -75,44 +79,29 @@ export function GuestPlayersPanel() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: g }, { data: m }] = await Promise.all([
-      supabase
-        .from("players")
-        .select("id, full_name, gender, elo_rating, total_friendly_matches, created_at")
-        .eq("is_guest", true)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("matches")
-        .select(
-          "id, created_at, score, category, winner_id, " +
-            "player1:players!player1_id(id,full_name,is_guest), " +
-            "player2:players!player2_id(id,full_name,is_guest), " +
-            "partner1:players!team1_partner_id(id,full_name,is_guest), " +
-            "partner2:players!team2_partner_id(id,full_name,is_guest)",
-        )
-        .eq("status", "pending")
-        .order("created_at", { ascending: false }),
-    ]);
-
-    setGuests((g as GuestRow[]) ?? []);
-    const guestMatches = ((m as any[]) ?? []).filter((row) =>
-      [row.player1, row.player2, row.partner1, row.partner2].some((p) => p?.is_guest),
-    );
-    setPending(guestMatches as PendingGuestMatch[]);
-    setLoading(false);
+    try {
+      const [g, guestMatches] = await Promise.all([
+        adminService.getGuestPlayers(),
+        adminService.getPendingGuestMatches(),
+      ]);
+      setGuests(g);
+      setPending(guestMatches);
+    } catch (err: any) {
+      toast.error("Failed to load guests or pending matches");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const loadRealPlayers = useCallback(async () => {
     if (realPlayersLoaded) return;
-    const { data } = await supabase
-      .from("players")
-      .select("id, full_name, department")
-      .eq("is_approved", true)
-      .or("is_guest.is.null,is_guest.eq.false")
-      .order("full_name");
-    setRealPlayers((data as RealPlayer[]) ?? []);
-    setRealPlayersLoaded(true);
+    try {
+      const data = await adminService.getRealApprovedPlayers();
+      setRealPlayers((data as RealPlayer[]) ?? []);
+      setRealPlayersLoaded(true);
+    } catch {
+      // non-blocking
+    }
   }, [realPlayersLoaded]);
 
   useEffect(() => { load(); }, [load]);
@@ -120,7 +109,7 @@ export function GuestPlayersPanel() {
 
   const logAction = async (action: string) => {
     const email = session?.user?.email || "admin";
-    await supabase.from("admin_logs").insert({ admin_email: email, action, created_at: new Date().toISOString() }).then(() => {});
+    await adminService.logAction(action, undefined, email);
   };
 
   const createGuest = async () => {
@@ -128,8 +117,7 @@ export function GuestPlayersPanel() {
     if (!clean) { toast.error("Enter a name for the guest"); return; }
     setCreating(true);
     try {
-      const { data, error } = await supabase.rpc("create_guest_player", { p_full_name: clean, p_gender: gender || null });
-      if (error) throw error;
+      const data = await adminService.createGuestPlayerRpc(clean, gender || null);
       toast.success(`Guest "${clean}" created`);
       await logAction(`Created guest player "${clean}"${gender ? ` (${gender})` : ""}`);
       setName(""); setGender("");
@@ -144,8 +132,7 @@ export function GuestPlayersPanel() {
     if (!(await confirm({ title: "Delete Guest", description: `Delete guest "${g.full_name}"? This cannot be undone.`, confirmVariant: "danger" }))) return;
     setBusyId(g.id);
     try {
-      const { error } = await supabase.rpc("delete_guest_player", { p_guest_id: g.id });
-      if (error) throw error;
+      await adminService.deleteGuestPlayer(g.id);
       toast.success("Guest deleted");
       await logAction(`Deleted guest player "${g.full_name}"`);
       setGuests((prev) => prev.filter((x) => x.id !== g.id));
@@ -158,8 +145,7 @@ export function GuestPlayersPanel() {
   const approveMatch = async (m: PendingGuestMatch) => {
     setBusyId(m.id);
     try {
-      const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: m.id, confirmer_id: "umpire_bypass" });
-      if (error) throw error;
+      await adminService.confirmFriendlyMatch(m.id);
       toast.success("Match approved — ELO applied");
       await logAction(`Approved guest match ${m.id}`);
       setPending((prev) => prev.filter((x) => x.id !== m.id));
@@ -173,8 +159,7 @@ export function GuestPlayersPanel() {
     if (!(await confirm({ title: "Reject Match", description: "Reject and delete this pending match?", confirmVariant: "danger" }))) return;
     setBusyId(m.id);
     try {
-      const { error } = await supabase.from("matches").delete().eq("id", m.id);
-      if (error) throw error;
+      await adminService.rejectGuestMatch(m.id);
       toast.success("Match rejected");
       await logAction(`Rejected guest match ${m.id}`);
       setPending((prev) => prev.filter((x) => x.id !== m.id));
@@ -183,36 +168,22 @@ export function GuestPlayersPanel() {
     } finally { setBusyId(null); }
   };
 
-  const executeClaim = async () => {
+  // WP8: linking a guest goes through a server-side preview and a reasoned,
+  // audited merge that moves all history (friendly, tournament, entries,
+  // teams, rating log) and keeps saved links working.
+  const executeClaim = () => {
     if (!selectedGuest || !selectedReal) return;
-    const matchCount = selectedGuest.total_friendly_matches ?? 0;
-    if (!(await confirm({
-      title: "Link Matches",
-      description: `Link all ${matchCount} match(es) from "${selectedGuest.full_name}" to "${selectedReal.full_name}"? This cannot be undone.`,
-      confirmVariant: "danger",
-      confirmLabel: "Link Matches",
-    }))) return;
-    setClaiming(true);
-    try {
-      const { error } = await supabase.rpc("claim_guest_player", { p_guest_id: selectedGuest.id, p_real_player_id: selectedReal.id });
-      if (error) throw error;
-      toast.success(`"${selectedGuest.full_name}" → "${selectedReal.full_name}" — ${matchCount} match(es) transferred.`);
-      await logAction(`Claimed guest "${selectedGuest.full_name}" → "${selectedReal.full_name}" (${matchCount} matches)`);
-      await recordAction({
-        action_type: "delete",
-        entity_type: "players",
-        entity_id: selectedGuest.id,
-        before_state: { is_guest: true, full_name: selectedGuest.full_name },
-        after_state: { claimed_by: selectedReal.full_name, real_player_id: selectedReal.id },
-        label: `Claimed guest "${selectedGuest.full_name}" → "${selectedReal.full_name}"`,
-      });
-      setGuests((prev) => prev.filter((x) => x.id !== selectedGuest.id));
-      setSelectedGuest(null);
-      setSelectedReal(null);
-      setClaimSearch("");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to claim guest");
-    } finally { setClaiming(false); }
+    setMergeOpen(true);
+  };
+
+  const afterMerge = async () => {
+    if (!selectedGuest || !selectedReal) return;
+    toast.success(`"${selectedGuest.full_name}" linked to "${selectedReal.full_name}".`);
+    await logAction(`Merged guest "${selectedGuest.full_name}" → "${selectedReal.full_name}"`);
+    setGuests((prev) => prev.filter((x) => x.id !== selectedGuest.id));
+    setSelectedGuest(null);
+    setSelectedReal(null);
+    setClaimSearch("");
   };
 
   const sideName = (a?: { full_name: string } | null, b?: { full_name: string } | null) =>
@@ -224,6 +195,17 @@ export function GuestPlayersPanel() {
 
   return (
     <div className="space-y-6">
+      {selectedGuest && selectedReal && (
+        <PlayerMergeDialog
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          guestId={selectedGuest.id}
+          realId={selectedReal.id}
+          onMerged={() => void afterMerge()}
+        />
+      )}
+      <ClaimRequestsSection onResolved={() => void load()} />
+      <MergeReversalPanel onReversed={() => void load()} />
       {/* ── Create guest ─────────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
         <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-1">
@@ -477,7 +459,7 @@ export function GuestPlayersPanel() {
                       className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-                      Link {selectedGuest.total_friendly_matches ?? 0} match{(selectedGuest.total_friendly_matches ?? 0) === 1 ? "" : "es"}
+                      Review &amp; link history
                     </button>
                   </div>
                 </div>
@@ -529,24 +511,9 @@ function LinkExternalSection({
 
   const loadLabels = useCallback(async () => {
     setLoading(true);
-    // Fetch all tournament_matches that have a label but no player linked
-    const [{ data: t1 }, { data: t2 }, { data: tp }] = await Promise.all([
-      supabase
-        .from("tournament_matches")
-        .select("team1_label, tournament_id, tournaments(name)")
-        .not("team1_label", "is", null)
-        .is("player1_id", null),
-      supabase
-        .from("tournament_matches")
-        .select("team2_label, tournament_id, tournaments(name)")
-        .not("team2_label", "is", null)
-        .is("player2_id", null),
-      supabase
-        .from("tournament_participants")
-        .select("display_name")
-        .not("display_name", "is", null)
-        .is("player_id", null),
-    ]);
+    try {
+      // Fetch all tournament_matches that have a label but no player linked
+      const { t1, t2, tp } = await adminService.getUnlinkedExternalLabels();
 
     const map = new Map<string, { count: number; tournaments: Set<string> }>();
     for (const row of (t1 ?? []) as any[]) {
@@ -579,8 +546,12 @@ function LinkExternalSection({
       tournaments: [...val.tournaments],
     })).sort((a, b) => a.label.localeCompare(b.label));
 
-    setLabels(list);
-    setLoading(false);
+      setLabels(list);
+    } catch (err) {
+      toast.error("Failed to load external labels");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { loadLabels(); }, [loadLabels]);
@@ -609,12 +580,11 @@ function LinkExternalSection({
     const partnerId = doublesMode ? selectedPartner?.id ?? null : null;
     setLinking(true);
     try {
-      const { data, error } = await (supabase.rpc as any)("link_label_to_player", {
-        p_label: selectedLabel.label,
-        p_player_id: selectedPlayer.id,
-        p_partner_id: partnerId,
-      });
-      if (error) throw error;
+      const data = await adminService.linkLabelToPlayerDoubles(
+        selectedLabel.label,
+        selectedPlayer.id,
+        partnerId
+      );
       const names = partnerId
         ? `"${selectedPlayer.full_name}" + "${selectedPartner!.full_name}"`
         : `"${selectedPlayer.full_name}"`;

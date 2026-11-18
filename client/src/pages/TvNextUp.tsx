@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Radio, Swords } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { tournamentService } from "@/services/tournamentService";
 import { headToHead, recentForm, type HistMatch } from "@/lib/headToHead";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -63,17 +63,8 @@ export default function TvNextUp() {
     enabled: !!tournamentId,
     refetchInterval: 20_000,
     queryFn: async () => {
-      const [{ data: t }, { data: rows, error }] = await Promise.all([
-        supabase.from("tournaments").select("name").eq("id", tournamentId).maybeSingle(),
-        supabase
-          .from("tournament_matches")
-          .select("id, court_number, status, scheduled_at, round, match_number, round_name, category, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id, score")
-          .eq("tournament_id", tournamentId)
-          .not("court_number", "is", null)
-          .in("status", [...LIVE, ...WAITING]),
-      ]);
-      if (error) throw error;
-      return { name: (t as any)?.name ?? "", rows: (rows ?? []) as Row[] };
+      const res = await tournamentService.fetchTvNextUpOverview(tournamentId);
+      return { name: res.name, rows: (res.rows ?? []) as Row[] };
     },
   });
 
@@ -100,16 +91,7 @@ export default function TvNextUp() {
       const a = ids(next!, 1);
       const b = ids(next!, 2);
       const all = [...a, ...b];
-      const or = all.flatMap((id) => [`player1_id.eq.${id}`, `player2_id.eq.${id}`, `player3_id.eq.${id}`, `player4_id.eq.${id}`]).join(",");
-      const [{ data: hist }, { data: players }] = await Promise.all([
-        supabase
-          .from("tournament_matches")
-          .select("id, status, winner_side, player1_id, player2_id, player3_id, player4_id, score, ended_at, scheduled_at, tournaments(name)")
-          .in("status", ["completed", "walkover"])
-          .or(or)
-          .limit(500),
-        supabase.from("players").select("id, elo_rating").in("id", all),
-      ]);
+      const { hist, players } = await tournamentService.fetchTvH2hHistory(all);
       const h = (hist ?? []) as unknown as HistMatch[];
       const elo = new Map((players ?? []).map((p: any) => [p.id, p.elo_rating as number | null]));
       const rating = (xs: string[]) => {

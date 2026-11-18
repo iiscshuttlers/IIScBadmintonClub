@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import { teamService } from "@/services/teamService";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useAuth } from "@/contexts/AuthContext";
 import { Shield, Plus, Loader2 } from "lucide-react";
@@ -44,7 +44,7 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
 
     try {
       // Create team
-      const { error } = await supabase.from("doubles_teams").insert({
+      await teamService.registerDoublesTeam({
         team_name: teamName.trim(),
         player1_id: currentUser.id,
         player2_id: partnerId,
@@ -54,24 +54,19 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
         matches_won: 0,
       });
 
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error("You and this partner already have a registered team!");
-        }
-        // Fallback for missing table
-        if (error.code === '42P01') {
-          throw new Error("Database migration required! Please run the 20260627000000_doubles_teams.sql script in Supabase.");
-        }
-        throw error;
-      }
-
       toast.success("Team registered successfully!");
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
       setTeamName("");
       setPartnerId("");
       onTeamRegistered();
     } catch (err: any) {
-      toast.error(err.message || "Failed to register team.");
+      if (err?.code === '23505') {
+        toast.error("You and this partner already have a registered team!");
+      } else if (err?.code === '42P01') {
+        toast.error("Database migration required! Please run the 20260627000000_doubles_teams.sql script in Supabase.");
+      } else {
+        toast.error(err.message || "Failed to register team.");
+      }
     } finally {
       setLoading(false);
     }

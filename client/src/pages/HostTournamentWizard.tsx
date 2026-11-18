@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, Link } from 'wouter';
 import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { tournamentService, playerService } from '@/services';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { TeamFormatConfigPanel, RubberConfig } from '@/components/admin/TeamFormatConfigPanel';
@@ -326,14 +326,12 @@ export default function HostTournamentWizard() {
         }
       }
 
-      const { data, error } = await supabase.from('tournaments').insert(payload).select().single();
-      
-      if (error) throw error;
+      const data = await tournamentService.createTournament(payload as any);
 
       // Import CSV entrants if provided
       if (data?.id && previewData.length > 1 && formatFamily === 'OPEN_EVENT') {
         try {
-          const { data: players } = await supabase.from("players").select("id, full_name, email, iisc_email").is("deleted_at", null);
+          const players = await playerService.getActivePlayersForMatching();
           const matchPlayer = (name: string, email: string) => {
             if (!name && !email) return null;
             return (players ?? []).find(p => {
@@ -389,19 +387,19 @@ export default function HostTournamentWizard() {
           for (const [cat, entries] of Object.entries(byCat)) {
             let nextSeed = 1;
             for (const entry of entries) {
-              const { error: insertErr } = await supabase.from("tournament_participants").insert({
-                tournament_id: data.id,
-                category: cat,
-                player_id: entry.player_id,
-                partner_id: entry.partner_id,
-                display_name: entry.display_name,
-                seed: entry.seed ?? nextSeed,
-              });
-              if (insertErr) {
-                console.error(`Failed to import ${entry.display_name} in ${cat}:`, insertErr.message);
-                failed++;
-              } else {
+              try {
+                await tournamentService.addTournamentParticipant({
+                  tournament_id: data.id,
+                  category: cat,
+                  player_id: entry.player_id,
+                  partner_id: entry.partner_id,
+                  display_name: entry.display_name,
+                  seed: entry.seed ?? nextSeed,
+                });
                 imported++;
+              } catch (insertErr: any) {
+                console.error(`Failed to import ${entry.display_name} in ${cat}:`, insertErr?.message || insertErr);
+                failed++;
               }
               nextSeed++;
             }
@@ -421,7 +419,7 @@ export default function HostTournamentWizard() {
         
       // Auto-assign creator as organizer
       if (data?.id && session.user.id) {
-        await supabase.from("tournament_officials").insert({
+        await tournamentService.assignTournamentOfficial({
           tournament_id: data.id,
           user_id: session.user.id,
           role: "ORGANIZER",

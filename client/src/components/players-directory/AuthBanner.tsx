@@ -67,8 +67,8 @@ export function AuthBanner({
                     <button
                       onClick={() => onConfirmMatch(m.id)}
                       disabled={processingMatches.has(m.id)}
-                      className={`flex-1 sm:flex-none px-4 py-2 text-on-accent text-xs font-bold rounded-lg transition ${
-                        processingMatches.has(m.id) ? "bg-primary cursor-not-allowed opacity-70" : "bg-primary hover:bg-primary"
+                      className={`flex-1 sm:flex-none px-4 py-2 text-primary-foreground text-xs font-bold rounded-lg transition ${
+                        processingMatches.has(m.id) ? "bg-primary cursor-not-allowed opacity-70" : "bg-primary hover:bg-primary/90"
                       }`}
                     >
                       {processingMatches.has(m.id) ? "Confirming..." : "Confirm"}

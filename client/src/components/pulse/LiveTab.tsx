@@ -1,7 +1,9 @@
 import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
+import { getLiveMatchPicks, saveLiveMatchPick, fetchPollRevealedMatches, updatePollRevealedMatches } from "@/services/feedService";
+import { toggleMatchKudos } from "@/services/socialService";
 import { toast } from "sonner";
 import {
   Activity,
@@ -30,12 +32,25 @@ import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
+import { LiveTeamsSection } from "@/components/events/LiveTeamsSection";
+import { MatchCentre } from "@/components/match/MatchCentre";
+import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
+import {
+  canonicalForLiveSubTab,
+  isLiveTabOffered,
+  liveSubTabFor,
+  type LiveSubTab,
+  type TournamentPanel,
+  type TournamentTab,
+} from "@/lib/tournamentRoutes";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
 import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
 import { TeamTiesSection } from "@/components/events/TeamTiesSection";
 import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
+import { UpNextPanel } from "@/components/tournament/UpNextPanel";
 import { MatchSection } from "@/components/pulse/MatchSection";
+import { LIVE_STATUSES } from "@/lib/matchView";
 import { MatchCard } from "@/components/feed/MatchCard";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
@@ -51,28 +66,56 @@ import { RefereeDashboard } from "@/components/tournament/RefereeDashboard";
 import { RegisterModal } from "@/components/tournament/RegisterModal";
 import { getEventFamily } from "@/lib/tournamentTheme";
 
-export interface LiveTabProps {
-  embedded?: boolean;
+/**
+ * Canonical tournament page mode (WP5). The tournament is fixed by the route
+ * and is never substituted; tab state lives in the URL path, not `?subtab=`.
+ */
+export interface LiveTabRoute {
+  tournament: any;
+  /** Date-aware lifecycle status used to decide whether Live is offered. */
+  lifecycle: string;
+  tab: TournamentTab;
+  panel: TournamentPanel | null;
+  navigate: (to: { tab: TournamentTab; panel: TournamentPanel | null }) => void;
+  /** Rendered between the tab bar and the tab content (e.g. winners on Results). */
+  beforeContent?: ReactNode;
 }
 
-export function LiveTab({ embedded = false }: LiveTabProps = {}) {
+export interface LiveTabProps {
+  embedded?: boolean;
+  route?: LiveTabRoute;
+}
+
+export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches" | "standings" | "ties" | "organizer" | "referee">("subtab", "matches");
-  const [activeTournament, setActiveTournament] = useState<any | null>(null);
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [querySubTab, setQuerySubTab] = useQueryState<LiveSubTab>("subtab", "matches");
+  const isRouteTeam = route?.tournament?.format_family === "TEAM";
+  const activeSubTab: LiveSubTab = route ? liveSubTabFor(route.tab, route.panel, isRouteTeam) : querySubTab;
+  const setActiveSubTab = (sub: LiveSubTab) => {
+    if (route) route.navigate(canonicalForLiveSubTab(sub, route.tab));
+    else setQuerySubTab(sub);
+  };
+  const [activeTournament, setActiveTournament] = useState<any | null>(route?.tournament ?? null);
+  const [tournaments, setTournaments] = useState<any[]>(route ? [route.tournament] : []);
+
+  // Route mode: keep the routed tournament in sync (e.g. after a refetch).
+  useEffect(() => {
+    if (!route) return;
+    setActiveTournament(route.tournament);
+    setTournaments([route.tournament]);
+    setTournamentFilter(route.tournament.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route?.tournament]);
 
   useEffect(() => {
+    if (route) return; // the route owns tournament selection; never fall back
     const searchParams = new URLSearchParams(window.location.search);
     const queryTournamentId = searchParams.get("id") || searchParams.get("tournament_id");
 
     async function loadTournaments() {
-      const { data } = await supabase
-        .from("tournaments")
-        .select("*")
-        .neq("status", "deleted")
-        .order("created_at", { ascending: false });
+      const data = await fetchTournaments();
 
       if (data && data.length > 0) {
         setTournaments(data);
@@ -117,8 +160,14 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
 
   // Dynamic URL syncing for Tournament Matches — use replace so filters
   // don't create back-button history entries; only the primary subtab does.
-  const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming", true);
-  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL", true);
+  const [queryMatchStatus, setQueryMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming", true);
+  const matchStatus: "upcoming" | "completed" = route ? (route.tab === "results" ? "completed" : "upcoming") : queryMatchStatus;
+  const setMatchStatus = (status: "upcoming" | "completed") => {
+    if (route) route.navigate({ tab: status === "completed" ? "results" : "live", panel: null });
+    else setQueryMatchStatus(status);
+  };
+  // Canonical URLs use `cat` (shared with the Players view); Pulse keeps `m_cat`.
+  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">(route ? "cat" : "m_cat", "ALL", true);
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -130,12 +179,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     const pid = ownProfile?.id;
     if (!activeTournamentId || !pid) { setLiveOfficialRoles(new Set()); return; }
     (async () => {
-      const { data } = await supabase
-        .from("tournament_officials" as any)
-        .select("role")
-        .eq("tournament_id", activeTournamentId)
-        .eq("user_id", pid);
-      if (!cancelled) setLiveOfficialRoles(new Set((data ?? []).map((d: any) => d.role)));
+      const roles = await fetchUserTournamentRoles(activeTournamentId, pid);
+      if (!cancelled) setLiveOfficialRoles(new Set(roles));
     })();
     return () => { cancelled = true; };
   }, [activeTournamentId, ownProfile?.id]);
@@ -144,7 +189,9 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   const isLiveReferee = liveOfficialRoles.has("REFEREE");
   const canReferee = isAdmin || isLiveOrganizer || isLiveReferee;
 
-  const initialTournamentId = typeof window !== "undefined"
+  const initialTournamentId = route
+    ? route.tournament.id
+    : typeof window !== "undefined"
     ? (new URLSearchParams(window.location.search).get("id") || new URLSearchParams(window.location.search).get("tournament_id") || "all")
     : "all";
 
@@ -206,22 +253,13 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   useEffect(() => {
     if (!ownProfile?.id) return;
     const loadPicks = async () => {
-      const { data: myVotes } = await supabase
-        .from("live_match_votes")
-        .select("live_match_id, pick")
-        .eq("user_id", ownProfile.id);
-      if (myVotes) {
-        const p: Record<string, 1 | 2> = {};
-        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
-        setPicks(p);
-      }
-      const { data: siteData } = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "poll_revealed_matches")
-        .single();
-      if (siteData?.value) {
-        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      try {
+        const myVotes = await getLiveMatchPicks(ownProfile.id);
+        setPicks(myVotes);
+        const revealed = await fetchPollRevealedMatches();
+        setRevealedMatchIds(revealed);
+      } catch (err) {
+        console.error("Failed to load picks/revealed matches:", err);
       }
     };
     loadPicks();
@@ -230,11 +268,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
   const handlePick = async (matchId: string, team: 1 | 2) => {
     if (!ownProfile?.id) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    await supabase.from("live_match_votes").upsert({
-      live_match_id: matchId,
-      user_id: ownProfile.id,
-      pick: team
-    }, { onConflict: 'live_match_id,user_id' });
+    await saveLiveMatchPick(matchId, ownProfile.id, team);
   };
 
   const handleToggleReveal = async (matchId: string) => {
@@ -242,10 +276,37 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
     const isRevealed = !!revealedMatchIds[matchId];
     const nextState = { ...revealedMatchIds, [matchId]: !isRevealed };
     setRevealedMatchIds(nextState);
-    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+    await updatePollRevealedMatches(nextState);
   };
 
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
+
+  // Keep the active tab visible in the scrollable row — horizontal only, so the page never jumps.
+  const tabRowRef = useRef<HTMLDivElement | null>(null);
+  const activeTabKey = route ? `${route.tab}|${route.panel ?? ""}` : activeSubTab;
+  const revealActiveTab = (row: HTMLElement | null, smooth: boolean) => {
+    const active = row?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!row || !active) return;
+    const r = row.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
+    if (a.left < r.left) row.scrollBy({ left: a.left - r.left - 16, behavior });
+    else if (a.right > r.right) row.scrollBy({ left: a.right - r.right + 16, behavior });
+  };
+  // Stable callback ref: runs when the row mounts (incl. after a loading remount).
+  const setTabRow = useCallback((el: HTMLDivElement | null) => {
+    tabRowRef.current = el;
+    if (!el) return;
+    requestAnimationFrame(() => revealActiveTab(el, false));
+    // Web fonts widen the pills after first paint; re-check once they settle.
+    document.fonts?.ready.then(() => revealActiveTab(el, false)).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => revealActiveTab(tabRowRef.current, true));
+    return () => cancelAnimationFrame(frame);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTabKey]);
 
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">
@@ -379,8 +440,35 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
-        {[
+      {/* Score strip on every tab except Live, which already leads with live cards. */}
+      {route && activeTournamentId && route.tab !== "live" && <LiveScoreTicker tournamentId={activeTournamentId} />}
+
+      {/* One scrollable tab row (Cricbuzz/cricinfo/FotMob) instead of wrapping pill rows. */}
+      <div
+        role="navigation"
+        aria-label="Tournament sections"
+        ref={setTabRow}
+        className="-mx-4 px-4 sm:mx-0 sm:px-0 flex flex-nowrap items-center gap-2 overflow-x-auto pt-1 pb-2 mb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {(route
+          ? [
+              { key: "overview", label: "Overview", icon: FileText, to: { tab: "overview", panel: null } },
+              { key: "players", label: isRouteTeam ? "Teams" : "Players", icon: Users, to: { tab: "players", panel: null } },
+              { key: "draw", label: isRouteTeam ? "Ties & Standings" : "Draw", icon: isRouteTeam ? Swords : LayoutList, to: { tab: "draw", panel: null } },
+              { key: "schedule", label: "Schedule", icon: Calendar, to: { tab: "schedule", panel: null } },
+              { key: "results", label: "Results", icon: Trophy, to: { tab: "results", panel: null } },
+              ...(isLiveTabOffered(route.lifecycle, route.tab) ? [{ key: "live", label: "Live", icon: Activity, to: { tab: "live", panel: null } }] : []),
+              ...(session ? [{ key: "my-matches", label: "My Matches", icon: Activity, to: { tab: route.tab, panel: "my-matches" } }] : []),
+              { key: "polls", label: "Polls", icon: ListChecks, to: { tab: route.tab, panel: "polls" } },
+              ...((isUmpire || isAdmin || isLiveUmpire) ? [{ key: "umpire", label: "Umpire", icon: Tv2, to: { tab: route.tab, panel: "umpire" } }] : []),
+              ...(canReferee ? [{ key: "referee", label: "Referee", icon: Gavel, to: { tab: route.tab, panel: "referee" } }] : []),
+              ...((isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id) ? [{ key: "organizer", label: "Organizer", icon: LayoutDashboard, to: { tab: route.tab, panel: "organizer" } }] : []),
+            ].map((t: any) => ({
+              ...t,
+              isActive: t.to.panel ? route.panel === t.to.panel : !route.panel && route.tab === t.to.tab,
+              onSelect: () => route.navigate(t.to),
+            }))
+          : [
           { id: "details", label: "Details", icon: FileText },
           ...(activeTournament?.format_family === "TEAM" ? [{ id: "ties", label: "Ties & Lineups", icon: Swords }] : []),
           { id: "matches", label: "Matches", icon: Activity },
@@ -400,27 +488,49 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
             label: "Organizer", 
             icon: LayoutDashboard
           }] : []),
-        ].map((tab: any) => (
+            ].map((t: any) => ({ ...t, key: t.id, isActive: activeSubTab === t.id, onSelect: () => setActiveSubTab(t.id) }))
+        ).map((tab: any) => (
           <button
-            key={tab.id}
-            onClick={() => setActiveSubTab(tab.id as any)}
-            className={`flex-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-              activeSubTab === tab.id
+            key={tab.key}
+            onClick={tab.onSelect}
+            aria-current={tab.isActive ? "page" : undefined}
+            className={`shrink-0 flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+              tab.isActive
                 ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
                 : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <tab.icon className={`w-4 h-4 mb-[1px] ${activeSubTab !== tab.id && tab.iconClass && !tab.inactiveClass ? tab.iconClass : ""}`} />
+            <tab.icon className="w-4 h-4 mb-[1px]" aria-hidden />
             <span>{tab.label}</span>
           </button>
         ))}
       </div>
       
+      {route?.beforeContent}
+
+      {/* Players / Teams (canonical route only) */}
+      {route && activeSubTab === "players" && activeTournament && (
+        <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 sm:p-6">
+          {isRouteTeam ? (
+            <LiveTeamsSection tournamentId={activeTournament.id} showParticipants={activeTournament.show_participants} />
+          ) : (
+            <LivePlayersSection
+              tournamentId={activeTournament.id}
+              categories={activeTournament.categories || []}
+              showParticipants={activeTournament.show_participants}
+            />
+          )}
+        </div>
+      )}
+
       {/* 0. Details */}
       {!loading && activeSubTab === "details" && (
         <div className="mb-6">
           {activeTournament ? (
-            <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
+            <div className="space-y-6">
+              <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
+              {route && <UpNextPanel tournamentId={activeTournament.id} />}
+            </div>
           ) : (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
               <FileText className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
@@ -433,10 +543,22 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
         </div>
       )}
 
+      {/* WP6: canonical Live / Results tabs use the Match Centre. */}
+      {route && activeSubTab === "matches" && activeTournamentId && (
+        <>
+          {route.tab === "live" && (
+            <div className="-mx-4 sm:mx-0 mb-6">
+              <LiveScoreSection tournamentId={activeTournamentId} />
+            </div>
+          )}
+          <MatchCentre key={route.tab} tournamentId={activeTournamentId} mode={route.tab === "results" ? "results" : "live"} />
+        </>
+      )}
+
       {/* 1. Matches (Scores & Log merged) and My Matches */}
-      {!loading && (activeSubTab === "matches" || activeSubTab === "my-matches") && (
+      {!loading && ((activeSubTab === "matches" && !route) || activeSubTab === "my-matches") && (
         <div className="mb-6">
-          {activeSubTab === "matches" && (
+          {activeSubTab === "matches" && (!route || route.tab === "live") && (
             <div className="-mx-4 sm:mx-0 mb-6">
               <LiveScoreSection />
             </div>
@@ -460,7 +582,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
           </div>
 
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex w-full sm:flex-1 relative">
+            {!route && <div className="flex w-full sm:flex-1 relative">
               <select
                 value={tournamentFilter}
                 onChange={(e) => {
@@ -490,7 +612,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            </div>}
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
               <div className="relative flex-1 sm:flex-none">
@@ -562,7 +684,12 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                   
                   if (isLiveNow) {
                     // Handled by LiveScoreSection, exclude from here
-                  } else if (match.status === 'scheduled' || match.status === 'pending') {
+                  } else if (
+                    match.status === 'scheduled' ||
+                    match.status === 'pending' ||
+                    // Tournament rows: status column decides (a live match is not "completed").
+                    (match.is_friendly === false && LIVE_STATUSES.has(String(match.status ?? '').toLowerCase()))
+                  ) {
                     upcomingMatches.push(match);
                   } else {
                     completedMatches.push(match);
@@ -648,21 +775,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                     }
 
                     if (session?.user?.id) {
-                      supabase
-                        .rpc("toggle_match_kudos", { p_match_id: match.id })
-                        .then(({ error }) => {
-                          if (error)
-                            console.warn("Failed to sync kudos live:", error);
-                        });
-
-                      if (!isCurrentlyLiked) {
-                        const giverName = ownProfile?.full_name ?? "Someone";
-                        supabase.functions
-                          .invoke("notify-kudos", {
-                            body: { match_id: match.id, giver_name: giverName },
-                          })
-                          .catch(() => { });
-                      }
+                      const giverName = ownProfile?.full_name ?? "Someone";
+                      toggleMatchKudos(match.id, giverName, isCurrentlyLiked);
                     }
                   };
 
@@ -777,7 +891,8 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                                 <button
                                   key={cat}
                                   onClick={() => setMatchCat(cat)}
-                                  className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-black transition-all ${
+                                  aria-pressed={matchCat === cat}
+                                  className={`flex-1 sm:flex-none px-3 py-2 min-h-[44px] rounded-xl text-xs font-black transition-all ${
                                     matchCat === cat
                                       ? "bg-primary text-primary-foreground shadow-sm"
                                       : "text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
@@ -852,7 +967,7 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
                   <button
                     type="button"
                     onClick={() => setActiveSubTab("ties")}
-                    className="px-5 py-2.5 rounded-2xl bg-primary text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-primary/90 transition shadow-sm inline-flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider hover:bg-primary/90 transition shadow-sm inline-flex items-center gap-2 cursor-pointer"
                   >
                     <Swords className="w-4 h-4" /> Switch to Ties &amp; Lineups
                   </button>
@@ -946,6 +1061,11 @@ export function LiveTab({ embedded = false }: LiveTabProps = {}) {
       {/* 6. Team Ties & Lineups */}
       {!loading && activeSubTab === "ties" && (
         <div className="mb-6">
+          {route && activeTournamentId && (
+            <div className="mb-6">
+              <TeamStandingsTable tournamentId={activeTournamentId} tournament={activeTournament} />
+            </div>
+          )}
           {activeTournamentId ? (
             <TeamTiesSection tournamentId={activeTournamentId} tournament={activeTournament} />
           ) : (

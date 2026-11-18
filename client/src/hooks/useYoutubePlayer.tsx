@@ -220,10 +220,10 @@ export function useYoutubePlayer({
     if (!containerRef.current) return;
     if (document.fullscreenElement) {
       document.exitFullscreen();
-      try { if (screen.orientation && (screen.orientation as any).unlock) (screen.orientation as any).unlock(); } catch {}
+      try { if (screen.orientation && (screen.orientation as any).unlock) (screen.orientation as any).unlock(); } catch { /* intentional — screen orientation unlock may not be supported by browser */ }
     } else {
       containerRef.current.requestFullscreen?.().then(() => {
-        try { if (screen.orientation && (screen.orientation as any).lock) (screen.orientation as any).lock("landscape").catch(() => {}); } catch {}
+        try { if (screen.orientation && (screen.orientation as any).lock) (screen.orientation as any).lock("landscape").catch(() => {}); } catch { /* intentional — screen orientation lock may not be supported */ }
       });
     }
   }, []);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle, XCircle, Loader2, RefreshCw, Trophy, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,14 +27,14 @@ export function DisputePanel() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(id,full_name,avatar_url), player2:players!player2_id(id,full_name,avatar_url), partner1:players!team1_partner_id(id,full_name,avatar_url), partner2:players!team2_partner_id(id,full_name,avatar_url)")
-      .eq("status", "disputed")
-      .order("created_at", { ascending: false });
-    if (!error && data) setMatches(data as any);
-    else if (error) toast.error("Failed to load disputes");
-    setLoading(false);
+    try {
+      const data = await adminService.fetchDisputes();
+      setMatches(data as any);
+    } catch {
+      toast.error("Failed to load disputes");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -42,14 +42,11 @@ export function DisputePanel() {
   const resolve = async (matchId: string, action: "uphold" | "override", newWinnerId?: string) => {
     setProcessing(matchId);
     try {
+      await adminService.resolveDispute(matchId, action, newWinnerId);
       if (action === "uphold") {
-        const { error } = await supabase.from("matches").update({ status: "confirmed", dispute_reason: null } as any).eq("id", matchId);
-        if (error) throw error;
         await logAction(`Upheld disputed match ${matchId}`);
         toast.success("Match upheld — result stands");
       } else if (action === "override" && newWinnerId) {
-        const { error } = await supabase.from("matches").update({ status: "confirmed", winner_id: newWinnerId, dispute_reason: null } as any).eq("id", matchId);
-        if (error) throw error;
         await logAction(`Overrode winner on match ${matchId} → player ${newWinnerId}`);
         toast.success("Winner overridden — match confirmed");
       }
@@ -63,7 +60,7 @@ export function DisputePanel() {
 
   const logAction = async (action: string) => {
     const email = session?.user?.email || "admin";
-    await supabase.from("admin_logs").insert({ admin_email: email, action, created_at: new Date().toISOString() }).then(() => {});
+    await adminService.logAction(action, undefined, email);
   };
 
   if (loading) return (

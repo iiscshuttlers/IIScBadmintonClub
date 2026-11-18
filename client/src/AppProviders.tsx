@@ -35,7 +35,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
           OS "reduce motion" setting — disables transform/layout animation while
           keeping opacity fades. Complements the CSS net in index.css. (#34) */}
       <MotionConfig reducedMotion="user">
-      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister,
+          // Bumped when cached shapes change for privacy reasons: discards
+          // caches written before player contact details were restricted.
+          buster: "player-contact-privacy-1",
+          dehydrateOptions: {
+            // Queries holding private data opt out with meta: { persist: false }.
+            // Same as the library default (successful queries) plus the opt-out.
+            shouldDehydrateQuery: (q) => q.meta?.persist !== false && q.state.status === "success",
+          },
+        }}
+      >
         <AuthProvider>
           <AppUpdateProvider>
             <AppModeProvider>

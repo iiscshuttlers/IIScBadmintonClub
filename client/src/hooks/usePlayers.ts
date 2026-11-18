@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { playerService } from "@/services/playerService";
+import { withAdminPrivate } from "@/services/playerPrivateService";
 
 export function usePlayers() {
   return useQuery({
@@ -7,6 +8,20 @@ export function usePlayers() {
     queryFn: () => playerService.getAllPlayers(),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+}
+
+/**
+ * Player directory plus contact details for site administrators (admin RPC).
+ * Not persisted to browser storage.
+ */
+export function useAdminPlayers() {
+  return useQuery({
+    queryKey: ["players", "directory", "admin-private"],
+    queryFn: async () => withAdminPrivate(await playerService.getAllPlayers()),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    meta: { persist: false },
   });
 }
 

@@ -103,7 +103,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
               if (parsed && typeof parsed.wins === "number" && typeof parsed.losses === "number") {
                 return `${parsed.wins}W - ${parsed.losses}L`;
               }
-            } catch {}
+            } catch { /* intentional — best-effort parse of JSON record with string fallback */ }
             return String(record);
           })();
 
@@ -119,7 +119,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
       if (parsed && typeof parsed.wins === "number" && typeof parsed.losses === "number") {
         return `${parsed.wins}W - ${parsed.losses}L`;
       }
-    } catch {}
+    } catch { /* intentional — best-effort parse of JSON record with string fallback */ }
     return String(record);
   };
 

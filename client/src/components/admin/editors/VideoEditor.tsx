@@ -209,7 +209,7 @@ export function VideoEditor({
                        toast.error("Clipboard does not contain valid score data array.");
                     }
                   } catch(e) { toast.error("No valid JSON found in clipboard"); }
-               }} className="text-xs font-bold px-4 py-2 rounded-xl bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/80/60 transition shadow-sm">
+               }} className="text-xs font-bold px-4 py-2 rounded-xl bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/50 transition shadow-sm">
                  Paste from Clipboard
                </button>
                {v.scoreLogs && v.scoreLogs.length > 0 && (

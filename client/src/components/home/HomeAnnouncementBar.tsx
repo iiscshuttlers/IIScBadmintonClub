@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { feedService } from "@/services/feedService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Bell, ExternalLink, Calendar, ChevronLeft, ChevronRight,
@@ -84,7 +84,11 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
     // Load dismissed keys from localStorage
     const stored = localStorage.getItem("home_banner_dismissed");
     if (stored) {
-      try { setDismissed(new Set(JSON.parse(stored))); } catch {}
+      try {
+        setDismissed(new Set(JSON.parse(stored)));
+      } catch {
+        /* intentional — fallback to empty dismissed set if localStorage data is corrupt */
+      }
     }
 
     // Helper to process all data into banners
@@ -168,24 +172,16 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
     };
 
     // Fetch active banners and noticeboard items
-    supabase
-      .from("site_data")
-      .select("key, value")
-      .in("key", ["home_banners", "announcements", "events", "flyers"])
-      .then(({ data }) => {
-        if (data) processData(data);
-      });
+    feedService.fetchHomeBannersData().then((data) => {
+      if (data) processData(data);
+    });
 
     // Realtime
-    const ch = supabase.channel("home_banners_rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=in.(home_banners,announcements,events,flyers)" }, async () => {
-        // Refetch all to process correctly (easier than maintaining state patches for 4 keys)
-        const { data } = await supabase.from("site_data").select("key, value").in("key", ["home_banners", "announcements", "events", "flyers"]);
-        if (data) processData(data);
-      })
-      .subscribe();
+    const unsubscribe = feedService.subscribeToHomeBanners((data) => {
+      if (data) processData(data);
+    });
 
-    return () => { supabase.removeChannel(ch); };
+    return () => { unsubscribe(); };
   }, []);
 
   const handleDismiss = (banner: HomeBanner) => {

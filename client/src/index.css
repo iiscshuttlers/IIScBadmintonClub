@@ -430,6 +430,16 @@ html {
     -webkit-user-select: none;
   }
 
+  /* Ensure option tags inside selects are readable across OS and themes */
+  select option {
+    background-color: #ffffff;
+    color: #0c0d10;
+  }
+  .dark select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+
   /* Completely hide web scrollbars for a native app feel */
   ::-webkit-scrollbar {
     display: none;
