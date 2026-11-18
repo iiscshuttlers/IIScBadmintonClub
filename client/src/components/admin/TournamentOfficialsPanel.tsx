@@ -139,7 +139,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
           <div>
             <h3 className="text-base font-black text-slate-800 dark:text-foreground">Officials</h3>
             <p className="text-xs text-muted-foreground">
-              The organiser ({"created you"}) is set automatically. Assign umpires and referees for this tournament.
+              Whoever creates the tournament is its organiser. Add umpires and referees here.
             </p>
           </div>
         </div>

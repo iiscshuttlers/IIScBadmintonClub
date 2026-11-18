@@ -7,10 +7,14 @@ import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { ClickableTeamName } from '@/contexts/TeamModalContext';
 
-export function TeamTournamentManager({ tournamentId }: { tournamentId: string }) {
+/**
+ * Team setup + tie list. The Tournament Manager now shows teams on its Teams
+ * tab, so it mounts this with view="fixtures" to show only the tie list.
+ */
+export function TeamTournamentManager({ tournamentId, view = "all" }: { tournamentId: string; view?: "all" | "fixtures" }) {
   const { confirm } = useConfirm();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'teams' | 'fixtures'>('teams');
+  const [activeTab, setActiveTab] = useState<'teams' | 'fixtures'>(view === 'fixtures' ? 'fixtures' : 'teams');
 
   // New Team Form State
   const [newTeamName, setNewTeamName] = useState('');
@@ -208,6 +212,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
   return (
     <div className="space-y-6">
       {/* Tabs */}
+      {view === 'all' && (
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button 
           onClick={() => setActiveTab('teams')}
@@ -232,6 +237,7 @@ export function TeamTournamentManager({ tournamentId }: { tournamentId: string }
           <span>Tie Fixtures</span>
         </button>
       </div>
+      )}
 
       {activeTab === 'teams' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

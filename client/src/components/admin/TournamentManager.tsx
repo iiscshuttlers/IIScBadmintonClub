@@ -3,10 +3,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
-import {
-  Loader2, Trophy, Users, Swords, Archive, Settings2,
-  CalendarDays, FileText, ShieldCheck, ClipboardList, CalendarClock, Gauge
-} from "lucide-react";
+import { Loader2, Trophy, Users, Swords, Settings2, CalendarDays, FileText, CalendarClock } from "lucide-react";
 import { cloneTournament } from "@/lib/cloneTournament";
 import { OverflowTabs } from "@/components/tournament/OverflowTabs";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
@@ -21,17 +18,15 @@ import { TournamentNotificationsTab } from "./TournamentNotificationsTab";
 import { TeamBracketTab } from "./TeamBracketTab";
 import { TeamsTab } from "./TeamsTab";
 import { TeamTournamentManager } from "./TeamTournamentManager";
-import { ScoringRulesPanel } from "@/components/tournament/ScoringRulesPanel";
-import { TournamentOfficialsPanel } from "./TournamentOfficialsPanel";
 import { TournamentRegistrationsPanel } from "./TournamentRegistrationsPanel";
 import { TournamentReportPanel } from "./TournamentReportPanel";
 import { TournamentArchiveTab } from "./TournamentArchiveTab";
 import { TournamentParticipantsTab } from "./TournamentParticipantsTab";
+import { CollapsibleSection } from "@/components/ui/CollapsibleSection";
 
 // Service & types
 import {
   fetchTournaments,
-  createTournament as createTournamentApi,
   updateTournament as updateTournamentApi,
   deleteTournament as deleteTournamentApi,
 } from "@/services/tournamentService";
@@ -39,25 +34,43 @@ import type { Tournament } from "@/types/tournament";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
 
-const SUB_TABS = [
-  "setup", "participants", "teams", "fixtures", "bracket",
-  "schedule", "rules", "officials", "registrations", "report", "archive"
-] as const;
+/** Five tabs, in the order an organiser works through them. */
+const SUB_TABS = ["setup", "entries", "draw", "schedule", "wrapup"] as const;
 type SubTab = typeof SUB_TABS[number];
+export type SetupSection = "team" | "rules" | "officials" | "more";
 
-const getHashSubTab = (): SubTab => {
+/**
+ * Tab ids from before the merge still arrive through saved links, admin
+ * action cards (?tab=officials) and readiness "fix" buttons. Map each one to
+ * the tab (and Setup section) that now holds it.
+ */
+const LEGACY_TABS: Record<string, { tab: SubTab; section?: SetupSection }> = {
+  participants: { tab: "entries" },
+  teams: { tab: "entries" },
+  registrations: { tab: "entries" },
+  bracket: { tab: "draw" },
+  fixtures: { tab: "draw" },
+  matches: { tab: "schedule" },
+  rules: { tab: "setup", section: "rules" },
+  officials: { tab: "setup", section: "officials" },
+  report: { tab: "wrapup" },
+  archive: { tab: "wrapup" },
+};
+
+function resolveTab(raw: string | null | undefined): { tab: SubTab; section?: SetupSection } | null {
+  if (!raw) return null;
+  if ((SUB_TABS as readonly string[]).includes(raw)) return { tab: raw as SubTab };
+  return LEGACY_TABS[raw] ?? null;
+}
+
+const readLocationTab = (): { tab: SubTab; section?: SetupSection } => {
   try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramTab = urlParams.get("tab") as SubTab;
-    if (paramTab && (SUB_TABS as readonly string[]).includes(paramTab)) return paramTab;
+    const fromQuery = resolveTab(new URLSearchParams(window.location.search).get("tab"));
+    if (fromQuery) return fromQuery;
   } catch {
     /* ignore */
   }
-
-  const hash = window.location.hash.replace("#", "");
-  const parts = hash.split("/");
-  const sub = parts[1] as SubTab;
-  return SUB_TABS.includes(sub) ? sub : "setup";
+  return resolveTab(window.location.hash.replace("#", "").split("/")[1]) ?? { tab: "setup" };
 };
 
 export function TournamentManager() {
@@ -67,16 +80,26 @@ export function TournamentManager() {
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selected, setSelected] = useState<Tournament | null>(null);
-  const [activeTab, setActiveTab] = useState<SubTab>(getHashSubTab);
+  const [activeTab, setActiveTab] = useState<SubTab>(() => readLocationTab().tab);
+  const [focusSection, setFocusSection] = useState<SetupSection | undefined>(() => readLocationTab().section);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showNotify, setShowNotify] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "deleted" | "archived">("active");
 
-  const setTab = (tab: SubTab) => {
-    setActiveTab(tab);
+  /** Accepts current ids and the old ones (see LEGACY_TABS). */
+  const setTab = (raw: string) => {
+    const target = resolveTab(raw) ?? { tab: "setup" as SubTab };
+    setActiveTab(target.tab);
+    setFocusSection(target.section);
+    // A ?tab= deep link would otherwise win over the hash on the next read.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("tab")) {
+      url.searchParams.delete("tab");
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
     const hash = window.location.hash.replace("#", "").split("/")[0];
-    window.location.hash = `${hash}/${tab}`;
+    window.location.hash = `${hash}/${target.tab}`;
   };
 
   const loadTournaments = useCallback(async (isInitial = false) => {
@@ -136,7 +159,11 @@ export function TournamentManager() {
   }, [selected?.id]);
 
   useEffect(() => {
-    const onHashChange = () => setActiveTab(getHashSubTab());
+    const onHashChange = () => {
+      const target = readLocationTab();
+      setActiveTab(target.tab);
+      setFocusSection(target.section);
+    };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
@@ -197,26 +224,6 @@ export function TournamentManager() {
     }
   };
 
-  const handleCreateTournament = async (formatFamily: "OPEN_EVENT" | "TEAM") => {
-    setCreating(true);
-    try {
-      const created = await createTournamentApi({
-        name: "New Tournament",
-        created_by: session?.user?.id,
-        year: new Date().getFullYear(),
-        format_family: formatFamily,
-      });
-      toast.success("Tournament created");
-      await loadTournaments(false);
-      setSelected(created);
-      setTab("setup");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setCreating(false);
-    }
-  };
-
   const handleClone = async () => {
     if (!selected) return;
     const ok = await confirm({
@@ -240,6 +247,8 @@ export function TournamentManager() {
       setCreating(false);
     }
   };
+
+  const isTeam = selected?.format_family === "TEAM";
 
   if (loading) {
     return (
@@ -265,7 +274,6 @@ export function TournamentManager() {
           url.searchParams.set("id", t.id);
           window.history.replaceState({}, "", url.toString());
         }}
-        onCreateTournament={handleCreateTournament}
         onCloneTournament={handleClone}
         onRestoreTournament={restoreTournament}
         onPermanentlyDelete={permanentlyDelete}
@@ -275,36 +283,17 @@ export function TournamentManager() {
 
       {selected && (
         <>
-          {/* Navigation Tabs */}
           <OverflowTabs
             activeId={activeTab}
-            onChange={(id) => setTab(id as SubTab)}
+            onChange={setTab}
             activeClassName={`${getTournamentTheme(selected).tokens.bg} text-white shadow-md`}
-            tabs={(selected?.format_family === "TEAM"
-              ? [
-                  { id: "setup", label: "Setup", icon: Settings2 },
-                  { id: "teams", label: "Teams", icon: Users },
-                  { id: "fixtures", label: "Schedule Tie", icon: CalendarDays },
-                  { id: "bracket", label: "Bracket & Pools", icon: Swords },
-                  { id: "schedule", label: "Order of Play", icon: CalendarClock },
-                  { id: "rules", label: "Scoring Rules", icon: Gauge },
-                  { id: "officials", label: "Officials", icon: ShieldCheck },
-                  ...(selected?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
-                  { id: "report", label: "Report", icon: FileText },
-                  { id: "archive", label: "Archive", icon: Archive }
-                ]
-              : [
-                  { id: "setup", label: "Setup", icon: Settings2 },
-                  { id: "participants", label: "Participants", icon: Users },
-                  { id: "bracket", label: "Bracket", icon: Swords },
-                  { id: "schedule", label: "Order of Play", icon: CalendarClock },
-                  { id: "rules", label: "Scoring Rules", icon: Gauge },
-                  { id: "officials", label: "Officials", icon: ShieldCheck },
-                  ...(selected?.require_app_registration ? [{ id: "registrations", label: "Registrations", icon: ClipboardList }] : []),
-                  { id: "report", label: "Report", icon: FileText },
-                  { id: "archive", label: "Archive", icon: Archive }
-                ]
-            ).map((tab) => {
+            tabs={[
+              { id: "setup", label: "Setup", icon: Settings2 },
+              { id: "entries", label: isTeam ? "Teams" : "Players", icon: Users },
+              { id: "draw", label: "Draw", icon: Swords },
+              { id: "schedule", label: "Schedule", icon: CalendarClock },
+              { id: "wrapup", label: "Wrap-up", icon: FileText },
+            ].map((tab) => {
               const IconComp = tab.icon;
               return { id: tab.id, label: tab.label, icon: <IconComp className="w-4 h-4 shrink-0" /> };
             })}
@@ -320,28 +309,43 @@ export function TournamentManager() {
                 }}
                 isMasterAdmin={isMainAdmin}
                 onDelete={() => { setSelected(null); loadTournaments(false); }}
-                onGoArchive={() => setTab("archive")}
-                onNavigateTab={(tab) => setTab(tab as SubTab)}
+                onGoArchive={() => setTab("wrapup")}
+                onNavigateTab={setTab}
+                focusSection={focusSection}
               />
             )}
-            {activeTab === "participants" && <TournamentParticipantsTab tournament={selected} />}
-            {activeTab === "teams" && <TeamsTab tournament={selected} />}
-            {activeTab === "fixtures" && selected?.format_family === "TEAM" && (
-              <TeamTournamentManager tournamentId={selected.id} />
+
+            {activeTab === "entries" && (
+              <>
+                {selected.require_app_registration && <TournamentRegistrationsPanel tournament={selected} />}
+                {isTeam ? <TeamsTab tournament={selected} /> : <TournamentParticipantsTab tournament={selected} />}
+              </>
             )}
-            {activeTab === "bracket" && selected?.format_family === "TEAM" && (
-              <TeamBracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
-            )}
-            {activeTab === "bracket" && selected?.format_family !== "TEAM" && (
+
+            {activeTab === "draw" && !isTeam && (
               <TournamentBracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
             )}
+            {activeTab === "draw" && isTeam && (
+              <>
+                <TeamBracketTab tournament={selected} isMasterAdmin={isMainAdmin} />
+                <CollapsibleSection
+                  bare
+                  title="All ties"
+                  summary="Add a tie by hand, reschedule or resolve one"
+                  icon={<CalendarDays />}
+                >
+                  <TeamTournamentManager tournamentId={selected.id} view="fixtures" />
+                </CollapsibleSection>
+              </>
+            )}
+
             {activeTab === "schedule" && <TournamentOrderOfPlayTab tournament={selected} />}
-            {activeTab === "rules" && <ScoringRulesPanel tournament={selected as any} />}
-            {activeTab === "officials" && <TournamentOfficialsPanel tournament={selected} />}
-            {activeTab === "registrations" && <TournamentRegistrationsPanel tournament={selected} />}
-            {activeTab === "report" && <TournamentReportPanel tournament={selected as any} />}
-            {activeTab === "archive" && (
-              <TournamentArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
+
+            {activeTab === "wrapup" && (
+              <>
+                <TournamentReportPanel tournament={selected as any} />
+                <TournamentArchiveTab tournament={selected} isMasterAdmin={isMainAdmin} onArchived={() => loadTournaments(false)} />
+              </>
             )}
           </ThemeScope>
 
@@ -358,7 +362,7 @@ export function TournamentManager() {
       {!selected && !loading && (
         <div className={`${cardCls} text-center py-10`}>
           <Trophy className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-bold">No tournaments yet. Create one above.</p>
+          <p className="text-muted-foreground font-bold">No tournaments yet. Use New above to create one.</p>
         </div>
       )}
     </div>

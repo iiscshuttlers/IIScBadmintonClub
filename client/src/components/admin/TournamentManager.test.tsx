@@ -50,6 +50,10 @@ vi.mock('@/components/admin/TournamentBracketTab', () => ({
   ),
 }));
 
+vi.mock('@/components/admin/TournamentRegistrationsPanel', () => ({
+  TournamentRegistrationsPanel: () => <div data-testid="tournament-registrations-panel" />,
+}));
+
 vi.mock('@/components/admin/TournamentParticipantsTab', () => ({
   TournamentParticipantsTab: () => (
     <div data-testid="tournament-participants-tab">Participants Tab Content</div>
@@ -97,7 +101,7 @@ describe('TournamentManager', () => {
     expect(screen.getByTestId('tournament-settings-tab')).toBeInTheDocument();
   });
 
-  it('switches to Bracket tab on clicking Bracket', async () => {
+  it('switches to the Draw tab (bracket) on clicking Draw', async () => {
     vi.mocked(tournamentService.fetchTournaments).mockResolvedValue(mockTournaments as any);
     const wrapper = createWrapper();
 
@@ -105,13 +109,13 @@ describe('TournamentManager', () => {
 
     expect(await screen.findByText('IISc Open 2026')).toBeInTheDocument();
 
-    const bracketTab = await screen.findByRole('tab', { name: /bracket/i });
+    const bracketTab = await screen.findByRole('tab', { name: /draw/i });
     fireEvent.click(bracketTab);
 
     expect(screen.getByTestId('tournament-bracket-tab')).toBeInTheDocument();
   });
 
-  it('switches to Participants tab on clicking Participants', async () => {
+  it('switches to the Players tab (participants) on clicking Players', async () => {
     vi.mocked(tournamentService.fetchTournaments).mockResolvedValue(mockTournaments as any);
     const wrapper = createWrapper();
 
@@ -119,7 +123,7 @@ describe('TournamentManager', () => {
 
     expect(await screen.findByText('IISc Open 2026')).toBeInTheDocument();
 
-    const participantsTab = await screen.findByRole('tab', { name: /participants/i });
+    const participantsTab = await screen.findByRole('tab', { name: /players/i });
     fireEvent.click(participantsTab);
 
     expect(screen.getByTestId('tournament-participants-tab')).toBeInTheDocument();
@@ -132,7 +136,23 @@ describe('TournamentManager', () => {
     render(<TournamentManager />, { wrapper });
 
     expect(
-      await screen.findByText('No tournaments yet. Create one above.')
+      await screen.findByText('No tournaments yet. Use New above to create one.')
     ).toBeInTheDocument();
+  });
+
+  it('opens the tab an old deep link points at', async () => {
+    window.history.replaceState({}, '', '/tournament-admin?tab=participants');
+    vi.mocked(tournamentService.fetchTournaments).mockResolvedValue(mockTournaments as any);
+    render(<TournamentManager />, { wrapper: createWrapper() });
+    expect(await screen.findByTestId('tournament-participants-tab')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /players/i })).toHaveAttribute('aria-selected', 'true');
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('shows five tabs', async () => {
+    vi.mocked(tournamentService.fetchTournaments).mockResolvedValue(mockTournaments as any);
+    render(<TournamentManager />, { wrapper: createWrapper() });
+    await screen.findByText('IISc Open 2026');
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Setup', 'Players', 'Draw', 'Schedule', 'Wrap-up']);
   });
 });

@@ -427,12 +427,8 @@ export default function HostTournamentWizard() {
         });
       }
 
-      toast.success("Tournament created successfully!");
-      if (data?.id) {
-        navigate(`/tournament-setup/${data.id}`);
-      } else {
-        navigate('/admin');
-      }
+      toast.success("Tournament created as a draft");
+      navigate(data?.id ? `/tournament-admin?id=${data.id}` : '/tournament-admin');
       
     } catch (error: any) {
       console.error(error);
@@ -469,7 +465,7 @@ export default function HostTournamentWizard() {
             <span className={step >= 1 ? "text-primary font-black" : ""}>1. Details</span>
             <span className={step >= 2 ? "text-primary font-black text-center" : "text-center"}>2. Rules</span>
             <span className={step >= 3 ? "text-primary font-black text-center" : "text-center"}>3. Roster</span>
-            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Publish</span>
+            <span className={step >= 4 ? "text-primary font-black text-right" : "text-right"}>4. Review</span>
           </div>
         </div>
 
@@ -734,8 +730,8 @@ export default function HostTournamentWizard() {
               <PageTransition key="step4">
                 <div className="text-center mb-8">
                   <CheckCircle2 className="w-16 h-16 text-[var(--success)] mx-auto mb-4" />
-                  <h2 className="text-2xl font-black mb-2">Ready to Go Live</h2>
-                  <p className="text-slate-500">Review your tournament settings before publishing.</p>
+                  <h2 className="text-2xl font-black mb-2">Looks good?</h2>
+                  <p className="text-slate-500">It starts as a draft that only admins can see. You'll go live from the Tournament Manager when you're ready.</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
@@ -781,7 +777,7 @@ export default function HostTournamentWizard() {
               className="gap-2 px-8 py-3 font-black shadow-lg shadow-primary/30"
             >
               {isPublishing ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-              {step === 4 ? 'Publish' : 'Continue'} 
+              {step === 4 ? 'Create tournament' : 'Continue'} 
               {step !== 4 && <ChevronRight className="w-5 h-5" />}
             </Button>
           </div>

@@ -276,9 +276,9 @@ export default function TournamentSetupChecklist() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
       <PageHeader
-        backTo="/tournaments"
-        backLabel="Tournaments"
-        badge="Lifecycle Readiness"
+        backTo={`/tournament-admin?id=${tournamentId}`}
+        backLabel="Tournament Manager"
+        badge="Launch checklist"
         badgeIcon={<Sparkles className="w-3.5 h-3.5 text-primary" />}
         title={tournament?.name || 'Tournament Launch Checklist'}
         subtitle={`${isTeam ? 'Team Tournament' : 'Open Knockout Tournament'} · ${tournament?.venue || 'Campus Badminton Courts'} · Status: ${tournament?.status ?? 'draft'}`}

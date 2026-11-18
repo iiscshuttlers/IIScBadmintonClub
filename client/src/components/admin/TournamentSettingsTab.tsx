@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { toast } from "sonner";
 import { tournamentService } from "@/services/tournamentService";
 import { adminService } from "@/services/adminService";
@@ -6,16 +7,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import {
-  Save, Trash2, Check, ChevronRight, Undo2, Users, GripVertical, AlertCircle, Loader2, ClipboardList, Bell, Clock, ShieldCheck, ShieldAlert, X, AlertTriangle
+  Save, Trash2, Check, ChevronRight, Undo2, Users, GripVertical, Loader2, ClipboardList, Bell, Clock, ShieldCheck, ShieldAlert, X, AlertTriangle,
+  ListChecks, Gauge, Settings2
 } from "lucide-react";
+import { ScoringRulesPanel } from "@/components/tournament/ScoringRulesPanel";
+import { TournamentOfficialsPanel } from "./TournamentOfficialsPanel";
+import { CollapsibleSection } from "@/components/ui/CollapsibleSection";
 import { calculateMinRosterRequirements } from "@/lib/teamLineupRules";
 import type { Tournament } from "@/types/tournament";
-import type { LifecycleAction, LifecycleReadinessReport } from "@/lib/tournamentReadiness";
+import type { LifecycleReadinessReport } from "@/lib/tournamentReadiness";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
 const CATEGORIES = ["MS", "WS", "MD", "WD", "XD"];
+
+/** Readiness checks name the old tab ids; label them by where they live now. */
+const FIX_LABEL: Record<string, string> = {
+  setup: "Setup",
+  participants: "Players",
+  teams: "Teams",
+  bracket: "Draw",
+  fixtures: "Draw",
+  rules: "Scoring rules",
+  schedule: "Schedule",
+  officials: "Officials",
+};
 
 const toLocalDatetimeStr = (isoStr: string | null) => {
   if (!isoStr) return "";
@@ -32,6 +49,8 @@ export interface TournamentSettingsTabProps {
   isMasterAdmin: boolean;
   onDelete?: () => void;
   onNavigateTab?: (tab: string) => void;
+  /** open and scroll to one of the collapsed sections (deep links, readiness fixes) */
+  focusSection?: "team" | "rules" | "officials" | "more";
 }
 
 export function TournamentSettingsTab({
@@ -41,19 +60,20 @@ export function TournamentSettingsTab({
   onDelete,
   onGoArchive,
   onNavigateTab,
+  focusSection,
 }: TournamentSettingsTabProps) {
   const [form, setForm] = useState<Tournament>({ ...tournament });
   const [saving, setSaving] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [readinessReport, setReadinessReport] = useState<LifecycleReadinessReport | null>(null);
   const [readinessModalOpen, setReadinessModalOpen] = useState(false);
-  const [verifyingReadiness, setVerifyingReadiness] = useState(false);
   const { session } = useAuth();
   const { recordAction } = useAdminHistory();
   const { confirm } = useConfirm();
 
   const [draggedRubberIndex, setDraggedRubberIndex] = useState<number | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => { setForm({ ...tournament }); }, [tournament.id]);
@@ -78,6 +98,7 @@ export function TournamentSettingsTab({
   const save = async (isAutosave = false) => {
     if (form.start_date && form.end_date) {
       if (new Date(form.start_date) > new Date(form.end_date)) {
+        setSaveError("Start date is after the end date");
         if (!isAutosave) toast.error("Start date cannot be after the end date.");
         return;
       }
@@ -106,32 +127,19 @@ export function TournamentSettingsTab({
         toast.success("Saved");
       }
       setIsDirty(false);
+      setSaveError(null);
       onSaved(data as Tournament);
       setSaving(false);
     } catch (err: any) {
+      setSaveError("Couldn't save");
       if (!isAutosave) toast.error(err.message || "Could not save tournament");
       setSaving(false);
       return;
     }
   };
 
-  const checkReadiness = async (action: LifecycleAction = "start_play") => {
-    setVerifyingReadiness(true);
-    try {
-      const report = await tournamentService.verifyTournamentReadiness(tournament.id, action);
-      setReadinessReport(report);
-      setReadinessModalOpen(true);
-      return report;
-    } catch (err: any) {
-      toast.error(err.message || "Failed to verify tournament readiness");
-      return null;
-    } finally {
-      setVerifyingReadiness(false);
-    }
-  };
-
   const transition = async (newStatus: string) => {
-    const statusLabel = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    const statusLabel = newStatus === "active" ? "Live" : newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
 
     if (newStatus === "active") {
       setTransitioning(true);
@@ -200,17 +208,18 @@ export function TournamentSettingsTab({
     setTransitioning(false);
   };
 
-  const deleteDraft = async () => {
-    if (form.status !== "draft") return;
+  const trashTournament = async () => {
+    const live = form.status === "active";
     const ok = await confirm({
-      title: "Trash Draft Tournament",
-      description: "Are you sure you want to send this draft tournament to the trash?",
-      confirmLabel: "Send to Trash",
+      title: "Move to trash?",
+      description: live
+        ? `"${form.name}" is live. Players will stop seeing it. You can restore it from Trash in the ⋯ menu.`
+        : `You can restore "${form.name}" from Trash in the ⋯ menu.`,
+      confirmLabel: "Move to trash",
       confirmVariant: "danger",
     });
     if (!ok) return;
     setSaving(true);
-    const afterState = { ...tournament, status: "deleted" };
     try {
       await tournamentService.updateTournament(tournament.id, { status: "deleted" });
     } catch (err: any) {
@@ -218,19 +227,17 @@ export function TournamentSettingsTab({
       setSaving(false);
       return;
     }
-    
     await recordAction({
       action_type: "update",
       entity_type: "tournaments",
       entity_id: tournament.id,
       before_state: tournament,
-      after_state: afterState,
-      label: `Sent draft tournament "${form.name}" to Trash`,
+      after_state: { ...tournament, status: "deleted" },
+      label: `Sent tournament "${form.name}" to Trash`,
     });
-    
-    toast.success("Tournament sent to Trash");
-    if (onDelete) onDelete();
+    toast.success("Moved to trash");
     setSaving(false);
+    onDelete?.();
   };
 
   const autoLabelRubbers = (config: any[]) => {
@@ -319,14 +326,17 @@ export function TournamentSettingsTab({
     setDraggedRubberIndex(null);
   };
 
+  const rubbers = getRubbersList(form.tie_format_config);
+  const isTeam = form.format_family === "TEAM";
+
   return (
     <div className="space-y-5">
-      {/* Status lifecycle: Draft → Active → Completed → Archived */}
+      {/* Status: Draft → Live → Completed → Archived */}
       <div className={cardCls}>
         {(() => {
           const STEPS = [
             { key: "draft", label: "Draft", hint: "Only admins can see it" },
-            { key: "active", label: "Active", hint: "Live for players" },
+            { key: "active", label: "Live", hint: "Visible to players" },
             { key: "completed", label: "Completed", hint: "Results final" },
             { key: "archived", label: "Archived", hint: "Saved to Legacy" },
           ];
@@ -356,7 +366,7 @@ export function TournamentSettingsTab({
                     <button onClick={goNext} disabled={transitioning}
                       className="px-4 py-2 text-sm font-black rounded-xl bg-primary text-primary-foreground disabled:opacity-50 inline-flex items-center gap-1.5 transition">
                       {transitioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                      {next.key === "active" ? "Activate" : next.key === "completed" ? "Mark completed" : "Archive to Legacy"}
+                      {next.key === "active" ? "Go live" : next.key === "completed" ? "Mark completed" : "Archive to Legacy"}
                     </button>
                   )}
                   {prev && (
@@ -366,15 +376,15 @@ export function TournamentSettingsTab({
                     </button>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => checkReadiness("start_play")}
-                  disabled={verifyingReadiness}
-                  className="px-3.5 py-2 text-xs font-bold rounded-xl border border-border bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-primary disabled:opacity-50 inline-flex items-center gap-1.5 transition shadow-sm"
-                >
-                  {verifyingReadiness ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
-                  Check Live Readiness
-                </button>
+                {form.status === "draft" && (
+                  <Link
+                    href={`/tournament-setup/${tournament.id}`}
+                    className="px-3.5 py-2 text-xs font-bold rounded-xl border border-border text-slate-700 dark:text-slate-200 hover:border-primary inline-flex items-center gap-1.5 transition"
+                  >
+                    <ListChecks className="w-3.5 h-3.5 text-primary" />
+                    What's left before going live?
+                  </Link>
+                )}
               </div>
             </>
           );
@@ -439,7 +449,7 @@ export function TournamentSettingsTab({
                           }}
                           className="shrink-0 px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary text-slate-900 dark:text-slate-100 transition shadow-sm"
                         >
-                          Fix in {b.fix_tab.charAt(0).toUpperCase() + b.fix_tab.slice(1)}
+                          Fix in {FIX_LABEL[b.fix_tab] ?? b.fix_tab}
                         </button>
                       )}
                     </div>
@@ -496,136 +506,125 @@ export function TournamentSettingsTab({
         </div>
       )}
 
-      {/* Public Visibility */}
+      {/* Basics */}
       <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Public Visibility</h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          Control which tabs are visible to players on the public Pulse page.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-6">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={!!form.show_participants}
-              onChange={(e) => upd("show_participants", e.target.checked)}
-              className="w-5 h-5 accent-primary rounded border-slate-300"
-            />
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show Participants Tab</span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={!!form.show_brackets}
-              onChange={(e) => upd("show_brackets", e.target.checked)}
-              className="w-5 h-5 accent-primary rounded border-slate-300"
-            />
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show Brackets Tab</span>
-          </label>
+        <div className="flex items-baseline justify-between gap-2 mb-4">
+          <h3 className="font-black text-slate-800 dark:text-foreground">Basics</h3>
+          <span className="text-xs text-muted-foreground">{isTeam ? "Team event" : "Open event"}</span>
         </div>
-      </div>
-
-      {/* Details */}
-      <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Details</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className={labelCls}>Tournament Name</label>
+            <label className={labelCls}>Tournament name</label>
             <input value={form.name} onChange={(e) => upd("name", e.target.value)} className={inputCls} placeholder="e.g. INVICTA 2026" />
           </div>
-          <div>
-            <label className={labelCls}>Visibility Type</label>
-            <select value={form.tournament_type} onChange={(e) => upd("tournament_type", e.target.value)} className={inputCls}>
-              <option value="open">Open (Public)</option>
-              <option value="invitational">Invitational</option>
-              <option value="internal">Internal Only</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>Format Family</label>
-            <div className="flex items-center h-10 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400">
-              {form.format_family === 'TEAM' ? 'Team Event (Ties/Rubbers)' : 'Open Event (Individual)'}
-            </div>
-          </div>
-          <div>
+          <div className="sm:col-span-2">
             <label className={labelCls}>Venue</label>
             <input value={form.venue ?? ""} onChange={(e) => upd("venue", e.target.value)} className={inputCls} placeholder="Gymkhana Courts" />
           </div>
           <div>
-            <label className={labelCls}>Start Date</label>
+            <label className={labelCls}>Start date</label>
             <input type="date" value={form.start_date ?? ""} onChange={(e) => upd("start_date", e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>End / Finals Date</label>
+            <label className={labelCls}>End / finals date</label>
             <input type="date" value={form.end_date ?? ""} onChange={(e) => upd("end_date", e.target.value)} className={inputCls} />
           </div>
-          <div className="sm:col-span-2">
-            <label className={labelCls}>Categories</label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => {
-                const active = form.categories?.includes(cat);
-                return (
-                  <button key={cat} type="button"
-                    onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...form.categories, cat])}
-                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
-                    {cat}
-                  </button>
-                );
-              })}
+          {!isTeam && (
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Categories</label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => {
+                  const active = form.categories?.includes(cat);
+                  return (
+                    <button key={cat} type="button"
+                      onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...(form.categories ?? []), cat])}
+                      className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            {form.format_family === 'TEAM' && <p className="text-xs text-slate-500 mt-2">Team Events typically use all standard categories. These act as placeholders for the tie rubbers.</p>}
-          </div>
-
+          )}
           <div className="sm:col-span-2">
-            <label className={labelCls}>Event Rules</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={form.counts_for_elo ?? true}
-                  onChange={(e) => upd("counts_for_elo", e.target.checked)}
-                  className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
-                />
-                <div>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Count for ELO</span>
-                  <span className="text-xs text-muted-foreground block">Matches will update players' personal and category ELO. Uncheck for casual tournaments.</span>
-                </div>
-              </label>
-
-              {form.format_family === 'TEAM' && (
-                <>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={form.ignore_gender_rules ?? false}
-                      onChange={(e) => upd("ignore_gender_rules", e.target.checked)}
-                      className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
-                    />
-                    <div>
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Ignore Gender Rules</span>
-                      <span className="text-xs text-muted-foreground block">Allow any player to play any rubber (e.g. women in MS).</span>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={form.play_dead_rubbers ?? true}
-                      onChange={(e) => upd("play_dead_rubbers", e.target.checked)}
-                      className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
-                    />
-                    <div>
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Play Dead Rubbers</span>
-                      <span className="text-xs text-muted-foreground block">Play all remaining rubbers even if the tie is already won.</span>
-                    </div>
-                  </label>
-                </>
-              )}
-            </div>
+            <label className={labelCls}>Who can enter</label>
+            <input value={form.eligibility ?? ""} onChange={(e) => upd("eligibility", e.target.value)} className={inputCls} placeholder="All IISc Members" />
           </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Description</label>
+            <textarea value={form.description ?? ""} onChange={(e) => upd("description", e.target.value)} className={inputCls} rows={2} placeholder="Short blurb…" />
+          </div>
+        </div>
+      </div>
 
+      {/* Registration */}
+      <div className={cardCls}>
+        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">How players sign up</h3>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
+              <ClipboardList className="w-4 h-4 text-primary" /> Sign up in the app
+            </span>
+            <p className="text-xs text-muted-foreground">
+              Signed-in players register and pick categories here; you approve them on the {isTeam ? "Teams" : "Players"} tab.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!form.require_app_registration}
+            aria-label="Sign up in the app"
+            onClick={() => upd("require_app_registration", !form.require_app_registration)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${form.require_app_registration ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.require_app_registration ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {!form.require_app_registration && (
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Or link an external form</label>
+              <input type="url" value={form.form_url ?? ""} onChange={(e) => upd("form_url", e.target.value)} className={inputCls} placeholder="https://forms.office.com/…" />
+            </div>
+          )}
+          <div>
+            <label className={labelCls}>Sign-up status</label>
+            <select value={form.form_status} onChange={(e) => upd("form_status", e.target.value)} className={inputCls}>
+              <option value="open">Open</option>
+              <option value="closing_soon">Closing soon</option>
+              <option value="closed">Closed</option>
+              <option value="disabled">Hidden</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Closes on</label>
+            <input
+              type="datetime-local"
+              value={toLocalDatetimeStr(form.form_close_date)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) upd("form_close_date", "");
+                else upd("form_close_date", new Date(val).toISOString());
+              }}
+              className={inputCls}
+            />
+          </div>
+        </div>
+      </div>
+
+      {isTeam && (
+        <CollapsibleSection
+          title="Team format"
+          icon={<Users />}
+          summary={`${rubbers.length} rubber${rubbers.length === 1 ? "" : "s"} per tie`}
+          defaultOpen={rubbers.length === 0}
+          focus={focusSection === "team"}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {form.format_family === 'TEAM' && (
             <div className="sm:col-span-2">
-              <label className={labelCls}>Tie Format / Rubbers</label>
+              <label className={labelCls}>Rubbers in a tie</label>
               <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-3">Quickly add or remove rubbers to build the default order of play for a tie.</p>
                 
@@ -862,27 +861,103 @@ export function TournamentSettingsTab({
             );
           })()}
 
-          <div>
-            <label className={labelCls}>Eligibility</label>
-            <input value={form.eligibility ?? ""} onChange={(e) => upd("eligibility", e.target.value)} className={inputCls} placeholder="All IISc Members" />
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.ignore_gender_rules ?? false}
+                onChange={(e) => upd("ignore_gender_rules", e.target.checked)}
+                className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Ignore gender rules</span>
+                <span className="text-xs text-muted-foreground block">Allow any player to play any rubber (e.g. women in MS).</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.play_dead_rubbers ?? true}
+                onChange={(e) => upd("play_dead_rubbers", e.target.checked)}
+                className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Play dead rubbers</span>
+                <span className="text-xs text-muted-foreground block">Play all remaining rubbers even if the tie is already won.</span>
+              </div>
+            </label>
           </div>
-          <div className="sm:col-span-2">
-            <label className={labelCls}>Description</label>
-            <textarea value={form.description ?? ""} onChange={(e) => upd("description", e.target.value)} className={inputCls} rows={2} placeholder="Short blurb…" />
+        </CollapsibleSection>
+      )}
+
+      <CollapsibleSection
+        bare
+        title="Scoring rules"
+        icon={<Gauge />}
+        summary="Points, games and caps per round"
+        focus={focusSection === "rules"}
+      >
+        <ScoringRulesPanel tournament={tournament as any} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        bare
+        title="Officials"
+        icon={<ShieldCheck />}
+        summary="Umpires and referees"
+        focus={focusSection === "officials"}
+      >
+        <TournamentOfficialsPanel tournament={tournament} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="More settings"
+        icon={<Settings2 />}
+        summary="Visibility, ranking, rest times, court blackouts, reminders"
+        focus={focusSection === "more"}
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Listing</label>
+              <select value={form.tournament_type} onChange={(e) => upd("tournament_type", e.target.value)} className={inputCls}>
+                <option value="open">Open (public)</option>
+                <option value="invitational">Invitational</option>
+                <option value="internal">Internal only</option>
+              </select>
+            </div>
+            <div className="space-y-2.5 sm:pt-6">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={!!form.show_participants} onChange={(e) => upd("show_participants", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300" />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show the player list publicly</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={!!form.show_brackets} onChange={(e) => upd("show_brackets", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300" />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show the draw publicly</span>
+              </label>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Scheduling & Rest Policies */}
-      <div className={cardCls}>
-        <div className="flex items-center gap-2 mb-2">
-          <Clock className="w-5 h-5 text-primary" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Scheduling & Rest Policies</h3>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Configure player rest intervals, default match duration estimates, and court blackout times.
-        </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.counts_for_elo ?? true} onChange={(e) => upd("counts_for_elo", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5" />
+              <div>
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Counts for ELO</span>
+                <span className="text-xs text-muted-foreground block">Results update players' ratings. Turn off for casual events.</span>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.auto_reminders_enabled !== false} onChange={(e) => upd("auto_reminders_enabled", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5" />
+              <div>
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-[var(--warning)]" /> Match reminders</span>
+                <span className="text-xs text-muted-foreground block">Push and email players and umpires 30 minutes before each match.</span>
+              </div>
+            </label>
+          </div>
 
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
+              <Clock className="w-4 h-4 text-primary" /> Scheduling
+            </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Minimum Rest Between Matches (Minutes)</label>
@@ -1027,138 +1102,39 @@ export function TournamentSettingsTab({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Registration */}
-      <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Registration Form</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <label className={labelCls}>Form URL</label>
-            <input type="url" value={form.form_url ?? ""} onChange={(e) => upd("form_url", e.target.value)} className={inputCls} placeholder="https://forms.office.com/…" />
-          </div>
-          <div>
-            <label className={labelCls}>Form Status</label>
-            <select value={form.form_status} onChange={(e) => upd("form_status", e.target.value)} className={inputCls}>
-              <option value="open">Open</option>
-              <option value="closing_soon">Closing Soon</option>
-              <option value="closed">Closed</option>
-              <option value="disabled">Disabled</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>Form Closes On</label>
-            <input 
-              type="datetime-local" 
-              value={toLocalDatetimeStr(form.form_close_date)} 
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val) upd("form_close_date", "");
-                else upd("form_close_date", new Date(val).toISOString());
-              }} 
-              className={inputCls} 
-            />
           </div>
         </div>
+      </CollapsibleSection>
 
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
-              <ClipboardList className="w-4 h-4 text-primary" /> In-app Registration
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Let signed-in players register & pick categories inside the app (reviewed in the Registrations tab). Overrides the external form link.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => upd("require_app_registration", !form.require_app_registration)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${form.require_app_registration ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.require_app_registration ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
-              <Bell className="w-4 h-4 text-[var(--warning)]" /> Auto Match & Umpire Reminders
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Sends push & email notifications to players and umpires 30 mins before scheduled matches.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => upd("auto_reminders_enabled", !form.auto_reminders_enabled)}
-            className={`px-4 py-2 rounded-xl text-xs font-black border transition-all ${
-              form.auto_reminders_enabled !== false
-                ? "bg-[var(--success)] text-white border-[var(--success)] shadow-xs"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
-            }`}
-          >
-            {form.auto_reminders_enabled !== false ? "✓ Enabled" : "Disabled"}
-          </button>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center">
-        <div>
-          {form.status === "draft" && (
-            <button onClick={deleteDraft} disabled={saving || transitioning}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 hover:bg-[var(--danger)] dark:bg-[var(--danger)]/30 dark:hover:bg-[var(--danger)]/50 text-[var(--danger)] dark:text-[var(--danger)] font-bold transition">
-              <Trash2 className="w-4 h-4" />
-              Delete Draft
-            </button>
-          )}
-        </div>
-        <button onClick={() => save(false)} disabled={saving || !isDirty}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground font-black transition shadow-lg">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (isDirty ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4" />)}
-          {saving ? "Saving..." : (isDirty ? "Save Details" : "Saved")}
+      {/* Footer: trash + autosave state */}
+      <div className="flex items-center justify-between gap-3 flex-wrap pt-2">
+        <button
+          onClick={trashTournament}
+          disabled={saving || transitioning}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[var(--danger)] hover:bg-[var(--danger)]/10 disabled:opacity-50 transition"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Move to trash
         </button>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="mt-12 pt-8 border-t-2 border-[var(--danger)] dark:border-[var(--danger)]/30">
-        <h3 className="text-sm font-black text-[var(--danger)] dark:text-[var(--danger)] mb-4 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" /> Danger Zone
-        </h3>
-        <div className="bg-red-50 dark:bg-[var(--danger)]/20 rounded-2xl p-6 border border-[var(--danger)] dark:border-[var(--danger)]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h4 className="font-bold text-[var(--danger)] dark:text-[var(--danger)]">Send to Trash (Soft Delete)</h4>
-            <p className="text-sm text-[var(--danger)] dark:text-[var(--danger)] mt-1">
-              Move this tournament to the trash instead of permanently deleting it. You can undo this action from the admin panel history.
-            </p>
-          </div>
-          <button
-            onClick={async () => {
-              const confirmMsg = "Move this tournament to the Trash? You will be able to undo this action using the admin panel's Undo feature.";
-              const ok = await confirm({ title: "Trash Tournament", description: confirmMsg, confirmLabel: "Trash Tournament", confirmVariant: "danger" });
-              if (!ok) return;
-              
-              const afterState = { ...tournament, status: "deleted" };
-              try {
-                await tournamentService.updateTournament(tournament.id, { status: "deleted" });
-                await recordAction({
-                  action_type: "update",
-                  entity_type: "tournaments",
-                  entity_id: tournament.id,
-                  before_state: tournament,
-                  after_state: afterState,
-                  label: `Sent tournament "${tournament.name}" to Trash`,
-                });
-                
-                toast.success("Tournament sent to Trash");
-                if (onDelete) onDelete();
-              } catch (err: any) {
-                toast.error("Failed to trash: " + (err.message || "Error"));
-              }
-            }}
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--danger)] hover:bg-[var(--danger)] text-foreground font-black transition shadow"
-          >
-            Trash Tournament
-          </button>
+        <div className="sticky bottom-24 lg:bottom-4 z-20 ml-auto">
+          {saving ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…
+            </span>
+          ) : saveError ? (
+            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-bold text-rose-500">
+              <AlertTriangle className="w-3.5 h-3.5" /> {saveError}
+              <button onClick={() => save(false)} className="underline">Retry</button>
+            </span>
+          ) : isDirty ? (
+            <button onClick={() => save(false)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-black shadow-lg">
+              <Save className="w-3.5 h-3.5" /> Save now
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-muted-foreground">
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> All changes saved
+            </span>
+          )}
         </div>
       </div>
     </div>
