@@ -1,16 +1,16 @@
 /**
  * Admin Features Panel
- * Central dashboard for all new features: live scores, predictions,
- * weekly challenges, notification queue, public API, and DB health.
+ * Central dashboard for live scores, notification queue, public API and
+ * DB health. (The predictions and weekly-challenge sections were removed on
+ * 18 Nov 2026: their tables don't exist in production.)
  */
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { adminService } from "@/services/adminService";
 import { MatchService } from "@/services/matchService";
 import {
-  Circle, TrendingUp, Zap, Bell, Globe, ShieldCheck,
-  RefreshCw, Trash2, Play, CheckCircle, XCircle, Loader2,
-  BarChart3, Trophy, Target, Coins
+  Circle, Zap, Bell, Globe, ShieldCheck,
+  RefreshCw, Trash2, Play, CheckCircle, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
@@ -171,185 +171,6 @@ function LiveMatchesPanel() {
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Match Predictions Admin ──────────────────────────────────────── */
-function PredictionsPanel() {
-  const [stats, setStats] = useState({ total: 0, correct: 0, topPlayer: "" });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const s = await adminService.getPredictionAdminStats();
-        setStats(s);
-      } catch {
-        /* intentional */
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const resolveAll = async () => {
-    try {
-      const resolved = await adminService.resolveMatchPredictions();
-      if (resolved === 0) {
-        toast.info("No unresolved predictions");
-      } else {
-        toast.success(`Resolved ${resolved} predictions`);
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to resolve predictions");
-    }
-  };
-
-  return (
-    <div className={cardCls}>
-      {sectionTitle(<TrendingUp className="w-4 h-4" />, "Match Predictions")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : (
-        <>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {[
-              { label: "Total Predictions", value: stats.total, color: "text-violet-600" },
-              { label: "Correct", value: stats.correct, color: "text-primary" },
-              { label: "Accuracy", value: stats.total > 0 ? `${Math.round((stats.correct / stats.total) * 100)}%` : "—", color: "text-amber-600" },
-            ].map((s) => (
-              <div key={s.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
-                <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">🏆 Top points: <strong>{stats.topPlayer}</strong></p>
-          <button onClick={resolveAll}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-on-accent text-sm font-black transition">
-            <Coins className="w-4 h-4" /> Resolve Pending Predictions
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ── Weekly Challenges Admin ──────────────────────────────────────── */
-function ChallengesAdminPanel() {
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newType, setNewType] = useState("matches");
-  const [newTarget, setNewTarget] = useState(5);
-  const [newPoints, setNewPoints] = useState(10);
-
-  const load = async () => {
-    const sunday = new Date();
-    sunday.setDate(sunday.getDate() - sunday.getDay());
-    const weekStart = sunday.toISOString().slice(0, 10);
-    try {
-      const data = await adminService.getWeeklyChallengesForWeek(weekStart);
-      setChallenges(data);
-    } catch {
-      /* intentional */
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteChallenge = async (id: string) => {
-    try {
-      await adminService.deleteWeeklyChallenge(id);
-      toast.success("Challenge deleted");
-      load();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to delete challenge");
-    }
-  };
-
-  const addChallenge = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle) return;
-    const sunday = new Date();
-    sunday.setDate(sunday.getDate() - sunday.getDay());
-    const weekStart = sunday.toISOString().slice(0, 10);
-
-    try {
-      await adminService.createWeeklyChallenge({
-        title: newTitle,
-        type: newType,
-        target: newTarget,
-        points: newPoints,
-        week_start: weekStart,
-      });
-      toast.success("Challenge added");
-      setNewTitle("");
-      load();
-    } catch (error: any) {
-      toast.error("Failed to add challenge: " + error.message);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  return (
-    <div className={cardCls}>
-      {sectionTitle(<Target className="w-4 h-4" />, "Weekly Challenges (This Week)")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> :
-        challenges.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No challenges this week. They auto-generate when a player opens the Challenges tab.</p>
-        ) : (
-          <div className="space-y-2">
-            {challenges.map((c) => (
-              <div key={c.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{c.title}</p>
-                  <p className="text-xs text-muted-foreground">{c.type} · target {c.target} · {c.points} pts · {(c.completions as any)?.[0]?.count ?? 0} completions</p>
-                </div>
-                <button onClick={() => deleteChallenge(c.id)}
-                  className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-200 transition ml-2 shrink-0">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )
-      }
-      
-      {isAdding ? (
-        <form onSubmit={addChallenge} className="mt-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-3">
-          <input
-            autoFocus
-            type="text"
-            placeholder="Challenge Title (e.g., Weekend Warrior)"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary"
-            required
-          />
-          <div className="grid grid-cols-3 gap-2">
-            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary">
-              <option value="matches">Matches</option>
-              <option value="wins">Wins</option>
-              <option value="singles">Singles</option>
-              <option value="doubles">Doubles</option>
-              <option value="streak">Streak</option>
-            </select>
-            <input type="number" min="1" placeholder="Target" value={newTarget} onChange={(e) => setNewTarget(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
-            <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
-          </div>
-          <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 transition">Cancel</button>
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-primary-foreground rounded-lg transition">Save Challenge</button>
-          </div>
-        </form>
-      ) : (
-        <button onClick={() => setIsAdding(true)} className="w-full mt-4 py-2 border border-dashed border-primary/50 dark:border-primary text-primary dark:text-primary rounded-xl text-sm font-bold hover:bg-primary/10 dark:hover:bg-primary/20 transition">
-          + Add Custom Challenge
-        </button>
       )}
     </div>
   );
@@ -519,10 +340,11 @@ function CronJobsPanel() {
 }
 
 export function AdminFeaturesPanel() {
-  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
+  // Old ?tab=predictions / ?tab=challenges links fall back to "live".
+  const [section, setSection] = useState<"live" | "notifications" | "api" | "health">(() => {
     const params = safeGetSearchParams();
     const tab = params.get("tab") as any;
-    return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
+    return ["live", "notifications", "api", "health"].includes(tab) ? tab : "live";
   });
 
   useEffect(() => {
@@ -535,8 +357,6 @@ export function AdminFeaturesPanel() {
 
   const sections = [
     { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-red-500 text-red-500" /> },
-    { id: "predictions", label: "Predictions", icon: <TrendingUp className="w-3.5 h-3.5" /> },
-    { id: "challenges", label: "Challenges", icon: <Target className="w-3.5 h-3.5" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-3.5 h-3.5" /> },
     { id: "api", label: "Public API", icon: <Globe className="w-3.5 h-3.5" /> },
     { id: "health", label: "DB Health", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
@@ -573,16 +393,6 @@ export function AdminFeaturesPanel() {
         </div>
       )}
 
-      {section === "predictions" && <PredictionsPanel />}
-      {section === "challenges" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <ChallengesAdminPanel />
-          <div className={cardCls}>
-            {sectionTitle(<Zap className="w-4 h-4" />, "Player View Preview")}
-            <p className="text-sm text-muted-foreground">Weekly Challenges feature is currently disabled.</p>
-          </div>
-        </div>
-      )}
       {section === "notifications" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />

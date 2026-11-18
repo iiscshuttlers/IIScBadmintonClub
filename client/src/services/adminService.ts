@@ -1,15 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { PlayerRow } from "@/types";
-import type { Json } from "@/lib/supabase-types-auto";
+import type { Database, Json, TablesInsert } from "@/lib/supabase-types-auto";
 import { withAdminPrivate } from "@/services/playerPrivateService";
 
-// match_predictions, prediction_points, weekly_challenges and challenge_progress
-// are not in the production schema: they are missing from the types generated
-// on 18 Nov 2026 and no migration creates them, so the prediction and
-// weekly-challenge admin calls below fail at runtime. They go through this
-// untyped client until those panels are removed or the tables are restored.
-const legacyTables = supabase as unknown as SupabaseClient;
+// Untyped access for table names chosen at runtime (exportTable,
+// restoreRecycleBinItem) and for broadcast_history, which is also missing from
+// the production schema (its insert result was never checked).
+const untypedTables = supabase as unknown as SupabaseClient;
 
 export interface AdminLogEntry {
   id: number;
@@ -26,6 +24,13 @@ export interface GuestRow {
   elo_rating: number | null;
   total_friendly_matches: number | null;
   created_at: string;
+}
+
+/** Response of the send-announcement edge function. */
+export interface PushBroadcastResult {
+  sent?: number;
+  failed?: number;
+  total?: number;
 }
 
 export interface PendingGuestMatch {
@@ -247,7 +252,10 @@ export const adminService = {
     return data as unknown as PlayerRow;
   },
 
-  async createGuestPlayerRpc(name: string, gender?: string | null): Promise<any> {
+  async createGuestPlayerRpc(
+    name: string,
+    gender?: string | null,
+  ): Promise<Database["public"]["Functions"]["create_guest_player"]["Returns"]> {
     const { data, error } = await supabase.rpc("create_guest_player", { p_full_name: name.trim(), p_gender: gender || null });
     if (error) throw error;
     return data;
@@ -350,7 +358,7 @@ export const adminService = {
     const { error } = await supabase
       .from("site_data")
       .upsert(
-        { key: "club_settings", value: settings as any, updated_at: new Date().toISOString() },
+        { key: "club_settings", value: settings as Json, updated_at: new Date().toISOString() },
         { onConflict: "key" },
       );
     if (error) throw error;
@@ -361,7 +369,7 @@ export const adminService = {
     const { error } = await supabase
       .from("site_data")
       .upsert(
-        { key: "app_version", value: versionData as any, updated_at: new Date().toISOString() },
+        { key: "app_version", value: versionData as Json, updated_at: new Date().toISOString() },
         { onConflict: "key" },
       );
     if (error) throw error;
@@ -379,8 +387,8 @@ export const adminService = {
     );
   },
 
-  async exportTable(tableName: string): Promise<any[]> {
-    const { data, error } = await (supabase as any).from(tableName).select("*");
+  async exportTable(tableName: string): Promise<Record<string, Json>[]> {
+    const { data, error } = await untypedTables.from(tableName).select("*");
     if (error) throw error;
     return data ?? [];
   },
@@ -403,75 +411,16 @@ export const adminService = {
     if (error) throw error;
   },
 
-  async verifyDbBackups(): Promise<any> {
-    const { data, error } = await supabase.functions.invoke("verify-db-backups");
+  async verifyDbBackups(): Promise<Record<string, unknown> | null> {
+    const { data, error } = await supabase.functions.invoke<Record<string, unknown>>("verify-db-backups");
     if (error) throw error;
     return data;
   },
 
-  async invokePublicApi(path: string): Promise<any> {
-    const { data, error } = await supabase.functions.invoke("public-api" + path);
+  async invokePublicApi(path: string): Promise<unknown> {
+    const { data, error } = await supabase.functions.invoke<unknown>("public-api" + path);
     if (error) throw error;
     return data;
-  },
-
-  async getPredictionAdminStats(): Promise<{ total: number; correct: number; topPlayer: string }> {
-    const [totalRes, correctRes, topRes] = await Promise.all([
-      legacyTables.from("match_predictions").select("id", { count: "exact", head: true }),
-      legacyTables.from("match_predictions").select("id", { count: "exact", head: true }).eq("correct", true),
-      legacyTables.from("prediction_points").select("total_points, player:players!player_id(full_name)")
-        .order("total_points", { ascending: false }).limit(1).maybeSingle(),
-    ]);
-    return {
-      total: totalRes.count ?? 0,
-      correct: correctRes.count ?? 0,
-      topPlayer: (topRes.data as any)?.player?.full_name ?? "—",
-    };
-  },
-
-  async resolveMatchPredictions(): Promise<number> {
-    const { data: unresolved } = await legacyTables
-      .from("match_predictions")
-      .select("id, match_id, player_id, predicted_winner_id, points_wagered, match:matches!match_id(winner_id, status)")
-      .is("correct", null);
-
-    if (!unresolved || unresolved.length === 0) return 0;
-
-    let resolved = 0;
-    for (const pred of unresolved as any[]) {
-      if (!pred.match?.winner_id || pred.match.status !== "confirmed") continue;
-      const correct = pred.predicted_winner_id === pred.match.winner_id;
-      const earned = correct ? pred.points_wagered * 2 : 0;
-      await legacyTables.from("match_predictions").update({ correct, points_earned: earned }).eq("id", pred.id);
-      await legacyTables.from("prediction_points").upsert({
-        player_id: pred.player_id,
-        total_points: correct ? 100 + earned : 100 - pred.points_wagered,
-      }, { onConflict: "player_id" });
-      resolved++;
-    }
-    return resolved;
-  },
-
-  async getWeeklyChallengesForWeek(weekStart: string): Promise<any[]> {
-    const { data, error } = await legacyTables
-      .from("weekly_challenges")
-      .select("*, completions:challenge_progress(count)")
-      .eq("week_start", weekStart);
-    if (error) throw error;
-    return data ?? [];
-  },
-
-  async createWeeklyChallenge(payload: { title: string; description?: string; type: string; target: number; points: number; week_start: string }): Promise<void> {
-    const { error } = await legacyTables.from("weekly_challenges").insert({
-      description: payload.description ?? "",
-      ...payload,
-    });
-    if (error) throw error;
-  },
-
-  async deleteWeeklyChallenge(id: string): Promise<void> {
-    const { error } = await legacyTables.from("weekly_challenges").delete().eq("id", id);
-    if (error) throw error;
   },
 
   async submitUserFeedback(userId: string, type: string, message: string): Promise<void> {
@@ -533,8 +482,8 @@ export const adminService = {
     return data ?? [];
   },
 
-  async restoreRecycleBinItem(item: { id: string; table_name: string; record_data: any }): Promise<void> {
-    const { error } = await (supabase as any).from(item.table_name).insert(item.record_data);
+  async restoreRecycleBinItem(item: { id: string; table_name: string; record_data: Json }): Promise<void> {
+    const { error } = await untypedTables.from(item.table_name).insert(item.record_data);
     if (error) throw error;
     const { error: delErr } = await supabase.from("recycle_bin").delete().eq("id", item.id);
     if (delErr) throw delErr;
@@ -551,8 +500,8 @@ export const adminService = {
     url?: string;
     admin_email: string;
     showOnHome?: boolean;
-  }): Promise<any> {
-    const { data: fnData, error: fnError } = await supabase.functions.invoke("send-announcement", {
+  }): Promise<PushBroadcastResult | null> {
+    const { data: fnData, error: fnError } = await supabase.functions.invoke<PushBroadcastResult>("send-announcement", {
       body: {
         title: payload.title.trim(),
         body: payload.body.trim() || payload.title.trim(),
@@ -574,7 +523,7 @@ export const adminService = {
 
     if (payload.showOnHome) {
       const { data: bData } = await supabase.from("site_data").select("value").eq("key", "home_banners").maybeSingle();
-      const existingBanners = (bData?.value as any)?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
+      const existingBanners = (bData?.value as { banners?: Json[] } | null)?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
       const newBanner = {
         id: `broadcast_${Date.now()}`,
         type: "custom",
@@ -592,7 +541,7 @@ export const adminService = {
       );
     }
 
-    await (supabase as any).from("broadcast_history").insert({
+    await untypedTables.from("broadcast_history").insert({
       title: payload.title.trim(),
       body: payload.body.trim(),
       url: payload.url?.trim() || null,
@@ -604,13 +553,13 @@ export const adminService = {
     return fnData;
   },
 
-  async queueScheduledNotification(row: Record<string, any>): Promise<void> {
-    const { error } = await supabase.from("scheduled_notifications").insert(row as any);
+  async queueScheduledNotification(row: TablesInsert<"scheduled_notifications">): Promise<void> {
+    const { error } = await supabase.from("scheduled_notifications").insert(row);
     if (error) throw error;
   },
 
-  async createInAppNotifications(rows: Array<Record<string, any>>): Promise<void> {
-    const { error } = await supabase.from("notifications").insert(rows as any);
+  async createInAppNotifications(rows: TablesInsert<"notifications">[]): Promise<void> {
+    const { error } = await supabase.from("notifications").insert(rows);
     if (error) throw error;
   },
 
@@ -639,7 +588,7 @@ export const adminService = {
     return data;
   },
 
-  async getTournamentSiteConfig(): Promise<any> {
+  async getTournamentSiteConfig(): Promise<Json | null> {
     const { data, error } = await supabase
       .from("site_data")
       .select("value")
@@ -649,9 +598,9 @@ export const adminService = {
     return data?.value ?? null;
   },
 
-  async saveTournamentSiteConfig(config: any): Promise<void> {
+  async saveTournamentSiteConfig(config: unknown): Promise<void> {
     const { error } = await supabase.from("site_data").upsert(
-      { key: "tournament_config", value: config },
+      { key: "tournament_config", value: config as Json },
       { onConflict: "key" }
     );
     if (error) throw error;
@@ -702,7 +651,7 @@ export const adminService = {
   },
 
   async linkLabelToPlayerDoubles(label: string, playerId: string, partnerId: string | null) {
-    const { data, error } = await (supabase.rpc as any)("link_label_to_player", {
+    const { data, error } = await supabase.rpc("link_label_to_player", {
       p_label: label,
       p_player_id: playerId,
       p_partner_id: partnerId,
@@ -712,11 +661,11 @@ export const adminService = {
   },
 
   async fetchAuthUsers(): Promise<any[]> {
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
     const funcRes = await Promise.race([
-      supabase.functions.invoke("admin-users", { method: "GET" }),
+      supabase.functions.invoke<{ users?: unknown[] }>("admin-users", { method: "GET" }),
       timeout,
-    ]) as any;
+    ]);
     if (funcRes.error) throw funcRes.error;
     return funcRes.data?.users ?? [];
   },
@@ -758,14 +707,14 @@ export const adminService = {
     if (tErr) throw tErr;
 
     const guestMap = new Map<string, any>();
-    memberData?.forEach((row: any) => {
-      const p = row.player as any;
+    memberData?.forEach((row) => {
+      const p = row.player;
       if (p && p.id && !guestMap.has(p.id)) {
         guestMap.set(p.id, p);
       }
     });
-    teamsData?.forEach((row: any) => {
-      const p = row.captain as any;
+    teamsData?.forEach((row) => {
+      const p = row.captain;
       if (p && p.id && !guestMap.has(p.id)) {
         guestMap.set(p.id, p);
       }
