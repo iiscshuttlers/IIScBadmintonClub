@@ -61,10 +61,15 @@ export const playerService = {
     if (error) throw error;
   },
 
+  /**
+   * Sets the availability picker value (looking | playing | resting | injured;
+   * the column has a check constraint) and keeps the older is_looking_to_play
+   * flag in step, which the directory's "looking to play" filter reads.
+   */
   async updatePlayerStatus(userId: string, status: string): Promise<void> {
     const { error } = await supabase
       .from("players")
-      .update({ status } as any)
+      .update({ status, is_looking_to_play: status === "looking" })
       .eq("id", userId);
     if (error) throw error;
   },

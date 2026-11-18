@@ -53,6 +53,8 @@ export interface PlayerRow {
   mixed_record?: string | null;
   recent_form: string | null;
   is_looking_to_play: boolean | null;
+  /** Availability picker: looking (Available) | playing | resting | injured. */
+  status?: string | null;
   is_retired: boolean | null;
   role: 'master_admin' | 'admin' | 'umpire' | 'player';
   gender: string | null;

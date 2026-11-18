@@ -85,7 +85,7 @@ export default function PersonalProfilePage() {
     setLocation("/");
   };
 
-  const currentStatus = (profile as any)?.status || "looking";
+  const currentStatus = profile?.status || "looking";
 
   const updateStatus = async (newStatus: string) => {
     if (!profile?.id || updatingStatus) return;

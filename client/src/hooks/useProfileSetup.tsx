@@ -23,10 +23,11 @@ const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
 /**
  * The profile being edited (public columns, plus private ones the viewer may
- * read). `status` is not a players column, so it is always undefined and the
- * form falls back to "looking".
+ * read). `status` is set by the availability picker on the personal page; this
+ * form only reads it to derive is_looking_to_play and never writes it, so a
+ * stale draft can't overwrite a newer picker choice.
  */
-type LoadedProfile = PlayerRow & { status?: string };
+type LoadedProfile = PlayerRow;
 
 export function useProfileSetup() {
   const [, setLocation] = useLocation();
