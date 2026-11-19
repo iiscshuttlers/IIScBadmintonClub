@@ -7,6 +7,7 @@ type AuthErrorLike = { message?: string; status?: number; name?: string } | null
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { toAppPath } from "@/lib/returnUrl";
 import { toast } from "sonner";
 import {
   biometricSignIn,
@@ -99,7 +100,9 @@ export function useJoinAuth() {
       const returnUrl = sessionStorage.getItem("return_url");
       if (returnUrl) {
         sessionStorage.removeItem("return_url");
-        setLocation(returnUrl);
+        // Older builds stored the address with the router base; strip it so
+        // wouter doesn't add it twice.
+        setLocation(toAppPath(returnUrl));
       } else {
         setLocation("/");
       }
