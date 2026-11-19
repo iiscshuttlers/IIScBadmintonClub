@@ -22,8 +22,9 @@
 --   * tp_public_read, tm_public_read and trr_public_read check the tournament
 --     with EXISTS (SELECT ... FROM tournaments), which runs under tournaments
 --     RLS, so the participants, matches and round rules of deleted
---     tournaments are hidden too. (handle_deleted_tournament already deletes
---     the matches when a tournament is trashed.)
+--     tournaments are hidden too. (Since 20261119140000 a trashed tournament
+--     keeps its matches, and since 20261119180000 these three policies
+--     exclude 'deleted' themselves, so they no longer depend on this one.)
 --   * tournament_team_standings (security_invoker) drops deleted tournaments.
 --   * Realtime UPDATE events for a tournament being trashed no longer reach
 --     them.
