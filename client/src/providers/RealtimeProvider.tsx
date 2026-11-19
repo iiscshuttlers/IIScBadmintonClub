@@ -45,13 +45,6 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => jitteredInvalidate(["site_data"])
       )
 
-      // Tournament Table Updates
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "tournaments" },
-        () => jitteredInvalidate(["tournaments"])
-      )
-
       // Live bracket advancement — team ties and their individual matches.
       // invalidateQueries prefix-matches, so this refreshes ['tournament_ties', id]
       // and ['tie_matches', id] for every spectator in real time. (#31)
@@ -89,8 +82,22 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
+    // Tournament status changes (play starts, finishes, archived, trashed).
+    // public.tournaments is not in the realtime publication, and a trashed
+    // or draft tournament fails RLS for most viewers, so postgres_changes
+    // could not report these. The database broadcasts just the id instead
+    // (migration 20261120120300); each client refetches under its own RLS.
+    const tournamentStatus = supabase
+      .channel("tournament-visibility")
+      .on("broadcast", { event: "status_changed" }, () => {
+        jitteredInvalidate(["tournaments"]);
+        jitteredInvalidate(["tournament-route"]);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(tournamentStatus);
     };
   }, [queryClient, profile?.id]);
 

@@ -12,11 +12,13 @@
 -- tournament_matches policies let them read it and the tournaments policies
 -- let them read its tournament (the view inner-joins tournaments):
 --   * non-draft tournaments: unchanged for everyone;
---   * drafts: admins only. tournament_matches lets admins and global umpires
---     read draft matches (tm_admin_read), but an unassigned global umpire
---     cannot read the draft itself; hosts and assigned officials have no
---     tournament_matches read policy for drafts at all, so they could not
---     read these matches from the table before this change either.
+--   * drafts: admins, the tournament's creator and its assigned officials.
+--     Admins read draft matches through tm_admin_read; the creator and
+--     officials through tm_official_read (added later by 20261119110000)
+--     and read the draft itself through tournaments_official_read. A global
+--     umpire who is not assigned can read the matches (tm_admin_read) but not
+--     the draft, so the view shows them nothing. When this migration was
+--     written (before 20261119110000) drafts showed to admins only.
 -- Adding "t.status <> 'draft'" to the view instead would also hide drafts
 -- from admins, and would have to be kept in step with the policies by hand.
 --

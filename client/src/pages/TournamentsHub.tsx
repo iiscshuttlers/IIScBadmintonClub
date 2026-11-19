@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Trophy, Search, Calendar, MapPin, Radio, Clock, CheckCircle2,
@@ -56,9 +57,20 @@ export default function TournamentsHub() {
     if (legacyDetailTarget) navigate(legacyDetailTarget, { replace: true });
   }, [legacyDetailTarget, navigate]);
 
-  const [all, setAll] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  // React Query (not local state) so RealtimeProvider's invalidation of
+  // ["tournaments"] refreshes the list when a tournament changes status.
+  const tournamentsQuery = useQuery({
+    queryKey: ["tournaments", "hub"],
+    queryFn: getTournaments,
+    staleTime: 30_000,
+  });
+  const all = useMemo<any[]>(
+    () => (Array.isArray(tournamentsQuery.data) ? tournamentsQuery.data : []),
+    [tournamentsQuery.data],
+  );
+  const loading = tournamentsQuery.isPending;
+  const loadError = tournamentsQuery.isError;
+  const load = () => { void tournamentsQuery.refetch(); };
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -70,21 +82,6 @@ export default function TournamentsHub() {
 
   // Registration modal state
   const [registerFor, setRegisterFor] = useState<any | null>(null);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await getTournaments();
-      setAll(Array.isArray(data) ? data : []);
-      setLoadError(false);
-    } catch {
-      setLoadError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
 
   const visible = useMemo(
     () => all.filter((t) => t.status !== "draft" && t.status !== "archived"),
