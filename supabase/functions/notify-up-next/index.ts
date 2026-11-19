@@ -60,9 +60,11 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async () => {
   try {
     // 1. Which tournaments have something live on a court right now?
+    // Trashed tournaments keep their matches; never alert about them.
     const { data: live, error: liveErr } = await supabase
       .from("tournament_matches")
-      .select("tournament_id")
+      .select("tournament_id, tournaments!inner(status)")
+      .neq("tournaments.status", "deleted")
       .in("status", Array.from(LIVE_STATUSES))
       .not("court_number", "is", null);
     if (liveErr) throw liveErr;
