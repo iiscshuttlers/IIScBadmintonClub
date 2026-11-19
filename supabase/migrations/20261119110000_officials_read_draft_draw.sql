@@ -45,10 +45,13 @@
 --     tournament_round_rules); this migration only adds reads.
 --   * Realtime changes to a draft's matches, entries and round rules now
 --     reach its host and officials.
---   * Trashed tournaments: no change. Their host and officials could already
---     read the entries and round rules (tp_public_read / trr_public_read pass
---     because they can see the tournament row and its status is not 'draft'),
---     and the matches are gone (handle_deleted_tournament deletes them).
+--   * Trashed tournaments: entries and round rules unchanged. Their host and
+--     officials could already read them (tp_public_read / trr_public_read
+--     pass because they can see the tournament row and its status is not
+--     'draft'). Matches: as of 2026-11-19 handle_deleted_tournament deletes
+--     them on trash. If trashed matches are kept instead (pending
+--     20261119140000), its RESTRICTIVE tm_hide_trashed policy applies on top
+--     of tm_official_read, so this migration does not expose them.
 --   * Cost, rehearsed on prod 2026-11-19 (avg of 50, signed-in member):
 --     all matches 6.3 -> 7.5 ms, all entries 6.7 -> 10.5 ms, all round rules
 --     2.8 -> 4.6 ms; one tournament's matches unchanged (3.4 / 3.3 ms). The
