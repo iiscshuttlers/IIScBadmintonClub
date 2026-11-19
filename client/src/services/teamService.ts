@@ -135,7 +135,7 @@ export const teamService = {
   async deleteTeam(teamId: string): Promise<void> {
     const { error } = await supabase
       .from("tournament_teams")
-      .update({ status: "INACTIVE" })
+      .update({ status: "WITHDRAWN" })
       .eq("id", teamId);
 
     if (error) throw error;
@@ -166,7 +166,7 @@ export const teamService = {
   async removeTeamMember(memberId: string): Promise<void> {
     const { error } = await supabase
       .from("tournament_team_members")
-      .update({ status: "INACTIVE" })
+      .update({ status: "REMOVED" })
       .eq("id", memberId);
 
     if (error) throw error;
@@ -618,6 +618,16 @@ export const teamService = {
       p_player_id: playerId,
     });
     if (error) throw error;
+  },
+
+  // The invite token is private (team_invite_tokens): team staff, managers,
+  // officials and admins get it here; anyone else gets null.
+  async getTeamInviteToken(teamId: string): Promise<string | null> {
+    const { data, error } = await supabase.rpc('get_team_invite_token', {
+      p_team_id: teamId,
+    });
+    if (error) return null;
+    return (data as string | null) ?? null;
   },
 
   async generateNewTeamInviteToken(teamId: string): Promise<string> {

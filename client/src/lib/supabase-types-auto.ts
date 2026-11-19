@@ -4039,6 +4039,7 @@ export type Database = {
       }
       get_set_multiplier: { Args: { p_sets: string[] }; Returns: number }
       get_team_by_invite_token: { Args: { p_token: string }; Returns: Json }
+      get_team_invite_token: { Args: { p_team_id: string }; Returns: string }
       get_tournament_contacts: {
         Args: { p_player_ids: string[]; p_tournament_id: string }
         Returns: {
