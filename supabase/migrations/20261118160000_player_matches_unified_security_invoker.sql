@@ -1,0 +1,32 @@
+-- Make player_matches_unified obey the row-level security of the tables it
+-- reads.
+--
+-- The view is owned by postgres and had no security_invoker option, so it
+-- ran with its owner's rights and ignored RLS on tournament_matches and
+-- tournaments. Its only filter is t.status <> 'deleted', so anon and every
+-- signed-in member could read the matches of draft tournaments through it,
+-- although tm_public_read and the tournaments policies hide them
+-- (20261118140000_hide_draft_tournaments).
+--
+-- With security_invoker = on, a viewer sees a match only when the
+-- tournament_matches policies let them read it and the tournaments policies
+-- let them read its tournament (the view inner-joins tournaments):
+--   * non-draft tournaments: unchanged for everyone;
+--   * drafts: admins only. tournament_matches lets admins and global umpires
+--     read draft matches (tm_admin_read), but an unassigned global umpire
+--     cannot read the draft itself; hosts and assigned officials have no
+--     tournament_matches read policy for drafts at all, so they could not
+--     read these matches from the table before this change either.
+-- Adding "t.status <> 'draft'" to the view instead would also hide drafts
+-- from admins, and would have to be kept in step with the policies by hand.
+--
+-- Readers: only fetchPlayerMatches (client/src/services/matchService.ts).
+-- Its fallback path already reads tournament_matches under RLS, so both
+-- paths now return the same rows. No SQL function, view, policy or edge
+-- function reads the view. anon and authenticated already hold SELECT on
+-- tournament_matches and tournaments, which security_invoker requires.
+-- Columns are unchanged, so old clients keep working.
+--
+-- Rollback: supabase/rollbacks/20261118160000_player_matches_unified_security_invoker.rollback.sql
+
+ALTER VIEW public.player_matches_unified SET (security_invoker = on);
