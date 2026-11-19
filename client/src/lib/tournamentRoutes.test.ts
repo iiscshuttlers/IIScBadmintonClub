@@ -15,6 +15,7 @@ import {
   parseTournamentRouteFilters,
   parseTournamentTab,
   tournamentLink,
+  tournamentManagePath,
   tournamentPath,
 } from "./tournamentRoutes";
 
@@ -38,6 +39,16 @@ describe("tournamentPath", () => {
 
   it("carries a panel", () => {
     expect(tournamentPath(TID, null, { panel: "umpire" })).toBe(`/tournaments/${TID}?panel=umpire`);
+  });
+});
+
+describe("tournamentManagePath", () => {
+  it("sends admins to the Tournament Manager", () => {
+    expect(tournamentManagePath(TID, true)).toBe(`/tournament-admin?id=${TID}`);
+  });
+
+  it("sends hosts who are not admins to the Organiser panel", () => {
+    expect(tournamentManagePath(TID, false)).toBe(`/tournaments/${TID}?panel=organizer`);
   });
 });
 

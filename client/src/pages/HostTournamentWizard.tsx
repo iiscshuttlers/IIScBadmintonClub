@@ -5,6 +5,7 @@ import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, Ar
 import { useAuth } from '@/contexts/AuthContext';
 import { tournamentService, playerService } from '@/services';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { tournamentManagePath } from '@/lib/tournamentRoutes';
 import { toast } from 'sonner';
 import { TeamFormatConfigPanel, RubberConfig } from '@/components/admin/TeamFormatConfigPanel';
 import { Button } from '@/components/ui/button';
@@ -428,7 +429,7 @@ export default function HostTournamentWizard() {
       }
 
       toast.success("Tournament created as a draft");
-      navigate(data?.id ? `/tournament-admin?id=${data.id}` : '/tournament-admin');
+      navigate(data?.id ? tournamentManagePath(data.id, isAdmin) : (isAdmin ? '/tournament-admin' : '/host-tournament'));
       
     } catch (error: any) {
       console.error(error);

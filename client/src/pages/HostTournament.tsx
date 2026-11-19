@@ -6,7 +6,7 @@ import { fetchTournamentsCreatedBy } from '@/services/tournamentService';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusChip } from '@/components/admin/TournamentHeader';
-import { tournamentPath } from '@/lib/tournamentRoutes';
+import { tournamentManagePath, tournamentPath } from '@/lib/tournamentRoutes';
 import type { Tournament } from '@/types/tournament';
 
 export default function HostTournament() {
@@ -15,7 +15,7 @@ export default function HostTournament() {
     description: "Tournaments you organise.",
   });
 
-  const { session } = useAuth();
+  const { session, isAdmin } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,7 +86,7 @@ export default function HostTournament() {
 
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
                   <Link
-                    href={`/tournament-admin?id=${t.id}`}
+                    href={tournamentManagePath(t.id, isAdmin)}
                     className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-lg text-xs font-bold transition-colors"
                   >
                     <LayoutDashboard className="w-3.5 h-3.5" /> Manage
