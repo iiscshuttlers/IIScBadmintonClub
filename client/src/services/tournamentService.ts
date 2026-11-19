@@ -625,19 +625,19 @@ export async function withdrawTournamentRegistration(id: string) {
 }
 
 /**
- * Approved registrations of a tournament with the player (id, full_name).
- * Throws on error. (It used to select `category` and filter status
- * "confirmed"; the column is `categories` and the statuses are
- * pending | approved | rejected | withdrawn, so the query always failed.)
+ * Number of entries in a tournament (rows in tournament_participants, one per
+ * player or pair per category). Same figure as the "N entered" count on the
+ * tournaments list, which embeds `tournament_participants(count)`. Counting
+ * approved registrations instead missed every player added directly by the
+ * organiser. Throws on error.
  */
-export async function fetchConfirmedRegistrations(tournamentId: string) {
-  const { data, error } = await supabase
-    .from("tournament_registrations")
-    .select("id, status, categories, player:players!tournament_registrations_player_id_fkey(id, full_name)")
-    .eq("tournament_id", tournamentId)
-    .eq("status", "approved");
+export async function countTournamentEntries(tournamentId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("tournament_participants")
+    .select("id", { count: "exact", head: true })
+    .eq("tournament_id", tournamentId);
   if (error) throw error;
-  return data || [];
+  return count ?? 0;
 }
 
 export async function fetchAllTournamentRegistrations() {
