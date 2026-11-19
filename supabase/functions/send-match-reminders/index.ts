@@ -106,9 +106,12 @@ serve(async () => {
 
     // Upcoming TOURNAMENT matches within the next 24h that have a scheduled time
     // and have not started yet. (The app logs tournament matches only.)
+    // Trashed tournaments keep their matches (so Restore brings the draw back);
+    // skip them. Drafts stay in: a tournament is 'draft' until start_play.
     const { data: upcomingMatches, error: matchesError } = await supabase
       .from("tournament_matches")
-      .select("id, scheduled_at, player1_id, player2_id, player3_id, player4_id, category, team1_label, team2_label, court_number, status")
+      .select("id, scheduled_at, player1_id, player2_id, player3_id, player4_id, category, team1_label, team2_label, court_number, status, tournaments!inner(status)")
+      .neq("tournaments.status", "deleted")
       .in("status", ["scheduled", "pending"])
       .not("scheduled_at", "is", null)
       .gt("scheduled_at", new Date(now).toISOString())

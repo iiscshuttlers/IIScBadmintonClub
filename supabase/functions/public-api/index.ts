@@ -62,9 +62,12 @@ serve(async (req) => {
 
   // --- /recent-matches ---
   if (path === "/recent-matches") {
+    // Service role bypasses RLS: show only what signed-out users can see
+    // (not drafts, not the trash).
     const { data, error } = await supabase
       .from("tournament_matches")
-      .select("id, score, ended_at, created_at, team1_label, team2_label")
+      .select("id, score, ended_at, created_at, team1_label, team2_label, tournaments!inner(status)")
+      .not("tournaments.status", "in", "(draft,deleted)")
       .in("status", ["completed", "walkover"])
       .order("ended_at", { ascending: false, nullsFirst: false })
       .limit(20);
@@ -85,7 +88,9 @@ serve(async (req) => {
   if (path === "/stats") {
     const [playersRes, matchesRes] = await Promise.all([
       supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", true),
-      supabase.from("tournament_matches").select("id", { count: "exact", head: true }).in("status", ["completed", "walkover"]),
+      supabase.from("tournament_matches").select("id, tournaments!inner(status)", { count: "exact", head: true })
+        .not("tournaments.status", "in", "(draft,deleted)")
+        .in("status", ["completed", "walkover"]),
     ]);
     return json({
       generated_at: new Date().toISOString(),
