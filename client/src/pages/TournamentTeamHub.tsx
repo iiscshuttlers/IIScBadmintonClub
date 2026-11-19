@@ -108,6 +108,14 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
   });
 
   const isCaptain = session?.user?.id === team?.captain_id;
+
+  // The invite token is no longer on the team row; staff fetch it privately.
+  const { data: inviteToken = null } = useQuery({
+    queryKey: ['team-invite-token', teamId],
+    queryFn: () => teamService.getTeamInviteToken(teamId!),
+    enabled: !!teamId && !!session?.user?.id,
+    staleTime: 30000,
+  });
   const isMember = members.some((m: any) => m.player_id === session?.user?.id && m.status === 'ACTIVE');
   const myInvite = members.find((m: any) => m.player_id === session?.user?.id && m.status === 'INVITED');
 
@@ -192,14 +200,15 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
     onSuccess: () => {
       toast.success('Generated a new invite link');
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['team-invite-token', teamId] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to regenerate link')
   });
 
   const getPublicShareUrl = () => {
-    if (!team?.invite_token) return '';
+    if (!inviteToken) return '';
     const base = getBaseShareUrl();
-    return `${base}/join-team/${team.invite_token}`;
+    return `${base}/join-team/${inviteToken}`;
   };
 
   const copyInviteLink = () => {
@@ -372,7 +381,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
               <div className="flex flex-col sm:flex-row gap-2">
                 <input 
                   readOnly 
-                  value={team.invite_token ? getPublicShareUrl() : 'Generating link...'} 
+                  value={inviteToken ? getPublicShareUrl() : 'Generating link...'} 
                   className="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-900 text-xs font-mono text-slate-800 dark:text-slate-200 select-all focus:outline-none"
                 />
                 <Button 

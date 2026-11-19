@@ -48,9 +48,12 @@ Deno.serve(async () => {
     // Ties that could have a deadline in the next hour (deadline or start within ~2h).
     const horizon = new Date(now + 2 * 60 * 60_000).toISOString();
     const nowIso = new Date(now).toISOString();
+    // Skip ties of trashed tournaments. Drafts stay in: a tournament is
+    // 'draft' until start_play, and the first lineups are due before that.
     const { data: ties, error } = await admin
       .from("tournament_ties")
-      .select("id, tie_code, state, scheduled_at, lineup_deadline, team_a_id, team_b_id")
+      .select("id, tie_code, state, scheduled_at, lineup_deadline, team_a_id, team_b_id, tournaments!inner(status)")
+      .neq("tournaments.status", "deleted")
       .in("state", ["SCHEDULED", "AWAITING_LINEUPS"])
       .or(
         `and(lineup_deadline.gt.${nowIso},lineup_deadline.lte.${horizon}),` +
