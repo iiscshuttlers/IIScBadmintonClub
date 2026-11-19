@@ -4354,6 +4354,18 @@ export type Database = {
         Args: { p_ended_at: string; p_match_id: string; p_started_at: string }
         Returns: undefined
       }
+      set_tournament_round_rule: {
+        Args: {
+          p_best_of_sets: number
+          p_category: string
+          p_golden_point: number
+          p_points_to_win: number
+          p_round: number
+          p_round_name: string | null
+          p_tournament_id: string
+        }
+        Returns: undefined
+      }
       start_tournament_match_checked: {
         Args: {
           p_expected_court?: string
