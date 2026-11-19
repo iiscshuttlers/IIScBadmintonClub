@@ -18,17 +18,26 @@ import { ParticipantDuplicatesModal, type DuplicateGroupItem } from "./Participa
 import { ParticipantContactsModal } from "./ParticipantContactsModal";
 import { fetchParticipantEmails } from "@/services/playerPrivateService";
 
-export function TournamentParticipantsTab({ tournament }: { tournament: Tournament }) {
+/**
+ * `host`: the tournament's creator editing entries outside the Manager (the
+ * Organiser panel). Entry writes work for them through tp_host_manage; the
+ * draw generator, contacts and phone editing need admin data or match writes,
+ * so they are hidden, and the category is not kept in the URL hash.
+ */
+export function TournamentParticipantsTab({ tournament, variant = "manager" }: { tournament: Tournament; variant?: "manager" | "host" }) {
+  const isHost = variant === "host";
   const [search, setSearch] = useState<Record<string, string>>({});
   const [partnerSearch, setPartnerSearch] = useState<Record<string, string>>({});
 
   const getHashCat = () => {
+    if (isHost) return (tournament.categories || [])[0] || "";
     const parts = window.location.hash.replace("#", "").split("/");
     return parts[2] || (tournament.categories || [])[0] || "";
   };
   const [activeCat, setActiveCat] = useState<string>(getHashCat());
 
   useEffect(() => {
+    if (isHost) return;
     const handleHash = () => {
       const parts = window.location.hash.replace("#", "").split("/");
       if (parts[1] === "participants") {
@@ -38,10 +47,11 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
     window.addEventListener("hashchange", handleHash);
     handleHash();
     return () => window.removeEventListener("hashchange", handleHash);
-  }, [tournament.categories]);
+  }, [tournament.categories, isHost]);
 
   const setTabCat = (cat: string) => {
     setActiveCat(cat);
+    if (isHost) return;
     const parts = window.location.hash.replace("#", "").split("/");
     window.location.hash = `${parts[0] || ""}/participants/${cat}`;
   };
@@ -669,16 +679,18 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                   >
                     <Download className="w-3 h-3" /> Export CSV
                   </button>
-                  <button
-                    onClick={() => setContactsView(contactsView === cat ? null : cat)}
-                    className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md"
-                  >
-                    <Phone className="w-3 h-3" /> Contacts
-                  </button>
+                  {!isHost && (
+                    <button
+                      onClick={() => setContactsView(contactsView === cat ? null : cat)}
+                      className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md"
+                    >
+                      <Phone className="w-3 h-3" /> Contacts
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {contactsView === cat && (
+              {!isHost && contactsView === cat && (
                 <ParticipantContactsModal
                   category={cat}
                   parts={parts}
@@ -713,7 +725,7 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                 linkParticipantToPlayer={linkParticipantToPlayer}
                 linkParticipantToPartner={linkParticipantToPartner}
                 saveEditedName={saveEditedName}
-                updatePhone={updatePhone}
+                updatePhone={isHost ? undefined : updatePhone}
                 drawPlan={drawPlan}
                 resolvedEntryRound={resolvedEntryRound}
               />
@@ -822,6 +834,18 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                 </div>
               )}
 
+              {isHost ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-xs text-muted-foreground">An admin makes the draw from these entries and seeds.</p>
+                  <button
+                    onClick={() => saveSeeds(cat)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black shadow transition"
+                  >
+                    Save Seeds
+                  </button>
+                </div>
+              ) : (
+              <>
               {/* Per-category 3rd place and manual order toggles */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="text-xs text-muted-foreground font-bold">3rd Place Playoff</span>
@@ -855,6 +879,8 @@ export function TournamentParticipantsTab({ tournament }: { tournament: Tourname
                   <Swords className="w-3.5 h-3.5" /> Generate Bracket
                 </button>
               </div>
+              </>
+              )}
             </div>
           </div>
         );

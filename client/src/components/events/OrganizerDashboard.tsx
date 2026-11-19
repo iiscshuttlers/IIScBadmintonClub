@@ -14,6 +14,7 @@ import { TieUmpireConsole } from '@/components/umpire/TieUmpireConsole';
 import { useTeamModal } from '@/contexts/TeamModalContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { tournamentManagePath } from '@/lib/tournamentRoutes';
+import { HostSetupSections } from './HostSetupSections';
 import { calculateMinRosterRequirements, normalizeGender } from '@/lib/teamLineupRules';
 
 
@@ -25,11 +26,15 @@ interface OrganizerDashboardProps {
 export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const isTeamEvent = tournament?.format_family === 'TEAM';
 
-  if (!isTeamEvent) {
-    return <IndividualEventDashboard tournamentId={tournamentId} tournament={tournament} />;
-  }
-
-  return <TeamEventDashboard tournamentId={tournamentId} tournament={tournament} />;
+  return (
+    <div className="space-y-6">
+      {isTeamEvent
+        ? <TeamEventDashboard tournamentId={tournamentId} tournament={tournament} />
+        : <IndividualEventDashboard tournamentId={tournamentId} tournament={tournament} />}
+      {/* The host's set-up tools (entries, registrations, scoring rules). */}
+      <HostSetupSections tournament={tournament} />
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */

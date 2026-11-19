@@ -11,6 +11,7 @@ import {
   overrideTournamentSchedule,
   verifyTournamentReadiness,
   transitionTournamentLifecycle,
+  setTournamentRoundRule,
 } from '@/services/tournamentService';
 
 const mockT = { id: '1', name: 'Test Tournament', status: 'upcoming' };
@@ -411,6 +412,51 @@ describe('tournamentService', () => {
       } as any);
 
       await expect(transitionTournamentLifecycle('tour-1', 'start_play')).rejects.toThrow('Cannot start_play tournament');
+    });
+  });
+
+  describe('setTournamentRoundRule', () => {
+    const rule = {
+      tournament_id: 'tour-1', category: 'MS', round: 2, round_name: 'Final',
+      points_to_win: 15, best_of_sets: 3, golden_point: 21,
+    };
+
+    it('saves through set_tournament_round_rule', async () => {
+      (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+
+      await setTournamentRoundRule(rule);
+
+      expect(supabase.rpc).toHaveBeenCalledWith('set_tournament_round_rule', {
+        p_tournament_id: 'tour-1', p_category: 'MS', p_round: 2, p_round_name: 'Final',
+        p_points_to_win: 15, p_best_of_sets: 3, p_golden_point: 21,
+      });
+      expect(supabase.from).not.toHaveBeenCalled();
+    });
+
+    it('throws the RPC error (e.g. a host refused)', async () => {
+      (supabase.rpc as any).mockResolvedValue({ data: null, error: { code: '42501', message: 'Only the tournament\'s host or an admin can change its scoring rules' } });
+
+      await expect(setTournamentRoundRule(rule)).rejects.toMatchObject({ code: '42501' });
+      expect(supabase.from).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the direct writes when the function is missing', async () => {
+      (supabase.rpc as any).mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+      const upsert = vi.fn().mockResolvedValue({ error: null });
+      const eq3 = vi.fn().mockResolvedValue({ error: null });
+      const eq2 = vi.fn().mockReturnValue({ eq: eq3 });
+      const eq1 = vi.fn().mockReturnValue({ eq: eq2 });
+      const update = vi.fn().mockReturnValue({ eq: eq1 });
+      (supabase.from as any).mockImplementation((table: string) =>
+        table === 'tournament_round_rules' ? { upsert } : { update });
+
+      await setTournamentRoundRule(rule);
+
+      expect(upsert).toHaveBeenCalledWith(rule, { onConflict: 'tournament_id,category,round' });
+      expect(update).toHaveBeenCalledWith({ points_to_win: 15, best_of_sets: 3, golden_point: 21 });
+      expect(eq1).toHaveBeenCalledWith('tournament_id', 'tour-1');
+      expect(eq2).toHaveBeenCalledWith('category', 'MS');
+      expect(eq3).toHaveBeenCalledWith('round', 2);
     });
   });
 });

@@ -17,7 +17,8 @@ export interface ParticipantSeedingTableProps {
   linkParticipantToPlayer: (participantId: string, playerId: string | null, playerName: string) => Promise<void>;
   linkParticipantToPartner: (participantId: string, partnerId: string | null, partnerName: string) => Promise<void>;
   saveEditedName: (id: string, name1: string, name2: string) => Promise<void>;
-  updatePhone: (playerId: string, phone: string) => Promise<void>;
+  /** Omit to hide phone editing (it writes players.contact_number, which only admins can). */
+  updatePhone?: (playerId: string, phone: string) => Promise<void>;
   drawPlan?: any;
   resolvedEntryRound?: Map<string, number>;
 }
@@ -198,7 +199,7 @@ export function ParticipantSeedingTable({
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
-                {p.player_id && (
+                {p.player_id && updatePhone && (
                   <button
                     onClick={() => {
                       const pl = allPlayers?.find((x: any) => x.id === p.player_id);
@@ -315,7 +316,7 @@ export function ParticipantSeedingTable({
             )}
 
             {/* Inline Phone Edit */}
-            {editingPhone?.playerId === p.player_id && (
+            {updatePhone && editingPhone?.playerId === p.player_id && (
               <div className="mt-2 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
                 <div className="flex gap-2">
                   <input

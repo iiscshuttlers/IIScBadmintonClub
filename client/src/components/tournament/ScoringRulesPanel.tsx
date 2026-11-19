@@ -108,11 +108,11 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
   const saveRule = async (category: string, round: number, round_name: string | null) => {
     const vals = valueFor(category, round);
     const clamped = { points_to_win: Math.max(1, vals.points_to_win), best_of_sets: Math.max(1, vals.best_of_sets), golden_point: Math.max(1, vals.golden_point) };
-    await tournamentService.upsertTournamentRoundRule({
+    // Saves the rule and pushes it onto that round's matches so live and
+    // scheduled matches pick it up. Hosts may call this as well as admins.
+    await tournamentService.setTournamentRoundRule({
       tournament_id: tournament.id, category, round, round_name, ...clamped,
     });
-    // Push the rule onto existing matches so live/scheduled matches pick it up.
-    await tournamentService.updateMatchesScoringRule(tournament.id, category, round, vals);
   };
 
   const saveOne = async (category: string, round: number, round_name: string | null) => {
@@ -194,8 +194,8 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
           <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">No rounds yet</h4>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
             {tournament.format_family === "TEAM"
-              ? "Schedule ties and generate rubbers first — the rounds and disciplines will appear here to set rules for."
-              : "Generate the bracket first — each format's rounds will appear here to set rules for."}
+              ? "Rounds and disciplines appear here once ties are scheduled and their rubbers are made."
+              : "Each format's rounds appear here once the draw is made."}
           </p>
         </div>
       ) : (
