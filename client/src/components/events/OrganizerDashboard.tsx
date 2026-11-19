@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import {
   fetchAllTournamentMatchRows,
-  fetchConfirmedRegistrations,
+  countTournamentEntries,
   fetchTournamentMatchesByNumber,
 } from '@/services/tournamentService';
 import { teamService } from '@/services/teamService';
@@ -296,12 +296,11 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
     refetchInterval: 15000
   });
 
-  const { data: registrations = [] } = useQuery({
-    queryKey: ['organizer_ind_registrations', tournamentId],
-    queryFn: async () => {
-      const data = await fetchConfirmedRegistrations(tournamentId);
-      return (data || []) as any[];
-    },
+  // Entries, not registrations: players the organiser adds directly never get
+  // a registration row. Matches the "N entered" count on the tournaments list.
+  const { data: entryCount = 0 } = useQuery({
+    queryKey: ['organizer_ind_entry_count', tournamentId],
+    queryFn: () => countTournamentEntries(tournamentId),
     enabled: !!tournamentId,
     refetchInterval: 30000
   });
@@ -353,7 +352,7 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
         percent={completionRate}
         unit="matches"
         stats={[
-          { value: registrations.length, label: registrations.length === 1 ? 'participant' : 'participants' },
+          { value: entryCount, label: entryCount === 1 ? 'participant' : 'participants' },
           { value: categories.length, label: categories.length === 1 ? 'category' : 'categories' },
         ]}
       />
