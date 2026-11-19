@@ -4,7 +4,7 @@
 -- the officials policy. This makes draft tournaments readable by everyone
 -- again, including anon.
 -- Run with: npx --no-install supabase db query --remote -f <this file>
--- Then: npx --no-install supabase migration repair --status reverted 20261118140000
+-- Then: npx --no-install supabase migration repair --status reverted 20261118140000 --remote --yes
 BEGIN;
 
 DROP POLICY IF EXISTS "Allow public read access to tournaments" ON public.tournaments;

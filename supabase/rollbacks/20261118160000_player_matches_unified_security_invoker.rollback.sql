@@ -3,7 +3,7 @@
 -- on 2026-11-18). Matches of draft tournaments become readable through it
 -- again by anon and every member.
 -- Run with: npx --no-install supabase db query --remote --yes -f <this file>
--- Then: npx --no-install supabase migration repair --status reverted 20261118160000
+-- Then: npx --no-install supabase migration repair --status reverted 20261118160000 --remote --yes
 BEGIN;
 
 ALTER VIEW public.player_matches_unified RESET (security_invoker);

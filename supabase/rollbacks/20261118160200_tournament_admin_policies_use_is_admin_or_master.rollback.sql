@@ -4,7 +4,7 @@
 -- only). The admin matched by e-mail loses direct write access to
 -- tournaments again.
 -- Run with: npx --no-install supabase db query --remote --yes -f <this file>
--- Then: npx --no-install supabase migration repair --status reverted 20261118160200
+-- Then: npx --no-install supabase migration repair --status reverted 20261118160200 --remote --yes
 BEGIN;
 
 ALTER POLICY "tournaments_admin_read" ON public.tournaments
