@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { getTournaments } from "@/lib/tournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { canonicalFromHubQuery, tournamentLink, tournamentPath } from "@/lib/tournamentRoutes";
+import { canonicalFromHubQuery, tournamentLink, tournamentManagePath, tournamentPath } from "@/lib/tournamentRoutes";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
 import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
 import { RankedBadge } from "@/components/tournament/RankedBadge";
@@ -44,7 +44,7 @@ export default function TournamentsHub() {
     description: "Browse every IISc Badminton Club tournament — live, upcoming and past.",
   });
 
-  const { session, profile } = useAuth();
+  const { session, profile, isAdmin } = useAuth();
   const isAuthed = !!session;
   const { myPlayerId } = useNavigationAuth();
 
@@ -365,7 +365,7 @@ export default function TournamentsHub() {
                       <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                         {isOrganizer ? (
                           <button
-                            onClick={() => navigate(`/tournament-admin?id=${t.id}`)}
+                            onClick={() => navigate(tournamentManagePath(t.id, isAdmin))}
                             className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline"
                           >
                             Organizer Console →

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { TieUmpireConsole } from '@/components/umpire/TieUmpireConsole';
 import { useTeamModal } from '@/contexts/TeamModalContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { tournamentManagePath } from '@/lib/tournamentRoutes';
 import { calculateMinRosterRequirements, normalizeGender } from '@/lib/teamLineupRules';
 
 
@@ -86,6 +87,8 @@ function DashboardHeader({
   unit: string;
   stats: HeaderStat[];
 }) {
+  // The Tournament Manager is admin-only; for a host this panel is the console.
+  const { isAdmin } = useAuth();
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -101,12 +104,14 @@ function DashboardHeader({
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
-          <Link
-            href={`/tournament-admin?id=${tournamentId}`}
-            className="inline-flex h-8 items-center gap-1 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition whitespace-nowrap"
-          >
-            Tournament Manager <ChevronRight className="w-3 h-3" />
-          </Link>
+          {isAdmin && (
+            <Link
+              href={tournamentManagePath(tournamentId, true)}
+              className="inline-flex h-8 items-center gap-1 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition whitespace-nowrap"
+            >
+              Tournament Manager <ChevronRight className="w-3 h-3" />
+            </Link>
+          )}
         </div>
       </div>
 

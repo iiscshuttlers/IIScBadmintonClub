@@ -124,6 +124,17 @@ export function tournamentPath(
   return `${tab ? `${base}/${tab}` : base}${buildQuery(filters)}`;
 }
 
+/**
+ * Where "Manage" takes someone who runs a tournament. The Tournament Manager
+ * (/tournament-admin) is admin-only, so a host or organiser who is not an
+ * admin gets the tournament page's Organiser panel instead of Access Denied.
+ */
+export function tournamentManagePath(tournamentId: string, isAdmin: boolean): string {
+  return isAdmin
+    ? `/tournament-admin?id=${encodeURIComponent(tournamentId)}`
+    : tournamentPath(tournamentId, null, { panel: "organizer" });
+}
+
 export function matchPath(tournamentId: string, matchId: string, tab?: MatchTab | null): string {
   const base = `/tournaments/${encodeURIComponent(tournamentId)}/matches/${encodeURIComponent(matchId)}`;
   // Summary is the default and keeps the original, shorter URL.
