@@ -37,8 +37,12 @@
 -- unchanged (participant e-mail stays hidden).
 --
 -- Knock-on effects:
---   * The e-mail-matched admin can now read draft entries and round rules
---     (tp_admin_all / trr_admin_all match admins by id only).
+--   * The e-mail-matched admin can read draft entries and round rules through
+--     these policies. 20261119093000 gives them that (and write access)
+--     through tp_admin_all / trr_admin_all; the two migrations are
+--     independent and this one does not touch those policies.
+--   * Hosts still cannot write round rules (no host policy on
+--     tournament_round_rules); this migration only adds reads.
 --   * Realtime changes to a draft's matches, entries and round rules now
 --     reach its host and officials.
 --   * Trashed tournaments: no change. Their host and officials could already
@@ -50,7 +54,7 @@
 --     2.8 -> 4.6 ms; one tournament's matches unchanged (3.4 / 3.3 ms). The
 --     check runs per row, so this grows with table size.
 --
--- Rollback: supabase/rollbacks/20261119100000_officials_read_draft_draw.rollback.sql
+-- Rollback: supabase/rollbacks/20261119110000_officials_read_draft_draw.rollback.sql
 
 DROP POLICY IF EXISTS "tm_official_read" ON public.tournament_matches;
 CREATE POLICY "tm_official_read" ON public.tournament_matches
