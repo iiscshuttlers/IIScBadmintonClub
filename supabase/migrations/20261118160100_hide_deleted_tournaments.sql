@@ -1,0 +1,36 @@
+-- Hide soft-deleted tournaments from everyone except the people who ran them.
+--
+-- tournaments_public_read (everyone, status <> 'draft') also let anon and
+-- every member read tournaments in the admin trash (status = 'deleted').
+-- The client hides them with .neq('status', 'deleted') on every public read
+-- (useTournamentRoute, matchRouteVisibility, lib/tournaments,
+-- tournamentService pickers and notice board), so nothing public needs them.
+--
+-- After this change a deleted tournament is readable only through:
+--   tournaments_admin_read / tournaments_admin_write   admins
+--   tournaments_official_read                          admins (also by e-mail), creator, assigned officials
+--   tournaments_self_host_read                         creator
+-- which keeps the admin trash working: TournamentManager's Deleted tab,
+-- Restore to Draft and Permanently Delete, and the "(Deleted/Trashed)"
+-- entries in MatchesManager's picker (all admin-only screens).
+--
+-- Soft delete and restore still work. UPDATE ... WHERE id = ... needs the new
+-- row to pass a SELECT policy, and everyone allowed to update a tournament
+-- (its creator, admins) can read it through the policies above.
+--
+-- Knock-on effects for anon and members:
+--   * tp_public_read, tm_public_read and trr_public_read check the tournament
+--     with EXISTS (SELECT ... FROM tournaments), which runs under tournaments
+--     RLS, so the participants, matches and round rules of deleted
+--     tournaments are hidden too. (handle_deleted_tournament already deletes
+--     the matches when a tournament is trashed.)
+--   * tournament_team_standings (security_invoker) drops deleted tournaments.
+--   * Realtime UPDATE events for a tournament being trashed no longer reach
+--     them.
+-- SECURITY DEFINER functions and edge functions (service role) bypass RLS
+-- and are unaffected.
+--
+-- Rollback: supabase/rollbacks/20261118160100_hide_deleted_tournaments.rollback.sql
+
+ALTER POLICY "tournaments_public_read" ON public.tournaments
+  USING (status <> ALL (ARRAY['draft'::text, 'deleted'::text]));
