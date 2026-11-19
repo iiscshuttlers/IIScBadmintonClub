@@ -184,6 +184,10 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
 
   // Load player contacts when matches are available
   useEffect(() => {
+    // get_tournament_contacts is only executable by signed-in users (anon gets
+    // a 401), and the server decides per role what to release; skip it for
+    // visitors, like the officials lookup above.
+    if (!profile?.id) return;
     if (!schedMatches.length) return;
     const playerIds = new Set<string>();
     for (const m of schedMatches) {
@@ -199,7 +203,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
     }).catch((err) => {
       console.error("Failed to load player contacts map:", err);
     });
-  }, [schedMatches]);
+  }, [schedMatches, profile?.id, tournamentId]);
 
   if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 animate-spin border-4 border-primary border-t-transparent rounded-full" /></div>;
 
