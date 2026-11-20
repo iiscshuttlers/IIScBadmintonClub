@@ -7,9 +7,9 @@ import {
   gameFlows,
   gameMinutes,
   keyMoments,
-  longestRun,
   progression,
   rallyStats,
+  shortNames,
   splitGames,
   statInsights,
   type GameSeries,
@@ -121,7 +121,7 @@ function Worm({ g, names, rules }: { g: GameSeries; names: [string, string]; rul
       </svg>
       {hovered && (
         <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[11px] font-semibold px-2 py-1 shadow">
-          Rally {hover! + 1}: {hovered.t1}–{hovered.t2} · point to {names[hovered.side - 1]}
+          Rally {hover! + 1}: {hovered.t1}–{hovered.t2} · {names[hovered.side - 1]} won it
         </div>
       )}
     </figure>
@@ -142,9 +142,11 @@ export function MatchPointsTab({
   const [asTable, setAsTable] = useState(false);
   const [scope, setScope] = useState<Scope>("match");
   const names: [string, string] = [view.sides[0].label, view.sides[1].label];
+  // First names everywhere except the points-won headline, which shows full names.
+  const short = useMemo(() => shortNames(names), [names[0], names[1]]);
   const rallies = useMemo(() => decodePoints(log.points), [log.points]);
   const games = useMemo(() => splitGames(rallies), [rallies]);
-  const moments = useMemo(() => keyMoments(rallies, rules, names), [rallies, rules, names[0], names[1]]);
+  const moments = useMemo(() => keyMoments(rallies, rules, short), [rallies, rules, short]);
   const coverage = useMemo(
     () => assessPointLogCoverage(rallies, view.games, {
       finished: view.state === "completed",
@@ -160,8 +162,8 @@ export function MatchPointsTab({
   const flows = useMemo(() => gameFlows(rallies, rules), [rallies, rules]);
   const matchWinner = view.sides[0].isWinner ? 1 : view.sides[1].isWinner ? 2 : null;
   const takeaways = useMemo(
-    () => statInsights(stats, names, { scope: activeScope === "match" ? "match" : "game", matchWinner }),
-    [stats, names[0], names[1], activeScope, matchWinner],
+    () => statInsights(stats, short, { scope: activeScope === "match" ? "match" : "game", matchWinner }),
+    [stats, short, activeScope, matchWinner],
   );
   const shownGames = activeScope === "match" ? games : games.filter((g) => g.game === activeScope);
   const shownMoments = activeScope === "match" ? moments : moments.filter((m) => m.game === activeScope);
@@ -183,22 +185,22 @@ export function MatchPointsTab({
 
       {coverage === "corrected" && (
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
-          Corrected result · this recorded history predates the correction; it may be incomplete and may not match the final result.
+          The score was corrected after the match, so these stats may not match it.
         </p>
       )}
       {coverage === "partial" && (
         <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
-          Partial point history · charts and key moments cover only the recorded scoring rallies.
+          Some points weren't recorded, so these stats are incomplete.
         </p>
       )}
       {coverage === "complete" && (
         <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400" role="status">
-          Complete point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"}.
+          All {rallies.length} {rallies.length === 1 ? "point" : "points"} recorded.
         </p>
       )}
       {coverage === "live" && (
         <p className="text-xs font-semibold text-sky-700 dark:text-sky-400" role="status">
-          Live point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"} recorded so far.
+          Live · {rallies.length} {rallies.length === 1 ? "point" : "points"} so far.
         </p>
       )}
 
@@ -226,13 +228,13 @@ export function MatchPointsTab({
 
       <PointsHeadline stats={stats} names={names} />
       <Takeaways lines={takeaways} />
-      <LeadTracker rallies={rallies} names={names} gameNumbers={shownGames.map((g) => g.game)} />
-      <CompareRows stats={stats} names={names} />
+      <LeadTracker rallies={rallies} names={short} gameNumbers={shownGames.map((g) => g.game)} />
+      <CompareRows stats={stats} names={short} />
 
       <section aria-labelledby="worm-heading">
         <div className="flex items-center justify-between gap-2 mb-2">
           <h2 id="worm-heading" className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-            Points progression
+            Score progression
           </h2>
           <button
             type="button"
@@ -247,26 +249,22 @@ export function MatchPointsTab({
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold mb-2" aria-hidden={asTable}>
           <span className="inline-flex items-center gap-1.5">
             <svg width="22" height="6" aria-hidden><line x1="0" x2="22" y1="3" y2="3" stroke="var(--worm-s1)" strokeWidth="2" /></svg>
-            {names[0]}
+            {short[0]}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <svg width="22" height="6" aria-hidden><line x1="0" x2="22" y1="3" y2="3" stroke="var(--worm-s2)" strokeWidth="2" strokeDasharray="5 3" /></svg>
-            {names[1]}
+            {short[1]}
           </span>
         </div>
 
         <div className="space-y-5">
           {shownGames.map((g) => {
-            const run = longestRun(g.rallies);
             const mins = gameMinutes(g);
             return (
               <div key={g.game}>
                 <p className="text-sm font-black mb-1">
                   Game {g.game} · {g.final[0]}–{g.final[1]}
-                  <span className="font-semibold text-muted-foreground text-xs">
-                    {run ? ` · longest run ${run.length} (${names[run.side - 1]})` : ""}
-                    {mins ? ` · ${mins} min` : ""}
-                  </span>
+                  {mins ? <span className="font-semibold text-muted-foreground text-xs"> · {mins} min</span> : null}
                 </p>
                 {asTable ? (
                   <table className="w-full text-sm">
@@ -274,8 +272,8 @@ export function MatchPointsTab({
                     <thead>
                       <tr className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                         <th scope="col" className="text-left py-1">After rally</th>
-                        <th scope="col" className="text-right py-1">{names[0]}</th>
-                        <th scope="col" className="text-right py-1">{names[1]}</th>
+                        <th scope="col" className="text-right py-1">{short[0]}</th>
+                        <th scope="col" className="text-right py-1">{short[1]}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
@@ -289,7 +287,7 @@ export function MatchPointsTab({
                     </tbody>
                   </table>
                 ) : (
-                  <Worm g={g} names={names} rules={rules} />
+                  <Worm g={g} names={short} rules={rules} />
                 )}
               </div>
             );
@@ -297,14 +295,14 @@ export function MatchPointsTab({
         </div>
       </section>
 
-      {activeScope === "match" && <GameFlowTable flows={flows} names={names} intervalPoint={Math.ceil(rules.pointsToWin / 2)} />}
+      {activeScope === "match" && <GameFlowTable flows={flows} names={short} intervalPoint={Math.ceil(rules.pointsToWin / 2)} />}
 
       <section aria-labelledby="moments-heading">
         <h2 id="moments-heading" className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-2">
           Key moments
         </h2>
         {shownMoments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No standout moments{activeScope === "match" ? " yet" : " in this game"}.</p>
+          <p className="text-sm text-muted-foreground">Nothing stood out{activeScope === "match" ? " yet" : " in this game"}.</p>
         ) : (
           <ul className="space-y-1.5 text-sm">
             {shownMoments.map((m, i) => (

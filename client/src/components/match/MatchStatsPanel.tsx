@@ -45,7 +45,7 @@ export function PointsHeadline({ stats, names }: { stats: RallyStats; names: [st
         Points won
       </h2>
       <p className="sr-only">
-        {names[0]} won {a.pointsWon} points ({share(a.pointsWon)}%), {names[1]} won {b.pointsWon} ({share(b.pointsWon)}%) of {total} rallies.
+        {names[0]} won {a.pointsWon} points ({share(a.pointsWon)}%), {names[1]} won {b.pointsWon} ({share(b.pointsWon)}%), out of {total}.
       </p>
       <div aria-hidden>
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
@@ -60,7 +60,7 @@ export function PointsHeadline({ stats, names }: { stats: RallyStats; names: [st
           </div>
           <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground text-center pb-5">
             Points won
-            <span className="block normal-case tracking-normal font-semibold">{total} rallies</span>
+            <span className="block normal-case tracking-normal font-semibold">{total} played</span>
           </p>
           <div className="min-w-0 text-right">
             <p className="text-4xl font-black tabular-nums leading-none">{b.pointsWon}</p>
@@ -110,7 +110,6 @@ interface Cell {
 
 interface Row {
   label: string;
-  hint?: string;
   left: Cell;
   right: Cell;
   /** Bar weights; the larger one is the row's leader (bold). */
@@ -127,53 +126,31 @@ function buildRows(stats: RallyStats): Row[] {
   const [a, b] = stats.sides;
   const rows: Row[] = [];
   const total = stats.rallies;
-  const aheadPct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+  const share = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
   if (a.onServe.of + b.onServe.of > 0) {
     rows.push({ label: "Won on serve", left: tallyCell(a.onServe), right: tallyCell(b.onServe), a: pct(a.onServe) ?? 0, b: pct(b.onServe) ?? 0 });
-    rows.push({
-      label: "Won on receive",
-      hint: "Rallies won on the other side's serve",
-      left: tallyCell(a.onReceive),
-      right: tallyCell(b.onReceive),
-      a: pct(a.onReceive) ?? 0,
-      b: pct(b.onReceive) ?? 0,
-    });
+    rows.push({ label: "Won on receive", left: tallyCell(a.onReceive), right: tallyCell(b.onReceive), a: pct(a.onReceive) ?? 0, b: pct(b.onReceive) ?? 0 });
   }
-  rows.push({
-    label: "Time in front",
-    hint: "Share of rallies after which that side led",
-    left: { main: `${aheadPct(a.ralliesAhead)}%` },
-    right: { main: `${aheadPct(b.ralliesAhead)}%` },
-    a: a.ralliesAhead,
-    b: b.ralliesAhead,
-  });
-  rows.push({ label: "Best run", hint: "Most points in a row", left: { main: String(a.longestRun) }, right: { main: String(b.longestRun) }, a: a.longestRun, b: b.longestRun });
+  rows.push({ label: "In the lead", left: { main: `${share(a.ralliesAhead)}%` }, right: { main: `${share(b.ralliesAhead)}%` }, a: a.ralliesAhead, b: b.ralliesAhead });
+  rows.push({ label: "Most points in a row", left: { main: String(a.longestRun) }, right: { main: String(b.longestRun) }, a: a.longestRun, b: b.longestRun });
   rows.push({ label: "Biggest lead", left: { main: String(a.biggestLead) }, right: { main: String(b.biggestLead) }, a: a.biggestLead, b: b.biggestLead });
   if (a.gamePoints.of + b.gamePoints.of > 0) {
     rows.push({
-      label: "Game points",
-      hint: "Converted of chances (match points included)",
-      left: { main: `${a.gamePoints.won}/${a.gamePoints.of}` },
-      right: { main: `${b.gamePoints.won}/${b.gamePoints.of}` },
+      label: "Game points won",
+      left: { main: `${a.gamePoints.won} of ${a.gamePoints.of}` },
+      right: { main: `${b.gamePoints.won} of ${b.gamePoints.of}` },
       a: a.gamePoints.of,
       b: b.gamePoints.of,
     });
   }
   if (a.crunch.of > 0) {
-    rows.push({
-      label: `From ${stats.crunchFrom}-all`,
-      hint: "Points won once both sides reached it",
-      left: { main: String(a.crunch.won) },
-      right: { main: String(b.crunch.won) },
-      a: a.crunch.won,
-      b: b.crunch.won,
-    });
+    rows.push({ label: `Points from ${stats.crunchFrom}-all`, left: { main: String(a.crunch.won) }, right: { main: String(b.crunch.won) }, a: a.crunch.won, b: b.crunch.won });
   }
   return rows;
 }
 
-/** Head-to-head numbers as split bars (BWF "more details", with shares and context). */
+/** Head-to-head numbers as split bars (BWF "more details", with shares). */
 export function CompareRows({ stats, names }: { stats: RallyStats; names: [string, string] }) {
   const rows = useMemo(() => buildRows(stats), [stats]);
   return (
@@ -197,10 +174,7 @@ export function CompareRows({ stats, names }: { stats: RallyStats; names: [strin
                     <span className={`text-lg tabular-nums leading-none ${lead === 1 ? "font-black" : "font-semibold text-slate-500 dark:text-slate-400"}`}>{r.left.main}</span>
                     {r.left.sub && <span className="block text-[11px] text-muted-foreground tabular-nums">{r.left.sub}</span>}
                   </p>
-                  <p className="text-center pt-0.5">
-                    <span className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">{r.label}</span>
-                    {r.hint && <span className="block text-[10px] text-muted-foreground max-w-[11rem]">{r.hint}</span>}
-                  </p>
+                  <p className="text-center pt-0.5 text-[11px] font-black uppercase tracking-wide text-slate-700 dark:text-slate-200 max-w-[13rem]">{r.label}</p>
                   <p className="min-w-0 text-right">
                     <span className={`text-lg tabular-nums leading-none ${lead === 2 ? "font-black" : "font-semibold text-slate-500 dark:text-slate-400"}`}>{r.right.main}</span>
                     {r.right.sub && <span className="block text-[11px] text-muted-foreground tabular-nums">{r.right.sub}</span>}
@@ -215,7 +189,7 @@ export function CompareRows({ stats, names }: { stats: RallyStats; names: [strin
         })}
       </ul>
       {stats.sides[0].onServe.of + stats.sides[1].onServe.of > 0 && (
-        <p className="mt-1 text-[11px] text-muted-foreground">The first serve of the match isn't recorded, so serve figures start from the second rally.</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">Serve stats skip the first point of the match: who served it isn't recorded.</p>
       )}
     </section>
   );
@@ -226,7 +200,7 @@ const LH = 150;
 const LPAD = { l: 22, r: 6, t: 16, b: 8 };
 
 /**
- * Lead tracker (FotMob-style momentum): the lead after every rally. Above the
+ * Lead tracker (FotMob-style momentum): the lead after every point. Above the
  * line, side 1 is ahead (blue); below, side 2 (orange). Each game restarts at
  * level; dashed lines split the games.
  */
@@ -302,7 +276,7 @@ export function LeadTracker({ rallies, names, gameNumbers }: { rallies: Rally[];
           viewBox={`0 0 ${LW} ${LH}`}
           className="w-full h-auto touch-none"
           role="img"
-          aria-label={`Lead after each rally. ${names[0]} was ahead after ${ahead(0)} rallies (biggest lead ${best(0)}), ${names[1]} after ${ahead(1)} (biggest lead ${best(1)}).`}
+          aria-label={`Who led after each point. ${names[0]} led after ${ahead(0)} points (biggest lead ${best(0)}); ${names[1]} after ${ahead(1)} (biggest lead ${best(1)}).`}
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
         >
@@ -348,16 +322,16 @@ export function LeadTracker({ rallies, names, gameNumbers }: { rallies: Rally[];
         <figcaption className="mt-1 flex justify-between gap-2 text-[11px] font-semibold text-muted-foreground">
           <span className="inline-flex items-center gap-1.5 min-w-0">
             <Swatch side={1} />
-            <span className="truncate">Above: {names[0]} ahead</span>
+            <span className="truncate">Above: {names[0]} leads</span>
           </span>
           <span className="inline-flex items-center gap-1.5 min-w-0">
-            <span className="truncate">Below: {names[1]} ahead</span>
+            <span className="truncate">Below: {names[1]} leads</span>
             <Swatch side={2} />
           </span>
         </figcaption>
         {hovered && (
           <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[11px] font-semibold px-2 py-1 shadow">
-            G{hovered.r.game} · rally {hovered.idxInGame}: {hovered.r.t1}–{hovered.r.t2}
+            G{hovered.r.game}, point {hovered.idxInGame}: {hovered.r.t1}–{hovered.r.t2}
             {hovered.r.t1 !== hovered.r.t2 ? ` · ${hovered.r.t1 > hovered.r.t2 ? names[0] : names[1]} +${Math.abs(hovered.r.t1 - hovered.r.t2)}` : " · level"}
           </div>
         )}
@@ -366,7 +340,7 @@ export function LeadTracker({ rallies, names, gameNumbers }: { rallies: Rally[];
   );
 }
 
-/** Game by game: interval score, swings, best run and length. */
+/** Game by game: interval score, lead changes, best run and length. */
 export function GameFlowTable({ flows, names, intervalPoint }: { flows: GameFlow[]; names: [string, string]; intervalPoint: number }) {
   if (flows.length < 2) return null;
   return (
@@ -377,14 +351,14 @@ export function GameFlowTable({ flows, names, intervalPoint }: { flows: GameFlow
       <div className="overflow-x-auto -mx-1 px-1">
         <table className="w-full text-sm">
           <caption className="sr-only">
-            Each game's score, the score at the interval ({intervalPoint}), how often the lead changed, the best run and how long it took. Scores read {names[0]} first.
+            Each game: final score, score at {intervalPoint}, lead changes, most points in a row, and time. Scores show {names[0]} first.
           </caption>
           <thead>
             <tr className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
               <th scope="col" className="text-left py-1 pr-2">Game</th>
               <th scope="col" className="text-right py-1 px-2">Score</th>
               <th scope="col" className="text-right py-1 px-2">At {intervalPoint}</th>
-              <th scope="col" className="text-right py-1 px-2" title="Lead changes">Swings</th>
+              <th scope="col" className="text-right py-1 px-2">Lead changes</th>
               <th scope="col" className="text-right py-1 px-2">Best run</th>
               <th scope="col" className="text-right py-1 pl-2">Time</th>
             </tr>

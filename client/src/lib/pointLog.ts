@@ -173,7 +173,7 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
         if (isGamePoint(mine, theirs, rules)) {
           const isMatchPoint = won[s - 1] === need - 1;
           if (r.side === s) {
-            if (isMatchPoint) matchPointText = `${name(s)} converted match point at ${prev[0]}–${prev[1]}`;
+            if (isMatchPoint) matchPointText = `${name(s)} won on match point at ${prev[0]}–${prev[1]}`;
           } else {
             saved[2 - s] += 1; // the other side saved it
           }
@@ -188,7 +188,7 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
 
     const run = longestRun(g.rallies);
     if (run && run.length >= 4) {
-      moments.push({ kind: "run", game: g.game, side: run.side, text: `${name(run.side)} won ${run.length} rallies in a row` });
+      moments.push({ kind: "run", game: g.game, side: run.side, text: `${name(run.side)} won ${run.length} points in a row` });
     }
     if (g.winner && maxDeficit[g.winner - 1] >= 5) {
       moments.push({
@@ -217,6 +217,28 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
 }
 
 // ── Per-side stats (Stats tab) ─────────────────────────────────────────────
+
+/** First usable word of a name: skips initials such as "K." or "S". */
+function firstName(person: string): string {
+  const words = person.trim().split(/\s+/).filter(Boolean);
+  return words.find((w) => w.replace(/[^\p{L}]/gu, "").length >= 3) ?? words[0] ?? "";
+}
+
+/**
+ * Short names for charts and takeaways: "Shiv Pratap Singh Rathore" → "Shiv",
+ * "Ritul & Prasenjeet Padhi" → "Ritul & Prasenjeet". Keeps the full labels
+ * when the short ones would read the same for both sides.
+ */
+export function shortNames(labels: [string, string]): [string, string] {
+  const one = (label: string) =>
+    label
+      .split(/\s*(?:&|\/|\+|,)\s*|\s+and\s+/i)
+      .map(firstName)
+      .filter(Boolean)
+      .join(" & ") || label;
+  const s: [string, string] = [one(labels[0]), one(labels[1])];
+  return s[0].toLowerCase() === s[1].toLowerCase() ? labels : s;
+}
 
 /**
  * Who served each rally. The umpire screen stores the side that serves
@@ -390,7 +412,7 @@ export function statInsights(
   opts: { scope: "match" | "game"; matchWinner?: 1 | 2 | null; max?: number } = { scope: "match" },
 ): string[] {
   const [a, b] = stats.sides;
-  const where = opts.scope === "match" ? "the match" : "the game";
+  const where = opts.scope === "match" ? "the match" : "this game";
   const out: Array<{ weight: number; text: string }> = [];
   const total = stats.rallies;
   if (total < 6) return [];
@@ -402,7 +424,7 @@ export function statInsights(
     if (stats.sides[l].pointsWon > stats.sides[w].pointsWon) {
       out.push({
         weight: 100,
-        text: `${names[l]} won more points (${stats.sides[l].pointsWon}–${stats.sides[w].pointsWon}) but ${names[w]} won the match.`,
+        text: `${names[l]} won more points (${stats.sides[l].pointsWon}–${stats.sides[w].pointsWon}), but ${names[w]} won the match.`,
       });
     }
   }
@@ -414,11 +436,11 @@ export function statInsights(
     if (stats.sides[other].ralliesAhead === 0 && stats.sides[k].ralliesAhead > 0) {
       out.push({ weight: 90, text: `${names[k]} never trailed in ${where}.` });
     } else if (share >= 0.6) {
-      out.push({ weight: 60 + share * 20, text: `${names[k]} was ahead for ${Math.round(share * 100)}% of ${where}.` });
+      out.push({ weight: 60 + share * 20, text: `${names[k]} led for ${Math.round(share * 100)}% of ${where}.` });
     }
   }
   if (stats.leadChanges >= 4) {
-    out.push({ weight: 55 + stats.leadChanges, text: `The lead changed hands ${stats.leadChanges} times.` });
+    out.push({ weight: 55 + stats.leadChanges, text: `The lead changed ${stats.leadChanges} times.` });
   }
 
   // Serve: who made more of their own serve.
@@ -429,7 +451,7 @@ export function statInsights(
       const [hi, lo, phi, plo] = pa > pb ? [0, 1, pa, pb] : [1, 0, pb, pa];
       out.push({
         weight: 50 + (phi - plo),
-        text: `${names[hi]} won ${phi}% of rallies on serve; ${names[lo]} won ${plo}%.`,
+        text: `On serve, ${names[hi]} won ${phi}% of points and ${names[lo]} ${plo}%.`,
       });
     }
   }
@@ -454,7 +476,7 @@ export function statInsights(
     if (missed >= 2) {
       out.push({
         weight: 45 + missed * 5,
-        text: gp.won === 0 ? `${names[k]} had ${gp.of} game points and converted none.` : `${names[k]} converted ${gp.won} of ${gp.of} game points.`,
+        text: gp.won === 0 ? `${names[k]} had ${gp.of} game points but won none.` : `${names[k]} won ${gp.won} of ${gp.of} game points.`,
       });
     }
   }
@@ -464,7 +486,7 @@ export function statInsights(
     const k = a.longestRun > b.longestRun ? 0 : 1;
     out.push({
       weight: 40 + stats.sides[k].longestRun,
-      text: `${names[k]}'s best run was ${stats.sides[k].longestRun} points in a row; ${names[1 - k]}'s was ${stats.sides[1 - k].longestRun}.`,
+      text: `Best run: ${names[k]} ${stats.sides[k].longestRun} points in a row, ${names[1 - k]} ${stats.sides[1 - k].longestRun}.`,
     });
   }
 

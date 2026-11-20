@@ -78,10 +78,10 @@ describe("MatchPointsTab stats", () => {
 
   it("shows points won, head-to-head rows, who was ahead and game by game for the match", () => {
     render2();
-    expect(screen.getByText("Asha won 39 points (52%), Bala won 36 (48%) of 75 rallies.")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /Lead after each rally/ })).toBeInTheDocument();
+    expect(screen.getByText("Asha won 39 points (52%), Bala won 36 (48%), out of 75.")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Who led after each point/ })).toBeInTheDocument();
     expect(screen.getByText(/^Won on serve: Asha/)).toBeInTheDocument();
-    expect(screen.getByText(/^Best run: Asha 6, Bala 4\.$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Most points in a row: Asha 6, Bala 4\.$/)).toBeInTheDocument();
     const flow = screen.getByRole("table");
     expect(within(flow).getAllByRole("row")).toHaveLength(3); // header + 2 games
   });
@@ -105,7 +105,7 @@ describe("MatchPointsTab stats", () => {
         log={{ points: pts, pointCount: pts.length, final: true, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByText("Bala won more points (59–42) but Asha won the match.")).toBeInTheDocument();
+    expect(screen.getByText("Bala won more points (59–42), but Asha won the match.")).toBeInTheDocument();
   });
 });
 

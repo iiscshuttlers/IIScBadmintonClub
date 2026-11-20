@@ -11,6 +11,7 @@ import {
   progression,
   rallyServers,
   rallyStats,
+  shortNames,
   splitGames,
   statInsights,
   type Rally,
@@ -108,7 +109,7 @@ describe("keyMoments", () => {
     const m = keyMoments(r, undefined, ["Asha", "Bala"]);
     expect(m.map((x) => x.kind)).toContain("comeback");
     expect(m.find((x) => x.kind === "comeback")?.text).toBe("Asha came back from 6 points down to win the game");
-    expect(m.find((x) => x.kind === "match_point")?.text).toBe("Asha converted match point at 20–6");
+    expect(m.find((x) => x.kind === "match_point")?.text).toBe("Asha won on match point at 20–6");
   });
 
   it("counts deuce, saved game points and golden point", () => {
@@ -205,7 +206,7 @@ describe("statInsights", () => {
   it("leads with a winner who scored fewer points", () => {
     const stats = { ...base, sides: [side({ pointsWon: 40, ralliesAhead: 30 }), side({ pointsWon: 38, ralliesAhead: 30 })] as [SideStats, SideStats] };
     expect(statInsights(stats, ["Asha", "Bala"], { scope: "match", matchWinner: 2 })[0]).toBe(
-      "Asha won more points (40–38) but Bala won the match.",
+      "Asha won more points (40–38), but Bala won the match.",
     );
   });
 
@@ -218,13 +219,23 @@ describe("statInsights", () => {
       ] as [SideStats, SideStats],
     };
     const lines = statInsights(stats, ["Asha", "Bala"], { scope: "match", matchWinner: 1 });
-    expect(lines).toContain("Asha was ahead for 77% of the match.");
-    expect(lines).toContain("Asha won 65% of rallies on serve; Bala won 49%.");
+    expect(lines).toContain("Asha led for 77% of the match.");
+    expect(lines).toContain("On serve, Asha won 65% of points and Bala 49%.");
     expect(lines).toContain("From 18-all, Asha won 4 of 5 points.");
     expect(lines.join(" ")).not.toMatch(/\b(he|she|his|her)\b/i);
   });
 
   it("says nothing on too few rallies", () => {
     expect(statInsights({ ...base, rallies: 5 }, ["A", "B"], { scope: "game" })).toEqual([]);
+  });
+});
+
+describe("shortNames", () => {
+  it("uses first names, skipping initials, and both partners in doubles", () => {
+    expect(shortNames(["Shiv Pratap Singh Rathore", "Uday regon"])).toEqual(["Shiv", "Uday"]);
+    expect(shortNames(["Ritul & Prasenjeet Padhi", "K. Ramesh / S Kumar"])).toEqual(["Ritul & Prasenjeet", "Ramesh & Kumar"]);
+  });
+  it("keeps full names when the short ones would clash", () => {
+    expect(shortNames(["Rahul Iyer", "Rahul Menon"])).toEqual(["Rahul Iyer", "Rahul Menon"]);
   });
 });

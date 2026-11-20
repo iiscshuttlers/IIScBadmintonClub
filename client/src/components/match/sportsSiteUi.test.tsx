@@ -155,8 +155,8 @@ describe("MatchPointsTab", () => {
         log={{ points, pointCount: points.length, final: false, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByText("Asha won 11 rallies in a row")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Live point history · 12 scoring rallies recorded so far.");
+    expect(screen.getByText("Asha won 11 points in a row")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Live · 12 points so far.");
     expect(screen.getByRole("img", { name: /Game 1 points progression over 12 rallies, final score 11–1/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "View as table" }));
     expect(screen.getByRole("table")).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe("MatchPointsTab", () => {
     render(
       <MatchPointsTab view={view()} log={{ points, pointCount: 13, final: true, supersededByCorrection: true, updatedAt: "" }} />,
     );
-    expect(screen.getByRole("note")).toHaveTextContent(/Corrected result/);
+    expect(screen.getByRole("note")).toHaveTextContent(/score was corrected after the match/);
   });
 
   it("uses the configured halfway interval for a 30-point game", () => {
@@ -191,7 +191,7 @@ describe("MatchPointsTab", () => {
         log={{ points: complete, pointCount: complete.length, final: true, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByRole("status")).toHaveTextContent("Complete point history · 21 scoring rallies.");
+    expect(screen.getByRole("status")).toHaveTextContent("All 21 points recorded.");
   });
 
   it("labels a truncated history as partial and avoids unsupported completeness", () => {
@@ -202,8 +202,8 @@ describe("MatchPointsTab", () => {
         log={{ points: partial, pointCount: partial.length, final: true, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByRole("note")).toHaveTextContent("Partial point history");
-    expect(screen.queryByText(/Complete point history/)).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("Some points weren't recorded");
+    expect(screen.queryByText(/points recorded\./)).not.toBeInTheDocument();
   });
 });
 
