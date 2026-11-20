@@ -127,7 +127,6 @@ export default function PlayerProfile() {
     usePlayerProfileQuery(id, ownPlayerProfile?.id);
 
   const {
-    h2hRecord,
     recentOpponents,
     bestOpponent,
   } = useProfileAnalytics(id, player, liveMatches, eloLogs, ownPlayerProfile);

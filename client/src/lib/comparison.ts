@@ -55,6 +55,13 @@ export interface ComparisonRow {
   round: string | null;
   event: string | null;
   tournamentId?: string | null;
+  /** One side is a draw BYE (stored as score "W/O" + label "BYE"): never a result. */
+  bye?: boolean;
+}
+
+/** Draw placeholder label, same rule as the stored W/L records (`\mbye\M`). */
+export function isByeLabel(label: string | null | undefined): boolean {
+  return /\bbye\b/i.test(label ?? "");
 }
 
 export type Eligibility = "counted" | "walkover" | "excluded";
@@ -80,6 +87,7 @@ export function winnerOf(row: ComparisonRow): 1 | 2 | null {
 }
 
 export function eligibilityOf(row: ComparisonRow): { eligibility: Eligibility; reason: string | null } {
+  if (row.bye) return { eligibility: "excluded", reason: "Bye" };
   const s = (row.status ?? "").toLowerCase();
   if (s === "walkover") return { eligibility: "walkover", reason: null };
   const finished = row.source === "friendly" ? s === "confirmed" : s === "completed";
@@ -222,4 +230,4 @@ export function sampleNote(sample: number): string | null {
 }
 
 export const RESULT_POLICY_TEXT =
-  "Won–lost counts completed tournament results that have a recorded winner. Walkovers are shown separately and never counted as wins or losses. Pending, in-progress, disputed and cancelled matches are listed but not counted. Retirements are counted as the result that was recorded.";
+  "Won–lost counts completed tournament results that have a recorded winner. Walkovers are shown separately and never counted as wins or losses. Byes are never counted. Pending, in-progress, disputed and cancelled matches are listed but not counted. Retirements are counted as the result that was recorded.";

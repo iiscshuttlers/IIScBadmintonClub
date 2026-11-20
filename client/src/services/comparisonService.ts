@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { ComparisonRow, ComparisonSide } from "@/lib/comparison";
+import { isByeLabel, type ComparisonRow, type ComparisonSide } from "@/lib/comparison";
 
 /**
  * Every recorded tournament match containing all players of both sides (no
@@ -23,7 +23,7 @@ export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide):
 
   let tq = supabase
     .from("tournament_matches")
-    .select("id, tournament_id, status, category, match_code, round_name, player1_id, player2_id, player3_id, player4_id, winner_side, winner_id, score, sets_history, ended_at, scheduled_at, created_at, tournaments!inner(name, status)")
+    .select("id, tournament_id, status, category, match_code, round_name, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label, winner_side, winner_id, score, sets_history, ended_at, scheduled_at, created_at, tournaments!inner(name, status)")
     .neq("tournaments.status", "deleted")
     .limit(MAX_ROWS);
   // One OR group per required player: the row must contain every player.
@@ -65,6 +65,7 @@ export async function fetchComparisonRows(a: ComparisonSide, b: ComparisonSide):
       round: m.round_name ?? null,
       event: m.tournaments?.name ?? null,
       tournamentId: m.tournament_id ?? null,
+      bye: isByeLabel(m.team1_label) || isByeLabel(m.team2_label),
     })),
   ];
 

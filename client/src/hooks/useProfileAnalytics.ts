@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type { PlayerRow } from "@/types";
 
 /** An embedded player on a profile match (only these fields are read). */
@@ -23,30 +23,9 @@ export function useProfileAnalytics(
   _player: PlayerRow | null,
   liveMatches: AnalyticsMatch[],
   _eloLogs: unknown[],
-  ownPlayerProfile: PlayerRow | null | undefined
+  _ownPlayerProfile: PlayerRow | null | undefined
 ) {
-  const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
-
-  useEffect(() => {
-    if (
-      !ownPlayerProfile ||
-      !id ||
-      ownPlayerProfile.id === id ||
-      liveMatches.length === 0
-    )
-      return;
-    const h2h = liveMatches.filter(
-      (m) =>
-        m.status === "confirmed" &&
-        ((m.player1_id === ownPlayerProfile.id && m.player2_id === id) ||
-          (m.player1_id === id && m.player2_id === ownPlayerProfile.id)),
-    );
-    if (h2h.length === 0) return;
-    const wins = h2h.filter((m) => m.winner_id === ownPlayerProfile.id).length;
-    const losses = h2h.filter((m) => m.winner_id === id).length;
-    setH2hRecord({ wins, losses });
-  }, [liveMatches, ownPlayerProfile, id]);
-
+  // Head-to-head lives in lib/comparison (compareSides), not here.
   const recentOpponents = useMemo(() => {
     if (!id || liveMatches.length === 0) return [];
     const confirmed = liveMatches
@@ -89,7 +68,6 @@ export function useProfileAnalytics(
   }, [liveMatches, id]);
 
   return {
-    h2hRecord,
     recentOpponents,
     bestOpponent,
   };
