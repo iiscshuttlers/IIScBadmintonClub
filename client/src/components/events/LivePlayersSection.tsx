@@ -195,9 +195,9 @@ export function LivePlayersSection({
 
   if (error) {
     return (
-      <div className="text-center py-12 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
-        <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-black text-slate-800 dark:text-foreground">Participants Not Yet Available</h3>
+      <div className="text-center py-12 bg-muted/50 rounded-3xl border border-border-strong">
+        <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-black text-foreground">Participants Not Yet Available</h3>
         <p className="text-muted-foreground mt-1">{error}</p>
       </div>
     );
@@ -207,9 +207,9 @@ export function LivePlayersSection({
 
   if (activeCategories.length === 0) {
     return (
-      <div className="text-center py-12 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
-        <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-black text-slate-800 dark:text-foreground">No Players Registered Yet</h3>
+      <div className="text-center py-12 bg-muted/50 rounded-3xl border border-border-strong">
+        <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-black text-foreground">No Players Registered Yet</h3>
         <p className="text-muted-foreground mt-1">Participants will appear here once they are added.</p>
       </div>
     );
@@ -227,7 +227,7 @@ export function LivePlayersSection({
             onClick={() => setActiveCat(cat)}
             className={`px-4 py-2 rounded-full text-sm font-black whitespace-nowrap transition-all duration-300 ${activeCat === cat
                 ? "bg-primary text-primary-foreground shadow-md ring-1 ring-primary/50 scale-[1.02]"
-                : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-foreground ring-1 ring-inset ring-slate-200 dark:ring-slate-700/50"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted-strong hover:text-foreground ring-1 ring-inset ring-border-strong/50"
               }`}
           >
             {cat} <span className={`text-[11px] ml-1 font-bold ${activeCat === cat ? "opacity-90" : ""}`}>({participants[cat].length})</span>
@@ -235,18 +235,18 @@ export function LivePlayersSection({
         ))}
       </div>
 
-      <div className="flex items-center justify-between px-1 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex items-center justify-between px-1 pb-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-primary dark:text-primary" />
-          <p className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">
+          <Info className="w-4 h-4 text-primary" />
+          <p className="text-xs font-semibold text-muted-foreground">
             Players are not listed in seeding order.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportAsImage} disabled={exporting} className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-500 hover:text-primary transition bg-slate-100 dark:bg-slate-800/60 px-2 py-1 rounded-md">
+          <button onClick={exportAsImage} disabled={exporting} className="flex items-center gap-1 text-[10px] font-black uppercase text-muted-foreground hover:text-primary transition bg-muted/60 px-2 py-1 rounded-md">
             {exporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />} Image
           </button>
-          <button onClick={exportAsPDF} disabled={exporting} className="flex items-center gap-1 text-[10px] font-black uppercase text-slate-500 hover:text-primary transition bg-slate-100 dark:bg-slate-800/60 px-2 py-1 rounded-md">
+          <button onClick={exportAsPDF} disabled={exporting} className="flex items-center gap-1 text-[10px] font-black uppercase text-muted-foreground hover:text-primary transition bg-muted/60 px-2 py-1 rounded-md">
             {exporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />} PDF
           </button>
         </div>
@@ -257,8 +257,8 @@ export function LivePlayersSection({
           <div
             key={p.id}
             className={`group relative flex items-center justify-between p-5 rounded-[1.25rem] transition-all duration-300 overflow-hidden ${exporting
-                ? "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
-                : "bg-white/80 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] dark:shadow-none hover:shadow-xl hover:-translate-y-1 hover:border-primary/40 dark:hover:border-primary/50"
+                ? "bg-muted border border-border-strong shadow-sm"
+                : "bg-muted/60 backdrop-blur-md border border-border-strong/50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] dark:shadow-none hover:shadow-xl hover:-translate-y-1 hover:border-primary/50"
               }`}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -275,13 +275,13 @@ export function LivePlayersSection({
                   return (
                     <div className="flex flex-col gap-3 w-full">
                       <div className="flex flex-col min-w-0">
-                        <span className="font-black text-[14px] text-slate-800 dark:text-slate-100 truncate tracking-tight">{name1}</span>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">{dept1}</span>
+                        <span className="font-black text-[14px] text-foreground truncate tracking-tight">{name1}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">{dept1}</span>
                       </div>
-                      <div className="w-full h-px bg-gradient-to-r from-slate-200 to-transparent dark:from-slate-700/50" />
+                      <div className="w-full h-px bg-gradient-to-r from-muted-strong/50 to-transparent" />
                       <div className="flex flex-col min-w-0">
-                        <span className="font-black text-[14px] text-slate-800 dark:text-slate-100 truncate tracking-tight">{name2 || "partner"}</span>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">{dept2}</span>
+                        <span className="font-black text-[14px] text-foreground truncate tracking-tight">{name2 || "partner"}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">{dept2}</span>
                       </div>
                     </div>
                   );
@@ -289,10 +289,10 @@ export function LivePlayersSection({
                   const dept = p.player?.department ? getDepartmentAcronym(p.player.department) : p.custom_team_name ? getDepartmentAcronym(p.custom_team_name) : "EXT";
                   return (
                     <div className="flex flex-col">
-                      <span className="font-black text-[15px] text-slate-800 dark:text-slate-100 truncate tracking-tight mb-1">
+                      <span className="font-black text-[15px] text-foreground truncate tracking-tight mb-1">
                         {p.display_name || p.player?.full_name || "Unknown Player"}
                       </span>
-                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                      <span className="text-[11px] font-bold text-muted-foreground truncate">
                         {dept}
                       </span>
                     </div>
@@ -302,7 +302,7 @@ export function LivePlayersSection({
             </div>
 
             <div className="flex-shrink-0 relative z-10 flex flex-col items-end justify-center self-stretch ml-2">
-              <span className="text-[32px] font-black leading-none text-slate-300 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
+              <span className="text-[32px] font-black leading-none text-muted-foreground group-hover:text-primary transition-colors duration-300">
                 #{i + 1}
               </span>
             </div>

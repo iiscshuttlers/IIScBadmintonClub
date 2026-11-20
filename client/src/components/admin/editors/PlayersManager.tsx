@@ -529,38 +529,38 @@ export function PlayersManager() {
       {/* ── In-app Confirmation Modal ── */}
       {confirmAction && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" onClick={dismissConfirm}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-media/60 backdrop-blur-sm" />
           <div
-            className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-6 space-y-4"
+            className="relative bg-card rounded-2xl shadow-2xl border border-border-strong w-full max-w-sm p-6 space-y-4"
             onClick={e => e.stopPropagation()}
           >
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto ${
-              confirmAction.confirmStyle === 'danger' ? 'bg-rose-100 dark:bg-rose-900/30' :
-              confirmAction.confirmStyle === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30' :
+              confirmAction.confirmStyle === 'danger' ? 'bg-danger/10' :
+              confirmAction.confirmStyle === 'warning' ? 'bg-warning/10' :
               'bg-primary/10'
             }`}>
               <AlertTriangle className={`w-6 h-6 ${
-                confirmAction.confirmStyle === 'danger' ? 'text-rose-500' :
-                confirmAction.confirmStyle === 'warning' ? 'text-amber-500' :
+                confirmAction.confirmStyle === 'danger' ? 'text-danger' :
+                confirmAction.confirmStyle === 'warning' ? 'text-warning' :
                 'text-primary'
               }`} />
             </div>
             <div className="text-center space-y-1.5">
-              <h3 className="font-bold text-lg text-foreground dark:text-slate-100">{confirmAction.title}</h3>
-              <p className="text-sm text-muted-foreground dark:text-slate-400 whitespace-pre-line">{confirmAction.message}</p>
+              <h3 className="font-bold text-lg text-foreground">{confirmAction.title}</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{confirmAction.message}</p>
             </div>
             <div className="flex gap-3 pt-1">
               <button
                 onClick={dismissConfirm}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-muted-foreground dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border-strong text-sm font-semibold text-muted-foreground hover:bg-muted transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => { dismissConfirm(); confirmAction.onConfirm(); }}
                 className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-                  confirmAction.confirmStyle === 'danger' ? 'bg-rose-500 hover:bg-rose-600 text-white' :
-                  confirmAction.confirmStyle === 'warning' ? 'bg-amber-500 hover:bg-amber-600 text-white' :
+                  confirmAction.confirmStyle === 'danger' ? 'bg-danger hover:bg-danger/90 text-danger-foreground' :
+                  confirmAction.confirmStyle === 'warning' ? 'bg-warning hover:bg-warning/90 text-warning-foreground' :
                   'bg-primary hover:bg-primary/90 text-primary-foreground'
                 }`}
               >
@@ -576,7 +576,7 @@ export function PlayersManager() {
           {
             label: "Total Acc",
             value: authUsers.length,
-            color: "bg-blue-50 text-blue-700",
+            color: "bg-info/10 text-info",
           },
           {
             label: "Profiles",
@@ -586,12 +586,12 @@ export function PlayersManager() {
           {
             label: "No Profile",
             value: noProfileUsers.length,
-            color: "bg-amber-50 text-amber-700",
+            color: "bg-warning/10 text-warning",
           },
           {
             label: "Pending",
             value: pending,
-            color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 dark:bg-slate-800 text-muted-foreground"}`,
+            color: `${pending > 0 ? "bg-danger/10 text-danger" : "bg-muted text-muted-foreground"}`,
           },
         ].map((s) => (
           <div
@@ -623,20 +623,20 @@ export function PlayersManager() {
             <button 
                onClick={approveAllPending}
                disabled={pending === 0}
-               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-primary/40 dark:border-primary/80 bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary font-bold text-xs hover:bg-primary/15 disabled:opacity-50 transition flex items-center"
+               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-primary/80 bg-primary/30 text-primary font-bold text-xs hover:bg-primary/15 disabled:opacity-50 transition flex items-center"
             >
                <UserCheck className="w-3.5 h-3.5 mr-1.5" />
                Approve All ({pending})
             </button>
             <button 
                onClick={exportCsv}
-               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition"
+               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-border-strong bg-card text-soft font-bold text-xs hover:bg-muted disabled:opacity-50 transition"
             >
                Download CSV
             </button>
             <button aria-label="Refresh players"
               onClick={load}
-              className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="px-3 py-2.5 rounded-xl border border-border-strong bg-card hover:bg-muted transition"
             >
               <RefreshCw className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -652,7 +652,7 @@ export function PlayersManager() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`flex items-center justify-center text-center px-2 py-2 rounded-xl text-xs font-bold transition sm:whitespace-nowrap sm:shrink-0 ${filter === f ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800/50 text-muted-foreground dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"}`}
+                  className={`flex items-center justify-center text-center px-2 py-2 rounded-xl text-xs font-bold transition sm:whitespace-nowrap sm:shrink-0 ${filter === f ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
                 >
                   {f === "profile"
                     ? "Profile Created"
@@ -669,7 +669,7 @@ export function PlayersManager() {
             <select
               value={genderFilter}
               onChange={(e) => setGenderFilter(e.target.value as any)}
-              className="flex-1 sm:flex-none min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
+              className="flex-1 sm:flex-none min-w-0 px-3 py-2 rounded-xl border border-border-strong bg-card text-soft font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
             >
               <option value="all">All Genders</option>
               <option value="male">Male</option>
@@ -682,7 +682,7 @@ export function PlayersManager() {
                 setSortField(field as any);
                 setSortDirection(dir as "asc" | "desc");
               }}
-              className="flex-1 sm:flex-none min-w-0 lg:hidden px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
+              className="flex-1 sm:flex-none min-w-0 lg:hidden px-3 py-2 rounded-xl border border-border-strong bg-card text-soft font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
             >
               <option value="name-asc">Sort: Name (A-Z)</option>
               <option value="name-desc">Sort: Name (Z-A)</option>
@@ -705,19 +705,19 @@ export function PlayersManager() {
             <span className="text-sm font-bold text-primary flex-1 min-w-[120px]">
               {selectedPlayers.length} selected
             </span>
-            <button onClick={() => bulkApprove(true)} className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition flex items-center gap-1">
+            <button onClick={() => bulkApprove(true)} className="px-3 py-1.5 text-xs font-bold text-success bg-success/10 hover:bg-success/15 rounded-lg transition flex items-center gap-1">
               <UserCheck className="w-3 h-3" /> Approve
             </button>
-            <button onClick={() => bulkApprove(false)} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition flex items-center gap-1">
+            <button onClick={() => bulkApprove(false)} className="px-3 py-1.5 text-xs font-bold text-warning bg-warning/10 hover:bg-warning/15 rounded-lg transition flex items-center gap-1">
               <UserX className="w-3 h-3" /> Revoke
             </button>
-            <button onClick={() => bulkRetire(true)} className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+            <button onClick={() => bulkRetire(true)} className="px-3 py-1.5 text-xs font-bold text-background bg-soft hover:bg-soft/90 rounded-lg transition flex items-center gap-1">
               <Sunset className="w-3 h-3" /> Retire
             </button>
-            <button onClick={() => bulkDelete()} className="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 rounded-lg transition flex items-center gap-1">
+            <button onClick={() => bulkDelete()} className="px-3 py-1.5 text-xs font-bold text-danger bg-danger/10 hover:bg-danger/15 rounded-lg transition flex items-center gap-1">
               <Trash2 className="w-3 h-3" /> Delete
             </button>
-            <button onClick={() => setSelectedPlayers([])} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+            <button onClick={() => setSelectedPlayers([])} className="px-3 py-1.5 text-xs font-bold text-background bg-soft hover:bg-soft/90 rounded-lg transition flex items-center gap-1">
               Clear
             </button>
           </div>
@@ -738,22 +738,22 @@ export function PlayersManager() {
               return (
                 <div key={u.id} className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-foreground dark:text-foreground">{u.email}</div>
-                    <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+                    <div className="font-bold text-foreground">{u.email}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       Account Created: {new Date(u.created_at).toLocaleDateString()}
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => removeAccount(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50">
+                    <button onClick={() => removeAccount(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-danger bg-danger/10 hover:bg-danger/10 text-xs font-bold transition disabled:opacity-50">
                       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       Delete Account
                     </button>
                     {!u.email_confirmed_at && (
                       <>
-                        <button onClick={() => resendVerifyEmail(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sky-600 bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50 text-xs font-bold transition disabled:opacity-50">
+                        <button onClick={() => resendVerifyEmail(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-info bg-info/10 hover:bg-info/20 text-xs font-bold transition disabled:opacity-50">
                           Resend Email
                         </button>
-                        <button onClick={() => forceVerify(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/40 text-xs font-bold transition disabled:opacity-50">
+                        <button onClick={() => forceVerify(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/30 hover:bg-primary/40 text-xs font-bold transition disabled:opacity-50">
                           Force Verify
                         </button>
                       </>
@@ -770,7 +770,7 @@ export function PlayersManager() {
           <div className="hidden lg:block overflow-x-auto pb-8">
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
+                <tr className="border-b border-border text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-3 w-10">
                     <input 
                       type="checkbox" 
@@ -779,7 +779,7 @@ export function PlayersManager() {
                         if (selectedPlayers.length === sortedAndFiltered.length) setSelectedPlayers([]);
                         else setSelectedPlayers(sortedAndFiltered.map(p => (p as Player).id));
                       }}
-                      className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                      className="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
                     />
                   </th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("name")}>Player <SortIcon field="name" /></th>
@@ -788,26 +788,26 @@ export function PlayersManager() {
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("singles")}>Singles (Rank) <SortIcon field="singles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("doubles")}>Doubles (Rank) <SortIcon field="doubles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("mixed")}>Mixed (Rank) <SortIcon field="mixed" /></th>
-                  <th className="p-3 font-bold text-right sticky right-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-slate-100 dark:border-slate-800">Actions</th>
+                  <th className="p-3 font-bold text-right sticky right-0 bg-background/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-border">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+              <tbody className="divide-y divide-border/50">
                 {sortedAndFiltered.map((item) => {
                   const p = item as Player & { ranks: any };
                   const busy = actionId === p.id;
                   
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition group">
+                    <tr key={p.id} className="hover:bg-muted/20 transition group">
                       <td className="p-3">
                         <input 
                           type="checkbox" 
                           checked={selectedPlayers.includes(p.id)} 
                           onChange={() => toggleSelect(p.id)} 
-                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                          className="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
                         />
                       </td>
                       <td className="p-3">
-                        <Link href={`/player/${p.id}`} className="block font-bold text-sm text-foreground dark:text-slate-200 whitespace-nowrap hover:text-primary transition cursor-pointer">{p.full_name}</Link>
+                        <Link href={`/player/${p.id}`} className="block font-bold text-sm text-soft whitespace-nowrap hover:text-primary transition cursor-pointer">{p.full_name}</Link>
                         <div className="text-[10px] sm:text-xs text-muted-foreground space-x-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={p.email || ""}>
                           {p.email && <span>{p.email}</span>}
                           {p.department && <span>· {p.department}</span>}
@@ -815,11 +815,11 @@ export function PlayersManager() {
                       </td>
                       <td className="p-3">
                         <div className="flex gap-1.5 flex-wrap">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/30 text-primary" : "bg-warning/10 text-warning"}`}>
                             {p.is_approved ? "Approved" : "Pending"}
                           </span>
                           {p.is_retired && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 whitespace-nowrap">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-danger/10 text-danger whitespace-nowrap">
                               Retired
                             </span>
                           )}
@@ -831,16 +831,16 @@ export function PlayersManager() {
                                 disabled={busy}
                                 className={cn(
                                   "appearance-none px-2 pr-5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider outline-none focus:ring-2 focus:ring-primary/50 transition-all disabled:opacity-50 cursor-pointer shadow-sm border",
-                                  p.role === "master_admin" ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20" :
-                                  p.role === "admin" ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
+                                  p.role === "master_admin" ? "bg-danger/10 text-danger border-danger/20 hover:bg-danger/20" :
+                                  p.role === "admin" ? "bg-warning/10 text-warning border-warning/20 hover:bg-warning/20" :
                                   p.role === "umpire" ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
-                                  "bg-slate-100 dark:bg-slate-800 text-muted-foreground border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                  "bg-muted text-muted-foreground border-border-strong hover:bg-muted-strong"
                                 )}
                               >
-                                <option value="user" className="bg-slate-900 text-slate-200">Reg</option>
-                                <option value="umpire" className="bg-slate-900 text-slate-200">Ump</option>
-                                <option value="admin" className="bg-slate-900 text-slate-200">Adm</option>
-                                <option value="master_admin" className="bg-slate-900 text-slate-200">M-Adm</option>
+                                <option value="user" className="bg-card text-soft">Reg</option>
+                                <option value="umpire" className="bg-card text-soft">Ump</option>
+                                <option value="admin" className="bg-card text-soft">Adm</option>
+                                <option value="master_admin" className="bg-card text-soft">M-Adm</option>
                               </select>
                               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 opacity-50">
                                 <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
@@ -851,43 +851,43 @@ export function PlayersManager() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
                           {p.ranks?.overall !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.overall}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.singles ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{p.stats?.singles ?? "-"}</span>
                           {p.ranks?.singles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.singles}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.doubles ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{p.stats?.doubles ?? "-"}</span>
                           {p.ranks?.doubles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.doubles}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.mixed ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{p.stats?.mixed ?? "-"}</span>
                           {p.ranks?.mixed !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.mixed}</span>}
                         </div>
                       </td>
-                      <td className="p-3 text-right sticky right-0 bg-white dark:bg-slate-950 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-slate-100 dark:border-slate-800/50 z-10">
+                      <td className="p-3 text-right sticky right-0 bg-background group-hover:bg-muted/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-border/50 z-10">
                         <div className="flex gap-1.5 shrink-0 justify-end flex-nowrap">
                           {!p.is_approved ? (
                             <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">
                               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
                             </button>
                           ) : (
-                            <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-muted-foreground hover:text-amber-700 text-xs font-bold transition disabled:opacity-50">
+                            <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="p-2 rounded-xl bg-muted hover:bg-warning/10 text-muted-foreground hover:text-warning text-xs font-bold transition disabled:opacity-50">
                               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserX className="w-3.5 h-3.5" />}
                             </button>
                           )}
-                          <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`p-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"}`}>
+                          <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`p-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-warning/10 text-warning hover:bg-warning/15" : "bg-muted text-muted-foreground hover:bg-muted-strong"}`}>
                             <Sunset className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition disabled:opacity-50">
+                          <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="p-2 rounded-xl text-danger hover:bg-danger/10 transition disabled:opacity-50">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -914,27 +914,27 @@ export function PlayersManager() {
                           type="checkbox" 
                           checked={selectedPlayers.includes(p.id)} 
                           onChange={() => toggleSelect(p.id)} 
-                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                          className="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
                         />
                     </div>
                     <div className="flex justify-between items-start gap-2 pr-8">
                        <div className="flex-1 min-w-0">
-                         <Link href={`/player/${p.id}`} className="block font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 truncate text-lg tracking-tight pb-0.5 hover:opacity-80 transition cursor-pointer">{p.full_name}</Link>
+                         <Link href={`/player/${p.id}`} className="block font-black text-transparent bg-clip-text bg-gradient-to-br from-foreground to-muted-foreground truncate text-lg tracking-tight pb-0.5 hover:opacity-80 transition cursor-pointer">{p.full_name}</Link>
                          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-xs mt-0.5 min-w-0">
-                           <span className="truncate text-blue-600 dark:text-blue-400 font-medium">{p.email}</span>
+                           <span className="truncate text-info font-medium">{p.email}</span>
                            {p.department && (
                              <div className="flex items-center min-w-0">
-                               <span className="truncate font-bold text-[9px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">{p.department}</span>
+                               <span className="truncate font-bold text-[9px] uppercase tracking-wider text-success bg-success/20 px-2 py-0.5 rounded-full">{p.department}</span>
                              </div>
                            )}
                          </div>
                        </div>
                        <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/30 text-primary" : "bg-warning/10 text-warning"}`}>
                             {p.is_approved ? "Approved" : "Pending"}
                           </span>
                           {p.is_retired && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 whitespace-nowrap">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-danger/10 text-danger whitespace-nowrap">
                               Retired
                             </span>
                           )}
@@ -942,33 +942,33 @@ export function PlayersManager() {
                     </div>
                     
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-4 gap-1 py-3 border-y border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl px-1">
+                    <div className="grid grid-cols-4 gap-1 py-3 border-y border-border/50 bg-card/20 rounded-xl px-1">
                        <div className="flex flex-col items-center justify-center text-center">
-                          <span className="text-[9px] text-amber-600 dark:text-amber-500 uppercase font-extrabold tracking-wider">Overall</span>
+                          <span className="text-[9px] text-warning uppercase font-extrabold tracking-wider">Overall</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
                             <span className="font-black text-sm text-foreground">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
-                            {p.ranks?.overall !== "-" && <span className="text-[10px] text-amber-500 font-black tracking-tighter">#{p.ranks?.overall}</span>}
+                            {p.ranks?.overall !== "-" && <span className="text-[10px] text-warning font-black tracking-tighter">#{p.ranks?.overall}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
-                          <span className="text-[9px] text-sky-600 dark:text-sky-500 uppercase font-extrabold tracking-wider">Singles</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
+                          <span className="text-[9px] text-info uppercase font-extrabold tracking-wider">Singles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
                             <span className="font-black text-sm text-foreground">{p.stats?.singles ?? "-"}</span>
-                            {p.ranks?.singles !== "-" && <span className="text-[10px] text-sky-500 font-black tracking-tighter">#{p.ranks?.singles}</span>}
+                            {p.ranks?.singles !== "-" && <span className="text-[10px] text-info font-black tracking-tighter">#{p.ranks?.singles}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
-                          <span className="text-[9px] text-indigo-600 dark:text-indigo-400 uppercase font-extrabold tracking-wider">Doubles</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
+                          <span className="text-[9px] text-info uppercase font-extrabold tracking-wider">Doubles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
                             <span className="font-black text-sm text-foreground">{p.stats?.doubles ?? "-"}</span>
-                            {p.ranks?.doubles !== "-" && <span className="text-[10px] text-indigo-400 font-black tracking-tighter">#{p.ranks?.doubles}</span>}
+                            {p.ranks?.doubles !== "-" && <span className="text-[10px] text-info font-black tracking-tighter">#{p.ranks?.doubles}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
-                          <span className="text-[9px] text-fuchsia-600 dark:text-fuchsia-400 uppercase font-extrabold tracking-wider">Mixed</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
+                          <span className="text-[9px] text-individual uppercase font-extrabold tracking-wider">Mixed</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
                             <span className="font-black text-sm text-foreground">{p.stats?.mixed ?? "-"}</span>
-                            {p.ranks?.mixed !== "-" && <span className="text-[10px] text-fuchsia-400 font-black tracking-tighter">#{p.ranks?.mixed}</span>}
+                            {p.ranks?.mixed !== "-" && <span className="text-[10px] text-individual font-black tracking-tighter">#{p.ranks?.mixed}</span>}
                           </div>
                        </div>
                     </div>
@@ -980,7 +980,7 @@ export function PlayersManager() {
                             value={p.role || "user"}
                             onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                             disabled={busy}
-                            className="w-full px-2 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 outline-none focus:ring-1 focus:ring-indigo-500 transition disabled:opacity-50 h-full"
+                            className="w-full px-2 py-2 rounded-xl text-xs font-bold bg-info/10 border border-info/30 text-info outline-none focus:ring-1 focus:ring-info transition disabled:opacity-50 h-full"
                           >
                             <option value="user">Regular</option>
                             <option value="umpire">Umpire</option>
@@ -990,21 +990,21 @@ export function PlayersManager() {
                        )}
                        
                         {!p.is_approved ? (
-                          <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition disabled:opacity-50 shadow-sm w-full">
+                          <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-success/10 hover:bg-success/15 text-success text-xs font-bold transition disabled:opacity-50 shadow-sm w-full">
                             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
                             <span>Approve</span>
                           </button>
                         ) : (
-                          <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-xs font-bold transition disabled:opacity-50 w-full">
+                          <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-warning/10 hover:bg-warning/15 text-warning text-xs font-bold transition disabled:opacity-50 w-full">
                             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserX className="w-3.5 h-3.5" />}
                             <span>Revoke</span>
                           </button>
                         )}
-                        <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`flex justify-center items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold transition disabled:opacity-50 w-full ${p.is_retired ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100" : "bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 text-orange-600 dark:text-orange-400"}`}>
+                        <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`flex justify-center items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold transition disabled:opacity-50 w-full ${p.is_retired ? "bg-success/10 text-success hover:bg-success/10" : "bg-secondary/10 hover:bg-secondary/10 text-secondary"}`}>
                           <Sunset className="w-3.5 h-3.5" />
                           <span>{p.is_retired ? "Unretire" : "Retire"}</span>
                         </button>
-                        <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 transition disabled:opacity-50 w-full">
+                        <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-danger/10 hover:bg-danger/15 text-danger transition disabled:opacity-50 w-full">
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>Delete</span>
                         </button>

@@ -201,11 +201,11 @@ export default function ExchangeTab() {
   return (
     <div className="w-full">
       {!session ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-center shadow-sm m-4 mt-8">
-          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-            <Store className="w-6 h-6 text-slate-400 dark:text-slate-500" />
+        <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-3xl border border-border text-center shadow-sm m-4 mt-8">
+          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-muted mb-4">
+            <Store className="w-6 h-6 text-muted-foreground" />
           </div>
-          <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Sign in to view Marketplace</h2>
+          <h2 className="text-xl font-black text-soft mb-2">Sign in to view Marketplace</h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
             You must be logged in to buy, sell, or view items in this section.
           </p>
@@ -219,13 +219,13 @@ export default function ExchangeTab() {
       ) : (
         <>
       {/* Header */}
-          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-14 z-30 shadow-sm">
+          <div className="bg-card border-b border-border sticky top-14 z-30 shadow-sm">
             <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Store className="w-5 h-5 text-primary" />
                 </div>
-                <h1 className="text-lg font-black text-slate-800 dark:text-foreground tracking-tight">Marketplace</h1>
+                <h1 className="text-lg font-black text-foreground tracking-tight">Marketplace</h1>
                 <InfoModal
                   title="MARKETPLACE EXCHANGE"
                   items={[
@@ -247,22 +247,22 @@ export default function ExchangeTab() {
             <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-3">
               {/* Top Row: Type Filter & Sold Toggle */}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full shrink-0">
+                <div className="flex bg-muted/50 p-1 rounded-full shrink-0">
                   <button
                     onClick={() => setTypeFilter('all')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-muted-strong text-foreground shadow-sm' : 'text-muted-foreground hover:text-soft'}`}
                   >
                     All
                   </button>
                   <button
                     onClick={() => setTypeFilter('sell')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-primary/40 text-primary shadow-sm' : 'text-muted-foreground hover:text-soft'}`}
                   >
                     Selling
                   </button>
                   <button
                     onClick={() => setTypeFilter('buy')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-info/15 text-info shadow-sm' : 'text-muted-foreground hover:text-soft'}`}
                   >
                     Requests
                   </button>
@@ -273,8 +273,8 @@ export default function ExchangeTab() {
                   onClick={() => setShowSold(s => !s)}
                   className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
                     showSold
-                      ? 'bg-slate-500 text-on-accent shadow-sm'
-                      : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
+                      ? 'bg-muted-foreground text-on-accent shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted-strong'
                   }`}
                 >
                   {showSold ? "✓ Showing Sold" : "Show Sold"}
@@ -289,8 +289,8 @@ export default function ExchangeTab() {
                     onClick={() => setFilter(cat)}
                     className={`px-1 sm:px-4 py-1.5 rounded-full text-xs font-black transition-all truncate text-center ${
                       filter === cat
-                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                        : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'bg-muted text-muted-foreground hover:bg-muted-strong'
                     }`}
                   >
                     {cat}
@@ -304,14 +304,14 @@ export default function ExchangeTab() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl h-80 animate-pulse border border-slate-200 dark:border-slate-800" />
+              <div key={i} className="bg-card rounded-2xl h-80 animate-pulse border border-border" />
             ))}
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="text-center py-12">
-            <Package className="w-16 h-16 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-foreground mb-2">No items found</h3>
-            <p className="text-muted-foreground dark:text-muted-foreground">Be the first to list an item in this category!</p>
+            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-foreground mb-2">No items found</h3>
+            <p className="text-muted-foreground">Be the first to list an item in this category!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -329,30 +329,30 @@ export default function ExchangeTab() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                   key={item.id}
-                  className={`bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm group hover:shadow-md transition-shadow flex flex-col relative ${item.status === 'sold' ? 'opacity-60' : ''}`}
+                  className={`bg-card rounded-3xl border border-border overflow-hidden shadow-sm group hover:shadow-md transition-shadow flex flex-col relative ${item.status === 'sold' ? 'opacity-60' : ''}`}
                 >
                   {/* SOLD stamp */}
                   {item.status === 'sold' && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                      <div className="rotate-[-20deg] border-4 border-rose-500 text-rose-500 text-3xl font-black px-4 py-1 rounded-lg opacity-80 tracking-widest">
+                      <div className="rotate-[-20deg] border-4 border-danger text-danger text-3xl font-black px-4 py-1 rounded-lg opacity-80 tracking-widest">
                         SOLD
                       </div>
                     </div>
                   )}
 
                   {/* Image Area */}
-                  <div className="h-48 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center shrink-0">
+                  <div className="h-48 bg-muted relative flex items-center justify-center shrink-0">
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
-                      <ImageIcon className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
+                      <ImageIcon className="w-10 h-10 text-muted-foreground" />
                     )}
-                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-slate-300 z-20">
+                    <div className="absolute top-3 left-3 bg-media/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-soft z-20">
                       {item.condition}
                     </div>
                     {item.listing_type === 'buy' && (
-                      <div className="absolute inset-0 z-10 bg-indigo-900/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                        <div className="bg-indigo-600 text-on-accent text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-white/20">
+                      <div className="absolute inset-0 z-10 bg-info/5 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                        <div className="bg-info text-on-accent text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-foreground/20">
                           WANT TO BUY
                         </div>
                       </div>
@@ -362,31 +362,31 @@ export default function ExchangeTab() {
                   {/* Content Area */}
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="font-bold text-slate-800 dark:text-foreground leading-tight line-clamp-2 text-lg">
+                      <h3 className="font-bold text-foreground leading-tight line-clamp-2 text-lg">
                         {item.title}
                       </h3>
-                      <div className="font-black text-primary dark:text-primary text-lg whitespace-nowrap">
+                      <div className="font-black text-primary text-lg whitespace-nowrap">
                         {item.listing_type === 'buy' 
                           ? (item.price === 0 ? "Open Budget" : `Max ₹${item.price}`) 
                           : (item.price === 0 ? "Giveaway" : `₹${item.price}`)}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground dark:text-muted-foreground line-clamp-2 mb-4 flex-1">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
                       {item.description}
                     </p>
 
                     {/* Footer / Seller info */}
-                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="mt-auto pt-4 border-t border-border">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <img
                             src={seller.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=10b981&color=fff`}
                             alt={safeName}
-                            className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover"
+                            className="w-8 h-8 rounded-full border border-border-strong object-cover"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-800 dark:text-foreground">{safeName}</p>
-                            <p className="text-[10px] text-muted-foreground dark:text-muted-foreground font-medium">
+                            <p className="text-xs font-bold text-foreground">{safeName}</p>
+                            <p className="text-[10px] text-muted-foreground font-medium">
                               {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </p>
                           </div>
@@ -399,14 +399,14 @@ export default function ExchangeTab() {
                             <div className="flex gap-2">
                               <a
                                 href={`mailto:${safeName.replace(/\s+/g, '.').toLowerCase()}@iisc.ac.in?subject=Marketplace: ${encodeURIComponent(item.title)}`}
-                                className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
+                                className="flex-1 bg-muted hover:bg-muted-strong text-soft py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
                               >
                                 <Mail className="w-3.5 h-3.5" /> Contact
                               </a>
                               <button
                                 onClick={() => reportListing(item.id, item.title)}
                                 title="Report this listing"
-                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-muted-foreground cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
+                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-muted text-muted-foreground cursor-default" : "bg-danger/10 text-danger hover:bg-danger/20"}`}
                               >
                                 <Flag className="w-3.5 h-3.5" />
                               </button>
@@ -416,7 +416,7 @@ export default function ExchangeTab() {
                               <button
                                 onClick={() => fulfillRequest(item.id)}
                                 disabled={busyId === item.id}
-                                className="flex-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                className="flex-1 bg-info/15 text-info hover:bg-info/25 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                               >
                                 {busyId === item.id ? <Package className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                                 I Have This
@@ -424,7 +424,7 @@ export default function ExchangeTab() {
                               <button
                                 onClick={() => reportListing(item.id, item.title)}
                                 title="Report this listing"
-                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-muted-foreground cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
+                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-muted text-muted-foreground cursor-default" : "bg-danger/10 text-danger hover:bg-danger/20"}`}
                               >
                                 <Flag className="w-3.5 h-3.5" />
                               </button>
@@ -435,7 +435,7 @@ export default function ExchangeTab() {
                             <div className="flex gap-2">
                               <span
                                 title={`Offered by ${item.fulfilled_by_name}`}
-                                className="flex-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-default truncate px-2"
+                                className="flex-1 bg-info/15 text-info py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-default truncate px-2"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Offered by {item.fulfilled_by_name}
                               </span>
@@ -447,23 +447,23 @@ export default function ExchangeTab() {
                           <button
                             disabled={busyId === item.id}
                             onClick={() => setMenuOpenId(menuOpenId === item.id ? null : item.id)}
-                            className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 py-2 rounded-xl text-xs font-black transition disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 bg-muted hover:bg-muted-strong text-soft py-2 rounded-xl text-xs font-black transition disabled:opacity-50"
                           >
                             <MoreVertical className="w-3.5 h-3.5" /> Manage Listing
                           </button>
                           {menuOpenId === item.id && (
-                            <div className="absolute bottom-full mb-2 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-20 overflow-hidden">
+                            <div className="absolute bottom-full mb-2 left-0 right-0 bg-muted border border-border-strong rounded-2xl shadow-xl z-20 overflow-hidden">
                               {item.status !== 'sold' && (
                                 <button
                                   onClick={() => markAsSold(item.id)}
-                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition"
+                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20 transition"
                                 >
                                   <CheckCircle2 className="w-4 h-4" /> Mark as Sold
                                 </button>
                               )}
                               <button
                                 onClick={() => deleteListing(item.id)}
-                                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-danger hover:bg-danger/10 transition"
                               >
                                 <Trash2 className="w-4 h-4" /> Delete Listing
                               </button>

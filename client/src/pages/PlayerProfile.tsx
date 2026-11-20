@@ -408,19 +408,19 @@ export default function PlayerProfile() {
   if (!player) return <MissingPlayer id={id} onFound={(newId) => setLocation(`/player/${newId}${window.location.hash}`, { replace: true })} />;
 
   return (
-    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-amber-500/30 overflow-x-hidden">
+    <div id="profile-container" className="min-h-screen bg-background selection:bg-warning/30 overflow-x-hidden">
       {/* Background patterns */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-info/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
       </div>
 
-      <div className="relative z-10 w-full bg-white dark:bg-slate-950">
+      <div className="relative z-10 w-full bg-background">
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => window.history.length > 2 ? window.history.back() : setLocation("/pulse#h2h")}
-            className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+            className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -435,8 +435,8 @@ export default function PlayerProfile() {
                   title={isSubscribed ? `Subscribed (${subMins}m before match)` : "Get notified for player matches"}
                   className={`h-10 md:h-12 px-3 md:px-4 rounded-full flex items-center gap-1.5 font-bold text-xs md:text-sm shadow-sm transition-all border ${
                     isSubscribed
-                      ? "bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20"
-                      : "bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white border-slate-200 dark:border-white/10"
+                      ? "bg-warning/10 text-warning border-warning/30 hover:bg-warning/20"
+                      : "bg-media/40 hover:bg-media/60 text-on-media border-foreground/10"
                   }`}
                 >
                   <Bell className="w-4 h-4" fill={isSubscribed ? "currentColor" : "none"} />
@@ -475,7 +475,7 @@ export default function PlayerProfile() {
                 <button
                   onClick={handleReport}
                   title="Report User"
-                  className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:bg-black/40 dark:hover:bg-rose-500/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+                  className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-danger/80 hover:text-danger text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10"
                 >
                   <Flag className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
@@ -487,28 +487,28 @@ export default function PlayerProfile() {
               <>
                 <button aria-label="Share profile"
                   onClick={handleShare}
-                  className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+                  className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10"
                 >
                   <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-lg text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+                      className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 shadow-lg text-on-accent font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
                     >
                       <Sparkles className="w-4 h-4" />
                       <span className="hidden sm:inline">{currentYearNow} Wrapped</span>
                       <span className="sm:hidden">Wrapped</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-slate-200 dark:border-slate-800">
+                  <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-md border-border">
                     {wrappedYears.map((year) => (
                       <DropdownMenuItem
                         key={year}
                         onClick={() => handleWrapped(year)}
-                        className="font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                        className="font-bold text-soft cursor-pointer hover:bg-muted"
                       >
-                        <Sparkles className="w-4 h-4 mr-2 text-amber-500" />
+                        <Sparkles className="w-4 h-4 mr-2 text-warning" />
                         {year} Wrapped
                       </DropdownMenuItem>
                     ))}
@@ -535,7 +535,7 @@ export default function PlayerProfile() {
                     },
                     instagram: player.instagram || undefined,
                   })}
-                  className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-slate-200 dark:border-white/10 whitespace-nowrap"
+                  className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-foreground/10 whitespace-nowrap"
                 >
                   <span className="hidden sm:inline">Export PDF</span>
                   <span className="sm:hidden">PDF</span>
@@ -555,7 +555,7 @@ export default function PlayerProfile() {
                   </button>
                 </Link>
                 <Link href="/profile/setup">
-                  <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10" title="Profile Settings">
+                  <button className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10" title="Profile Settings">
                     <Settings className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </Link>
@@ -564,7 +564,7 @@ export default function PlayerProfile() {
             {currentUser && currentUser.id === player.id && (
               <button
                 onClick={() => signOut()}
-                className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+                className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10"
               >
                 <LogOut className="w-4 h-4 md:w-5 md:h-5" />
               </button>
@@ -595,7 +595,7 @@ export default function PlayerProfile() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-slate-950 sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
+        <div className="w-full border-b border-warning/10 bg-background sticky top-0 z-30 shadow-sm shadow-warning/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center gap-2 md:gap-6 w-full md:min-w-max">
               {[
@@ -617,15 +617,15 @@ export default function PlayerProfile() {
                   }}
                   className={`flex-auto md:flex-none min-w-[100px] py-3 md:py-4 text-[11px] md:text-sm font-black tracking-widest uppercase transition-colors relative text-center ${
                     activeTab === tab
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-muted-foreground hover:text-foreground dark:hover:text-slate-300"
+                      ? "text-warning"
+                      : "text-muted-foreground hover:text-soft"
                   }`}
                 >
                   {tab === "TRAINING" ? "⚡ TRAINING" : tab}
                   {activeTab === tab && (
                     <motion.div
                       layoutId="profileTabIndicator"
-                      className="absolute bottom-0 left-0 right-0 h-1 bg-amber-500 dark:bg-amber-400 rounded-t-full"
+                      className="absolute bottom-0 left-0 right-0 h-1 bg-warning rounded-t-full"
                     />
                   )}
                 </button>

@@ -47,21 +47,21 @@ export interface TournamentTheme {
 }
 
 const INDIVIDUAL: FamilyTokens = {
-  text: "text-violet-600 dark:text-violet-300",
-  bg: "bg-violet-600",
-  bgSoft: "bg-violet-50 dark:bg-violet-500/10",
-  border: "border-violet-200 dark:border-violet-500/30",
-  ring: "ring-violet-500/40",
-  gradient: "from-violet-500 to-indigo-500",
+  text: "text-individual",
+  bg: "bg-individual",
+  bgSoft: "bg-individual/10",
+  border: "border-individual/30",
+  ring: "ring-individual/40",
+  gradient: "from-individual to-info",
 };
 
 const TEAM: FamilyTokens = {
-  text: "text-emerald-600 dark:text-emerald-300",
-  bg: "bg-emerald-600",
-  bgSoft: "bg-emerald-50 dark:bg-emerald-500/10",
-  border: "border-emerald-200 dark:border-emerald-500/30",
-  ring: "ring-emerald-500/40",
-  gradient: "from-emerald-500 to-teal-500",
+  text: "text-success",
+  bg: "bg-success",
+  bgSoft: "bg-success/10",
+  border: "border-success/30",
+  ring: "ring-success/40",
+  gradient: "from-success to-team",
 };
 
 /** Derive the event family from either tournament_type or format_family. */
@@ -110,44 +110,44 @@ export const SEMANTIC = {
     border: "border-primary/30",
   },
   live: {
-    text: "text-rose-500 dark:text-rose-400",
-    bg: "bg-rose-500 text-white",
-    bgSoft: "bg-rose-500/15 text-rose-300",
-    border: "border-rose-500/30",
+    text: "text-danger",
+    bg: "bg-danger text-danger-foreground",
+    bgSoft: "bg-danger/15 text-danger",
+    border: "border-danger/30",
   },
   pending: {
-    text: "text-amber-500 dark:text-amber-400",
-    bg: "bg-amber-500 text-slate-950",
-    bgSoft: "bg-amber-500/15 text-amber-300",
-    border: "border-amber-500/30",
+    text: "text-warning",
+    bg: "bg-warning text-warning-foreground",
+    bgSoft: "bg-warning/15 text-warning",
+    border: "border-warning/30",
   },
   success: {
-    text: "text-emerald-500 dark:text-emerald-400",
-    bg: "bg-emerald-500 text-white",
-    bgSoft: "bg-emerald-500/15 text-emerald-300",
-    border: "border-emerald-500/30",
+    text: "text-success",
+    bg: "bg-success text-success-foreground",
+    bgSoft: "bg-success/15 text-success",
+    border: "border-success/30",
   },
   neutral: {
-    text: "text-slate-400 dark:text-slate-500",
-    bg: "bg-slate-700 text-slate-200",
-    bgSoft: "bg-slate-800 text-slate-400",
-    border: "border-slate-700/60",
+    text: "text-muted-foreground",
+    bg: "bg-muted-strong text-soft",
+    bgSoft: "bg-muted text-muted-foreground",
+    border: "border-border-strong/60",
   },
 } as const;
 
 /** Ranked-state tokens (colour-blind-safe: always paired with icon + label). */
 export const RANKED_TOKENS = {
   ranked: {
-    text: "text-amber-600 dark:text-amber-300",
-    bgSoft: "bg-amber-50 dark:bg-amber-500/10",
-    border: "border-amber-200 dark:border-amber-500/40",
+    text: "text-warning",
+    bgSoft: "bg-warning/10",
+    border: "border-warning/40",
     label: "Ranked",
     sublabel: "Affects ELO",
   },
   unranked: {
-    text: "text-slate-500 dark:text-slate-400",
-    bgSoft: "bg-slate-100 dark:bg-slate-500/10",
-    border: "border-slate-200 dark:border-slate-600/50",
+    text: "text-muted-foreground",
+    bgSoft: "bg-muted-foreground/10",
+    border: "border-border-strong/50",
     label: "Casual",
     sublabel: "No ELO",
   },

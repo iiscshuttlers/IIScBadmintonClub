@@ -43,11 +43,11 @@ export function RouteStatusCard({
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div
-        className="max-w-md w-full text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-8"
+        className="max-w-md w-full text-center bg-card rounded-3xl border border-border shadow-sm p-8"
         role={kind === "error" ? "alert" : undefined}
       >
-        <Icon className="w-10 h-10 mx-auto mb-3 text-slate-400" aria-hidden />
-        <h1 className="text-xl font-black text-slate-800 dark:text-slate-100">
+        <Icon className="w-10 h-10 mx-auto mb-3 text-muted-foreground" aria-hidden />
+        <h1 className="text-xl font-black text-foreground">
           {title ?? (kind === "error" ? "Couldn't load this tournament" : "Tournament not found")}
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
@@ -68,7 +68,7 @@ export function RouteStatusCard({
           )}
           <Link
             href="/tournaments"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted text-soft text-sm font-bold"
           >
             All tournaments
           </Link>
@@ -129,11 +129,11 @@ export default function TournamentPage() {
   const showStory = tab === "results" && !panel;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
+    <div className="min-h-screen bg-background pb-10">
       <div className="container mx-auto px-4 max-w-3xl pt-5 flex items-center justify-between gap-4">
         <Link
           href="/tournaments"
-          className="inline-flex items-center gap-1.5 text-sm font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-black text-soft hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden /> All tournaments
         </Link>
@@ -190,9 +190,9 @@ function FinishedWinners({
   return (
     <section
       aria-labelledby="tournament-winners-heading"
-      className="mb-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-4 sm:p-6 space-y-6"
+      className="mb-6 bg-card rounded-3xl border border-border shadow-sm p-4 sm:p-6 space-y-6"
     >
-      <h2 id="tournament-winners-heading" className="text-lg font-black text-slate-800 dark:text-slate-100">
+      <h2 id="tournament-winners-heading" className="text-lg font-black text-foreground">
         Winners
       </h2>
       <TournamentWinnersPanel tournament={input} />

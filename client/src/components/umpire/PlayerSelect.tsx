@@ -116,12 +116,12 @@ export function PlayerSelect({
         onChange={(e) => { setSearch(e.target.value); setIsOpen(true); onChange(e.target.value); }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground truncate"
+        className="w-full text-sm font-bold bg-card/50 border border-border-strong rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground truncate"
       />
       {isOpen && (
         <div 
           ref={listboxRef} 
-          className="absolute z-[100] left-0 right-0 w-full mt-1 bg-slate-850 dark:bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto overscroll-contain visible-scrollbar touch-pan-y"
+          className="absolute z-[100] left-0 right-0 w-full mt-1 bg-muted border border-border-strong rounded-xl shadow-2xl max-h-56 overflow-y-auto overscroll-contain visible-scrollbar touch-pan-y"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {filtered.length === 0 ? (
@@ -144,24 +144,24 @@ export function PlayerSelect({
                     setSearch(p.full_name);
                     setIsOpen(false);
                   }}
-                  className={`p-2.5 text-sm font-bold transition-colors border-b border-slate-700/40 last:border-0 ${
+                  className={`p-2.5 text-sm font-bold transition-colors border-b border-border-strong/40 last:border-0 ${
                     isAlreadyAdded
-                      ? "cursor-not-allowed opacity-60 bg-slate-800/80"
+                      ? "cursor-not-allowed opacity-60 bg-muted/80"
                       : activeIndex === idx
                       ? "bg-primary text-primary-foreground font-black cursor-pointer"
-                      : "hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-200 cursor-pointer"
+                      : "hover:bg-primary/20 text-soft cursor-pointer"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`truncate ${isAlreadyAdded ? "line-through text-slate-400 font-semibold" : ""}`}>
+                    <span className={`truncate ${isAlreadyAdded ? "line-through text-muted-foreground font-semibold" : ""}`}>
                       {p.full_name}
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isAlreadyAdded && (
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
                           activeIndex === idx
-                            ? "text-amber-950 bg-amber-200/90 border-amber-300"
-                            : "text-amber-400/90 bg-amber-400/10 border-amber-400/20"
+                            ? "text-warning bg-warning/15 border-warning"
+                            : "text-warning/90 bg-warning/10 border-warning/20"
                         }`}>
                           Already in team
                         </span>
@@ -169,8 +169,8 @@ export function PlayerSelect({
                       {p._isSuggested && !isAlreadyAdded && (
                         <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                           activeIndex === idx
-                            ? "text-amber-950 bg-amber-200/90 border-amber-300"
-                            : "text-amber-400 bg-amber-400/10 border-amber-400/30"
+                            ? "text-warning bg-warning/15 border-warning"
+                            : "text-warning bg-warning/10 border-warning/30"
                         }`}>
                           Suggested Match
                         </span>
@@ -180,10 +180,10 @@ export function PlayerSelect({
                   {p.iisc_email && (
                     <div className={`text-[11px] font-mono truncate mt-0.5 ${
                       isAlreadyAdded
-                        ? "line-through text-slate-500"
+                        ? "line-through text-muted-foreground"
                         : activeIndex === idx
                         ? "text-primary-foreground/85"
-                        : "text-emerald-400/90"
+                        : "text-success/90"
                     }`}>
                       IISc: {p.iisc_email}
                     </div>
@@ -191,10 +191,10 @@ export function PlayerSelect({
                   {p.email && p.email !== p.iisc_email && (
                     <div className={`text-[11px] font-mono truncate mt-0.5 ${
                       isAlreadyAdded
-                        ? "line-through text-slate-500"
+                        ? "line-through text-muted-foreground"
                         : activeIndex === idx
                         ? "text-primary-foreground/75"
-                        : "text-slate-400"
+                        : "text-muted-foreground"
                     }`}>
                       {p.email}
                     </div>

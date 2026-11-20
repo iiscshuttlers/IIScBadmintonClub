@@ -20,29 +20,29 @@ import {
   notifyTournamentMatch,
 } from "@/services/tournamentService";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
 const COURT_COLORS: Record<string, string> = {
-  C1: "bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] dark:text-[var(--info)]",
-  C2: "bg-[var(--success)] dark:bg-[var(--success)]/40 text-[var(--success)] dark:text-[var(--success)]",
-  C3: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
-  C4: "bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] dark:text-[var(--warning)]",
-  C5: "bg-[var(--danger)] dark:bg-[var(--danger)]/40 text-[var(--danger)] dark:text-[var(--danger)]",
-  C6: "bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300",
+  C1: "bg-info/40 text-info",
+  C2: "bg-success/40 text-success",
+  C3: "bg-individual/15 text-individual",
+  C4: "bg-warning/40 text-warning",
+  C5: "bg-danger/40 text-danger",
+  C6: "bg-accent/15 text-accent",
 };
 
 export function getCourtColorClass(court: string) {
-  return COURT_COLORS[court.toUpperCase()] ?? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
+  return COURT_COLORS[court.toUpperCase()] ?? "bg-muted text-soft";
 }
 
 export function MatchStatusChip({ match }: { match: { status: string; scheduled_at?: string | null; court_number?: string | null } }) {
-  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] whitespace-nowrap">W/O</span>;
-  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary whitespace-nowrap">COMPLETED</span>;
-  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] whitespace-nowrap">LIVE</span>;
-  if (match.scheduled_at) return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] whitespace-nowrap">SCHEDULED</span>;
-  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground whitespace-nowrap">PENDING</span>;
+  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-info/40 text-info whitespace-nowrap">W/O</span>;
+  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/40 text-primary whitespace-nowrap">COMPLETED</span>;
+  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-warning/40 text-warning whitespace-nowrap">LIVE</span>;
+  if (match.scheduled_at) return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-info/40 text-info whitespace-nowrap">SCHEDULED</span>;
+  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-muted text-muted-foreground whitespace-nowrap">PENDING</span>;
 }
 
 export interface TournamentMatchesTabProps {
@@ -465,7 +465,7 @@ export function TournamentMatchesTab({
         const roundName = roundMatches[0]?.round_name ?? `Round ${round}`;
         return (
           <details key={round} className="group mb-6">
-            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 mb-3 select-none outline-none hover:bg-slate-50 dark:hover:bg-slate-900/50 p-2 rounded-xl transition">
+            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 mb-3 select-none outline-none hover:bg-card/50 p-2 rounded-xl transition">
               <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:-rotate-180" />
               <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">{roundName}</h3>
             </summary>
@@ -479,17 +479,17 @@ export function TournamentMatchesTab({
 
                 return (
                   <div key={m.id} className={`${cardCls} !p-0 overflow-hidden`}>
-                    <div className="flex items-center gap-2 flex-wrap px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">{m.match_code}</span>
+                    <div className="flex items-center gap-2 flex-wrap px-4 py-2.5 bg-muted/30 border-b border-border">
+                      <span className="text-[11px] font-black text-muted-foreground uppercase tracking-wider bg-muted-strong/60 px-2 py-0.5 rounded-md">{m.match_code}</span>
                       <MatchStatusChip match={m} />
                       {m.reminder_sent && (
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400" title="Notification sent">
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-success" title="Notification sent">
                           <Bell className="w-3 h-3 fill-current" /> Notified
                         </span>
                       )}
-                      {m.locked && <Lock className="w-3.5 h-3.5 text-[var(--warning)]" aria-label="Locked" />}
+                      {m.locked && <Lock className="w-3.5 h-3.5 text-warning" aria-label="Locked" />}
                       {m.scored_by && m.status === 'completed' && (
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 ml-auto">
+                        <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1 ml-auto">
                           <Trophy className="w-3 h-3" /> {allPlayers?.find((p) => p.id === m.scored_by)?.full_name || "Umpire"}
                         </span>
                       )}
@@ -504,7 +504,7 @@ export function TournamentMatchesTab({
                             </span>
                           )}
                           {m.scheduled_at && (
-                            <span className="text-[10px] text-muted-foreground dark:text-slate-400 flex items-center gap-1">
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                               <CalendarDays className="w-3 h-3" />
                               {new Date(m.scheduled_at).toLocaleString("en-IN", { weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
                             </span>
@@ -514,11 +514,11 @@ export function TournamentMatchesTab({
 
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className={`text-sm font-bold truncate ${m.winner_side === 1 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
+                          <div className={`text-sm font-bold truncate ${m.winner_side === 1 ? "text-primary" : "text-soft"}`}>
                             {m.team1_label ?? "TBD"}
                             {m.status === "scheduled" && (!m.locked || isMasterAdmin) && m.team1_label && m.team1_label !== "TBD" && (
                               <button onClick={() => { setSwapParticipant({ matchId: m.id, side: 1 }); loadParticipants(m.category); }}
-                                className="ml-1 inline-flex align-middle text-muted-foreground hover:text-[var(--info)] transition" title="Swap participant">
+                                className="ml-1 inline-flex align-middle text-muted-foreground hover:text-info transition" title="Swap participant">
                                 <ArrowLeftRight className="w-3 h-3" />
                               </button>
                             )}
@@ -526,10 +526,10 @@ export function TournamentMatchesTab({
                         </div>
                         <span className="text-[10px] font-black text-muted-foreground uppercase shrink-0">vs</span>
                         <div className="flex-1 min-w-0 text-right">
-                          <div className={`text-sm font-bold truncate ${m.winner_side === 2 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
+                          <div className={`text-sm font-bold truncate ${m.winner_side === 2 ? "text-primary" : "text-soft"}`}>
                             {m.status === "scheduled" && (!m.locked || isMasterAdmin) && m.team2_label && m.team2_label !== "TBD" && (
                               <button onClick={() => { setSwapParticipant({ matchId: m.id, side: 2 }); loadParticipants(m.category); }}
-                                className="mr-1 inline-flex align-middle text-muted-foreground hover:text-[var(--info)] transition" title="Swap participant">
+                                className="mr-1 inline-flex align-middle text-muted-foreground hover:text-info transition" title="Swap participant">
                                 <ArrowLeftRight className="w-3 h-3" />
                               </button>
                             )}
@@ -539,10 +539,10 @@ export function TournamentMatchesTab({
                       </div>
 
                       {swapParticipant?.matchId === m.id && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                        <div className="mt-2 p-2.5 rounded-lg bg-info/10 border border-info/40">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <ArrowLeftRight className="w-3.5 h-3.5 text-[var(--info)]" />
-                            <span className="text-[11px] font-black text-[var(--info)]">
+                            <ArrowLeftRight className="w-3.5 h-3.5 text-info" />
+                            <span className="text-[11px] font-black text-info">
                               Swap {swapParticipant.side === 1 ? m.team1_label : m.team2_label}
                             </span>
                             <button onClick={() => setSwapParticipant(null)} className="ml-auto text-muted-foreground hover:text-foreground">
@@ -550,7 +550,7 @@ export function TournamentMatchesTab({
                             </button>
                           </div>
                           <select
-                            className="w-full text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5"
+                            className="w-full text-xs rounded-md border border-border-strong bg-card px-2 py-1.5"
                             defaultValue=""
                             disabled={swapSaving}
                             onChange={(e) => { if (e.target.value) executeSwap(e.target.value); }}
@@ -582,7 +582,7 @@ export function TournamentMatchesTab({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {m.status === "scheduled" && canEdit && (
                           <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] dark:text-[var(--warning)] hover:bg-[var(--warning)] dark:hover:bg-[var(--warning)]/40 transition">
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-warning/40 text-warning hover:bg-warning/40 transition">
                             <Play className="w-3 h-3" /> Start
                           </button>
                         )}
@@ -594,27 +594,27 @@ export function TournamentMatchesTab({
                               const ptw = m.points_to_win ?? 21;
                               setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
                             }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/25 dark:hover:bg-primary/50 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/40 text-primary hover:bg-primary/50 transition">
                               <Trophy className="w-3 h-3" /> Score
                             </button>
                             <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition">
                               <SkipForward className="w-3 h-3" /> W/O T1
                             </button>
                             <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition">
                               <SkipForward className="w-3 h-3" /> W/O T2
                             </button>
                             <button onClick={() => submitWalkover(m.id, 0)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)]/40 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-[var(--danger)]/20 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-danger/40 text-danger hover:bg-danger/20 transition">
                               <SkipForward className="w-3 h-3" /> Double W/O
                             </button>
                             <button onClick={() => assignBye(m.id, 1)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-info/25 text-info hover:bg-info/10 transition">
                               <SkipForward className="w-3 h-3" /> BYE T1
                             </button>
                             <button onClick={() => assignBye(m.id, 2)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-info/25 text-info hover:bg-info/10 transition">
                               <SkipForward className="w-3 h-3" /> BYE T2
                             </button>
                           </>
@@ -631,11 +631,11 @@ export function TournamentMatchesTab({
                         {m.status === "completed" && isMasterAdmin && (
                           <>
                             <button onClick={() => setCorrecting({ id: m.id, t1: m.team1_label ?? "Side 1", t2: m.team2_label ?? "Side 2" })}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--warning)] dark:border-[var(--warning)] text-[var(--warning)] dark:text-[var(--warning)] hover:bg-amber-50 dark:hover:bg-[var(--warning)]/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-warning text-warning hover:bg-warning/30 transition">
                               <Unlock className="w-3 h-3" /> Correct
                             </button>
                             <button onClick={() => undoTournamentMatch(m.id)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)] text-[var(--danger)] dark:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-[var(--danger)]/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-danger text-danger hover:bg-danger/30 transition">
                               <Undo2 className="w-3 h-3" /> Undo Match
                             </button>
                           </>
@@ -661,21 +661,21 @@ export function TournamentMatchesTab({
                                 setRemindSendingId(null);
                               }
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
                           >
                             {remindSendingId === m.id ? (
                               <>
-                                <Loader2 className="w-3 h-3 animate-spin text-[var(--warning)]" />
+                                <Loader2 className="w-3 h-3 animate-spin text-warning" />
                                 <span>Sending...</span>
                               </>
                             ) : remindSentMap[m.id] ? (
                               <>
-                                <Check className="w-3 h-3 text-[var(--success)]" />
-                                <span className="text-[var(--success)] dark:text-[var(--success)] font-black">Sent!</span>
+                                <Check className="w-3 h-3 text-success" />
+                                <span className="text-success font-black">Sent!</span>
                               </>
                             ) : (
                               <>
-                                <AlertCircle className="w-3 h-3 text-[var(--warning)]" />
+                                <AlertCircle className="w-3 h-3 text-warning" />
                                 <span>Remind</span>
                               </>
                             )}
@@ -692,11 +692,11 @@ export function TournamentMatchesTab({
                               }
                               setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: localAt });
                             }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition">
                               <CalendarDays className="w-3 h-3" /> Schedule
                             </button>
                             <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${m.id}`; }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)]/50 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-danger/50 text-danger hover:bg-danger/30 transition">
                               <Camera className="w-3 h-3" /> Camera
                             </button>
                           </>
@@ -704,10 +704,10 @@ export function TournamentMatchesTab({
                       </div>
 
                       {isMasterAdmin && !isByeMatch && (
-                        <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-dashed border-slate-200/60 dark:border-slate-700/40">
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-dashed border-border-strong/40">
                           {(isMasterAdmin || session?.user?.id === m.umpired_by) && m.status !== "completed" && (
                             <button onClick={() => setAssignUmpire({ matchId: m.id, umpireId: m.umpired_by ?? "" })}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition">
                               <Users className="w-3 h-3" /> Umpire
                             </button>
                           )}
@@ -733,7 +733,7 @@ export function TournamentMatchesTab({
                               }
                             }}
                               disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-[var(--danger)]/30 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-[var(--danger)] dark:hover:bg-[var(--danger)]/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-danger/30 text-danger hover:bg-danger/30 transition">
                               <RotateCcw className="w-3 h-3" /> Reset
                             </button>
                           )}
@@ -758,7 +758,7 @@ export function TournamentMatchesTab({
                               }
                             }}
                               disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-[var(--danger)]/30 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-[var(--danger)] dark:hover:bg-[var(--danger)]/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-danger/30 text-danger hover:bg-danger/30 transition">
                               <Trash2 className="w-3 h-3" /> Delete 3rd Place
                             </button>
                           )}
@@ -796,7 +796,7 @@ export function TournamentMatchesTab({
                                 }
                               }}
                               disabled={busy}
-                              className="bg-transparent border border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase text-muted-foreground rounded-lg px-2 py-1 outline-none transition cursor-pointer"
+                              className="bg-transparent border border-border-strong text-[11px] font-bold uppercase text-muted-foreground rounded-lg px-2 py-1 outline-none transition cursor-pointer"
                             >
                               <option value="scheduled">Scheduled</option>
                               <option value="in_progress">In Progress</option>
@@ -819,7 +819,7 @@ export function TournamentMatchesTab({
                           }
                         }}
                           disabled={busy}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/25 transition">
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/40 text-primary hover:bg-primary/25 transition">
                           <RotateCcw className="w-3 h-3" /> Restore BYE
                         </button>
                       )}
@@ -841,8 +841,8 @@ export function TournamentMatchesTab({
                         setEditScore((p) => p && ({ ...p, setsData: next, sets: nextStr, ...(auto ? { side: auto } : {}) }));
                       };
                       return (
-                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                          <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                        <div className="mt-3 pt-3 border-t border-border space-y-3">
+                          <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 py-1.5 rounded-lg border border-border-strong/50">
                             <span title="Points required to win a set">Win at {editScore!.pointsToWin}</span>
                             <span className="opacity-30">•</span>
                             <span title="Best of X sets">Best of {editScore!.bestOfSets}</span>
@@ -899,8 +899,8 @@ export function TournamentMatchesTab({
                                   disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
-                                    ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
+                                    ${t1Won ? "border-primary bg-primary/30 text-primary/70"
+                                            : "border-border-strong bg-muted text-foreground"}
                                     focus:border-primary`}
                                 />
                                 <span className="text-center text-xs font-bold text-muted-foreground">–</span>
@@ -910,8 +910,8 @@ export function TournamentMatchesTab({
                                   disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
-                                    ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
+                                    ${t2Won ? "border-primary bg-primary/30 text-primary/70"
+                                            : "border-border-strong bg-muted text-foreground"}
                                     focus:border-primary`}
                                 />
                               </div>
@@ -920,14 +920,14 @@ export function TournamentMatchesTab({
                           <div className="flex items-center gap-2 pt-1">
                             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0">Winner</span>
                             {autoWinner ? (
-                              <span className="flex items-center gap-1.5 text-xs font-black text-primary dark:text-primary">
+                              <span className="flex items-center gap-1.5 text-xs font-black text-primary">
                                 <Trophy className="w-3 h-3" />
                                 {editScore!.side === 1 ? (m.team1_label ?? "Team 1") : (m.team2_label ?? "Team 2")}
                                 <span className="text-muted-foreground font-normal">(auto-detected)</span>
                               </span>
                             ) : (
                               <select value={editScore!.side} onChange={(e) => setEditScore((p) => p && ({ ...p, side: parseInt(e.target.value) as 1 | 2 }))}
-                                className="text-sm px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-1 focus:ring-primary">
+                                className="text-sm px-3 py-1.5 rounded-xl border border-border-strong bg-muted outline-none focus:ring-1 focus:ring-primary">
                                 <option value={1}>{m.team1_label ?? "Team 1"}</option>
                                 <option value={2}>{m.team2_label ?? "Team 2"}</option>
                               </select>
@@ -945,7 +945,7 @@ export function TournamentMatchesTab({
                     })()}
 
                     {isScheduling && (
-                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                      <div className="mt-3 pt-3 border-t border-border space-y-2">
                         <div className="flex gap-2">
                           <div>
                             <label className={labelCls}><MapPin className="w-3 h-3 inline mr-1" />Court</label>
@@ -962,7 +962,7 @@ export function TournamentMatchesTab({
                                       if (e.target.value === "other") setEditSchedule((p) => p && ({ ...p, court: "​" }));
                                       else setEditSchedule((p) => p && ({ ...p, court: e.target.value }));
                                     }}
-                                    className="w-28 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none"
+                                    className="w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
                                   >
                                     <option value="">Select</option>
                                     <option value="C1">Court 1 (C1)</option>
@@ -975,7 +975,7 @@ export function TournamentMatchesTab({
                                       value={editSchedule!.court === "​" ? "" : editSchedule!.court}
                                       onChange={(e) => setEditSchedule((p) => p && ({ ...p, court: e.target.value || "​" }))}
                                       placeholder="Enter court"
-                                      className="mt-1 w-28 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none"
+                                      className="mt-1 w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
                                     />
                                   )}
                                 </>
@@ -990,14 +990,14 @@ export function TournamentMatchesTab({
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
                     )}
 
                     {assignUmpire?.matchId === m.id && (
-                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                      <div className="mt-3 pt-3 border-t border-border space-y-2">
                         <div>
                           <label className={labelCls}><Users className="w-3 h-3 inline mr-1" />Assign Umpire</label>
                           <div className="mt-1">
@@ -1010,7 +1010,7 @@ export function TournamentMatchesTab({
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -1024,11 +1024,11 @@ export function TournamentMatchesTab({
       })}
 
       {showBulkSchedule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col gap-4 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-media/50 p-4">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col gap-4 p-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-black text-slate-800 dark:text-foreground text-base">Bulk Schedule — {activeCategory}</h3>
+                <h3 className="font-black text-foreground text-base">Bulk Schedule — {activeCategory}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">One match per line. Supported text formats:</p>
                 <div className="mt-1 text-xs text-muted-foreground font-mono space-y-0.5">
                   <p>MS_QF_01: Court 3, 2026-06-30 10:00</p>
@@ -1039,7 +1039,7 @@ export function TournamentMatchesTab({
               <div className="flex items-center gap-2">
                 <button
                   onClick={downloadScheduleTemplate}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground hover:text-[var(--info)] hover:border-[var(--info)] transition">
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border-strong text-xs font-black text-muted-foreground hover:text-info hover:border-info transition">
                   <Download className="w-3.5 h-3.5" /> CSV Template
                 </button>
                 <button onClick={() => setShowBulkSchedule(false)} className="text-muted-foreground hover:text-muted-foreground transition">
@@ -1059,10 +1059,10 @@ export function TournamentMatchesTab({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => parseBulkSchedule(bulkText)}
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-on-accent text-xs font-black transition">
+                className="px-4 py-2 rounded-xl bg-muted-strong hover:bg-faint text-on-accent text-xs font-black transition">
                 Preview
               </button>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-[var(--info)] transition">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-info transition">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Upload CSV</span>
                 <input type="file" accept=".csv" className="hidden"
@@ -1071,17 +1071,17 @@ export function TournamentMatchesTab({
             </div>
 
             {bulkPreview.length > 0 && (
-              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden text-xs">
-                <div className="grid grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800 px-3 py-2 font-black text-muted-foreground uppercase tracking-wider text-[10px]">
+              <div className="border border-border-strong rounded-xl overflow-hidden text-xs">
+                <div className="grid grid-cols-4 gap-0 bg-muted px-3 py-2 font-black text-muted-foreground uppercase tracking-wider text-[10px]">
                   <span>Match</span><span>Court</span><span>Date & Time</span><span>Status</span>
                 </div>
                 <div className="max-h-60 overflow-y-auto">
                   {bulkPreview.map((row, i) => (
-                    <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-[var(--danger)]/20" : ""}`}>
-                      <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
-                      <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
-                      <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
-                      <span className={row.found && !row.wrongCategory ? "text-primary font-bold" : "text-[var(--danger)] font-bold"}>
+                    <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-border ${!row.found ? "bg-danger/20" : ""}`}>
+                      <span className="font-bold text-soft">{row.matchCode}</span>
+                      <span className="text-muted-foreground">{row.court || <span className="text-soft">—</span>}</span>
+                      <span className="text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-soft">—</span>}</span>
+                      <span className={row.found && !row.wrongCategory ? "text-primary font-bold" : "text-danger font-bold"}>
                         {!row.found ? "✗ Not found" : row.wrongCategory ? "⚠️ Wrong Category" : "✓ Found"}
                       </span>
                     </div>
@@ -1094,7 +1094,7 @@ export function TournamentMatchesTab({
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}

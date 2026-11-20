@@ -183,12 +183,12 @@ export function WinnersWallSection() {
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Stats Bar */}
           <div className="grid grid-cols-3 gap-3 sm:gap-6">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-400" />
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-border shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-info/15 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5 sm:w-7 sm:h-7 text-info" />
               </div>
               <div>
-                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
+                <div className="text-xl sm:text-3xl font-black text-foreground leading-none sm:leading-tight">
                   {tournamentsWithResults.length}
                 </div>
                 <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
@@ -196,12 +196,12 @@ export function WinnersWallSection() {
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 dark:bg-primary/40 flex items-center justify-center shrink-0">
-                <Medal className="w-5 h-5 sm:w-7 sm:h-7 text-primary dark:text-primary" />
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-border shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/40 flex items-center justify-center shrink-0">
+                <Medal className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
               </div>
               <div>
-                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
+                <div className="text-xl sm:text-3xl font-black text-foreground leading-none sm:leading-tight">
                   {totalCategories}
                 </div>
                 <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
@@ -209,12 +209,12 @@ export function WinnersWallSection() {
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-                <Users className="w-5 h-5 sm:w-7 sm:h-7 text-amber-600 dark:text-amber-400" />
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-border shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-warning/15 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 sm:w-7 sm:h-7 text-warning" />
               </div>
               <div>
-                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
+                <div className="text-xl sm:text-3xl font-black text-foreground leading-none sm:leading-tight">
                   {leaderboard.length}
                 </div>
                 <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
@@ -225,10 +225,10 @@ export function WinnersWallSection() {
           </div>
 
           {/* Top Leaderboard */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+          <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center gap-3">
               <BarChart3 className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-black text-blue-950 dark:text-foreground">
+              <h2 className="text-xl font-black text-foreground">
                 Hall of Fame
               </h2>
             </div>
@@ -237,24 +237,24 @@ export function WinnersWallSection() {
                 {leaderboard.slice(0, 8).map((player, idx) => (
                   <div
                     key={player.name}
-                    className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50"
+                    className="flex flex-col gap-3 p-4 rounded-3xl bg-muted/40 border border-border-strong/50"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary font-black flex items-center justify-center shrink-0 text-sm">
+                        <div className="w-8 h-8 rounded-full bg-primary/40 text-primary font-black flex items-center justify-center shrink-0 text-sm">
                           #{idx + 1}
                         </div>
-                        <div className="font-bold text-foreground dark:text-foreground truncate text-base">
+                        <div className="font-bold text-foreground truncate text-base">
                           {renderName(player.name)}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold shrink-0 text-xs shadow-sm">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold/15 text-gold font-bold shrink-0 text-xs shadow-sm">
                         <Award className="w-3.5 h-3.5" />
                         {player.wins}
                       </div>
                     </div>
                     
-                    <div className="flex flex-col space-y-2 bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-100 dark:border-slate-800/60">
+                    <div className="flex flex-col space-y-2 bg-card/60 rounded-2xl p-3 border border-border/60">
                       {player.details.map((d, i) => {
                         const lower = d.category.toLowerCase();
                         let shortCat = d.category;
@@ -286,10 +286,10 @@ export function WinnersWallSection() {
                               ? Medal
                               : Award;
                         const medalColor = d.medal === "Gold"
-                          ? "text-amber-500"
+                          ? "text-gold"
                           : d.medal === "Silver"
-                            ? "text-slate-400"
-                            : "text-orange-500";
+                            ? "text-muted-foreground"
+                            : "text-secondary";
 
                         return (
                           <div
@@ -299,7 +299,7 @@ export function WinnersWallSection() {
                             <span className="shrink-0 mt-0.5" title={d.medal}>
                               <MedalIcon className={`w-3.5 h-3.5 ${medalColor}`} />
                             </span>
-                            <span className="font-black text-slate-700 dark:text-slate-300 shrink-0 w-6">
+                            <span className="font-black text-soft shrink-0 w-6">
                               {shortCat}
                             </span>
                             <span className="text-muted-foreground font-medium flex-1">
@@ -318,22 +318,22 @@ export function WinnersWallSection() {
 
         {/* Filters */}
         <div className="flex justify-center max-w-6xl mx-auto">
-          <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex gap-1">
+          <div className="bg-card p-1.5 rounded-2xl shadow-sm border border-border flex gap-1">
             <button
               onClick={() => setFilter("all")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-blue-900 text-on-accent shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-info/20 text-on-accent shadow-md" : "text-muted-foreground hover:bg-muted"}`}
             >
               All Events
             </button>
             <button
               onClick={() => setFilter("open")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "open" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "open" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
             >
               Open Tournaments
             </button>
             <button
               onClick={() => setFilter("team")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "team" ? "bg-indigo-600 text-on-accent shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "team" ? "bg-info text-on-accent shadow-md" : "text-muted-foreground hover:bg-muted"}`}
             >
               Team Events
             </button>
@@ -341,7 +341,7 @@ export function WinnersWallSection() {
         </div>
 
         {filteredTournaments.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 dark:text-muted-foreground">
+          <div className="text-center py-12 text-muted-foreground">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p className="text-lg font-semibold">
               No results match this filter.
@@ -360,16 +360,16 @@ export function WinnersWallSection() {
                   animate="visible"
                   exit={{ opacity: 0, scale: 0.95 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  className="rounded-2xl sm:rounded-3xl shadow-sm border border-primary/20 dark:border-slate-700/50 bg-white dark:bg-slate-800 overflow-hidden"
+                  className="rounded-2xl sm:rounded-3xl shadow-sm border border-border-strong/50 bg-muted overflow-hidden"
                 >
                   {/* Top accent */}
                   <div
                     className={`h-1.5 bg-gradient-to-r ${
                       event.type === "open"
-                        ? "from-primary to-teal-600"
+                        ? "from-primary to-team"
                         : event.type === "team"
-                          ? "from-blue-500 to-indigo-600"
-                          : "from-purple-500 to-pink-600"
+                          ? "from-info to-info"
+                          : "from-individual to-individual"
                     }`}
                   />
 
@@ -380,10 +380,10 @@ export function WinnersWallSection() {
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
                               event.type === "open"
-                                ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
+                                ? "bg-primary/40 text-primary"
                                 : event.type === "team"
-                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-                                  : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
+                                  ? "bg-info/15 text-info"
+                                  : "bg-individual/15 text-individual"
                             }`}
                           >
                             {event.type === "open"
@@ -392,14 +392,14 @@ export function WinnersWallSection() {
                                 ? "Team Event"
                                 : "Special Event"}
                           </span>
-                          <span className="text-xs sm:text-sm font-bold text-primary dark:text-primary">
+                          <span className="text-xs sm:text-sm font-bold text-primary">
                             {event.startDate}
                           </span>
                         </div>
-                        <h2 className="text-lg sm:text-2xl font-black text-blue-900 dark:text-foreground leading-tight">
+                        <h2 className="text-lg sm:text-2xl font-black text-foreground leading-tight">
                           {event.name}
                         </h2>
-                        <p className="text-muted-foreground dark:text-muted-foreground mt-1.5 max-w-3xl text-xs sm:text-sm leading-snug">
+                        <p className="text-muted-foreground mt-1.5 max-w-3xl text-xs sm:text-sm leading-snug">
                           {event.description}
                         </p>
                       </div>
@@ -409,13 +409,13 @@ export function WinnersWallSection() {
                           href={event.galleryFolder ? `/legacy?filter=${encodeURIComponent(event.galleryFolder)}#albums` : `/legacy#albums`}
                           className="flex-1 sm:flex-none"
                         >
-                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-muted-foreground dark:text-slate-200 font-bold text-xs sm:text-sm transition-colors">
+                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-muted-strong hover:bg-faint text-soft font-bold text-xs sm:text-sm transition-colors">
                             <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             Photos
                           </button>
                         </a>
                         <Link href={tournamentLink(event)} className="flex-1 sm:flex-none">
-                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/60 text-primary dark:text-primary font-bold text-xs sm:text-sm transition-colors">
+                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/40 hover:bg-primary/60 text-primary font-bold text-xs sm:text-sm transition-colors">
                             Results
                             <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
@@ -425,7 +425,7 @@ export function WinnersWallSection() {
 
                     {/* Winners */}
                     {event.winners && (
-                      <div className="space-y-5 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                      <div className="space-y-5 pt-3 border-t border-border-strong/50">
                         {Object.entries(
                           event.winners.reduce(
                             (acc, curr) => {
@@ -448,8 +448,8 @@ export function WinnersWallSection() {
                           <div key={group} className="space-y-2">
                             {group !== "Overall" && (
                               <div className="flex items-center gap-2">
-                                <div className="w-1 h-4 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                                <h3 className="text-sm font-black text-blue-900 dark:text-foreground">
+                                <div className="w-1 h-4 bg-gradient-to-b from-warning to-secondary rounded-full" />
+                                <h3 className="text-sm font-black text-foreground">
                                   {group}
                                 </h3>
                               </div>
@@ -458,17 +458,17 @@ export function WinnersWallSection() {
                               {results!.map((result) => (
                                 <div
                                   key={result.category}
-                                  className="flex-1 min-w-[200px] rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/10 p-3 hover:shadow-sm transition-shadow"
+                                  className="flex-1 min-w-[200px] rounded-xl border border-warning/25 bg-warning/5 p-3 hover:shadow-sm transition-shadow"
                                 >
-                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-1.5">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-gold uppercase tracking-wider mb-1.5">
                                     <Medal className="w-3 h-3" />
                                     {result.category}
                                   </div>
-                                  <p className="font-bold text-blue-950 dark:text-foreground text-xs sm:text-sm flex items-center gap-1">
-                                    <Trophy className="w-3 h-3 text-amber-500 shrink-0" /> {renderName(result.winner)}
+                                  <p className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1">
+                                    <Trophy className="w-3 h-3 text-gold shrink-0" /> {renderName(result.winner)}
                                   </p>
                                   {result.runnerUp && (
-                                    <p className="mt-1 text-[10px] sm:text-xs font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-1">
+                                    <p className="mt-1 text-[10px] sm:text-xs font-semibold text-muted-foreground flex items-center gap-1">
                                       <Medal className="w-2.5 h-2.5 text-muted-foreground shrink-0" /> {renderName(result.runnerUp)}
                                     </p>
                                   )}
@@ -482,43 +482,43 @@ export function WinnersWallSection() {
 
                     {/* Podium */}
                     {event.podium && (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-border-strong/50">
                         {event.podium.map((team, index) => {
                           const rankConfig = [
                             {
                               label: "Gold",
                               icon: Trophy,
-                              iconColor: "text-amber-500",
+                              iconColor: "text-warning",
                               border:
-                                "border-amber-300 dark:border-amber-700/60",
-                              bg: "bg-amber-50/50 dark:bg-amber-950/10",
-                              text: "text-amber-700 dark:text-amber-400",
+                                "border-warning/60",
+                              bg: "bg-warning/5",
+                              text: "text-warning",
                             },
                             {
                               label: "Silver",
                               icon: Medal,
-                              iconColor: "text-slate-400",
-                              border: "border-slate-300 dark:border-slate-600/60",
-                              bg: "bg-slate-50/50 dark:bg-slate-800/40",
-                              text: "text-slate-600 dark:text-slate-300",
+                              iconColor: "text-muted-foreground",
+                              border: "border-border-strong/60",
+                              bg: "bg-muted/40",
+                              text: "text-soft",
                             },
                             {
                               label: "Bronze",
                               icon: Award,
-                              iconColor: "text-orange-400",
+                              iconColor: "text-secondary",
                               border:
-                                "border-orange-300 dark:border-orange-700/60",
-                              bg: "bg-orange-50/50 dark:bg-orange-950/10",
-                              text: "text-orange-700 dark:text-orange-400",
+                                "border-secondary/60",
+                              bg: "bg-secondary/5",
+                              text: "text-secondary",
                             },
                           ];
                           const rank = rankConfig[index] ?? {
                             label: `#${index + 1}`,
                             icon: undefined as any,
                             iconColor: undefined as string | undefined,
-                            border: "border-blue-200 dark:border-blue-800/60",
-                            bg: "bg-blue-50/50 dark:bg-blue-950/10",
-                            text: "text-blue-700 dark:text-blue-400",
+                            border: "border-info/35",
+                            bg: "bg-info/5",
+                            text: "text-info",
                           };
                           return (
                             <div
@@ -531,7 +531,7 @@ export function WinnersWallSection() {
                                 {rank.icon && <rank.icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${rank.iconColor ?? ""}`} />}
                                 {rank.label}
                               </p>
-                              <p className="mt-1.5 font-bold text-blue-950 dark:text-foreground text-xs sm:text-sm">
+                              <p className="mt-1.5 font-bold text-foreground text-xs sm:text-sm">
                                 {team}
                               </p>
                             </div>

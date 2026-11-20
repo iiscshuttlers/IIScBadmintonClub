@@ -38,9 +38,9 @@ export function AdminFeedbackPanel() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "bug": return <Bug className="w-5 h-5 text-rose-500" />;
-      case "feature": return <Lightbulb className="w-5 h-5 text-amber-500" />;
-      default: return <MessageSquare className="w-5 h-5 text-blue-500" />;
+      case "bug": return <Bug className="w-5 h-5 text-danger" />;
+      case "feature": return <Lightbulb className="w-5 h-5 text-warning" />;
+      default: return <MessageSquare className="w-5 h-5 text-info" />;
     }
   };
 
@@ -78,9 +78,9 @@ export function AdminFeedbackPanel() {
               onChange={(e) => handleStatusChange(item.id, e.target.value)}
               className={cn(
                 "text-xs font-bold px-3 py-1.5 rounded-lg border appearance-none outline-none cursor-pointer",
-                item.status === 'new' ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/50" :
-                item.status === 'reviewing' ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50" :
-                "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50"
+                item.status === 'new' ? "bg-danger/10 text-danger border-danger/30" :
+                item.status === 'reviewing' ? "bg-warning/10 text-warning border-warning/30" :
+                "bg-success/10 text-success border-success/30"
               )}
             >
               <option value="new">New</option>

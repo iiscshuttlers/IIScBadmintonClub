@@ -70,7 +70,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
   const [duplicateReport, setDuplicateReport] = useState<{ cat: string; groups: DuplicateGroupItem[][] } | null>(null);
 
   const allPlayers = adminPlayers;
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5";
+  const cardCls = "bg-card rounded-2xl border border-border shadow-sm p-4 sm:p-5";
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
   const { confirm } = useConfirm();
 
@@ -579,7 +579,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
           className={`px-4 py-2 rounded-full text-sm font-black transition ${
             activeCat === "ALL"
               ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+              : "bg-muted text-muted-foreground hover:bg-muted-strong"
           }`}
         >
           All Categories
@@ -591,7 +591,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
             className={`px-4 py-2 rounded-full text-sm font-black transition ${
               activeCat === cat
                 ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                : "bg-muted text-muted-foreground hover:bg-muted-strong"
             }`}
           >
             {cat} ({participants[cat]?.length ?? 0})
@@ -646,7 +646,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                   <select
                     value={filterStatus[cat] || "all"}
                     onChange={(e) => setFilterStatus((prev) => ({ ...prev, [cat]: e.target.value as any }))}
-                    className="text-xs font-bold px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:ring-1 focus:ring-primary"
+                    className="text-xs font-bold px-2 py-1 bg-muted border border-border-strong rounded-md outline-none focus:ring-1 focus:ring-primary"
                   >
                     <option value="all">All</option>
                     <option value="registered">Registered Only</option>
@@ -654,7 +654,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                   </select>
                   <button
                     onClick={() => { setBulkCat(cat); setAdding(null); }}
-                    className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-[var(--info)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-info transition px-2 py-1 bg-muted hover:bg-muted-strong rounded-md"
                   >
                     <Upload className="w-3 h-3" /> Import
                   </button>
@@ -663,26 +663,26 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => checkDuplicates(cat, parts, doubles)}
-                    className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[var(--warning)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    className="flex items-center gap-1 text-xs font-bold text-soft hover:text-warning transition px-2 py-1 bg-muted hover:bg-muted-strong rounded-md"
                   >
                     <AlertCircle className="w-3 h-3" /> Check Duplicates
                   </button>
                   <button
                     onClick={() => downloadCategoryJPG(cat)}
-                    className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-green-500 transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    className="flex items-center gap-1 text-xs font-bold text-soft hover:text-success transition px-2 py-1 bg-muted hover:bg-muted-strong rounded-md"
                   >
                     <Camera className="w-3 h-3" /> Export JPG
                   </button>
                   <button
                     onClick={() => downloadCategoryCSV(cat)}
-                    className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    className="flex items-center gap-1 text-xs font-bold text-soft hover:text-primary transition px-2 py-1 bg-muted hover:bg-muted-strong rounded-md"
                   >
                     <Download className="w-3 h-3" /> Export CSV
                   </button>
                   {!isHost && (
                     <button
                       onClick={() => setContactsView(contactsView === cat ? null : cat)}
-                      className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md"
+                      className="flex items-center gap-1 text-xs font-bold text-success hover:text-success/80 transition px-2 py-1 bg-success/10 hover:bg-success/20 rounded-md"
                     >
                       <Phone className="w-3 h-3" /> Contacts
                     </button>
@@ -744,21 +744,21 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
 
               {/* Add Participant Drawer */}
               {adding === cat && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-2">
+                <div className="bg-muted/50 rounded-xl p-3 space-y-2">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
                     <input
                       value={catSearch}
                       onChange={(e) => setSearch((p) => ({ ...p, [cat]: e.target.value }))}
                       placeholder={doubles ? "Search player 1…" : "Search registered player…"}
-                      className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-border-strong bg-card outline-none focus:ring-1 focus:ring-primary"
                     />
                     {catSearch && (
-                      <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
+                      <div className="mt-1 w-full bg-card border border-border-strong rounded-xl shadow-sm max-h-40 overflow-y-auto">
                         {filteredPlayers.slice(0, 8).map((pl) => (
                           <button
                             key={pl.id}
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/20 transition"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-primary/20 transition"
                             onClick={() => {
                               if (!doubles) {
                                 addParticipant(cat, pl.id, null, pl.full_name);
@@ -770,7 +770,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                             }}
                           >
                             <span>{pl.full_name}</span>
-                            {(pl.iisc_email || pl.email) && <span className="ml-2 text-[10px] text-slate-400">{pl.iisc_email || pl.email}</span>}
+                            {(pl.iisc_email || pl.email) && <span className="ml-2 text-[10px] text-muted-foreground">{pl.iisc_email || pl.email}</span>}
                           </button>
                         ))}
                       </div>
@@ -784,14 +784,14 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                         value={catPartnerSearch}
                         onChange={(e) => setPartnerSearch((p) => ({ ...p, [cat]: e.target.value }))}
                         placeholder="Search partner…"
-                        className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
+                        className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-border-strong bg-card outline-none focus:ring-1 focus:ring-primary"
                       />
                       {catPartnerSearch && (
-                        <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
+                        <div className="mt-1 w-full bg-card border border-border-strong rounded-xl shadow-sm max-h-40 overflow-y-auto">
                           {filteredPartners.slice(0, 8).map((pl) => (
                             <button
                               key={pl.id}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/20 transition"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-primary/20 transition"
                               onClick={() => {
                                 const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
                                 if (p1Data) {
@@ -827,7 +827,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setAdding(cat)}
-                    className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition flex items-center justify-center gap-1"
+                    className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-border-strong text-muted-foreground hover:border-primary hover:text-primary transition flex items-center justify-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Participant
                   </button>
@@ -835,7 +835,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
               )}
 
               {isHost ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border">
                   <p className="text-xs text-muted-foreground">An admin makes the draw from these entries and seeds.</p>
                   <button
                     onClick={() => saveSeeds(cat)}
@@ -847,22 +847,22 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
               ) : (
               <>
               {/* Per-category 3rd place and manual order toggles */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="pt-2 border-t border-border flex items-center justify-between">
                 <span className="text-xs text-muted-foreground font-bold">3rd Place Playoff</span>
                 <button
                   onClick={() => setThirdPlacePerCat((p) => ({ ...p, [cat]: !p[cat] }))}
-                  className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
+                  className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-primary" : "bg-faint"}`}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${thirdPlacePerCat[cat] ? "translate-x-4" : ""}`} />
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-foreground shadow transition-transform ${thirdPlacePerCat[cat] ? "translate-x-4" : ""}`} />
                 </button>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground font-bold">Manual draw order</span>
                 <button
                   onClick={() => setManualOrderPerCat((p) => ({ ...p, [cat]: !p[cat] }))}
-                  className={`relative w-9 h-5 rounded-full transition-colors ${manualOrderPerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
+                  className={`relative w-9 h-5 rounded-full transition-colors ${manualOrderPerCat[cat] ? "bg-primary" : "bg-faint"}`}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${manualOrderPerCat[cat] ? "translate-x-4" : ""}`} />
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-foreground shadow transition-transform ${manualOrderPerCat[cat] ? "translate-x-4" : ""}`} />
                 </button>
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -874,7 +874,7 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
                 </button>
                 <button
                   onClick={() => generateBracket(cat)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black shadow transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-individual hover:bg-individual/90 text-individual-foreground text-xs font-black shadow transition"
                 >
                   <Swords className="w-3.5 h-3.5" /> Generate Bracket
                 </button>

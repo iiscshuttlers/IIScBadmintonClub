@@ -94,7 +94,7 @@ function Worm({ g, names, rules }: { g: GameSeries; names: [string, string]; rul
         )}
       </svg>
       {hovered && (
-        <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[11px] font-semibold px-2 py-1 shadow">
+        <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-foreground text-background text-[11px] font-semibold px-2 py-1 shadow">
           Rally {hover! + 1}: {hovered.t1}–{hovered.t2} · point to {names[hovered.side - 1]}
         </div>
       )}
@@ -137,22 +137,22 @@ export function MatchPointsTab({
       `}</style>
 
       {coverage === "corrected" && (
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
+        <p className="text-xs font-semibold text-warning" role="note">
           Corrected result · this recorded history predates the correction; it may be incomplete and may not match the final result.
         </p>
       )}
       {coverage === "partial" && (
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
+        <p className="text-xs font-semibold text-warning" role="note">
           Partial point history · charts and key moments cover only the recorded scoring rallies.
         </p>
       )}
       {coverage === "complete" && (
-        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400" role="status">
+        <p className="text-xs font-semibold text-success" role="status">
           Complete point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"}.
         </p>
       )}
       {coverage === "live" && (
-        <p className="text-xs font-semibold text-sky-700 dark:text-sky-400" role="status">
+        <p className="text-xs font-semibold text-info" role="status">
           Live point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"} recorded so far.
         </p>
       )}
@@ -224,7 +224,7 @@ export function MatchPointsTab({
                         <th scope="col" className="text-right py-1">{names[1]}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
+                    <tbody className="divide-y divide-border font-mono tabular-nums">
                       {progression(g).map((p) => (
                         <tr key={p.rally}>
                           <td className="py-1">{p.rally}</td>

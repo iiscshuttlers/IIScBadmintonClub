@@ -56,7 +56,7 @@ export function OverflowTabs({
               className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-xs font-black transition-all sm:text-sm ${
                 isActive
                   ? activeClassName
-                  : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white"
+                  : "border border-border bg-card text-soft hover:border-border-strong hover:text-foreground"
               }`}
             >
               {tab.icon && <span className="shrink-0">{tab.icon}</span>}

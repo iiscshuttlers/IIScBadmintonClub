@@ -68,7 +68,7 @@ export function FeaturedTournamentHero({
             onOpen();
           }
         }}
-        className="relative overflow-hidden rounded-3xl p-4 sm:p-7 bg-slate-900 border border-slate-800 hover:border-primary/50 shadow-xl transition-all cursor-pointer group active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="relative overflow-hidden rounded-3xl p-4 sm:p-7 bg-card border border-border hover:border-primary/50 shadow-xl transition-all cursor-pointer group active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <div className="relative z-10 flex flex-row items-center justify-between gap-3 sm:gap-5">
           <div className="space-y-2 sm:space-y-3 max-w-2xl min-w-0">
@@ -79,7 +79,7 @@ export function FeaturedTournamentHero({
                   <Clock className="w-3 h-3" aria-hidden="true" /> {countdownText}
                 </span>
               ) : !isLive && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-wider border border-slate-700">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-muted text-soft text-[10px] font-black uppercase tracking-wider border border-border-strong">
                   <Trophy className="w-3 h-3 text-primary" aria-hidden="true" /> Featured
                 </span>
               )}
@@ -93,13 +93,13 @@ export function FeaturedTournamentHero({
 
             <div>
               <h2
-                className="text-xl sm:text-2xl lg:text-3xl font-black text-white group-hover:text-primary transition-colors tracking-tight"
+                className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground group-hover:text-primary transition-colors tracking-tight"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 {t.name}
               </h2>
               {t.subtitle && (
-                <p className="text-xs sm:text-sm text-slate-400 font-medium mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
                   {t.subtitle}
                 </p>
               )}
@@ -108,24 +108,24 @@ export function FeaturedTournamentHero({
             {/* W3: Big Live Scoreline with Number Roll */}
             {isLive && liveScore && (
               <div
-                className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-rose-950/40 border border-rose-800/40 text-xs sm:text-sm shadow-inner"
+                className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-live/15 border border-live/25 text-xs sm:text-sm shadow-inner"
                 aria-label={`Live match score: ${liveScore.team1_label || "Side 1"} versus ${liveScore.team2_label || "Side 2"}`}
               >
                 <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-danger" />
                 </span>
-                <span className="font-bold text-white tracking-wide">
+                <span className="font-bold text-foreground tracking-wide">
                   {liveScore.team1_label || "Side 1"} vs {liveScore.team2_label || "Side 2"}
                 </span>
 
                 {sets.length > 0 ? (
-                  <div className="flex items-center gap-2 font-mono font-black text-rose-300 text-sm sm:text-base bg-rose-950/70 px-2.5 py-0.5 rounded-lg border border-rose-800/50">
+                  <div className="flex items-center gap-2 font-mono font-black text-danger text-sm sm:text-base bg-danger/25 px-2.5 py-0.5 rounded-lg border border-danger/30">
                     {sets.map((s, idx) => (
                       <span key={idx} className="inline-flex items-center">
-                        {idx > 0 && <span className="text-rose-500/60 mx-1">,</span>}
+                        {idx > 0 && <span className="text-danger/60 mx-1">,</span>}
                         <AnimatedScoreNumber value={s.s1} />
-                        <span className="text-rose-500/80 mx-0.5">-</span>
+                        <span className="text-danger/80 mx-0.5">-</span>
                         <AnimatedScoreNumber value={s.s2} />
                       </span>
                     ))}
@@ -133,29 +133,29 @@ export function FeaturedTournamentHero({
                 ) : null}
 
                 {liveScore.court_number && (
-                  <span className="text-rose-300/80 font-semibold text-xs ml-1 bg-rose-900/40 px-2 py-0.5 rounded-md">
+                  <span className="text-danger/80 font-semibold text-xs ml-1 bg-danger/15 px-2 py-0.5 rounded-md">
                     Court {liveScore.court_number}
                   </span>
                 )}
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-xs sm:text-sm text-slate-400 flex-wrap pt-1">
+            <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap pt-1">
               {dateStr && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                  <Calendar className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   <span>{dateStr}</span>
                 </div>
               )}
               {t.venue && (
                 <div className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                  <MapPin className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   <span>{t.venue}</span>
                 </div>
               )}
               {typeof t.participant_count === "number" && t.participant_count > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                  <Users className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   <AvatarStack
                     totalCount={t.participant_count}
                     avatars={t.sample_participants || []}

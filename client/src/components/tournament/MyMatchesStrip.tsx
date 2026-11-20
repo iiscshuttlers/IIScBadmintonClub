@@ -11,17 +11,17 @@ const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
 
 // Each category/format gets its own colour so a glance tells you the discipline.
 const CATEGORY_COLOR: Record<string, string> = {
-  MS: "text-sky-400",
-  WS: "text-pink-400",
-  MD: "text-blue-400",
-  WD: "text-violet-400",
-  XD: "text-amber-400",
-  BS: "text-cyan-400",
-  GS: "text-rose-400",
-  BD: "text-teal-400",
-  GD: "text-fuchsia-400",
+  MS: "text-cat-ms",
+  WS: "text-cat-ws",
+  MD: "text-cat-md",
+  WD: "text-cat-wd",
+  XD: "text-cat-xd",
+  BS: "text-accent",
+  GS: "text-danger",
+  BD: "text-team",
+  GD: "text-individual",
 };
-const catColor = (c?: string) => CATEGORY_COLOR[(c || "").toUpperCase()] || "text-slate-300";
+const catColor = (c?: string) => CATEGORY_COLOR[(c || "").toUpperCase()] || "text-soft";
 
 /**
  * Compact "My Matches" strip — the current player's tournament matches ordered
@@ -155,34 +155,34 @@ export function MyMatchesStrip({
           const isDone = m.status === "completed";
           return (
             <Link key={m.id} href="/my-matches">
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-primary/40 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/60 border border-border-strong/60 hover:border-primary/40 transition-colors cursor-pointer">
                 <div className="shrink-0">
                   {isLive ? (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-400 text-[9px] font-black uppercase">
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-live/20 text-live text-[9px] font-black uppercase">
                       <Radio className="w-2.5 h-2.5 animate-pulse" /> Live
                     </span>
                   ) : isDone ? (
-                    <span className="px-1.5 py-0.5 rounded-md bg-slate-600/40 text-slate-300 text-[9px] font-black uppercase">Done</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-faint/40 text-soft text-[9px] font-black uppercase">Done</span>
                   ) : (
-                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase">Upcoming</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-success/20 text-success text-[9px] font-black uppercase">Upcoming</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">
-                    {m.team1_label || "TBD"} <span className="text-slate-500">vs</span> {m.team2_label || "TBD"}
+                  <p className="text-xs font-bold text-foreground truncate">
+                    {m.team1_label || "TBD"} <span className="text-muted-foreground">vs</span> {m.team2_label || "TBD"}
                   </p>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[10px] truncate">
                       <span className={`font-black ${catColor(m.category)}`}>{m.category}</span>
-                      <span className="text-slate-400">
+                      <span className="text-muted-foreground">
                         {m.round_name ? ` · ${m.round_name}` : ""}
                         {m.court_number ? ` · Court ${m.court_number}` : ""}
                       </span>
                     </p>
                     {isDone ? (
-                      <span className="shrink-0 text-[11px] font-black text-emerald-400 whitespace-nowrap tabular-nums">{m.score || "Final"}</span>
+                      <span className="shrink-0 text-[11px] font-black text-success whitespace-nowrap tabular-nums">{m.score || "Final"}</span>
                     ) : m.scheduled_at ? (
-                      <span className="shrink-0 flex items-center gap-1 text-[10px] text-sky-400 font-bold whitespace-nowrap">
+                      <span className="shrink-0 flex items-center gap-1 text-[10px] text-info font-bold whitespace-nowrap">
                         <Clock className="w-3 h-3" />
                         {new Date(m.scheduled_at).toLocaleString([], {
                           month: "short",
@@ -207,9 +207,9 @@ export function MyMatchesStrip({
                     </button>
                   )}
                   {!isDone && !isLive && stakes[m.id] && (
-                    <p className="text-[10px] font-bold tabular-nums text-slate-400" title="Estimated Elo change (range covers 2- and 3-game results)">
-                      Elo ≈ win <span className="text-emerald-400">{formatRange(stakes[m.id].win)}</span> · lose{" "}
-                      <span className="text-rose-400">{formatRange(stakes[m.id].lose)}</span>
+                    <p className="text-[10px] font-bold tabular-nums text-muted-foreground" title="Estimated Elo change (range covers 2- and 3-game results)">
+                      Elo ≈ win <span className="text-success">{formatRange(stakes[m.id].win)}</span> · lose{" "}
+                      <span className="text-danger">{formatRange(stakes[m.id].lose)}</span>
                     </p>
                   )}
                 </div>

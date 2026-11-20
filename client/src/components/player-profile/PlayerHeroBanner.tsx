@@ -33,8 +33,8 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
           alt="Profile Banner"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/20 to-transparent dark:from-black/65 dark:via-black/35 dark:to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-media/65 via-media/35 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       {/* Hero Content */}
@@ -42,7 +42,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
         <div className="flex flex-col md:flex-row gap-6 items-end relative pointer-events-auto">
           {/* Avatar */}
           <div className="relative mt-8 md:mt-12 shrink-0 z-20">
-            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800 group relative">
+            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-foreground/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-muted group relative">
               {player.avatar_url ? (
                 <Dialog>
                   <DialogTrigger asChild>
@@ -52,12 +52,12 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                         alt={player.full_name}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                      <div className="absolute inset-0 bg-media/0 group-hover:bg-media/20 transition-colors flex items-center justify-center">
+                        <ZoomIn className="w-8 h-8 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl p-1 sm:p-2 bg-transparent border-none shadow-none flex justify-center items-center [&>button]:text-white [&>button]:bg-black/50 [&>button]:hover:bg-black/70 [&>button]:rounded-full [&>button]:p-2 [&>button]:top-2 [&>button]:right-2 sm:[&>button]:top-4 sm:[&>button]:right-4 z-[100]" showCloseButton={true}>
+                  <DialogContent className="max-w-4xl p-1 sm:p-2 bg-transparent border-none shadow-none flex justify-center items-center [&>button]:text-on-media [&>button]:bg-media/50 [&>button]:hover:bg-media/70 [&>button]:rounded-full [&>button]:p-2 [&>button]:top-2 [&>button]:right-2 sm:[&>button]:top-4 sm:[&>button]:right-4 z-[100]" showCloseButton={true}>
                     <DialogTitle className="sr-only">{player.full_name}'s Profile Picture</DialogTitle>
                     <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
                       <TransformComponent wrapperStyle={{ width: "100%", height: "80vh" }} contentStyle={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -78,19 +78,19 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
             </div>
             {/* Rank badge */}
             {eloRank && (
-              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2 z-30">
+              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-border flex items-center gap-2 z-30">
                 <Trophy className="w-5 h-5" /> #{eloRank}
               </div>
             )}
           </div>
 
           {/* Info */}
-          <div className="flex-1 pb-2 md:pb-4 text-foreground dark:text-foreground mt-4 md:mt-0">
+          <div className="flex-1 pb-2 md:pb-4 text-foreground mt-4 md:mt-0">
             <div className="flex flex-col">
               {heroRestName && (
                 <div className="flex items-center gap-3">
                   <span
-                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-slate-800 dark:text-foreground"
+                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-foreground"
                     style={
                       theme === "light"
                         ? { textShadow: "0 2px 12px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
@@ -100,7 +100,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                     {heroRestName}
                   </span>
                   {player.is_retired && (
-                    <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-on-accent rounded-md shadow-md border border-rose-400">
+                    <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-danger text-on-accent rounded-md shadow-md border border-danger">
                       Retired
                     </span>
                   )}
@@ -108,7 +108,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               )}
               {!heroRestName && player.is_retired && (
                 <div className="mb-2">
-                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-on-accent rounded-md shadow-md border border-rose-400">
+                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-danger text-on-accent rounded-md shadow-md border border-danger">
                     Retired
                   </span>
                 </div>
@@ -116,7 +116,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
 
               <div className="flex items-center flex-wrap gap-4">
                 <h1
-                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground"
+                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-foreground"
                   style={
                     theme === "light"
                       ? { textShadow: "0 2px 16px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
@@ -129,14 +129,14 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               
               {player.joined_year && (
                 <div className="mt-3 md:mt-4 flex flex-wrap items-center gap-2">
-                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/20 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm backdrop-blur-md text-slate-800 dark:text-slate-200">
+                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-foreground/10 border border-foreground/20 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm backdrop-blur-md text-soft">
                     Member Since {player.joined_year}
                   </span>
                 </div>
               )}
 
               {eloRank && (moveLabel || (myMove?.peakRank && myMove.peakRank < eloRank)) ? (
-                <p className="mt-3 text-xs md:text-sm font-bold text-slate-700 dark:text-slate-300">
+                <p className="mt-3 text-xs md:text-sm font-bold text-soft">
                   Rank #{eloRank}
                   {moveLabel && <span title={moveLabel.long}> ({moveLabel.text}<span className="sr-only">: {moveLabel.long}</span>)</span>}
                   {myMove?.peakRank && myMove.peakRank < eloRank ? <> · peak #{myMove.peakRank}</> : null}
@@ -146,7 +146,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               {/* Last-5 tournament form; hidden for players with no tournament results. */}
               {(form.isPending && form.fetchStatus !== "idle") || (formEntries && formEntries.length > 0) ? (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-soft">
                     Tournament form
                   </span>
                   <FormChips entries={formEntries} loading={form.isPending} size="md" />

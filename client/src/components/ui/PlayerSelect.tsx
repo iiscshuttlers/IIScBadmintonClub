@@ -105,10 +105,10 @@ export function PlayerSelect({
           e.currentTarget.select();
         }}
         onKeyDown={handleKeyDown}
-        className={className || "w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-primary"}
+        className={className || "w-full text-xs font-bold bg-muted border border-border-strong rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-primary"}
       />
       {isOpen && (
-        <div className="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-72 overflow-y-auto">
+        <div className="absolute z-[60] w-full mt-1 bg-muted border border-border-strong rounded-lg shadow-xl max-h-72 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="p-2 text-xs text-muted-foreground text-center">No players found</div>
           ) : (
@@ -124,7 +124,7 @@ export function PlayerSelect({
                 className={`p-2 text-xs font-bold cursor-pointer flex items-center justify-between gap-2 ${
                   selectedIndex === idx
                     ? "bg-primary text-primary-foreground font-black"
-                    : "hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-700 dark:text-slate-200"
+                    : "hover:bg-primary/20 text-soft"
                 }`}
               >
                 <span className="truncate">{p.full_name}</span>
@@ -132,7 +132,7 @@ export function PlayerSelect({
                   <span className={`shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                     selectedIndex === idx
                       ? "bg-primary-foreground/20 text-primary-foreground"
-                      : "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300"
+                      : "bg-individual/15 text-individual"
                   }`}>
                     Guest
                   </span>

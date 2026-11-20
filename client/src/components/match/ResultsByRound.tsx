@@ -98,8 +98,8 @@ export function ResultsByRound({
 
   if (views.length === 0) {
     return (
-      <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-        <p className="font-black text-slate-700 dark:text-slate-200">{emptyTitle}</p>
+      <div className="text-center py-10 bg-card rounded-2xl border border-dashed border-border-strong">
+        <p className="font-black text-soft">{emptyTitle}</p>
         {emptyHint && <p className="text-sm text-muted-foreground mt-1">{emptyHint}</p>}
       </div>
     );
@@ -115,7 +115,7 @@ export function ResultsByRound({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a player's matches"
           aria-label="Search results by player"
-          className="w-full min-h-[44px] bg-white dark:bg-slate-900 text-foreground text-sm font-semibold rounded-xl pl-10 pr-10 outline-none border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary placeholder:text-slate-500"
+          className="w-full min-h-[44px] bg-card text-foreground text-sm font-semibold rounded-xl pl-10 pr-10 outline-none border border-border focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
         />
         {query && (
           <button
@@ -140,7 +140,7 @@ export function ResultsByRound({
                 key={s.stage.key}
                 type="button"
                 onClick={() => jumpTo(s)}
-                className="shrink-0 min-h-[36px] px-3.5 rounded-full text-xs font-black bg-muted text-foreground hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+                className="shrink-0 min-h-[36px] px-3.5 rounded-full text-xs font-black bg-muted text-foreground hover:bg-muted-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
                 title={s.stage.label}
               >
                 {s.stage.short}

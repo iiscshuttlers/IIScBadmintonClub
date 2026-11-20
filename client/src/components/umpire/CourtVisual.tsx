@@ -68,7 +68,7 @@ export function CourtVisual({
   const nameColor = (side: "left" | "right", pIdx: 0 | 1) => {
     const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
     if (sideIsServer && serverPlayerIndex === pIdx) return "text-primary";
-    if (!sideIsServer && (!isDoubles || pIdx === receiverPlayerIndex)) return "text-amber-400/80";
+    if (!sideIsServer && (!isDoubles || pIdx === receiverPlayerIndex)) return "text-warning/80";
     return "text-muted-foreground";
   };
 
@@ -115,7 +115,7 @@ export function CourtVisual({
           >
             {leftP1Name || "T1"}
             {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {!leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {!leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-warning">RECEIVER</span>}
           </div>
           {isDoubles && leftP2Name && (
             <div
@@ -125,7 +125,7 @@ export function CourtVisual({
             >
               {leftP2Name}
               {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {!leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {!leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-warning">RECEIVER</span>}
             </div>
           )}
         </div>
@@ -138,7 +138,7 @@ export function CourtVisual({
           >
             {rightP1Name || "T2"}
             {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-warning">RECEIVER</span>}
           </div>
           {isDoubles && rightP2Name && (
             <div
@@ -148,7 +148,7 @@ export function CourtVisual({
             >
               {rightP2Name}
               {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-warning">RECEIVER</span>}
             </div>
           )}
         </div>

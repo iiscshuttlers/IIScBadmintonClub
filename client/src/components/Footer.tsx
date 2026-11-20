@@ -32,9 +32,9 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-slate-950 text-foreground mt-12 overflow-hidden">
+    <footer className="relative bg-background text-foreground mt-12 overflow-hidden">
       {/* Top gradient bar */}
-      <div className="h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
+      <div className="h-[3px] bg-gradient-to-r from-primary via-team to-secondary" />
 
       {/* Subtle dot pattern background */}
       <div
@@ -47,7 +47,7 @@ export default function Footer() {
 
       {/* Glow orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-80 h-56 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-56 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative container mx-auto px-4 pt-10 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
@@ -88,9 +88,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"
-                className="group w-9 h-9 rounded-xl bg-white/5 border border-white/8 hover:bg-pink-500/15 hover:border-pink-500/30 flex items-center justify-center transition-all duration-200"
+                className="group w-9 h-9 rounded-xl bg-foreground/5 border border-foreground/8 hover:bg-individual/15 hover:border-individual/30 flex items-center justify-center transition-all duration-200"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-pink-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-individual transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                   <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -101,9 +101,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="YouTube"
-                className="group w-9 h-9 rounded-xl bg-white/5 border border-white/8 hover:bg-red-600/15 hover:border-red-600/30 flex items-center justify-center transition-all duration-200"
+                className="group w-9 h-9 rounded-xl bg-foreground/5 border border-foreground/8 hover:bg-danger/15 hover:border-danger/30 flex items-center justify-center transition-all duration-200"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-red-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-danger transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
                   <path d="m10 15 5-3-5-3z" />
                 </svg>
@@ -119,7 +119,7 @@ export default function Footer() {
                 <li key={href}>
                   <Link href={href}>
                     <span className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm cursor-pointer">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-primary transition-colors flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted-strong group-hover:bg-primary transition-colors flex-shrink-0" />
                       {label}
                     </span>
                   </Link>
@@ -131,7 +131,7 @@ export default function Footer() {
                   onClick={() => window.dispatchEvent(new CustomEvent("openHolidays"))}
                   className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm cursor-pointer w-full text-left"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-primary transition-colors flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-strong group-hover:bg-primary transition-colors flex-shrink-0" />
                   Holidays
                 </button>
               </li>
@@ -147,7 +147,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                className="group flex items-center gap-3.5 bg-white/4 border border-white/8 hover:bg-primary/8 hover:border-primary/25 rounded-2xl p-4 transition-all duration-300"
+                className="group flex items-center gap-3.5 bg-foreground/4 border border-foreground/8 hover:bg-primary/8 hover:border-primary/25 rounded-2xl p-4 transition-all duration-300"
                 title="Download Android App"
               >
                 <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
@@ -166,7 +166,7 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom Bar ── */}
-        <div className="border-t border-white/5 pt-5">
+        <div className="border-t border-foreground/5 pt-5">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="text-muted-foreground text-xs">
               © {new Date().getFullYear()} IISc Badminton Club. All rights reserved.
@@ -177,10 +177,10 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <p className="text-muted-foreground text-xs flex items-center gap-1">
                 Built with
-                <span className="text-rose-400">♥</span>
+                <span className="text-danger">♥</span>
               </p>
               {versionName && (
-                <span className="text-muted-foreground text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">
+                <span className="text-muted-foreground text-xs font-mono bg-muted px-2 py-0.5 rounded-md">
                   v{versionName}
                 </span>
               )}

@@ -39,7 +39,7 @@ export function MatchSection({
   });
 
   return (
-    <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
+    <div className="mb-6 bg-card rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300">
       <div 
         role="button"
         tabIndex={0}
@@ -51,14 +51,14 @@ export function MatchSection({
             setExpanded(!expanded);
           }
         }}
-        className="px-5 py-4 min-h-[44px] flex items-center justify-between cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        className="px-5 py-4 min-h-[44px] flex items-center justify-between cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary bg-muted/50 hover:bg-muted transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm text-primary">
+          <div className="p-2 bg-card rounded-xl shadow-sm text-primary">
             {icon}
           </div>
-          <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">{title} <span className="text-muted-foreground font-semibold text-sm ml-2">({matches.length})</span></h3>
+          <h3 className="font-black text-lg text-foreground">{title} <span className="text-muted-foreground font-semibold text-sm ml-2">({matches.length})</span></h3>
         </div>
         <div className="flex items-center gap-3">
           {headerAction && (
@@ -66,13 +66,13 @@ export function MatchSection({
               {headerAction}
             </div>
           )}
-          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
       {expanded && (
-        <div className="p-4 sm:p-5 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="mb-5 bg-slate-100/50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="p-4 sm:p-5 pt-2 border-t border-border">
+          <div className="mb-5 bg-background p-1.5 rounded-2xl border border-border">
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1">
               {CATEGORIES.map(cat => (
                 <button
@@ -81,8 +81,8 @@ export function MatchSection({
                   aria-pressed={category === cat}
                   className={`flex-1 sm:flex-none px-3 py-2 min-h-[44px] rounded-xl text-xs font-black transition-all ${
                     category === cat
-                      ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                      ? "bg-muted text-primary shadow-sm ring-1 ring-border-strong"
+                      : "text-muted-foreground hover:text-soft hover:bg-muted/50"
                   }`}
                 >
                   {cat}
@@ -95,7 +95,7 @@ export function MatchSection({
             {filteredMatches.length > 0 ? (
               filteredMatches.map((match, i) => renderMatchCard(match, i))
             ) : (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm font-medium">
+              <div className="text-center py-8 text-muted-foreground text-sm font-medium">
                 No {category !== "ALL" ? category : ""} matches found in this section.
               </div>
             )}

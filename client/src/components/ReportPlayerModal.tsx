@@ -81,24 +81,24 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
 
   return createPortal(
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-media/60 backdrop-blur-sm" />
       <div
         ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-title"
         tabIndex={-1}
-        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden outline-none"
+        className="relative w-full max-w-md bg-card rounded-2xl shadow-2xl border border-border-strong overflow-hidden outline-none"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-8 h-8 rounded-full bg-rose-500/15 flex items-center justify-center">
-            <Flag className="w-4 h-4 text-rose-500" />
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border">
+          <div className="w-8 h-8 rounded-full bg-danger/15 flex items-center justify-center">
+            <Flag className="w-4 h-4 text-danger" />
           </div>
           <h2 id="report-title" className="text-sm font-black text-foreground flex-1">
             Report {reportedPlayerName || "player"}
           </h2>
-          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button onClick={onClose} aria-label="Close" className="p-1 rounded-lg hover:bg-muted">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -108,14 +108,14 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
             <legend className="text-xs font-bold text-muted-foreground mb-2">Why are you reporting this player?</legend>
             <div className="space-y-1.5">
               {REASONS.map((r) => (
-                <label key={r.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+                <label key={r.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl cursor-pointer hover:bg-muted/60 transition">
                   <input
                     type="radio"
                     name="report-reason"
                     value={r.id}
                     checked={reason === r.id}
                     onChange={() => setReason(r.id)}
-                    className="accent-rose-500"
+                    className="accent-danger"
                   />
                   <span className="text-sm text-foreground">{r.label}</span>
                 </label>
@@ -132,18 +132,18 @@ export function ReportPlayerModal({ open, onClose, reportedPlayerId, reportedPla
               rows={3}
               maxLength={1000}
               placeholder="Add anything that helps us review this…"
-              className="mt-1 w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-rose-500/30"
+              className="mt-1 w-full rounded-xl bg-muted border border-border-strong px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-danger/30"
             />
           </div>
 
           <label className="flex items-center gap-2.5 text-sm text-foreground cursor-pointer">
-            <input type="checkbox" checked={alsoBlock} onChange={(e) => setAlsoBlock(e.target.checked)} className="accent-rose-500" />
+            <input type="checkbox" checked={alsoBlock} onChange={(e) => setAlsoBlock(e.target.checked)} className="accent-danger" />
             <ShieldBan className="w-4 h-4 text-muted-foreground" />
             Also block this player
           </label>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-border">
           <Button variant="ghost" size="sm" onClick={onClose} disabled={submitting}>Cancel</Button>
           <Button variant="danger" size="sm" onClick={submit} disabled={submitting}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}

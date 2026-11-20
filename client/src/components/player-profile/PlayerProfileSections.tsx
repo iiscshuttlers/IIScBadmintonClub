@@ -84,9 +84,9 @@ export function EquipmentArsenalSection({
   return (
     <section className="py-8 relative" ref={containerRef}>
       <div className="flex items-center gap-3 mb-10 px-4">
-        <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0 flex items-center gap-2">
-          <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
+        <div className="h-px flex-1 bg-linear-to-r from-transparent to-foreground/10" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-foreground/60 shrink-0 flex items-center gap-2">
+          <Zap className="w-3.5 h-3.5 text-individual" /> Equipment Arsenal
           <InfoModal
             title="EQUIPMENT ARSENAL"
             items={[
@@ -94,7 +94,7 @@ export function EquipmentArsenalSection({
             ]}
           />
         </span>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-white/10" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-foreground/10" />
       </div>
 
       {/* The Animated Kitbag */}
@@ -106,13 +106,13 @@ export function EquipmentArsenalSection({
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : -6 }}
           transition={{ delay: 0.8, duration: 0.4 }}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20 transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-individual/40 bg-individual/10 hover:bg-individual/20 transition-colors"
         >
-          <span className="text-violet-400 text-xs">↺</span>
-          <span className="text-violet-300 font-bold text-[11px] tracking-widest uppercase">
+          <span className="text-individual text-xs">↺</span>
+          <span className="text-individual font-bold text-[11px] tracking-widest uppercase">
             {isOpen ? "tap to zip up" : "tap to unzip"}
           </span>
-          <span className="text-violet-400 text-xs">↺</span>
+          <span className="text-individual text-xs">↺</span>
         </motion.button>
 
         <motion.div
@@ -135,7 +135,7 @@ export function EquipmentArsenalSection({
           <motion.div
             animate={isOpen ? { scaleX: 1.1, opacity: 0.3 } : { scaleX: 1, opacity: 0.45 }}
             transition={{ duration: 0.5 }}
-            className="absolute -bottom-5 left-10 right-10 h-5 bg-black blur-xl rounded-full"
+            className="absolute -bottom-5 left-10 right-10 h-5 bg-background blur-xl rounded-full"
           />
 
           {/* ── Single arched carry handle ── */}
@@ -259,7 +259,7 @@ export function EquipmentArsenalSection({
                   <line x1="14.5" y1="3" x2="7.5" y2="15" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
                   <line x1="11" y1="17.5" x2="11" y2="26" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
-                <span className="text-violet-400/80 font-black tracking-[0.4em] text-[11px] uppercase"
+                <span className="text-individual/80 font-black tracking-[0.4em] text-[11px] uppercase"
                       style={{ textShadow: '0 0 12px rgba(139,92,246,0.8)' }}>
                   PRO GEAR
                 </span>
@@ -299,18 +299,18 @@ export function EquipmentArsenalSection({
               className="w-full relative z-10"
             >
               {item.type === 'racket' && (
-                <div className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 group ${item.isMain ? "bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none border-violet-500/40 shadow-lg shadow-violet-900/30" : "bg-white dark:bg-white/5 shadow-sm dark:shadow-none border-slate-200 dark:border-white/8 shadow-md"}`}>
+                <div className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 group ${item.isMain ? "bg-foreground/8 shadow-sm dark:shadow-none border-individual/40 shadow-lg shadow-individual/30" : "bg-foreground/5 shadow-sm dark:shadow-none border-foreground/8 shadow-md"}`}>
                   {/* Racket string-grid pattern in background */}
                   <div
                     className="absolute inset-0 opacity-[0.06] pointer-events-none"
                     style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px), repeating-linear-gradient(90deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)", color: item.isMain ? "#8b5cf6" : "#94a3b8" }}
                   />
-                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-violet-400 via-fuchsia-500 to-violet-400" : "bg-linear-to-r from-white/15 to-slate-300 dark:to-white/10"}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-individual via-individual to-individual" : "bg-linear-to-r from-foreground/15 to-foreground/10"}`} />
                   <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                     <div className="flex items-center gap-4">
                       {/* Racket illustration */}
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-violet-500/15" : "bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none"}`}>
-                        <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-violet-400" : "text-muted-foreground"}`} fill="none">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-individual/15" : "bg-foreground/8 shadow-sm dark:shadow-none"}`}>
+                        <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-individual" : "text-muted-foreground"}`} fill="none">
                           {/* Racket head */}
                           <ellipse cx="20" cy="15" rx="10" ry="12" stroke="currentColor" strokeWidth="2" />
                           {/* String pattern */}
@@ -325,18 +325,18 @@ export function EquipmentArsenalSection({
                           {/* Grip tape */}
                           <rect x="17.5" y="32" width="5" height="2" rx="1" fill="currentColor" opacity="0.4" />
                         </svg>
-                        {item.isMain && <div className="absolute inset-0 bg-violet-400/10 rounded-2xl" />}
+                        {item.isMain && <div className="absolute inset-0 bg-individual/10 rounded-2xl" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-black text-lg text-slate-800 dark:text-foreground">{item.data.name}</h3>
+                          <h3 className="font-black text-lg text-foreground">{item.data.name}</h3>
                           {item.isMain && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-on-accent rounded-lg">Primary</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-individual text-on-accent rounded-lg">Primary</span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground dark:text-foreground/60 font-medium">
-                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.string}</span></span>
-                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.tension}</span></span>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-foreground/60 font-medium">
+                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-info" /> String: <span className="font-bold text-foreground/80">{item.data.string}</span></span>
+                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-danger" /> Tension: <span className="font-bold text-foreground/80">{item.data.tension}</span></span>
                         </div>
                       </div>
                     </div>
@@ -345,18 +345,18 @@ export function EquipmentArsenalSection({
               )}
 
               {item.type === 'shoe' && (
-                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-md overflow-hidden relative">
+                <div className="bg-foreground/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-info/20 shadow-md overflow-hidden relative">
                   {/* Shoe tread dot pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
                     style={{ backgroundImage: "radial-gradient(circle, #3b82f6 1px, transparent 1px)", backgroundSize: "10px 10px" }}
                   />
-                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-blue-400 to-cyan-500" : "bg-linear-to-r from-white/15 to-slate-300 dark:to-white/10"}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-info to-accent" : "bg-linear-to-r from-foreground/15 to-foreground/10"}`} />
                   <div className="p-4 sm:p-5 flex items-center justify-between gap-3 relative z-10">
                     <div className="flex items-center gap-4 min-w-0">
                       {/* Shoe illustration */}
-                      <div className="w-12 h-12 rounded-xl bg-blue-500/12 flex items-center justify-center shrink-0 shadow-inner">
-                        <svg viewBox="0 0 40 28" className="w-9 h-7 text-blue-500" fill="none">
+                      <div className="w-12 h-12 rounded-xl bg-info/12 flex items-center justify-center shrink-0 shadow-inner">
+                        <svg viewBox="0 0 40 28" className="w-9 h-7 text-info" fill="none">
                           {/* Sole */}
                           <path d="M2 22 Q8 26 20 26 Q34 26 38 22 L36 18 Q28 20 20 20 Q10 20 4 17 Z" fill="currentColor" opacity="0.25" />
                           {/* Upper */}
@@ -372,29 +372,29 @@ export function EquipmentArsenalSection({
                         </svg>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[9px] uppercase tracking-[0.15em] text-blue-400 font-black mb-0.5">Footwear</div>
-                        <div className="font-bold text-base text-slate-800 dark:text-foreground/90 truncate">{item.data.name}</div>
+                        <div className="text-[9px] uppercase tracking-[0.15em] text-info font-black mb-0.5">Footwear</div>
+                        <div className="font-bold text-base text-foreground/90 truncate">{item.data.name}</div>
                       </div>
                     </div>
                     {item.data.primary && (
-                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-on-accent rounded-lg shrink-0">Primary</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-info text-on-accent rounded-lg shrink-0">Primary</span>
                     )}
                   </div>
                 </div>
               )}
 
               {item.type === 'apparel' && (
-                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-violet-500/20 shadow-md overflow-hidden relative">
+                <div className="bg-foreground/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-individual/20 shadow-md overflow-hidden relative">
                   {/* Fabric weave pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
                     style={{ backgroundImage: "repeating-linear-gradient(45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px), repeating-linear-gradient(-45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px)" }}
                   />
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-violet-400 to-purple-500" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-individual to-individual" />
                   <div className="p-4 sm:p-5 flex items-center gap-4 relative z-10">
                     {/* Apparel illustration */}
-                    <div className="w-12 h-12 rounded-xl bg-violet-500/12 flex items-center justify-center shadow-inner">
-                      <svg viewBox="0 0 40 36" className="w-8 h-8 text-violet-500" fill="none">
+                    <div className="w-12 h-12 rounded-xl bg-individual/12 flex items-center justify-center shadow-inner">
+                      <svg viewBox="0 0 40 36" className="w-8 h-8 text-individual" fill="none">
                         {/* Jersey shape */}
                         <path d="M8 4 L2 12 L8 14 L8 32 L32 32 L32 14 L38 12 L32 4 L26 8 Q20 10 14 8 Z" stroke="currentColor" strokeWidth="1.8" fill="currentColor" opacity="0.12" />
                         {/* Collar */}
@@ -407,8 +407,8 @@ export function EquipmentArsenalSection({
                       </svg>
                     </div>
                     <div>
-                      <div className="text-[9px] uppercase tracking-[0.15em] text-violet-400 font-black mb-0.5">Apparel</div>
-                      <div className="font-bold text-base text-slate-800 dark:text-foreground/90">{item.data.name}</div>
+                      <div className="text-[9px] uppercase tracking-[0.15em] text-individual font-black mb-0.5">Apparel</div>
+                      <div className="font-bold text-base text-foreground/90">{item.data.name}</div>
                     </div>
                   </div>
                 </div>
@@ -428,24 +428,24 @@ const TIMELINE_COLORS = [
     icon: "text-primary",
   },
   {
-    ring: "ring-blue-500/25",
-    bg: "bg-blue-500/12",
-    icon: "text-blue-400",
+    ring: "ring-info/25",
+    bg: "bg-info/12",
+    icon: "text-info",
   },
   {
-    ring: "ring-purple-500/25",
-    bg: "bg-purple-500/10",
-    icon: "text-purple-400",
+    ring: "ring-individual/25",
+    bg: "bg-individual/10",
+    icon: "text-individual",
   },
   {
-    ring: "ring-amber-500/25",
-    bg: "bg-amber-500/10",
-    icon: "text-amber-400",
+    ring: "ring-warning/25",
+    bg: "bg-warning/10",
+    icon: "text-warning",
   },
   {
-    ring: "ring-rose-500/25",
-    bg: "bg-rose-500/10",
-    icon: "text-rose-400",
+    ring: "ring-danger/25",
+    bg: "bg-danger/10",
+    icon: "text-danger",
   },
 ];
 
@@ -546,16 +546,16 @@ export function CareerHighlightsSection({ player }: { player: any }) {
   return (
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0">
+        <div className="h-px flex-1 bg-foreground/8 shadow-sm dark:shadow-none" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-foreground/60 shrink-0">
           Career Highlights
         </span>
-        <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
+        <div className="h-px flex-1 bg-foreground/8 shadow-sm dark:shadow-none" />
       </div>
 
       <div className="relative ml-6">
         {/* Vertical timeline line */}
-        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-primary/50 via-blue-500/50 to-purple-500/50 rounded-full" />
+        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-primary/50 via-info/50 to-individual/50 rounded-full" />
 
         <div className="space-y-5">
           {finalHighlights
@@ -577,15 +577,15 @@ export function CareerHighlightsSection({ player }: { player: any }) {
                     <Star className={`w-3.5 h-3.5 ${color.icon}`} />
                   </div>
                   {/* Card */}
-                  <div className="flex-1 bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-xl p-4 border border-slate-200 dark:border-white/8 hover:border-white/15 hover:bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground dark:text-foreground/60 mb-1">
+                  <div className="flex-1 bg-foreground bg-foreground/5 shadow-sm dark:shadow-none rounded-xl p-4 border border-foreground/8 hover:border-foreground/15 hover:bg-foreground/90 bg-foreground/8 hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-foreground/60 mb-1">
                       {h.year}
                     </div>
-                    <div className="text-sm font-black text-slate-800 dark:text-foreground leading-snug">
+                    <div className="text-sm font-black text-foreground leading-snug">
                       {h.title}
                     </div>
                     {h.description && (
-                      <div className="text-xs text-muted-foreground dark:text-foreground/60 mt-1.5 leading-relaxed">
+                      <div className="text-xs text-foreground/60 mt-1.5 leading-relaxed">
                         {h.description}
                       </div>
                     )}

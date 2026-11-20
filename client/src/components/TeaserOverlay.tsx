@@ -30,15 +30,15 @@ export function TeaserOverlay({
       </div>
 
       {/* Glassmorphism Overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-white/30 dark:bg-slate-950/30 backdrop-blur-sm z-10 rounded-3xl">
-        <div className="bg-white/80 dark:bg-slate-900/80 p-6 md:p-8 rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-800/50 flex flex-col items-center text-center max-w-sm w-full backdrop-blur-lg transform hover:scale-105 transition-transform duration-300">
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-background/30 backdrop-blur-sm z-10 rounded-3xl">
+        <div className="bg-card/80 p-6 md:p-8 rounded-3xl shadow-2xl border border-border/50 flex flex-col items-center text-center max-w-sm w-full backdrop-blur-lg transform hover:scale-105 transition-transform duration-300">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 text-primary shadow-inner border border-primary/20">
             <Lock className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-3 tracking-tight">
+          <h3 className="text-xl font-black text-foreground mb-3 tracking-tight">
             Members Only
           </h3>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          <p className="text-sm font-medium text-muted-foreground mb-8 leading-relaxed">
             {message}
           </p>
           <Button 

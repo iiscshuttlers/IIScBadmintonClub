@@ -242,8 +242,8 @@ export default function Navigation() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
         className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/15 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
-            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/10 dark:to-slate-950 border-b border-transparent"
+            ? "bg-gradient-to-r from-primary/15 to-background/95 backdrop-blur-xl shadow-lg shadow-media/40 border-b border-border/60"
+            : "bg-gradient-to-r from-primary/10 to-background border-b border-transparent"
         }`}
       >
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
@@ -258,15 +258,15 @@ export default function Navigation() {
                   className="w-8 h-8 sm:w-9 sm:h-9 object-contain flex-shrink-0 transition-all duration-300"
                 />
                 <div className="min-w-0 flex-shrink flex-1 pr-1">
-                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-xs sm:text-base block truncate tracking-tight">
+                  <span className="font-bold text-foreground leading-tight text-xs sm:text-base block truncate tracking-tight">
                     IISc Badminton Club
                   </span>
                   {viewAsRole ? (
-                    <span className="text-[9px] text-amber-500 font-black uppercase tracking-widest hidden sm:block animate-pulse truncate">
+                    <span className="text-[9px] text-warning font-black uppercase tracking-widest hidden sm:block animate-pulse truncate">
                       Viewing as: {viewAsRole.replace("_", " ")}
                     </span>
                   ) : (
-                    <span className="text-[9px] text-primary dark:text-primary font-semibold uppercase tracking-widest hidden sm:block truncate">
+                    <span className="text-[9px] text-primary font-semibold uppercase tracking-widest hidden sm:block truncate">
                       Shuttlers · Bangalore
                     </span>
                   )}
@@ -301,14 +301,14 @@ export default function Navigation() {
             <div className="flex lg:hidden items-center gap-0.5 ml-auto flex-shrink-0">
               <button
                 onClick={() => setShowHolidays(true)}
-                className="p-1.5 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 transition-colors shadow-sm border border-emerald-100 dark:border-emerald-900/50"
+                className="p-1.5 rounded-xl text-success bg-success/15 hover:bg-success/25 transition-colors shadow-sm border border-success/30"
                 aria-label="Holiday Calendar"
               >
                 <Calendar className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-4 h-4" />
@@ -319,7 +319,7 @@ export default function Navigation() {
                     {isAdmin && (
                       <button
                         onClick={() => setLocation("/admin")}
-                        className="p-1.5 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors"
+                        className="p-1.5 rounded-xl text-individual hover:bg-individual/10 transition-colors"
                         title="Site Admin"
                       >
                         <Shield className="w-4.5 h-4.5" />
@@ -357,18 +357,18 @@ export default function Navigation() {
                         <DropdownMenuContent align="end" className="w-56 mt-2">
                           {myPlayerId ? (
                             <>
-                              <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
+                              <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-warning">
                                 <UserCircle className="mr-2 h-4 w-4" />
                                 <span>Public Profile</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-slate-700 dark:text-slate-300">
+                              <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-soft">
                                 <Settings className="mr-2 h-4 w-4" />
                                 <span>Settings</span>
                               </DropdownMenuItem>
                             </>
                           ) : null}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                          <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-danger focus:bg-danger/10">
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Sign Out</span>
                           </DropdownMenuItem>
@@ -391,11 +391,11 @@ export default function Navigation() {
           </div>
 
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
-          <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
+          <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-border/60 pt-1.5">
 
             <Link href="/host-tournament">
               <button
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary dark:text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 transition-colors shadow-sm border border-primary/20"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary bg-primary/20 hover:bg-primary/30 transition-colors shadow-sm border border-primary/20"
                 aria-label="Host Tournament"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -404,7 +404,7 @@ export default function Navigation() {
             </Link>
             <button
               onClick={() => setShowHolidays(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 transition-colors shadow-sm border border-emerald-100 dark:border-emerald-900/50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-success bg-success/15 hover:bg-success/25 transition-colors shadow-sm border border-success/30"
               aria-label="Holiday Calendar"
             >
               <Calendar className="w-3.5 h-3.5" />
@@ -412,18 +412,18 @@ export default function Navigation() {
             </button>
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
               aria-label="Search"
             >
               <Search className="w-4 h-4" />
             </button>
             {!authLoading && (
               isLoggedIn ? (
-                <div className="flex items-center gap-3 ml-2 border-l border-slate-200 dark:border-slate-800 pl-3">
+                <div className="flex items-center gap-3 ml-2 border-l border-border pl-3">
                   {isAdmin && (
                     <button
                       onClick={() => setLocation("/admin")}
-                      className="p-1.5 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors"
+                      className="p-1.5 rounded-xl text-individual hover:bg-individual/10 transition-colors"
                       title="Site Admin"
                     >
                       <Shield className="w-5 h-5" />
@@ -440,7 +440,7 @@ export default function Navigation() {
                       <DropdownMenuContent align="end" className="w-56 mt-2">
                         {myPlayerId ? (
                           <>
-                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-warning">
                               <UserCircle className="mr-2 h-4 w-4" />
                               <span>Public Profile</span>
                             </DropdownMenuItem>
@@ -448,14 +448,14 @@ export default function Navigation() {
                               <User className="mr-2 h-4 w-4" />
                               <span>Personal Space</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-slate-700 dark:text-slate-300">
+                            <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-soft">
                               <Settings className="mr-2 h-4 w-4" />
                               <span>Settings</span>
                             </DropdownMenuItem>
                           </>
                         ) : null}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-danger focus:bg-danger/10">
                           <LogOut className="mr-2 h-4 w-4" />
                           <span>Sign Out</span>
                         </DropdownMenuItem>
@@ -482,13 +482,13 @@ export default function Navigation() {
 
       {/* ── Mobile Bottom Sheet Menu (outside nav so backdrop-blur doesn't break fixed positioning) ── */}
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
+        <div className="lg:hidden fixed inset-0 z-[9998] bg-media/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
           <div
-            className="fixed bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-88px)]"
+            className="fixed bottom-[72px] left-2 right-2 bg-background rounded-3xl shadow-2xl overflow-y-auto border border-border max-h-[calc(100vh-88px)]"
             onClick={(e) => e.stopPropagation()}
           >
               <div className="px-4 py-4 space-y-1">
-                <div className="w-10 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4" />
+                <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-4" />
 
               <div className="pt-2 mt-2">
 
@@ -497,7 +497,7 @@ export default function Navigation() {
                 {updateInfo && (
                   <button
                     onClick={() => { openUpdateDialog(); setIsOpen(false); }}
-                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-primary/10 dark:bg-primary/30 hover:bg-primary/15 dark:hover:bg-primary/40 text-primary dark:text-primary font-bold text-sm transition-colors cursor-pointer border border-primary/30 dark:border-primary/50"
+                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-primary/30 hover:bg-primary/40 text-primary font-bold text-sm transition-colors cursor-pointer border border-primary/50"
                   >
                     <span className="flex items-center gap-2">
                       <Download className="h-4 w-4" /> Update Available
@@ -507,11 +507,11 @@ export default function Navigation() {
                 )}
 
                 {authLoading ? (
-                  <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+                  <div className="h-10 bg-muted rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
                     <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-foreground font-bold text-sm transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-muted text-foreground font-bold text-sm transition-colors cursor-pointer"
                       onClick={() => {
                         setIsOpen(false);
                         setLocation("/host-tournament");
@@ -523,16 +523,16 @@ export default function Navigation() {
                     {myPlayerId && (
                       <>
                         <button
-                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-muted text-soft font-medium text-sm transition-colors cursor-pointer"
                           onClick={() => {
                             setIsOpen(false);
                             setLocation(`/player/${myPlayerId}`);
                           }}
                         >
-                          <UserCircle className="h-4 w-4 text-amber-500" /> Public Profile
+                          <UserCircle className="h-4 w-4 text-warning" /> Public Profile
                         </button>
                         <button
-                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-primary font-bold text-sm transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-muted text-primary font-bold text-sm transition-colors cursor-pointer"
                           onClick={() => {
                             setIsOpen(false);
                             setLocation(`/player/${myPlayerId}/personal`);
@@ -541,7 +541,7 @@ export default function Navigation() {
                           <User className="h-4 w-4" /> Personal Space
                         </button>
                         <button
-                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-muted text-soft font-bold text-sm transition-colors cursor-pointer"
                           onClick={() => {
                             setIsOpen(false);
                             setLocation("/settings");
@@ -552,7 +552,7 @@ export default function Navigation() {
                       </>
                     )}
                     <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-danger/10 text-danger font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => {
                         setIsOpen(false);
                         handleSignOut();
@@ -582,21 +582,21 @@ export default function Navigation() {
       {!new RegExp('^/player/[^/]+/personal').test(location) && (
       <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
       >
                 <Link href="/" className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
                     <LayoutDashboard strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Home</span>
                   </button>
                 </Link>
                 <a href={getPulseHref()} className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
                     {hasUnreadAnnouncements ? (
                       <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
-                        <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
+                        <span className="w-2 h-2 bg-danger rounded-full border border-border" />
                       </span>
                     ) : null}
                   </button>
@@ -609,7 +609,7 @@ export default function Navigation() {
               <Link href={eventsHref} className="flex-1 min-w-0">
                 <button
                   aria-label={liveCount > 0 ? `Events${eventsLiveLabel}` : undefined}
-                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
+                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Events</span>
@@ -622,14 +622,14 @@ export default function Navigation() {
               </Link>
 
               <Link href="/club" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
                   <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Club</span>
                 </button>
               </Link>
               
               <Link href="/legacy" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
                   <Award strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Legacy</span>
                 </button>
@@ -639,7 +639,7 @@ export default function Navigation() {
               onClick={() => setIsOpen(!isOpen)}
               aria-expanded={isOpen}
               aria-label={isOpen ? "Close menu" : "Open menu"}
-              className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
+              className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary" : "text-info") : "text-muted-foreground hover:text-foreground"}`}
             >
               {isOpen ? <X className="w-5 h-5 mb-0.5" /> : <Menu className="w-5 h-5 mb-0.5" />}
               <span className="text-[11px] font-semibold">Menu</span>
@@ -684,9 +684,9 @@ function LivePill() {
   return (
     <span
       aria-hidden
-      className="inline-flex items-center gap-0.5 rounded-full bg-red-600 px-1 py-px text-[8px] font-black leading-none tracking-wider text-white shadow ring-1 ring-white dark:ring-slate-950"
+      className="inline-flex items-center gap-0.5 rounded-full bg-live px-1 py-px text-[8px] font-black leading-none tracking-wider text-live-foreground shadow ring-1 ring-background"
     >
-      <span className="w-1 h-1 rounded-full bg-white motion-safe:animate-pulse" />
+      <span className="w-1 h-1 rounded-full bg-foreground motion-safe:animate-pulse" />
       LIVE
     </span>
   );
@@ -713,8 +713,8 @@ function NavLink({
         aria-label={ariaLabel}
         className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
-            : "text-slate-600 dark:text-slate-300 hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            ? "text-primary bg-primary/15 ring-1 ring-primary/25"
+            : "text-soft hover:text-foreground hover:bg-muted/60"
         }`}
       >
         {label}
@@ -724,8 +724,8 @@ function NavLink({
           </span>
         )}
         {!!badge && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-on-accent px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-live text-[9px] font-black text-on-accent px-0.5 shadow ring-2 ring-background">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-50" />
             {badge > 0 && <span className="relative">{badge}</span>}
           </span>
         )}
@@ -743,14 +743,14 @@ function MobileNavLink({
         onClick={onClick}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer ${
           isActive
-            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/15 ring-1 ring-primary/25"
-            : "text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            ? "text-primary bg-primary/15 ring-1 ring-primary/25"
+            : "text-soft hover:bg-muted/60"
         }`}
       >
         <span>{label}</span>
         {!!badge && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-black">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-live/15 text-live text-xs font-black">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
             {badge > 0 ? `${badge} LIVE` : "NEW"}
           </span>
         )}
@@ -767,14 +767,14 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
     return (
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTheme(); }}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-soft hover:bg-muted transition-colors"
       >
         <span className="flex items-center gap-2">
-          {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          {isDark ? <Sun className="w-4 h-4 text-warning" /> : <Moon className="w-4 h-4 text-info" />}
           Dark Mode
         </span>
-        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}>
-          <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all ${isDark ? 'left-4.5' : 'left-0.5'}`} />
+        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-primary' : 'bg-muted-strong'}`}>
+          <div className={`w-3 h-3 bg-foreground rounded-full absolute top-0.5 transition-all ${isDark ? 'left-4.5' : 'left-0.5'}`} />
         </div>
       </button>
     );
@@ -785,7 +785,7 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+      className="text-soft hover:bg-muted cursor-pointer"
       title="Toggle dark mode"
     >
       {isDark ? (

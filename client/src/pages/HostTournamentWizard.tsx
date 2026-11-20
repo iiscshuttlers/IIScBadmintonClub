@@ -39,11 +39,11 @@ function RankedToggle({
 }) {
   if (!isAdmin) {
     return (
-      <div className="flex items-start gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-        <Circle className="w-5 h-5 mt-0.5 text-slate-400 shrink-0" />
+      <div className="flex items-start gap-3 p-4 border border-border rounded-xl bg-muted/40">
+        <Circle className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
         <div>
-          <div className="font-bold text-slate-800 dark:text-slate-200">Casual event — won't affect ELO</div>
-          <div className="text-xs text-slate-500">
+          <div className="font-bold text-soft">Casual event — won't affect ELO</div>
+          <div className="text-xs text-muted-foreground">
             Only club admins can create ranked tournaments. Your event runs as a casual tournament and
             won't change any player's ELO, win/loss record or stats.
           </div>
@@ -55,20 +55,20 @@ function RankedToggle({
     <label
       className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
         countsForElo
-          ? 'border-amber-300 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10'
-          : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+          ? 'border-warning/40 bg-warning/10'
+          : 'border-border hover:bg-muted/50'
       }`}
     >
       <input
         type="checkbox"
         checked={countsForElo}
         onChange={(e) => setCountsForElo(e.target.checked)}
-        className="w-5 h-5 accent-amber-500"
+        className="w-5 h-5 accent-warning"
       />
-      <Star className={`w-5 h-5 shrink-0 ${countsForElo ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
+      <Star className={`w-5 h-5 shrink-0 ${countsForElo ? 'text-gold fill-gold' : 'text-muted-foreground'}`} />
       <div>
-        <div className="font-bold text-slate-800 dark:text-slate-200">Ranked — count for ELO</div>
-        <div className="text-xs text-slate-500">
+        <div className="font-bold text-soft">Ranked — count for ELO</div>
+        <div className="text-xs text-muted-foreground">
           {team ? 'Team rubbers' : 'Matches'} update players' personal and category ELO. Uncheck for a casual event.
         </div>
       </div>
@@ -439,10 +439,10 @@ export default function HostTournamentWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 sticky top-0 z-10 shadow-sm">
+    <div className="min-h-screen bg-background">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card shrink-0 sticky top-0 z-10 shadow-sm">
         <Link href="/host-tournament">
-          <button className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Back">
+          <button className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors" aria-label="Back">
             <ArrowLeft className="w-5 h-5" />
           </button>
         </Link>
@@ -453,13 +453,13 @@ export default function HostTournamentWizard() {
       </div>
       
       <div className="max-w-3xl mx-auto px-4 py-8 pb-24">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6">Create Tournament</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-6">Create Tournament</h1>
         
         {/* Stepper */}
         <div className="space-y-2 mb-8">
           <div className="flex gap-2">
             {[1, 2, 3, 4].map(s => (
-              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
+              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-muted'}`} />
             ))}
           </div>
           <div className="grid grid-cols-4 text-[10px] sm:text-xs font-bold text-muted-foreground">
@@ -470,27 +470,27 @@ export default function HostTournamentWizard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl relative min-h-[400px] flex flex-col">
+        <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xl relative min-h-[400px] flex flex-col">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <PageTransition key="step1">
                 <h2 className="text-xl font-black mb-6">1. Basic Info</h2>
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Tournament Name *</label>
+                    <label className="block text-sm font-bold text-muted-foreground mb-2">Tournament Name *</label>
                     <input 
                       type="text"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition"
+                      className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted focus:ring-2 focus:ring-primary outline-none transition"
                       placeholder="e.g. All England Open 2026"
                       value={name}
                       onChange={e => setName(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Location / Venue *</label>
+                    <label className="block text-sm font-bold text-muted-foreground mb-2">Location / Venue *</label>
                     <input 
                       type="text"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition"
+                      className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted focus:ring-2 focus:ring-primary outline-none transition"
                       placeholder="e.g. Gymkhana Badminton Hall"
                       value={location}
                       onChange={e => setLocation(e.target.value)}
@@ -498,43 +498,43 @@ export default function HostTournamentWizard() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">Start Date</label>
+                      <label className="block text-sm font-bold text-muted-foreground mb-2">Start Date</label>
                       <input 
                         type="date"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition text-sm"
+                        className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted focus:ring-2 focus:ring-primary outline-none transition text-sm"
                         value={startDate}
                         onChange={e => setStartDate(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">End Date (optional)</label>
+                      <label className="block text-sm font-bold text-muted-foreground mb-2">End Date (optional)</label>
                       <input 
                         type="date"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-primary outline-none transition text-sm"
+                        className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted focus:ring-2 focus:ring-primary outline-none transition text-sm"
                         value={endDate}
                         onChange={e => setEndDate(e.target.value)}
                       />
                     </div>
                   </div>
                   <div className="pt-2">
-                    <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-3">Tournament Type *</label>
+                    <label className="block text-sm font-bold text-muted-foreground mb-3">Tournament Type *</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div 
                           onClick={() => setFormatFamily('TEAM')}
-                          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${formatFamily === 'TEAM' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${formatFamily === 'TEAM' ? 'border-primary bg-primary/5' : 'border-border hover:border-border-strong'}`}
                         >
-                          <h3 className={`font-black text-lg mb-1 flex items-center justify-between ${formatFamily === 'TEAM' ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>
+                          <h3 className={`font-black text-lg mb-1 flex items-center justify-between ${formatFamily === 'TEAM' ? 'text-primary' : 'text-soft'}`}>
                             Team Tie
                             <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
                           </h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">Teams face off in ties (MS/WS/MD/WD/XD rubbers).</p>
+                          <p className="text-sm text-muted-foreground">Teams face off in ties (MS/WS/MD/WD/XD rubbers).</p>
                         </div>
                       <div 
                         onClick={() => setFormatFamily('OPEN_EVENT')}
-                        className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${formatFamily === 'OPEN_EVENT' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                        className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${formatFamily === 'OPEN_EVENT' ? 'border-primary bg-primary/5' : 'border-border hover:border-border-strong'}`}
                       >
-                        <h3 className={`font-black text-lg mb-1 ${formatFamily === 'OPEN_EVENT' ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>Open Event</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Individual knockout draw per category.</p>
+                        <h3 className={`font-black text-lg mb-1 ${formatFamily === 'OPEN_EVENT' ? 'text-primary' : 'text-soft'}`}>Open Event</h3>
+                        <p className="text-sm text-muted-foreground">Individual knockout draw per category.</p>
                       </div>
                     </div>
                   </div>
@@ -545,7 +545,7 @@ export default function HostTournamentWizard() {
             {step === 2 && formatFamily === 'OPEN_EVENT' && (
               <PageTransition key="step2-open">
                 <h2 className="text-xl font-black mb-6">2. Open Event Format</h2>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <p className="text-muted-foreground leading-relaxed bg-muted/50 p-6 rounded-2xl border border-border">
                   Open events don't use rubber/tie configuration — each category (MS, WS, MD, WD, XD) runs its own
                   independent single-elimination bracket. Which categories run is determined by the entrants you
                   import in the next step; you can generate a seeded bracket per category from the dashboard once
@@ -553,7 +553,7 @@ export default function HostTournamentWizard() {
                 </p>
 
                 <div className="mt-8 space-y-4">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200">Event Rules</h3>
+                  <h3 className="font-bold text-soft">Event Rules</h3>
                   <RankedToggle isAdmin={isAdmin} countsForElo={countsForElo} setCountsForElo={setCountsForElo} />
                 </div>
               </PageTransition>
@@ -565,17 +565,17 @@ export default function HostTournamentWizard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div 
                     onClick={() => setFormat('standard')}
-                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${format === 'standard' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${format === 'standard' ? 'border-primary bg-primary/5' : 'border-border hover:border-border-strong'}`}
                   >
-                    <h3 className={`font-black text-lg mb-1 ${format === 'standard' ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>BWF Standard</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">5 Matches (MS, WS, MD, WD, XD)</p>
+                    <h3 className={`font-black text-lg mb-1 ${format === 'standard' ? 'text-primary' : 'text-soft'}`}>BWF Standard</h3>
+                    <p className="text-sm text-muted-foreground">5 Matches (MS, WS, MD, WD, XD)</p>
                   </div>
                   <div 
                     onClick={() => setFormat('custom')}
-                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${format === 'custom' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${format === 'custom' ? 'border-primary bg-primary/5' : 'border-border hover:border-border-strong'}`}
                   >
-                    <h3 className={`font-black text-lg mb-1 ${format === 'custom' ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>Custom Format</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Configure custom match rules</p>
+                    <h3 className={`font-black text-lg mb-1 ${format === 'custom' ? 'text-primary' : 'text-soft'}`}>Custom Format</h3>
+                    <p className="text-sm text-muted-foreground">Configure custom match rules</p>
                   </div>
                 </div>
 
@@ -604,20 +604,20 @@ export default function HostTournamentWizard() {
                 )}
                 
                 <div className="mt-8 space-y-4">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200">Event Rules</h3>
+                  <h3 className="font-bold text-soft">Event Rules</h3>
                   <RankedToggle isAdmin={isAdmin} countsForElo={countsForElo} setCountsForElo={setCountsForElo} team />
-                  <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <label className="flex items-center gap-3 p-4 border border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
                     <input type="checkbox" checked={ignoreGenderRules} onChange={e => setIgnoreGenderRules(e.target.checked)} className="w-5 h-5 accent-primary" />
                     <div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200">Ignore Gender Rules</div>
-                      <div className="text-xs text-slate-500">Allow any player to play any rubber (e.g. women in MS).</div>
+                      <div className="font-bold text-soft">Ignore Gender Rules</div>
+                      <div className="text-xs text-muted-foreground">Allow any player to play any rubber (e.g. women in MS).</div>
                     </div>
                   </label>
-                  <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <label className="flex items-center gap-3 p-4 border border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
                     <input type="checkbox" checked={playDeadRubbers} onChange={e => setPlayDeadRubbers(e.target.checked)} className="w-5 h-5 accent-primary" />
                     <div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200">Play Dead Rubbers</div>
-                      <div className="text-xs text-slate-500">Play all remaining rubbers even if the tie is already won.</div>
+                      <div className="font-bold text-soft">Play Dead Rubbers</div>
+                      <div className="text-xs text-muted-foreground">Play all remaining rubbers even if the tie is already won.</div>
                     </div>
                   </label>
                 </div>
@@ -633,24 +633,24 @@ export default function HostTournamentWizard() {
                   </button>
                 </div>
                 
-                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-10 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div className="border-2 border-dashed border-border-strong rounded-3xl p-10 text-center hover:bg-muted/50 transition-colors">
                   <UploadCloud className="w-16 h-16 text-primary mx-auto mb-4" />
                   <h3 className="text-lg font-bold mb-2">Upload CSV</h3>
                   
                   {file ? (
                     <div className="mb-6">
-                      <div className="text-[var(--success)] font-black mb-1">{file.name}</div>
-                      <div className="text-sm text-slate-500">{parsedTeams} records parsed</div>
+                      <div className="text-success font-black mb-1">{file.name}</div>
+                      <div className="text-sm text-muted-foreground">{parsedTeams} records parsed</div>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500 mb-6">Drag and drop your file here</p>
+                    <p className="text-sm text-muted-foreground mb-6">Drag and drop your file here</p>
                   )}
                   
                   <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button 
                       onClick={() => fileInputRef.current?.click()}
-                      className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-black shadow-md hover:scale-105 transition-transform"
+                      className="bg-foreground text-background px-6 py-3 rounded-xl font-black shadow-md hover:scale-105 transition-transform"
                     >
                       {file ? 'Change File' : 'Browse Files'}
                     </button>
@@ -660,7 +660,7 @@ export default function HostTournamentWizard() {
                         setParsedTeams(0);
                         setStep(4);
                       }}
-                      className="px-5 py-3 rounded-xl font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-sm"
+                      className="px-5 py-3 rounded-xl font-bold text-muted-foreground hover:text-soft transition-colors text-sm"
                     >
                       Skip CSV &amp; add manually in dashboard →
                     </button>
@@ -671,20 +671,20 @@ export default function HostTournamentWizard() {
                 {file && previewData.length > 1 && formatFamily === 'OPEN_EVENT' && (
                   <div className="mt-6">
                     {csvWarnings.size > 0 && (
-                      <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm font-bold">
+                      <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/40 text-warning text-sm font-bold">
                         <AlertTriangle className="w-4 h-4 shrink-0" />
                         {csvWarnings.size} potential duplicate(s) found — review and remove before continuing
                       </div>
                     )}
-                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div className="overflow-x-auto rounded-xl border border-border">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/50 text-left">
-                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500 w-8">#</th>
-                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Cat</th>
-                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Player 1</th>
-                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500">Player 2</th>
-                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-slate-500 w-8"></th>
+                          <tr className="bg-muted/50 text-left">
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-muted-foreground w-8">#</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-muted-foreground">Cat</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-muted-foreground">Player 1</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-muted-foreground">Player 2</th>
+                            <th className="px-3 py-2 font-black text-[10px] uppercase tracking-widest text-muted-foreground w-8"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -693,16 +693,16 @@ export default function HostTournamentWizard() {
                             return (
                               <tr
                                 key={i}
-                                className={`border-t border-slate-100 dark:border-slate-800 ${warning ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
+                                className={`border-t border-border ${warning ? 'bg-warning/5' : ''}`}
                               >
-                                <td className="px-3 py-2 text-slate-400 text-xs">{i + 1}</td>
-                                <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">{row[0]}</td>
-                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                                  {row[1]}{row[2] && <span className="text-[10px] text-slate-400 ml-1">({row[2]})</span>}
+                                <td className="px-3 py-2 text-muted-foreground text-xs">{i + 1}</td>
+                                <td className="px-3 py-2 font-bold text-soft">{row[0]}</td>
+                                <td className="px-3 py-2 text-muted-foreground">
+                                  {row[1]}{row[2] && <span className="text-[10px] text-muted-foreground ml-1">({row[2]})</span>}
                                 </td>
-                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                                  {tbd.test((row[3] ?? '').trim()) ? <span className="text-slate-400 italic">TBD</span> : (
-                                    <>{row[3]}{row[4] && <span className="text-[10px] text-slate-400 ml-1">({row[4]})</span>}</>
+                                <td className="px-3 py-2 text-muted-foreground">
+                                  {tbd.test((row[3] ?? '').trim()) ? <span className="text-muted-foreground italic">TBD</span> : (
+                                    <>{row[3]}{row[4] && <span className="text-[10px] text-muted-foreground ml-1">({row[4]})</span>}</>
                                   )}
                                 </td>
                                 <td className="px-3 py-2">
@@ -710,7 +710,7 @@ export default function HostTournamentWizard() {
                                     <button
                                       onClick={() => removePreviewRow(i)}
                                       title={warning}
-                                      className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+                                      className="p-1 rounded-md text-danger hover:bg-danger/10 transition"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -730,28 +730,28 @@ export default function HostTournamentWizard() {
             {step === 4 && (
               <PageTransition key="step4">
                 <div className="text-center mb-8">
-                  <CheckCircle2 className="w-16 h-16 text-[var(--success)] mx-auto mb-4" />
+                  <CheckCircle2 className="w-16 h-16 text-success mx-auto mb-4" />
                   <h2 className="text-2xl font-black mb-2">Looks good?</h2>
-                  <p className="text-slate-500">It starts as a draft that only admins can see. You'll go live from the Tournament Manager when you're ready.</p>
+                  <p className="text-muted-foreground">It starts as a draft that only admins can see. You'll go live from the Tournament Manager when you're ready.</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
-                    <span className="text-sm text-slate-500 font-bold">Name</span>
-                    <span className="font-black text-slate-800 dark:text-slate-200">{name}</span>
+                <div className="bg-muted/50 rounded-2xl p-6 border border-border space-y-4">
+                  <div className="flex justify-between items-center pb-4 border-b border-border-strong">
+                    <span className="text-sm text-muted-foreground font-bold">Name</span>
+                    <span className="font-black text-soft">{name}</span>
                   </div>
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
-                    <span className="text-sm text-slate-500 font-bold">Location</span>
-                    <span className="font-black text-slate-800 dark:text-slate-200">{location}</span>
+                  <div className="flex justify-between items-center pb-4 border-b border-border-strong">
+                    <span className="text-sm text-muted-foreground font-bold">Location</span>
+                    <span className="font-black text-soft">{location}</span>
                   </div>
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-slate-700">
-                    <span className="text-sm text-slate-500 font-bold">Type</span>
+                  <div className="flex justify-between items-center pb-4 border-b border-border-strong">
+                    <span className="text-sm text-muted-foreground font-bold">Type</span>
                     <span className="font-black text-primary">{formatFamily === 'OPEN_EVENT' ? 'Open Event' : 'Team Tie'}</span>
                   </div>
                   {formatFamily === 'TEAM' && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-500 font-bold">Format</span>
-                      <span className="font-black text-slate-800 dark:text-slate-200">{format === 'standard' ? 'BWF Standard' : 'Custom Format'}</span>
+                      <span className="text-sm text-muted-foreground font-bold">Format</span>
+                      <span className="font-black text-soft">{format === 'standard' ? 'BWF Standard' : 'Custom Format'}</span>
                     </div>
                   )}
                 </div>
@@ -759,7 +759,7 @@ export default function HostTournamentWizard() {
             )}
           </AnimatePresence>
 
-          <div className="mt-auto pt-8 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50">
+          <div className="mt-auto pt-8 flex items-center justify-between border-t border-border/50">
             {step > 1 ? (
               <Button 
                 type="button"

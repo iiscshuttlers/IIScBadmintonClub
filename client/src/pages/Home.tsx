@@ -115,17 +115,17 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen flex flex-col pb-0 bg-slate-950">
+      <div className="min-h-screen flex flex-col pb-0 bg-background">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-white py-2 lg:py-4 flex items-center bg-slate-950">
+        <section aria-label="Hero" className="relative overflow-hidden text-foreground py-2 lg:py-4 flex items-center bg-background">
           {/* Universal bg */}
           <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-950" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-background via-card to-background" />
             <div className="absolute inset-0 hero-pattern opacity-30" />
             {/* decorative glow orbs */}
             <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[80px]" />
+            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-team/10 rounded-full blur-[80px]" />
             <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-primary/5 rounded-full blur-[60px]" />
             {/* dot grid */}
             <div className="absolute inset-0 dot-pattern opacity-30" />
@@ -138,7 +138,7 @@ export default function Home() {
               <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
                 {/* Heading */}
                 <div className="space-y-4">
-                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-foreground drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
                     Welcome to the <br className="hidden sm:block" />
                     <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">IISc</span> Badminton Club
                   </h1>
@@ -160,9 +160,9 @@ export default function Home() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/30 animate-bounce">
-            <div className="w-5 h-8 rounded-full border-2 border-white/20 flex items-start justify-center pt-1.5">
-              <div className="w-1 h-2 bg-white/40 rounded-full" />
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-foreground/30 animate-bounce">
+            <div className="w-5 h-8 rounded-full border-2 border-foreground/20 flex items-start justify-center pt-1.5">
+              <div className="w-1 h-2 bg-foreground/40 rounded-full" />
             </div>
           </div>
         </section>
@@ -170,7 +170,7 @@ export default function Home() {
 
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
-        <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">
+        <section aria-label="Quick Links" className="bg-transparent">
           <div className="container mx-auto px-4 max-w-5xl">
             
             <HomeAnnouncementBar isAdmin={isAdmin} />
@@ -200,7 +200,7 @@ export default function Home() {
 
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section aria-label="About & Mission" className="py-2 bg-white dark:bg-slate-950">
+        <section aria-label="About & Mission" className="py-2 bg-background">
           <div className="container mx-auto px-4 max-w-5xl">
             <motion.div
               className="mb-2"
@@ -208,12 +208,12 @@ export default function Home() {
             >
               <div className="inline-flex items-center justify-between w-full cursor-pointer group" onClick={() => setShowAbout(!showAbout)}>
                 <div>
-                  <h2 className="text-xl lg:text-2xl font-black text-foreground dark:text-foreground mb-1 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h2 className="text-xl lg:text-2xl font-black text-foreground mb-1 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                     About IISc
-                    <span className="text-primary dark:text-primary"> Badminton Club</span>
+                    <span className="text-primary"> Badminton Club</span>
                   </h2>
                 </div>
-                <div className="ml-4 shrink-0 text-slate-400 group-hover:text-primary transition-colors bg-slate-100 dark:bg-slate-800 p-2 sm:p-3 rounded-full">
+                <div className="ml-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors bg-muted p-2 sm:p-3 rounded-full">
                   {showAbout ? <ChevronUp className="w-6 h-6 sm:w-8 sm:h-8" /> : <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8" />}
                 </div>
               </div>
@@ -227,43 +227,43 @@ export default function Home() {
               {/* Mission */}
               <motion.div variants={fadeUp} className="space-y-4">
                 <div>
-                  <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
-                    <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-teal-500 rounded-full inline-block" />
+                  <h3 className="text-2xl font-black text-foreground mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                    <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-team rounded-full inline-block" />
                     Our Mission
                   </h3>
                 </div>
-                <p className="text-muted-foreground dark:text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
+                <p className="text-soft leading-relaxed text-base whitespace-pre-wrap">
                   {config?.about?.mission ||
                     "To foster excellence in badminton through competitive play and community engagement at IISc. We aim to develop skilled players while promoting discipline, teamwork, and sportsmanship."}
                 </p>
                 {config?.about?.history && (
                   <div className="pt-2 space-y-2">
-                    <h3 className="text-2xl font-black text-foreground dark:text-foreground flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
-                      <span className="w-1.5 h-7 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-full inline-block" />
+                    <h3 className="text-2xl font-black text-foreground flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                      <span className="w-1.5 h-7 bg-gradient-to-b from-info to-info rounded-full inline-block" />
                       Our History
                     </h3>
-                    <p className="text-muted-foreground dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{config.about.history}</p>
+                    <p className="text-soft leading-relaxed whitespace-pre-wrap">{config.about.history}</p>
                   </div>
                 )}
               </motion.div>
 
               {/* Values */}
               <motion.div variants={fadeUp}>
-                <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-4 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
-                  <span className="w-1.5 h-7 bg-gradient-to-b from-orange-400 to-amber-500 rounded-full inline-block" />
+                <h3 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <span className="w-1.5 h-7 bg-gradient-to-b from-secondary to-warning rounded-full inline-block" />
                   Our Values
                 </h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
                   {VALUES.map(({ title, desc, Icon }) => (
                     <div
                       key={title}
-                      className="group relative rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                      className="group relative rounded-2xl p-3 bg-muted/60 border border-border-strong/50 hover:bg-muted hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-2">
-                        <Icon className="w-4 h-4 text-primary dark:text-primary" />
+                      <div className="w-8 h-8 rounded-xl bg-primary/40 flex items-center justify-center mb-2">
+                        <Icon className="w-4 h-4 text-primary" />
                       </div>
-                      <h4 className="font-black text-foreground dark:text-foreground text-sm mb-1">{title}</h4>
-                      <p className="text-muted-foreground dark:text-muted-foreground text-xs leading-relaxed">{desc}</p>
+                      <h4 className="font-black text-foreground text-sm mb-1">{title}</h4>
+                      <p className="text-muted-foreground text-xs leading-relaxed">{desc}</p>
                     </div>
                   ))}
                 </div>
@@ -272,7 +272,7 @@ export default function Home() {
             )}
             {/* Team Photo */}
             <motion.div
-              className="mt-8 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
+              className="mt-8 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-border-strong max-w-5xl mx-auto"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -292,17 +292,17 @@ export default function Home() {
         </section>
 
         {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
-        <section aria-label="Leadership Team" className="flex-1 py-2 bg-slate-50 dark:bg-slate-950">
+        <section aria-label="Leadership Team" className="flex-1 py-2 bg-background">
           <div className="container mx-auto px-4 max-w-5xl">
             <motion.div
               className="text-center mb-3"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <p className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mb-1">Leadership</p>
-              <h2 className="text-xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
+              <p className="text-[9px] font-bold text-secondary uppercase tracking-widest mb-1">Leadership</p>
+              <h2 className="text-xl font-black text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
                 Club Leadership
               </h2>
-              <p className="text-muted-foreground dark:text-muted-foreground text-[10px] mt-0.5">The people keeping the shuttles flying</p>
+              <p className="text-muted-foreground text-[10px] mt-0.5">The people keeping the shuttles flying</p>
             </motion.div>
 
             <motion.div
@@ -310,16 +310,16 @@ export default function Home() {
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               {teamMembers.map((member, idx) => {
-                const gradients = ["from-primary to-teal-600", "from-blue-600 to-indigo-700"];
+                const gradients = ["from-primary to-team", "from-info to-info"];
                 const initials = member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
                 return (
                   <motion.div
                     key={idx}
                     variants={cardVariant}
-                    className="flex flex-col items-center text-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group backdrop-blur-sm"
+                    className="flex flex-col items-center text-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl bg-muted/80 border border-border-strong/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group backdrop-blur-sm"
                     onClick={() => member.image && !imageErrors[member.name] ? setSelectedImage(member.image) : undefined}
                   >
-                    <div className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${gradients[idx % 2]} flex items-center justify-center shadow-lg overflow-hidden ring-4 ring-white dark:ring-slate-700 group-hover:scale-105 transition-transform duration-300`}>
+                    <div className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${gradients[idx % 2]} flex items-center justify-center shadow-lg overflow-hidden ring-4 ring-border-strong group-hover:scale-105 transition-transform duration-300`}>
                       {member.image && !imageErrors[member.name] ? (
                         <img
                           loading="lazy"
@@ -333,10 +333,10 @@ export default function Home() {
                       )}
                     </div>
                     <div className="min-w-0 w-full">
-                      <span className="inline-block text-[8px] sm:text-[9px] font-black text-primary dark:text-primary uppercase tracking-widest mb-1 px-2 py-0.5 bg-primary/10 dark:bg-primary/20 rounded-full border border-primary/20">
+                      <span className="inline-block text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-widest mb-1 px-2 py-0.5 bg-primary/20 rounded-full border border-primary/20">
                         {member.role}
                       </span>
-                      <h3 className="text-sm sm:text-xl font-black text-foreground dark:text-foreground leading-tight truncate px-1">{member.name}</h3>
+                      <h3 className="text-sm sm:text-xl font-black text-foreground leading-tight truncate px-1">{member.name}</h3>
                     </div>
                   </motion.div>
                 );
@@ -387,11 +387,11 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-media/95 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <button
-        className="absolute top-5 right-5 z-[60] text-foreground/60 hover:text-foreground bg-white/10 hover:bg-white/20 rounded-full p-2.5 transition-all cursor-pointer"
+        className="absolute top-5 right-5 z-[60] text-foreground/60 hover:text-foreground bg-foreground/10 hover:bg-foreground/20 rounded-full p-2.5 transition-all cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         aria-label="Close"
       >
@@ -418,7 +418,7 @@ function AnimatedLogo() {
   return (
     <div className="relative flex items-center justify-center overflow-visible">
       <div className="relative flex-shrink-0" style={{ width: "min(260px, 75vw)", height: "min(260px, 75vw)" }}>
-        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-950 to-blue-950 shadow-2xl border-[8px] border-slate-900 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500">
+        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-background to-info/20 shadow-2xl border-[8px] border-border flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-warning">
           {/* Grid pattern */}
           <div className="absolute inset-0 opacity-15 pointer-events-none">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -432,7 +432,7 @@ function AnimatedLogo() {
           </div>
 
           {/* IISc silhouette */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] opacity-20 text-amber-500 pointer-events-none mt-2">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] opacity-20 text-warning pointer-events-none mt-2">
             <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
               <line x1="15" y1="180" x2="185" y2="180" strokeWidth="3" />
               <rect x="75" y="80" width="50" height="100" />
@@ -458,7 +458,7 @@ function AnimatedLogo() {
           {/* Top text */}
           <div className="absolute top-10 left-0 right-0 text-center z-10 flex flex-col items-center">
             <h1 className="text-7xl font-black text-foreground tracking-wider drop-shadow-md flex items-baseline">
-              IIS<span className="text-6xl text-amber-400 ml-0.5">c</span>
+              IIS<span className="text-6xl text-warning ml-0.5">c</span>
             </h1>
           </div>
 
@@ -500,11 +500,11 @@ function AnimatedLogo() {
 
           {/* Bottom text */}
           <div className="absolute bottom-14 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-amber-500 tracking-[0.25em] uppercase drop-shadow-sm">Badminton</h2>
+            <h2 className="text-2xl font-bold text-warning tracking-[0.25em] uppercase drop-shadow-sm">Badminton</h2>
             <div className="flex items-center gap-4 mt-2">
-              <div className="w-8 h-[2px] bg-white/40" />
-              <h3 className="text-lg font-semibold text-slate-100 tracking-[0.4em] uppercase">Club</h3>
-              <div className="w-8 h-[2px] bg-white/40" />
+              <div className="w-8 h-[2px] bg-foreground/40" />
+              <h3 className="text-lg font-semibold text-foreground tracking-[0.4em] uppercase">Club</h3>
+              <div className="w-8 h-[2px] bg-foreground/40" />
             </div>
           </div>
         </div>

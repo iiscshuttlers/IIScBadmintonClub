@@ -265,9 +265,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           const el = document.getElementById(elId);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-950', 'transition-all', 'duration-700');
+            el.classList.add('ring-4', 'ring-info', 'ring-offset-2', 'ring-offset-background', 'transition-all', 'duration-700');
             setTimeout(() => {
-              el.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-950');
+              el.classList.remove('ring-4', 'ring-info', 'ring-offset-2', 'ring-offset-background');
             }, 3000);
           }
         }, 500); // Allow time for DOM to paint
@@ -321,20 +321,20 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
-          className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm animate-pulse"
+          className="bg-card rounded-3xl p-5 border border-border shadow-sm animate-pulse"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
-              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+              <div className="w-10 h-10 rounded-full bg-muted" />
+              <div className="h-4 w-24 bg-muted rounded" />
             </div>
-            <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            <div className="h-6 w-12 bg-muted rounded-full" />
             <div className="flex items-center gap-3">
-              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
-              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+              <div className="h-4 w-24 bg-muted rounded" />
+              <div className="w-10 h-10 rounded-full bg-muted" />
             </div>
           </div>
-          <div className="h-3 w-1/3 mx-auto bg-slate-200 dark:bg-slate-800 rounded" />
+          <div className="h-3 w-1/3 mx-auto bg-muted rounded" />
         </div>
       ))}
     </div>
@@ -343,11 +343,11 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
   if (!activeTournamentId && !hasLiveMatches) {
     return (
       <div className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
-        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
-          <div className="w-24 h-24 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-            <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
+        <div className="text-center py-16 bg-card rounded-3xl border border-border shadow-sm mt-8">
+          <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
+            <Trophy className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">
+          <h3 className="text-xl font-black text-soft mb-2">
             No Live Tournament
           </h3>
           <p className="text-muted-foreground font-medium max-w-sm mx-auto">
@@ -373,7 +373,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <motion.h1
                   layoutId={activeTournament?.id ? `tourn-title-${activeTournament.id}` : undefined}
-                  className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white"
+                  className="text-xl sm:text-2xl font-black text-foreground"
                   style={{ fontFamily: "Playfair Display, serif" }}
                 >
                   {activeTournament.name}
@@ -383,7 +383,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                     <select
                       value={activeTournament.id}
                       onChange={(e) => handleSelectTournament(e.target.value)}
-                      className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                      className="appearance-none bg-muted text-soft text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-border-strong focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
                       title="Switch Tournament"
                     >
                       {tournaments.map((t: any) => (
@@ -392,7 +392,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 )}
               </div>
@@ -408,7 +408,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                   <select
                     value={activeTournament.id}
                     onChange={(e) => handleSelectTournament(e.target.value)}
-                    className="appearance-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
+                    className="appearance-none bg-muted text-soft text-xs font-bold rounded-full pl-3 pr-7 py-1 outline-none border border-border-strong focus:ring-2 focus:ring-primary cursor-pointer shadow-xs"
                     title="Switch Tournament"
                   >
                     {tournaments.map((t: any) => (
@@ -417,7 +417,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
             )
@@ -528,7 +528,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
         const pill = (active: boolean) =>
           `shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${active
             ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
-            : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"}`;
+            : "bg-muted/80 text-soft hover:bg-muted-strong hover:text-foreground"}`;
         const activeStaff = staff.find((t) => t.isActive);
         const activeKey = [...sections, ...staff].find((t) => t.isActive)?.key ?? "";
         return (
@@ -576,7 +576,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
       {/* Players / Teams (canonical route only) */}
       {route && activeSubTab === "players" && activeTournament && (
-        <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 sm:p-6">
+        <div className="mb-6 bg-card rounded-3xl shadow-sm border border-border p-4 sm:p-6">
           {isRouteTeam ? (
             <LiveTeamsSection tournamentId={activeTournament.id} showParticipants={activeTournament.show_participants} />
           ) : (
@@ -595,9 +595,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           {activeTournament ? (
             <TournamentDetailsTab tournament={activeTournament} playerName={ownProfile?.full_name || null} />
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <FileText className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Details</h3>
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm">
+              <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-soft">No Tournament Details</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
                 No active or selected tournament was found.
               </p>
@@ -657,17 +657,17 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           )}
 
           <div className="mb-3 relative w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search matches, players, formats..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 text-foreground text-sm font-bold rounded-2xl pl-11 pr-4 py-3 outline-none border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary shadow-sm placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              className="w-full bg-card text-foreground text-sm font-bold rounded-2xl pl-11 pr-4 py-3 outline-none border border-border focus:ring-2 focus:ring-primary shadow-sm placeholder:text-muted-foreground"
             />
           </div>
 
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-card p-2.5 rounded-2xl border border-border shadow-sm">
             {!route && <div className="flex w-full sm:flex-1 relative">
               <select
                 value={tournamentFilter}
@@ -688,7 +688,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                     window.history.replaceState({}, "", url.toString());
                   }
                 }}
-                className="appearance-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
+                className="appearance-none bg-muted text-soft text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
               >
                 <option value="all">All Tournaments</option>
                 {tournaments.map(t => (
@@ -697,11 +697,11 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>}
 
             {/* One-tap time range (Match Centre style); disciplines are the chips below. */}
-            <div className="w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700 min-w-0">
+            <div className="w-full sm:w-auto sm:pl-4 sm:border-l sm:border-border-strong min-w-0">
               <ChipStrip
                 label="Time"
                 options={[
@@ -860,14 +860,14 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                         <MyCertificatesCard tournament={activeTournament} />
                         <MatchSection
                           title="My Matches"
-                          icon={<Activity className="w-5 h-5 text-violet-500" />}
+                          icon={<Activity className="w-5 h-5 text-individual" />}
                           matches={myMatchesList}
                           defaultExpanded={true}
                           renderMatchCard={renderCard}
                           headerAction={
                             <button
                               onClick={() => setIsGlobalReminderOpen(true)}
-                              className="p-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 text-violet-600 dark:text-violet-400 rounded-full transition-colors"
+                              className="p-1.5 bg-individual/10 hover:bg-individual/20 text-individual rounded-full transition-colors"
                               title="Global Match Reminders"
                             >
                               <Bell className="w-4 h-4" />
@@ -884,15 +884,15 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                         )}
                       </>
                     ) : (
-                      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 mb-6">
-                        <div className="flex border-b border-slate-100 dark:border-slate-800">
+                      <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden transition-all duration-300 mb-6">
+                        <div className="flex border-b border-border">
                           {(["upcoming", "completed"] as const).map(status => (
                             <button
                               key={status}
                               onClick={() => setMatchStatus(status)}
                               className={`flex-1 py-4 text-sm font-black capitalize transition-colors ${matchStatus === status
-                                ? "text-primary border-b-2 border-primary bg-slate-50/50 dark:bg-slate-800/50"
-                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                                ? "text-primary border-b-2 border-primary bg-muted/50"
+                                : "text-muted-foreground hover:text-soft"
                                 }`}
                             >
                               {status}
@@ -917,7 +917,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                               // One discipline rule everywhere (category text or match-code prefix).
                               const filteredList = list.filter(m => matchCat === "ALL" || disciplineOf(m.category, m.match_code) === matchCat);
 
-                              if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-slate-400">No matches found in this section.</div>;
+                              if (filteredList.length === 0) return <div className="text-center py-12 text-sm font-bold text-muted-foreground">No matches found in this section.</div>;
                               return filteredList.map((m, i) => renderCard(m, i));
                             })()}
                           </div>
@@ -932,7 +932,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 <div className="flex justify-center mt-6 pt-4 pb-8">
                   <button
                     onClick={() => setLimitCount((prev) => prev + 50)}
-                    className="px-6 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 rounded-full font-bold text-sm transition shadow-sm hover:shadow-md"
+                    className="px-6 py-2.5 bg-muted hover:bg-muted-strong text-soft rounded-full font-bold text-sm transition shadow-sm hover:shadow-md"
                   >
                     Load More Matches
                   </button>
@@ -940,15 +940,15 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               )}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8 p-6">
-              <div className="w-20 h-20 mx-auto bg-slate-50 dark:bg-slate-800/80 rounded-3xl flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-800">
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm mt-8 p-6">
+              <div className="w-20 h-20 mx-auto bg-muted/80 rounded-3xl flex items-center justify-center mb-4 border border-border">
                 {activeTournament?.format_family === "TEAM" ? (
                   <Swords className="w-9 h-9 text-primary" />
                 ) : (
-                  <Trophy className="w-9 h-9 text-slate-300 dark:text-muted-foreground" />
+                  <Trophy className="w-9 h-9 text-muted-foreground" />
                 )}
               </div>
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">
+              <h3 className="text-xl font-black text-soft mb-2">
                 {activeTournament?.format_family === "TEAM"
                   ? "Team Tournament Fixtures"
                   : "No matches yet"}
@@ -978,13 +978,13 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
       {/* Schedule Tab */}
       {activeSubTab === "schedule" && (
-        <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-          <h2 className="font-black text-lg mb-4 text-slate-800 dark:text-foreground">Match Schedule</h2>
+        <div className="mb-6 bg-card rounded-3xl p-5 border border-border shadow-sm">
+          <h2 className="font-black text-lg mb-4 text-foreground">Match Schedule</h2>
           {activeTournamentId ? (
             <LiveMatchSchedule tournamentId={activeTournamentId} playerName={ownProfile?.full_name || null} />
           ) : (
-            <div className="text-center py-10 text-slate-400">
-              <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <div className="text-center py-10 text-muted-foreground">
+              <Calendar className="w-10 h-10 text-faint mx-auto mb-2" />
               <p className="font-bold text-sm">No tournament schedule available.</p>
             </div>
           )}
@@ -1000,12 +1000,12 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
       {/* 4. Brackets */}
       {!loading && activeSubTab === "brackets" && (
-        <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="mb-6 bg-card rounded-3xl p-4 sm:p-5 border border-border shadow-sm">
           {activeTournamentId ? (
             <LiveBracketsSection tournamentId={activeTournamentId} showBrackets={true} />
           ) : (
-            <div className="text-center py-10 text-slate-400">
-              <LayoutList className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <div className="text-center py-10 text-muted-foreground">
+              <LayoutList className="w-10 h-10 text-faint mx-auto mb-2" />
               <p className="font-bold text-sm">No brackets available.</p>
             </div>
           )}
@@ -1016,11 +1016,11 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {!loading && activeSubTab === "standings" && (
         <div className="mb-6">
           {activeTournament && activeTournament.format_family !== "TEAM" ? (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-              <div className="w-16 h-16 bg-amber-50 dark:bg-amber-950/40 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200 dark:border-amber-800/50">
-                <Trophy className="w-8 h-8 text-amber-500" />
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+              <div className="w-16 h-16 bg-gold/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-gold/30">
+                <Trophy className="w-8 h-8 text-gold" />
               </div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-1">
+              <h3 className="text-lg font-black text-soft mb-1">
                 Points Table Not Available
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -1036,7 +1036,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 </button>
                 <button
                   onClick={() => setActiveSubTab("matches")}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  className="px-4 py-2 bg-muted text-soft font-bold text-xs rounded-full hover:bg-muted-strong transition"
                 >
                   View Matches
                 </button>
@@ -1045,9 +1045,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           ) : activeTournamentId ? (
             <TeamStandingsTable tournamentId={activeTournamentId} tournament={activeTournament} />
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Standings Available</h3>
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm">
+              <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-soft">No Standings Available</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
                 No active team tournament is selected.
               </p>
@@ -1067,9 +1067,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           {activeTournamentId ? (
             <TeamTiesSection tournamentId={activeTournamentId} tournament={activeTournament} />
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-              <Swords className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Team Tournament Selected</h3>
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+              <Swords className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-soft">No Team Tournament Selected</h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                 Select an active team tournament to view fixtures, playing orders, and lineups.
               </p>
@@ -1089,9 +1089,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           {activeTournamentId ? (
             <RefereeDashboard tournament={activeTournament} />
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-              <Gavel className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Selected</h3>
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+              <Gavel className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-soft">No Tournament Selected</h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                 Select an active tournament to oversee its matches.
               </p>
@@ -1108,9 +1108,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               tournament={activeTournament}
             />
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-              <LayoutDashboard className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Tournament Selected</h3>
+            <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+              <LayoutDashboard className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-black text-soft">No Tournament Selected</h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                 Select an active tournament to view the Organizer command dashboard.
               </p>

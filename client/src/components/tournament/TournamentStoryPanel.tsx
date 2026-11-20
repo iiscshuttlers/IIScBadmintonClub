@@ -44,14 +44,14 @@ export function TournamentStoryPanel({ tournamentId, tournamentName }: { tournam
   return (
     <section
       aria-labelledby="tournament-story-heading"
-      className="mb-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-4 sm:p-6 space-y-4"
+      className="mb-6 bg-card rounded-3xl border border-border shadow-sm p-4 sm:p-6 space-y-4"
     >
-      <h2 id="tournament-story-heading" className="flex items-center gap-2 text-lg font-black text-slate-800 dark:text-slate-100">
+      <h2 id="tournament-story-heading" className="flex items-center gap-2 text-lg font-black text-foreground">
         <BookOpen className="w-5 h-5 text-primary" aria-hidden /> Tournament story
       </h2>
 
       {story.record && !factsReady && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-muted-foreground">
           {decided.status === "loading" ? "Checking the story against current results…" : "The story is hidden because current results could not be checked."}
         </p>
       )}
@@ -59,7 +59,7 @@ export function TournamentStoryPanel({ tournamentId, tournamentName }: { tournam
       {view && story.record && <PublishedStory record={story.record} view={view} tournamentId={tournamentId} />}
 
       {!story.record && isAdmin && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No story is published. Only you (an admin) can see this section.</p>
+        <p className="text-sm text-muted-foreground">No story is published. Only you (an admin) can see this section.</p>
       )}
 
       {isAdmin && (
@@ -87,11 +87,11 @@ function PublishedStory({
   return (
     <div className="space-y-4">
       {record.editorialNote && (
-        <figure className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4">
-          <figcaption className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+        <figure className="rounded-2xl bg-muted/60 p-4">
+          <figcaption className="text-xs font-black uppercase tracking-wide text-muted-foreground mb-1">
             From the organisers
           </figcaption>
-          <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line">{record.editorialNote}</p>
+          <p className="text-sm text-soft whitespace-pre-line">{record.editorialNote}</p>
         </figure>
       )}
       <ul className="space-y-3">
@@ -100,12 +100,12 @@ function PublishedStory({
         ))}
       </ul>
       {view.withheldItemIds.length > 0 && (
-        <p role="status" className="text-sm text-amber-700 dark:text-amber-300">
+        <p role="status" className="text-sm text-warning">
           {view.withheldItemIds.length === 1 ? "1 item is" : `${view.withheldItemIds.length} items are`} hidden because a
           supporting result changed after publication and is awaiting review.
         </p>
       )}
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-muted-foreground">
         Facts computed from published results ·{" "}
         {Number.isNaN(published.getTime())
           ? "publication date unknown"
@@ -117,13 +117,13 @@ function PublishedStory({
 
 function StoryItem({ item, tournamentId }: { item: FactualStoryItem; tournamentId: string }) {
   return (
-    <li className="rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+    <li className="rounded-2xl border border-border p-4">
       <p className="text-xs font-black uppercase tracking-wide text-primary">
         {TYPE_LABEL[item.type]}
         {item.discipline ? ` · ${item.discipline}` : ""}
       </p>
-      <p className="mt-1 font-black text-slate-800 dark:text-slate-100 break-words">{item.headline}</p>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 break-words">{item.body}</p>
+      <p className="mt-1 font-black text-foreground break-words">{item.headline}</p>
+      <p className="mt-1 text-sm text-soft break-words">{item.body}</p>
       <div className="mt-2 flex flex-wrap gap-3">
         {item.supportingMatchIds.map((matchId) => (
           <Link key={matchId} href={matchPath(tournamentId, matchId)} className="text-sm font-bold text-primary hover:underline">
@@ -196,13 +196,13 @@ function StoryEditor({
   const busy = story.publish.isPending || story.withdraw.isPending;
 
   return (
-    <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+    <div className="border-t border-border pt-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={`story-editor-${tournamentId}`}
-        className="inline-flex items-center gap-1.5 text-sm font-black text-slate-700 dark:text-slate-200 hover:text-primary"
+        className="inline-flex items-center gap-1.5 text-sm font-black text-soft hover:text-primary"
       >
         {open ? <ChevronUp className="w-4 h-4" aria-hidden /> : <ChevronDown className="w-4 h-4" aria-hidden />}
         Review story (admin)
@@ -210,24 +210,24 @@ function StoryEditor({
 
       {open && (
         <div id={`story-editor-${tournamentId}`} className="mt-3 space-y-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Items are generated from completed results. Drafts are not saved; only publishing stores the story, and the
             facts are checked again at that moment. Walkovers are not used.
           </p>
 
-          {factsStatus === "loading" && <p className="text-sm text-slate-500">Loading results…</p>}
+          {factsStatus === "loading" && <p className="text-sm text-muted-foreground">Loading results…</p>}
           {factsStatus === "error" && (
-            <p className="text-sm text-red-600 dark:text-red-400">Results could not be loaded, so no story can be generated.</p>
+            <p className="text-sm text-danger">Results could not be loaded, so no story can be generated.</p>
           )}
           {factsStatus === "ready" && draft.items.length === 0 && (
-            <p className="text-sm text-slate-500">No finals, seed upsets or close deciders have been recorded yet.</p>
+            <p className="text-sm text-muted-foreground">No finals, seed upsets or close deciders have been recorded yet.</p>
           )}
 
           {draft.items.length > 0 && (
             <fieldset className="space-y-2">
-              <legend className="text-sm font-black text-slate-700 dark:text-slate-200 mb-1">Items to publish</legend>
+              <legend className="text-sm font-black text-soft mb-1">Items to publish</legend>
               {draft.items.map((item) => (
-                <label key={item.id} className="flex items-start gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3 cursor-pointer">
+                <label key={item.id} className="flex items-start gap-3 rounded-xl border border-border p-3 cursor-pointer">
                   <input
                     type="checkbox"
                     className="mt-1 h-4 w-4"
@@ -239,8 +239,8 @@ function StoryEditor({
                       {TYPE_LABEL[item.type]}
                       {item.discipline ? ` · ${item.discipline}` : ""}
                     </span>
-                    <span className="block font-bold text-slate-800 dark:text-slate-100 break-words">{item.headline}</span>
-                    <span className="block text-sm text-slate-600 dark:text-slate-300 break-words">{item.body}</span>
+                    <span className="block font-bold text-foreground break-words">{item.headline}</span>
+                    <span className="block text-sm text-soft break-words">{item.body}</span>
                   </span>
                 </label>
               ))}
@@ -248,7 +248,7 @@ function StoryEditor({
           )}
 
           <div>
-            <label htmlFor={`story-note-${tournamentId}`} className="block text-sm font-black text-slate-700 dark:text-slate-200">
+            <label htmlFor={`story-note-${tournamentId}`} className="block text-sm font-black text-soft">
               Organiser note (optional)
             </label>
             <textarea
@@ -257,13 +257,13 @@ function StoryEditor({
               maxLength={STORY_EDITORIAL_NOTE_MAX}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3 text-sm"
+              className="mt-1 w-full rounded-xl border border-border-strong bg-background p-3 text-sm"
             />
-            <p className="text-xs text-slate-500">Shown separately as “From the organisers”. {note.length}/{STORY_EDITORIAL_NOTE_MAX}</p>
+            <p className="text-xs text-muted-foreground">Shown separately as “From the organisers”. {note.length}/{STORY_EDITORIAL_NOTE_MAX}</p>
           </div>
 
-          {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          {message && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{message}</p>}
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+          {message && <p role="status" className="text-sm text-success">{message}</p>}
 
           <div className="flex flex-wrap gap-2">
             <button
@@ -279,7 +279,7 @@ function StoryEditor({
                 type="button"
                 onClick={onWithdraw}
                 disabled={busy}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-black text-slate-700 dark:text-slate-200 disabled:opacity-50"
+                className="rounded-xl border border-border-strong px-4 py-2 text-sm font-black text-soft disabled:opacity-50"
               >
                 Withdraw story
               </button>

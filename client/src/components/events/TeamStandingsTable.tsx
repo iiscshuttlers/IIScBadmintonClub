@@ -130,10 +130,10 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
 
   if (!rawStandings || rawStandings.length === 0) {
     return (
-      <div className="text-center p-12 text-muted-foreground bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <Trophy className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-        <h4 className="font-bold text-slate-600 dark:text-slate-400">No Standings Available Yet</h4>
-        <p className="text-xs text-slate-400 mt-1">Standings update in real-time as pool ties and rubbers are completed.</p>
+      <div className="text-center p-12 text-muted-foreground bg-card rounded-3xl border border-border shadow-sm">
+        <Trophy className="w-10 h-10 text-faint mx-auto mb-3" />
+        <h4 className="font-bold text-muted-foreground">No Standings Available Yet</h4>
+        <p className="text-xs text-muted-foreground mt-1">Standings update in real-time as pool ties and rubbers are completed.</p>
       </div>
     );
   }
@@ -148,20 +148,20 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm space-y-4">
+    <div className="bg-card rounded-3xl border border-border p-5 sm:p-6 shadow-sm space-y-4">
       {/* Top Header & Pool Switcher */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-500" />
+            <h2 className="text-xl font-black text-foreground flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-gold" />
               Tournament Points Table
             </h2>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-xs font-bold transition-colors cursor-help"
+                  className="w-5 h-5 rounded-full bg-muted hover:bg-muted-strong text-muted-foreground flex items-center justify-center text-xs font-bold transition-colors cursor-help"
                   aria-label="Table info and rules"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
@@ -170,50 +170,50 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
               <TooltipContent 
                 side="right" 
                 sideOffset={8}
-                className="max-w-xs p-3.5 space-y-2.5 text-xs bg-slate-950/95 backdrop-blur-md text-slate-100 border border-slate-700/80 shadow-2xl rounded-2xl z-50"
+                className="max-w-xs p-3.5 space-y-2.5 text-xs bg-background/95 backdrop-blur-md text-foreground border border-border-strong/80 shadow-2xl rounded-2xl z-50"
               >
-                <div className="flex items-center gap-1.5 font-black text-amber-400 text-xs border-b border-slate-750 pb-1.5 border-slate-800">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div className="flex items-center gap-1.5 font-black text-gold text-xs border-b border-border-strong pb-1.5 border-border">
+                  <Trophy className="w-3.5 h-3.5 text-gold shrink-0" />
                   <span>Points Table Rules & Columns</span>
                 </div>
                 <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px] font-medium">
-                  <span className="font-black text-sky-400">P</span>
-                  <span className="text-slate-200">Matches / Ties Played</span>
-                  <span className="font-black text-emerald-400">W</span>
-                  <span className="text-slate-200">Ties Won <span className="text-emerald-400 font-bold">(+{winPoints} pts)</span></span>
-                  <span className="font-black text-slate-400">D</span>
-                  <span className="text-slate-200">Ties Drawn <span className="text-slate-400 font-bold">(+{drawPoints} pts)</span></span>
-                  <span className="font-black text-amber-400">L</span>
-                  <span className="text-slate-200">Ties Lost <span className="text-amber-400 font-bold">(+{lossPoints} pts)</span></span>
-                  <span className="font-black text-cyan-300">R (+/-)</span>
-                  <span className="text-slate-200">Rubber Net Diff <span className="text-slate-400 text-[10px]">(For - Against)</span></span>
-                  <span className="font-black text-indigo-300">S (+/-)</span>
-                  <span className="text-slate-200">Sets Net Diff <span className="text-slate-400 text-[10px]">(For - Against)</span></span>
-                  <span className="font-black text-violet-300">PTS (+/-)</span>
-                  <span className="text-slate-200">Match Points Net Diff</span>
-                  <span className="font-black text-lime-400">PTS</span>
-                  <span className="text-lime-300 font-bold">Total Standing Points</span>
+                  <span className="font-black text-info">P</span>
+                  <span className="text-soft">Matches / Ties Played</span>
+                  <span className="font-black text-success">W</span>
+                  <span className="text-soft">Ties Won <span className="text-success font-bold">(+{winPoints} pts)</span></span>
+                  <span className="font-black text-muted-foreground">D</span>
+                  <span className="text-soft">Ties Drawn <span className="text-muted-foreground font-bold">(+{drawPoints} pts)</span></span>
+                  <span className="font-black text-warning">L</span>
+                  <span className="text-soft">Ties Lost <span className="text-warning font-bold">(+{lossPoints} pts)</span></span>
+                  <span className="font-black text-accent">R (+/-)</span>
+                  <span className="text-soft">Rubber Net Diff <span className="text-muted-foreground text-[10px]">(For - Against)</span></span>
+                  <span className="font-black text-info">S (+/-)</span>
+                  <span className="text-soft">Sets Net Diff <span className="text-muted-foreground text-[10px]">(For - Against)</span></span>
+                  <span className="font-black text-individual">PTS (+/-)</span>
+                  <span className="text-soft">Match Points Net Diff</span>
+                  <span className="font-black text-primary">PTS</span>
+                  <span className="text-primary font-bold">Total Standing Points</span>
                 </div>
-                <div className="pt-2 border-t border-slate-800 flex items-center gap-2 text-[11px] font-medium text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <div className="pt-2 border-t border-border flex items-center gap-2 text-[11px] font-medium text-success">
+                  <span className="w-2 h-2 rounded-full bg-success shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   <span>{qualifyingText}</span>
                 </div>
               </TooltipContent>
             </Tooltip>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Click column headers to sort. Click any team name to view the complete squad roster.
           </p>
         </div>
 
         {pools.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-1.5 bg-muted/80 p-1 rounded-2xl border border-border-strong">
             <button
               onClick={() => setSelectedPool("ALL")}
               className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                 selectedPool === "ALL"
-                  ? "bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-soft"
               }`}
             >
               All Pools
@@ -224,8 +224,8 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                 onClick={() => setSelectedPool(p)}
                 className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                   selectedPool === p
-                    ? "bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-soft"
                 }`}
               >
                 Pool {p}
@@ -239,7 +239,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
       <div className="overflow-x-auto -mx-5 sm:mx-0">
         <table className="w-full text-sm text-left border-collapse">
           <thead>
-            <tr className="text-[11px] font-black text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/40 border-y border-slate-100 dark:border-slate-800">
+            <tr className="text-[11px] font-black text-muted-foreground uppercase tracking-wider bg-muted/40 border-y border-border">
               {/* POS */}
               <th className="px-3 sm:px-4 py-3 text-center w-12 whitespace-nowrap align-middle">
                 <Tooltip>
@@ -426,7 +426,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <tbody className="divide-y divide-border/60">
             {sorted.map((team: any, index: number) => {
               const rDiff = (team.rubbers_for ?? 0) - (team.rubbers_against ?? 0);
               const sDiff = team.sets_diff ?? ((team.sets_for ?? 0) - (team.sets_against ?? 0));
@@ -438,20 +438,20 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
               return (
                 <tr 
                   key={team.team_id} 
-                  className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${
-                    isQualified ? "bg-emerald-500/[0.02]" : ""
+                  className={`hover:bg-muted/30 transition-colors ${
+                    isQualified ? "bg-success/[0.02]" : ""
                   }`}
                 >
                   {/* Position */}
                   <td className="px-3 sm:px-4 py-3.5 text-center">
                     <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                       index === 0
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-black shadow-sm"
+                        ? "bg-warning/15 text-warning font-black shadow-sm"
                         : index === 1
-                        ? "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-black"
+                        ? "bg-muted text-soft font-black"
                         : index === 2
-                        ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
-                        : "text-slate-400"
+                        ? "bg-secondary/15 text-secondary"
+                        : "text-muted-foreground"
                     }`}>
                       {index + 1}
                     </span>
@@ -462,7 +462,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                     <div className="flex items-center gap-2">
                       {isQualified && (
                         <div 
-                          className="w-1.5 h-6 rounded-full bg-emerald-500 shrink-0" 
+                          className="w-1.5 h-6 rounded-full bg-success shrink-0" 
                           title={hasMultiplePools ? `Top ${dynamicCutoff} in pool qualifies for playoffs` : `Top ${dynamicCutoff} qualifies for playoffs`} 
                         />
                       )}
@@ -478,11 +478,11 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                           className="group flex items-center gap-2 text-left focus:outline-hidden"
                           title="Click to view complete team roster"
                         >
-                          <span className="font-bold text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors underline-offset-4 group-hover:underline cursor-pointer">
+                          <span className="font-bold text-foreground group-hover:text-primary transition-colors underline-offset-4 group-hover:underline cursor-pointer">
                             {team.team_name}
                           </span>
                           {team.short_name && (
-                            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase px-1.5 py-0.5 rounded bg-muted group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                               {team.short_name}
                             </span>
                           )}
@@ -494,58 +494,58 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                   {/* Pool */}
                   {pools.length > 0 && selectedPool === "ALL" && (
                     <td className="px-3 py-3.5 text-center">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-soft">
                         {team.pool || "-"}
                       </span>
                     </td>
                   )}
 
                   {/* P */}
-                  <td className="px-2.5 py-3.5 text-right font-bold text-slate-500">
+                  <td className="px-2.5 py-3.5 text-right font-bold text-muted-foreground">
                     {team.played ?? 0}
                   </td>
 
                   {/* W */}
-                  <td className="px-2.5 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                  <td className="px-2.5 py-3.5 text-right font-bold text-success">
                     {team.won ?? 0}
                   </td>
 
                   {/* D */}
-                  <td className="px-2.5 py-3.5 text-right font-medium text-slate-400">
+                  <td className="px-2.5 py-3.5 text-right font-medium text-muted-foreground">
                     {team.drawn ?? 0}
                   </td>
 
                   {/* L */}
-                  <td className="px-2.5 py-3.5 text-right font-medium text-slate-400">
+                  <td className="px-2.5 py-3.5 text-right font-medium text-muted-foreground">
                     {team.lost ?? 0}
                   </td>
 
                   {/* Rubbers Diff */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs">
-                    <span className={rDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : rDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
+                    <span className={rDiff > 0 ? "text-success font-bold" : rDiff < 0 ? "text-warning font-bold" : "text-muted-foreground"}>
                       {rDiff > 0 ? `+${rDiff}` : rDiff}
                     </span>
-                    <span className="text-[10px] text-slate-400 ml-1">
+                    <span className="text-[10px] text-muted-foreground ml-1">
                       ({team.rubbers_for ?? 0}-{team.rubbers_against ?? 0})
                     </span>
                   </td>
 
                   {/* Sets Diff (Medium+ screens) */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs hidden md:table-cell">
-                    <span className={sDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : sDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
+                    <span className={sDiff > 0 ? "text-success font-bold" : sDiff < 0 ? "text-warning font-bold" : "text-muted-foreground"}>
                       {sDiff > 0 ? `+${sDiff}` : sDiff}
                     </span>
-                    <span className="text-[10px] text-slate-400 ml-1">
+                    <span className="text-[10px] text-muted-foreground ml-1">
                       ({team.sets_for ?? 0}-{team.sets_against ?? 0})
                     </span>
                   </td>
 
                   {/* Points Diff (Large screens) */}
                   <td className="px-3 py-3.5 text-right font-mono text-xs hidden lg:table-cell">
-                    <span className={pDiff > 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : pDiff < 0 ? "text-amber-500 font-bold" : "text-slate-400"}>
+                    <span className={pDiff > 0 ? "text-success font-bold" : pDiff < 0 ? "text-warning font-bold" : "text-muted-foreground"}>
                       {pDiff > 0 ? `+${pDiff}` : pDiff}
                     </span>
-                    <span className="text-[10px] text-slate-400 ml-1">
+                    <span className="text-[10px] text-muted-foreground ml-1">
                       ({team.points_for ?? 0}-{team.points_against ?? 0})
                     </span>
                   </td>
@@ -562,9 +562,9 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
       </div>
 
       {/* Footer Info (Dynamically fetched per tournament) */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 text-[11px] text-slate-400 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 text-[11px] text-muted-foreground border-t border-border">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isPureLeague ? "bg-amber-500" : "bg-emerald-500"}`} />
+          <div className={`w-2 h-2 rounded-full ${isPureLeague ? "bg-warning" : "bg-success"}`} />
           <span>{qualifyingText}</span>
         </div>
         <div>

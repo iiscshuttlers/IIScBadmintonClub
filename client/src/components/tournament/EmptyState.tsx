@@ -21,7 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={`text-center py-14 px-6 bg-white dark:bg-slate-900/80 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center ${className}`}
+      className={`text-center py-14 px-6 bg-card/80 rounded-3xl border border-dashed border-border shadow-sm flex flex-col items-center justify-center ${className}`}
     >
       {/* Warm Shuttlecock SVG Icon */}
       <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 text-primary shadow-xs">
@@ -48,10 +48,10 @@ export function EmptyState({
         </svg>
       </div>
 
-      <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+      <h3 className="text-lg font-black text-foreground tracking-tight">
         {title}
       </h3>
-      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm font-medium mb-5">
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-sm font-medium mb-5">
         {description}
       </p>
 

@@ -223,26 +223,26 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
   if (teamLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
         <Loader2 className="animate-spin w-10 h-10 text-primary mb-4" />
-        <p className="text-slate-500 font-medium">Loading Team Command Center...</p>
+        <p className="text-muted-foreground font-medium">Loading Team Command Center...</p>
       </div>
     );
   }
 
   if (!team) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-8">
-        <AlertCircle className="w-12 h-12 text-rose-500 mb-3" />
-        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">Team Not Found</h2>
-        <p className="text-slate-500 mb-6">This team does not exist or may have been deleted.</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
+        <AlertCircle className="w-12 h-12 text-danger mb-3" />
+        <h2 className="text-2xl font-black text-foreground mb-2">Team Not Found</h2>
+        <p className="text-muted-foreground mb-6">This team does not exist or may have been deleted.</p>
         <Button onClick={() => navigate('/pulse')}>Back to Tournaments</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">
+    <div className="min-h-screen bg-background text-foreground pb-28">
       {/* Header Banner */}
       <PageHeader
         backTo="/pulse"
@@ -252,10 +252,10 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         title={team.name}
         subtitle={`${team.tournaments?.name || 'Tournament Team'} · ${activeMembers.length} active player${activeMembers.length === 1 ? '' : 's'}`}
         action={
-          <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-fit">
+          <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl bg-muted border border-border-strong w-fit">
             <Users className="w-4 h-4 text-primary" />
             <span>Roster: {activeMembers.length}/{maxRoster}</span>
-            <span className={`w-2 h-2 rounded-full ${activeMembers.length >= 4 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+            <span className={`w-2 h-2 rounded-full ${activeMembers.length >= 4 ? 'bg-success' : 'bg-warning animate-pulse'}`} />
           </div>
         }
       />
@@ -274,16 +274,16 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
         {/* ACTION REQUIRED BANNER (if lineup pending) */}
         {upcomingTieWithPendingLineup && isCaptain && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-warning/10 via-warning/5 to-transparent border-2 border-warning/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/30">
+              <div className="p-2.5 rounded-xl bg-warning text-warning-foreground shadow-md shadow-warning/30">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-amber-900 dark:text-amber-200">
+                <h3 className="text-base sm:text-lg font-bold text-warning">
                   Lineup Submission Pending!
                 </h3>
-                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300/90 mt-0.5">
+                <p className="text-xs sm:text-sm text-warning/90 mt-0.5">
                   Tie <span className="font-mono font-bold">{upcomingTieWithPendingLineup.tie_code}</span> requires your official playing lineup submission.
                 </p>
               </div>
@@ -294,7 +294,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 const el = document.getElementById(`tie-${upcomingTieWithPendingLineup.id}`);
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 border border-amber-400 active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer text-xs sm:text-sm"
+              className="bg-warning hover:bg-warning/90 text-warning-foreground font-black px-5 py-2.5 rounded-xl shadow-lg shadow-warning/25 border border-warning active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer text-xs sm:text-sm"
             >
               Submit Lineup Now
               <ChevronRight className="w-4 h-4 ml-1 stroke-[3]" />
@@ -309,14 +309,14 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
               <Sparkles className="w-6 h-6 text-primary" />
               <div>
                 <h3 className="font-bold text-base">You've been invited to join {team.name}!</h3>
-                <p className="text-xs text-slate-500">Accept the invitation to represent this team in the tournament.</p>
+                <p className="text-xs text-muted-foreground">Accept the invitation to represent this team in the tournament.</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => respondInvite.mutate({ accept: true })} 
                 disabled={respondInvite.isPending}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                className="bg-success hover:bg-success/90 text-success-foreground font-bold"
               >
                 <Check className="w-4 h-4 mr-1.5" /> Accept Invite
               </Button>
@@ -324,7 +324,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 variant="outline" 
                 onClick={() => respondInvite.mutate({ accept: false })} 
                 disabled={respondInvite.isPending}
-                className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                className="text-danger hover:bg-danger/10"
               >
                 <X className="w-4 h-4 mr-1.5" /> Decline
               </Button>
@@ -333,22 +333,22 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         )}
 
         {/* SECTION 1: CAPTAIN ROSTER & SHAREABLE INVITE LINK */}
-        <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <section className="bg-card rounded-3xl p-5 sm:p-7 border border-border shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Users className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-lg font-black tracking-tight">Team Roster & Members</h2>
-                <p className="text-xs text-slate-500 font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   {activeMembers.length} active players · {invitedMembers.length} pending invites
                 </p>
               </div>
             </div>
             {isCaptain && (
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-bold text-success bg-success/25 border border-success/50 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Captain Controls Enabled
               </span>
             )}
@@ -356,11 +356,11 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
           {/* Captain Shareable Link Card */}
           {isCaptain && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/85 dark:border-indigo-800/70 space-y-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-info/10 border border-info/40 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="font-bold text-sm text-indigo-950 dark:text-indigo-200">
+                  <LinkIcon className="w-4 h-4 text-info" />
+                  <h3 className="font-bold text-sm text-info">
                     Shareable Team Join Link
                   </h3>
                 </div>
@@ -369,24 +369,24 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                   size="sm" 
                   onClick={() => regenerateTokenMutation.mutate()}
                   disabled={regenerateTokenMutation.isPending}
-                  className="h-8 text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-white dark:hover:bg-indigo-900/50"
+                  className="h-8 text-xs font-bold text-info hover:text-foreground hover:bg-info/20"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 mr-1 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
                   Reset Link
                 </Button>
               </div>
-              <p className="text-xs text-indigo-900/80 dark:text-indigo-200/80">
+              <p className="text-xs text-info/80">
                 Share this link with your teammates. Anyone with this link can immediately join your team roster without waiting for manual approval.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input 
                   readOnly 
                   value={inviteToken ? getPublicShareUrl() : 'Generating link...'} 
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-900 text-xs font-mono text-slate-800 dark:text-slate-200 select-all focus:outline-none"
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-info/50 bg-card text-xs font-mono text-soft select-all focus:outline-none"
                 />
                 <Button 
                   onClick={copyInviteLink} 
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs h-9 px-4 rounded-xl shadow-md shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
+                  className="bg-info hover:bg-info/90 text-info-foreground font-black text-xs h-9 px-4 rounded-xl shadow-md shadow-info/25 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <Copy className="w-3.5 h-3.5 mr-1.5" />
                   Copy Link
@@ -398,36 +398,36 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
           {/* Captain Add Player Search */}
           {isCaptain && (
             <div className="space-y-3 pt-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Add / Invite Player by Name
               </label>
               <div className="relative">
                 <div className="relative flex items-center">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5" />
+                  <Search className="w-4 h-4 text-muted-foreground absolute left-3.5" />
                   <input 
                     type="text" 
                     placeholder="Search IISc badminton players by name or email..." 
                     value={playerSearchQuery} 
                     onChange={e => setPlayerSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-card/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                   {isSearching && (
-                    <Loader2 className="w-4 h-4 animate-spin text-slate-400 absolute right-3.5" />
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground absolute right-3.5" />
                   )}
                 </div>
 
                 {/* Dropdown Results */}
                 {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-20 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden divide-y divide-border max-h-64 overflow-y-auto">
                     {searchResults.map((player: any) => {
                       const alreadyInTeam = members.some((m: any) => m.player_id === player.id);
                       return (
                         <div 
                           key={player.id} 
-                          className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between gap-3 transition"
+                          className="p-3 hover:bg-muted/60 flex items-center justify-between gap-3 transition"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs overflow-hidden">
+                            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-bold text-xs overflow-hidden">
                               {player.avatar_url ? (
                                 <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -436,11 +436,11 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                             </div>
                             <div>
                               <p className="text-sm font-bold leading-tight">{player.full_name || player.nickname || 'Unknown Player'}</p>
-                              <p className="text-xs text-slate-500 font-mono">{player.email || 'No email'}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{player.email || 'No email'}</p>
                             </div>
                           </div>
                           {alreadyInTeam ? (
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                               Already added
                             </span>
                           ) : (
@@ -465,15 +465,15 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
 
           {/* Members List Grid */}
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Active Squad ({activeMembers.length})
             </label>
             {membersLoading ? (
-              <div className="py-8 flex items-center justify-center gap-2 text-slate-400 text-xs">
+              <div className="py-8 flex items-center justify-center gap-2 text-muted-foreground text-xs">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" /> Loading roster...
               </div>
             ) : activeMembers.length === 0 ? (
-              <div className="py-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+              <div className="py-6 text-center text-xs text-muted-foreground bg-muted/40 rounded-2xl">
                 No active players in roster yet.
               </div>
             ) : (
@@ -484,14 +484,14 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 return (
                   <div 
                     key={m.id} 
-                    className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition"
+                    className="p-3.5 rounded-2xl border border-border bg-card/90 flex items-center justify-between gap-3 shadow-xs hover:border-border-strong transition"
                   >
                     <div 
                       onClick={() => openPlayerModal(m.player_id)}
                       className="flex items-center gap-3 min-w-0 cursor-pointer group/player hover:opacity-90 transition"
                       title="View player profile"
                     >
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 group-hover/player:ring-2 group-hover/player:ring-primary/40 transition">
+                      <div className="w-10 h-10 rounded-full bg-muted-strong flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 group-hover/player:ring-2 group-hover/player:ring-primary/40 transition">
                         {m.players?.avatar_url ? (
                           <img src={m.players.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -500,26 +500,26 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-sm flex items-center gap-1.5 truncate">
-                          <span className="truncate group-hover/player:text-primary transition-colors text-slate-900 dark:text-slate-100">
+                          <span className="truncate group-hover/player:text-primary transition-colors text-foreground">
                             {m.players?.full_name || m.players?.display_name || 'Player'}
                           </span>
                           {isMe && <span className="text-[10px] text-primary font-bold">(You)</span>}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {isThisPlayerCaptain ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30">
-                              <Shield className="w-3 h-3 text-amber-500 fill-amber-500/30" /> Captain
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-md bg-warning/15 text-warning border border-warning/30">
+                              <Shield className="w-3 h-3 text-warning fill-warning/30" /> Captain
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                               Player
                             </span>
                           )}
                           {m.players?.gender && (
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               m.players.gender === 'Female' || m.players.gender === 'F'
-                                ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
-                                : 'bg-sky-500/15 text-sky-500 border border-sky-500/30'
+                                ? 'bg-danger/15 text-danger border border-danger/30'
+                                : 'bg-info/15 text-info border border-info/30'
                             }`}>
                               {m.players.gender === 'Female' || m.players.gender === 'F' ? '♀ Female' : '♂ Male'}
                             </span>
@@ -534,7 +534,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                         size="sm" 
                         onClick={() => removeMember.mutate(m.id)}
                         disabled={removeMember.isPending}
-                        className="text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-950/40 h-8 px-2.5 text-xs font-bold rounded-xl cursor-pointer"
+                        className="text-danger hover:text-danger/80 hover:bg-danger/15 h-8 px-2.5 text-xs font-bold rounded-xl cursor-pointer"
                       >
                         <UserMinus className="w-3.5 h-3.5 mr-1" />
                         Remove
@@ -550,22 +550,22 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
           {/* Invited / Pending Members */}
           {invitedMembers.length > 0 && (
             <div className="space-y-2 pt-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <label className="text-xs font-bold uppercase tracking-wider text-warning">
                 Pending Invitations ({invitedMembers.length})
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {invitedMembers.map((m: any) => (
                   <div 
                     key={m.id} 
-                    className="p-3 rounded-2xl border border-amber-200/50 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/10 flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl border border-warning/20 bg-warning/5 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Clock className="w-4 h-4 text-amber-500" />
+                      <Clock className="w-4 h-4 text-warning" />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <p className="text-xs font-bold text-soft">
                           {m.players?.full_name || m.players?.email || 'Invited User'}
                         </p>
-                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                        <span className="text-[10px] font-bold text-warning">
                           Awaiting response
                         </span>
                       </div>
@@ -575,7 +575,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeMember.mutate(m.id)}
-                        className="text-slate-400 hover:text-rose-600 h-7 px-2 text-xs"
+                        className="text-muted-foreground hover:text-danger h-7 px-2 text-xs"
                       >
                         Cancel
                       </Button>
@@ -588,15 +588,15 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         </section>
 
         {/* SECTION 2: FIXTURES & LINEUPS */}
-        <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <section className="bg-card rounded-3xl p-5 sm:p-7 border border-border shadow-sm space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-lg font-black tracking-tight">Fixtures & Lineup Submissions</h2>
-                <p className="text-xs text-slate-500 font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   Select a tie below to build, adjust, and lock your playing order
                 </p>
               </div>
@@ -604,10 +604,10 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
           </div>
 
           {ties.length === 0 ? (
-            <div className="text-center py-10 bg-slate-50 dark:bg-slate-850 rounded-2xl">
-              <Calendar className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-bold text-slate-600 dark:text-slate-300">No ties scheduled yet</p>
-              <p className="text-xs text-slate-400 mt-0.5">The tournament organizer has not generated fixtures for this round.</p>
+            <div className="text-center py-10 bg-card rounded-2xl">
+              <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-bold text-soft">No ties scheduled yet</p>
+              <p className="text-xs text-muted-foreground mt-0.5">The tournament organizer has not generated fixtures for this round.</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -626,24 +626,24 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                       className={`px-4 py-2.5 rounded-2xl border text-xs font-black tracking-tight transition-all duration-200 flex items-center gap-2.5 shrink-0 shadow-xs cursor-pointer ${
                         isSelected 
                           ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 ring-2 ring-primary/50 scale-[1.02]' 
-                          : 'bg-slate-900/90 text-slate-100 hover:text-white border-slate-700/80 hover:border-slate-500 hover:bg-slate-800'
+                          : 'bg-card/90 text-foreground hover:text-foreground/80 border-border-strong/80 hover:border-border-strong hover:bg-muted'
                       }`}
                     >
                       <span className={`font-mono text-[11px] px-1.5 py-0.5 rounded-md font-bold ${
                         isSelected 
                           ? 'bg-primary-foreground/15 text-primary-foreground' 
-                          : 'bg-slate-800 text-slate-300 border border-slate-700'
+                          : 'bg-muted text-soft border border-border-strong'
                       }`}>
                         {tie.tie_code}
                       </span>
                       <span className="font-bold">
-                        <span className={isSelected ? 'text-primary-foreground/70 font-semibold' : 'text-slate-400 font-semibold'}>vs</span>{' '}
+                        <span className={isSelected ? 'text-primary-foreground/70 font-semibold' : 'text-muted-foreground font-semibold'}>vs</span>{' '}
                         {opponentObj?.short_name || opponentObj?.name || 'TBD'}
                       </span>
                       {isLocked ? (
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-primary-foreground' : 'text-emerald-400'}`} />
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-primary-foreground' : 'text-success'}`} />
                       ) : (
-                        <span className={`w-2 h-2 rounded-full shrink-0 animate-pulse ${isSelected ? 'bg-slate-950' : 'bg-amber-400'}`} />
+                        <span className={`w-2 h-2 rounded-full shrink-0 animate-pulse ${isSelected ? 'bg-background' : 'bg-warning'}`} />
                       )}
                     </button>
                   );
@@ -661,24 +661,24 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                 const isLocked = side === 'A' ? tie.lineup_locked_a : tie.lineup_locked_b;
 
                 return (
-                  <div key={tie.id} id={`tie-${tie.id}`} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-slate-900/40">
-                    <div className="bg-slate-100 dark:bg-slate-800/80 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700">
+                  <div key={tie.id} id={`tie-${tie.id}`} className="border border-border rounded-2xl overflow-hidden bg-card/40">
+                    <div className="bg-muted/80 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-strong">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-primary font-black text-sm bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-mono">
+                        <span className="text-primary font-black text-sm bg-card px-2.5 py-1 rounded-lg border border-border-strong font-mono">
                           {tie.tie_code}
                         </span>
-                        <span className="text-xs text-slate-400 font-bold uppercase">Versus</span>
-                        <ClickableTeamName team={opponentObj} className="text-base font-bold text-slate-900 dark:text-slate-100" />
+                        <span className="text-xs text-muted-foreground font-bold uppercase">Versus</span>
+                        <ClickableTeamName team={opponentObj} className="text-base font-bold text-foreground" />
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
                           isLocked 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800' 
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                            ? 'bg-success/25 text-success border border-success/40' 
+                            : 'bg-warning/25 text-warning border border-warning/40'
                         }`}>
                           {isLocked ? 'Lineup Locked' : 'Lineup Not Locked'}
                         </span>
-                        <span className="text-xs font-bold px-2.5 py-1 bg-slate-200 dark:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300">
+                        <span className="text-xs font-bold px-2.5 py-1 bg-muted-strong rounded-lg text-soft">
                           State: {tie.state}
                         </span>
                       </div>
@@ -701,14 +701,14 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         </section>
 
         {/* SECTION 3: TOURNAMENT STANDINGS */}
-        <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <section className="bg-card rounded-3xl p-5 sm:p-7 border border-border shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-border">
             <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <Trophy className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight">Tournament Standings</h2>
-              <p className="text-xs text-slate-500 font-medium">Current pool and team standings</p>
+              <p className="text-xs text-muted-foreground font-medium">Current pool and team standings</p>
             </div>
           </div>
           <TeamStandingsTable tournamentId={team?.tournament_id} />

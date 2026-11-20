@@ -74,7 +74,7 @@ export function DirectoryFilters({
     : [];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
+    <div className="bg-card rounded-3xl p-6 sm:p-6 shadow-xl shadow-media/50 dark:shadow-none border border-border mb-10 space-y-5">
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative w-full md:flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -87,12 +87,12 @@ export function DirectoryFilters({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, nickname, or department..."
-            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-semibold"
+            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-border-strong bg-muted text-foreground focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-semibold"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-soft"
             >
               <X className="w-4 h-4" />
             </button>
@@ -107,7 +107,7 @@ export function DirectoryFilters({
               <select
                 value={tournamentFilter}
                 onChange={(e) => setTournamentFilter(e.target.value)}
-                className="w-full pl-8 pr-2 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
+                className="w-full pl-8 pr-2 py-3 rounded-2xl border border-border-strong bg-muted text-soft text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
               >
                 <option value="All">All</option>
                 {tournaments.map((t) => (
@@ -124,7 +124,7 @@ export function DirectoryFilters({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full pl-7 pr-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
+                className="w-full pl-7 pr-1 py-3 rounded-2xl border border-border-strong bg-muted text-soft text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
               >
                 <option value="elo">Overall</option>
                 <option value="singles">Singles</option>
@@ -144,8 +144,8 @@ export function DirectoryFilters({
               className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-3 rounded-2xl border text-xs font-bold transition
             ${
               showFilters
-                ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary text-primary dark:text-primary"
-                : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+                ? "bg-primary/20 border-primary text-primary"
+                : "border-border-strong text-soft hover:border-border-strong/90"
             }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
@@ -165,7 +165,7 @@ export function DirectoryFilters({
             <button
               key={chip.label}
               onClick={chip.clear}
-              className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 text-primary dark:text-primary text-xs font-bold hover:bg-primary/15 transition"
+              className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-primary/20 border border-primary/50 text-primary text-xs font-bold hover:bg-primary/15 transition"
             >
               <span className="truncate max-w-[12rem]">{chip.label}</span>
               <X className="w-3 h-3 shrink-0" />
@@ -178,7 +178,7 @@ export function DirectoryFilters({
               setTournamentFilter?.("All");
               setCategoryFilter?.("All");
             }}
-            className="text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200 transition"
+            className="text-xs font-bold text-muted-foreground hover:text-soft transition"
           >
             Clear all
           </button>
@@ -195,15 +195,15 @@ export function DirectoryFilters({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                   Playing Level
                 </label>
                 <select
                   value={levelFilter}
                   onChange={(e) => pickLevel(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Levels</option>
                   {ELO_TIERS.map(tier => (
@@ -212,13 +212,13 @@ export function DirectoryFilters({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                   Department
                 </label>
                 <select
                   value={departmentFilter}
                   onChange={(e) => pickDept(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Departments</option>
                   {allDepartments.map((dept) => (
@@ -232,13 +232,13 @@ export function DirectoryFilters({
               {setCategoryFilter && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                       Category
                     </label>
                     <select
                       value={categoryFilter}
                       onChange={(e) => pickCategory(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                      className="w-full px-4 py-3 rounded-2xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                     >
                       <option value="All">All Categories</option>
                       <option value="Men's Singles">Men's Singles</option>
@@ -260,7 +260,7 @@ export function DirectoryFilters({
                       setTournamentFilter?.("All");
                       setCategoryFilter?.("All");
                     }}
-                    className="text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200 transition flex items-center gap-1"
+                    className="text-xs font-bold text-muted-foreground hover:text-soft transition flex items-center gap-1"
                   >
                     <X className="w-3.5 h-3.5" /> Clear filters
                   </button>
@@ -273,9 +273,9 @@ export function DirectoryFilters({
 
       {/* Result count */}
       {isIndividuals && (searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
-        <p className="text-xs font-bold text-muted-foreground dark:text-muted-foreground mt-5">
+        <p className="text-xs font-bold text-muted-foreground mt-5">
           Showing{" "}
-          <span className="text-primary dark:text-primary">
+          <span className="text-primary">
             {filteredPlayersCount}
           </span>{" "}
           of {otherPlayersCount} players

@@ -19,7 +19,7 @@ const quickLinks = [
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 flex flex-col items-center justify-center px-4 text-on-accent relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-tr from-team/20 via-success to-primary flex flex-col items-center justify-center px-4 text-on-accent relative overflow-hidden">
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
@@ -75,7 +75,7 @@ export default function NotFound() {
 
       {/* Glowing orbs */}
       <div className="absolute top-20 left-20 w-64 h-64 bg-primary rounded-full opacity-10 blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400 rounded-full opacity-10 blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-80 h-80 bg-info rounded-full opacity-10 blur-3xl" />
 
       {/* Main card */}
       <div className="relative z-10 text-center max-w-2xl mx-auto">
@@ -85,7 +85,7 @@ export default function NotFound() {
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full p-6 border border-white/20 shadow-2xl">
+            <div className="bg-foreground/10 backdrop-blur-sm rounded-full p-6 border border-foreground/20 shadow-2xl">
               <svg
                 viewBox="0 0 64 64"
                 className="w-16 h-16 text-primary"
@@ -140,7 +140,7 @@ export default function NotFound() {
           Out of Bounds!
         </h1>
 
-        <p className="text-blue-200 text-lg mb-3 max-w-md mx-auto leading-relaxed">
+        <p className="text-info text-lg mb-3 max-w-md mx-auto leading-relaxed">
           Looks like this page landed outside the court. It may have been moved,
           deleted, or the URL is incorrect.
         </p>
@@ -161,7 +161,7 @@ export default function NotFound() {
 
         {/* Quick nav */}
         <div>
-          <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-info text-sm font-semibold uppercase tracking-widest mb-2">
             Or jump to a section
           </p>
           <div className="flex flex-wrap justify-center gap-2">
@@ -169,7 +169,7 @@ export default function NotFound() {
               .filter((l) => l.href !== "/")
               .map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href}>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-200 hover:text-foreground bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 px-4 py-2 rounded-full transition-all duration-200 cursor-pointer">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-info hover:text-foreground bg-foreground/5 hover:bg-foreground/15 border border-foreground/10 hover:border-foreground/30 px-4 py-2 rounded-full transition-all duration-200 cursor-pointer">
                     <Icon className="w-3.5 h-3.5" />
                     {label}
                   </span>

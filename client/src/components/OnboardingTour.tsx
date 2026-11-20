@@ -11,7 +11,7 @@ const STEPS = [
     title: "Welcome to IISc Badminton Club!",
     body: "Your one-stop hub for badminton at IISc. Track matches, compete on leaderboards, and rise through the ranks.",
     cta: null,
-    accent: "from-primary to-teal-500",
+    accent: "from-primary to-team",
     icon: null,
   },
   {
@@ -19,32 +19,32 @@ const STEPS = [
     title: "The Pulse",
     body: "Stay up to date with the latest from the club! View the social feed, check out live updates, and see what others are up to.",
     cta: null,
-    accent: "from-blue-500 to-indigo-500",
-    icon: <Activity className="w-12 h-12 text-blue-400 opacity-80" />,
+    accent: "from-info to-info",
+    icon: <Activity className="w-12 h-12 text-info opacity-80" />,
   },
   {
     emoji: null,
     title: "Tournaments & Live Scores",
     body: "Track ongoing tournaments in real-time. View live scores from active matches and follow tournament brackets directly from your phone.",
     cta: null,
-    accent: "from-amber-500 to-orange-500",
-    icon: <Trophy className="w-12 h-12 text-amber-400 opacity-80" />,
+    accent: "from-warning to-secondary",
+    icon: <Trophy className="w-12 h-12 text-gold opacity-80" />,
   },
   {
     emoji: null,
     title: "The Hub",
     body: "The central place for all club utilities. Did you lose a racket? Want to buy or sell gear? The Hub's Lost & Found and Exchange got you covered.",
     cta: null,
-    accent: "from-violet-500 to-purple-500",
-    icon: <CheckCircle className="w-12 h-12 text-violet-400 opacity-80" />,
+    accent: "from-individual to-individual",
+    icon: <CheckCircle className="w-12 h-12 text-individual opacity-80" />,
   },
   {
     emoji: null,
     title: "Legacy & Hall of Fame",
     body: "View past champions, tournament archives, and our club's history. See who cemented their name in the IISc Badminton Hall of Fame!",
     cta: null,
-    accent: "from-rose-500 to-orange-500",
-    icon: <Flame className="w-12 h-12 text-rose-400 opacity-80" />,
+    accent: "from-danger to-secondary",
+    icon: <Flame className="w-12 h-12 text-danger opacity-80" />,
   },
   {
     emoji: "🎉",
@@ -52,7 +52,7 @@ const STEPS = [
     body: "Head to the Pulse to see what's happening right now, or explore Tournaments. See you on the courts!",
     cta: "Go to Pulse",
     ctaHref: "/pulse",
-    accent: "from-primary to-cyan-500",
+    accent: "from-primary to-accent",
     icon: <CheckCircle className="w-12 h-12 text-primary opacity-80" />,
   },
 ];
@@ -66,11 +66,11 @@ const getSteps = () => {
       title: "Download our Android App!",
       body: "Our official app is now live on the Play Store! Get real-time match tracking, dynamic ELO ratings, and community features right on your phone.",
       cta: null,
-      accent: "from-violet-500 to-amber-500",
-      icon: <Smartphone className="w-12 h-12 text-amber-400 opacity-90" />,
+      accent: "from-individual to-warning",
+      icon: <Smartphone className="w-12 h-12 text-warning opacity-90" />,
       detail: (
         <div className="flex flex-col gap-2 mt-4 text-xs font-semibold">
-          <a href="https://play.google.com/store/apps/details?id=shuttlers.iisc.com" target="_blank" rel="noreferrer" className="bg-slate-800 text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 border border-slate-700 hover:bg-slate-700 transition-colors">
+          <a href="https://play.google.com/store/apps/details?id=shuttlers.iisc.com" target="_blank" rel="noreferrer" className="bg-muted text-foreground py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 border border-border-strong hover:bg-muted-strong transition-colors">
             Download on Play Store
           </a>
         </div>
@@ -122,7 +122,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          className="absolute inset-0 bg-media/70 backdrop-blur-sm"
           onClick={dismiss}
         />
 
@@ -132,7 +132,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -24, scale: 0.96 }}
           transition={{ duration: 0.22 }}
-          className="relative w-full max-w-sm bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+          className="relative w-full max-w-sm bg-card rounded-3xl shadow-2xl overflow-hidden border border-foreground/10"
         >
           {/* Gradient header accent */}
           <div className={`h-1.5 w-full bg-gradient-to-r ${s.accent}`} />
@@ -140,7 +140,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           {/* Dismiss */}
           <button aria-label="Dismiss tour"
             onClick={dismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-foreground/60 hover:text-foreground transition"
+            className="absolute top-4 right-4 p-1.5 rounded-lg bg-foreground/10 hover:bg-foreground/20 text-foreground/60 hover:text-foreground transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -164,14 +164,14 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   i === step
                     ? `w-6 bg-gradient-to-r ${s.accent}`
-                    : "w-1.5 bg-slate-700"
+                    : "w-1.5 bg-muted-strong"
                 }`}
               />
             ))}
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between px-7 py-5 border-t border-white/8">
+          <div className="flex items-center justify-between px-7 py-5 border-t border-foreground/8">
             <button
               onClick={prev}
               disabled={step === 0}

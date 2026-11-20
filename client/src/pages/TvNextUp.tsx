@@ -40,11 +40,11 @@ interface Row {
 const ids = (m: Row, s: 1 | 2) => (s === 1 ? [m.player1_id, m.player3_id] : [m.player2_id, m.player4_id]).filter((x): x is string => !!x);
 
 function Form({ form }: { form: ("W" | "L")[] }) {
-  if (!form.length) return <span className="text-slate-500 text-lg">No results yet</span>;
+  if (!form.length) return <span className="text-muted-foreground text-lg">No results yet</span>;
   return (
     <div className="flex gap-1.5 justify-center">
       {form.map((r, i) => (
-        <span key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center font-black ${r === "W" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+        <span key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center font-black ${r === "W" ? "bg-success/20 text-success" : "bg-danger/20 text-danger"}`}>
           {r}
         </span>
       ))}
@@ -106,18 +106,18 @@ export default function TvNextUp() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-sky-400" aria-label="Loading" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-info" aria-label="Loading" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#0c4a6e,_#020617_65%)] text-white flex flex-col p-6 sm:p-10">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#0c4a6e,_#020617_65%)] text-foreground flex flex-col p-6 sm:p-10">
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link href="/tv">
-            <span className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white cursor-pointer font-bold">
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground cursor-pointer font-bold">
               <ArrowLeft className="w-4 h-4" /> TV
             </span>
           </Link>
@@ -130,7 +130,7 @@ export default function TvNextUp() {
               role="tab"
               aria-selected={c === activeCourt}
               onClick={() => setLocation(`${location}?court=${encodeURIComponent(c)}`)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-black ${c === activeCourt ? "bg-sky-400 text-slate-950" : "bg-slate-800 text-slate-300"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-black ${c === activeCourt ? "bg-info text-info-foreground" : "bg-muted text-soft"}`}
             >
               {courtName(c)}
             </button>
@@ -139,22 +139,22 @@ export default function TvNextUp() {
       </header>
 
       {live && (
-        <div className="mt-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-5 py-3 flex items-center gap-3 text-lg font-bold">
-          <Radio className="w-5 h-5 text-rose-400 animate-pulse" /> Now on court: {live.team1_label} vs {live.team2_label}
+        <div className="mt-6 rounded-2xl border border-live/40 bg-live/10 px-5 py-3 flex items-center gap-3 text-lg font-bold">
+          <Radio className="w-5 h-5 text-live animate-pulse" /> Now on court: {live.team1_label} vs {live.team2_label}
         </div>
       )}
 
       {!next ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
           <Swords className="w-16 h-16 mb-4" />
           <p className="text-2xl font-bold">{courts.length ? `No more matches queued on ${courtName(activeCourt)}` : "No matches on court yet"}</p>
         </div>
       ) : (
         <main className="flex-1 flex flex-col justify-center">
-          <p className="text-center text-sky-300 font-black tracking-[0.3em] uppercase text-sm">
+          <p className="text-center text-info font-black tracking-[0.3em] uppercase text-sm">
             Next on {courtName(activeCourt)}
           </p>
-          <p className="text-center text-slate-300 font-bold mt-1">
+          <p className="text-center text-soft font-bold mt-1">
             {CAT[next.category ?? ""] ?? next.category} · {next.round_name}
             {next.scheduled_at ? ` · ${new Date(next.scheduled_at).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}
           </p>
@@ -167,9 +167,9 @@ export default function TvNextUp() {
               const card = (
                 <div key={s} className="text-center space-y-3">
                   <div className="text-3xl sm:text-5xl font-black leading-tight break-words">{label}</div>
-                  {rating != null && <div className="text-xl text-slate-300 font-bold tabular-nums">Elo {rating}</div>}
+                  {rating != null && <div className="text-xl text-soft font-bold tabular-nums">Elo {rating}</div>}
                   <div>
-                    <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-1">Last 5</div>
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-1">Last 5</div>
                     <Form form={form ?? []} />
                   </div>
                 </div>
@@ -178,11 +178,11 @@ export default function TvNextUp() {
                 [
                   card,
                   <div key="h2h" className="text-center">
-                    <div className="text-xs uppercase tracking-widest text-slate-400 font-bold">Head to head</div>
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Head to head</div>
                     <div className="text-5xl sm:text-7xl font-black tabular-nums">
                       {info ? `${info.h2h.aWins}–${info.h2h.bWins}` : "–"}
                     </div>
-                    {info && info.h2h.meetings.length === 0 && <div className="text-slate-400 font-bold">First meeting</div>}
+                    {info && info.h2h.meetings.length === 0 && <div className="text-muted-foreground font-bold">First meeting</div>}
                   </div>,
                 ]
               ) : (
@@ -194,11 +194,11 @@ export default function TvNextUp() {
           {info && info.h2h.meetings.length > 0 && (
             <ul className="mt-10 max-w-2xl mx-auto w-full space-y-1.5">
               {info.h2h.meetings.slice(0, 3).map((m) => (
-                <li key={m.id} className="flex justify-between gap-4 text-slate-300 text-lg">
+                <li key={m.id} className="flex justify-between gap-4 text-soft text-lg">
                   <span className="truncate">
                     {m.aWon ? next.team1_label : next.team2_label} won{m.where ? ` · ${m.where}` : ""}
                   </span>
-                  <span className="tabular-nums text-slate-400 shrink-0">{m.score}</span>
+                  <span className="tabular-nums text-muted-foreground shrink-0">{m.score}</span>
                 </li>
               ))}
             </ul>

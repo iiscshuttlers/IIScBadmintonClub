@@ -43,7 +43,7 @@ export function EventEditor({
               onChange={(ev) => update(i, "title", ev.target.value)}
               className={inputCls}
             />
-            <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-muted-foreground dark:text-slate-300">
+            <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-soft">
               <input
                 type="checkbox"
                 checked={!!e.showOnHome}
@@ -74,7 +74,7 @@ export function EventEditor({
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
+              <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Link
               </label>
               <FileUploader onUpload={(url) => update(i, "link", url)} />
@@ -125,7 +125,7 @@ export function EventEditor({
             </div>
             <button
               onClick={() => remove(i)}
-              className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition mb-0.5"
+              className="p-2 rounded-xl text-danger hover:bg-danger/10 transition mb-0.5"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -134,7 +134,7 @@ export function EventEditor({
       ))}
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-strong text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Event
       </button>

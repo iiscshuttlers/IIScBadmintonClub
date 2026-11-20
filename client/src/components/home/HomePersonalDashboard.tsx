@@ -67,21 +67,21 @@ export function HomePersonalDashboard() {
   );
 
   return (
-    <div className="mb-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900 to-slate-950 border border-primary/30 shadow-xl backdrop-blur-md text-white">
+    <div className="mb-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-r from-card/90 via-card to-background border border-primary/30 shadow-xl backdrop-blur-md text-foreground">
       {/* Header bar */}
-      <div className="flex flex-row items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800">
+      <div className="flex flex-row items-center justify-between gap-2.5 pb-2.5 border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-sm">
             🏸
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
+            <h2 className="text-sm sm:text-base font-black leading-tight text-foreground flex items-center gap-2">
               Welcome back, {userName || "Player"}!
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
                 Dashboard
               </span>
             </h2>
-            <p className="text-xs text-slate-400">Your personal matches, tournaments & club status</p>
+            <p className="text-xs text-muted-foreground">Your personal matches, tournaments & club status</p>
           </div>
         </div>
 
@@ -99,16 +99,16 @@ export function HomePersonalDashboard() {
       {/* Grid of personal highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-3">
         {/* Card 1: Next / Pending Match */}
-        <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-1.5">
+        <div className="p-3 rounded-xl bg-muted/60 border border-border-strong/60">
+          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mb-1.5">
             <span className="flex items-center gap-1 text-primary">
               <Swords className="w-3.5 h-3.5" /> Next / Pending
             </span>
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-200">No pending matches</p>
+            <p className="text-xs font-bold text-soft">No pending matches</p>
             <Link href="/pulse#directory">
-              <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
+              <span className="text-[11px] text-muted-foreground hover:text-foreground font-medium mt-1 inline-block cursor-pointer">
                 Find hitting partners in Directory →
               </span>
             </Link>
@@ -116,16 +116,16 @@ export function HomePersonalDashboard() {
         </div>
 
         {/* Card 2: Your Tournaments */}
-        <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-1.5">
-            <span className="flex items-center gap-1 text-amber-400">
+        <div className="p-3 rounded-xl bg-muted/60 border border-border-strong/60">
+          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mb-1.5">
+            <span className="flex items-center gap-1 text-gold">
               <Trophy className="w-3.5 h-3.5" /> Your Tournaments
             </span>
-            <span className="text-[10px] font-bold text-slate-400">{activeRoles.length} enrolled</span>
+            <span className="text-[10px] font-bold text-muted-foreground">{activeRoles.length} enrolled</span>
           </div>
           {activeRoles.length > 0 ? (
             <div>
-              <p className="text-xs font-bold text-white truncate">
+              <p className="text-xs font-bold text-foreground truncate">
                 Registered in {activeRoles.length} tournament{activeRoles.length > 1 ? "s" : ""}
               </p>
               <Link href="/tournaments">
@@ -136,7 +136,7 @@ export function HomePersonalDashboard() {
             </div>
           ) : (
             <div>
-              <p className="text-xs font-bold text-slate-200">No active registrations</p>
+              <p className="text-xs font-bold text-soft">No active registrations</p>
               <Link href="/tournaments">
                 <span className="text-[11px] text-primary hover:underline font-bold mt-1 inline-block cursor-pointer">
                   Explore open tournaments →
@@ -147,27 +147,27 @@ export function HomePersonalDashboard() {
         </div>
 
         {/* Card 3: Recent Record */}
-        <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-1.5">
-            <span className="flex items-center gap-1 text-emerald-400">
+        <div className="p-3 rounded-xl bg-muted/60 border border-border-strong/60">
+          <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mb-1.5">
+            <span className="flex items-center gap-1 text-success">
               <Flame className="w-3.5 h-3.5" /> Recent Match
             </span>
-            <span className="text-[10px] font-bold text-slate-400">{matches.length} played</span>
+            <span className="text-[10px] font-bold text-muted-foreground">{matches.length} played</span>
           </div>
           {recentMatch ? (
             <div>
-              <p className="text-xs font-bold text-white truncate">
+              <p className="text-xs font-bold text-foreground truncate">
                 {describeOpponent(recentMatch, myPlayerId)}
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                 {recentMatch.match_score || (recentMatch as any).score || "Finished"}
               </p>
             </div>
           ) : (
             <div>
-              <p className="text-xs font-bold text-slate-200">No matches recorded yet</p>
+              <p className="text-xs font-bold text-soft">No matches recorded yet</p>
               <Link href="/tournaments">
-                <span className="text-[11px] text-slate-400 hover:text-white font-medium mt-1 inline-block cursor-pointer">
+                <span className="text-[11px] text-muted-foreground hover:text-foreground font-medium mt-1 inline-block cursor-pointer">
                   Ready to compete? →
                 </span>
               </Link>

@@ -12,14 +12,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "bg-slate-900/95 border border-slate-700/80 text-foreground dark:text-foreground shadow-2xl backdrop-blur-md rounded-2xl p-4 font-sans max-w-sm sm:max-w-md mx-auto",
-          title: "font-black text-sm text-white",
+            "bg-card/95 border border-border-strong/80 text-foreground shadow-2xl backdrop-blur-md rounded-2xl p-4 font-sans max-w-sm sm:max-w-md mx-auto",
+          title: "font-black text-sm text-foreground",
           description:
-            "!text-slate-300 !opacity-100 font-medium text-xs mt-0.5",
+            "!text-soft !opacity-100 font-medium text-xs mt-0.5",
           actionButton:
             "!bg-primary !text-primary-foreground font-black text-xs px-3 py-1.5 rounded-xl hover:!bg-primary/90 transition shadow-sm",
           cancelButton:
-            "!bg-slate-800 !text-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl hover:!bg-slate-700 transition",
+            "!bg-muted !text-soft font-bold text-xs px-3 py-1.5 rounded-xl !hover:bg-muted-strong transition",
         },
       }}
       style={

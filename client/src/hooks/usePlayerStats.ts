@@ -206,7 +206,7 @@ export function usePlayerStats(
         icon: "💯",
         description: "Played 100+ matches",
         color:
-          "bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/20",
+          "bg-warning/15 text-warning border-warning/30 ring-warning/20",
       });
     } else if (totalMatches >= 50) {
       _badges.push({
@@ -215,7 +215,7 @@ export function usePlayerStats(
         icon: "⚔️",
         description: "Played 50+ matches",
         color:
-          "bg-slate-500/15 text-muted-foreground border-slate-500/30 ring-slate-500/20",
+          "bg-muted-foreground/15 text-muted-foreground border-border-strong/30 ring-border-strong/20",
       });
     }
 
@@ -230,7 +230,7 @@ export function usePlayerStats(
           icon: "⚡",
           description: "5+ Match Win Streak",
           color:
-            "bg-indigo-500/15 text-indigo-400 border-indigo-500/30 ring-indigo-500/20",
+            "bg-info/15 text-info border-info/30 ring-info/20",
         });
       } else if (streakCount >= 3) {
         _badges.push({
@@ -239,7 +239,7 @@ export function usePlayerStats(
           icon: "🔥",
           description: "3 Match Win Streak",
           color:
-            "bg-orange-500/15 text-orange-400 border-orange-500/30 ring-orange-500/20",
+            "bg-secondary/15 text-secondary border-secondary/30 ring-secondary/20",
         });
       }
     }
@@ -257,7 +257,7 @@ export function usePlayerStats(
         icon: "🗡️",
         description: "Defeated a much higher ranked opponent",
         color:
-          "bg-rose-500/15 text-rose-400 border-rose-500/30 ring-rose-500/20",
+          "bg-danger/15 text-danger border-danger/30 ring-danger/20",
       });
     }
 

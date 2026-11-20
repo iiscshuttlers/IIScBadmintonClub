@@ -39,7 +39,7 @@ export function MediaTab({
       {/* Game Photos Links */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 flex items-center gap-2">
+          <label className="block text-sm font-semibold text-soft flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-primary" />
             Game Photos Showcase
           </label>
@@ -48,7 +48,7 @@ export function MediaTab({
             onClick={() =>
               setMediaImages([...mediaImages, { url: "", caption: "" }])
             }
-            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary/80 flex items-center gap-1 bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 transition shadow-sm"
           >
             + Add Photo Link
           </button>
@@ -58,20 +58,20 @@ export function MediaTab({
           {mediaImages.map((img, idx) => (
             <div
               key={idx}
-              className="flex gap-3 items-end p-4 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 relative"
+              className="flex gap-3 items-end p-4 bg-card rounded-2xl border border-border relative"
             >
               <button
                 type="button"
                 onClick={() =>
                   setMediaImages(mediaImages.filter((_, i) => i !== idx))
                 }
-                className="absolute top-2 right-2 text-rose-500 hover:text-rose-600 text-xs font-bold"
+                className="absolute top-2 right-2 text-danger hover:text-danger/80 text-xs font-bold"
               >
                 Remove
               </button>
               <div className="flex-1 space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     Image URL
                   </label>
                   <input
@@ -89,16 +89,16 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleImageBlur(idx, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary
+                    className={`w-full px-3 py-2 rounded-xl border bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary
                       ${
                         imagePreviewStatus[idx] === "error"
-                          ? "border-rose-400 dark:border-rose-500"
-                          : "border-slate-200 dark:border-slate-700"
+                          ? "border-danger"
+                          : "border-border-strong"
                       }`}
                     placeholder="e.g. https://images.unsplash.com/photo-..."
                   />
                   {imagePreviewStatus[idx] === "ok" && img.url && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/40 dark:border-primary/80 w-full aspect-video bg-slate-100 dark:bg-slate-800">
+                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/80 w-full aspect-video bg-muted">
                       <img
                         src={img.url}
                         alt="preview"
@@ -107,13 +107,13 @@ export function MediaTab({
                     </div>
                   )}
                   {imagePreviewStatus[idx] === "error" && (
-                    <p className="mt-1 text-[11px] text-rose-500 font-semibold">
+                    <p className="mt-1 text-[11px] text-danger font-semibold">
                       Could not load image — check the URL.
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     Caption
                   </label>
                   <input
@@ -124,7 +124,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaImages(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Winning Smash in Doubles Final"
                   />
                 </div>
@@ -132,7 +132,7 @@ export function MediaTab({
             </div>
           ))}
           {mediaImages.length === 0 && (
-            <div className="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-muted-foreground text-sm">
+            <div className="text-center py-6 border border-dashed border-border rounded-2xl text-muted-foreground text-sm">
               No photos added yet. Showcase your winning matches!
             </div>
           )}
@@ -140,10 +140,10 @@ export function MediaTab({
       </div>
 
       {/* YouTube Video Links */}
-      <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+      <div className="space-y-4 pt-6 border-t border-border">
         <div className="flex justify-between items-center">
-          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 flex items-center gap-2">
-            <Play className="w-5 h-5 text-red-500 fill-red-500" />
+          <label className="block text-sm font-semibold text-soft flex items-center gap-2">
+            <Play className="w-5 h-5 text-danger fill-danger" />
             YouTube Game Highlights
           </label>
           <button
@@ -151,7 +151,7 @@ export function MediaTab({
             onClick={() =>
               setMediaVideos([...mediaVideos, { url: "", caption: "" }])
             }
-            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary/80 flex items-center gap-1 bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 transition shadow-sm"
           >
             + Add Video Link
           </button>
@@ -161,20 +161,20 @@ export function MediaTab({
           {mediaVideos.map((vid, idx) => (
             <div
               key={idx}
-              className="flex gap-3 items-end p-4 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 relative"
+              className="flex gap-3 items-end p-4 bg-card rounded-2xl border border-border relative"
             >
               <button
                 type="button"
                 onClick={() =>
                   setMediaVideos(mediaVideos.filter((_, i) => i !== idx))
                 }
-                className="absolute top-2 right-2 text-rose-500 hover:text-rose-600 text-xs font-bold"
+                className="absolute top-2 right-2 text-danger hover:text-danger/80 text-xs font-bold"
               >
                 Remove
               </button>
               <div className="flex-1 space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     YouTube URL
                   </label>
                   <input
@@ -192,11 +192,11 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleVideoBlur(idx, e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. https://youtube.com/watch?v=..."
                   />
                   {videoPreviewIds[idx] && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/40 dark:border-primary/80 w-full aspect-video bg-black">
+                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/80 w-full aspect-video bg-background">
                       <iframe
                         src={`https://www.youtube.com/embed/${videoPreviewIds[idx]}`}
                         title="YouTube video player"
@@ -207,13 +207,13 @@ export function MediaTab({
                     </div>
                   )}
                   {vid.url && !videoPreviewIds[idx] && (
-                    <p className="mt-1 text-[11px] text-rose-500 font-semibold">
+                    <p className="mt-1 text-[11px] text-danger font-semibold">
                       Invalid YouTube link format.
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     Caption
                   </label>
                   <input
@@ -224,7 +224,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaVideos(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. IISc Shuttlers Open 2024"
                   />
                 </div>
@@ -232,7 +232,7 @@ export function MediaTab({
             </div>
           ))}
           {mediaVideos.length === 0 && (
-            <div className="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-muted-foreground text-sm">
+            <div className="text-center py-6 border border-dashed border-border rounded-2xl text-muted-foreground text-sm">
               No videos added. (Shorts & Standard links supported)
             </div>
           )}

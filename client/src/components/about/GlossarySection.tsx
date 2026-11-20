@@ -17,8 +17,8 @@ export function GlossarySection() {
   const features = [
     {
       category: "Social & Networking",
-      icon: <Users className="w-8 h-8 text-blue-500" />,
-      color: "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/50",
+      icon: <Users className="w-8 h-8 text-info" />,
+      color: "bg-info/10 border-info/30",
       items: [
         {
           title: "Following Feed",
@@ -32,8 +32,8 @@ export function GlossarySection() {
     },
     {
       category: "Site Architecture & Navigation",
-      icon: <BookOpen className="w-8 h-8 text-cyan-500" />,
-      color: "bg-cyan-50 dark:bg-cyan-900/20 border-cyan-100 dark:border-cyan-900/50",
+      icon: <BookOpen className="w-8 h-8 text-accent" />,
+      color: "bg-accent/10 border-accent/30",
       items: [
         {
           title: "Tiered Events Megahub",
@@ -56,7 +56,7 @@ export function GlossarySection() {
     {
       category: "Player Analytics",
       icon: <BarChart3 className="w-8 h-8 text-primary" />,
-      color: "bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/50",
+      color: "bg-primary/20 border-primary/50",
       items: [
         {
           title: "Doubles Synergy",
@@ -88,7 +88,7 @@ export function GlossarySection() {
               { badge: "STB", title: "Stabilization", desc: "After 10 matches, your Elo changes become more stable (max ±20 points per match)." },
               { badge: "GLB", title: "Global vs Format", desc: "You have separate Elos for MS, MD, and XD. Your 'Global Elo' (ALL tab) blends these but moves at 1/3 speed to maintain balance." }
             ],
-            footer: <p className="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-muted-foreground dark:text-muted-foreground mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>
+            footer: <p className="text-[10px] sm:text-xs font-mono bg-muted p-2 rounded-lg text-muted-foreground mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>
           }
         },
         {
@@ -99,8 +99,8 @@ export function GlossarySection() {
     },
     {
       category: "Gamification",
-      icon: <Trophy className="w-8 h-8 text-amber-500" />,
-      color: "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/50",
+      icon: <Trophy className="w-8 h-8 text-gold" />,
+      color: "bg-warning/10 border-warning/30",
       items: [
         {
           title: "Monthly Leaderboards",
@@ -131,8 +131,8 @@ export function GlossarySection() {
     },
     {
       category: "Video Analysis Tools",
-      icon: <PlayCircle className="w-8 h-8 text-indigo-500" />,
-      color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-900/50",
+      icon: <PlayCircle className="w-8 h-8 text-info" />,
+      color: "bg-info/10 border-info/30",
       items: [
         {
           title: "Telestrator Draw Mode",
@@ -154,8 +154,8 @@ export function GlossarySection() {
     },
     {
       category: "Match Playback Controls",
-      icon: <PlayCircle className="w-8 h-8 text-sky-500" />,
-      color: "bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-900/50",
+      icon: <PlayCircle className="w-8 h-8 text-info" />,
+      color: "bg-info/10 border-info/30",
       items: [
         {
           title: "Speed Dial",
@@ -181,8 +181,8 @@ export function GlossarySection() {
     },
     {
       category: "Mobile Native (PWA)",
-      icon: <Smartphone className="w-8 h-8 text-purple-500" />,
-      color: "bg-purple-50 dark:bg-purple-900/20 border-purple-100 dark:border-purple-900/50",
+      icon: <Smartphone className="w-8 h-8 text-individual" />,
+      color: "bg-individual/10 border-individual/30",
       items: [
         {
           title: "Offline Capabilities",
@@ -200,8 +200,8 @@ export function GlossarySection() {
     },
     {
       category: "Platform Moderation",
-      icon: <ShieldCheck className="w-8 h-8 text-rose-500" />,
-      color: "bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/50",
+      icon: <ShieldCheck className="w-8 h-8 text-danger" />,
+      color: "bg-danger/10 border-danger/30",
       items: [
         {
           title: "Overwatch Tribunal",
@@ -232,7 +232,7 @@ export function GlossarySection() {
   ];
 
   return (
-    <div className="w-full bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <div className="w-full bg-card border-t border-border">
       <div className="container mx-auto px-4 py-4 max-w-5xl pb-24 md:pb-8">
 
       <div className="columns-1 lg:columns-2 gap-6">
@@ -245,10 +245,10 @@ export function GlossarySection() {
             className={`p-4 md:p-4 rounded-3xl border shadow-sm break-inside-avoid mb-4 inline-block w-full ${section.color}`}
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+              <div className="p-3 bg-card rounded-2xl shadow-sm">
                 {section.icon}
               </div>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">
+              <h2 className="text-2xl font-black text-foreground">
                 {section.category}
               </h2>
             </div>
@@ -261,7 +261,7 @@ export function GlossarySection() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">
+                      <h4 className="font-bold text-lg text-soft">
                         {item.title}
                       </h4>
                       {item.modal && (
@@ -273,7 +273,7 @@ export function GlossarySection() {
                         />
                       )}
                     </div>
-                    <p className="text-sm md:text-base text-muted-foreground dark:text-muted-foreground leading-relaxed mt-1">
+                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed mt-1">
                       {item.desc}
                     </p>
                   </div>

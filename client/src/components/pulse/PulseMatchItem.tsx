@@ -28,12 +28,12 @@ export function PulseMatchItem({
     isMatchOfTheDay || upsetDiff > 0 ? (
       <>
         {isMatchOfTheDay && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 px-2 py-0.5 text-[10px] font-black">
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 text-warning px-2 py-0.5 text-[10px] font-black">
             <Sparkles className="w-3 h-3" aria-hidden /> Match of the day
           </span>
         )}
         {upsetDiff > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-300 px-2 py-0.5 text-[10px] font-black">
+          <span className="inline-flex items-center gap-1 rounded-full bg-individual/20 text-individual px-2 py-0.5 text-[10px] font-black">
             <TrendingUp className="w-3 h-3" aria-hidden /> Upset +{upsetDiff}
           </span>
         )}

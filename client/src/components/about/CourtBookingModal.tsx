@@ -69,24 +69,24 @@ export function CourtBookingModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-media/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-lg bg-card border border-border-strong/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-background border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-success/20 text-success flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-sm sm:text-base text-white">
+              <h3 className="font-black text-sm sm:text-base text-foreground">
                 {editingBookingId ? "Edit Court Booking" : "Update / Add Court Booking"}
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-400">
+              <p className="text-[11px] sm:text-xs text-muted-foreground">
                 Administrator booking control
               </p>
             </div>
@@ -94,17 +94,17 @@ export function CourtBookingModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-xl bg-muted hover:bg-muted-strong text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Form Body */}
-        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto text-xs text-slate-300">
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto text-xs text-soft">
           {/* Tournament Name */}
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Tournament / Event Name *
             </label>
             <input
@@ -112,13 +112,13 @@ export function CourtBookingModal({
               value={bookingTournament}
               onChange={(e) => setBookingTournament(e.target.value)}
               placeholder="e.g. Mechanical Dept Annual Badminton Meet 2026"
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs text-foreground placeholder-faint focus:outline-none focus:border-success"
             />
           </div>
 
           {/* Department */}
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Department / Organizing Body
             </label>
             <input
@@ -126,25 +126,25 @@ export function CourtBookingModal({
               value={bookingDepartment}
               onChange={(e) => setBookingDepartment(e.target.value)}
               placeholder="e.g. Mechanical Engineering, Gymkhana, IISc Sports Club"
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs text-foreground placeholder-faint focus:outline-none focus:border-success"
             />
           </div>
 
           {/* Dates Selector */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Booking Date(s) *
               </label>
-              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-950 border border-slate-800 text-[10px]">
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-background border border-border text-[10px]">
                 <button
                   type="button"
                   onClick={() => setDateSelectionMode("individual")}
                   className={cn(
                     "px-2 py-0.5 rounded-md font-bold transition-colors",
                     dateSelectionMode === "individual"
-                      ? "bg-emerald-500 text-slate-950"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-success text-success-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Single / Multi
@@ -155,8 +155,8 @@ export function CourtBookingModal({
                   className={cn(
                     "px-2 py-0.5 rounded-md font-bold transition-colors",
                     dateSelectionMode === "range"
-                      ? "bg-emerald-500 text-slate-950"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-success text-success-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Date Range
@@ -165,10 +165,10 @@ export function CourtBookingModal({
             </div>
 
             {dateSelectionMode === "range" ? (
-              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+              <div className="p-3 rounded-2xl bg-background border border-border space-y-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">Start Date</span>
+                    <span className="text-[10px] text-muted-foreground block mb-1">Start Date</span>
                     <input
                       type="date"
                       value={dateRangeStart}
@@ -176,11 +176,11 @@ export function CourtBookingModal({
                         setDateRangeStart(e.target.value);
                         applyDateRange(e.target.value, dateRangeEnd);
                       }}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 bg-card border border-border-strong rounded-lg text-xs text-foreground focus:outline-none focus:border-success"
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">End Date</span>
+                    <span className="text-[10px] text-muted-foreground block mb-1">End Date</span>
                     <input
                       type="date"
                       value={dateRangeEnd}
@@ -188,11 +188,11 @@ export function CourtBookingModal({
                         setDateRangeEnd(e.target.value);
                         applyDateRange(dateRangeStart, e.target.value);
                       }}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 bg-card border border-border-strong rounded-lg text-xs text-foreground focus:outline-none focus:border-success"
                     />
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-muted-foreground">
                   Select a start and end date to automatically populate consecutive days (max 30 days).
                 </p>
               </div>
@@ -203,7 +203,7 @@ export function CourtBookingModal({
                     type="date"
                     value={newDateInput}
                     onChange={(e) => setNewDateInput(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-xl text-xs text-foreground focus:outline-none focus:border-success"
                   />
                   <button
                     type="button"
@@ -212,7 +212,7 @@ export function CourtBookingModal({
                         setBookingDates((prev) => [...prev, newDateInput].sort());
                       }
                     }}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-colors"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-muted hover:bg-muted-strong text-foreground transition-colors"
                   >
                     Add Date
                   </button>
@@ -225,7 +225,7 @@ export function CourtBookingModal({
               {bookingDates.map((d) => (
                 <span
                   key={d}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-800/80 text-[11px] font-bold text-emerald-400"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-success/25 border border-success/50 text-[11px] font-bold text-success"
                 >
                   {new Date(d + "T12:00:00").toLocaleDateString("en-IN", {
                     month: "short",
@@ -235,7 +235,7 @@ export function CourtBookingModal({
                     <button
                       type="button"
                       onClick={() => setBookingDates((prev) => prev.filter((x) => x !== d))}
-                      className="hover:text-rose-400 transition-colors ml-0.5"
+                      className="hover:text-danger transition-colors ml-0.5"
                     >
                       &times;
                     </button>
@@ -248,10 +248,10 @@ export function CourtBookingModal({
           {/* Court Selection */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Courts Reserved *
               </label>
-              <span className="text-[10px] text-amber-400 font-bold">
+              <span className="text-[10px] text-warning font-bold">
                 Max 1 court recommended by interim rules
               </span>
             </div>
@@ -278,8 +278,8 @@ export function CourtBookingModal({
                     className={cn(
                       "p-3 rounded-2xl border text-left transition-all",
                       isSelected
-                        ? "bg-emerald-950/70 border-emerald-500 text-white shadow-md shadow-emerald-950/40"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                        ? "bg-success/25 border-success text-foreground shadow-md shadow-success/40"
+                        : "bg-background border-border text-muted-foreground hover:border-border-strong"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -288,14 +288,14 @@ export function CourtBookingModal({
                         className={cn(
                           "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black",
                           isSelected
-                            ? "bg-emerald-500 text-slate-950"
-                            : "bg-slate-800 text-slate-500"
+                            ? "bg-success text-success-foreground"
+                            : "bg-muted text-muted-foreground"
                         )}
                       >
                         {isSelected ? "✓" : ""}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-500 block mt-0.5">{c.sub}</span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">{c.sub}</span>
                   </button>
                 );
               })}
@@ -304,7 +304,7 @@ export function CourtBookingModal({
 
           {/* Slot Selection */}
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Timing / Slot *
             </label>
             <div className="grid grid-cols-3 gap-2 mb-2.5">
@@ -322,36 +322,36 @@ export function CourtBookingModal({
                     className={cn(
                       "p-2.5 rounded-2xl border text-left transition-all",
                       isSelected
-                        ? "bg-emerald-950/70 border-emerald-500 text-white shadow-md shadow-emerald-950/40"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                        ? "bg-success/25 border-success text-foreground shadow-md shadow-success/40"
+                        : "bg-background border-border text-muted-foreground hover:border-border-strong"
                     )}
                   >
                     <span className="font-bold text-xs block">{slot.label}</span>
-                    <span className="text-[10px] text-slate-500 block mt-0.5">{slot.sub}</span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">{slot.sub}</span>
                   </button>
                 );
               })}
             </div>
 
             {bookingSlot === "custom" && (
-              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="p-3 rounded-2xl bg-background border border-border space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">Start Time</span>
+                    <span className="text-[10px] text-muted-foreground block mb-1">Start Time</span>
                     <input
                       type="time"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 bg-card border border-border-strong rounded-lg text-xs text-foreground focus:outline-none focus:border-success"
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">End Time</span>
+                    <span className="text-[10px] text-muted-foreground block mb-1">End Time</span>
                     <input
                       type="time"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 bg-card border border-border-strong rounded-lg text-xs text-foreground focus:outline-none focus:border-success"
                     />
                   </div>
                 </div>
@@ -361,11 +361,11 @@ export function CourtBookingModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3.5 sm:p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-background border-t border-border flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-750 text-slate-300 transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-muted hover:bg-muted-strong text-soft transition-colors"
           >
             Cancel
           </button>
@@ -373,7 +373,7 @@ export function CourtBookingModal({
             type="button"
             onClick={onSaveBooking}
             disabled={isSavingBooking}
-            className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-50"
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-success hover:bg-success/90 text-success-foreground transition-colors shadow-md shadow-success/20 disabled:opacity-50"
           >
             {isSavingBooking
               ? "Saving..."

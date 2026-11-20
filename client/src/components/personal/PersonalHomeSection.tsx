@@ -235,7 +235,7 @@ export function PersonalHomeSection({
                       className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-black ${
                         r === "W"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-[var(--series-b)] text-white"
+                          : "bg-series-b text-foreground"
                       }`}
                     >
                       {r}
@@ -371,7 +371,7 @@ export function PersonalHomeSection({
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setExpandedCard(null)}
-                className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors bg-slate-100 dark:bg-slate-800/80 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"
+                className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors bg-muted/80 px-4 py-2 rounded-full border border-border-strong shadow-sm"
               >
                 <ChevronUp className="w-4 h-4" />
                 Close Details
@@ -411,7 +411,7 @@ export function PersonalHomeSection({
       )}
 
       {matches.length === 0 && (
-        <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700/50 p-8 text-center">
+        <div className="bg-muted/80 rounded-2xl shadow-md border border-border-strong/50 p-8 text-center">
           <Trophy className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground font-semibold">No tournament matches yet</p>
         </div>

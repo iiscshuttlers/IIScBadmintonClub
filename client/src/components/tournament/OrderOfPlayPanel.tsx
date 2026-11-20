@@ -394,8 +394,8 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
 
   const conflictCount = new Set([...restConflicts.keys(), ...courtConflicts.keys()]).size;
 
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm";
-  const fieldCls = "bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40";
+  const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
+  const fieldCls = "bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40";
 
   const matchRow = (m: MatchRow, showEditor: boolean) => {
     const e = editFor(m);
@@ -405,22 +405,22 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
     const hasWarnings = mCourtConflicts.some((c) => c.conflictType === "warning") || mRestConflicts.some((c) => c.conflictType === "warning");
 
     return (
-      <div key={m.id} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3">
+      <div key={m.id} className="rounded-xl border border-border bg-background/40 p-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{m.match_code}</span>
           {m.is_tie && (
-            <span className="text-[10px] font-black tracking-wider uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">
+            <span className="text-[10px] font-black tracking-wider uppercase bg-warning/15 text-warning px-1.5 py-0.5 rounded-md border border-warning/20">
               Team Tie
             </span>
           )}
-          <span className="text-[11px] font-bold text-slate-500">{CAT_LABELS[m.category] ?? m.category}</span>
+          <span className="text-[11px] font-bold text-muted-foreground">{CAT_LABELS[m.category] ?? m.category}</span>
           <span className="text-[11px] text-muted-foreground">· {m.round_name}</span>
-          {live && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-black text-rose-600"><Radio className="w-3 h-3 animate-pulse" /> Live</span>}
+          {live && <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-black text-live"><Radio className="w-3 h-3 animate-pulse" /> Live</span>}
         </div>
         <div className="mt-1.5 flex items-center gap-2 min-w-0">
-          <span className="text-sm font-black text-slate-800 dark:text-slate-100 truncate flex-1 text-right">{m.team1_label ?? "TBD"}</span>
-          <span className="text-[11px] font-black text-slate-400 shrink-0">vs</span>
-          <span className="text-sm font-black text-slate-800 dark:text-slate-100 truncate flex-1">{m.team2_label ?? "TBD"}</span>
+          <span className="text-sm font-black text-foreground truncate flex-1 text-right">{m.team1_label ?? "TBD"}</span>
+          <span className="text-[11px] font-black text-muted-foreground shrink-0">vs</span>
+          <span className="text-sm font-black text-foreground truncate flex-1">{m.team2_label ?? "TBD"}</span>
         </div>
 
         {/* Rest Conflicts */}
@@ -430,18 +430,18 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
             role="alert"
             className={`mt-2 p-2 rounded-xl text-xs flex flex-col gap-1 ${
               c.conflictType === "hard"
-                ? "bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300"
-                : "bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300"
+                ? "bg-danger/10 border border-danger/30 text-danger"
+                : "bg-warning/10 border border-warning/30 text-warning"
             }`}
           >
             <div className="flex items-center gap-1.5 font-bold">
               {c.conflictType === "hard" ? (
-                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-danger shrink-0" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
               )}
               <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-black ${
-                c.conflictType === "hard" ? "bg-rose-600 text-white" : "bg-amber-500 text-white"
+                c.conflictType === "hard" ? "bg-danger text-danger-foreground" : "bg-warning text-warning-foreground"
               }`}>
                 {c.conflictType === "hard" ? "Hard Conflict" : "Warning Conflict"}
               </span>
@@ -465,18 +465,18 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
             role="alert"
             className={`mt-2 p-2 rounded-xl text-xs flex flex-col gap-1 ${
               c.conflictType === "hard"
-                ? "bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300"
-                : "bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300"
+                ? "bg-danger/10 border border-danger/30 text-danger"
+                : "bg-warning/10 border border-warning/30 text-warning"
             }`}
           >
             <div className="flex items-center gap-1.5 font-bold">
               {c.conflictType === "hard" ? (
-                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-danger shrink-0" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
               )}
               <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-black ${
-                c.conflictType === "hard" ? "bg-rose-600 text-white" : "bg-amber-500 text-white"
+                c.conflictType === "hard" ? "bg-danger text-danger-foreground" : "bg-warning text-warning-foreground"
               }`}>
                 {c.conflictType === "hard" ? "Hard Conflict" : "Warning Conflict"}
               </span>
@@ -529,9 +529,9 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           if (suggestions.length === 0) return null;
 
           return (
-            <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-emerald-500" /> Suggested slots:
+            <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-success" /> Suggested slots:
               </span>
               {suggestions.map((s, idx) => (
                 <button
@@ -544,7 +544,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
                     });
                     toast.info(`Selected suggested slot: ${s.label}`);
                   }}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 transition"
+                  className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-success/10 hover:bg-success/20 text-success border border-success/20 transition"
                   title="Apply this conflict-free slot"
                 >
                   {s.label}
@@ -557,7 +557,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
         {showEditor ? (
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
               <input
                 value={e.court}
                 onChange={(ev) => setEdit(m.id, { court: ev.target.value })}
@@ -576,7 +576,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
                 type="button"
                 onClick={() => save(m)}
                 disabled={savingId === m.id}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition disabled:opacity-40"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-warning hover:bg-warning/90 text-warning-foreground text-xs font-black transition disabled:opacity-40"
               >
                 Override &amp; Save
               </button>
@@ -607,30 +607,30 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           <CalendarClock className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-black text-slate-800 dark:text-foreground">Order of Play</h3>
+          <h3 className="text-base font-black text-foreground">Order of Play</h3>
           <p className="text-xs text-muted-foreground">Assign courts and times, and see what's running on each court.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {hasTies && hasRubbers && (
-            <div className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            <div className="flex items-center gap-1 p-0.5 bg-muted rounded-lg">
               <button
                 type="button"
                 onClick={() => setViewScope("ALL")}
-                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "ALL" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "ALL" ? "bg-muted-strong text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
               >
                 All
               </button>
               <button
                 type="button"
                 onClick={() => setViewScope("TIES")}
-                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "TIES" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "TIES" ? "bg-muted-strong text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
               >
                 Ties
               </button>
               <button
                 type="button"
                 onClick={() => setViewScope("RUBBERS")}
-                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "RUBBERS" ? "bg-white dark:bg-slate-700 text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
+                className={`px-2 py-1 text-xs font-bold rounded-md transition ${viewScope === "RUBBERS" ? "bg-muted-strong text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"}`}
               >
                 Rubbers
               </button>
@@ -641,7 +641,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
             <option value="ALL">All categories</option>
             {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
           </select>
-          <button onClick={() => load(true)} className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition shrink-0" title="Refresh">
+          <button onClick={() => load(true)} className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition shrink-0" title="Refresh">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -651,8 +651,8 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
         <div className={`${cardCls} flex items-center justify-center py-12 text-muted-foreground`}><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : loadError ? (
         <div className={`${cardCls} text-center py-10`}>
-          <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-          <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load matches</p>
+          <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
+          <p className="text-sm font-bold text-soft">Couldn't load matches</p>
           <button onClick={() => load()} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">
             <RefreshCw className="w-3.5 h-3.5" /> Retry
           </button>
@@ -660,7 +660,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
       ) : (
         <>
           {conflictCount > 0 && (
-            <div role="status" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+            <div role="status" className="rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm font-bold text-warning flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               {conflictCount} match{conflictCount === 1 ? "" : "es"} have a player-rest or court-overlap warning. Check the highlighted rows.
             </div>
@@ -669,8 +669,8 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           {/* Needs scheduling */}
           <div className={cardCls}>
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <h4 className="text-sm font-black text-slate-700 dark:text-slate-200">Needs scheduling</h4>
+              <AlertTriangle className="w-4 h-4 text-warning" />
+              <h4 className="text-sm font-black text-soft">Needs scheduling</h4>
               <span className="text-[11px] font-bold text-muted-foreground">({unscheduled.length})</span>
             </div>
             {unscheduled.length === 0 ? (
@@ -684,11 +684,11 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           <div className={cardCls}>
             <div className="flex items-center gap-2 mb-3">
               <LayoutGrid className="w-4 h-4 text-primary" />
-              <h4 className="text-sm font-black text-slate-700 dark:text-slate-200">On courts</h4>
+              <h4 className="text-sm font-black text-soft">On courts</h4>
             </div>
             {byCourt.length === 0 ? (
               <div className="text-center py-6">
-                <Swords className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+                <Swords className="w-8 h-8 text-faint mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">No matches assigned to a court yet.</p>
               </div>
             ) : (
@@ -714,16 +714,16 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
           role="dialog"
           aria-modal="true"
           aria-labelledby="override-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-media/60 backdrop-blur-xs"
         >
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95">
+          <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                <div className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 id="override-modal-title" className="text-base font-black text-slate-900 dark:text-slate-100">
+                  <h3 id="override-modal-title" className="text-base font-black text-foreground">
                     Override Schedule Conflict
                   </h3>
                   <p className="text-xs text-muted-foreground">{overrideModal.match.match_code} · Court {overrideModal.court}</p>
@@ -732,26 +732,26 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
               <button
                 type="button"
                 onClick={() => setOverrideModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-lg text-muted-foreground hover:text-soft"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 font-medium">
+            <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 text-xs text-warning font-medium">
               <p className="font-bold mb-1">Warning Details:</p>
               <p>{overrideModal.warningMessage}</p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                Audit Reason <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-soft mb-1.5">
+                Audit Reason <span className="text-danger">*</span>
               </label>
               <textarea
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
                 placeholder="e.g. Previous match running faster than expected; players agreed to shorter rest."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-border-strong bg-muted text-foreground outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
                 required
               />
               <p className="text-[10px] text-muted-foreground mt-1">
@@ -763,7 +763,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
               <button
                 type="button"
                 onClick={() => setOverrideModal(null)}
-                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-border-strong text-soft hover:bg-muted transition"
               >
                 Cancel
               </button>
@@ -771,7 +771,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
                 type="button"
                 onClick={handleConfirmOverride}
                 disabled={overriding || !overrideReason.trim()}
-                className="px-4 py-2 text-xs font-black rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition disabled:opacity-40 inline-flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-2 text-xs font-black rounded-xl bg-warning hover:bg-warning/90 text-warning-foreground transition disabled:opacity-40 inline-flex items-center gap-1.5 shadow-sm"
               >
                 {overriding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                 Confirm &amp; Log Override

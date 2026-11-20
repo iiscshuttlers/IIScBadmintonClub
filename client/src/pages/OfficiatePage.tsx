@@ -17,7 +17,7 @@ export default function OfficiatePage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+      <div className="min-h-screen bg-background pb-20">
         <PageHeader
           badge="Officials & Umpires"
           badgeIcon={<Shield className="w-3.5 h-3.5 text-primary" />}
@@ -25,9 +25,9 @@ export default function OfficiatePage() {
           subtitle="Real-time BWF scoring console, court scheduling, and match officiating."
         />
         <div className="container mx-auto px-4 max-w-xl text-center py-16">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-4">
             <Swords className="w-12 h-12 text-primary mx-auto opacity-80" />
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Sign In Required</h2>
+            <h2 className="text-xl font-black text-foreground">Sign In Required</h2>
             <p className="text-sm text-muted-foreground">
               Please sign in with your official or club credentials to access assigned matches and the live scoring console.
             </p>
@@ -44,7 +44,7 @@ export default function OfficiatePage() {
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+      <div className="min-h-screen bg-background pb-20">
         <PageHeader
           badge="Officials & Umpires"
           badgeIcon={<Shield className="w-3.5 h-3.5 text-primary" />}
@@ -52,9 +52,9 @@ export default function OfficiatePage() {
           subtitle="Real-time BWF scoring console, court scheduling, and match officiating."
         />
         <div className="container mx-auto px-4 max-w-xl text-center py-16">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <AlertCircle className="w-12 h-12 text-amber-500 mx-auto opacity-80" />
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Official Access Required</h2>
+          <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-4">
+            <AlertCircle className="w-12 h-12 text-warning mx-auto opacity-80" />
+            <h2 className="text-xl font-black text-foreground">Official Access Required</h2>
             <p className="text-sm text-muted-foreground">
               Your account does not currently have umpire or tournament official privileges. Please contact tournament administration to be added as an official.
             </p>
@@ -70,7 +70,7 @@ export default function OfficiatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <PageHeader
         badge="Officials Hub"
         badgeIcon={<Shield className="w-3.5 h-3.5 text-primary" />}
@@ -89,7 +89,7 @@ export default function OfficiatePage() {
             >
               <ArrowLeft className="w-4 h-4" /> Back to matches list
             </Button>
-            <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 p-2 sm:p-4">
+            <div className="rounded-3xl overflow-hidden border border-border shadow-xl bg-card p-2 sm:p-4">
               <UmpireEngine
                 userId={session.user.id}
                 userEmail={session.user.email || ""}
@@ -101,7 +101,7 @@ export default function OfficiatePage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
+          <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
             <UmpireTournamentTab
               onStartMatch={(m) => setActiveMatch(m)}
             />

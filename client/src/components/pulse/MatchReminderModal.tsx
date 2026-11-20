@@ -94,53 +94,53 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-media/60 backdrop-blur-sm">
+      <div className="bg-card rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-border animate-in fade-in zoom-in-95 duration-200">
+        <div className="p-4 border-b border-border flex justify-between items-center bg-card/50">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <Bell className="w-4 h-4" />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-white">
+            <h3 className="font-bold text-foreground">
               {isGlobal ? "Match Reminders" : "Set Match Reminder"}
             </h3>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-soft rounded-lg hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-muted-foreground">
             {isGlobal 
               ? "We'll send you an in-app and push notification before your upcoming matches."
               : "Set a custom reminder for this specific match. This will override your global setting if you have one."}
           </p>
 
-          <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-border-strong bg-muted/50">
             <div>
-              <p className="font-semibold text-slate-900 dark:text-white">Enable Reminder</p>
-              <p className="text-xs text-slate-500">Turn notifications {enabled ? 'on' : 'off'}</p>
+              <p className="font-semibold text-foreground">Enable Reminder</p>
+              <p className="text-xs text-muted-foreground">Turn notifications {enabled ? 'on' : 'off'}</p>
             </div>
             <button
               onClick={() => setEnabled(!enabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${enabled ? 'bg-primary' : 'bg-muted-strong'}`}
             >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
 
           {enabled && (
             <div className="space-y-3 animate-in slide-in-from-top-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-soft">
                 Remind me before match (in minutes):
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
                   <Clock className="w-4 h-4" />
                 </div>
                 <input
@@ -148,7 +148,7 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
                   min="1"
                   value={minutes}
                   onChange={(e) => setMinutes(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-slate-900 dark:text-white font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 bg-card border border-border-strong rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-foreground font-medium"
                   placeholder="e.g. 30"
                 />
               </div>
@@ -156,20 +156,20 @@ export function MatchReminderModal({ isOpen, onClose, matchId, userId, initialGl
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-2">
+        <div className="p-4 border-t border-border bg-card/50 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium text-soft hover:bg-muted rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-slate-900 bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
           >
             {loading ? (
-              <div className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-border/30 border-t-border rounded-full animate-spin" />
             ) : (
               <Save className="w-4 h-4" />
             )}

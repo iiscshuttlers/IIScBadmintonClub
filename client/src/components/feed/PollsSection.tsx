@@ -55,17 +55,17 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
   const shouldShowResults = hasVoted || isAdmin || poll.results_revealed || poll.is_archived;
 
   return (
-    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 relative ${poll.is_archived ? "opacity-75" : ""}`}>
+    <div className={`bg-card rounded-3xl p-6 shadow-sm border border-border relative ${poll.is_archived ? "opacity-75" : ""}`}>
       <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-xl ${poll.is_archived ? "bg-slate-100 dark:bg-slate-800" : "bg-violet-100 dark:bg-violet-900/50"}`}>
-          <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-muted-foreground" : "text-violet-600 dark:text-violet-400"}`} />
+        <div className={`p-2 rounded-xl ${poll.is_archived ? "bg-muted" : "bg-individual/20"}`}>
+          <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-muted-foreground" : "text-individual"}`} />
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-muted-foreground" : "text-violet-500"}`}>
+          <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-muted-foreground" : "text-individual"}`}>
             {poll.is_archived ? "Archived Poll" : "Community Poll"}
           </span>
           {isAdmin && !poll.results_revealed && (
-            <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
+            <span className="text-[9px] font-bold bg-warning/20 text-warning px-1.5 py-0.5 rounded uppercase tracking-widest">
               Hidden from public
             </span>
           )}
@@ -76,7 +76,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
           {onToggleReveal && (
             <button
               onClick={() => onToggleReveal(poll.id, !poll.results_revealed)}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-emerald-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-success transition-colors flex items-center gap-1"
             >
               {poll.results_revealed ? "Hide from Public" : "Reveal to Public"}
             </button>
@@ -84,7 +84,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
           {onNotify && (
             <button
               onClick={() => onNotify(poll)}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-indigo-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-info transition-colors flex items-center gap-1"
             >
               Notify
             </button>
@@ -92,7 +92,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
           {onArchive && (
             <button
               onClick={() => onArchive(poll.id, !poll.is_archived)}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-amber-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-warning transition-colors flex items-center gap-1"
             >
               {poll.is_archived ? "Unarchive" : "Archive"}
             </button>
@@ -100,17 +100,17 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
           {onDelete && (
             <button
               onClick={() => onDelete(poll.id)}
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-danger transition-colors flex items-center gap-1"
             >
               Delete
             </button>
           )}
-          <Link href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
+          <Link href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-individual transition-colors flex items-center gap-1 border-l border-border-strong pl-3">
             Manage
           </Link>
         </div>
       )}
-      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-4 mt-2">{poll.question}</h3>
+      <h3 className="font-black text-foreground text-base mb-4 mt-2">{poll.question}</h3>
       <div className="space-y-2.5">
         {poll.options.map((option) => {
           const voteCount = option.votes?.length || 0;
@@ -124,16 +124,16 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               disabled={hasVoted}
               className={`w-full text-left relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
                 isMyVote
-                  ? "border-violet-500 dark:border-violet-400 shadow-sm shadow-violet-500/20"
+                  ? "border-individual shadow-sm shadow-individual/20"
                   : hasVoted
-                  ? "border-slate-200 dark:border-slate-800 cursor-default"
-                  : "border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-700 cursor-pointer"
+                  ? "border-border cursor-default"
+                  : "border-border-strong hover:border-individual cursor-pointer"
               }`}
             >
               {/* Progress bar background */}
               {hasVoted && shouldShowResults && (
                 <motion.div
-                  className={`absolute inset-0 ${isMyVote ? "bg-violet-100 dark:bg-violet-500/25" : "bg-slate-50 dark:bg-slate-800/60"}`}
+                  className={`absolute inset-0 ${isMyVote ? "bg-individual/25" : "bg-muted/60"}`}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: pct / 100 }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
@@ -143,16 +143,16 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               <div className="relative z-10 flex items-center justify-between px-4 py-3.5">
                 <div className="flex items-center gap-3">
                   {isMyVote ? (
-                    <CheckCircle2 className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-individual shrink-0" />
                   ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
+                    <div className="w-5 h-5 rounded-full border-2 border-border-strong shrink-0" />
                   )}
-                  <span className={`text-sm font-bold ${isMyVote ? "text-violet-800 dark:text-violet-200" : "text-slate-700 dark:text-slate-300"}`}>
+                  <span className={`text-sm font-bold ${isMyVote ? "text-individual" : "text-soft"}`}>
                     {option.text}
                   </span>
                 </div>
                 {hasVoted && shouldShowResults && (
-                  <span className={`text-sm font-black ${isMyVote ? "text-violet-700 dark:text-violet-300" : "text-slate-500 dark:text-slate-400"} ml-2 whitespace-nowrap`}>
+                  <span className={`text-sm font-black ${isMyVote ? "text-individual" : "text-muted-foreground"} ml-2 whitespace-nowrap`}>
                     {pct}%
                   </span>
                 )}
@@ -231,18 +231,18 @@ function CreatePollForm({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-violet-200 dark:border-violet-800 p-5 shadow-sm">
+    <div className="bg-card rounded-3xl border border-individual/40 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-black text-slate-800 dark:text-foreground flex items-center gap-2">
-          <BarChart2 className="w-4 h-4 text-violet-500" /> Create Poll
+        <h3 className="font-black text-foreground flex items-center gap-2">
+          <BarChart2 className="w-4 h-4 text-individual" /> Create Poll
         </h3>
-        <button aria-label="Cancel poll" onClick={onCancel} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X className="w-4 h-4 text-muted-foreground" /></button>
+        <button aria-label="Cancel poll" onClick={onCancel} className="p-1 rounded-lg hover:bg-muted transition"><X className="w-4 h-4 text-muted-foreground" /></button>
       </div>
       <input
         value={question}
         onChange={e => setQuestion(e.target.value)}
         placeholder="Ask the community something..."
-        className="w-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground mb-4"
+        className="w-full text-sm bg-muted border border-border-strong rounded-xl px-4 py-3 outline-none text-foreground placeholder:text-muted-foreground mb-4"
       />
       <div className="space-y-2 mb-3">
         {options.map((opt, i) => (
@@ -251,10 +251,10 @@ function CreatePollForm({
               value={opt}
               onChange={e => updateOption(i, e.target.value)}
               placeholder={`Option ${i + 1}`}
-              className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground"
+              className="flex-1 text-sm bg-muted border border-border-strong rounded-xl px-4 py-2.5 outline-none text-foreground placeholder:text-muted-foreground"
             />
             {options.length > 2 && (
-              <button onClick={() => removeOption(i)} className="p-2 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition">
+              <button onClick={() => removeOption(i)} className="p-2 text-danger hover:bg-danger/10 rounded-xl transition">
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
@@ -267,20 +267,20 @@ function CreatePollForm({
           id="notify-poll" 
           checked={notify} 
           onChange={e => setNotify(e.target.checked)} 
-          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer" 
+          className="rounded border-border-strong text-individual focus:ring-individual w-4 h-4 cursor-pointer" 
         />
-        <label htmlFor="notify-poll" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+        <label htmlFor="notify-poll" className="text-sm font-semibold text-soft cursor-pointer select-none">
           Send Push Notification
         </label>
       </div>
       <div className="flex gap-2">
-        <button onClick={addOption} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-violet-600 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition">
+        <button onClick={addOption} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-individual bg-individual/10 hover:bg-individual/15 transition">
           <Plus className="w-3.5 h-3.5" /> Add Option
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-violet-500 hover:bg-violet-600 text-on-accent transition disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-individual hover:bg-individual/90 text-on-accent transition disabled:opacity-50"
         >
           <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Publish Poll"}
         </button>
@@ -404,7 +404,7 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
       {isMasterAdmin && !showCreate && (
         <button
           onClick={() => setShowCreate(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-violet-200 dark:border-violet-800 text-violet-500 font-bold text-sm hover:bg-violet-50 dark:hover:bg-violet-900/20 transition"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-individual/40 text-individual font-bold text-sm hover:bg-individual/10 transition"
         >
           <Plus className="w-4 h-4" /> Create Community Poll
         </button>
@@ -429,11 +429,11 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
       ))}
 
       {visiblePolls.length === 0 && (!isMasterAdmin || archivedPolls.length === 0) && !showCreate && (
-        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-          <div className="w-16 h-16 bg-violet-50 dark:bg-violet-950/40 rounded-full flex items-center justify-center mx-auto mb-4 border border-violet-200 dark:border-violet-800/50">
-            <BarChart2 className="w-8 h-8 text-violet-500" />
+        <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+          <div className="w-16 h-16 bg-individual/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-individual/30">
+            <BarChart2 className="w-8 h-8 text-individual" />
           </div>
-          <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-1">
+          <h3 className="text-lg font-black text-soft mb-1">
             No Polls for This Tournament
           </h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -443,7 +443,7 @@ export function PollsSection({ tournamentId }: { tournamentId?: string } = {}) {
       )}
 
       {isMasterAdmin && archivedPolls.length > 0 && (
-        <details className="mt-8 group border border-slate-200 dark:border-slate-800 rounded-2xl bg-white/50 dark:bg-slate-900/50">
+        <details className="mt-8 group border border-border rounded-2xl bg-card/50">
           <summary className="flex items-center gap-2 p-4 cursor-pointer list-none outline-none">
             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex-1">Archived Polls</h3>
             <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>

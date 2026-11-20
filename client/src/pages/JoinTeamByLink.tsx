@@ -64,25 +64,25 @@ export default function JoinTeamByLink() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Verifying Team Invite...</h2>
-        <p className="text-sm text-slate-500 mt-1">Checking invitation token and team status</p>
+        <h2 className="text-xl font-bold text-foreground">Verifying Team Invite...</h2>
+        <p className="text-sm text-muted-foreground mt-1">Checking invitation token and team status</p>
       </div>
     );
   }
 
   if (error || !teamInfo) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-lg">
-          <div className="w-14 h-14 bg-rose-100 dark:bg-rose-950/50 rounded-2xl flex items-center justify-center text-rose-600 mx-auto mb-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+        <div className="max-w-md w-full bg-card border border-border rounded-3xl p-8 text-center shadow-lg">
+          <div className="w-14 h-14 bg-danger/20 rounded-2xl flex items-center justify-center text-danger mx-auto mb-4">
             <AlertCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
+          <h2 className="text-2xl font-black text-foreground mb-2">
             Invite Not Valid
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             {(error as any)?.message || "This invitation link is invalid, expired, or has been disabled by the team captain."}
           </p>
           <Button onClick={() => navigate('/pulse')} className="w-full">
@@ -94,11 +94,11 @@ export default function JoinTeamByLink() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6">
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl text-center relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-xl text-center relative overflow-hidden">
         {/* Subtle decorative glow */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-info/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex justify-center mb-5">
           <TeamLogo
@@ -108,30 +108,30 @@ export default function JoinTeamByLink() {
           />
         </div>
 
-        <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mb-3">
-          <Trophy className="w-3.5 h-3.5 text-indigo-500" />
+        <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-info/25 text-info border border-info/40 mb-3">
+          <Trophy className="w-3.5 h-3.5 text-info" />
           Team Invitation
         </span>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           Join {teamInfo.team_name}
         </h1>
-        <p className="text-sm text-slate-500 font-medium mt-1">
+        <p className="text-sm text-muted-foreground font-medium mt-1">
           {teamInfo.tournament_name}
         </p>
 
         {/* Details Card */}
-        <div className="my-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-left space-y-3">
+        <div className="my-6 p-4 rounded-2xl bg-muted/60 border border-border text-left space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 font-semibold">Team Captain:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-muted-foreground font-semibold">Team Captain:</span>
+            <span className="font-bold text-soft flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-warning" />
               {teamInfo.captain_name || 'Assigned Captain'}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 font-semibold">Roster Status:</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+            <span className="text-muted-foreground font-semibold">Roster Status:</span>
+            <span className="font-bold text-soft flex items-center gap-1">
               <Users className="w-3.5 h-3.5 text-primary" />
               {teamInfo.active_members} / {teamInfo.max_roster} Players
             </span>
@@ -151,19 +151,19 @@ export default function JoinTeamByLink() {
               <LogIn className="w-4 h-4 mr-2" />
               Log In to Join Team
             </Button>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               You need an IISc Badminton Club account to join the roster.
             </p>
           </div>
         ) : teamInfo.is_full ? (
-          <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+          <div className="p-3.5 rounded-xl bg-danger/15 border border-danger/40 text-danger text-xs font-semibold">
             This team roster is already full ({teamInfo.max_roster} maximum players reached).
           </div>
         ) : (
           <Button 
             onClick={() => joinMutation.mutate()}
             disabled={joinMutation.isPending}
-            className="w-full h-12 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
+            className="w-full h-12 text-sm font-bold bg-success hover:bg-success/90 text-success-foreground shadow-md shadow-success/20"
           >
             {joinMutation.isPending ? (
               <>

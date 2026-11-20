@@ -49,22 +49,22 @@ export default function Hub() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
+    <div className="min-h-screen bg-background pb-24 lg:pb-8 font-sans selection:bg-primary/30">
       <PageHeader
         badge="Club Info"
-        badgeIcon={<ShieldCheck className="w-3.5 h-3.5 text-lime-300" />}
+        badgeIcon={<ShieldCheck className="w-3.5 h-3.5 text-primary" />}
         title="Club"
         subtitle="Courts, contacts, and platform info — all in one place."
       >
         {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
         <div className="flex justify-center w-full px-2">
-          <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+          <div className="flex w-full sm:w-auto bg-media/20 backdrop-blur-md p-1 rounded-2xl border border-border/10 gap-1 flex-wrap justify-center shadow-inner">
             <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
               {[
-                { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
+                { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+                { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+                { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+                { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
               ].map(({ id, label, icon, activeClass }) => (
                 <Button
                   key={id}
@@ -74,7 +74,7 @@ export default function Hub() {
                   className={
                     activeTab === id
                       ? activeClass
-                      : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                      : "text-on-media/80 hover:text-on-media hover:bg-media/20 scale-95"
                   }
                 >
                   {icon} {label}

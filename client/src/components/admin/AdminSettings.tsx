@@ -239,7 +239,7 @@ export function AdminSettings() {
       {/* Maintenance Mode */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Power className="w-5 h-5 text-rose-500" />
+          <Power className="w-5 h-5 text-danger" />
           <h3 className="font-black text-foreground">Maintenance Mode</h3>
           <InfoModal
             title="MAINTENANCE MODE"
@@ -256,7 +256,7 @@ export function AdminSettings() {
           </div>
           <button
             onClick={() => update("maintenanceMode", !settings.maintenanceMode)}
-            className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.maintenanceMode ? "bg-rose-500" : "bg-muted"}`}
+            className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.maintenanceMode ? "bg-danger" : "bg-muted"}`}
           >
             <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.maintenanceMode ? "left-6" : "left-0.5"}`} />
           </button>
@@ -274,7 +274,7 @@ export function AdminSettings() {
           </div>
         )}
         {settings.maintenanceMode && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-200 dark:border-amber-900/40">
+          <div className="mt-3 flex items-center gap-2 text-xs text-warning bg-warning/10 p-3 rounded-xl border border-warning/25">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             Maintenance mode is currently ON. All users will see a maintenance banner.
           </div>
@@ -285,7 +285,7 @@ export function AdminSettings() {
       {/* Feature Toggles */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-amber-500" />
+          <Zap className="w-5 h-5 text-warning" />
           <h3 className="font-black text-foreground">Feature Toggles</h3>
         </div>
         <div className="flex flex-col gap-4">
@@ -297,13 +297,13 @@ export function AdminSettings() {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setLocation("/standings")}
-                className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition flex items-center gap-1 shrink-0"
+                className="text-xs font-bold text-info hover:text-info/80 transition flex items-center gap-1 shrink-0"
               >
                 View <ExternalLink className="w-3 h-3" />
               </button>
               <button
                 onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
-                className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-emerald-500" : "bg-muted"}`}
+                className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-success" : "bg-muted"}`}
               >
                 <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
               </button>
@@ -317,7 +317,7 @@ export function AdminSettings() {
             </div>
             <button
               onClick={() => update("showPlayerDirectory", !settings.showPlayerDirectory)}
-              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-emerald-500" : "bg-muted"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-success" : "bg-muted"}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.showPlayerDirectory ? "left-6" : "left-0.5"}`} />
             </button>
@@ -328,7 +328,7 @@ export function AdminSettings() {
       {/* Notification Settings */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Bell className="w-5 h-5 text-blue-500" />
+          <Bell className="w-5 h-5 text-info" />
           <h3 className="font-black text-foreground">Automation & Notifications</h3>
         </div>
         <div className="space-y-4">
@@ -339,7 +339,7 @@ export function AdminSettings() {
             </div>
             <button
               onClick={() => update("matchAnnouncementPush", !settings.matchAnnouncementPush)}
-              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-emerald-500" : "bg-muted"}`}
+              className={`relative w-12 h-6 shrink-0 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-success" : "bg-muted"}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-all ${settings.matchAnnouncementPush ? "left-6" : "left-0.5"}`} />
             </button>
@@ -383,7 +383,7 @@ export function AdminSettings() {
       {/* App Updates */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Smartphone className="w-5 h-5 text-indigo-500" />
+          <Smartphone className="w-5 h-5 text-info" />
           <h3 className="font-black text-foreground">Force App Update Prompt</h3>
           <InfoModal
             title="APP UPDATE PROMPT"
@@ -400,7 +400,7 @@ export function AdminSettings() {
           <button
             onClick={forceUpdatePrompt}
             disabled={savingUpdate}
-            className="shrink-0 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-xl transition disabled:opacity-50 flex items-center gap-2"
+            className="shrink-0 px-4 py-2 bg-info hover:bg-info/90 text-info-foreground text-sm font-bold rounded-xl transition disabled:opacity-50 flex items-center gap-2"
           >
             {savingUpdate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             {savingUpdate ? "Sending..." : "Send Now"}
@@ -411,7 +411,7 @@ export function AdminSettings() {
       {/* Data Export */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Download className="w-5 h-5 text-emerald-500" />
+          <Download className="w-5 h-5 text-success" />
           <h3 className="font-black text-foreground">Data Export</h3>
           <InfoModal
             title="DATA EXPORT"
@@ -437,7 +437,7 @@ export function AdminSettings() {
               <button
                 onClick={() => exportData("players", "Players")}
                 disabled={exporting !== null}
-                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                className="shrink-0 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
               >
                 {exporting === "players" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 Export
@@ -461,7 +461,7 @@ export function AdminSettings() {
               <button
                 onClick={() => exportData("tournament_matches", "Matches")}
                 disabled={exporting !== null}
-                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                className="shrink-0 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
               >
                 {exporting === "tournament_matches" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 Export
@@ -485,7 +485,7 @@ export function AdminSettings() {
               <button
                 onClick={() => exportData("tournaments", "Tournaments")}
                 disabled={exporting !== null}
-                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                className="shrink-0 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
               >
                 {exporting === "tournaments" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 Export

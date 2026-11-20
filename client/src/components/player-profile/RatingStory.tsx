@@ -17,11 +17,11 @@ export function RatingStory({
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
   return (
-    <section aria-labelledby="rating-story-heading" className="rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 p-4 space-y-4">
+    <section aria-labelledby="rating-story-heading" className="rounded-2xl border border-border-strong/50 bg-muted/50 p-4 space-y-4">
       <h3 id="rating-story-heading" className="text-sm font-black">Rating history</h3>
       <div className="grid gap-3 sm:grid-cols-3">
         {stories.map((s) => (
-          <div key={s.bucket} className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-3 text-sm">
+          <div key={s.bucket} className="rounded-xl bg-card/60 p-3 text-sm">
             <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{BUCKET_LABEL[s.bucket]}</p>
             <p className="text-2xl font-black tabular-nums">{s.current ?? "—"}</p>
             {s.logged === 0 ? (
@@ -35,11 +35,11 @@ export function RatingStory({
                     </>
                   ) : s.movement >= 0 ? (
                     <>
-                      <TrendingUp className="w-3 h-3 text-emerald-600" aria-hidden /> +{s.movement} in the last {s.movementWindowDays} days
+                      <TrendingUp className="w-3 h-3 text-success" aria-hidden /> +{s.movement} in the last {s.movementWindowDays} days
                     </>
                   ) : (
                     <>
-                      <TrendingDown className="w-3 h-3 text-rose-600" aria-hidden /> {s.movement} in the last {s.movementWindowDays} days
+                      <TrendingDown className="w-3 h-3 text-danger" aria-hidden /> {s.movement} in the last {s.movementWindowDays} days
                     </>
                   )}
                 </p>
@@ -52,7 +52,7 @@ export function RatingStory({
                   {s.logged} recorded {s.logged === 1 ? "change" : "changes"} since {fmtDate(s.historyStart!)}
                 </p>
                 {s.outOfStep && (
-                  <p className="text-xs text-[var(--warning)]">
+                  <p className="text-xs text-warning">
                     The current rating differs from the last recorded change — usually an administrator recalculation.
                   </p>
                 )}
@@ -60,7 +60,7 @@ export function RatingStory({
                   {s.recent.map((r) => (
                     <li key={r.id} className="flex justify-between gap-2 text-xs tabular-nums">
                       <span className="text-muted-foreground">{fmtDate(r.date)}</span>
-                      <span className={r.change > 0 ? "text-emerald-700 dark:text-emerald-400 font-bold" : r.change < 0 ? "text-rose-700 dark:text-rose-400 font-bold" : ""}>
+                      <span className={r.change > 0 ? "text-success font-bold" : r.change < 0 ? "text-danger font-bold" : ""}>
                         {r.change > 0 ? `+${r.change}` : r.change}
                         {r.newRating != null && <span className="text-muted-foreground font-normal"> → {r.newRating}</span>}
                       </span>

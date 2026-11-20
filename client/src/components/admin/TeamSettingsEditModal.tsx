@@ -125,24 +125,24 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/75 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden">
+      <div className="bg-card w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl border border-border shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
         
         {/* Header (fixed at top) */}
-        <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
+        <div className="flex items-start justify-between border-b border-border pb-4 shrink-0">
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-black text-foreground flex items-center gap-2">
               <Settings2 className="w-6 h-6 text-primary" />
               Edit Format, Advancement &amp; Decider Rules
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Customize pool qualification cutoffs, playoff formats, and sudden-death decider rubbers. Changes take effect immediately.
             </p>
           </div>
           <button 
             onClick={onClose}
             aria-label="Close"
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-2 text-muted-foreground hover:text-soft rounded-full hover:bg-muted cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -151,7 +151,7 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
         {/* Scrollable Modal Content */}
         <div className="overflow-y-auto flex-1 min-h-0 space-y-6 py-4 pr-1">
         {/* 1. Advancement & Playoff Format */}
-        <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+        <div className="space-y-4 p-4 rounded-2xl bg-muted/50 border border-border">
           <h3 className="text-sm font-black flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />
             Pool Advancement &amp; Stage 2 Structure
@@ -159,32 +159,32 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">
                 Advancing Teams per Pool
               </label>
               <select
                 value={advancingPerPool}
                 onChange={(e) => setAdvancingPerPool(parseInt(e.target.value))}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
               >
                 <option value={1}>Top 1 per pool (Pool Winners only)</option>
                 <option value={2}>Top 2 per pool (Winner &amp; Runner-up)</option>
                 <option value={3}>Top 3 per pool (1st, 2nd &amp; 3rd Place)</option>
                 <option value={4}>Top 4 per pool (Top 4 teams)</option>
               </select>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted-foreground mt-1">
                 Updates standings qualification cutoff line dynamically.
               </p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">
                 Playoff Stage Format
               </label>
               <select
                 value={playoffFormat}
                 onChange={(e) => setPlayoffFormat(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
               >
                 <option value="KNOCKOUT">Knockouts (Play-ins &amp; Byes for 6 teams)</option>
                 <option value="CHAMPIONSHIP_POOL">Championship Pool (Round-Robin between qualifiers)</option>
@@ -195,7 +195,7 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
         </div>
 
         {/* 2. Decider & Tiebreaker Rules */}
-        <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+        <div className="space-y-4 p-4 rounded-2xl bg-muted/50 border border-border">
           <h3 className="text-sm font-black flex items-center gap-2">
             <Trophy className="w-4 h-4 text-primary" />
             Tiebreaker &amp; Decider Rubber Settings (e.g. 3-3 Tie)
@@ -203,13 +203,13 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">
                 Knockout Tie Decider Rule
               </label>
               <select
                 value={deciderRule}
                 onChange={(e) => setDeciderRule(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
               >
                 <option value="EXTRA_DECIDER_RUBBER">Sudden-Death Extra Decider Rubber (e.g. XD2, MS2 - Unlocked on tie)</option>
                 <option value="SET_DIFF">Net Set Difference across Rubbers</option>
@@ -222,13 +222,13 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
 
             {deciderRule === 'SPECIFIC_RUBBER' && (
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">
                   Designated Decider Rubber
                 </label>
                 <select
                   value={specificRubberOrder}
                   onChange={(e) => setSpecificRubberOrder(parseInt(e.target.value))}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   {rubbers.map((r: any) => (
                     <option key={r.order} value={r.order}>
@@ -240,13 +240,13 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
             )}
 
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">
                 Pool Stage Draws
               </label>
               <select
                 value={drawAllowedInPools ? 'true' : 'false'}
                 onChange={(e) => setDrawAllowedInPools(e.target.value === 'true')}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
               >
                 <option value="true">Allowed (Ties can end in a draw, 1 pt each)</option>
                 <option value="false">Not Allowed (Apply tie decider in pools too)</option>
@@ -255,20 +255,20 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
           </div>
 
           {(deciderRule === 'EXTRA_DECIDER_RUBBER' || deciderRule === 'GOLDEN_MATCH') && (
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+            <div className="p-3.5 rounded-xl bg-warning/10 border border-warning/30 space-y-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                <ShieldCheck className="w-4 h-4 text-warning" />
+                <span className="text-xs font-black text-warning">
                   Conditional Decider Rubber (e.g. XD2, MS2)
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1">Category</label>
+                  <label className="text-[11px] font-bold text-muted-foreground block mb-1">Category</label>
                   <select
                     value={deciderCategory}
                     onChange={(e) => setDeciderCategory(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                   >
                     <option value="XD">XD (Mixed Doubles)</option>
                     <option value="MS">MS (Men's Singles)</option>
@@ -278,32 +278,32 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1">Rubber Label</label>
+                  <label className="text-[11px] font-bold text-muted-foreground block mb-1">Rubber Label</label>
                   <input
                     type="text"
                     value={deciderLabel}
                     onChange={(e) => setDeciderLabel(e.target.value)}
                     placeholder="e.g. XD 2 or MS 2"
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1">Sets Format</label>
+                  <label className="text-[11px] font-bold text-muted-foreground block mb-1">Sets Format</label>
                   <select
                     value={deciderSets}
                     onChange={(e) => setDeciderSets(parseInt(e.target.value))}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                   >
                     <option value={1}>1 Set (Sudden Death)</option>
                     <option value={3}>Best of 3 Sets</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1">Points to Win</label>
+                  <label className="text-[11px] font-bold text-muted-foreground block mb-1">Points to Win</label>
                   <select
                     value={deciderPoints}
                     onChange={(e) => setDeciderPoints(parseInt(e.target.value))}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                    className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                   >
                     <option value={11}>11 Points (Sprint)</option>
                     <option value={15}>15 Points</option>
@@ -311,48 +311,48 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
                   </select>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] text-muted-foreground">
                 ⚡ <strong>Captains Lineup:</strong> Submitted later by captains only when the tie actually ends in a tie. Official reveals the decider rubber when ready.
               </p>
             </div>
           )}
 
           {/* Points Table Settings */}
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-3">
+          <div className="pt-3 border-t border-border-strong space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
               <div>
-                <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Win</label>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Win</label>
                 <input
                   type="number"
                   value={winPoints}
                   onChange={(e) => setWinPoints(parseInt(e.target.value) || 0)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Draw</label>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Draw</label>
                 <input
                   type="number"
                   value={drawPoints}
                   onChange={(e) => setDrawPoints(parseInt(e.target.value) || 0)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Loss</label>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Loss</label>
                 <input
                   type="number"
                   value={lossPoints}
                   onChange={(e) => setLossPoints(parseInt(e.target.value) || 0)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 mb-1 block">Points Table Sorting</label>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Points Table Sorting</label>
                 <select
                   value={standingsSortPriority}
                   onChange={(e) => setStandingsSortPriority(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                 >
                   <option value="STANDARD">Pts &gt; Rubbers &gt; Sets &gt; Points</option>
                   <option value="SETS_FIRST">Pts &gt; Sets Diff &gt; Points Diff</option>
@@ -372,14 +372,14 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
             });
 
             return (
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-4">
+              <div className="pt-4 border-t border-border-strong space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h4 className="text-sm font-black flex items-center gap-2">
                       <Users className="w-4 h-4 text-primary" />
                       Player Repetition &amp; Lineup Restrictions
                     </h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
                       Configure individual match participation caps and prevent duplicate discipline assignments.
                     </p>
                   </div>
@@ -390,45 +390,45 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">
                       Max Rubbers per Male Player
                     </label>
                     <select
                       value={maxRubbersPerMale}
                       onChange={(e) => setMaxRubbersPerMale(parseInt(e.target.value) || 2)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                      className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                     >
                       <option value={1}>1 rubber only (No repeats)</option>
                       <option value={2}>At most 2 rubbers (Standard)</option>
                       <option value={3}>At most 3 rubbers</option>
                       <option value={4}>Unlimited / 4 rubbers</option>
                     </select>
-                    <span className="text-[10px] text-slate-500 mt-1 block">
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
                       Requires at least {rosterReq.minMalePlayers} male players for {rosterReq.totalMaleSlots} male slots.
                     </span>
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                    <label className="text-xs font-bold text-muted-foreground block mb-1">
                       Max Rubbers per Female Player
                     </label>
                     <select
                       value={maxRubbersPerFemale}
                       onChange={(e) => setMaxRubbersPerFemale(parseInt(e.target.value) || 2)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                      className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                     >
                       <option value={1}>1 rubber only (No repeats)</option>
                       <option value={2}>At most 2 rubbers (Standard)</option>
                       <option value={3}>At most 3 rubbers (Flexible)</option>
                       <option value={4}>Unlimited / 4 rubbers</option>
                     </select>
-                    <span className="text-[10px] text-slate-500 mt-1 block">
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
                       Requires at least {rosterReq.minFemalePlayers} female players for {rosterReq.totalFemaleSlots} female slots.
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border-strong">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -437,10 +437,10 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
                       className="w-4 h-4 accent-primary rounded mt-0.5"
                     />
                     <div>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                      <span className="text-xs font-bold text-soft block">
                         Disallow Same-Discipline Repeats
                       </span>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-muted-foreground block">
                         A player who played MS1 cannot play MS2 (or WD1/WD2).
                       </span>
                     </div>
@@ -454,10 +454,10 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
                       className="w-4 h-4 accent-primary rounded mt-0.5"
                     />
                     <div>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                      <span className="text-xs font-bold text-soft block">
                         Allow Same Event Player in Decider
                       </span>
-                      <span className="text-[11px] text-slate-500 block">
+                      <span className="text-[11px] text-muted-foreground block">
                         If tie has a decider (e.g. XD2), allow players who played regular XD1.
                       </span>
                     </div>
@@ -470,7 +470,7 @@ export function TeamSettingsEditModal({ isOpen, onClose, tournament, onSaved }: 
         </div>
 
         {/* Footer Actions (fixed at bottom) */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="flex justify-end gap-3 pt-3 border-t border-border shrink-0">
           <Button variant="outline" onClick={onClose} disabled={saving} className="rounded-xl font-bold">
             Cancel
           </Button>

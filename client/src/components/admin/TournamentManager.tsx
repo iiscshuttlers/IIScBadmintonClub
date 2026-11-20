@@ -32,7 +32,7 @@ import {
 } from "@/services/tournamentService";
 import type { Tournament } from "@/types/tournament";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 
 /** Five tabs, in the order an organiser works through them. */
 const SUB_TABS = ["setup", "entries", "draw", "schedule", "wrapup"] as const;
@@ -286,7 +286,7 @@ export function TournamentManager() {
           <OverflowTabs
             activeId={activeTab}
             onChange={setTab}
-            activeClassName={`${getTournamentTheme(selected).tokens.bg} text-white shadow-md`}
+            activeClassName={`${getTournamentTheme(selected).tokens.bg} text-foreground shadow-md`}
             tabs={[
               { id: "setup", label: "Setup", icon: Settings2 },
               { id: "entries", label: isTeam ? "Teams" : "Players", icon: Users },
@@ -361,7 +361,7 @@ export function TournamentManager() {
 
       {!selected && !loading && (
         <div className={`${cardCls} text-center py-10`}>
-          <Trophy className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-bold">No tournaments yet. Use New above to create one.</p>
         </div>
       )}

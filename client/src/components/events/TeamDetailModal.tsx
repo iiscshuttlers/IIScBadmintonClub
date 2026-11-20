@@ -260,15 +260,15 @@ export function TeamDetailModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[70] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[70] bg-background/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div 
-        className="max-w-2xl w-full max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="max-w-2xl w-full max-h-[92vh] flex flex-col bg-card border border-border rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Header Hero */}
-        <div className="p-5 pb-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 shrink-0">
+        <div className="p-5 pb-4 border-b border-border bg-card/80 shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
               <TeamLogo
@@ -280,11 +280,11 @@ export function TeamDetailModal({
               
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight truncate">
+                  <h2 className="text-xl sm:text-2xl font-black text-foreground leading-tight truncate">
                     {team.name}
                   </h2>
                   {team.short_name && (
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-soft">
                       {team.short_name}
                     </span>
                   )}
@@ -294,7 +294,7 @@ export function TeamDetailModal({
                     </span>
                   )}
                 </div>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+                <p className="text-xs font-bold text-muted-foreground mt-1 flex items-center gap-2">
                   <span>{counts.total} Registered Players</span>
                   <span>•</span>
                   <span>{categorizedMatches.total} Tournament Fixtures</span>
@@ -307,7 +307,7 @@ export function TeamDetailModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                  className="px-3 py-1.5 rounded-xl bg-muted hover:bg-muted-strong text-soft text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs border border-border-strong"
                   title="Open Team Hub to manage team, rosters and lineups"
                 >
                   <Shield className="w-3.5 h-3.5 text-primary" />
@@ -316,7 +316,7 @@ export function TeamDetailModal({
               </Link>
               <button
                 onClick={onClose}
-                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0 cursor-pointer"
+                className="p-2 text-muted-foreground hover:text-soft hover:bg-muted rounded-full transition-colors shrink-0 cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -325,14 +325,14 @@ export function TeamDetailModal({
           </div>
 
           {/* Navigation Tabs (Squad Roster vs Fixtures/Matches) */}
-          <div className="mt-4 flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="mt-4 flex items-center gap-2 border-b border-border">
             <button
               type="button"
               onClick={() => setActiveTab("roster")}
               className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
                 activeTab === "roster"
                   ? "border-primary text-primary"
-                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  : "border-transparent text-muted-foreground hover:text-soft"
               }`}
             >
               <Users className="w-4 h-4" />
@@ -345,13 +345,13 @@ export function TeamDetailModal({
               className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black transition-all border-b-2 -mb-px ${
                 activeTab === "matches"
                   ? "border-primary text-primary"
-                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  : "border-transparent text-muted-foreground hover:text-soft"
               }`}
             >
               <Swords className="w-4 h-4" />
               Fixtures & Matches ({categorizedMatches.total})
               {categorizedMatches.live.length > 0 && (
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block" />
+                <span className="w-2 h-2 rounded-full bg-live animate-ping inline-block" />
               )}
             </button>
           </div>
@@ -361,14 +361,14 @@ export function TeamDetailModal({
         {activeTab === "roster" && (
           <div className="flex-1 flex flex-col min-h-0">
             {/* Quick Filter Bar */}
-            <div className="p-3 sm:px-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div className="p-3 sm:px-5 border-b border-border bg-card/30 flex flex-wrap items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setGenderFilter("ALL")}
                   className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${
                     genderFilter === "ALL"
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "bg-muted text-muted-foreground hover:bg-muted/90"
                   }`}
                 >
                   All ({counts.total})
@@ -377,8 +377,8 @@ export function TeamDetailModal({
                   onClick={() => setGenderFilter("Male")}
                   className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1 ${
                     genderFilter === "Male"
-                      ? "bg-sky-600 text-white shadow-sm"
-                      : "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 border border-sky-200 dark:border-sky-800/40"
+                      ? "bg-info text-info-foreground shadow-sm"
+                      : "bg-info/15 text-info hover:bg-info/10 border border-info/25"
                   }`}
                 >
                   <span>♂ Male</span>
@@ -388,8 +388,8 @@ export function TeamDetailModal({
                   onClick={() => setGenderFilter("Female")}
                   className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1 ${
                     genderFilter === "Female"
-                      ? "bg-rose-600 text-white shadow-sm"
-                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 border border-rose-200 dark:border-rose-800/40"
+                      ? "bg-danger text-danger-foreground shadow-sm"
+                      : "bg-danger/15 text-danger hover:bg-danger/10 border border-danger/25"
                   }`}
                 >
                   <span>♀ Female</span>
@@ -397,7 +397,7 @@ export function TeamDetailModal({
                 </button>
               </div>
 
-              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                 {filteredMembers.length} displayed
               </div>
             </div>
@@ -407,12 +407,12 @@ export function TeamDetailModal({
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Loading Squad...</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Loading Squad...</p>
                 </div>
               ) : filteredMembers.length === 0 ? (
-                <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                  <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                  <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                <div className="text-center py-16 bg-muted/40 rounded-2xl border border-dashed border-border">
+                  <Users className="w-10 h-10 text-faint mx-auto mb-2" />
+                  <p className="font-bold text-sm text-soft">
                     {genderFilter !== "ALL" ? `No ${genderFilter} players found` : "No players registered in this team yet"}
                   </p>
                 </div>
@@ -427,10 +427,10 @@ export function TeamDetailModal({
                       onClick={() => openPlayerModal(member.player.id || member.player_id)}
                       className={`relative p-3.5 rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer hover:shadow-md hover:scale-[1.008] active:scale-[0.99] ${
                         isCaptain
-                          ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-sm hover:border-amber-500"
+                          ? "bg-gradient-to-r from-warning/15 via-warning/5 to-transparent border-2 border-warning/60 shadow-sm hover:border-warning"
                           : isFemale
-                          ? "bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700"
-                          : "bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700"
+                          ? "bg-danger/10 border border-danger/25 hover:border-danger"
+                          : "bg-info/10 border border-info/25 hover:border-info"
                       }`}
                       title="Click to view player stats & profile"
                     >
@@ -439,10 +439,10 @@ export function TeamDetailModal({
                         <div
                           className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-xs ${
                             isCaptain
-                              ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400/50"
+                              ? "bg-warning text-warning-foreground ring-2 ring-warning/50"
                               : isFemale
-                              ? "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300 ring-2 ring-rose-300/40"
-                              : "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300 ring-2 ring-sky-300/40"
+                              ? "bg-danger/25 text-danger ring-2 ring-danger/40"
+                              : "bg-info/25 text-info ring-2 ring-info/40"
                           }`}
                         >
                           {isCaptain ? (
@@ -456,25 +456,25 @@ export function TeamDetailModal({
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
+                            <span className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
                               {member.player.full_name}
                             </span>
                             {isCaptain && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 shadow-xs">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold text-gold-foreground shadow-xs">
                                 <Crown className="w-3 h-3 fill-current" />
                                 Captain
                               </span>
                             )}
                             {member.player.is_guest && (
-                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-muted-strong text-soft">
                                 Guest
                               </span>
                             )}
                           </div>
                           
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground truncate mt-0.5">
                             {member.player.elo_rating && (
-                              <span>Rating: <strong className="text-slate-700 dark:text-slate-300">{member.player.elo_rating}</strong></span>
+                              <span>Rating: <strong className="text-soft">{member.player.elo_rating}</strong></span>
                             )}
                             {member.player.email && (
                               <span className="truncate opacity-75">{member.player.email}</span>
@@ -486,12 +486,12 @@ export function TeamDetailModal({
                       {/* Right: Gender Pill Badge */}
                       <div className="shrink-0 flex items-center gap-1.5">
                         {isFemale ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-300/60 dark:border-rose-800 shadow-2xs">
+                          <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-danger/20 text-danger border border-danger/40 shadow-2xs">
                             <span>♀</span>
                             <span>Female</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 border border-sky-300/60 dark:border-sky-800 shadow-2xs">
+                          <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-info/20 text-info border border-info/40 shadow-2xs">
                             <span>♂</span>
                             <span>Male</span>
                           </span>
@@ -511,20 +511,20 @@ export function TeamDetailModal({
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 space-y-3">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Loading Fixtures...</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Loading Fixtures...</p>
               </div>
             ) : categorizedMatches.total === 0 ? (
-              <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="font-bold text-sm text-slate-700 dark:text-slate-300">No fixtures scheduled for this team yet</p>
-                <p className="text-xs text-slate-400 mt-1">Fixtures will appear once the tournament schedule is generated.</p>
+              <div className="text-center py-16 bg-muted/40 rounded-2xl border border-dashed border-border">
+                <Calendar className="w-10 h-10 text-faint mx-auto mb-2" />
+                <p className="font-bold text-sm text-soft">No fixtures scheduled for this team yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Fixtures will appear once the tournament schedule is generated.</p>
               </div>
             ) : (
               <>
                 {/* 1. LIVE MATCHES (FIRST) */}
                 {categorizedMatches.live.length > 0 && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                    <div className="flex items-center gap-2 text-live">
                       <Radio className="w-4 h-4 animate-pulse" />
                       <h3 className="text-xs font-black uppercase tracking-wider">
                         Live on Court ({categorizedMatches.live.length})
@@ -560,7 +560,7 @@ export function TeamDetailModal({
                 {/* 3. COMPLETED MATCHES (LAST) */}
                 {categorizedMatches.completed.length > 0 && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-500">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <CheckCircle2 className="w-4 h-4" />
                       <h3 className="text-xs font-black uppercase tracking-wider">
                         Completed Results ({categorizedMatches.completed.length})
@@ -580,13 +580,13 @@ export function TeamDetailModal({
         )}
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center shrink-0">
-          <span className="text-[11px] font-bold text-slate-400">
+        <div className="p-4 border-t border-border bg-card/50 flex justify-between items-center shrink-0">
+          <span className="text-[11px] font-bold text-muted-foreground">
             {team.pool ? `Pool ${team.pool}` : "IISc Badminton Tournament"}
           </span>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-100 hover:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs rounded-full transition shadow-sm"
+            className="px-6 py-2 bg-muted text-foreground hover:bg-muted-strong font-bold text-xs rounded-full transition shadow-sm"
           >
             Close
           </button>
@@ -615,20 +615,20 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
   return (
     <div className={`p-4 rounded-2xl border transition-all ${
       isLive
-        ? "bg-rose-50/20 dark:bg-rose-950/20 border-rose-400/40 shadow-sm"
+        ? "bg-live/10 border-live/40 shadow-sm"
         : isCompleted
         ? isWin
-          ? "bg-emerald-50/20 dark:bg-emerald-950/20 border-emerald-400/30"
-          : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
-        : "bg-slate-50/60 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800"
+          ? "bg-success/10 border-success/30"
+          : "bg-muted/40 border-border"
+        : "bg-muted/30 border-border"
     }`}>
       <div className="flex items-center justify-between gap-3">
         {/* Stage & Round Info */}
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded bg-muted text-soft">
             {tie.tie_code}
           </span>
-          <span className="text-xs font-bold text-slate-500 uppercase">
+          <span className="text-xs font-bold text-muted-foreground uppercase">
             {tie.round_name || tie.stage}
           </span>
         </div>
@@ -636,25 +636,25 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
         {/* State / Result Badge */}
         <div>
           {isLive ? (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-500 text-white animate-pulse">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-live text-live-foreground animate-pulse">
               <Radio className="w-3 h-3" /> LIVE NOW
             </span>
           ) : isCompleted ? (
             isWin ? (
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-success text-success-foreground">
                 WON ({myScore} - {oppScore})
               </span>
             ) : isLoss ? (
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30">
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-danger/20 text-danger border border-danger/30">
                 LOST ({myScore} - {oppScore})
               </span>
             ) : (
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-muted-strong text-soft">
                 DRAW ({myScore} - {oppScore})
               </span>
             )
           ) : (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-500">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               SCHEDULED
             </span>
           )}
@@ -664,13 +664,13 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
       {/* Opponent & Matchup */}
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-xs font-bold text-slate-400">vs</div>
+          <div className="text-xs font-bold text-muted-foreground">vs</div>
           <div>
-            <h4 className="font-black text-sm text-slate-900 dark:text-white">
+            <h4 className="font-black text-sm text-foreground">
               {opponent?.name || "TBD / BYE"}
             </h4>
             {opponent?.short_name && (
-              <span className="text-[10px] font-bold text-slate-400">
+              <span className="text-[10px] font-bold text-muted-foreground">
                 {opponent.short_name}
               </span>
             )}
@@ -679,22 +679,22 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
 
         {/* Tie Score */}
         <div className="text-right">
-          <div className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-            <span className={isWin ? "text-emerald-500" : ""}>{myScore}</span>
-            <span className="mx-1 text-slate-400">-</span>
-            <span className={isLoss ? "text-rose-500" : ""}>{oppScore}</span>
+          <div className="text-base font-black tracking-tight text-foreground">
+            <span className={isWin ? "text-success" : ""}>{myScore}</span>
+            <span className="mx-1 text-muted-foreground">-</span>
+            <span className={isLoss ? "text-danger" : ""}>{oppScore}</span>
           </div>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Tie Score</span>
+          <span className="text-[10px] font-bold text-muted-foreground uppercase">Tie Score</span>
         </div>
       </div>
 
       {/* Rubber Matches details toggle */}
       {tie.rubbers && tie.rubbers.length > 0 && (
-        <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60">
+        <div className="mt-3 pt-2.5 border-t border-border/60">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-between text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            className="w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-soft"
           >
             <span>Rubbers Breakdown ({tie.rubbers.length} Matches)</span>
             <span className="text-[11px] text-primary">{expanded ? "Hide ▲" : "View Rubbers ▼"}</span>
@@ -710,24 +710,24 @@ function TieMatchCard({ tie, currentTeamId }: { tie: TeamTieItem; currentTeamId:
                 return (
                   <div 
                     key={rubber.id} 
-                    className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-xs"
+                    className="p-2 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 text-xs"
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                         {rubber.category}
                       </span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      <span className="font-semibold text-soft">
                         {rubber.rubber_label || `Rubber #${rubber.rubber_order}`}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3">
                       {scoreStr ? (
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                        <span className="font-mono font-bold text-foreground">
                           {scoreStr}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-slate-400 uppercase">
+                        <span className="text-[10px] text-muted-foreground uppercase">
                           {rubber.status}
                         </span>
                       )}

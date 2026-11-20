@@ -54,9 +54,9 @@ export function ClaimRequestsSection({ onResolved }: { onResolved?: () => void }
   if (q.isError || (q.data && q.data.requests.length === 0)) return null;
 
   return (
-    <section aria-labelledby="claim-requests-heading" className="bg-white dark:bg-slate-900 rounded-3xl border border-amber-300 dark:border-amber-800 p-5 sm:p-6">
+    <section aria-labelledby="claim-requests-heading" className="bg-card rounded-3xl border border-warning/40 p-5 sm:p-6">
       <h2 id="claim-requests-heading" className="text-lg font-black flex items-center gap-2 mb-1">
-        <UserCheck className="w-5 h-5 text-amber-500" aria-hidden /> Ownership requests
+        <UserCheck className="w-5 h-5 text-warning" aria-hidden /> Ownership requests
       </h2>
       <p className="text-sm text-muted-foreground mb-3">
         Members asking to link a guest record to their profile. Verify before approving — a matching name is not proof.
@@ -68,7 +68,7 @@ export function ClaimRequestsSection({ onResolved }: { onResolved?: () => void }
       ) : (
         <ul className="space-y-3">
           {q.data!.requests.map((r) => (
-            <li key={r.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-3 text-sm">
+            <li key={r.id} className="rounded-2xl border border-border-strong p-3 text-sm">
               <p className="font-bold break-words">
                 {q.data!.names[r.requester_id] ?? "Member"} → guest “{q.data!.names[r.guest_id] ?? "Guest"}”
               </p>
@@ -81,12 +81,12 @@ export function ClaimRequestsSection({ onResolved }: { onResolved?: () => void }
                     id={`reject-${r.id}`}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3"
+                    className="w-full min-h-[44px] rounded-xl border border-border-strong bg-card px-3"
                   />
                   <div className="flex gap-2">
                     <button className="min-h-[44px] px-4 rounded-xl border font-bold" onClick={() => setRejecting(null)}>Cancel</button>
                     <button
-                      className="min-h-[44px] px-4 rounded-xl bg-[var(--danger)] text-white font-bold disabled:opacity-50"
+                      className="min-h-[44px] px-4 rounded-xl bg-danger text-danger-foreground font-bold disabled:opacity-50"
                       disabled={busy || !note.trim()}
                       onClick={() => void reject(r.id)}
                     >
@@ -99,7 +99,7 @@ export function ClaimRequestsSection({ onResolved }: { onResolved?: () => void }
                   <button className="min-h-[44px] px-4 rounded-xl bg-primary text-primary-foreground font-bold" onClick={() => setApproving(r)}>
                     Review &amp; approve
                   </button>
-                  <button className="min-h-[44px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold" onClick={() => { setRejecting(r.id); setNote(""); }}>
+                  <button className="min-h-[44px] px-4 rounded-xl border border-border-strong font-bold" onClick={() => { setRejecting(r.id); setNote(""); }}>
                     Reject
                   </button>
                 </div>

@@ -30,7 +30,7 @@ export function FlyerConfigBuilder({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+      <div className="flex flex-col gap-4 border-b border-border pb-4">
         {/* Row 1: Color & Controls */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end w-full">
           <div className="flex-[2] w-full sm:w-auto">
@@ -53,7 +53,7 @@ export function FlyerConfigBuilder({
           </div>
           
           <div className="flex items-center gap-3 mb-2.5">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-soft">
               <input
                 type="checkbox"
                 checked={f.enabled}
@@ -62,7 +62,7 @@ export function FlyerConfigBuilder({
               />
               Enabled
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300 ml-4">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-soft ml-4">
               <input
                 type="checkbox"
                 checked={!!f.showOnHome}
@@ -74,7 +74,7 @@ export function FlyerConfigBuilder({
             {onRemove && (
               <button
                 onClick={onRemove}
-                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
+                className="p-2 rounded-xl text-danger hover:bg-danger/10 transition"
                 title="Delete Flyer"
               >
                 <Trash2 className="w-4 h-4" />
@@ -147,7 +147,7 @@ export function FlyerConfigBuilder({
       <div className="space-y-2">
         <label className={labelCls}>Flyer Items</label>
         {f.items.map((item, itemIdx) => (
-          <div key={itemIdx} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl">
+          <div key={itemIdx} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-muted/50 p-2 rounded-xl">
             <input
               value={item.text}
               onChange={(e) => updateItem(itemIdx, "text", e.target.value)}
@@ -166,12 +166,12 @@ export function FlyerConfigBuilder({
                 value={item.colorClass}
                 onChange={(e) => updateItem(itemIdx, "colorClass", e.target.value)}
                 className={inputCls}
-                placeholder="#ffffff or e.g. text-yellow-300"
+                placeholder="#ffffff or e.g. text-warning"
               />
             </div>
             <button
               onClick={() => removeItem(itemIdx)}
-              className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg transition"
+              className="p-2 text-danger hover:bg-danger/15 rounded-lg transition"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -179,7 +179,7 @@ export function FlyerConfigBuilder({
         ))}
         <button
           onClick={addItem}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 rounded-lg transition"
         >
           <Plus className="w-3.5 h-3.5" /> Add Item
         </button>

@@ -49,7 +49,7 @@ export function ContentHub() {
   return (
     <div className="space-y-6">
       {/* Sub-navigation */}
-      <div className="flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap gap-1 rounded-2xl border border-border bg-card p-1.5 shadow-sm">
         {SUB_TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -59,8 +59,8 @@ export function ContentHub() {
               onClick={() => setTab(t.id)}
               className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
                 active
-                  ? "bg-primary/10 text-primary dark:bg-primary/40 dark:text-primary"
-                  : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800"
+                  ? "bg-primary/40 text-primary"
+                  : "text-muted-foreground hover:bg-muted"
               }`}
             >
               <Icon className="h-4 w-4" />

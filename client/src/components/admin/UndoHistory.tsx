@@ -42,39 +42,39 @@ export function UndoHistory() {
   };
 
   const getActionColor = (action: string) => {
-    if (action === "delete") return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50";
-    if (action === "create") return "bg-primary/15 text-primary border-primary/40 dark:bg-primary/40 dark:text-primary dark:border-primary/50";
-    if (action === "update") return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50";
-    return "bg-slate-100 text-muted-foreground border-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:border-slate-700";
+    if (action === "delete") return "bg-danger/15 text-danger border-danger/30";
+    if (action === "create") return "bg-primary/40 text-primary border-primary/50";
+    if (action === "update") return "bg-info/15 text-info border-info/30";
+    return "bg-muted text-muted-foreground border-border-strong";
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
-          <History className="w-5 h-5 text-indigo-500" /> Undo History
+        <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+          <History className="w-5 h-5 text-info" /> Undo History
         </h2>
-        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-muted">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm mb-6 text-sm text-muted-foreground dark:text-muted-foreground">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm mb-6 text-sm text-muted-foreground">
         <p>This table shows a chronological log of all site modifications (updates, creations, deletions) stored securely in the <strong>admin_history</strong> table. These records power the Undo/Redo stack. <em>You can use the Revert button on historical items to undo them individually, but be careful as this may overwrite newer changes to the same record.</em></p>
       </div>
 
       {loading && history.length === 0 ? (
         <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : history.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-          <History className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+        <div className="text-center py-12 bg-card rounded-3xl border border-border">
+          <History className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-bold">No history available.</p>
           <p className="text-xs text-muted-foreground mt-1">Modifications will appear here once you make changes.</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
+        <div className="bg-card rounded-2xl border border-border overflow-x-auto shadow-sm">
           <table className="w-full text-sm min-w-[700px]">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+            <thead className="bg-muted/50 border-b border-border-strong">
               <tr>
                 <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-48">Time</th>
                 <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-32">Action</th>
@@ -82,13 +82,13 @@ export function UndoHistory() {
                 <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground w-24">Undo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-border">
               {history.map((item, index) => {
                 const isLatest = index === 0;
                 
                 return (
-                  <tr key={item.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${isLatest ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
-                    <td className="px-4 py-3 text-muted-foreground dark:text-muted-foreground whitespace-nowrap text-xs">
+                  <tr key={item.id} className={`hover:bg-muted/50 transition-colors ${isLatest ? 'bg-info/5' : ''}`}>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                       {formatTime(item.created_at || "")}
                     </td>
                     <td className="px-4 py-3">
@@ -97,8 +97,8 @@ export function UndoHistory() {
                       </span>
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <div className="font-bold text-muted-foreground dark:text-slate-200 text-sm mb-1">{item.label}</div>
-                      <div className="text-[10px] font-mono text-muted-foreground bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded inline-block">
+                      <div className="font-bold text-soft text-sm mb-1">{item.label}</div>
+                      <div className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-1 rounded inline-block">
                         Table: {item.entity_type} {item.entity_id ? `| ID: ${item.entity_id.split("-")[0]}...` : ""}
                       </div>
                     </td>
@@ -106,7 +106,7 @@ export function UndoHistory() {
                       {isLatest && item.id === lastAction?.id ? (
                         <button
                           onClick={undo}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm text-muted-foreground dark:text-slate-300"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-muted border border-border-strong hover:bg-muted-strong transition shadow-sm text-soft"
                         >
                           <Undo2 className="w-3.5 h-3.5" /> Undo
                         </button>
@@ -114,7 +114,7 @@ export function UndoHistory() {
                         <button
                           onClick={() => revertAction(item)}
                           title="Revert this specific action (Caution: may overwrite newer changes)"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-900/30 dark:hover:text-rose-400 dark:hover:border-rose-800 transition shadow-sm text-muted-foreground dark:text-muted-foreground"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-muted border border-border-strong hover:bg-danger/10 hover:text-danger hover:border-danger/40 transition shadow-sm text-muted-foreground"
                         >
                           <Undo2 className="w-3 h-3" /> Revert
                         </button>
@@ -127,11 +127,11 @@ export function UndoHistory() {
           </table>
 
           {history.length >= (page + 1) * PAGE_SIZE && (
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <div className="p-4 border-t border-border text-center">
               <button
                 onClick={handleLoadMore}
                 disabled={loading}
-                className="px-4 py-2 text-sm font-bold text-muted-foreground dark:text-slate-300 hover:text-foreground dark:hover:text-foreground transition"
+                className="px-4 py-2 text-sm font-bold text-soft hover:text-foreground transition"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : "Load More"}
               </button>

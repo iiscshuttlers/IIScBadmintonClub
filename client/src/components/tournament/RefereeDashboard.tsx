@@ -224,35 +224,35 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
     }
   };
 
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm";
+  const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
 
   const STAT_CARDS: { label: string; value: number; icon: typeof Radio; cls: string; onClick?: () => void }[] = [
-    { label: "Live now", value: stats.live, icon: Radio, cls: "text-rose-600 bg-rose-50 dark:bg-rose-950/30", onClick: () => setFilter("live") },
-    { label: "Overdue", value: stats.overdue, icon: AlertTriangle, cls: "text-amber-600 bg-amber-50 dark:bg-amber-950/30", onClick: () => setFilter("attention") },
+    { label: "Live now", value: stats.live, icon: Radio, cls: "text-danger bg-danger/10", onClick: () => setFilter("live") },
+    { label: "Overdue", value: stats.overdue, icon: AlertTriangle, cls: "text-warning bg-warning/10", onClick: () => setFilter("attention") },
     { label: "Upcoming", value: stats.upcoming, icon: CalendarClock, cls: "text-primary bg-primary/10", onClick: () => setFilter("upcoming") },
-    { label: "Completed", value: stats.completed, icon: CheckCircle2, cls: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30", onClick: () => setFilter("completed") },
+    { label: "Completed", value: stats.completed, icon: CheckCircle2, cls: "text-success bg-success/10", onClick: () => setFilter("completed") },
   ];
 
   const statusChip = (m: MatchRow) => {
     if (m.status === "in_progress")
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-rose-600 bg-rose-50 dark:bg-rose-950/30"><Radio className="w-3 h-3 animate-pulse" /> Live</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-live bg-live/10"><Radio className="w-3 h-3 animate-pulse" /> Live</span>;
     if (m.status === "completed")
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30"><CheckCircle2 className="w-3 h-3" /> Done</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-success bg-success/10"><CheckCircle2 className="w-3 h-3" /> Done</span>;
     if (isOverdue(m))
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/30"><AlertTriangle className="w-3 h-3" /> Overdue</span>;
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800"><Clock className="w-3 h-3" /> Scheduled</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-warning bg-warning/10"><AlertTriangle className="w-3 h-3" /> Overdue</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-muted-foreground bg-muted"><Clock className="w-3 h-3" /> Scheduled</span>;
   };
 
   const tieStatusChip = (t: any) => {
     if (t.state === "IN_PROGRESS")
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-500/20"><Radio className="w-3 h-3 animate-pulse" /> Live Tie</span>;
+      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-live bg-live/15 border border-live/20"><Radio className="w-3 h-3 animate-pulse" /> Live Tie</span>;
     if (t.state === "COMPLETED")
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Final</span>;
+      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-success bg-success/15 border border-success/20"><CheckCircle2 className="w-3 h-3" /> Final</span>;
     if (t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed)
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/40 border border-amber-500/30"><Eye className="w-3 h-3" /> Ready to Reveal</span>;
+      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-warning bg-warning/15 border border-warning/30"><Eye className="w-3 h-3" /> Ready to Reveal</span>;
     if (!t.lineup_locked_a || !t.lineup_locked_b)
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-rose-500 bg-rose-50 dark:bg-rose-950/30 border border-rose-500/20"><Clock className="w-3 h-3" /> Missing Lineup</span>;
-    return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800"><Clock className="w-3 h-3" /> Scheduled</span>;
+      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-danger bg-danger/10 border border-danger/20"><Clock className="w-3 h-3" /> Missing Lineup</span>;
+    return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-muted-foreground bg-muted"><Clock className="w-3 h-3" /> Scheduled</span>;
   };
 
   const FILTERS: { key: StatusFilter; label: string; count: number }[] = [
@@ -271,7 +271,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
           <Gavel className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-black text-slate-800 dark:text-foreground truncate">Referee Oversight</h3>
+          <h3 className="text-base font-black text-foreground truncate">Referee Oversight</h3>
           <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
             <EventTypeBadge tournament_type={tournament.tournament_type} format_family={tournament.format_family} />
             <RankedBadge ranked={tournament.counts_for_elo} />
@@ -279,7 +279,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
         </div>
         <button
           onClick={() => load(true)}
-          className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10 transition shrink-0"
+          className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition shrink-0"
           title="Refresh"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
@@ -302,7 +302,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                 <Icon className="w-4.5 h-4.5" />
               </div>
               <div className="min-w-0">
-                <div className="text-xl font-black text-slate-800 dark:text-foreground leading-none">{s.value}</div>
+                <div className="text-xl font-black text-foreground leading-none">{s.value}</div>
                 <div className="text-[11px] text-muted-foreground mt-1 truncate">{s.label}</div>
               </div>
             </button>
@@ -311,7 +311,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
       </div>
 
       {stats.noCourt > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-bold text-warning">
           <LayoutGrid className="w-4 h-4 shrink-0" />
           {stats.noCourt} match{stats.noCourt === 1 ? "" : "es"} without an assigned court.
         </div>
@@ -329,29 +329,29 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                 variant="tab"
                 onClick={() => setFilter(f.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
-                  active ? "bg-primary text-primary-foreground" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  active ? "bg-primary text-primary-foreground" : "bg-muted text-soft hover:bg-muted-strong"
                 }`}
               >
                 {f.label}
-                <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>{f.count}</span>
+                <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-foreground/20" : "bg-muted-strong"}`}>{f.count}</span>
               </Button>
             );
           })}
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search match, player, round…"
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40"
+              className="w-full pl-9 pr-3 py-2 bg-muted border border-border-strong rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/40"
+            className="bg-muted border border-border-strong rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="ALL">All categories</option>
             {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
@@ -361,30 +361,30 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
 
       {/* Team Tournament Ties Quick Action & Status Banner */}
       {isTeamEvent && (
-        <div className={`${cardCls} space-y-3 bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border-indigo-900/30`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+        <div className={`${cardCls} space-y-3 bg-gradient-to-r from-card via-info/10 to-card border-info/20`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-2.5">
             <div>
-              <h4 className="text-sm font-black text-white flex items-center gap-2">
-                <Swords className="w-4 h-4 text-indigo-400" />
+              <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+                <Swords className="w-4 h-4 text-info" />
                 Team Ties Status ({ties.length} Total)
               </h4>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Oversight for tie lineup submissions, reveals, and match schedules
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {tiesAwaitingReveal.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning/20 text-warning border border-warning/30">
                   {tiesAwaitingReveal.length} Ready to Reveal
                 </span>
               )}
               {tiesPendingLineup.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-danger/20 text-danger border border-danger/30">
                   {tiesPendingLineup.length} Missing Lineups
                 </span>
               )}
               {liveTies.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-success/20 text-success border border-success/30">
                   {liveTies.length} Live
                 </span>
               )}
@@ -393,26 +393,26 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
 
           {tiesAwaitingReveal.length > 0 && (
             <div className="space-y-2 pt-1">
-              <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-warning uppercase tracking-wider">
                 Action Needed: Lineups Locked &amp; Ready for Referee Reveal
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {tiesAwaitingReveal.map((t: any) => (
-                  <div key={t.id} className="p-2.5 rounded-xl bg-slate-950/70 border border-amber-500/30 flex items-center justify-between gap-3">
+                  <div key={t.id} className="p-2.5 rounded-xl bg-background/70 border border-warning/30 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning">
                           {t.tie_code}
                         </span>
-                        <span className="text-xs font-black text-white truncate">
+                        <span className="text-xs font-black text-foreground truncate">
                           {t.team_a?.name || 'TBD'} vs {t.team_b?.name || 'TBD'}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Both lineups locked</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Both lineups locked</p>
                     </div>
                     <button
                       onClick={() => setSelectedTieForConsole(t)}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400 transition shrink-0 flex items-center gap-1"
+                      className="px-2.5 py-1 rounded-lg bg-warning text-warning-foreground font-black text-xs hover:bg-warning/90 transition shrink-0 flex items-center gap-1"
                     >
                       <Eye className="w-3.5 h-3.5" /> Reveal Lineup
                     </button>
@@ -430,8 +430,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
           <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin" /></div>
         ) : loadError ? (
           <div className="text-center py-10">
-            <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-            <p className="text-sm text-slate-600 dark:text-slate-300 font-bold">Couldn't load data</p>
+            <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
+            <p className="text-sm text-soft font-bold">Couldn't load data</p>
             <button
               onClick={() => load()}
               className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
@@ -441,7 +441,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
           </div>
         ) : filteredMatches.length === 0 && filteredTies.length === 0 ? (
           <div className="text-center py-10">
-            <Swords className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+            <Swords className="w-8 h-8 text-faint mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               {filter === "attention" 
                 ? "Nothing needs attention — all clear."
@@ -454,8 +454,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
             {filteredTies.length > 0 && (
               <div className="space-y-2">
                 {filteredMatches.length > 0 && (
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <div className="flex items-center justify-between pb-1 border-b border-border">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                       <Swords className="w-3.5 h-3.5 text-primary" /> Team Ties ({filteredTies.length})
                     </span>
                   </div>
@@ -470,15 +470,15 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                   return (
                     <div
                       key={t.id}
-                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3 sm:p-4 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                      className="rounded-2xl border border-border bg-background/40 p-3 sm:p-4 hover:border-border-strong transition"
                     >
                       {/* Top Header Row */}
-                      <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+                      <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-border/60">
                         <span className="text-[11px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                           {t.tie_code}
                         </span>
                         {t.round_name && (
-                          <span className="text-[11px] font-bold text-slate-500">
+                          <span className="text-[11px] font-bold text-muted-foreground">
                             {t.round_name}
                           </span>
                         )}
@@ -496,17 +496,17 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                             size="sm"
                           />
                           <div className="min-w-0">
-                            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 truncate block">
+                            <span className="text-sm sm:text-base font-black text-foreground truncate block">
                               {t.team_a?.name || "Team A"}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                               {t.lineup_locked_a ? "Lineup Locked" : "Lineup Pending"}
                             </span>
                           </div>
                         </div>
 
                         {/* Score or VS */}
-                        <div className="px-3 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0 font-mono font-black text-base sm:text-lg text-slate-900 dark:text-white shadow-2xs">
+                        <div className="px-3 py-1 rounded-xl bg-card border border-border shrink-0 font-mono font-black text-base sm:text-lg text-foreground shadow-2xs">
                           {t.state === "COMPLETED" || t.state === "IN_PROGRESS"
                             ? `${t.score_team_a ?? 0} - ${t.score_team_b ?? 0}`
                             : "vs"}
@@ -515,10 +515,10 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                         {/* Team B */}
                         <div className="flex items-center justify-end gap-2.5 flex-1 min-w-0 text-right">
                           <div className="min-w-0">
-                            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 truncate block">
+                            <span className="text-sm sm:text-base font-black text-foreground truncate block">
                               {t.team_b?.name || "Team B"}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                               {t.lineup_locked_b ? "Lineup Locked" : "Lineup Pending"}
                             </span>
                           </div>
@@ -532,18 +532,18 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                       </div>
 
                       {/* Footer Row: Court, Time & Referee Actions */}
-                      <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2 flex-wrap text-xs">
-                        <div className="flex items-center gap-3 text-slate-500 text-[11px] flex-wrap">
-                          <span className={`inline-flex items-center gap-1 ${!hasCourt && t.state !== "COMPLETED" ? "text-amber-600 font-bold" : ""}`}>
+                      <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2 flex-wrap text-xs">
+                        <div className="flex items-center gap-3 text-muted-foreground text-[11px] flex-wrap">
+                          <span className={`inline-flex items-center gap-1 ${!hasCourt && t.state !== "COMPLETED" ? "text-warning font-bold" : ""}`}>
                             <MapPin className="w-3 h-3" /> {courtDisplay}
                           </span>
                           {t.scheduled_at ? (
-                            <span className={`inline-flex items-center gap-1 ${isTieOverdue(t) ? "text-amber-600 font-bold" : ""}`}>
+                            <span className={`inline-flex items-center gap-1 ${isTieOverdue(t) ? "text-warning font-bold" : ""}`}>
                               <Clock className="w-3 h-3" />
                               {new Date(t.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} • {new Date(t.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           ) : (
-                            <span className="text-slate-400">Time not scheduled</span>
+                            <span className="text-muted-foreground">Time not scheduled</span>
                           )}
                         </div>
 
@@ -551,7 +551,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                           {canReveal && (
                             <button
                               onClick={() => setSelectedTieForConsole(t)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition shadow-xs"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-warning hover:bg-warning/90 text-warning-foreground text-xs font-black transition shadow-xs"
                             >
                               <Eye className="w-3.5 h-3.5" /> Reveal Lineups
                             </button>
@@ -574,8 +574,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
             {filteredMatches.length > 0 && (
               <div className="space-y-2">
                 {filteredTies.length > 0 && (
-                  <div className="flex items-center justify-between pt-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  <div className="flex items-center justify-between pt-2 pb-1 border-b border-border">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                       Individual Rubbers ({filteredMatches.length})
                     </span>
                   </div>
@@ -583,36 +583,36 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
                 {filteredMatches.map((m) => {
                   const canRemind = m.status === "scheduled" && !!m.player1_id;
                   return (
-                    <div key={m.id} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-3">
+                    <div key={m.id} className="rounded-xl border border-border bg-background/40 p-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[11px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{m.match_code}</span>
-                        <span className="text-[11px] font-bold text-slate-500">{CAT_LABELS[m.category] ?? m.category}</span>
+                        <span className="text-[11px] font-bold text-muted-foreground">{CAT_LABELS[m.category] ?? m.category}</span>
                         <span className="text-[11px] text-muted-foreground">· {m.round_name}</span>
                         <div className="ml-auto">{statusChip(m)}</div>
                       </div>
                       <div className="mt-1.5 flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-black text-slate-800 dark:text-slate-100 truncate flex-1 text-right">
+                        <span className="text-sm font-black text-foreground truncate flex-1 text-right">
                           {m.team1_label ?? "TBD"}
                         </span>
-                        <span className="text-[11px] font-black text-slate-400 shrink-0">
+                        <span className="text-[11px] font-black text-muted-foreground shrink-0">
                           {m.status === "completed" && m.score ? m.score : "vs"}
                         </span>
-                        <span className="text-sm font-black text-slate-800 dark:text-slate-100 truncate flex-1">
+                        <span className="text-sm font-black text-foreground truncate flex-1">
                           {m.team2_label ?? "TBD"}
                         </span>
                       </div>
                       <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-                        <span className={`inline-flex items-center gap-1 ${!m.court_number && m.status !== "completed" ? "text-amber-600 font-bold" : ""}`}>
+                        <span className={`inline-flex items-center gap-1 ${!m.court_number && m.status !== "completed" ? "text-warning font-bold" : ""}`}>
                           <MapPin className="w-3 h-3" /> {m.court_number ? `Court ${m.court_number}` : "No court"}
                         </span>
                         {m.scheduled_at && (
-                          <span className={`inline-flex items-center gap-1 ${isOverdue(m) ? "text-amber-600 font-bold" : ""}`}>
+                          <span className={`inline-flex items-center gap-1 ${isOverdue(m) ? "text-warning font-bold" : ""}`}>
                             <Clock className="w-3 h-3" />
                             {new Date(m.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
                           </span>
                         )}
                         {m.status === "completed" && m.winner_side ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                          <span className="inline-flex items-center gap-1 text-success font-bold">
                             <Flag className="w-3 h-3" /> {m.winner_side === 1 ? m.team1_label : m.team2_label} won
                           </span>
                         ) : null}

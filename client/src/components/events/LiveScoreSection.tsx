@@ -230,7 +230,7 @@ function MatchBroadcastCard({
 
             const receiverDot = isReceiver ? (
               <span className="relative flex h-2 w-2 shrink-0" title="Receiving">
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--danger)]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-danger"></span>
               </span>
             ) : null;
 
@@ -259,70 +259,70 @@ function MatchBroadcastCard({
         onClick={() => setIsExpanded(true)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-on-accent max-w-4xl mx-auto shadow hover:border-slate-600 transition-all cursor-pointer relative overflow-hidden group select-none"
+        className="bg-card border border-border rounded-xl p-3 text-on-accent max-w-4xl mx-auto shadow hover:border-border-strong transition-all cursor-pointer relative overflow-hidden group select-none"
       >
-        <div className={`absolute left-0 top-0 bottom-0 w-1 ${match.status === "finished" ? "bg-slate-700" : "bg-primary animate-pulse"}`} />
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${match.status === "finished" ? "bg-muted-strong" : "bg-primary animate-pulse"}`} />
         
         <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 pl-1 sm:pl-2">
           <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             
             <div className="flex flex-col min-w-0 shrink-0">
-              <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] ${match.status === "finished" ? "text-slate-400" : ""}`}>
+              <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] ${match.status === "finished" ? "text-muted-foreground" : ""}`}>
                 {match.status === "finished" ? (
                   <>
                     <Trophy className="w-3 h-3 shrink-0" />
                     <span className="truncate">Match Concluded</span>
                   </>
                 ) : (
-                  <div className="flex items-center gap-1.5 bg-red-500/10 text-red-500 dark:text-red-400 px-2 py-0.5 rounded border border-red-500/20">
+                  <div className="flex items-center gap-1.5 bg-live/10 text-live px-2 py-0.5 rounded border border-live/20">
                     <span className="relative flex h-1.5 w-1.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-danger"></span>
                     </span>
                     <span className="truncate tracking-widest leading-none pt-0.5">LIVE</span>
                   </div>
                 )}
-                <span className="text-slate-600 dark:text-slate-400 shrink-0">•</span>
-                <span className="text-[var(--winner)] truncate">{match.isFriendly ? "Friendly" : match.matchNumber}</span>
+                <span className="text-muted-foreground shrink-0">•</span>
+                <span className="text-winner truncate">{match.isFriendly ? "Friendly" : match.matchNumber}</span>
               </div>
-              <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold mt-0.5 truncate">
-                {match.inferredCategory || match.category} • Umpire: <span className="text-indigo-400">{match.umpireName}</span>
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold mt-0.5 truncate">
+                {match.inferredCategory || match.category} • Umpire: <span className="text-info">{match.umpireName}</span>
               </div>
             </div>
             
             <div className="flex flex-row items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-1 min-w-0 font-bold">
-              <div className={`text-xs sm:text-sm text-right w-full flex justify-end ${match.winner === 1 ? 'text-[var(--winner)]' : 'text-slate-200'}`}>
+              <div className={`text-xs sm:text-sm text-right w-full flex justify-end ${match.winner === 1 ? 'text-winner' : 'text-soft'}`}>
                 {renderTeamPlayers(1, "right")}
               </div>
               
               <div className="flex flex-col items-center shrink-0">
                 {match.status === "finished" ? (
-                  <div className="text-sm sm:text-base font-black tracking-widest text-[var(--winner)] bg-[var(--winner)]/10 px-3 py-1 rounded-lg border border-[var(--winner)]/20 shadow-inner">
+                  <div className="text-sm sm:text-base font-black tracking-widest text-winner bg-winner/10 px-3 py-1 rounded-lg border border-winner/20 shadow-inner">
                     {match.setsHistory.join(", ") || "Concluded"}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 shadow-inner">
-                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 1 ? 'text-[var(--winner)]' : 'text-slate-100'}`}>{match.t1.score}</span>
-                    <span className="text-slate-600 dark:text-slate-400 text-[10px]">-</span>
-                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 2 ? 'text-[var(--winner)]' : 'text-slate-100'}`}>{match.t2.score}</span>
+                  <div className="flex items-center gap-2 bg-background px-3 py-1 rounded-lg border border-border shadow-inner">
+                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 1 ? 'text-winner' : 'text-foreground'}`}>{match.t1.score}</span>
+                    <span className="text-muted-foreground text-[10px]">-</span>
+                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 2 ? 'text-winner' : 'text-foreground'}`}>{match.t2.score}</span>
                   </div>
                 )}
                 {match.status !== "finished" && match.setsHistory.length > 0 && (
-                  <div className="text-[9px] text-slate-500 mt-1 font-semibold tracking-wider text-center absolute -bottom-3 sm:relative sm:bottom-0 sm:mt-0.5">
+                  <div className="text-[9px] text-muted-foreground mt-1 font-semibold tracking-wider text-center absolute -bottom-3 sm:relative sm:bottom-0 sm:mt-0.5">
                     {match.setsHistory.join(", ")}
                   </div>
                 )}
               </div>
 
-              <div className={`text-xs sm:text-sm text-left w-full flex justify-start ${match.winner === 2 ? 'text-[var(--winner)]' : 'text-slate-200'}`}>
+              <div className={`text-xs sm:text-sm text-left w-full flex justify-start ${match.winner === 2 ? 'text-winner' : 'text-soft'}`}>
                 {renderTeamPlayers(2, "left")}
               </div>
             </div>
             
           </div>
           
-          <div className="flex items-center justify-center shrink-0 pl-1 sm:border-l border-slate-800/50">
-            <button aria-label="Open match" className="p-1.5 sm:p-2 bg-slate-800/50 text-slate-400 rounded-full group-hover:bg-slate-700 group-hover:text-white transition-colors">
+          <div className="flex items-center justify-center shrink-0 pl-1 sm:border-l border-border/50">
+            <button aria-label="Open match" className="p-1.5 sm:p-2 bg-muted/50 text-muted-foreground rounded-full group-hover:bg-muted-strong group-hover:text-foreground transition-colors">
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
@@ -335,13 +335,13 @@ function MatchBroadcastCard({
     <div 
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="bg-slate-900 border border-slate-800 rounded-3xl p-3 sm:p-4 text-on-accent max-w-4xl mx-auto shadow-2xl relative overflow-hidden select-none"
+      className="bg-card border border-border rounded-3xl p-3 sm:p-4 text-on-accent max-w-4xl mx-auto shadow-2xl relative overflow-hidden select-none"
     >
-      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-sky-500" />
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-info" />
       
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-1 mb-3">
         <div className="flex-1 min-w-0">
-          <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-xs mb-0.5 ${match.status === "finished" ? "text-slate-400" : "text-primary"}`}>
+          <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-xs mb-0.5 ${match.status === "finished" ? "text-muted-foreground" : "text-primary"}`}>
             {match.status === "finished" ? (
               <Trophy className="w-4 h-4" />
             ) : (
@@ -357,7 +357,7 @@ function MatchBroadcastCard({
           {match.status !== "finished" && (
             <button
               onClick={() => { setLocation(`/tv/${match.id}`); }}
-              className="shrink-0 px-2.5 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white border border-red-500 transition shadow-lg animate-pulse"
+              className="shrink-0 px-2.5 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 bg-live hover:bg-live/90 text-live-foreground border border-live transition shadow-lg animate-pulse"
               title="Watch Live TV Scoreboard"
             >
               <Tv2 className="w-4 h-4" />
@@ -368,8 +368,8 @@ function MatchBroadcastCard({
           {Capacitor.isNativePlatform() && (
             <button 
                onClick={() => togglePinScore(match.id)} 
-               className={`shrink-0 px-3 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-               <Pin className={`w-3.5 h-3.5 ${isScorePinned ? "fill-white" : ""}`} /> <span>{isScorePinned ? "Unpin Scores" : "Pin Scores"}</span>
+               className={`shrink-0 px-3 py-1.5 font-bold text-[10px] sm:text-xs rounded-lg flex items-center gap-1.5 border transition ${isScorePinned ? "bg-individual border-individual text-individual-foreground" : "bg-muted hover:bg-muted-strong text-soft border-border-strong"}`}>
+               <Pin className={`w-3.5 h-3.5 ${isScorePinned ? "fill-foreground" : ""}`} /> <span>{isScorePinned ? "Unpin Scores" : "Pin Scores"}</span>
             </button>
           )}
         </div>
@@ -377,9 +377,9 @@ function MatchBroadcastCard({
 
       {match.status === "finished" ? (
         <div className="text-center py-4">
-          <Trophy className="w-12 h-12 mx-auto text-[var(--winner)] mb-3 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+          <Trophy className="w-12 h-12 mx-auto text-winner mb-3 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
           <h2 className="text-2xl font-black mb-1">Match Finished!</h2>
-          <p className="text-lg text-slate-300">
+          <p className="text-lg text-soft">
             {match.winner === 1 ? match.t1.p1Name : match.t2.p1Name} Won {match.setsHistory.join(", ")}
           </p>
         </div>
@@ -387,18 +387,18 @@ function MatchBroadcastCard({
         <div className="flex flex-col items-center gap-2 sm:gap-3">
           <div className="flex flex-row items-stretch justify-center w-full gap-2 sm:gap-4">
             {/* Team 1 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-muted/50 border-border-strong/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   <span className="text-[11px] sm:text-sm font-bold truncate">{match.t1.p1Name}</span>
                   {match.serverTeam === 1 && match.serverPlayerIndex === 0 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
-                  {match.serverTeam === 2 && match.receiverPlayerIndex === 0 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded shrink-0">R</span>}
+                  {match.serverTeam === 2 && match.receiverPlayerIndex === 0 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-warning bg-warning/10 px-1 py-0.5 rounded shrink-0">R</span>}
                 </div>
                 {match.t1.p2Name && (
                   <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%] mt-0.5">
                     <span className="text-[11px] sm:text-sm font-bold truncate">{match.t1.p2Name}</span>
                     {match.serverTeam === 1 && match.serverPlayerIndex === 1 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
-                    {match.serverTeam === 2 && match.receiverPlayerIndex === 1 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded shrink-0">R</span>}
+                    {match.serverTeam === 2 && match.receiverPlayerIndex === 1 && <span className="absolute left-full ml-1.5 text-[9px] font-black text-warning bg-warning/10 px-1 py-0.5 rounded shrink-0">R</span>}
                   </div>
                 )}
               </div>
@@ -412,21 +412,21 @@ function MatchBroadcastCard({
 
             {/* VS */}
             <div className="flex flex-col items-center justify-center px-1">
-               <div className="text-lg sm:text-xl font-black italic text-slate-600 dark:text-slate-400">VS</div>
+               <div className="text-lg sm:text-xl font-black italic text-muted-foreground">VS</div>
             </div>
 
             {/* Team 2 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-muted/50 border-border-strong/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
-                  {match.serverTeam === 1 && match.receiverPlayerIndex === 0 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded shrink-0">R</span>}
+                  {match.serverTeam === 1 && match.receiverPlayerIndex === 0 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-warning bg-warning/10 px-1 py-0.5 rounded shrink-0">R</span>}
                   <span className="text-[11px] sm:text-sm font-bold truncate">{match.t2.p1Name}</span>
                 </div>
                 {match.t2.p2Name && (
                   <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%] mt-0.5">
                     {match.serverTeam === 2 && match.serverPlayerIndex === 1 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
-                    {match.serverTeam === 1 && match.receiverPlayerIndex === 1 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded shrink-0">R</span>}
+                    {match.serverTeam === 1 && match.receiverPlayerIndex === 1 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-warning bg-warning/10 px-1 py-0.5 rounded shrink-0">R</span>}
                     <span className="text-[11px] sm:text-sm font-bold truncate">{match.t2.p2Name}</span>
                   </div>
                 )}
@@ -441,20 +441,20 @@ function MatchBroadcastCard({
           </div>
           
           {/* Sets Score Below */}
-          <div className="bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700 text-xs sm:text-sm font-bold text-slate-300 flex items-center gap-3">
-            <span className="text-white text-base">{match.t1.games}</span>
-            <span className="text-slate-500 uppercase tracking-widest text-[10px]">Sets Won</span>
-            <span className="text-white text-base">{match.t2.games}</span>
+          <div className="bg-muted/80 px-4 py-1.5 rounded-full border border-border-strong text-xs sm:text-sm font-bold text-soft flex items-center gap-3">
+            <span className="text-foreground text-base">{match.t1.games}</span>
+            <span className="text-muted-foreground uppercase tracking-widest text-[10px]">Sets Won</span>
+            <span className="text-foreground text-base">{match.t2.games}</span>
           </div>
         </div>
       )}
 
       {/* ── Admin/Umpire controls ── */}
       {(isAdmin || isUmpire) && (
-        <div className="mt-3 pt-2 border-t border-slate-800">
+        <div className="mt-3 pt-2 border-t border-border">
           <button 
             onClick={(e) => { e.stopPropagation(); setShowAdminControls(!showAdminControls); }}
-            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--winner)] mb-2 hover:opacity-80 transition"
+            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-winner mb-2 hover:opacity-80 transition"
           >
             <ShieldCheck className="w-3.5 h-3.5" /> {isAdmin ? "Admin" : "Umpire"} Controls {showAdminControls ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
@@ -466,7 +466,7 @@ function MatchBroadcastCard({
               {/* Umpire/Admin Takeover Button */}
               <button
                 onClick={() => onTakeoverRequest(match)}
-                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 font-bold text-[11px] sm:text-xs rounded-lg transition"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-info/15 hover:bg-info/25 border border-info/40 text-info font-bold text-[11px] sm:text-xs rounded-lg transition"
               >
                 <MonitorPlay className="w-4 h-4" /> Open in Umpire
               </button>
@@ -497,26 +497,26 @@ function MatchBroadcastCard({
                     });
                   }
                 }}
-                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/25 border border-[var(--danger)]/40 text-[var(--danger)] font-bold text-[11px] sm:text-xs rounded-lg transition"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-danger/15 hover:bg-danger/25 border border-danger/40 text-danger font-bold text-[11px] sm:text-xs rounded-lg transition"
               >
                 <Trash2 className="w-4 h-4 shrink-0" /> <span className="truncate">Kill Broadcast</span>
               </button>
               <button
                 onClick={sendScorePush}
                 disabled={sendingPush}
-                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-[var(--winner)]/15 hover:bg-[var(--winner)]/25 border border-[var(--winner)]/40 text-[var(--winner)] font-bold text-[11px] sm:text-xs rounded-lg transition disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2 py-2.5 bg-winner/15 hover:bg-winner/25 border border-winner/40 text-winner font-bold text-[11px] sm:text-xs rounded-lg transition disabled:opacity-50"
               >
                 {sendingPush ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Bell className="w-4 h-4 shrink-0" />}
                 <span className="truncate">Push Score</span>
               </button>
             </div>
           ) : (
-            <div className="space-y-3 bg-slate-800/50 rounded-2xl p-4">
+            <div className="space-y-3 bg-muted/50 rounded-2xl p-4">
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Winner</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => setAdminWinner(1)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 1 ? "bg-primary/20 border-primary text-primary/70" : "bg-slate-900 border-slate-700 text-muted-foreground"}`}>{t1Label}</button>
-                  <button onClick={() => setAdminWinner(2)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 2 ? "bg-sky-500/20 border-sky-500 text-sky-300" : "bg-slate-900 border-slate-700 text-muted-foreground"}`}>{t2Label}</button>
+                  <button onClick={() => setAdminWinner(1)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 1 ? "bg-primary/20 border-primary text-primary/70" : "bg-card border-border-strong text-muted-foreground"}`}>{t1Label}</button>
+                  <button onClick={() => setAdminWinner(2)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 2 ? "bg-info/20 border-info text-info" : "bg-card border-border-strong text-muted-foreground"}`}>{t2Label}</button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -529,15 +529,15 @@ function MatchBroadcastCard({
                 
                 <div className="flex items-center gap-2 px-1 mb-1">
                    <div className="w-10"></div>
-                   <div className="flex-1 text-center text-[10px] font-bold text-slate-400 truncate px-1">{t1Label}</div>
+                   <div className="flex-1 text-center text-[10px] font-bold text-muted-foreground truncate px-1">{t1Label}</div>
                    <div className="w-4"></div>
-                   <div className="flex-1 text-center text-[10px] font-bold text-slate-400 truncate px-1">{t2Label}</div>
+                   <div className="flex-1 text-center text-[10px] font-bold text-muted-foreground truncate px-1">{t2Label}</div>
                    {adminSets.length > 1 && <div className="w-8 shrink-0"></div>}
                 </div>
 
                 {adminSets.map((set, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-500 w-10 text-center bg-slate-800/50 py-2 rounded-lg border border-slate-700/30">S{i+1}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground w-10 text-center bg-muted/50 py-2 rounded-lg border border-border-strong/30">S{i+1}</span>
                     <input 
                       type="number" 
                       value={set.t1} 
@@ -546,9 +546,9 @@ function MatchBroadcastCard({
                         newSets[i].t1 = e.target.value;
                         setAdminSets(newSets);
                       }} 
-                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                      className="flex-1 w-full min-w-0 bg-card border border-border-strong rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
                     />
-                    <span className="text-slate-500 font-bold">-</span>
+                    <span className="text-muted-foreground font-bold">-</span>
                     <input 
                       type="number" 
                       value={set.t2} 
@@ -557,10 +557,10 @@ function MatchBroadcastCard({
                         newSets[i].t2 = e.target.value;
                         setAdminSets(newSets);
                       }} 
-                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                      className="flex-1 w-full min-w-0 bg-card border border-border-strong rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
                     />
                     {adminSets.length > 1 ? (
-                      <button onClick={() => setAdminSets(adminSets.filter((_, idx) => idx !== i))} className="p-2 text-slate-500 hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition shrink-0">
+                      <button onClick={() => setAdminSets(adminSets.filter((_, idx) => idx !== i))} className="p-2 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-lg transition shrink-0">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     ) : (
@@ -570,7 +570,7 @@ function MatchBroadcastCard({
                 ))}
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-on-accent rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
+                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-muted-strong hover:bg-faint text-on-accent rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
                   <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
@@ -600,10 +600,10 @@ function MatchBroadcastCard({
         </div>
       )}
       
-      <div className="mt-4 flex justify-center border-t border-slate-800/50 pt-2">
+      <div className="mt-4 flex justify-center border-t border-border/50 pt-2">
         <button
           onClick={() => setIsExpanded(false)}
-          className="p-1 sm:p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition shadow-md"
+          className="p-1 sm:p-2 text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-full transition shadow-md"
           title="Collapse"
         >
           <ChevronDown className="w-5 h-5 rotate-180" />
@@ -627,20 +627,20 @@ function MiniMatchCard({
   showDate = false
 }: any) {
   return (
-    <div className="h-full bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-slate-500">
+    <div className="h-full bg-muted/80 border border-border-strong rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-border-strong/90">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full shrink-0">{m.category}</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-card px-2 py-0.5 rounded-full shrink-0">{m.category}</span>
           {(m.match_code || m.match_number) && (
-            <span className="text-[10px] font-black text-[var(--winner)] bg-[var(--winner)]/10 px-2 py-0.5 rounded-full border border-[var(--winner)]/20 shrink-0">
+            <span className="text-[10px] font-black text-winner bg-winner/10 px-2 py-0.5 rounded-full border border-winner/20 shrink-0">
               {m.match_code || `Match #${m.match_number}`}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          {m.status === "in_progress" && <span className="text-[10px] font-black text-[var(--winner)] animate-pulse shrink-0">● LIVE</span>}
+          {m.status === "in_progress" && <span className="text-[10px] font-black text-winner animate-pulse shrink-0">● LIVE</span>}
           {m.court_number && (
-            <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest shrink-0", getCourtColor(m.court_number))}>
+            <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border-strong/50 shadow-inner font-black tracking-widest shrink-0", getCourtColor(m.court_number))}>
               <MapPin className="w-3.5 h-3.5 opacity-70 shrink-0" /> 
               <span className="text-xs uppercase whitespace-nowrap">Court {m.court_number}</span>
             </div>
@@ -654,9 +654,9 @@ function MiniMatchCard({
           </p>
         </div>
         <div className="flex items-center justify-center gap-3">
-          <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
-          <span className="text-[10px] font-black text-[var(--danger)] shrink-0">VS</span>
-          <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
+          <div className="h-[1px] bg-muted-strong/50 flex-1 sm:hidden"></div>
+          <span className="text-[10px] font-black text-danger shrink-0">VS</span>
+          <div className="h-[1px] bg-muted-strong/50 flex-1 sm:hidden"></div>
         </div>
         <div className="flex-1 text-center sm:text-right">
           <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
@@ -665,7 +665,7 @@ function MiniMatchCard({
         </div>
       </div>
       <div className="flex items-center justify-between gap-2 mt-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
+        <div className="flex items-center gap-1.5 text-[11px] text-soft font-bold bg-card/50 self-start px-2.5 py-1.5 rounded-lg border border-border">
           <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
           {m.scheduled_at 
             ? (showDate ? new Date(m.scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) 
@@ -698,7 +698,7 @@ function MiniMatchCard({
             return (
               <button 
                 onClick={() => setNotifMatchTarget(m.id)}
-                className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300"
+                className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors border-border-strong bg-muted/50 hover:bg-muted-strong text-soft"
               >
                 <Bell className="w-3.5 h-3.5" />
                 Notify me
@@ -1166,7 +1166,7 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
               setVoiceEnabled(!voiceEnabled);
             }}
             className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
-              voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
+              voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-muted text-muted-foreground border-border-strong hover:bg-muted-strong'
             }`}
           >
             {voiceEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
@@ -1175,7 +1175,7 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
           <button
             onClick={() => setFlashEnabled(!flashEnabled)}
             className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
-              flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
+              flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-muted text-muted-foreground border-border-strong hover:bg-muted-strong'
             }`}
           >
             <Zap className="w-3 h-3" />
@@ -1184,7 +1184,7 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
           <button
             onClick={() => setVibrateEnabled(!vibrateEnabled)}
             className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
-              vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
+              vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-muted text-muted-foreground border-border-strong hover:bg-muted-strong'
             }`}
           >
             <Smartphone className="w-3 h-3" />
@@ -1195,7 +1195,7 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
 
       {!(tournamentId && visibleLiveCount === 0) && <MatchSection 
         title="Live Matches" 
-        icon={<Activity className="w-5 h-5 text-red-500 animate-pulse" />} 
+        icon={<Activity className="w-5 h-5 text-danger animate-pulse" />} 
         matches={activeMatchList.filter(m => m.status !== "setup")} 
         defaultExpanded={true} 
         renderMatchCard={(m) => (
@@ -1219,28 +1219,28 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
       />}
 
       {takeoverTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
             <ShieldCheck className="w-12 h-12 text-primary mx-auto opacity-50 mb-2" />
             <h3 className="text-xl font-black text-foreground">Match Handover</h3>
             
             {takeoverTarget.takeoverRequest?.requesterId === session?.user?.id && takeoverTarget.takeoverRequest?.status === "pending" ? (
               <div className="space-y-4 pt-2">
                 <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-                <p className="text-sm text-slate-300">
-                  Waiting for <span className="font-bold text-[var(--winner)]">{takeoverTarget.umpireName}</span> to approve your request...
+                <p className="text-sm text-soft">
+                  Waiting for <span className="font-bold text-winner">{takeoverTarget.umpireName}</span> to approve your request...
                 </p>
                 <div className="flex flex-col gap-2 pt-2">
                   <button
                     onClick={() => setTakeoverTarget(null)}
-                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-on-accent font-bold text-sm rounded-xl transition"
+                    className="w-full py-2.5 bg-muted hover:bg-muted-strong text-on-accent font-bold text-sm rounded-xl transition"
                   >
                     Cancel Request
                   </button>
                   {isAdmin && (
                     <button
                       onClick={() => handleForceTakeover(takeoverTarget.id)}
-                      className="w-full py-2.5 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/25 border border-[var(--danger)]/40 text-[var(--danger)] font-bold text-sm rounded-xl transition mt-2"
+                      className="w-full py-2.5 bg-danger/15 hover:bg-danger/25 border border-danger/40 text-danger font-bold text-sm rounded-xl transition mt-2"
                     >
                       Force Takeover (Admin)
                     </button>
@@ -1249,8 +1249,8 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-slate-300">
-                  You are about to take over umpiring from <span className="font-bold text-[var(--winner)]">{takeoverTarget.umpireName}</span>.
+                <p className="text-sm text-soft">
+                  You are about to take over umpiring from <span className="font-bold text-winner">{takeoverTarget.umpireName}</span>.
                 </p>
                 <div className="flex flex-col gap-2 pt-2">
                   <button
@@ -1262,14 +1262,14 @@ export function LiveScoreSection({ tournamentId, onLiveCount }: { tournamentId?:
                   {isAdmin && (
                     <button
                       onClick={() => handleForceTakeover(takeoverTarget.id)}
-                      className="w-full py-2.5 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/25 border border-[var(--danger)]/40 text-[var(--danger)] font-bold text-sm rounded-xl transition mt-2"
+                      className="w-full py-2.5 bg-danger/15 hover:bg-danger/25 border border-danger/40 text-danger font-bold text-sm rounded-xl transition mt-2"
                     >
                       Force Takeover (Admin)
                     </button>
                   )}
                   <button
                     onClick={() => setTakeoverTarget(null)}
-                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-on-accent font-bold text-sm rounded-xl transition mt-1"
+                    className="w-full py-2.5 bg-muted hover:bg-muted-strong text-on-accent font-bold text-sm rounded-xl transition mt-1"
                   >
                     Cancel
                   </button>

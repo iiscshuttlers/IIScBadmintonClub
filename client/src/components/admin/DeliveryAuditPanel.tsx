@@ -40,9 +40,9 @@ const RANGES = [
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  sent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  pending: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  failed: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+  sent: "bg-success/15 text-success",
+  pending: "bg-warning/15 text-warning",
+  failed: "bg-danger/15 text-danger",
   cancelled: "bg-muted text-muted-foreground",
 };
 
@@ -170,9 +170,9 @@ export function DeliveryAuditPanel() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             {ok ? (
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
                             ) : (
-                              <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+                              <AlertTriangle className="h-4 w-4 shrink-0 text-danger" />
                             )}
                             <span className="truncate text-sm font-black text-foreground">{job.jobname}</span>
                             {!job.active && (
@@ -187,15 +187,15 @@ export function DeliveryAuditPanel() {
                             {job.last_duration_sec != null && ` · ${job.last_duration_sec}s`}
                           </p>
                           {job.last_message && !ok && (
-                            <p className="mt-1 max-w-lg truncate text-[11px] text-rose-500">{job.last_message}</p>
+                            <p className="mt-1 max-w-lg truncate text-[11px] text-danger">{job.last_message}</p>
                           )}
                         </div>
                         <div className="text-right">
                           <div
                             className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
                               hasFailures
-                                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
-                                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                ? "bg-danger/15 text-danger"
+                                : "bg-success/15 text-success"
                             }`}
                           >
                             {job.failures_24h}/{job.runs_24h} failed · 24h
@@ -243,16 +243,16 @@ export function DeliveryAuditPanel() {
             {/* Recent failures */}
             {(failures.data || []).length > 0 && (
               <div className="space-y-2 pt-1">
-                <p className="text-xs font-bold text-rose-500">Recent failures</p>
+                <p className="text-xs font-bold text-danger">Recent failures</p>
                 {(failures.data || []).map((f) => (
-                  <div key={f.id} className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-3">
+                  <div key={f.id} className="rounded-2xl border border-danger/30 bg-danger/5 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-sm font-bold text-foreground">{f.title}</span>
                       <span className="shrink-0 text-[11px] text-muted-foreground">{relative(f.created_at)}</span>
                     </div>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {(f.channels || []).join(", ")}
-                      {f.error && <span className="text-rose-500"> · {f.error}</span>}
+                      {f.error && <span className="text-danger"> · {f.error}</span>}
                     </p>
                   </div>
                 ))}

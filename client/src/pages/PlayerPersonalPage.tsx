@@ -102,7 +102,7 @@ export default function PlayerPersonalPage() {
   if (isLoading || !player) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] pb-32 lg:pb-0 lg:flex">
+    <div className="min-h-screen bg-[#050505] pb-32 lg:pb-0 lg:flex">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-border bg-card z-50 py-6 px-4">
         <div className="flex flex-col gap-5 px-2 mb-8">
@@ -113,7 +113,7 @@ export default function PlayerPersonalPage() {
                 alt="IISc Logo"
                 className="h-9 w-auto object-contain flex-shrink-0 group-hover:scale-105 transition-transform"
               />
-              <span className="font-bold text-[14px] tracking-tight text-foreground dark:text-foreground hidden xl:block whitespace-nowrap text-left">
+              <span className="font-bold text-[14px] tracking-tight text-foreground hidden xl:block whitespace-nowrap text-left">
                 IISc Badminton Club
               </span>
             </div>
@@ -122,7 +122,7 @@ export default function PlayerPersonalPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("open-global-search"))}
-              className="flex-1 flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-muted-foreground dark:text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors border border-transparent dark:border-slate-800"
+              className="flex-1 flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-muted-foreground bg-muted/50 hover:bg-muted-strong/50 transition-colors border border-border"
               aria-label="Search"
             >
               <Search className="w-4 h-4" />
@@ -141,18 +141,18 @@ export default function PlayerPersonalPage() {
                 className={cn(
                   "relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold tracking-tight transition-all duration-200 w-full text-left",
                   active
-                    ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/30"
-                    : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                    ? "text-primary bg-primary/30"
+                    : "text-muted-foreground hover:text-soft hover:bg-muted/60"
                 )}
               >
                 {active && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute inset-0 bg-primary/15 dark:bg-primary/40 rounded-xl"
+                    className="absolute inset-0 bg-primary/40 rounded-xl"
                     transition={{ type: "spring", bounce: 0.18, duration: 0.5 }}
                   />
                 )}
-                <span className={cn("relative z-10 flex items-center gap-3", active && "text-primary dark:text-primary")}>
+                <span className={cn("relative z-10 flex items-center gap-3", active && "text-primary")}>
                   {getTabIcon(tab)}
                   <span>{tab}</span>
                 </span>
@@ -164,10 +164,10 @@ export default function PlayerPersonalPage() {
         <div className="flex flex-col gap-2 border-t border-border pt-4 mt-4">
           {profile?.id && (
             <Link href={`/player/${profile.id}/personal`}>
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all w-full hover:bg-slate-100 dark:hover:bg-slate-800/60 group mt-1 cursor-pointer">
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all w-full hover:bg-muted/60 group mt-1 cursor-pointer">
                 <Avatar src={profile.avatar_url} name={profile.full_name} size="sm" />
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-primary transition-colors text-left">
+                  <span className="text-sm font-bold text-soft truncate group-hover:text-primary transition-colors text-left">
                     {profile.full_name?.split(" ")[0]}
                   </span>
                   <span className="text-[10px] text-muted-foreground truncate text-left">{profile.email}</span>
@@ -178,7 +178,7 @@ export default function PlayerPersonalPage() {
 
           <button
             onClick={() => signOut()}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[var(--series-b)]/80 hover:text-[var(--series-b)] hover:bg-rose-50 dark:hover:bg-[var(--series-b)]/10 transition-all w-full mt-1"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-series-b/80 hover:text-series-b hover:bg-series-b/10 transition-all w-full mt-1"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
@@ -221,7 +221,7 @@ export default function PlayerPersonalPage() {
                     <motion.h1
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-0.5 truncate text-3xl font-extrabold leading-none tracking-tight lg:text-4xl text-slate-800 dark:text-slate-100"
+                      className="mt-0.5 truncate text-3xl font-extrabold leading-none tracking-tight lg:text-4xl text-foreground"
                     >
                       {player?.full_name?.split(" ")[0]}
                     </motion.h1>
@@ -236,7 +236,7 @@ export default function PlayerPersonalPage() {
                         </span>
                       )}
                       <Link href={`/player/${id}`}>
-                        <button className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700">
+                        <button className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-muted hover:bg-muted-strong text-soft transition-colors border border-border-strong">
                           <User className="w-3.5 h-3.5 shrink-0" /> Public Profile →
                         </button>
                       </Link>
@@ -245,7 +245,7 @@ export default function PlayerPersonalPage() {
                       {player?.email && player?.is_guest === false && (
                         <div className="flex items-center gap-1.5">
                           <span className="truncate max-w-[200px] sm:max-w-xs">{player.email}</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--series-a)] text-[var(--series-a)] dark:bg-[var(--series-a)]/40 dark:text-[var(--series-a)] px-1.5 py-0.5 rounded-md border border-[var(--series-a)] dark:border-[var(--series-a)]/50">
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-series-a/40 text-series-a px-1.5 py-0.5 rounded-md border border-series-a/50">
                             BRAINMINTON Linked
                           </span>
                         </div>
@@ -302,7 +302,7 @@ export default function PlayerPersonalPage() {
       {/* Bottom Navigation - Mobile Only */}
       <div
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
       >
         {MAIN_TABS.map((tab) => (
           <button
@@ -311,7 +311,7 @@ export default function PlayerPersonalPage() {
             className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${
               activeTab === tab
                 ? "text-[#ccff00]"
-                : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <div className="mb-0.5 transform scale-90 opacity-90">

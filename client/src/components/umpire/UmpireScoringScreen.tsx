@@ -165,7 +165,7 @@ export function UmpireScoringScreen({
     return (
       <span
         className={`inline-block w-2.5 h-2.5 rounded-sm ml-1 ${
-          last === "yellow" ? "bg-yellow-400" : last === "red" ? "bg-red-500" : "bg-slate-900 border border-white"
+          last === "yellow" ? "bg-warning" : last === "red" ? "bg-danger" : "bg-card border border-foreground"
         }`}
         title={`${c.length} card(s)`}
       />
@@ -177,8 +177,8 @@ export function UmpireScoringScreen({
   const receivingTeamIsDoubles = sideIsDoubles(match?.serverTeam === 1 ? match?.t2 : match?.t1);
 
   return (
-    <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800/50 rounded-[2rem] p-3 sm:p-6 text-on-accent max-w-4xl lg:max-w-5xl mx-auto shadow-2xl shadow-black/40 relative overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-[var(--info)] to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]" />
+    <div className="bg-gradient-to-b from-background via-card to-background border border-border/50 rounded-[2rem] p-3 sm:p-6 text-on-accent max-w-4xl lg:max-w-5xl mx-auto shadow-2xl shadow-media/40 relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-info to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]" />
 
       {/* ── Change Ends Overlay ── */}
       {showChangeEnds && (
@@ -248,20 +248,20 @@ export function UmpireScoringScreen({
           {match.status !== "finished" ? (
             <>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/15 border border-red-500/30 backdrop-blur-sm shadow-[0_0_8px_rgba(239,68,68,0.1)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                  <span className="text-[10px] sm:text-xs font-black text-red-400 uppercase tracking-[0.15em]">Live</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger/15 border border-danger/30 backdrop-blur-sm shadow-[0_0_8px_rgba(239,68,68,0.1)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  <span className="text-[10px] sm:text-xs font-black text-live uppercase tracking-[0.15em]">Live</span>
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Game {currentGameNum}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Game {currentGameNum}</span>
               </div>
-              <div className="text-slate-500 text-[10px] sm:text-[11px] font-bold truncate">
+              <div className="text-muted-foreground text-[10px] sm:text-[11px] font-bold truncate">
                 {match.isFriendly ? "Friendly" : `Tournament · ${match.matchNumber || "—"}`} · {match.inferredCategory || match.category} · BO{match.bestOfSets || 1} ({match.pointsToWin || 30}pts)
               </div>
             </>
           ) : (
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-black text-[var(--success)] uppercase tracking-widest">Match Finished</span>
-              <div className="text-slate-500 text-[10px] sm:text-[11px] font-bold truncate">
+              <span className="text-[11px] font-black text-success uppercase tracking-widest">Match Finished</span>
+              <div className="text-muted-foreground text-[10px] sm:text-[11px] font-bold truncate">
                 {match.isFriendly ? "Friendly" : `Tournament · ${match.matchNumber || "—"}`} · {match.inferredCategory || match.category}
               </div>
             </div>
@@ -271,22 +271,22 @@ export function UmpireScoringScreen({
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <button
             onClick={() => handleClose()}
-            className="px-3 py-1.5 bg-slate-800/40 hover:bg-slate-700/60 text-slate-400 hover:text-white font-bold text-[10px] sm:text-xs rounded-full flex justify-center items-center gap-1.5 border border-slate-700/50 hover:border-slate-600 backdrop-blur-sm transition cursor-pointer shadow-sm"
+            className="px-3 py-1.5 bg-muted/40 hover:bg-muted-strong/60 text-muted-foreground hover:text-foreground font-bold text-[10px] sm:text-xs rounded-full flex justify-center items-center gap-1.5 border border-border-strong/50 hover:border-border-strong backdrop-blur-sm transition cursor-pointer shadow-sm"
           >
             <X className="w-3.5 h-3.5" /> Exit
           </button>
           {offlineSync.isOffline && (
-            <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[9px] sm:text-[10px] rounded-full flex justify-center items-center gap-1.5 animate-pulse backdrop-blur-sm">
+            <span className="px-2.5 py-1 bg-warning/10 border border-warning/30 text-warning font-bold text-[9px] sm:text-[10px] rounded-full flex justify-center items-center gap-1.5 animate-pulse backdrop-blur-sm">
               ⚡ Saved on device ({offlineSync.queuedCount})
             </span>
           )}
           {!offlineSync.isOffline && offlineSync.syncStatus === "syncing" && (
-            <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold text-[9px] sm:text-[10px] rounded-full">
+            <span className="px-2.5 py-1 bg-info/10 border border-info/30 text-info font-bold text-[9px] sm:text-[10px] rounded-full">
               Syncing saved score…
             </span>
           )}
           {!offlineSync.isOffline && offlineSync.syncStatus === "error" && (
-            <span role="alert" className="px-2.5 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold text-[9px] sm:text-[10px] rounded-full">
+            <span role="alert" className="px-2.5 py-1 bg-danger/10 border border-danger/30 text-danger font-bold text-[9px] sm:text-[10px] rounded-full">
               Score sync needs retry ({offlineSync.queuedCount})
             </span>
           )}
@@ -297,20 +297,20 @@ export function UmpireScoringScreen({
       {match.status === "finished" ? (
         <div className="text-center py-2">
           <div className="flex flex-col items-center gap-1 mb-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-1 shadow-[0_0_24px_rgba(251,191,36,0.12)]">
-              <Trophy className="w-6 h-6 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
+            <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-1 shadow-[0_0_24px_rgba(251,191,36,0.12)]">
+              <Trophy className="w-6 h-6 text-gold drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
             </div>
-            <h2 className="text-xl font-black tracking-tight text-white">{match.retiredTeam ? "Match Retired" : "Match Finished!"}</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground">{match.retiredTeam ? "Match Retired" : "Match Finished!"}</h2>
           </div>
 
-          <div className="mx-auto max-w-xs mb-4 px-4 py-3 rounded-2xl bg-amber-500/[0.07] border border-amber-500/20 backdrop-blur-sm">
-            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Winner</div>
-            <p className="text-base font-black text-amber-300 leading-tight">
+          <div className="mx-auto max-w-xs mb-4 px-4 py-3 rounded-2xl bg-gold/[0.07] border border-gold/20 backdrop-blur-sm">
+            <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Winner</div>
+            <p className="text-base font-black text-gold leading-tight">
               {match.winner === 1
                 ? (match.t1.p1Name + (match.t1.p2Name ? ` / ${match.t1.p2Name}` : ""))
                 : (match.t2.p1Name + (match.t2.p2Name ? ` / ${match.t2.p2Name}` : ""))}
             </p>
-            <p className="text-[var(--success)] font-black text-sm mt-1 tabular-nums">
+            <p className="text-success font-black text-sm mt-1 tabular-nums">
               {match.setsHistory.join("  ·  ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}
             </p>
           </div>
@@ -323,7 +323,7 @@ export function UmpireScoringScreen({
                 setDirectWinner(match.winner || null);
                 setIsDirectScoreOpen(true);
               }}
-              className="flex-1 px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-wider border border-slate-700/80 flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
+              className="flex-1 px-3 py-2.5 bg-muted hover:bg-muted-strong text-soft hover:text-foreground rounded-xl font-bold text-[10px] uppercase tracking-wider border border-border-strong/80 flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
             >
               <Edit2 className="w-3.5 h-3.5 text-primary" /> Edit Score
             </button>
@@ -332,8 +332,8 @@ export function UmpireScoringScreen({
               onClick={saveMatchToProfile}
               className={`flex-1 px-3 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${
                 hasSaved
-                  ? "bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-[var(--success)] border border-[color-mix(in_srgb,var(--success)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_25%,transparent)]"
-                  : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                  ? "bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-success border border-[color-mix(in_srgb,var(--success)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_25%,transparent)]"
+                  : "bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 text-foreground shadow-[0_0_20px_rgba(245,158,11,0.25)]"
               }`}
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? "Saving..." : hasSaved ? "Save Again" : "Save Result"}
@@ -345,16 +345,16 @@ export function UmpireScoringScreen({
                   .then(() => toast.success("Score pushed to Live Feed"))
                   .catch(() => toast.error("Failed to push score"));
               }}
-              className="flex-1 px-3 py-2.5 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] rounded-xl font-bold text-[10px] uppercase tracking-wider border border-[color-mix(in_srgb,var(--info)_20%,transparent)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+              className="flex-1 px-3 py-2.5 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-info rounded-xl font-bold text-[10px] uppercase tracking-wider border border-[color-mix(in_srgb,var(--info)_20%,transparent)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Push Score
             </button>
             <button
               disabled={isSaving}
               onClick={() => handleClose()}
-              className="px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+              className="px-3 py-2.5 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft rounded-xl font-bold text-[10px] uppercase tracking-wider border border-foreground/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
             >
-              <X className="w-3.5 h-3.5 text-rose-400" /> Close
+              <X className="w-3.5 h-3.5 text-danger" /> Close
             </button>
           </div>
           <button
@@ -365,14 +365,14 @@ export function UmpireScoringScreen({
                   title: "Resume Match?",
                   message: `This is a Best-of-${maxSets} match and ${match.setsHistory.length} set${match.setsHistory.length > 1 ? "s have" : " has"} been played. Are you sure you want to add another set?`,
                   confirmLabel: "Resume Anyway",
-                  confirmColor: "bg-amber-600 hover:bg-amber-500",
+                  confirmColor: "bg-warning hover:bg-warning/90",
                   onConfirm: () => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined }),
                 });
               } else {
                 updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined });
               }
             }}
-            className="mt-3 text-[9px] font-bold text-slate-600 dark:text-slate-400 hover:text-slate-400 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition"
+            className="mt-3 text-[9px] font-bold text-muted-foreground hover:text-muted-foreground/80 uppercase tracking-widest underline underline-offset-2 block mx-auto cursor-pointer transition"
           >
             Wait, add a set / resume match
           </button>
@@ -381,21 +381,21 @@ export function UmpireScoringScreen({
         <>
           {/* ── Break Timer Banner ── */}
           {breakSecondsLeft !== null && (
-            <div className="w-full bg-amber-500/[0.07] border border-amber-500/20 rounded-2xl mb-3 overflow-hidden backdrop-blur-sm">
-              <div className="h-0.5 bg-slate-800">
+            <div className="w-full bg-warning/[0.07] border border-warning/20 rounded-2xl mb-3 overflow-hidden backdrop-blur-sm">
+              <div className="h-0.5 bg-muted">
                 <div
-                  className={`h-full transition-all duration-1000 ${breakSecondsLeft < 0 ? 'bg-rose-500' : 'bg-amber-400'}`}
+                  className={`h-full transition-all duration-1000 ${breakSecondsLeft < 0 ? 'bg-danger' : 'bg-warning'}`}
                   style={{ width: breakTotalSeconds ? `${Math.min(100, ((breakTotalSeconds - breakSecondsLeft) / breakTotalSeconds) * 100)}%` : '0%' }}
                 />
               </div>
               <div className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                    <Timer className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <div className="w-8 h-8 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+                    <Timer className="w-4 h-4 text-warning animate-pulse" />
                   </div>
                   <div>
-                    <div className="text-amber-300 font-black text-[10px] sm:text-xs uppercase tracking-widest">{breakLabel || "Break"}</div>
-                    <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="text-warning font-black text-[10px] sm:text-xs uppercase tracking-widest">{breakLabel || "Break"}</div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
                       Elapsed: {(() => {
                         const elapsed = (breakTotalSeconds ?? breakSecondsLeft) - breakSecondsLeft;
                         return `${Math.floor(Math.abs(elapsed) / 60).toString().padStart(2, "0")}:${(Math.abs(elapsed) % 60).toString().padStart(2, "0")}`;
@@ -404,10 +404,10 @@ export function UmpireScoringScreen({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`font-black text-xl sm:text-2xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : 'text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]'}`}>
+                  <span className={`font-black text-xl sm:text-2xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-danger drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : 'text-warning drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]'}`}>
                     {breakSecondsLeft < 0 ? "-" : ""}{Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")}
                   </span>
-                  <button onClick={endBreak} className="px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-bold text-[10px] rounded-xl border border-white/[0.08] transition backdrop-blur-sm shrink-0">
+                  <button onClick={endBreak} className="px-3 py-1.5 bg-foreground/[0.06] hover:bg-foreground/[0.1] text-soft font-bold text-[10px] rounded-xl border border-foreground/[0.08] transition backdrop-blur-sm shrink-0">
                     End
                   </button>
                 </div>
@@ -427,12 +427,12 @@ export function UmpireScoringScreen({
               const teamVar = team === 1 ? "var(--team-1)" : "var(--team-2)";
               const teamGradient = isServing
                 ? "bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--team)_22%,transparent),color-mix(in_srgb,var(--team)_6%,transparent))] border-[color-mix(in_srgb,var(--team)_60%,transparent)] shadow-[0_0_40px_color-mix(in_srgb,var(--team)_15%,transparent)]"
-                : "bg-gradient-to-b from-slate-800/60 to-slate-900/40 border-slate-700/40";
+                : "bg-gradient-to-b from-muted/60 to-card/40 border-border-strong/40";
               const scoreGlow = isServing
-                ? "text-[var(--team)] drop-shadow-[0_0_20px_color-mix(in_srgb,var(--team)_40%,transparent)]"
-                : "text-[var(--team)]";
-              const servingColor = "text-[var(--team)]";
-              const servingDotColor = "bg-[var(--team)] shadow-[0_0_8px_color-mix(in_srgb,var(--team)_60%,transparent)]";
+                ? "text-team drop-shadow-[0_0_20px_color-mix(in_srgb,var(--team)_40%,transparent)]"
+                : "text-team";
+              const servingColor = "text-team";
+              const servingDotColor = "bg-team shadow-[0_0_8px_color-mix(in_srgb,var(--team)_60%,transparent)]";
 
               return (
                 <div
@@ -451,22 +451,22 @@ export function UmpireScoringScreen({
                     }
                   }}
                   style={{ transform: match.endsSwapped ? swapOffset : "translateX(0)", ["--team" as any]: teamVar }}
-                  className={`relative cursor-pointer select-none rounded-[1.25rem] sm:rounded-3xl border-2 p-2 sm:p-4 md:p-6 flex flex-col items-center backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-500 ease-in-out active:duration-75 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/70 ${teamGradient}`}
+                  className={`relative cursor-pointer select-none rounded-[1.25rem] sm:rounded-3xl border-2 p-2 sm:p-4 md:p-6 flex flex-col items-center backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-500 ease-in-out active:duration-75 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/70 ${teamGradient}`}
                 >
                   <button
                     onClick={(e) => { e.stopPropagation(); deductPoint(team); }}
-                    className="absolute top-2 left-2 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-black/30 hover:bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10 z-10 transition"
+                    className="absolute top-2 left-2 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-media/30 hover:bg-foreground/10 backdrop-blur-sm flex items-center justify-center border border-foreground/10 z-10 transition"
                     aria-label="Deduct point"
                   >
-                    <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
+                    <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
                   </button>
 
                   <div className="text-center px-5 w-full min-w-0">
-                    <h3 className="text-[10px] sm:text-sm md:text-lg font-black truncate leading-tight w-full text-white/90">
+                    <h3 className="text-[10px] sm:text-sm md:text-lg font-black truncate leading-tight w-full text-foreground/90">
                       {t.p1Name}{cardBadge(team === 1 ? "t1p1" : "t2p1")}
                     </h3>
                     {t.p2Name && (
-                      <h3 className="text-[10px] sm:text-sm md:text-lg font-black truncate leading-tight w-full text-white/70">
+                      <h3 className="text-[10px] sm:text-sm md:text-lg font-black truncate leading-tight w-full text-foreground/70">
                         {t.p2Name}{cardBadge(team === 1 ? "t1p2" : "t2p2")}
                       </h3>
                     )}
@@ -478,8 +478,8 @@ export function UmpireScoringScreen({
                         <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${servingDotColor} animate-pulse`} /> Serving
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-slate-500 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-600" /> Receiving
+                      <span className="inline-flex items-center gap-1 text-muted-foreground text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-faint" /> Receiving
                       </span>
                     )}
                   </div>
@@ -490,7 +490,7 @@ export function UmpireScoringScreen({
 
                   <div className="mt-1.5 sm:mt-2 flex justify-center gap-1.5">
                     {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                      <div key={i} className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${i < t.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)] scale-110" : "bg-slate-700/60 border border-slate-600/50"}`} />
+                      <div key={i} className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${i < t.games ? "bg-warning shadow-[0_0_10px_rgba(251,191,36,0.5)] scale-110" : "bg-muted-strong/60 border border-border-strong/50"}`} />
                     ))}
                   </div>
                 </div>
@@ -499,26 +499,26 @@ export function UmpireScoringScreen({
           </div>
 
           {/* ── Score Announcement ── */}
-          <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4 px-4 py-2 sm:py-2.5 mx-auto w-fit rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 1 ? "bg-[var(--team-1)] animate-pulse" : "bg-transparent"}`} />
-            <span className="text-[var(--team-1)] text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
+          <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4 px-4 py-2 sm:py-2.5 mx-auto w-fit rounded-2xl bg-foreground/[0.04] border border-foreground/[0.06] backdrop-blur-sm">
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 1 ? "bg-team-1 animate-pulse" : "bg-transparent"}`} />
+            <span className="text-team-1 text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {match.t1.p2Name ? `${match.t1.p1Name} / ${match.t1.p2Name}` : match.t1.p1Name}
             </span>
-            <span className="text-[var(--team-1)] text-base sm:text-lg font-black tabular-nums">{match.t1.score}</span>
-            <span className="text-slate-600 dark:text-slate-400 text-xs font-black">—</span>
-            <span className="text-[var(--team-2)] text-base sm:text-lg font-black tabular-nums">{match.t2.score}</span>
-            <span className="text-[var(--team-2)] text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
+            <span className="text-team-1 text-base sm:text-lg font-black tabular-nums">{match.t1.score}</span>
+            <span className="text-muted-foreground text-xs font-black">—</span>
+            <span className="text-team-2 text-base sm:text-lg font-black tabular-nums">{match.t2.score}</span>
+            <span className="text-team-2 text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {match.t2.p2Name ? `${match.t2.p1Name} / ${match.t2.p2Name}` : match.t2.p1Name}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 2 ? "bg-[var(--team-2)] animate-pulse" : "bg-transparent"}`} />
-            {match.setsHistory.length > 0 && <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 ml-1">({match.setsHistory.join(", ")})</span>}
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 2 ? "bg-team-2 animate-pulse" : "bg-transparent"}`} />
+            {match.setsHistory.length > 0 && <span className="text-[8px] sm:text-[10px] font-bold text-muted-foreground ml-1">({match.setsHistory.join(", ")})</span>}
           </div>
 
           {/* ── BWF 25s Rally Timer ── */}
           {rallyTimer !== null && (
             <div className="flex justify-center mt-1.5">
               <span className={`text-xs font-mono font-black tabular-nums ${
-                rallyTimer > 5 ? "text-slate-500" : rallyTimer > 0 ? "text-amber-400" : "text-rose-400 animate-pulse"
+                rallyTimer > 5 ? "text-muted-foreground" : rallyTimer > 0 ? "text-warning" : "text-danger animate-pulse"
               }`}>
                 {rallyTimer}s
               </span>
@@ -550,12 +550,12 @@ export function UmpireScoringScreen({
               <button
                 onClick={() => { setShowSettings(!showSettings); setShowBreak(false); setShowMore(false); }}
                 className={`flex-1 flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl border backdrop-blur-sm transition-all overflow-hidden ${
-                  showSettings ? "bg-white/[0.08] border-white/[0.15] shadow-inner" : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05]"
+                  showSettings ? "bg-foreground/[0.08] border-foreground/[0.15] shadow-inner" : "bg-foreground/[0.02] border-foreground/[0.05] hover:bg-foreground/[0.05]"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 w-full">
-                  <Settings className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${showSettings ? "text-slate-300" : "text-slate-400"}`} />
-                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${showSettings ? "text-white" : "text-slate-400"}`}>Settings</span>
+                  <Settings className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${showSettings ? "text-soft" : "text-muted-foreground"}`} />
+                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${showSettings ? "text-foreground" : "text-muted-foreground"}`}>Settings</span>
                 </div>
               </button>
 
@@ -563,14 +563,14 @@ export function UmpireScoringScreen({
                 onClick={() => { setShowBreak(!showBreak); setShowSettings(false); setShowMore(false); }}
                 className={`flex-1 flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl border backdrop-blur-sm transition-all overflow-hidden ${
                   breakSecondsLeft !== null
-                    ? showBreak ? "bg-amber-500/20 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "bg-amber-500/[0.08] border-amber-500/30 hover:bg-amber-500/15"
-                    : showBreak ? "bg-white/[0.08] border-white/[0.15] shadow-inner" : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05]"
+                    ? showBreak ? "bg-warning/20 border-warning/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "bg-warning/[0.08] border-warning/30 hover:bg-warning/15"
+                    : showBreak ? "bg-foreground/[0.08] border-foreground/[0.15] shadow-inner" : "bg-foreground/[0.02] border-foreground/[0.05] hover:bg-foreground/[0.05]"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 w-full">
-                  <Timer className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${breakSecondsLeft !== null ? "text-amber-400 animate-pulse" : showBreak ? "text-slate-300" : "text-slate-400"}`} />
-                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${breakSecondsLeft !== null ? "text-amber-300" : showBreak ? "text-white" : "text-slate-400"}`}>
-                    Break {breakSecondsLeft !== null && <span className="text-[8px] sm:text-[9px] text-amber-400/80 tracking-normal normal-case ml-0.5">({breakSecondsLeft < 0 ? "-" : ""}{Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")})</span>}
+                  <Timer className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${breakSecondsLeft !== null ? "text-warning animate-pulse" : showBreak ? "text-soft" : "text-muted-foreground"}`} />
+                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${breakSecondsLeft !== null ? "text-warning" : showBreak ? "text-foreground" : "text-muted-foreground"}`}>
+                    Break {breakSecondsLeft !== null && <span className="text-[8px] sm:text-[9px] text-warning/80 tracking-normal normal-case ml-0.5">({breakSecondsLeft < 0 ? "-" : ""}{Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")})</span>}
                   </span>
                 </div>
               </button>
@@ -578,25 +578,25 @@ export function UmpireScoringScreen({
               <button
                 onClick={() => { setShowMore(!showMore); setShowSettings(false); setShowBreak(false); }}
                 className={`flex-1 flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl border backdrop-blur-sm transition-all overflow-hidden ${
-                  showMore ? "bg-white/[0.08] border-white/[0.15] shadow-inner" : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05]"
+                  showMore ? "bg-foreground/[0.08] border-foreground/[0.15] shadow-inner" : "bg-foreground/[0.02] border-foreground/[0.05] hover:bg-foreground/[0.05]"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 w-full">
-                  <MoreHorizontal className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${showMore ? "text-slate-300" : "text-slate-400"}`} />
-                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${showMore ? "text-white" : "text-slate-400"}`}>More</span>
+                  <MoreHorizontal className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${showMore ? "text-soft" : "text-muted-foreground"}`} />
+                  <span className={`text-[8.5px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-widest truncate ${showMore ? "text-foreground" : "text-muted-foreground"}`}>More</span>
                 </div>
               </button>
             </div>
 
             <div className={`transition-all duration-300 overflow-hidden ${showSettings || showBreak || showMore ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"}`}>
-              <div className={`rounded-2xl border bg-white/[0.02] backdrop-blur-sm p-2 pt-2.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 ${showBreak && breakSecondsLeft !== null ? "border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]" : "border-white/[0.06]"}`}>
+              <div className={`rounded-2xl border bg-foreground/[0.02] backdrop-blur-sm p-2 pt-2.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 ${showBreak && breakSecondsLeft !== null ? "border-warning/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]" : "border-foreground/[0.06]"}`}>
                 {showSettings && (
                   <>
-                    <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
-                      <ArrowLeftRight className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Swap Ends
+                    <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition">
+                      <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Swap Ends
                     </button>
-                    <button onClick={() => updateMatch({ serverTeam: match.serverTeam === 1 ? 2 : 1, serverPlayerIndex: 0, receiverPlayerIndex: 0 })} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
-                      <Shuffle className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Switch Server
+                    <button onClick={() => updateMatch({ serverTeam: match.serverTeam === 1 ? 2 : 1, serverPlayerIndex: 0, receiverPlayerIndex: 0 })} className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition">
+                      <Shuffle className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Switch Server
                     </button>
                     {servingTeamIsDoubles && (
                       <button
@@ -609,9 +609,9 @@ export function UmpireScoringScreen({
                               : { t2RightCourt: flip(match.t2RightCourt) }),
                           });
                         }}
-                        className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition"
+                        className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition"
                       >
-                        <Repeat className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Swap Server Player
+                        <Repeat className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Swap Server Player
                       </button>
                     )}
                     {receivingTeamIsDoubles && (
@@ -626,18 +626,18 @@ export function UmpireScoringScreen({
                               : { t1RightCourt: flip(match.t1RightCourt) }),
                           });
                         }}
-                        className="py-2.5 px-2 bg-white/[0.04] hover:bg-amber-500/10 text-slate-300 hover:text-amber-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-amber-500/30 transition"
+                        className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-warning/10 text-soft hover:text-warning font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-warning/30 transition"
                       >
-                        <Repeat className="w-3.5 h-3.5 text-amber-400 shrink-0" /> Swap Receiver
+                        <Repeat className="w-3.5 h-3.5 text-warning shrink-0" /> Swap Receiver
                       </button>
                     )}
-                    <button onClick={() => setIsDirectScoreOpen(true)} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
-                      <Flag className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Direct Score
+                    <button onClick={() => setIsDirectScoreOpen(true)} className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition">
+                      <Flag className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Direct Score
                     </button>
-                    <button onClick={() => setIsEditSetupOpen(true)} className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.06] hover:border-white/[0.12] transition">
-                      <Settings className="w-3.5 h-3.5 text-slate-400 shrink-0" /> Edit Setup
+                    <button onClick={() => setIsEditSetupOpen(true)} className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition">
+                      <Settings className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> Edit Setup
                     </button>
-                    <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="py-2.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-red-500/20 hover:border-red-500/40 transition cursor-pointer">
+                    <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="py-2.5 px-2 bg-danger/10 hover:bg-danger/20 text-danger font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-danger/20 hover:border-danger/40 transition cursor-pointer">
                       <Camera className="w-3.5 h-3.5 shrink-0" /> Broadcast
                     </button>
                   </>
@@ -651,8 +651,8 @@ export function UmpireScoringScreen({
                         onClick={() => startBreak(secs as number, lbl as string)}
                         className={`py-2.5 font-bold text-[10px] sm:text-xs rounded-xl transition-all flex justify-center items-center gap-1.5 ${
                           breakTotalSeconds === secs
-                            ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
-                            : "bg-white/[0.03] hover:bg-amber-500/10 border border-white/[0.06] hover:border-amber-500/30 text-slate-400 hover:text-amber-300"
+                            ? "bg-warning/15 border border-warning/30 text-warning shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+                            : "bg-foreground/[0.03] hover:bg-warning/10 border border-foreground/[0.06] hover:border-warning/30 text-muted-foreground hover:text-warning"
                         }`}
                       >
                         <Timer className="w-3.5 h-3.5 shrink-0" />{label as string}
@@ -665,50 +665,50 @@ export function UmpireScoringScreen({
                   <>
                     <button
                       onClick={forceEndSet}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-[color-mix(in_srgb,var(--success)_10%,transparent)] border border-white/[0.06] hover:border-[color-mix(in_srgb,var(--success)_30%,transparent)] text-slate-300 hover:text-[var(--success)] font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-[color-mix(in_srgb,var(--success)_10%,transparent)] border border-foreground/[0.06] hover:border-[color-mix(in_srgb,var(--success)_30%,transparent)] text-soft hover:text-success font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       <Plus className="w-3.5 h-3.5 shrink-0" /> Add Set
                     </button>
                     <button
                       onClick={callLet}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-blue-500/10 border border-white/[0.06] hover:border-blue-500/30 text-slate-300 hover:text-blue-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-info/10 border border-foreground/[0.06] hover:border-info/30 text-soft hover:text-info font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       ↩ Let
                     </button>
                     <button
                       onClick={() => callServiceFault(match.serverTeam)}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-orange-500/10 border border-white/[0.06] hover:border-orange-500/30 text-slate-300 hover:text-orange-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-secondary/10 border border-foreground/[0.06] hover:border-secondary/30 text-soft hover:text-secondary font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       ✗ Fault
                     </button>
                     <button
                       onClick={() => { setShowCardPanel(true); setCardTarget(null); }}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-yellow-500/10 border border-white/[0.06] hover:border-yellow-500/30 text-slate-300 hover:text-yellow-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-warning/10 border border-foreground/[0.06] hover:border-warning/30 text-soft hover:text-warning font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       <Flag className="w-3.5 h-3.5 shrink-0" /> Cards
                     </button>
                     <button
                       onClick={() => setShowRetireModal(true)}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-rose-500/10 border border-white/[0.06] hover:border-rose-500/30 text-slate-300 hover:text-rose-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-danger/10 border border-foreground/[0.06] hover:border-danger/30 text-soft hover:text-danger font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Retire
                     </button>
                     <button
                       onClick={() => setShowLog(!showLog)}
-                      className="py-2.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] border border-foreground/[0.06] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition"
                     >
                       <BookOpen className="w-3.5 h-3.5 shrink-0" /> Log ({match.pointLog.length})
                     </button>
-                    <div className="col-span-2 sm:col-span-3 md:col-span-4 border-t border-white/[0.06] my-1" />
+                    <div className="col-span-2 sm:col-span-3 md:col-span-4 border-t border-foreground/[0.06] my-1" />
                     <button
                       onClick={() => setConfirmAction({
                         title: "Cancel Match",
                         message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
                         confirmLabel: "Cancel Match",
-                        confirmColor: "bg-rose-600 hover:bg-rose-500",
+                        confirmColor: "bg-danger hover:bg-danger/90",
                         onConfirm: () => handleClose({ endBroadcast: true }),
                       })}
-                      className="py-2.5 px-2 bg-white/[0.03] hover:bg-rose-500/10 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.03] hover:bg-danger/10 text-danger font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.05] hover:border-danger/20 transition"
                     >
                       <X className="w-3.5 h-3.5 shrink-0" /> Cancel
                     </button>
@@ -717,7 +717,7 @@ export function UmpireScoringScreen({
                         title: "Abort Match",
                         message: "Are you sure you want to permanently abort this match and delete its records?",
                         confirmLabel: "Abort Match",
-                        confirmColor: "bg-rose-600 hover:bg-rose-500",
+                        confirmColor: "bg-danger hover:bg-danger/90",
                         onConfirm: async () => {
                           try {
                             const lm = await umpireService.fetchLiveMatchesRegistry();
@@ -737,7 +737,7 @@ export function UmpireScoringScreen({
                           handleClose({ endBroadcast: true });
                         },
                       })}
-                      className="py-2.5 px-2 bg-white/[0.03] hover:bg-rose-500/10 text-rose-500 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition"
+                      className="py-2.5 px-2 bg-foreground/[0.03] hover:bg-danger/10 text-danger font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.05] hover:border-danger/20 transition"
                     >
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Abort
                     </button>
@@ -751,28 +751,28 @@ export function UmpireScoringScreen({
 
       {/* ── Sets History & Editing ── */}
       {match.setsHistory.length > 0 && (
-        <div className={`${match.status === "finished" ? "mt-4" : "mt-8"} bg-slate-800/40 border border-slate-700 rounded-2xl overflow-hidden overflow-x-auto`}>
+        <div className={`${match.status === "finished" ? "mt-4" : "mt-8"} bg-muted/40 border border-border-strong rounded-2xl overflow-hidden overflow-x-auto`}>
           <table className="w-full text-sm text-left table-fixed">
-            <thead className="bg-slate-800/80 text-[10px] sm:text-xs uppercase text-muted-foreground">
+            <thead className="bg-muted/80 text-[10px] sm:text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-2 sm:px-4 py-3 border-b border-slate-700 font-black w-[40px] sm:w-[60px]"></th>
-                <th className="px-2 sm:px-4 py-3 border-b border-slate-700 text-center font-black text-primary w-[30%]">
+                <th className="px-2 sm:px-4 py-3 border-b border-border-strong font-black w-[40px] sm:w-[60px]"></th>
+                <th className="px-2 sm:px-4 py-3 border-b border-border-strong text-center font-black text-primary w-[30%]">
                   <div className="flex flex-col items-center justify-center gap-0.5 break-words">
                     <span className="line-clamp-2 leading-tight">{match.t1.p1Name}</span>
                     {match.t1.p2Name && <span className="line-clamp-2 leading-tight">& {match.t1.p2Name}</span>}
                   </div>
                 </th>
-                <th className="px-2 sm:px-4 py-3 border-b border-slate-700 text-center font-black text-[var(--info)] w-[30%]">
+                <th className="px-2 sm:px-4 py-3 border-b border-border-strong text-center font-black text-info w-[30%]">
                   <div className="flex flex-col items-center justify-center gap-0.5 break-words">
                     <span className="line-clamp-2 leading-tight">{match.t2.p1Name}</span>
                     {match.t2.p2Name && <span className="line-clamp-2 leading-tight">& {match.t2.p2Name}</span>}
                   </div>
                 </th>
-                <th className="px-2 sm:px-4 py-3 border-b border-slate-700 font-black text-center text-amber-400 w-[20%]">Winner</th>
-                <th className="px-2 sm:px-4 py-3 border-b border-slate-700 font-black text-center w-[40px] sm:w-[60px]"></th>
+                <th className="px-2 sm:px-4 py-3 border-b border-border-strong font-black text-center text-gold w-[20%]">Winner</th>
+                <th className="px-2 sm:px-4 py-3 border-b border-border-strong font-black text-center w-[40px] sm:w-[60px]"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50 text-slate-300">
+            <tbody className="divide-y divide-border-strong/50 text-soft">
               {match.setsHistory.map((setStr, i) => {
                 const [s1, s2] = setStr.split("-");
                 const n1 = parseInt(s1);
@@ -786,7 +786,7 @@ export function UmpireScoringScreen({
                     : "-";
 
                 return (
-                  <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                  <tr key={i} className="hover:bg-muted/30 transition-colors">
                     <td className="px-2 sm:px-4 py-3 font-bold text-muted-foreground whitespace-nowrap text-xs sm:text-sm">Set {i + 1}</td>
                     <td className="px-2 sm:px-4 py-3 text-center">
                       <input
@@ -798,7 +798,7 @@ export function UmpireScoringScreen({
                           const capped = raw && parseInt(raw) > match.goldenPoint ? match.goldenPoint.toString() : raw;
                           handleEditSet(i, capped, s2);
                         }}
-                        className="w-10 sm:w-16 bg-slate-900 border border-slate-600 rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-primary outline-none focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-10 sm:w-16 bg-card border border-border-strong rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-primary outline-none focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </td>
                     <td className="px-2 sm:px-4 py-3 text-center">
@@ -811,7 +811,7 @@ export function UmpireScoringScreen({
                           const capped = raw && parseInt(raw) > match.goldenPoint ? match.goldenPoint.toString() : raw;
                           handleEditSet(i, s1, capped);
                         }}
-                        className="w-10 sm:w-16 bg-slate-900 border border-slate-600 rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-[var(--info)] outline-none focus:border-[var(--info)] transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-10 sm:w-16 bg-card border border-border-strong rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-info outline-none focus:border-info transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </td>
                     <td className="px-2 sm:px-4 py-3 font-semibold text-[10px] sm:text-xs text-muted-foreground text-center">
@@ -819,11 +819,11 @@ export function UmpireScoringScreen({
                     </td>
                     <td className="px-2 sm:px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => reopenSet(i)} className="p-1.5 sm:p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 shadow-xs" title="Reopen Set in Score Panel">
+                        <button onClick={() => reopenSet(i)} className="p-1.5 sm:p-2 bg-muted hover:bg-muted-strong text-soft hover:text-foreground rounded-lg transition-colors border border-border-strong shadow-xs" title="Reopen Set in Score Panel">
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         {match.setsHistory.length > 1 && (
-                          <button onClick={() => deleteSet(i)} className="p-1.5 sm:p-2 bg-slate-800 hover:bg-rose-900/50 text-slate-500 hover:text-rose-400 rounded-lg transition-colors border border-slate-700 hover:border-rose-700 shadow-xs" title="Delete Set">
+                          <button onClick={() => deleteSet(i)} className="p-1.5 sm:p-2 bg-muted hover:bg-danger/20 text-muted-foreground hover:text-danger rounded-lg transition-colors border border-border-strong hover:border-danger shadow-xs" title="Delete Set">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -834,10 +834,10 @@ export function UmpireScoringScreen({
               })}
               {!!match.winner && (
                 <tr className="bg-primary/20">
-                  <td colSpan={3} className="px-2 sm:px-4 py-4 font-black text-amber-500 text-right sm:pr-6 uppercase tracking-widest text-[10px] sm:text-xs">
+                  <td colSpan={3} className="px-2 sm:px-4 py-4 font-black text-gold text-right sm:pr-6 uppercase tracking-widest text-[10px] sm:text-xs">
                     Match Winner
                   </td>
-                  <td colSpan={2} className="px-2 sm:px-4 py-4 font-black text-amber-400 text-center">
+                  <td colSpan={2} className="px-2 sm:px-4 py-4 font-black text-gold text-center">
                     <div className="line-clamp-2 break-words leading-tight text-[11px] sm:text-sm">
                       {match.winner === 1
                         ? match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "")
@@ -855,13 +855,13 @@ export function UmpireScoringScreen({
 
       {/* ── Point-by-Point Log ── */}
       {match.status === "playing" && showLog && (
-        <div className="mt-4 bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
-          <div className="px-4 py-2.5 border-b border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="mt-4 bg-muted/60 border border-border-strong rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
+          <div className="px-4 py-2.5 border-b border-border-strong flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex flex-col">
               <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Match Log</span>
               <div className="flex items-center gap-3 mt-1 text-[10px]">
                 <span className="text-primary font-bold">T1: {match.t1.p1Name}{match.t1.p2Name && ` / ${match.t1.p2Name}`}</span>
-                <span className="text-[var(--info)] font-bold">T2: {match.t2.p1Name}{match.t2.p2Name && ` / ${match.t2.p2Name}`}</span>
+                <span className="text-info font-bold">T2: {match.t2.p1Name}{match.t2.p2Name && ` / ${match.t2.p2Name}`}</span>
               </div>
             </div>
             <span className="text-xs text-muted-foreground">{match.pointLog.length} events</span>
@@ -869,24 +869,24 @@ export function UmpireScoringScreen({
           {match.pointLog.length === 0 ? (
             <div className="px-4 py-6 text-center text-muted-foreground text-sm">No points logged yet</div>
           ) : (
-            <div className="divide-y divide-slate-700/50">
+            <div className="divide-y divide-border-strong/50">
               {[...match.pointLog].reverse().map((entry, i) => (
                 <div key={i} className="px-4 py-2 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2">
                     <span className={`font-black ${
                       entry.team === 1 ? "text-primary"
-                      : entry.team === 2 ? "text-[var(--info)]"
-                      : entry.team === "let" ? "text-blue-400"
-                      : "text-orange-400"
+                      : entry.team === 2 ? "text-info"
+                      : entry.team === "let" ? "text-info"
+                      : "text-secondary"
                     }`}>
                       {entry.team === 1 ? "T1 +" : entry.team === 2 ? "T2 +" : entry.team === "let" ? "LET" : "FAULT"}
                     </span>
                     {entry.note && <span className="text-muted-foreground">{entry.note}</span>}
                     <span className="text-muted-foreground">G{entry.gameNum}</span>
                   </div>
-                  <div className="font-mono font-bold text-slate-300 shrink-0">
+                  <div className="font-mono font-bold text-soft shrink-0">
                     {entry.t1Score} — {entry.t2Score}
-                    <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-primary" : "text-[var(--info)]"}`}>
+                    <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-primary" : "text-info"}`}>
                       🏸T{entry.serverTeam}
                     </span>
                   </div>
@@ -899,7 +899,7 @@ export function UmpireScoringScreen({
 
       {/* ── Match Action Buttons (Bottom Dock) ── */}
       {match.status === "playing" && (
-        <div className="mt-5 mb-1 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+        <div className="mt-5 mb-1 p-1.5 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.06] backdrop-blur-sm">
           <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={async () => {
@@ -936,7 +936,7 @@ export function UmpireScoringScreen({
                   toast.success(`Score pushed to all users! (${pushResp?.sent ?? 0} devices notified)`);
                 }
               }}
-              className="px-2 py-3 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--info)_15%,transparent)] hover:border-[color-mix(in_srgb,var(--info)_30%,transparent)] transition active:scale-95"
+              className="px-2 py-3 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-info font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--info)_15%,transparent)] hover:border-[color-mix(in_srgb,var(--info)_30%,transparent)] transition active:scale-95"
             >
               <Tv2 className="w-3.5 h-3.5" /> Push Score
             </button>
@@ -948,7 +948,7 @@ export function UmpireScoringScreen({
                 confirmColor: "bg-primary hover:bg-primary",
                 onConfirm: () => updateMatch({ status: 'finished', winner: match.t1.games >= match.t2.games ? 1 : 2 }),
               })}
-              className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-[var(--success)] font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]"
+              className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-success font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]"
             >
               <Save className="w-3.5 h-3.5" /> Finish
             </button>
@@ -958,11 +958,11 @@ export function UmpireScoringScreen({
 
       {/* ── Takeover Request Modal ── */}
       {match.takeoverRequest?.status === "pending" && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto">
-          <div className="bg-slate-900 border border-primary/50 rounded-[2rem] p-6 shadow-2xl shadow-primary/20 space-y-6 w-full max-w-sm animate-in zoom-in-95 fade-in duration-200">
+        <div className="fixed inset-0 z-[100] bg-media/60 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto">
+          <div className="bg-card border border-primary/50 rounded-[2rem] p-6 shadow-2xl shadow-primary/20 space-y-6 w-full max-w-sm animate-in zoom-in-95 fade-in duration-200">
             <div className="text-center space-y-2">
               <h3 className="text-xl font-black text-foreground">Handover Request</h3>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-soft">
                 <span className="font-bold text-primary">{match.takeoverRequest.requesterName}</span> wants to take over umpiring this match.
               </p>
             </div>
@@ -971,7 +971,7 @@ export function UmpireScoringScreen({
                 onClick={() => {
                   updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "rejected" } });
                 }}
-                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-on-accent font-bold rounded-xl transition"
+                className="flex-1 py-3 bg-muted hover:bg-muted-strong text-on-accent font-bold rounded-xl transition"
               >
                 Reject
               </button>

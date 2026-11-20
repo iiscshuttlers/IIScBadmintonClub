@@ -27,11 +27,11 @@ const TYPES = [
 ] as const;
 
 const COLOR_PREVIEWS: Record<string, string> = {
-  blue: "bg-blue-500",
-  green: "bg-emerald-500",
-  amber: "bg-amber-500",
-  red: "bg-red-500",
-  purple: "bg-purple-500",
+  blue: "bg-info",
+  green: "bg-success",
+  amber: "bg-warning",
+  red: "bg-danger",
+  purple: "bg-individual",
 };
 
 function newBanner(): HomeBanner {
@@ -101,7 +101,7 @@ export function HomeBannerManager() {
         <div className="flex items-center gap-2">
           <button
             onClick={add}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold border border-slate-700 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted-strong text-foreground rounded-xl text-sm font-bold border border-border-strong transition"
           >
             <Plus className="w-4 h-4" /> Add Banner
           </button>
@@ -117,10 +117,10 @@ export function HomeBannerManager() {
       </div>
 
       {banners.length === 0 && (
-        <div className="text-center py-12 bg-slate-900 rounded-2xl border border-slate-800">
-          <Megaphone className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-400">No banners yet</p>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Click "Add Banner" to create your first home page notice</p>
+        <div className="text-center py-12 bg-card rounded-2xl border border-border">
+          <Megaphone className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="font-bold text-muted-foreground">No banners yet</p>
+          <p className="text-sm text-muted-foreground mt-1">Click "Add Banner" to create your first home page notice</p>
         </div>
       )}
 
@@ -131,7 +131,7 @@ export function HomeBannerManager() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, height: 0 }}
-            className={`bg-slate-900 rounded-xl border p-3 space-y-2.5 ${banner.active ? "border-slate-700" : "border-slate-800 opacity-60"}`}
+            className={`bg-card rounded-xl border p-3 space-y-2.5 ${banner.active ? "border-border-strong" : "border-border opacity-60"}`}
           >
             {/* Header row */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -139,7 +139,7 @@ export function HomeBannerManager() {
               <button
                 onClick={() => update(banner.id, "active", !banner.active)}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition ${
-                  banner.active ? "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30" : "bg-slate-800 text-slate-500 border border-slate-700"
+                  banner.active ? "bg-success/20 text-success border border-success/30" : "bg-muted text-muted-foreground border border-border-strong"
                 }`}
               >
                 {banner.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -151,7 +151,7 @@ export function HomeBannerManager() {
                 onClick={() => update(banner.id, "pinned", !banner.pinned)}
                 title="Pinned banners cannot be dismissed by users"
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition ${
-                  banner.pinned ? "bg-amber-600/20 text-amber-400 border border-amber-600/30" : "bg-slate-800 text-slate-500 border border-slate-700"
+                  banner.pinned ? "bg-warning/20 text-warning border border-warning/30" : "bg-muted text-muted-foreground border border-border-strong"
                 }`}
               >
                 {banner.pinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
@@ -161,7 +161,7 @@ export function HomeBannerManager() {
               <div className="ml-auto">
                 <button
                   onClick={() => remove(banner.id)}
-                  className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-950/30 transition"
+                  className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -171,7 +171,7 @@ export function HomeBannerManager() {
             {/* Type & Color */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Type</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Type</label>
                 <div className="flex flex-wrap gap-1.5">
                   {TYPES.map(({ id, label, icon: Icon }) => (
                     <button
@@ -180,7 +180,7 @@ export function HomeBannerManager() {
                       className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition ${
                         banner.type === id
                           ? "bg-primary text-primary-foreground"
-                          : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                          : "bg-muted text-muted-foreground hover:bg-muted-strong"
                       }`}
                     >
                       <Icon className="w-3 h-3" />
@@ -190,14 +190,14 @@ export function HomeBannerManager() {
                 </div>
               </div>
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Color</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Color</label>
                 <div className="flex gap-1.5">
                   {COLORS.map(c => (
                     <button
                       key={c}
                       onClick={() => update(banner.id, "color", c)}
                       className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full ${COLOR_PREVIEWS[c]} transition-all ${
-                        banner.color === c ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110" : "opacity-60 hover:opacity-100"
+                        banner.color === c ? "ring-2 ring-foreground ring-offset-2 ring-offset-card scale-110" : "opacity-60 hover:opacity-100"
                       }`}
                       title={c}
                     />
@@ -209,22 +209,22 @@ export function HomeBannerManager() {
             {/* Title & Message */}
             <div className="grid grid-cols-1 gap-2">
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Title *</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Title *</label>
                 <input
                   value={banner.title}
                   onChange={e => update(banner.id, "title", e.target.value)}
                   placeholder="Banner headline..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-bold outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-xs text-foreground font-bold outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Message</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Message</label>
                 <textarea
                   value={banner.message}
                   onChange={e => update(banner.id, "message", e.target.value)}
                   placeholder="Detailed message or description..."
                   rows={2}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-primary resize-none"
+                  className="w-full bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
             </div>
@@ -232,35 +232,35 @@ export function HomeBannerManager() {
             {/* CTA Link */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Button URL (optional)</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Button URL (optional)</label>
                 <input
                   value={banner.link_url || ""}
                   onChange={e => update(banner.id, "link_url", e.target.value)}
                   placeholder="https://... or /pulse"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] text-white font-mono outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-[11px] text-foreground font-mono outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Button Label</label>
+                <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Button Label</label>
                 <input
                   value={banner.link_label || ""}
                   onChange={e => update(banner.id, "link_label", e.target.value)}
                   placeholder="Register Now, Learn More..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
 
             {/* Dismiss key */}
             <div>
-              <label className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">
-                Dismiss Key <span className="text-slate-600 dark:text-slate-400 font-normal normal-case">(change this to "reset" dismissals for all users)</span>
+              <label className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">
+                Dismiss Key <span className="text-muted-foreground font-normal normal-case">(change this to "reset" dismissals for all users)</span>
               </label>
               <input
                 value={banner.dismiss_key || ""}
                 onChange={e => update(banner.id, "dismiss_key", e.target.value)}
                 placeholder="e.g. v2"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-muted border border-border-strong rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </motion.div>

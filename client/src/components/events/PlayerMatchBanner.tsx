@@ -36,17 +36,17 @@ export function PlayerMatchBanner({ tournamentId, onNavigateToTie }: PlayerMatch
   if (isLoading || myAssignedRubbers.length === 0) return null;
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-violet-600/10 via-indigo-600/5 to-transparent border-2 border-violet-500/30 shadow-sm space-y-3">
+    <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-individual/10 via-info/5 to-transparent border-2 border-individual/30 shadow-sm space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-600/20">
+          <div className="p-2 rounded-xl bg-individual text-individual-foreground shadow-sm shadow-individual/20">
             <Swords className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="font-black text-sm sm:text-base text-foreground flex items-center gap-2">
               Your Upcoming Rubber Assignments ({myAssignedRubbers.length})
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Matches where you are assigned to play in your team lineup
             </p>
           </div>
@@ -62,41 +62,41 @@ export function PlayerMatchBanner({ tournamentId, onNavigateToTie }: PlayerMatch
           return (
             <div 
               key={item.id}
-              className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-violet-200/60 dark:border-violet-900/40 shadow-xs flex flex-col justify-between gap-2"
+              className="p-3.5 rounded-2xl bg-card border border-individual/25 shadow-xs flex flex-col justify-between gap-2"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-individual/25 text-individual border border-individual/40">
                     {item.tie?.tie_code} · Rubber #{item.rubber_order}
                   </span>
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+                  <p className="text-xs font-bold text-soft mt-1">
                     {item.tie?.team_a?.short_name || 'Team A'} vs {item.tie?.team_b?.short_name || 'Team B'}
                   </p>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isRevealed 
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' 
-                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                    ? 'bg-success/15 text-success' 
+                    : 'bg-warning/15 text-warning'
                 }`}>
                   {isRevealed ? 'Revealed' : 'Private Lineup'}
                 </span>
               </div>
 
-              <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs text-muted-foreground space-y-1 pt-1 border-t border-border">
                 {isDoubles && (
                   <div className="flex items-center gap-1.5 font-medium">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
+                    <User className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Partner: <strong>{partner?.full_name || partner?.nickname || 'Assigned Teammate'}</strong></span>
                   </div>
                 )}
                 {item.tie?.court && (
                   <div className="flex items-center gap-1.5 font-medium">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Court: {item.tie.court}</span>
                   </div>
                 )}
                 {item.tie?.scheduled_at && (
-                  <div className="flex items-center gap-1.5 font-medium text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5 font-medium text-[11px] text-muted-foreground">
                     <Clock className="w-3.5 h-3.5" />
                     <span>{format(new Date(item.tie.scheduled_at), 'EEE, d MMM · h:mm a')}</span>
                   </div>
@@ -108,7 +108,7 @@ export function PlayerMatchBanner({ tournamentId, onNavigateToTie }: PlayerMatch
                   size="sm" 
                   variant="ghost" 
                   onClick={() => onNavigateToTie(item.tie?.id)}
-                  className="w-full text-xs h-7 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                  className="w-full text-xs h-7 text-individual hover:bg-individual/10"
                 >
                   View Tie Details
                   <ChevronRight className="w-3.5 h-3.5 ml-1" />

@@ -168,7 +168,7 @@ export function FeatureMapDashboard() {
             {UNAVAILABLE.map((un, idx) => (
               <div key={idx} className="bg-[#16221C] border border-[#2A3830] rounded-xl p-5 opacity-75 grayscale-[35%]">
                 <div className="font-bold text-sm text-[#A9B6AC] flex items-center gap-2">
-                  <span className="text-[0.58rem] font-extrabold tracking-wider bg-slate-800 text-[#8FA3BE] px-1.5 py-0.5 rounded whitespace-nowrap">NOT AVAILABLE</span>
+                  <span className="text-[0.58rem] font-extrabold tracking-wider bg-muted text-[#8FA3BE] px-1.5 py-0.5 rounded whitespace-nowrap">NOT AVAILABLE</span>
                   {un.n}
                 </div>
                 <div className="text-[#A9B6AC] text-xs mt-2 leading-relaxed">{un.d}</div>
