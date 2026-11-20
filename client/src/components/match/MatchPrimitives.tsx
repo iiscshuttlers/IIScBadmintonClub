@@ -85,7 +85,7 @@ export function MatchSideRow({
           <span className={`break-words ${nameClass}`}>{side.label}</span>
           <SeedMark seed={side.seed} />
           {serving && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider text-red-600 dark:text-red-400" title="Serving">
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider text-live" title="Serving">
               <ShuttleIcon className="w-3.5 h-3.5" />
               Serve
             </span>

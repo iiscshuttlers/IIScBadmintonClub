@@ -87,7 +87,7 @@ export function PointsHeadline({ stats, names }: { stats: RallyStats; names: [st
 export function Takeaways({ lines }: { lines: string[] }) {
   if (lines.length === 0) return null;
   return (
-    <section aria-labelledby="takeaways-heading" className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-4">
+    <section aria-labelledby="takeaways-heading" className="rounded-2xl border border-border bg-background/60 p-4">
       <h2 id="takeaways-heading" className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-muted-foreground mb-2">
         <Lightbulb className="w-3.5 h-3.5" aria-hidden /> Takeaways
       </h2>
@@ -158,7 +158,7 @@ export function CompareRows({ stats, names }: { stats: RallyStats; names: [strin
       <h2 id="h2h-num-heading" className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-1">
         Head to head
       </h2>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      <ul className="divide-y divide-border">
         {rows.map((r) => {
           const lead = r.a === r.b ? 0 : r.a > r.b ? 1 : 2;
           return (
@@ -171,12 +171,12 @@ export function CompareRows({ stats, names }: { stats: RallyStats; names: [strin
               <div aria-hidden>
                 <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
                   <p className="min-w-0">
-                    <span className={`text-lg tabular-nums leading-none ${lead === 1 ? "font-black" : "font-semibold text-slate-500 dark:text-slate-400"}`}>{r.left.main}</span>
+                    <span className={`text-lg tabular-nums leading-none ${lead === 1 ? "font-black" : "font-semibold text-muted-foreground"}`}>{r.left.main}</span>
                     {r.left.sub && <span className="block text-[11px] text-muted-foreground tabular-nums">{r.left.sub}</span>}
                   </p>
-                  <p className="text-center pt-0.5 text-[11px] font-black uppercase tracking-wide text-slate-700 dark:text-slate-200 max-w-[13rem]">{r.label}</p>
+                  <p className="text-center pt-0.5 text-[11px] font-black uppercase tracking-wide text-soft max-w-[13rem]">{r.label}</p>
                   <p className="min-w-0 text-right">
-                    <span className={`text-lg tabular-nums leading-none ${lead === 2 ? "font-black" : "font-semibold text-slate-500 dark:text-slate-400"}`}>{r.right.main}</span>
+                    <span className={`text-lg tabular-nums leading-none ${lead === 2 ? "font-black" : "font-semibold text-muted-foreground"}`}>{r.right.main}</span>
                     {r.right.sub && <span className="block text-[11px] text-muted-foreground tabular-nums">{r.right.sub}</span>}
                   </p>
                 </div>
@@ -330,7 +330,7 @@ export function LeadTracker({ rallies, names, gameNumbers }: { rallies: Rally[];
           </span>
         </figcaption>
         {hovered && (
-          <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[11px] font-semibold px-2 py-1 shadow">
+          <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-foreground text-background text-[11px] font-semibold px-2 py-1 shadow">
             G{hovered.r.game}, point {hovered.idxInGame}: {hovered.r.t1}–{hovered.r.t2}
             {hovered.r.t1 !== hovered.r.t2 ? ` · ${hovered.r.t1 > hovered.r.t2 ? names[0] : names[1]} +${Math.abs(hovered.r.t1 - hovered.r.t2)}` : " · level"}
           </div>
@@ -363,7 +363,7 @@ export function GameFlowTable({ flows, names, intervalPoint }: { flows: GameFlow
               <th scope="col" className="text-right py-1 pl-2">Time</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 tabular-nums">
+          <tbody className="divide-y divide-border tabular-nums">
             {flows.map((f) => {
               const intervalLeader = f.atInterval ? (f.atInterval[0] > f.atInterval[1] ? 1 : 2) : null;
               return (

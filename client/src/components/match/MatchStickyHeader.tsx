@@ -40,12 +40,12 @@ function initials(name: string): string {
 
 function Face({ face, fallbackName }: { face?: PlayerFace; fallbackName: string }) {
   const [broken, setBroken] = useState(false);
-  const ring = "w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-950 bg-slate-200 dark:bg-slate-800 shrink-0";
+  const ring = "w-8 h-8 rounded-full ring-2 ring-background bg-muted shrink-0";
   if (face?.avatarUrl && !broken) {
     return <img src={face.avatarUrl} alt="" loading="lazy" onError={() => setBroken(true)} className={`${ring} object-cover`} />;
   }
   return (
-    <span className={`${ring} inline-flex items-center justify-center text-[10px] font-black text-slate-600 dark:text-slate-300`}>
+    <span className={`${ring} inline-flex items-center justify-center text-[10px] font-black text-soft`}>
       {initials(face?.name || fallbackName)}
     </span>
   );
@@ -60,7 +60,7 @@ function SideMini({ side, faces, align }: { side: MatchSide; faces: Record<strin
           <Face key={id || i} face={id ? faces?.[id] : undefined} fallbackName={side.label} />
         ))}
       </span>
-      <span className={`min-w-0 truncate text-xs ${side.isWinner ? "font-black" : "font-semibold text-slate-600 dark:text-slate-300"}`}>{side.label}</span>
+      <span className={`min-w-0 truncate text-xs ${side.isWinner ? "font-black" : "font-semibold text-soft"}`}>{side.label}</span>
     </div>
   );
 }
@@ -72,13 +72,13 @@ function ScoreMini({ view, serving }: { view: MatchView; serving: 1 | 2 | null }
     return (
       <div className="text-center">
         <div className="flex items-center justify-center gap-1.5 font-mono text-lg font-black tabular-nums leading-none">
-          <span className="w-3.5 text-red-600 dark:text-red-400">{serving === 1 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
+          <span className="w-3.5 text-live">{serving === 1 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
           <span>{cur.side1}</span>
           <span className="text-muted-foreground">–</span>
           <span>{cur.side2}</span>
-          <span className="w-3.5 text-red-600 dark:text-red-400">{serving === 2 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
+          <span className="w-3.5 text-live">{serving === 2 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
         </div>
-        <p className="mt-0.5 text-[10px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">G{games.length} · Live</p>
+        <p className="mt-0.5 text-[10px] font-black uppercase tracking-wider text-live">G{games.length} · Live</p>
       </div>
     );
   }
@@ -135,7 +135,7 @@ export function MatchStickyHeader({
       className={`fixed inset-x-0 z-40 transition-[opacity,transform] duration-200 ${shown ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
       style={{ top: navH }}
     >
-      <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-background border-b border-border shadow-sm">
         <div className="container mx-auto max-w-2xl px-4 py-2 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <SideMini side={view.sides[0]} faces={faces.data} align="left" />
           <ScoreMini view={view} serving={serving} />

@@ -213,7 +213,7 @@ export function MatchPointsTab({
                 aria-pressed={on}
                 onClick={() => setScope(o.value)}
                 className={`min-h-[44px] px-3 rounded-xl text-xs font-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  on ? "bg-primary text-primary-foreground" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  on ? "bg-primary text-primary-foreground" : "bg-muted text-soft"
                 }`}
               >
                 {o.label}
