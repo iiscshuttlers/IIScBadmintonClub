@@ -78,11 +78,13 @@ export function TournamentCard({
     return { total, completed, liveMatches, pct };
   })();
 
-  // Extract winner names if available on completed tournament
+  // Winner names on a finished (completed or archived) tournament
+  const finished = t.status === "completed" || t.status === "archived";
   const winnersList = (() => {
-    if (t.status !== "completed") return [];
-    if (Array.isArray(t.winners) && t.winners.length > 0) return t.winners;
-    return [];
+    if (!finished) return [];
+    if (!Array.isArray(t.winners)) return [];
+    // Finals winners are { category, winner, runnerUp }; skip any without a name.
+    return t.winners.filter((w: any) => (typeof w === "string" ? w : w?.winner));
   })();
 
   return (
@@ -198,7 +200,12 @@ export function TournamentCard({
           <div className="mb-3 p-2 rounded-xl bg-success/10 border border-success/25 flex items-center gap-2">
             <Trophy className="w-3.5 h-3.5 text-success shrink-0" />
             <div className="text-[11px] font-bold text-success truncate">
-              Champion: <span className="font-black">{winnersList.map((w: any) => typeof w === "string" ? w : w.name || w.player_name).join(", ")}</span>
+              {winnersList.length > 1 ? "Champions" : "Champion"}:{" "}
+              <span className="font-black">
+                {winnersList
+                  .map((w: any) => (typeof w === "string" ? w : [w.category, w.winner].filter(Boolean).join(" ")))
+                  .join(" · ")}
+              </span>
             </div>
           </div>
         )}
@@ -286,7 +293,7 @@ export function TournamentCard({
             </button>
           ) : (
             <span className="text-xs font-bold text-muted-foreground">
-              {t.status === "completed" ? "View results" : "View matches"}
+              {finished ? "View results" : "View matches"}
             </span>
           )}
 

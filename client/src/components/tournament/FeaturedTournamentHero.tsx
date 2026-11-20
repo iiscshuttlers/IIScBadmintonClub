@@ -45,9 +45,9 @@ export function FeaturedTournamentHero({
   const dateStr = startStr && endStr && startStr !== endStr ? `${startStr} – ${endStr}` : startStr || endStr;
   const sets = liveScore ? parseSets(liveScore.score) : [];
 
-  // Countdown computation for upcoming tournament
+  // Countdown, only for an upcoming tournament (a finished one is not "starting")
   const countdownText = (() => {
-    if (isLive || !t.startDate) return null;
+    if (t.status !== "upcoming" || !t.startDate) return null;
     const now = new Date().setHours(0, 0, 0, 0);
     const target = new Date(t.startDate).setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((target - now) / 86400000);

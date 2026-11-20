@@ -29,6 +29,9 @@ import { EmptyState } from "@/components/tournament/EmptyState";
 import { staggerContainer } from "@/lib/motion";
 
 type StatusFilter = "all" | "upcoming" | "active" | "completed";
+
+/** Finished tournaments: completed, or completed and then archived to Legacy. */
+const isPast = (s: string | null | undefined) => s === "completed" || s === "archived";
 type TypeFilter = "all" | "open" | "team";
 type RankedFilter = "all" | "ranked" | "casual";
 type SortOption = "date_desc" | "date_asc" | "name_asc";
@@ -84,10 +87,10 @@ export default function TournamentsHub() {
   // Registration modal state
   const [registerFor, setRegisterFor] = useState<any | null>(null);
 
-  const visible = useMemo(
-    () => all.filter((t) => t.status !== "draft" && t.status !== "archived"),
-    [all],
-  );
+  // Archived = finished and also saved to Legacy. It stays here as a past
+  // tournament (Completed); hiding it emptied the hub once every event was
+  // archived. Only drafts are hidden.
+  const visible = useMemo(() => all.filter((t) => t.status !== "draft"), [all]);
 
   // My Roles Hook (Phase 0.2 / D)
   const { myRoles, refetch: refetchMyRoles } = useMyTournamentRoles(
@@ -124,7 +127,7 @@ export default function TournamentsHub() {
     visible.forEach((t) => {
       if (t.status === "upcoming") c.upcoming++;
       else if (t.status === "active") c.active++;
-      else if (t.status === "completed") c.completed++;
+      else if (isPast(t.status)) c.completed++;
     });
     return c;
   }, [visible]);
@@ -140,7 +143,8 @@ export default function TournamentsHub() {
   // Filtered tournament list
   const filtered = useMemo(() => {
     let list = listSource;
-    if (status !== "all") list = list.filter((t) => t.status === status);
+    if (status === "completed") list = list.filter((t) => isPast(t.status));
+    else if (status !== "all") list = list.filter((t) => t.status === status);
     if (type !== "all") list = list.filter((t) => t.tournament_type === type);
     if (ranked !== "all") list = list.filter((t) => (ranked === "ranked" ? t.counts_for_elo : !t.counts_for_elo));
     if (search.trim()) {
@@ -180,7 +184,7 @@ export default function TournamentsHub() {
     return {
       active: filtered.filter(t => t.status === "active"),
       upcoming: filtered.filter(t => t.status === "upcoming"),
-      completed: filtered.filter(t => t.status === "completed"),
+      completed: filtered.filter(t => isPast(t.status)),
     };
   }, [filtered]);
 
