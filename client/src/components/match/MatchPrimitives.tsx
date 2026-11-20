@@ -34,6 +34,17 @@ export function MatchStatusBadge({ view }: { view: Pick<MatchView, "state" | "st
   );
 }
 
+/** Shuttlecock (cork down, feathers up); decorative, callers add the words. */
+export function ShuttleIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M8.5 15 5 3h14l-3.5 12" />
+      <path d="M10 3.5l1 11.5M14 3.5l-1 11.5" />
+      <path d="M8.5 15h7v1.5a3.5 3.5 0 0 1-7 0z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function SeedMark({ seed }: { seed: number | null }) {
   if (seed == null) return null;
   return (
@@ -48,10 +59,13 @@ export function MatchSideRow({
   side,
   index,
   view,
+  serving = false,
 }: {
   side: MatchSide;
   index: 0 | 1;
   view: Pick<MatchView, "games" | "state">;
+  /** Live only: this side serves the next rally. */
+  serving?: boolean;
 }) {
   // BWF/Cricbuzz-style: the game in progress is boxed so the live score reads first.
   const liveIdx = currentGameIndex(view);
@@ -70,6 +84,12 @@ export function MatchSideRow({
         <span className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
           <span className={`break-words ${nameClass}`}>{side.label}</span>
           <SeedMark seed={side.seed} />
+          {serving && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider text-live" title="Serving">
+              <ShuttleIcon className="w-3.5 h-3.5" />
+              Serve
+            </span>
+          )}
           {side.isWinner && <span className="sr-only">(winner)</span>}
         </span>
       </div>
@@ -218,7 +238,9 @@ export function MatchScorecard({
 
 /**
  * Last-n form chips (FotMob/BWF style), newest on the left. Letter and colour
- * together (never colour alone); walkovers are lighter and read "W/O"/"L/O".
+ * together (never colour alone). A walkover keeps its result's letter and
+ * colour and adds a small "w/o" under the letter: badminton writes W/O for
+ * the match itself, so "L/O" would mean nothing to players.
  */
 export function FormChips({
   entries,
@@ -233,7 +255,7 @@ export function FormChips({
     return (
       <span className="inline-flex gap-1" aria-hidden>
         {Array.from({ length: 5 }, (_, i) => (
-          <span key={i} className="w-5 h-5 rounded bg-muted motion-safe:animate-pulse" />
+          <span key={i} className="w-5 h-6 rounded bg-muted motion-safe:animate-pulse" />
         ))}
       </span>
     );
@@ -242,7 +264,8 @@ export function FormChips({
     return <span className="text-xs text-muted-foreground">No completed tournament matches yet</span>;
   }
   const wins = entries.filter((e) => e.result === "W").length;
-  const box = size === "md" ? "min-w-6 h-6 text-xs" : "min-w-5 h-5 text-[10px]";
+  const box = size === "md" ? "min-w-6 h-7 text-xs" : "min-w-5 h-6 text-[10px]";
+  const woText = size === "md" ? "text-[8px]" : "text-[7px]";
   return (
     <span className="inline-flex items-center gap-1">
       <span className="sr-only">
@@ -250,13 +273,7 @@ export function FormChips({
       </span>
       {entries.map((e) => {
         const won = e.result === "W";
-        const tone = e.walkover
-          ? won
-            ? "bg-success/20 text-success"
-            : "bg-danger/20 text-danger"
-          : won
-            ? "bg-success text-success-foreground"
-            : "bg-danger text-danger-foreground";
+        const tone = won ? "bg-success text-success-foreground" : "bg-danger text-danger-foreground";
         const date = e.date
           ? new Date(e.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
           : null;
@@ -269,7 +286,14 @@ export function FormChips({
             aria-label={title}
             className={`${box} px-1 inline-flex items-center justify-center rounded font-black tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tone}`}
           >
-            {e.walkover ? `${e.result}/O` : e.result}
+            {e.walkover ? (
+              <span className="flex flex-col items-center leading-none" aria-hidden>
+                <span>{e.result}</span>
+                <span className={`${woText} font-bold lowercase tracking-tight opacity-90`}>w/o</span>
+              </span>
+            ) : (
+              e.result
+            )}
           </Link>
         );
       })}
