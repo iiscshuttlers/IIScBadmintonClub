@@ -103,19 +103,18 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Event-family accents (see lib/tournamentTheme.ts + ThemeScope). Re-point
-   --primary inside a subtree so primary buttons/pills pick up the family
-   colour of the current theme. */
+/* Event-family accents (see lib/tournamentTheme.ts + ThemeScope). A family
+   scope exposes --family for badges, glows and family-specific accents, but
+   does NOT re-tint --primary: buttons, active tabs and links keep the theme's
+   one primary colour on every page so the app stays consistent. */
 .family-individual {
-  --primary: var(--individual);
-  --primary-foreground: var(--individual-foreground);
-  --ring: var(--individual);
+  --family: var(--individual);
+  --family-foreground: var(--individual-foreground);
   --family-glow: color-mix(in srgb, var(--individual) 16%, transparent);
 }
 .family-team {
-  --primary: var(--team);
-  --primary-foreground: var(--team-foreground);
-  --ring: var(--team);
+  --family: var(--team);
+  --family-foreground: var(--team-foreground);
   --family-glow: color-mix(in srgb, var(--team) 15%, transparent);
 }
 

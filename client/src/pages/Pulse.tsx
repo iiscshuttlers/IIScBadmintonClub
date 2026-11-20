@@ -11,6 +11,7 @@ import { ArchivedTournament, type TournamentStatus } from "@/data/tournamentArch
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { InfoModal } from "@/components/InfoModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -284,11 +285,9 @@ export default function Pulse() {
 
   return (
     <div className="min-h-screen bg-background pb-24 lg:pb-8">
-      <section className="bg-gradient-to-tr from-team/20 via-success to-primary text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-1.5 bg-foreground/10 border border-foreground/20 text-foreground/80 px-3 py-1 rounded-full text-xs font-semibold mb-3">
-            <Activity className="w-3.5 h-3.5 text-primary" />
+      <PageHeader
+        badge={
+          <span className="inline-flex items-center gap-1.5">
             Pulse
             <InfoModal
               title="PULSE"
@@ -298,44 +297,39 @@ export default function Pulse() {
                 { badge: "CALENDAR", title: "Court Schedule", desc: "View daily court schedules and booking slots." },
                 { badge: "DIRECTORY", title: "Players Directory", desc: "Explore club members and connect with players." }
               ]}
-              triggerClassName="text-foreground hover:text-primary"
+              triggerClassName="text-primary hover:text-primary/70"
             />
-          </div>
-          <h1
-            className="text-3xl md:text-4xl font-black mb-2 text-foreground font-display"
-          >
-            Action & Updates
-          </h1>
-          <p className="text-sm md:text-base text-success max-w-3xl mx-auto">
-            Live matches, announcements, court calendars, and player directory.
-          </p>
-
-          <div className="mt-6 w-full flex justify-center mb-2 px-2">
-            <div className="flex w-full sm:w-auto bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border gap-1 flex-wrap justify-center shadow-inner">
-              {[
-                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
-                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
-                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
-                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
-              ].map((tab) => (
-                <Button
-                  key={tab.id}
-                  variant="tab"
-                  size="tab"
-                  onClick={() => setPulseTab(tab.id as any)}
-                  className={
-                    pulseTab === tab.id
-                      ? tab.activeClass
-                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
-                  }
-                >
-                  {tab.icon} {tab.label}
-                </Button>
-              ))}
-            </div>
+          </span>
+        }
+        badgeIcon={<Activity className="w-3.5 h-3.5" />}
+        title="Action & Updates"
+        subtitle="Live matches, announcements, court calendars, and player directory."
+      >
+        <div className="w-full flex justify-center px-2">
+          <div className="flex w-full sm:w-auto bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border gap-1 flex-wrap justify-center shadow-inner">
+            {[
+              { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                variant="tab"
+                size="tab"
+                onClick={() => setPulseTab(tab.id as any)}
+                className={
+                  pulseTab === tab.id
+                    ? tab.activeClass
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
+                }
+              >
+                {tab.icon} {tab.label}
+              </Button>
+            ))}
           </div>
         </div>
-      </section>
+      </PageHeader>
 
       {pulseTab === "live" && <LiveTab />}
       {pulseTab === "feed" && <AnnouncementsTab />}

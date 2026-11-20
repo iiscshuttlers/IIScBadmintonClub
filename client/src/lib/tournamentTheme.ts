@@ -83,11 +83,11 @@ export function getTournamentTheme(input: TournamentThemeInput): TournamentTheme
 }
 
 /**
- * Class that re-tints a subtree to the event family's accent. The class sets
- * `--primary` (and its foreground/ring) in index.css, so every `bg-primary` /
- * `text-primary` / `ring-primary` descendant adopts the family colour — the
- * same mechanism the app themes use (styles/themes.css). Defined in CSS rather
- * than inline so each theme supplies its own AA-readable family colour.
+ * Class for a subtree that belongs to one event family. It exposes `--family`,
+ * `--family-foreground` and `--family-glow` (index.css) for family badges and
+ * glows. It deliberately does not re-tint `--primary`: buttons, tabs and links
+ * use the theme's single primary colour everywhere for consistency. Use
+ * `tokens.*` above (text-individual / text-team …) to mark family identity.
  */
 export const FAMILY_CLASS: Record<EventFamily, string> = {
   individual: "family-individual",

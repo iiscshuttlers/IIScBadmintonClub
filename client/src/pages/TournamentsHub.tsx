@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -221,52 +222,37 @@ export default function TournamentsHub() {
 
   return (
     <ThemeScope family={featuredFamily} className="min-h-screen bg-background">
-      {/* Top Banner Hero */}
-      <section className="bg-gradient-to-br from-info/20 via-card to-background text-on-accent py-12 relative overflow-hidden border-b border-border">
-        <div 
-          className="absolute inset-0 pointer-events-none transition-colors duration-700"
-          style={{
-            background: "radial-gradient(ellipse 80% 80% at 50% -20%, var(--family-glow, color-mix(in srgb, var(--individual) 25%, transparent)), transparent)"
-          }}
-        />
-        <div className="container mx-auto px-4 max-w-5xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" /> Tournaments &amp; Events
-          </div>
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black mb-2.5 tracking-tight text-foreground font-display"
+      {/* Page header — same component as every other section page */}
+      <PageHeader
+        badge="Tournaments & Events"
+        badgeIcon={<Sparkles className="w-3.5 h-3.5" />}
+        title="Tournaments"
+        subtitle="Follow live events, register for upcoming draws and look back at past results."
+      >
+        {/* Organisers: one quiet line (the top bar also has + Host). */}
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium -mt-2">
+          Organising one?{" "}
+          <button
+            type="button"
+            onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
+            className="font-black text-primary hover:underline underline-offset-2"
           >
-            Tournaments
-          </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base font-medium mb-4">
-            Follow live events, register for upcoming draws and look back at past results.
-          </p>
-
-          {/* Organisers: one quiet line (the top bar also has + Host). */}
-          <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-            Organising one?{" "}
-            <button
-              type="button"
-              onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
-              className="font-black text-primary hover:underline underline-offset-2"
-            >
-              Host a tournament
-            </button>
-            {isAuthed && (
-              <>
-                {" · "}
-                <button
-                  type="button"
-                  onClick={() => navigate("/host-tournament")}
-                  className="font-black text-soft hover:text-primary hover:underline underline-offset-2"
-                >
-                  My tournaments
-                </button>
-              </>
-            )}
-          </p>
-        </div>
-      </section>
+            Host a tournament
+          </button>
+          {isAuthed && (
+            <>
+              {" · "}
+              <button
+                type="button"
+                onClick={() => navigate("/host-tournament")}
+                className="font-black text-soft hover:text-primary hover:underline underline-offset-2"
+              >
+                My tournaments
+              </button>
+            </>
+          )}
+        </p>
+      </PageHeader>
 
       <section className="container mx-auto px-4 max-w-5xl -mt-6 relative z-20 pb-16 space-y-6">
         {/* Phase H: Pinned Featured Tournament Hero */}
