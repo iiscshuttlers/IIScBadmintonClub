@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     androidScheme: "https",
   },
   android: {
-    backgroundColor: "#020617",
+    backgroundColor: "#0a1020",
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: "#020617",
+      backgroundColor: "#0a1020",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },
@@ -31,7 +31,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: "DARK",
       overlaysWebView: false,
-      backgroundColor: "#020617"
+      backgroundColor: "#0a1020"
     }
   },
 };

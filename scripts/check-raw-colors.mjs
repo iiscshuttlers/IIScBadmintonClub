@@ -25,16 +25,19 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "client", "src");
-const EXEMPT_FILES = new Set(["client/src/styles/themes.css"]);
+// Theme definitions: the token values and the per-theme font registry.
+const EXEMPT_FILES = new Set(["client/src/styles/themes.css", "client/src/lib/themes.ts"]);
 
 const PALETTE = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
 const UTIL = "bg|text|border(?:-[trblxyse])?|ring(?:-offset)?|outline|fill|stroke|from|via|to|divide|placeholder|decoration|shadow|accent|caret";
 const RULES = [
   { id: "palette-class", re: new RegExp(`(?<![\\w-])(?:[\\w\\[\\]&>=.:/*-]+:)?!?(?:${UTIL})-(?:${PALETTE})-\\d{2,3}\\b`, "g") },
   { id: "white-black-class", re: new RegExp(`(?<![\\w-])(?:[\\w\\[\\]&>=.:/*-]+:)?!?(?:${UTIL})-(?:white|black)(?![\\w-])`, "g") },
-  { id: "arbitrary-colour-class", re: new RegExp(`(?<![\\w-])(?:${UTIL})-\\[[^\\]]*(?:#[0-9a-fA-F]{3}|rgba?\\(|hsla?\\()`, "g") },
+  // any arbitrary value class (bg-[…], drop-shadow-[…], shadow-[…], …) holding a literal colour
+  { id: "arbitrary-colour-class", re: /(?<![\w-])[a-z][\w-]*-\[[^\]]*(?:#[0-9a-fA-F]{3}|rgba?\(|hsla?\()/g },
   { id: "hex-colour", re: /(?<![\w&])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])/g },
-  { id: "rgb-hsl-colour", re: /\b(?:rgba?|hsla?)\(\s*\d/g },
+  // `_rgba(` inside Tailwind arbitrary values has no word boundary, so only exclude letters before it
+  { id: "rgb-hsl-colour", re: /(?<![a-zA-Z])(?:rgba?|hsla?)\(\s*\d/g },
   { id: "font-family", re: /\b(?:Playfair|Bodoni|Cinzel|Caveat|Outfit|Barlow|Unbounded|Fraunces|Manrope|Jakarta|Inter Tight)\b|font-\[(?!var\()/g },
 ];
 
@@ -98,7 +101,9 @@ for (const file of walk(SRC)) {
       let m;
       while ((m = rule.re.exec(code))) {
         // url fragments and ids like href="#abc" are not colours
-        if (rule.id === "hex-colour" && /(?:href|to|id|url\(|#\{)\s*=?\s*["'`(]?$/.test(code.slice(0, m.index))) continue;
+        if (rule.id === "hex-colour" && /(?:\bhref|\bid|\bto|url\(|#\{)\s*=?\s*["'`(]?$/.test(code.slice(0, m.index))) continue;
+        // arbitrary classes are reported once by their own rule
+        if ((rule.id === "hex-colour" || rule.id === "rgb-hsl-colour") && /-\[[^\]\s]*$/.test(code.slice(0, m.index))) continue;
         findings.push({ file: rel, line: idx + 1, rule: rule.id, match: m[0], text: line.trim().slice(0, 160) });
       }
     }

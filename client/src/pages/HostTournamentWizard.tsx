@@ -459,7 +459,7 @@ export default function HostTournamentWizard() {
         <div className="space-y-2 mb-8">
           <div className="flex gap-2">
             {[1, 2, 3, 4].map(s => (
-              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' : 'bg-muted'}`} />
+              <div key={s} className={`flex-1 h-2 rounded-full transition-all duration-300 ${s <= step ? 'bg-primary shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_50%,transparent)]' : 'bg-muted'}`} />
             ))}
           </div>
           <div className="grid grid-cols-4 text-[10px] sm:text-xs font-bold text-muted-foreground">

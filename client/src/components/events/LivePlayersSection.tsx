@@ -3,6 +3,7 @@ import { fetchParticipantsWithDepartments } from "@/services/tournamentService";
 import { Loader2, Users, Info, Image as ImageIcon, FileText } from "lucide-react";
 import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 import { toPng } from "html-to-image";
+import { themeColor } from "@/lib/themeColors";
 import { getDepartmentAcronym } from "@/data/departments";
 
 interface Participant {
@@ -43,7 +44,7 @@ export function LivePlayersSection({
       const dataUrl = await toPng(exportRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: document.documentElement.classList.contains('dark') ? '#131417' : '#f8fafc'
+        backgroundColor: themeColor("background")
       });
       const link = document.createElement('a');
       link.download = `players-${activeCat}.png`;
@@ -258,7 +259,7 @@ export function LivePlayersSection({
             key={p.id}
             className={`group relative flex items-center justify-between p-5 rounded-[1.25rem] transition-all duration-300 overflow-hidden ${exporting
                 ? "bg-muted border border-border-strong shadow-sm"
-                : "bg-muted/60 backdrop-blur-md border border-border-strong/50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] dark:shadow-none hover:shadow-xl hover:-translate-y-1 hover:border-primary/50"
+                : "bg-muted/60 backdrop-blur-md border border-border-strong/50 shadow-[0_2px_10px_-4px_color-mix(in_srgb,var(--scrim)_15%,transparent)] dark:shadow-none hover:shadow-xl hover:-translate-y-1 hover:border-primary/50"
               }`}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

@@ -99,11 +99,10 @@ export function PageHeader({
 
             <h1
               className={cn(
-                "font-black tracking-tight text-foreground mb-2.5 flex items-center gap-2.5",
+                "font-display font-black tracking-tight text-foreground mb-2.5 flex items-center gap-2.5",
                 compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl md:text-5xl",
                 isCenter && "justify-center"
               )}
-              style={{ fontFamily: "Outfit, Inter, sans-serif" }}
             >
               {icon}
               {title}

@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { playerService } from "@/services/playerService";
 import { socialService } from "@/services/socialService";
@@ -75,7 +74,6 @@ export default function PersonalProfilePage() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const { theme, toggleTheme } = useTheme();
   const { setMode } = useAppMode();
   const [signOutDialog, setSignOutDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);

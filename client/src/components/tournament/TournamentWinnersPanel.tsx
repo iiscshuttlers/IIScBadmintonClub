@@ -7,9 +7,9 @@ import type { TournamentWinner } from "@/data/tournamentArchive";
 const PODIUM_PLACEMENTS: Placement[] = ["winner", "runnerUp", "third", "fourth"];
 
 const PODIUM_CONFIGS = [
-  { label: "🥇 Champion", border: "border-warning", bg: "bg-warning/10", text: "text-warning" },
-  { label: "🥈 Runner-up", border: "border-border-strong", bg: "bg-muted", text: "text-soft" },
-  { label: "🥉 Third Place", border: "border-secondary", bg: "bg-secondary/10", text: "text-secondary" },
+  { label: "🥇 Champion", border: "border-gold", bg: "bg-gold/10", text: "text-gold" },
+  { label: "🥈 Runner-up", border: "border-silver/60", bg: "bg-silver/10", text: "text-silver" },
+  { label: "🥉 Third Place", border: "border-bronze/60", bg: "bg-bronze/10", text: "text-bronze" },
   { label: "Fourth Place", border: "border-info/30", bg: "bg-info/10", text: "text-info" },
 ];
 

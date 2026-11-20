@@ -105,19 +105,19 @@ export default function TvScoreboard() {
     const serving = isServer(team);
     const color = team === 1 ? "cyan" : "violet";
     const glowClass = team === 1
-      ? "text-accent drop-shadow-[0_0_80px_rgba(34,211,238,0.5)]"
-      : "text-individual drop-shadow-[0_0_80px_rgba(167,139,250,0.5)]";
+      ? "text-team-1 drop-shadow-[0_0_80px_color-mix(in_srgb,var(--team-1)_50%,transparent)]"
+      : "text-team-2 drop-shadow-[0_0_80px_color-mix(in_srgb,var(--team-2)_50%,transparent)]";
     const bgClass = team === 1
-      ? "from-accent/10 via-transparent to-transparent"
-      : "from-individual/10 via-transparent to-transparent";
-    const dotColor = team === 1 ? "bg-accent" : "bg-individual";
+      ? "from-team-1/10 via-transparent to-transparent"
+      : "from-team-2/10 via-transparent to-transparent";
+    const dotColor = team === 1 ? "bg-team-1" : "bg-team-2";
     const dotGlow = team === 1
-      ? "shadow-[0_0_25px_6px_rgba(34,211,238,0.6)]"
-      : "shadow-[0_0_25px_6px_rgba(167,139,250,0.6)]";
-    const setDot = team === 1 ? "bg-accent" : "bg-individual";
+      ? "shadow-[0_0_25px_6px_color-mix(in_srgb,var(--team-1)_60%,transparent)]"
+      : "shadow-[0_0_25px_6px_color-mix(in_srgb,var(--team-2)_60%,transparent)]";
+    const setDot = team === 1 ? "bg-team-1" : "bg-team-2";
     const setGlow = team === 1
-      ? "shadow-[0_0_12px_rgba(6,182,212,0.7)]"
-      : "shadow-[0_0_12px_rgba(139,92,246,0.7)]";
+      ? "shadow-[0_0_12px_color-mix(in_srgb,var(--team-1)_70%,transparent)]"
+      : "shadow-[0_0_12px_color-mix(in_srgb,var(--team-2)_70%,transparent)]";
 
     return (
       <div className={`flex-1 flex flex-col items-center justify-center p-6 md:p-10 relative transition-all duration-500 ${serving ? `bg-gradient-to-br ${bgClass}` : ""}`}>
@@ -169,7 +169,7 @@ export default function TvScoreboard() {
   return (
     <div className="h-[100dvh] bg-background text-foreground flex flex-col overflow-hidden font-sans selection:bg-transparent relative group">
       {/* Subtle animated background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(6,182,212,0.06)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.06)_0%,transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_srgb,var(--team-1)_6%,transparent)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,color-mix(in_srgb,var(--team-2)_6%,transparent)_0%,transparent_50%)] pointer-events-none" />
 
       {/* Exit Button (Always partially visible, fully visible on hover) */}
       <button 
@@ -184,11 +184,11 @@ export default function TvScoreboard() {
       <div className="h-20 md:h-28 w-full flex items-center justify-between px-8 md:px-12 bg-gradient-to-b from-background/80 to-transparent relative z-10">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-danger animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-live animate-pulse shadow-[0_0_8px_color-mix(in_srgb,var(--live)_80%,transparent)]" />
             <span className="text-xs font-black uppercase tracking-[0.2em] text-live">LIVE</span>
           </div>
           <div className="w-px h-8 bg-muted-strong/50" />
-          <div className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent to-individual tracking-wide">
+          <div className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-team-1 to-team-2 tracking-wide">
             IISc Badminton
           </div>
           {matchState.tournament && (

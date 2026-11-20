@@ -31,7 +31,7 @@ export function ProfileOverviewTabRight({
       {player.quote && (
         <motion.div variants={itemVariants} className="relative group">
           <div className="absolute -inset-0.5 bg-gradient-to-br from-info/20 to-warning rounded-[1.75rem] blur opacity-25 group-hover:opacity-50 transition duration-500" />
-          <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-background rounded-[1.75rem] p-7 shadow-lg shadow-info/40 overflow-hidden border border-warning/20">
+          <div className="relative bg-background bg-gradient-to-br from-info/30 via-info/10 to-background rounded-[1.75rem] p-7 shadow-lg shadow-info/40 overflow-hidden border border-warning/20">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-warning/0 via-warning/50 to-warning/0" />
             <Quote className="absolute -bottom-3 -right-3 w-24 h-24 text-warning/[0.12] -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
             <div className="relative z-10">

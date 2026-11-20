@@ -359,7 +359,7 @@ export function AdminFeaturesPanel() {
   }, [section]);
 
   const sections = [
-    { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-danger text-danger" /> },
+    { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-live text-live" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-3.5 h-3.5" /> },
     { id: "api", label: "Public API", icon: <Globe className="w-3.5 h-3.5" /> },
     { id: "health", label: "DB Health", icon: <ShieldCheck className="w-3.5 h-3.5" /> },

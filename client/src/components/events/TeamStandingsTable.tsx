@@ -195,7 +195,7 @@ export function TeamStandingsTable({ tournamentId, qualifyingCutoff = 2, tournam
                   <span className="text-primary font-bold">Total Standing Points</span>
                 </div>
                 <div className="pt-2 border-t border-border flex items-center gap-2 text-[11px] font-medium text-success">
-                  <span className="w-2 h-2 rounded-full bg-success shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="w-2 h-2 rounded-full bg-success shrink-0 shadow-[0_0_8px_color-mix(in_srgb,var(--success)_80%,transparent)]" />
                   <span>{qualifyingText}</span>
                 </div>
               </TooltipContent>

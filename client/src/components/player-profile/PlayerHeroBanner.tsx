@@ -6,6 +6,7 @@ import { FormChips } from "@/components/match/MatchPrimitives";
 import { useRecentForm } from "@/hooks/queries/useRecentForm";
 import { useRankingMovement } from "@/hooks/queries/useRankingMovement";
 import { movementLabel } from "@/lib/rankMovement";
+import { cssVarAlpha } from "@/lib/themeColors";
 
 interface PlayerHeroBannerProps {
   player: PlayerRow;
@@ -42,7 +43,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
         <div className="flex flex-col md:flex-row gap-6 items-end relative pointer-events-auto">
           {/* Avatar */}
           <div className="relative mt-8 md:mt-12 shrink-0 z-20">
-            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-foreground/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-muted group relative">
+            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-foreground/35 overflow-hidden shadow-[0_8px_40px_color-mix(in_srgb,var(--scrim)_35%,transparent)] dark:shadow-[0_8px_40px_color-mix(in_srgb,var(--scrim)_80%,transparent)] bg-muted group relative">
               {player.avatar_url ? (
                 <Dialog>
                   <DialogTrigger asChild>
@@ -93,7 +94,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                     className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-foreground"
                     style={
                       theme === "light"
-                        ? { textShadow: "0 2px 12px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
+                        ? { textShadow: `0 2px 12px ${cssVarAlpha("background", 0.8)}, 0 1px 4px ${cssVarAlpha("background", 0.6)}` }
                         : undefined
                     }
                   >
@@ -119,7 +120,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                   className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-foreground"
                   style={
                     theme === "light"
-                      ? { textShadow: "0 2px 16px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
+                      ? { textShadow: `0 2px 16px ${cssVarAlpha("background", 0.8)}, 0 1px 4px ${cssVarAlpha("background", 0.6)}` }
                       : undefined
                   }
                 >

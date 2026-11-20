@@ -248,8 +248,8 @@ export function UmpireScoringScreen({
           {match.status !== "finished" ? (
             <>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger/15 border border-danger/30 backdrop-blur-sm shadow-[0_0_8px_rgba(239,68,68,0.1)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger/15 border border-danger/30 backdrop-blur-sm shadow-[0_0_8px_color-mix(in_srgb,var(--danger)_10%,transparent)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse shadow-[0_0_8px_color-mix(in_srgb,var(--danger)_80%,transparent)]" />
                   <span className="text-[10px] sm:text-xs font-black text-live uppercase tracking-[0.15em]">Live</span>
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Game {currentGameNum}</span>
@@ -297,8 +297,8 @@ export function UmpireScoringScreen({
       {match.status === "finished" ? (
         <div className="text-center py-2">
           <div className="flex flex-col items-center gap-1 mb-3">
-            <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-1 shadow-[0_0_24px_rgba(251,191,36,0.12)]">
-              <Trophy className="w-6 h-6 text-gold drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
+            <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mb-1 shadow-[0_0_24px_color-mix(in_srgb,var(--gold)_12%,transparent)]">
+              <Trophy className="w-6 h-6 text-gold drop-shadow-[0_0_10px_color-mix(in_srgb,var(--gold)_50%,transparent)]" />
             </div>
             <h2 className="text-xl font-black tracking-tight text-foreground">{match.retiredTeam ? "Match Retired" : "Match Finished!"}</h2>
           </div>
@@ -333,7 +333,7 @@ export function UmpireScoringScreen({
               className={`flex-1 px-3 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${
                 hasSaved
                   ? "bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-success border border-[color-mix(in_srgb,var(--success)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_25%,transparent)]"
-                  : "bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 text-foreground shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                  : "bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 text-warning-foreground shadow-[0_0_20px_color-mix(in_srgb,var(--warning)_25%,transparent)]"
               }`}
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? "Saving..." : hasSaved ? "Save Again" : "Save Result"}
@@ -404,7 +404,7 @@ export function UmpireScoringScreen({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`font-black text-xl sm:text-2xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-danger drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]' : 'text-warning drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]'}`}>
+                  <span className={`font-black text-xl sm:text-2xl tabular-nums tracking-tighter ${breakSecondsLeft < 0 ? 'text-danger drop-shadow-[0_0_12px_color-mix(in_srgb,var(--danger)_50%,transparent)]' : 'text-warning drop-shadow-[0_0_12px_color-mix(in_srgb,var(--warning)_30%,transparent)]'}`}>
                     {breakSecondsLeft < 0 ? "-" : ""}{Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")}
                   </span>
                   <button onClick={endBreak} className="px-3 py-1.5 bg-foreground/[0.06] hover:bg-foreground/[0.1] text-soft font-bold text-[10px] rounded-xl border border-foreground/[0.08] transition backdrop-blur-sm shrink-0">
@@ -490,7 +490,7 @@ export function UmpireScoringScreen({
 
                   <div className="mt-1.5 sm:mt-2 flex justify-center gap-1.5">
                     {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                      <div key={i} className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${i < t.games ? "bg-warning shadow-[0_0_10px_rgba(251,191,36,0.5)] scale-110" : "bg-muted-strong/60 border border-border-strong/50"}`} />
+                      <div key={i} className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${i < t.games ? "bg-warning shadow-[0_0_10px_color-mix(in_srgb,var(--warning)_50%,transparent)] scale-110" : "bg-muted-strong/60 border border-border-strong/50"}`} />
                     ))}
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export function UmpireScoringScreen({
                 onClick={() => { setShowBreak(!showBreak); setShowSettings(false); setShowMore(false); }}
                 className={`flex-1 flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl border backdrop-blur-sm transition-all overflow-hidden ${
                   breakSecondsLeft !== null
-                    ? showBreak ? "bg-warning/20 border-warning/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "bg-warning/[0.08] border-warning/30 hover:bg-warning/15"
+                    ? showBreak ? "bg-warning/20 border-warning/50 shadow-[0_0_15px_color-mix(in_srgb,var(--warning)_20%,transparent)]" : "bg-warning/[0.08] border-warning/30 hover:bg-warning/15"
                     : showBreak ? "bg-foreground/[0.08] border-foreground/[0.15] shadow-inner" : "bg-foreground/[0.02] border-foreground/[0.05] hover:bg-foreground/[0.05]"
                 }`}
               >
@@ -589,7 +589,7 @@ export function UmpireScoringScreen({
             </div>
 
             <div className={`transition-all duration-300 overflow-hidden ${showSettings || showBreak || showMore ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"}`}>
-              <div className={`rounded-2xl border bg-foreground/[0.02] backdrop-blur-sm p-2 pt-2.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 ${showBreak && breakSecondsLeft !== null ? "border-warning/30 shadow-[0_0_15px_rgba(245,158,11,0.05)]" : "border-foreground/[0.06]"}`}>
+              <div className={`rounded-2xl border bg-foreground/[0.02] backdrop-blur-sm p-2 pt-2.5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 ${showBreak && breakSecondsLeft !== null ? "border-warning/30 shadow-[0_0_15px_color-mix(in_srgb,var(--warning)_5%,transparent)]" : "border-foreground/[0.06]"}`}>
                 {showSettings && (
                   <>
                     <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="py-2.5 px-2 bg-foreground/[0.04] hover:bg-foreground/[0.08] text-soft font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-foreground/[0.06] hover:border-foreground/[0.12] transition">
@@ -651,7 +651,7 @@ export function UmpireScoringScreen({
                         onClick={() => startBreak(secs as number, lbl as string)}
                         className={`py-2.5 font-bold text-[10px] sm:text-xs rounded-xl transition-all flex justify-center items-center gap-1.5 ${
                           breakTotalSeconds === secs
-                            ? "bg-warning/15 border border-warning/30 text-warning shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+                            ? "bg-warning/15 border border-warning/30 text-warning shadow-[0_0_12px_color-mix(in_srgb,var(--warning)_10%,transparent)]"
                             : "bg-foreground/[0.03] hover:bg-warning/10 border border-foreground/[0.06] hover:border-warning/30 text-muted-foreground hover:text-warning"
                         }`}
                       >
@@ -948,7 +948,7 @@ export function UmpireScoringScreen({
                 confirmColor: "bg-primary hover:bg-primary",
                 onConfirm: () => updateMatch({ status: 'finished', winner: match.t1.games >= match.t2.games ? 1 : 2 }),
               })}
-              className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-success font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]"
+              className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-success font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_color-mix(in_srgb,var(--success)_8%,transparent)]"
             >
               <Save className="w-3.5 h-3.5" /> Finish
             </button>

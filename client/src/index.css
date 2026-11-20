@@ -119,6 +119,19 @@
   --family-glow: color-mix(in srgb, var(--team) 15%, transparent);
 }
 
+/* Text placed on a saturated fill (gradient banners, role-coloured hero cards).
+   Re-points the text tokens for the subtree so children written with
+   text-foreground / text-soft / text-muted-foreground — and overlays like
+   bg-foreground/10 — stay readable on the fill in every theme (dark text on
+   the vivid fills of dark themes, white on the deep fills of light themes). */
+.on-fill {
+  --foreground: var(--on-accent);
+  --soft: color-mix(in srgb, var(--on-accent) 90%, transparent);
+  --muted-foreground: color-mix(in srgb, var(--on-accent) 78%, transparent);
+  --faint: color-mix(in srgb, var(--on-accent) 68%, transparent);
+  color: var(--on-accent);
+}
+
 /* Bracket image export: render the subtree on white with the Paper theme. */
 .print-light-theme {
   background-color: var(--card) !important;

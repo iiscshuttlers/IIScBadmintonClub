@@ -360,7 +360,7 @@ export default function FindLost() {
     <div className="min-h-screen bg-background pb-safe pb-24 lg:pb-8">
       {/* Hero */}
       <div className="bg-gradient-to-r from-card via-info/20 to-card text-on-accent py-3 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,color-mix(in_srgb,var(--info)_15%,transparent),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border border-foreground/20 text-[10px] font-black uppercase tracking-widest mb-1.5">
             <Search className="w-3 h-3 text-info" /> Find &amp; Lost
@@ -427,8 +427,8 @@ export default function FindLost() {
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
                       form.type === t 
                         ? (t === "lost" 
-                            ? "bg-danger/20 text-danger ring-1 ring-danger/30 shadow-[0_0_15px_rgba(244,63,94,0.1)]" 
-                            : "bg-team/20 text-team ring-1 ring-team/30 shadow-[0_0_15px_rgba(20,184,166,0.1)]")
+                            ? "bg-danger/20 text-danger ring-1 ring-danger/30 shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_10%,transparent)]" 
+                            : "bg-team/20 text-team ring-1 ring-team/30 shadow-[0_0_15px_color-mix(in_srgb,var(--team)_10%,transparent)]")
                         : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >

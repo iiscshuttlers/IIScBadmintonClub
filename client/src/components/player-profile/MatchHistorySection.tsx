@@ -136,7 +136,7 @@ export function MatchHistorySection({
               {/* Rivalry Analytics */}
               {isViewingOther && h2hMatches.length > 0 && (
                 <div className="mb-4 ml-2 bg-gradient-to-r from-muted to-muted/50 rounded-2xl p-4 border border-border-strong shadow-sm relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.05),transparent)] pointer-events-none" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--danger)_5%,transparent),transparent)] pointer-events-none" />
                   <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2 relative z-10">
                     <Swords className="w-4 h-4 text-danger" /> Head-to-Head vs
                     You

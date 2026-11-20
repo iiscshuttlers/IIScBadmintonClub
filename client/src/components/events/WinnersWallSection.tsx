@@ -15,6 +15,7 @@ import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { playerService } from "@/services/playerService";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { themeColor } from "@/lib/themeColors";
 
 const cardVariant = {
   hidden: { opacity: 0, y: 28 },
@@ -41,7 +42,7 @@ function ConfettiBurst() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const COLORS = ["#10b981", "#ff6b35", "#f59e0b", "#3b82f6", "#a855f7", "#f43f5e"];
+    const COLORS = (["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"] as const).map((t) => themeColor(t));
     const particles: {
       x: number; y: number; vx: number; vy: number;
       color: string; size: number; rotation: number; vr: number; alpha: number;

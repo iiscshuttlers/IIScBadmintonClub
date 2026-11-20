@@ -17,7 +17,7 @@ export default function TvScoreboardIndex() {
         </button>
       <div className="max-w-4xl mx-auto space-y-8 mt-12 sm:mt-16">
         <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 bg-info/10 rounded-3xl flex items-center justify-center mb-6 ring-1 ring-info/20 shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]">
+          <div className="mx-auto w-20 h-20 bg-info/10 rounded-3xl flex items-center justify-center mb-6 ring-1 ring-info/20 shadow-[0_0_40px_-10px_color-mix(in_srgb,var(--info)_30%,transparent)]">
             <MonitorPlay className="w-10 h-10 text-info" />
           </div>
           <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-info to-info">
@@ -33,7 +33,7 @@ export default function TvScoreboardIndex() {
               </button>
             </Link>
             <Link href="/tv/draw">
-              <button className="px-5 py-3 bg-gradient-to-r from-warning to-warning hover:from-warning/90 hover:to-warning/90 text-foreground font-black rounded-2xl shadow-lg flex items-center gap-2 text-sm transition active:scale-95 cursor-pointer">
+              <button className="px-5 py-3 bg-gradient-to-r from-warning to-warning hover:from-warning/90 hover:to-warning/90 text-warning-foreground font-black rounded-2xl shadow-lg flex items-center gap-2 text-sm transition active:scale-95 cursor-pointer">
                 <Shuffle className="w-5 h-5" /> Draw &amp; Court Display
               </button>
             </Link>
@@ -55,7 +55,7 @@ export default function TvScoreboardIndex() {
           <div className="grid gap-4 sm:grid-cols-2">
             {activeMatches.map(([umpireId, match]) => (
               <Link key={umpireId} href={`/tv/${umpireId}`}>
-                <div className="group cursor-pointer bg-card rounded-[2rem] p-6 border border-border hover:border-info/50 transition-all duration-300 hover:shadow-[0_0_30px_-5px_rgba(59,130,246,0.2)] hover:-translate-y-1 overflow-hidden relative">
+                <div className="group cursor-pointer bg-card rounded-[2rem] p-6 border border-border hover:border-info/50 transition-all duration-300 hover:shadow-[0_0_30px_-5px_color-mix(in_srgb,var(--info)_20%,transparent)] hover:-translate-y-1 overflow-hidden relative">
                   <div className="absolute top-0 right-0 p-4">
                     <span className="flex h-3 w-3 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-75"></span>
@@ -76,7 +76,7 @@ export default function TvScoreboardIndex() {
                         {match.t1.p1Name}
                         {match.t1.p2Name && <span className="text-muted-foreground text-sm block">{match.t1.p2Name}</span>}
                       </div>
-                      <div className="text-3xl text-foreground drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{match.t1.score}</div>
+                      <div className="text-3xl text-foreground drop-shadow-[0_0_10px_color-mix(in_srgb,var(--foreground)_30%,transparent)]">{match.t1.score}</div>
                     </div>
                     
                     <div className="h-px w-full bg-gradient-to-r from-transparent via-muted-strong to-transparent"></div>
@@ -86,11 +86,11 @@ export default function TvScoreboardIndex() {
                         {match.t2.p1Name}
                         {match.t2.p2Name && <span className="text-muted-foreground text-sm block">{match.t2.p2Name}</span>}
                       </div>
-                      <div className="text-3xl text-foreground drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{match.t2.score}</div>
+                      <div className="text-3xl text-foreground drop-shadow-[0_0_10px_color-mix(in_srgb,var(--foreground)_30%,transparent)]">{match.t2.score}</div>
                     </div>
                   </div>
                   
-                  <div className="mt-6 flex items-center justify-center gap-2 w-full py-3 bg-info/20 text-info rounded-xl font-bold group-hover:bg-info group-hover:text-foreground transition-colors">
+                  <div className="mt-6 flex items-center justify-center gap-2 w-full py-3 bg-info/20 text-info rounded-xl font-bold group-hover:bg-info group-hover:text-info-foreground transition-colors">
                     <Tv2 className="w-5 h-5" /> Launch Display
                   </div>
                 </div>

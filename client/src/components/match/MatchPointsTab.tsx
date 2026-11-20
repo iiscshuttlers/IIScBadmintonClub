@@ -17,8 +17,8 @@ import type { StoredPointLog } from "@/hooks/queries/useMatchPointLog";
 /**
  * Points tab (cricinfo worm / FotMob momentum): one small chart per game of
  * cumulative points by rally, key moments, and a table view. Side 1 is a solid
- * blue line, side 2 a dashed orange line, so identity never rests on colour.
- * Palette: dataviz reference slots 1–2, stepped per mode.
+ * line, side 2 a dashed line, so identity never rests on colour.
+ * Palette: the theme's scoreboard side tokens (team-1 / team-2).
  */
 
 const W = 320;
@@ -131,9 +131,7 @@ export function MatchPointsTab({
   return (
     <div className="mt-4 space-y-6">
       <style>{`
-        .worm-root { --worm-s1:#2a78d6; --worm-s2:#eb6834; --worm-grid:#e5e4df; --worm-muted:#6b6a65; --worm-ink:#0b0b0b; --worm-surface:#ffffff; --worm-deuce:rgba(235,104,52,0.07); }
-        @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .worm-root { --worm-s1:#3987e5; --worm-s2:#d95926; --worm-grid:#2e2e2b; --worm-muted:#a3a29a; --worm-ink:#f0efec; --worm-surface:#0f172a; --worm-deuce:rgba(217,89,38,0.12); } }
-        :root[data-theme="dark"] .worm-root, .dark .worm-root { --worm-s1:#3987e5; --worm-s2:#d95926; --worm-grid:#2e2e2b; --worm-muted:#a3a29a; --worm-ink:#f0efec; --worm-surface:#0f172a; --worm-deuce:rgba(217,89,38,0.12); }
+        .worm-root { --worm-s1:var(--team-1); --worm-s2:var(--team-2); --worm-grid:var(--border); --worm-muted:var(--muted-foreground); --worm-ink:var(--foreground); --worm-surface:var(--card); --worm-deuce:color-mix(in srgb, var(--warning) 10%, transparent); }
       `}</style>
 
       {coverage === "corrected" && (

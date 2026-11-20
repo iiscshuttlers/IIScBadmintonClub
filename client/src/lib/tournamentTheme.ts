@@ -3,13 +3,13 @@
  *
  * Two event families get distinct, scoped identities so a user always knows
  * which world they are in:
- *   - individual (Open events)  → violet / indigo
- *   - team       (Team events)  → emerald / teal
+ *   - individual (Open events)  → the theme's `individual` colour
+ *   - team       (Team events)  → the theme's `team` colour
  *
  * Ranked state is a separate, colour-blind-safe accent (always paired with an
  * icon + label, never colour alone):
- *   - ranked   → amber / gold  (★ "Ranked" — affects ELO)
- *   - unranked → slate / muted (○ "Casual" — no ELO)
+ *   - ranked   → gold  (★ "Ranked" — affects ELO)
+ *   - unranked → muted (○ "Casual" — no ELO)
  *
  * These are returned as complete Tailwind class-string literals so the JIT
  * scanner picks them up. Do NOT build these strings dynamically.
@@ -56,12 +56,12 @@ const INDIVIDUAL: FamilyTokens = {
 };
 
 const TEAM: FamilyTokens = {
-  text: "text-success",
-  bg: "bg-success",
-  bgSoft: "bg-success/10",
-  border: "border-success/30",
-  ring: "ring-success/40",
-  gradient: "from-success to-team",
+  text: "text-team",
+  bg: "bg-team",
+  bgSoft: "bg-team/10",
+  border: "border-team/30",
+  ring: "ring-team/40",
+  gradient: "from-team to-success",
 };
 
 /** Derive the event family from either tournament_type or format_family. */
@@ -86,8 +86,8 @@ export function getTournamentTheme(input: TournamentThemeInput): TournamentTheme
  * Class that re-tints a subtree to the event family's accent. The class sets
  * `--primary` (and its foreground/ring) in index.css, so every `bg-primary` /
  * `text-primary` / `ring-primary` descendant adopts the family colour — the
- * same mechanism the global data-accent themes use. Defined in CSS rather than
- * inline so dark mode can use the lighter, AA-readable shade.
+ * same mechanism the app themes use (styles/themes.css). Defined in CSS rather
+ * than inline so each theme supplies its own AA-readable family colour.
  */
 export const FAMILY_CLASS: Record<EventFamily, string> = {
   individual: "family-individual",
@@ -97,11 +97,11 @@ export const FAMILY_CLASS: Record<EventFamily, string> = {
 /**
  * Single source of truth for semantic tournament states.
  * Colors signal meaning strictly:
- * - brand: lime (--primary) for actions / "do this"
- * - live: rose-500 exclusively for in-progress action
- * - pending: amber-500 for awaiting reveal or needs-attention
- * - success: emerald-500 for completed results or team family
- * - neutral: slate-500 for archived, casual, or default
+ * - brand: --primary for actions / "do this"
+ * - live: --live exclusively for in-progress action
+ * - pending: --warning for awaiting reveal or needs-attention
+ * - success: --success for completed results
+ * - neutral: muted tokens for archived, casual, or default
  */
 export const SEMANTIC = {
   brand: {
@@ -110,10 +110,10 @@ export const SEMANTIC = {
     border: "border-primary/30",
   },
   live: {
-    text: "text-danger",
-    bg: "bg-danger text-danger-foreground",
-    bgSoft: "bg-danger/15 text-danger",
-    border: "border-danger/30",
+    text: "text-live",
+    bg: "bg-live text-live-foreground",
+    bgSoft: "bg-live/15 text-live",
+    border: "border-live/30",
   },
   pending: {
     text: "text-warning",
@@ -138,9 +138,9 @@ export const SEMANTIC = {
 /** Ranked-state tokens (colour-blind-safe: always paired with icon + label). */
 export const RANKED_TOKENS = {
   ranked: {
-    text: "text-warning",
-    bgSoft: "bg-warning/10",
-    border: "border-warning/40",
+    text: "text-gold",
+    bgSoft: "bg-gold/10",
+    border: "border-gold/40",
     label: "Ranked",
     sublabel: "Affects ELO",
   },

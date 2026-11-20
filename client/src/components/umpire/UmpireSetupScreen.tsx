@@ -48,7 +48,7 @@ export function UmpireSetupScreen({
     const CAT_BADGE: Record<string, string> = {
       MS: "bg-cat-ms",
       WS: "bg-cat-ws",
-      MD: "bg-primary",
+      MD: "bg-cat-md",
       WD: "bg-cat-wd",
       XD: "bg-cat-xd",
     };

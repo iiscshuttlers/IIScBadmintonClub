@@ -373,8 +373,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <motion.h1
                   layoutId={activeTournament?.id ? `tourn-title-${activeTournament.id}` : undefined}
-                  className="text-xl sm:text-2xl font-black text-foreground"
-                  style={{ fontFamily: "Playfair Display, serif" }}
+                  className="text-xl sm:text-2xl font-black text-foreground font-display"
                 >
                   {activeTournament.name}
                 </motion.h1>

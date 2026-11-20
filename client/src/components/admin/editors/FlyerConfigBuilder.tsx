@@ -10,6 +10,13 @@ import {
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 
+// Flyer colours are content the admin picks and stores, not UI styling, so the
+// colour pickers fall back to fixed values that do not follow the theme.
+const FLYER_COLOR_DEFAULTS = {
+  background: "#7c3aed", // raw-color-ok: user-chosen flyer colour value
+  text: "#ffffff", // raw-color-ok: user-chosen flyer colour value
+};
+
 export function FlyerConfigBuilder({
   f,
   onChange,
@@ -38,7 +45,7 @@ export function FlyerConfigBuilder({
             <div className="flex items-center gap-2">
               <input
                 type="color"
-                value={toHex(f.bgColorClass, "#7c3aed")}
+                value={toHex(f.bgColorClass, FLYER_COLOR_DEFAULTS.background)}
                 onChange={(e) => update("bgColorClass", e.target.value)}
                 className={colorSwatchCls}
                 title="Pick background color"
@@ -47,7 +54,7 @@ export function FlyerConfigBuilder({
                 value={f.bgColorClass}
                 onChange={(e) => update("bgColorClass", e.target.value)}
                 className={inputCls}
-                placeholder="#7c3aed or a Tailwind gradient class"
+                placeholder={`${FLYER_COLOR_DEFAULTS.background} or a Tailwind gradient class`}
               />
             </div>
           </div>
@@ -157,7 +164,7 @@ export function FlyerConfigBuilder({
             <div className="flex items-center gap-2 flex-1 w-full">
               <input
                 type="color"
-                value={toHex(item.colorClass, "#ffffff")}
+                value={toHex(item.colorClass, FLYER_COLOR_DEFAULTS.text)}
                 onChange={(e) => updateItem(itemIdx, "colorClass", e.target.value)}
                 className={colorSwatchCls}
                 title="Pick text color"
@@ -166,7 +173,7 @@ export function FlyerConfigBuilder({
                 value={item.colorClass}
                 onChange={(e) => updateItem(itemIdx, "colorClass", e.target.value)}
                 className={inputCls}
-                placeholder="#ffffff or e.g. text-warning"
+                placeholder={`${FLYER_COLOR_DEFAULTS.text} or e.g. text-warning`}
               />
             </div>
             <button

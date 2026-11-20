@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { cssVar } from "@/lib/themeColors";
 
 interface Match {
   id: string;
@@ -115,7 +116,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
         {/* Rolling Win Rate */}
         <div className="bg-muted/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Win Rate (rolling 5)</p>
-          <SparkLine values={data.winRates} color="#10b981" />
+          <SparkLine values={data.winRates} color={cssVar("success")} />
           <p className="text-xs font-bold text-soft mt-1">
             {data.winRates[data.winRates.length - 1]?.toFixed(0)}% last window
           </p>
@@ -124,7 +125,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
         {/* ELO Movement */}
         <div className="bg-muted/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">ELO Movement</p>
-          <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? "#10b981" : "#f43f5e"} />
+          <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? cssVar("success") : cssVar("danger")} />
           <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary" : "text-danger"}`}>
             {eloTrend >= 0 ? "+" : ""}{eloTrend} pts overall
           </p>

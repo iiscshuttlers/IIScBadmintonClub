@@ -11,6 +11,36 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { BwfMatchState } from "@/types/umpire";
+import { cssVar, cssVarAlpha, themeColor, themeColorAlpha, themeFont, withAlpha, type ThemeColorToken } from "@/lib/themeColors";
+
+// Scoreboard overlay colours are theme tokens, so the overlay follows the user's theme.
+// The chosen token (not a colour) is saved; older saved colours fall back to the default.
+type OverlaySwatch = { label: string; value: ThemeColorToken; bg: string };
+const SCORE_COLOR_PRESETS: OverlaySwatch[] = [
+  { label: "Amber Gold", value: "warning", bg: "bg-warning" },
+  { label: "Electric Cyan", value: "info", bg: "bg-info" },
+  { label: "Neon Pink", value: "danger", bg: "bg-danger" },
+  { label: "Pure White", value: "foreground", bg: "bg-foreground" },
+  { label: "Emerald Green", value: "success", bg: "bg-success" },
+];
+const SERVER_DOT_PRESETS: OverlaySwatch[] = [
+  { label: "Electric Gold", value: "warning", bg: "bg-warning" },
+  { label: "Vibrant Cyan", value: "info", bg: "bg-info" },
+  { label: "Electric Violet", value: "individual", bg: "bg-individual" },
+  { label: "Bright Red", value: "danger", bg: "bg-danger" },
+];
+type OverlayGlass = { label: string; value: string; token: ThemeColorToken; alpha: number };
+const CARD_BG_PRESETS: OverlayGlass[] = [
+  { label: "Fully Transparent", value: "transparent", token: "card", alpha: 0 },
+  { label: "Midnight Blue Glass", value: "card-glass", token: "card", alpha: 0.4 },
+  { label: "Neon Purple Tint", value: "violet-tint", token: "individual", alpha: 0.4 },
+  { label: "Deep Onyx Fade", value: "deep-fade", token: "background", alpha: 0.4 },
+];
+const CARD_BG_DEFAULT: OverlayGlass = { label: "Default", value: "default", token: "card", alpha: 0.82 };
+const savedOverlayToken = (key: string, presets: OverlaySwatch[]): ThemeColorToken => {
+  const saved = localStorage.getItem(key);
+  return presets.find((p) => p.value === saved)?.value ?? presets[0].value;
+};
 
 interface MatchData {
   id: string;
@@ -77,17 +107,18 @@ export default function CameraBroadcast() {
   const [showYoutubeModal, setShowYoutubeModal] = useState<boolean>(false);
 
   // Customizable Scorecard Overlay Styling
-  const [scoreTextColor, setScoreTextColor] = useState<string>(
-    () => localStorage.getItem("overlay_score_color") || "#fbbf24"
+  const [scoreTextColor, setScoreTextColor] = useState<ThemeColorToken>(
+    () => savedOverlayToken("overlay_score_color", SCORE_COLOR_PRESETS)
   );
   const [cardBgColor, setCardBgColor] = useState<string>(
-    () => localStorage.getItem("overlay_bg_color") || "rgba(15, 23, 42, 0.82)"
+    () => localStorage.getItem("overlay_bg_color") || CARD_BG_DEFAULT.value
   );
-  const [serverDotColor, setServerDotColor] = useState<string>(
-    () => localStorage.getItem("overlay_server_color") || "#fbbf24"
+  const [serverDotColor, setServerDotColor] = useState<ThemeColorToken>(
+    () => savedOverlayToken("overlay_server_color", SERVER_DOT_PRESETS)
   );
+  const cardGlass = CARD_BG_PRESETS.find((p) => p.value === cardBgColor) ?? CARD_BG_DEFAULT;
 
-  const updateScoreTextColor = (color: string) => {
+  const updateScoreTextColor = (color: ThemeColorToken) => {
     setScoreTextColor(color);
     localStorage.setItem("overlay_score_color", color);
   };
@@ -97,7 +128,7 @@ export default function CameraBroadcast() {
     localStorage.setItem("overlay_bg_color", color);
   };
 
-  const updateServerDotColor = (color: string) => {
+  const updateServerDotColor = (color: ThemeColorToken) => {
     setServerDotColor(color);
     localStorage.setItem("overlay_server_color", color);
   };
@@ -406,6 +437,17 @@ export default function CameraBroadcast() {
     // 1. Draw raw camera video
     ctx.drawImage(videoEl, 0, 0, width, height);
 
+    // Theme colours and fonts for the burned-in overlay
+    const scoreColor = themeColor(scoreTextColor);
+    const dotColor = themeColor(serverDotColor);
+    const fg = themeColor("foreground");
+    const metaColor = themeColor("muted-foreground");
+    const idleDot = themeColor("faint");
+    const rowBg = themeColorAlpha("muted", 0.75);
+    const pointsBg = themeColorAlpha("background", 0.95);
+    const bodyFont = themeFont("body");
+    const statFont = themeFont("stat");
+
     // 2. Draw lower-third scoreboard overlay bug at bottom left
     const bugWidth = Math.min(440, width * 0.85);
     const bugHeight = 135;
@@ -414,8 +456,8 @@ export default function CameraBroadcast() {
 
     // Background card with dark translucent glassmorphism
     ctx.save();
-    ctx.fillStyle = cardBgColor;
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.fillStyle = themeColorAlpha(cardGlass.token, cardGlass.alpha);
+    ctx.shadowColor = themeColor("scrim");
     ctx.shadowBlur = 12;
     ctx.beginPath();
     ctx.roundRect(bugX, bugY, bugWidth, bugHeight, 16);
@@ -424,37 +466,37 @@ export default function CameraBroadcast() {
 
     // Header bar (Category + Round)
     ctx.save();
-    ctx.fillStyle = "rgba(2, 6, 23, 0.88)"; // slate-950 88%
+    ctx.fillStyle = themeColorAlpha("background", 0.88);
     ctx.beginPath();
     ctx.roundRect(bugX, bugY, bugWidth, 28, [16, 16, 0, 0]);
     ctx.fill();
 
     // Category Badge
-    ctx.fillStyle = "#2563eb"; // blue-600
+    ctx.fillStyle = themeColor("info");
     ctx.beginPath();
     ctx.roundRect(bugX + 10, bugY + 5, 48, 18, 4);
     ctx.fill();
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = themeColor("info-foreground");
+    ctx.font = `bold 11px ${bodyFont}`;
     ctx.textAlign = "center";
     ctx.fillText(match?.category || "LIVE", bugX + 34, bugY + 18);
 
     // Round Name
-    ctx.fillStyle = "#cbd5e1"; // slate-300
-    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = themeColor("soft");
+    ctx.font = `bold 11px ${bodyFont}`;
     ctx.textAlign = "left";
     ctx.fillText(match?.round_name || "Court Match", bugX + 66, bugY + 18);
 
     // DEUCE / MATCH POINT alert badge
     if (match?.live_score?.is_deuce) {
-      ctx.fillStyle = "#f97316"; // orange-500
-      ctx.font = "bold 10px sans-serif";
+      ctx.fillStyle = themeColor("warning");
+      ctx.font = `bold 10px ${bodyFont}`;
       ctx.textAlign = "right";
       ctx.fillText("⚡ DEUCE", bugX + bugWidth - 10, bugY + 18);
     } else if (match?.live_score?.is_match_point) {
-      ctx.fillStyle = "#e11d48"; // rose-600
-      ctx.font = "bold 10px sans-serif";
+      ctx.fillStyle = themeColor("danger");
+      ctx.font = `bold 10px ${bodyFont}`;
       ctx.textAlign = "right";
       ctx.fillText("🔥 MATCH POINT", bugX + bugWidth - 10, bugY + 18);
     }
@@ -463,18 +505,18 @@ export default function CameraBroadcast() {
     // Team 1 Row
     const row1Y = bugY + 34;
     ctx.save();
-    ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
+    ctx.fillStyle = rowBg;
     ctx.beginPath();
     ctx.roundRect(bugX + 8, row1Y, bugWidth - 16, 42, 10);
     ctx.fill();
 
     // Server Dot Team 1
     if (match?.live_score?.server === 1) {
-      ctx.fillStyle = serverDotColor;
-      ctx.shadowColor = serverDotColor;
+      ctx.fillStyle = dotColor;
+      ctx.shadowColor = dotColor;
       ctx.shadowBlur = 8;
     } else {
-      ctx.fillStyle = "rgb(100, 116, 139)"; // slate-500
+      ctx.fillStyle = idleDot;
       ctx.shadowBlur = 0;
     }
     ctx.beginPath();
@@ -483,31 +525,31 @@ export default function CameraBroadcast() {
 
 
     // Team 1 Label
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = fg;
+    ctx.font = `bold 14px ${bodyFont}`;
     ctx.textAlign = "left";
     ctx.fillText(match?.team1_label || "Team 1", bugX + 35, row1Y + 26);
 
     // Team 1 Sets
-    ctx.fillStyle = "#94a3b8"; // slate-400
-    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = metaColor;
+    ctx.font = `bold 11px ${bodyFont}`;
     ctx.textAlign = "right";
     ctx.fillText(`${match?.live_score?.t1_sets || 0} set`, bugX + bugWidth - 65, row1Y + 26);
 
     // Team 1 Points Box (Glowing Neon)
     ctx.save();
-    ctx.fillStyle = "rgba(2, 6, 23, 0.95)";
-    ctx.strokeStyle = `${scoreTextColor}65`;
+    ctx.fillStyle = pointsBg;
+    ctx.strokeStyle = withAlpha(scoreColor, 0.4);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.roundRect(bugX + bugWidth - 55, row1Y + 6, 44, 30, 8);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = scoreTextColor;
-    ctx.shadowColor = scoreTextColor;
+    ctx.fillStyle = scoreColor;
+    ctx.shadowColor = scoreColor;
     ctx.shadowBlur = 12;
-    ctx.font = "bold 18px monospace";
+    ctx.font = `bold 18px ${statFont}`;
     ctx.textAlign = "center";
     ctx.fillText(String(match?.live_score?.t1_points ?? 0), bugX + bugWidth - 33, row1Y + 27);
     ctx.restore();
@@ -515,18 +557,18 @@ export default function CameraBroadcast() {
     // Team 2 Row
     const row2Y = bugY + 82;
     ctx.save();
-    ctx.fillStyle = "rgba(30, 41, 59, 0.75)";
+    ctx.fillStyle = rowBg;
     ctx.beginPath();
     ctx.roundRect(bugX + 8, row2Y, bugWidth - 16, 42, 10);
     ctx.fill();
 
     // Server Dot Team 2
     if (match?.live_score?.server === 2) {
-      ctx.fillStyle = serverDotColor;
-      ctx.shadowColor = serverDotColor;
+      ctx.fillStyle = dotColor;
+      ctx.shadowColor = dotColor;
       ctx.shadowBlur = 8;
     } else {
-      ctx.fillStyle = "rgb(100, 116, 139)"; // slate-500
+      ctx.fillStyle = idleDot;
       ctx.shadowBlur = 0;
     }
     ctx.beginPath();
@@ -534,31 +576,31 @@ export default function CameraBroadcast() {
     ctx.fill();
 
     // Team 2 Label
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = fg;
+    ctx.font = `bold 14px ${bodyFont}`;
     ctx.textAlign = "left";
     ctx.fillText(match?.team2_label || "Team 2", bugX + 35, row2Y + 26);
 
     // Team 2 Sets
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "bold 11px sans-serif";
+    ctx.fillStyle = metaColor;
+    ctx.font = `bold 11px ${bodyFont}`;
     ctx.textAlign = "right";
     ctx.fillText(`${match?.live_score?.t2_sets || 0} set`, bugX + bugWidth - 65, row2Y + 26);
 
     // Team 2 Points Box (Glowing Neon)
     ctx.save();
-    ctx.fillStyle = "rgba(2, 6, 23, 0.95)";
-    ctx.strokeStyle = `${scoreTextColor}65`;
+    ctx.fillStyle = pointsBg;
+    ctx.strokeStyle = withAlpha(scoreColor, 0.4);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.roundRect(bugX + bugWidth - 55, row2Y + 6, 44, 30, 8);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = scoreTextColor;
-    ctx.shadowColor = scoreTextColor;
+    ctx.fillStyle = scoreColor;
+    ctx.shadowColor = scoreColor;
     ctx.shadowBlur = 12;
-    ctx.font = "bold 18px monospace";
+    ctx.font = `bold 18px ${statFont}`;
     ctx.textAlign = "center";
     ctx.fillText(String(match?.live_score?.t2_points ?? 0), bugX + bugWidth - 33, row2Y + 27);
     ctx.restore();
@@ -753,8 +795,8 @@ export default function CameraBroadcast() {
       {/* ── Premium BWF Live Scoreboard Overlay ──────────────────────────── */}
       <div className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-auto z-20 pointer-events-none">
         <div
-          style={{ backgroundColor: cardBgColor }}
-          className="backdrop-blur-xl border border-border-strong/50 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ backgroundColor: cssVarAlpha(cardGlass.token, cardGlass.alpha) }}
+          className="backdrop-blur-xl border border-border-strong/50 rounded-2xl shadow-[0_12px_40px_var(--scrim)] overflow-hidden max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
           {/* Accent top gradient */}
           <div className="h-0.5 bg-gradient-to-r from-success via-accent to-info" />
@@ -762,8 +804,8 @@ export default function CameraBroadcast() {
           {/* Header Bar */}
           <div className="px-4 py-2 border-b border-border/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.7)]" />
-              <span className="bg-info/90 text-foreground px-2 py-0.5 rounded-md font-black tracking-wider text-[9px] uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse shadow-[0_0_6px_color-mix(in_srgb,var(--live)_70%,transparent)]" />
+              <span className="bg-info/90 text-info-foreground px-2 py-0.5 rounded-md font-black tracking-wider text-[9px] uppercase">
                 {liveMatch?.category || "LIVE"}
               </span>
               <span className="text-muted-foreground font-bold truncate max-w-[140px] text-[11px]">
@@ -796,17 +838,17 @@ export default function CameraBroadcast() {
             {/* Team 1 Row */}
             <div className="flex items-center justify-between rounded-xl px-3 py-2 transition-all duration-300"
               style={{
-                backgroundColor: liveMatch?.live_score?.server === 1 ? "rgba(16,185,129,0.08)" : "rgba(30,41,59,0.5)",
+                backgroundColor: liveMatch?.live_score?.server === 1 ? cssVarAlpha("team-1", 0.08) : cssVarAlpha("muted", 0.5),
                 borderWidth: "1px",
-                borderColor: liveMatch?.live_score?.server === 1 ? "rgba(16,185,129,0.2)" : "rgba(51,65,85,0.3)",
+                borderColor: liveMatch?.live_score?.server === 1 ? cssVarAlpha("team-1", 0.2) : cssVarAlpha("border-strong", 0.3),
               }}
             >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
                   className="w-2 h-2 rounded-full shrink-0 transition-all duration-300 animate-pulse"
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 1 ? serverDotColor : "rgb(100,116,139)",
-                    boxShadow: liveMatch?.live_score?.server === 1 ? `0 0 10px ${serverDotColor}` : "none"
+                    backgroundColor: liveMatch?.live_score?.server === 1 ? cssVar(serverDotColor) : cssVar("faint"),
+                    boxShadow: liveMatch?.live_score?.server === 1 ? `0 0 10px ${cssVar(serverDotColor)}` : "none"
                   }}
                 />
                 <span className="text-foreground font-black text-sm tracking-tight truncate">
@@ -820,9 +862,9 @@ export default function CameraBroadcast() {
                 <span
                   className="text-2xl font-black tabular-nums min-w-[2ch] text-center rounded-lg px-2 py-0.5 transition-all duration-200"
                   style={{
-                    color: scoreTextColor,
-                    backgroundColor: "rgba(2,6,23,0.7)",
-                    textShadow: `0 0 16px ${scoreTextColor}60`,
+                    color: cssVar(scoreTextColor),
+                    backgroundColor: cssVarAlpha("background", 0.7),
+                    textShadow: `0 0 16px ${cssVarAlpha(scoreTextColor, 0.38)}`,
                   }}
                 >
                   {liveMatch?.live_score?.t1_points ?? 0}
@@ -833,17 +875,17 @@ export default function CameraBroadcast() {
             {/* Team 2 Row */}
             <div className="flex items-center justify-between rounded-xl px-3 py-2 transition-all duration-300"
               style={{
-                backgroundColor: liveMatch?.live_score?.server === 2 ? "rgba(99,102,241,0.08)" : "rgba(30,41,59,0.5)",
+                backgroundColor: liveMatch?.live_score?.server === 2 ? cssVarAlpha("team-2", 0.08) : cssVarAlpha("muted", 0.5),
                 borderWidth: "1px",
-                borderColor: liveMatch?.live_score?.server === 2 ? "rgba(99,102,241,0.2)" : "rgba(51,65,85,0.3)",
+                borderColor: liveMatch?.live_score?.server === 2 ? cssVarAlpha("team-2", 0.2) : cssVarAlpha("border-strong", 0.3),
               }}
             >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
                   className="w-2 h-2 rounded-full shrink-0 transition-all duration-300 animate-pulse"
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 2 ? serverDotColor : "rgb(100,116,139)",
-                    boxShadow: liveMatch?.live_score?.server === 2 ? `0 0 10px ${serverDotColor}` : "none"
+                    backgroundColor: liveMatch?.live_score?.server === 2 ? cssVar(serverDotColor) : cssVar("faint"),
+                    boxShadow: liveMatch?.live_score?.server === 2 ? `0 0 10px ${cssVar(serverDotColor)}` : "none"
                   }}
                 />
                 <span className="text-foreground font-black text-sm tracking-tight truncate">
@@ -857,9 +899,9 @@ export default function CameraBroadcast() {
                 <span
                   className="text-2xl font-black tabular-nums min-w-[2ch] text-center rounded-lg px-2 py-0.5 transition-all duration-200"
                   style={{
-                    color: scoreTextColor,
-                    backgroundColor: "rgba(2,6,23,0.7)",
-                    textShadow: `0 0 16px ${scoreTextColor}60`,
+                    color: cssVar(scoreTextColor),
+                    backgroundColor: cssVarAlpha("background", 0.7),
+                    textShadow: `0 0 16px ${cssVarAlpha(scoreTextColor, 0.38)}`,
                   }}
                 >
                   {liveMatch?.live_score?.t2_points ?? 0}
@@ -1097,13 +1139,7 @@ export default function CameraBroadcast() {
                 <div>
                   <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">Score Number Color</span>
                   <div className="flex items-center gap-2">
-                    {[
-                      { label: "Amber Gold", value: "#fbbf24", bg: "bg-warning" },
-                      { label: "Electric Cyan", value: "#38bdf8", bg: "bg-info" },
-                      { label: "Neon Pink", value: "#f43f5e", bg: "bg-danger" },
-                      { label: "Pure White", value: "#ffffff", bg: "bg-foreground" },
-                      { label: "Emerald Green", value: "#34d399", bg: "bg-success" },
-                    ].map((c) => (
+                    {SCORE_COLOR_PRESETS.map((c) => (
                       <button
                         key={c.value}
                         onClick={() => updateScoreTextColor(c.value)}
@@ -1120,12 +1156,7 @@ export default function CameraBroadcast() {
                 <div>
                   <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">Server Dot Color</span>
                   <div className="flex items-center gap-2">
-                    {[
-                      { label: "Electric Gold", value: "#fbbf24", bg: "bg-warning" },
-                      { label: "Vibrant Cyan", value: "#38bdf8", bg: "bg-info" },
-                      { label: "Electric Violet", value: "#c084fc", bg: "bg-individual" },
-                      { label: "Bright Red", value: "#ef4444", bg: "bg-danger" },
-                    ].map((c) => (
+                    {SERVER_DOT_PRESETS.map((c) => (
                       <button
                         key={c.value}
                         onClick={() => updateServerDotColor(c.value)}
@@ -1142,18 +1173,13 @@ export default function CameraBroadcast() {
                 <div>
                   <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">Card Background Glass</span>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    {[
-                      { label: "Fully Transparent", value: "rgba(0, 0, 0, 0)" },
-                      { label: "Midnight Blue Glass", value: "rgba(15, 23, 42, 0.4)" },
-                      { label: "Neon Purple Tint", value: "rgba(88, 28, 135, 0.4)" },
-                      { label: "Deep Onyx Fade", value: "rgba(2, 6, 23, 0.4)" },
-                    ].map((bg) => (
+                    {CARD_BG_PRESETS.map((bg) => (
                       <button
                         key={bg.value}
                         onClick={() => updateCardBgColor(bg.value)}
                         className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition text-left ${
                           cardBgColor === bg.value
-                            ? "bg-info/30 border-info text-info shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                            ? "bg-info/30 border-info text-info shadow-[0_0_10px_color-mix(in_srgb,var(--info)_50%,transparent)]"
                             : "bg-background border-border text-muted-foreground hover:text-foreground"
                         }`}
                       >

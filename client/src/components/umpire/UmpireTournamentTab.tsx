@@ -72,11 +72,11 @@ const CAT_LABELS: Record<string, string> = {
 };
 
 const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = {
-  MS: { bg: "bg-cat-ms/10 border-cat-ms/40 text-cat-ms", active: "bg-cat-ms text-foreground border-cat-ms", dot: "bg-cat-ms" },
-  WS: { bg: "bg-cat-ws/10 border-cat-ws/40 text-cat-ws", active: "bg-cat-ws text-foreground border-cat-ws", dot: "bg-cat-ws" },
-  MD: { bg: "bg-primary/30 border-primary/80 text-primary/70", active: "bg-primary text-primary-foreground border-primary", dot: "bg-primary" },
-  WD: { bg: "bg-cat-wd/10 border-cat-wd/40 text-cat-wd", active: "bg-cat-wd text-foreground border-cat-wd", dot: "bg-cat-wd" },
-  XD: { bg: "bg-cat-xd/10 border-cat-xd/40 text-cat-xd", active: "bg-cat-xd text-foreground border-cat-xd", dot: "bg-cat-xd" },
+  MS: { bg: "bg-cat-ms/10 border-cat-ms/40 text-cat-ms", active: "bg-cat-ms text-on-accent border-cat-ms", dot: "bg-cat-ms" },
+  WS: { bg: "bg-cat-ws/10 border-cat-ws/40 text-cat-ws", active: "bg-cat-ws text-on-accent border-cat-ws", dot: "bg-cat-ws" },
+  MD: { bg: "bg-cat-md/10 border-cat-md/40 text-cat-md", active: "bg-cat-md text-on-accent border-cat-md", dot: "bg-cat-md" },
+  WD: { bg: "bg-cat-wd/10 border-cat-wd/40 text-cat-wd", active: "bg-cat-wd text-on-accent border-cat-wd", dot: "bg-cat-wd" },
+  XD: { bg: "bg-cat-xd/10 border-cat-xd/40 text-cat-xd", active: "bg-cat-xd text-on-accent border-cat-xd", dot: "bg-cat-xd" },
 };
 
 const DEFAULT_COLORS = { bg: "bg-muted-strong border-border-strong text-soft", active: "bg-faint text-foreground border-border-strong", dot: "bg-muted-foreground" };
@@ -84,7 +84,7 @@ const DEFAULT_COLORS = { bg: "bg-muted-strong border-border-strong text-soft", a
 const CAT_BOX_COLORS_DARK: Record<string, string> = {
   MS: "bg-cat-ms/10 border-cat-ms/25 hover:border-cat-ms/50 hover:shadow-cat-ms/20",
   WS: "bg-cat-ws/10 border-cat-ws/25 hover:border-cat-ws/50 hover:shadow-cat-ws/20",
-  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
+  MD: "bg-cat-md/10 border-cat-md/20 hover:border-cat-md/50 hover:shadow-cat-md/20",
   WD: "bg-cat-wd/10 border-cat-wd/25 hover:border-cat-wd/50 hover:shadow-cat-wd/20",
   XD: "bg-cat-xd/10 border-cat-xd/25 hover:border-cat-xd/50 hover:shadow-cat-xd/20",
   BS: "bg-team/10 border-team/25 hover:border-team/50 hover:shadow-team/20",

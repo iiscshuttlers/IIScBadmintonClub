@@ -23,7 +23,7 @@ export default function NotFound() {
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
-          className="w-full h-full"
+          className="w-full h-full text-on-accent"
           viewBox="0 0 800 600"
           preserveAspectRatio="none"
         >
@@ -32,7 +32,7 @@ export default function NotFound() {
             y1="0"
             x2="400"
             y2="600"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <line
@@ -40,7 +40,7 @@ export default function NotFound() {
             y1="300"
             x2="800"
             y2="300"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="2"
           />
           <ellipse
@@ -48,7 +48,7 @@ export default function NotFound() {
             cy="300"
             rx="160"
             ry="120"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="2"
             fill="none"
           />
@@ -57,7 +57,7 @@ export default function NotFound() {
             y="80"
             width="640"
             height="440"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="3"
             fill="none"
           />
@@ -66,7 +66,7 @@ export default function NotFound() {
             y="80"
             width="480"
             height="440"
-            stroke="white"
+            stroke="currentColor"
             strokeWidth="1.5"
             fill="none"
           />
@@ -134,8 +134,7 @@ export default function NotFound() {
         </div>
 
         <h1
-          className="text-4xl sm:text-5xl font-bold mb-4"
-          style={{ fontFamily: "Playfair Display, serif" }}
+          className="text-4xl sm:text-5xl font-bold mb-4 font-display"
         >
           Out of Bounds!
         </h1>

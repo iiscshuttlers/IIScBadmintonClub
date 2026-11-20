@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { PlayerRow } from "@/types";
+import { cssVar, cssVarAlpha } from "@/lib/themeColors";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -91,14 +92,14 @@ export function ProfileStatsTabLeft({
                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
                   <defs>
                     <linearGradient id="colorRadar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.7} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="5%" stopColor={cssVar("success")} stopOpacity={0.7} />
+                      <stop offset="95%" stopColor={cssVar("success")} stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" className="stroke-faint/60" />
+                  <PolarGrid stroke={cssVar("faint")} strokeDasharray="3 3" className="stroke-faint/60" />
                   <PolarAngleAxis
                     dataKey="subject"
-                    tick={{ fill: "#94a3b8", fontSize: 13, fontWeight: 700 }}
+                    tick={{ fill: cssVar("muted-foreground"), fontSize: 13, fontWeight: 700 }}
                   />
                   <PolarRadiusAxis
                     angle={90}
@@ -109,21 +110,21 @@ export function ProfileStatsTabLeft({
                   <Radar
                     name="Performance"
                     dataKey="A"
-                    stroke="#10b981"
+                    stroke={cssVar("success")}
                     strokeWidth={4}
                     fill="url(#colorRadar)"
-                    activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: cssVar("success"), stroke: cssVar("foreground"), strokeWidth: 2 }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(19, 20, 23, 0.95)",
-                      borderColor: "rgba(36, 37, 42, 0.9)",
+                      backgroundColor: cssVarAlpha("popover", 0.95),
+                      borderColor: cssVar("border"),
                       borderRadius: "12px",
                       backdropFilter: "blur(8px)",
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+                      boxShadow: `0 10px 25px -5px ${cssVarAlpha("scrim", 0.5)}`,
                     }}
-                    itemStyle={{ color: "#10b981", fontWeight: "black", fontSize: "16px" }}
-                    labelStyle={{ color: "#94a3b8", fontWeight: "bold", marginBottom: "4px" }}
+                    itemStyle={{ color: cssVar("success"), fontWeight: "black", fontSize: "16px" }}
+                    labelStyle={{ color: cssVar("muted-foreground"), fontWeight: "bold", marginBottom: "4px" }}
                   />
                 </RadarChart>
               </ResponsiveContainer>

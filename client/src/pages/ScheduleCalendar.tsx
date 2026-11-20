@@ -1,6 +1,7 @@
 import { matchPath, tournamentLink } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
+import { cssVar, cssVarAlpha } from "@/lib/themeColors";
 import { fetchTournamentConfig, getTournaments } from "@/lib/tournaments";
 import { tournamentService } from "@/services/tournamentService";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
@@ -57,8 +58,8 @@ const HOLIDAY_COLORS = [
     textDark: "text-danger",
     badge: "bg-danger/10 text-danger",
     solid: "bg-danger",
-    hex: "#f43f5e",
-    hexBg: "rgba(244, 63, 94, 0.1)",
+    hex: cssVar("danger"),
+    hexBg: cssVarAlpha("danger", 0.1),
   },
   {
     bg: "bg-individual/10",
@@ -68,8 +69,8 @@ const HOLIDAY_COLORS = [
     badge:
       "bg-individual/10 text-individual",
     solid: "bg-individual",
-    hex: "#a855f7",
-    hexBg: "rgba(168, 85, 247, 0.1)",
+    hex: cssVar("individual"),
+    hexBg: cssVarAlpha("individual", 0.1),
   },
   {
     bg: "bg-warning/10",
@@ -79,8 +80,8 @@ const HOLIDAY_COLORS = [
     badge:
       "bg-warning/10 text-warning",
     solid: "bg-warning",
-    hex: "#f59e0b",
-    hexBg: "rgba(245, 158, 11, 0.1)",
+    hex: cssVar("warning"),
+    hexBg: cssVarAlpha("warning", 0.1),
   },
   {
     bg: "bg-accent/10",
@@ -89,8 +90,8 @@ const HOLIDAY_COLORS = [
     textDark: "text-accent",
     badge: "bg-accent/10 text-accent",
     solid: "bg-accent",
-    hex: "#06b6d4",
-    hexBg: "rgba(6, 182, 212, 0.1)",
+    hex: cssVar("accent"),
+    hexBg: cssVarAlpha("accent", 0.1),
   },
   {
     bg: "bg-individual/10",
@@ -100,8 +101,8 @@ const HOLIDAY_COLORS = [
     badge:
       "bg-individual/10 text-individual",
     solid: "bg-individual",
-    hex: "#d946ef",
-    hexBg: "rgba(217, 70, 239, 0.1)",
+    hex: cssVar("individual"),
+    hexBg: cssVarAlpha("individual", 0.1),
   },
 ];
 
@@ -368,11 +369,11 @@ export default function ScheduleCalendar() {
                                 let catColor = "text-soft";
                                 if (e.type !== "holiday") {
                                   const cat = e.title.split(" • ")[0];
-                                  if (cat === "MS") catColor = "text-info";
-                                  else if (cat === "MD") catColor = "text-success";
-                                  else if (cat === "WS") catColor = "text-individual";
-                                  else if (cat === "WD") catColor = "text-individual";
-                                  else if (cat === "XD") catColor = "text-secondary";
+                                  if (cat === "MS") catColor = "text-cat-ms";
+                                  else if (cat === "MD") catColor = "text-cat-md";
+                                  else if (cat === "WS") catColor = "text-cat-ws";
+                                  else if (cat === "WD") catColor = "text-cat-wd";
+                                  else if (cat === "XD") catColor = "text-cat-xd";
                                 }
                                 return (
                                   <div
@@ -413,13 +414,13 @@ export default function ScheduleCalendar() {
                 modifiersStyles={{
                   hasEventStart: {
                     fontWeight: "900",
-                    color: "#0ea5e9",
-                    backgroundColor: "rgba(14, 165, 233, 0.15)",
+                    color: cssVar("info"),
+                    backgroundColor: cssVarAlpha("info", 0.15),
                   },
                   hasEventOngoing: {
                     fontWeight: "900",
-                    color: "#10b981",
-                    backgroundColor: "rgba(16, 185, 129, 0.1)",
+                    color: cssVar("success"),
+                    backgroundColor: cssVarAlpha("success", 0.1),
                   },
                   hasHoliday_0: {
                     fontWeight: "900",
@@ -448,8 +449,8 @@ export default function ScheduleCalendar() {
                   },
                   hasDeadline: {
                     fontWeight: "900",
-                    color: "#f59e0b",
-                    backgroundColor: "rgba(245, 158, 11, 0.2)",
+                    color: cssVar("warning"),
+                    backgroundColor: cssVarAlpha("warning", 0.2),
                   },
                 }}
               />

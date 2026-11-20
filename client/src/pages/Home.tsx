@@ -30,6 +30,7 @@ import { ArchivedTournament } from "@/data/tournamentArchive";
 import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
+import { cssVar } from "@/lib/themeColors";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
 import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
 import { HostTournamentCta } from "@/components/home/HostTournamentCta";
@@ -138,9 +139,9 @@ export default function Home() {
               <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
                 {/* Heading */}
                 <div className="space-y-4">
-                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-foreground drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-foreground drop-shadow-[0_2px_6px_color-mix(in_srgb,var(--background)_60%,transparent)] font-display">
                     Welcome to the <br className="hidden sm:block" />
-                    <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">IISc</span> Badminton Club
+                    <span className="text-primary drop-shadow-[0_2px_6px_color-mix(in_srgb,var(--background)_60%,transparent)]">IISc</span> Badminton Club
                   </h1>
                 </div>
 
@@ -208,7 +209,7 @@ export default function Home() {
             >
               <div className="inline-flex items-center justify-between w-full cursor-pointer group" onClick={() => setShowAbout(!showAbout)}>
                 <div>
-                  <h2 className="text-xl lg:text-2xl font-black text-foreground mb-1 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h2 className="text-xl lg:text-2xl font-black text-foreground mb-1 leading-tight font-display">
                     About IISc
                     <span className="text-primary"> Badminton Club</span>
                   </h2>
@@ -227,7 +228,7 @@ export default function Home() {
               {/* Mission */}
               <motion.div variants={fadeUp} className="space-y-4">
                 <div>
-                  <h3 className="text-2xl font-black text-foreground mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h3 className="text-2xl font-black text-foreground mb-1 flex items-center gap-3 font-display">
                     <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-team rounded-full inline-block" />
                     Our Mission
                   </h3>
@@ -238,7 +239,7 @@ export default function Home() {
                 </p>
                 {config?.about?.history && (
                   <div className="pt-2 space-y-2">
-                    <h3 className="text-2xl font-black text-foreground flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                    <h3 className="text-2xl font-black text-foreground flex items-center gap-3 font-display">
                       <span className="w-1.5 h-7 bg-gradient-to-b from-info to-info rounded-full inline-block" />
                       Our History
                     </h3>
@@ -249,7 +250,7 @@ export default function Home() {
 
               {/* Values */}
               <motion.div variants={fadeUp}>
-                <h3 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                <h3 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3 font-display">
                   <span className="w-1.5 h-7 bg-gradient-to-b from-secondary to-warning rounded-full inline-block" />
                   Our Values
                 </h3>
@@ -299,7 +300,7 @@ export default function Home() {
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               <p className="text-[9px] font-bold text-secondary uppercase tracking-widest mb-1">Leadership</p>
-              <h2 className="text-xl font-black text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
+              <h2 className="text-xl font-black text-foreground font-display">
                 Club Leadership
               </h2>
               <p className="text-muted-foreground text-[10px] mt-0.5">The people keeping the shuttles flying</p>
@@ -424,7 +425,7 @@ function AnimatedLogo() {
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke={cssVar("warning")} strokeWidth="1" />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
@@ -466,34 +467,34 @@ function AnimatedLogo() {
           <div className="absolute inset-0 z-20 pointer-events-none transform scale-75 origin-center">
             <div className="racket-anim absolute top-1/2 left-1/2 -ml-[50px] -mt-[50px] w-[100px] h-[180px]">
               <svg width="100" height="180" viewBox="0 0 100 180">
-                <rect x="42" y="120" width="16" height="50" fill="#f59e0b" rx="2" />
-                <rect x="42" y="165" width="16" height="5" fill="#b45309" rx="1" />
-                <rect x="44" y="115" width="12" height="5" fill="#94a3b8" />
-                <line x1="50" y1="115" x2="50" y2="75" stroke="#cbd5e1" strokeWidth="6" />
-                <path d="M 50 75 L 40 60 L 60 60 Z" fill="#3b82f6" />
+                <rect x="42" y="120" width="16" height="50" fill={cssVar("warning")} rx="2" />
+                <rect x="42" y="165" width="16" height="5" fill={cssVar("secondary")} rx="1" />
+                <rect x="44" y="115" width="12" height="5" fill={cssVar("muted-foreground")} />
+                <line x1="50" y1="115" x2="50" y2="75" stroke={cssVar("soft")} strokeWidth="6" />
+                <path d="M 50 75 L 40 60 L 60 60 Z" fill={cssVar("info")} />
                 <defs>
                   <pattern id="strings" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <rect width="8" height="8" fill="none" stroke="#64748b" strokeWidth="0.75" />
+                    <rect width="8" height="8" fill="none" stroke={cssVar("faint")} strokeWidth="0.75" />
                   </pattern>
                 </defs>
-                <ellipse cx="50" cy="50" rx="28" ry="38" fill="url(#strings)" stroke="#3b82f6" strokeWidth="6" />
+                <ellipse cx="50" cy="50" rx="28" ry="38" fill="url(#strings)" stroke={cssVar("info")} strokeWidth="6" />
               </svg>
             </div>
             <div className="shuttle-anim absolute top-1/2 left-1/2 -ml-[30px] -mt-[30px] w-[60px] h-[60px]">
               <svg width="60" height="60" viewBox="0 0 60 60">
-                <path d="M 22 45 A 8 8 0 0 0 38 45 Z" fill="#ef4444" />
-                <rect x="22" y="42" width="16" height="3" fill="#ffffff" />
-                <path d="M 22 42 L 10 10 L 50 10 L 38 42 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" strokeLinejoin="round" />
-                <line x1="26" y1="42" x2="20" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <line x1="30" y1="42" x2="30" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <line x1="34" y1="42" x2="40" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <path d="M 12 25 Q 30 32 48 25" fill="none" stroke="#cbd5e1" strokeWidth="1.5" />
-                <path d="M 17 35 Q 30 39 43 35" fill="none" stroke="#cbd5e1" strokeWidth="1.5" />
+                <path d="M 22 45 A 8 8 0 0 0 38 45 Z" fill={cssVar("danger")} />
+                <rect x="22" y="42" width="16" height="3" fill={cssVar("foreground")} />
+                <path d="M 22 42 L 10 10 L 50 10 L 38 42 Z" fill={cssVar("foreground")} stroke={cssVar("muted-foreground")} strokeWidth="1.5" strokeLinejoin="round" />
+                <line x1="26" y1="42" x2="20" y2="10" stroke={cssVar("muted-foreground")} strokeWidth="1.5" />
+                <line x1="30" y1="42" x2="30" y2="10" stroke={cssVar("muted-foreground")} strokeWidth="1.5" />
+                <line x1="34" y1="42" x2="40" y2="10" stroke={cssVar("muted-foreground")} strokeWidth="1.5" />
+                <path d="M 12 25 Q 30 32 48 25" fill="none" stroke={cssVar("muted-foreground")} strokeWidth="1.5" />
+                <path d="M 17 35 Q 30 39 43 35" fill="none" stroke={cssVar("muted-foreground")} strokeWidth="1.5" />
               </svg>
             </div>
             <div className="spark-anim absolute top-1/2 left-1/2 ml-[10px] mt-[10px] w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2">
               <svg viewBox="0 0 100 100">
-                <path d="M50 10 L55 45 L90 50 L55 55 L50 90 L45 55 L10 50 L45 45 Z" fill="#fef08a" />
+                <path d="M50 10 L55 45 L90 50 L55 55 L50 90 L45 55 L10 50 L45 45 Z" fill={cssVar("gold")} />
               </svg>
             </div>
           </div>

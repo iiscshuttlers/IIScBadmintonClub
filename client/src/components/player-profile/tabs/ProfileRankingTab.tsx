@@ -54,7 +54,7 @@ export function ProfileRankingTab({
 
       {/* Format Rankings */}
       <div className="flex flex-wrap gap-3 md:gap-4">
-        <div className="flex-1 min-w-[140px] bg-gradient-to-br from-gold to-secondary rounded-2xl p-4 flex flex-col shadow-lg shadow-gold/20 text-on-accent relative overflow-hidden">
+        <div className="flex-1 min-w-[140px] bg-gradient-to-br from-gold to-secondary rounded-2xl p-4 flex flex-col shadow-lg shadow-gold/20 on-fill relative overflow-hidden">
           <div className="absolute -right-4 -top-4 opacity-20">
             <Trophy className="w-20 h-20" />
           </div>

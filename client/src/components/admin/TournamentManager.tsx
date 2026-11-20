@@ -286,7 +286,7 @@ export function TournamentManager() {
           <OverflowTabs
             activeId={activeTab}
             onChange={setTab}
-            activeClassName={`${getTournamentTheme(selected).tokens.bg} text-foreground shadow-md`}
+            activeClassName={`${getTournamentTheme(selected).tokens.bg} text-on-accent shadow-md`}
             tabs={[
               { id: "setup", label: "Setup", icon: Settings2 },
               { id: "entries", label: isTeam ? "Teams" : "Players", icon: Users },

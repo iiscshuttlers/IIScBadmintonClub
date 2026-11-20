@@ -16,32 +16,32 @@ export default function Join() {
       <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-success/5 rounded-full blur-3xl pointer-events-none" />
       {/* Subtle court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="none">
-          <line x1="400" y1="0" x2="400" y2="600" stroke="white" strokeWidth="1.5" />
-          <line x1="0" y1="300" x2="800" y2="300" stroke="white" strokeWidth="1.5" />
-          <ellipse cx="400" cy="300" rx="120" ry="90" stroke="white" strokeWidth="1.5" fill="none" />
-          <rect x="120" y="100" width="560" height="400" stroke="white" strokeWidth="2" fill="none" />
+        <svg className="w-full h-full text-on-accent" viewBox="0 0 800 600" preserveAspectRatio="none">
+          <line x1="400" y1="0" x2="400" y2="600" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="0" y1="300" x2="800" y2="300" stroke="currentColor" strokeWidth="1.5" />
+          <ellipse cx="400" cy="300" rx="120" ry="90" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          <rect x="120" y="100" width="560" height="400" stroke="currentColor" strokeWidth="2" fill="none" />
         </svg>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-foreground/10 border border-foreground/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm">
-            <ShieldCheck className="w-8 h-8 text-primary" />
+          <div className="w-16 h-16 bg-on-accent/10 border border-on-accent/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm">
+            <ShieldCheck className="w-8 h-8 text-on-accent" />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-3xl font-black text-foreground tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>IISc Badminton Club</h1>
+            <h1 className="text-3xl font-black text-on-accent tracking-tight font-display">IISc Badminton Club</h1>
             <InfoModal
               title="MEMBER PORTAL"
               items={[
                 { badge: "ACCESS", title: "Club Members Only", desc: "You must be an approved club member to access the internal platform." },
                 { badge: "GUESTS", title: "Guest Access", desc: "If you are a guest, you don't need an account. Your host will log matches on your behalf." }
               ]}
-              triggerClassName="text-foreground hover:text-primary/70"
+              triggerClassName="text-on-accent hover:text-on-accent/70"
             />
           </div>
-          <p className="mt-2 text-sm text-success">Member portal · Campus Badminton Community</p>
+          <p className="mt-2 text-sm text-on-accent/80">Member portal · Campus Badminton Community</p>
         </div>
 
         <div className="bg-card py-8 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-foreground/10 backdrop-blur-sm">

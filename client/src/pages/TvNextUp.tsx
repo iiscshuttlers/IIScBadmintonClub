@@ -113,7 +113,7 @@ export default function TvNextUp() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#0c4a6e,_#020617_65%)] text-foreground flex flex-col p-6 sm:p-10">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_color-mix(in_srgb,var(--info)_25%,var(--background)),_var(--background)_65%)] text-foreground flex flex-col p-6 sm:p-10">
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link href="/tv">

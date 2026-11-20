@@ -226,7 +226,7 @@ export default function TournamentsHub() {
         <div 
           className="absolute inset-0 pointer-events-none transition-colors duration-700"
           style={{
-            background: "radial-gradient(ellipse 80% 80% at 50% -20%, var(--family-glow, rgba(120,119,198,0.25)), rgba(255,255,255,0))"
+            background: "radial-gradient(ellipse 80% 80% at 50% -20%, var(--family-glow, color-mix(in srgb, var(--individual) 25%, transparent)), transparent)"
           }}
         />
         <div className="container mx-auto px-4 max-w-5xl relative z-10 text-center">
@@ -234,8 +234,7 @@ export default function TournamentsHub() {
             <Sparkles className="w-3.5 h-3.5" /> Tournaments &amp; Events
           </div>
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black mb-2.5 tracking-tight text-foreground"
-            style={{ fontFamily: "Outfit, Inter, sans-serif" }}
+            className="text-3xl sm:text-4xl md:text-5xl font-black mb-2.5 tracking-tight text-foreground font-display"
           >
             Tournaments
           </h1>

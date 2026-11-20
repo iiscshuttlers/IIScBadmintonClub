@@ -14,8 +14,6 @@ import {
   Settings,
   LogOut,
   UserPlus,
-  Moon,
-  Sun,
   Zap,
   ChevronDown,
   Globe,
@@ -582,16 +580,16 @@ export default function Navigation() {
       {!new RegExp('^/player/[^/]+/personal').test(location) && (
       <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_10%,transparent)] dark:shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_60%,transparent)]"
       >
                 <Link href="/" className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                     <LayoutDashboard strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Home</span>
                   </button>
                 </Link>
                 <a href={getPulseHref()} className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
                     {hasUnreadAnnouncements ? (
@@ -609,7 +607,7 @@ export default function Navigation() {
               <Link href={eventsHref} className="flex-1 min-w-0">
                 <button
                   aria-label={liveCount > 0 ? `Events${eventsLiveLabel}` : undefined}
-                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Events</span>
@@ -622,14 +620,14 @@ export default function Navigation() {
               </Link>
 
               <Link href="/club" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                   <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Club</span>
                 </button>
               </Link>
               
               <Link href="/legacy" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground"}`}>
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                   <Award strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Legacy</span>
                 </button>
@@ -756,44 +754,6 @@ function MobileNavLink({
         )}
       </button>
     </Link>
-  );
-}
-
-function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
-
-  if (insideMenu) {
-    return (
-      <button
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTheme(); }}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-soft hover:bg-muted transition-colors"
-      >
-        <span className="flex items-center gap-2">
-          {isDark ? <Sun className="w-4 h-4 text-warning" /> : <Moon className="w-4 h-4 text-info" />}
-          Dark Mode
-        </span>
-        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-primary' : 'bg-muted-strong'}`}>
-          <div className={`w-3 h-3 bg-foreground rounded-full absolute top-0.5 transition-all ${isDark ? 'left-4.5' : 'left-0.5'}`} />
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
-      className="text-soft hover:bg-muted cursor-pointer"
-      title="Toggle dark mode"
-    >
-      {isDark ? (
-        <Sun className="h-5 w-5" />
-      ) : (
-        <Moon className="h-5 w-5" />
-      )}
-    </Button>
   );
 }
 

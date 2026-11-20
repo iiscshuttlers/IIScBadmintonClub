@@ -30,7 +30,7 @@ function parseMarkdown(text: string) {
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(
       /\[(.*?)\]\((.*?)\)/g,
-      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:#10b981;font-weight:bold;text-decoration:underline;'>$1</a>",
+      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:var(--primary);font-weight:bold;text-decoration:underline;'>$1</a>",
     )
     .replace(/\n/g, "<br/>");
 }
@@ -377,8 +377,7 @@ export function AnnouncementsSection() {
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-2 h-8 bg-gradient-to-b from-secondary to-warning rounded-full" />
                     <h2
-                      className="text-2xl font-black text-foreground flex items-center gap-2"
-                      style={{ fontFamily: "Playfair Display, serif" }}
+                      className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                     >
                       <Pin className="w-6 h-6 text-secondary" />
                       Important Announcements
@@ -512,8 +511,7 @@ export function AnnouncementsSection() {
                 <div className="flex items-center gap-3 mb-8">
                   <div className="w-2 h-8 bg-gradient-to-b from-primary to-team rounded-full" />
                   <h2
-                    className="text-2xl font-black text-foreground flex items-center gap-2"
-                    style={{ fontFamily: "Playfair Display, serif" }}
+                    className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                   >
                     <Bell className="w-6 h-6 text-primary" />
                     Recent Updates

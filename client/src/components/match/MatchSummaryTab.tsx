@@ -31,7 +31,7 @@ export function GamesTable({ view }: { view: MatchView }) {
             <tr key={i}>
               <th scope="row" className="text-left py-1.5 font-semibold">
                 Game {i + 1}
-                {inProgress && <span className="ml-2 text-[11px] font-black text-danger">In progress</span>}
+                {inProgress && <span className="ml-2 text-[11px] font-black text-live">In progress</span>}
               </th>
               <td className={`text-right py-1.5 font-mono tabular-nums ${w1 ? "font-black" : "text-muted-foreground"}`}>{g.side1}</td>
               <td className={`text-right py-1.5 font-mono tabular-nums ${w2 ? "font-black" : "text-muted-foreground"}`}>{g.side2}</td>

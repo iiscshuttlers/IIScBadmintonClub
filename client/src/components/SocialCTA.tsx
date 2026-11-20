@@ -50,8 +50,7 @@ export function SocialCTA({
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
         <h2
-          className="text-2xl font-black mb-2 text-foreground"
-          style={{ fontFamily: "Playfair Display, serif" }}
+          className="text-2xl font-black mb-2 text-foreground font-display"
         >
           Follow Our Journey
         </h2>

@@ -28,50 +28,50 @@ export function ScoreboardOverlay({
 
   return (
     <>
-      <div className="absolute top-8 left-8 z-30 flex flex-col bg-[#1A1A1A]/95 border border-foreground/10 rounded shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden pointer-events-auto select-none min-w-[240px] md:min-w-[280px]">
+      <div className="absolute top-8 left-8 z-30 flex flex-col bg-card/95 border border-foreground/10 rounded shadow-[0_10px_40px_var(--scrim)] overflow-hidden pointer-events-auto select-none min-w-[240px] md:min-w-[280px]">
         {/* Team A Row */}
         <div className="flex items-stretch border-b border-foreground/10 h-10 md:h-12">
-          <div className="w-6 flex items-center justify-center bg-media/40 shrink-0">
+          <div className="w-6 flex items-center justify-center bg-background/40 shrink-0">
             {(currentScore?.serverIdx === 0 || currentScore?.serverIdx === 1) && (
-              <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#E5FA00]" />
+              <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-primary" />
             )}
           </div>
-          <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-media/20 to-transparent">
+          <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-background/20 to-transparent">
             <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-foreground uppercase tracking-wider font-sans">
               {teamA.length === 2 ? (
                 <>
-                  <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
-                  <span onClick={() => handleSetServer(1)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 1 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[1]}</span>
+                  <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
+                  <span onClick={() => handleSetServer(1)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 1 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[1]}</span>
                 </>
               ) : (
-                <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
+                <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
               )}
             </div>
           </div>
-          <div className="w-12 md:w-14 flex items-center justify-center bg-media/60 border-l border-foreground/10 shrink-0">
+          <div className="w-12 md:w-14 flex items-center justify-center bg-background/60 border-l border-foreground/10 shrink-0">
             <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamA > (currentScore.teamB || 0) ? 'text-foreground' : 'text-foreground/80'}`}>{currentScore?.teamA || 0}</span>
           </div>
         </div>
         {/* Team B Row */}
         <div className="flex items-stretch h-10 md:h-12">
-          <div className="w-6 flex items-center justify-center bg-media/40 shrink-0">
+          <div className="w-6 flex items-center justify-center bg-background/40 shrink-0">
             {(currentScore?.serverIdx === 2 || currentScore?.serverIdx === 3) && (
-              <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#E5FA00]" />
+              <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-primary" />
             )}
           </div>
-          <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-media/20 to-transparent">
+          <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-background/20 to-transparent">
             <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-foreground uppercase tracking-wider font-sans">
               {teamB.length === 2 ? (
                 <>
-                  <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
-                  <span onClick={() => handleSetServer(3)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 3 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[1]}</span>
+                  <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
+                  <span onClick={() => handleSetServer(3)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 3 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[1]}</span>
                 </>
               ) : (
-                <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
+                <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-primary' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
               )}
             </div>
           </div>
-          <div className="w-12 md:w-14 flex items-center justify-center bg-media/60 border-l border-foreground/10 shrink-0">
+          <div className="w-12 md:w-14 flex items-center justify-center bg-background/60 border-l border-foreground/10 shrink-0">
             <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamB > (currentScore.teamA || 0) ? 'text-foreground' : 'text-foreground/80'}`}>{currentScore?.teamB || 0}</span>
           </div>
         </div>

@@ -377,7 +377,7 @@ function MatchBroadcastCard({
 
       {match.status === "finished" ? (
         <div className="text-center py-4">
-          <Trophy className="w-12 h-12 mx-auto text-winner mb-3 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+          <Trophy className="w-12 h-12 mx-auto text-winner mb-3 drop-shadow-[0_0_15px_color-mix(in_srgb,var(--winner)_50%,transparent)]" />
           <h2 className="text-2xl font-black mb-1">Match Finished!</h2>
           <p className="text-lg text-soft">
             {match.winner === 1 ? match.t1.p1Name : match.t2.p1Name} Won {match.setsHistory.join(", ")}
@@ -387,7 +387,7 @@ function MatchBroadcastCard({
         <div className="flex flex-col items-center gap-2 sm:gap-3">
           <div className="flex flex-row items-stretch justify-center w-full gap-2 sm:gap-4">
             {/* Team 1 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-muted/50 border-border-strong/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 1 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_color-mix(in_srgb,var(--primary)_15%,transparent)]" : "bg-muted/50 border-border-strong/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   <span className="text-[11px] sm:text-sm font-bold truncate">{match.t1.p1Name}</span>
@@ -404,7 +404,7 @@ function MatchBroadcastCard({
               </div>
               
               <div className="flex justify-center mt-1 sm:mt-2">
-                <div className={`text-[3rem] sm:text-[4rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT1 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
+                <div className={`text-[3rem] sm:text-[4rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT1 ? 'text-primary scale-110 drop-shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_80%,transparent)]' : ''}`}>
                   {match.t1.score}
                 </div>
               </div>
@@ -416,7 +416,7 @@ function MatchBroadcastCard({
             </div>
 
             {/* Team 2 */}
-            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-muted/50 border-border-strong/50"}`}>
+            <div className={`flex-1 min-w-0 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col justify-between items-center ${match.serverTeam === 2 ? "bg-primary/20 border-primary/50 shadow-[0_0_30px_color-mix(in_srgb,var(--primary)_15%,transparent)]" : "bg-muted/50 border-border-strong/50"}`}>
               <div className="text-center w-full min-h-[3rem] flex flex-col justify-center gap-0.5">
                 <div className="relative inline-flex items-center justify-center mx-auto max-w-[80%]">
                   {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <span className="absolute right-full mr-1.5 text-[9px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded shrink-0">S</span>}
@@ -433,7 +433,7 @@ function MatchBroadcastCard({
               </div>
               
               <div className="flex justify-center mt-1 sm:mt-2">
-                <div className={`text-[3rem] sm:text-[4rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT2 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
+                <div className={`text-[3rem] sm:text-[4rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT2 ? 'text-primary scale-110 drop-shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_80%,transparent)]' : ''}`}>
                   {match.t2.score}
                 </div>
               </div>

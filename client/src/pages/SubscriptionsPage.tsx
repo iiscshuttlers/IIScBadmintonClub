@@ -180,7 +180,7 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505]">
+    <div className="min-h-screen bg-background">
       <PageHeader
         compact
         align="left"

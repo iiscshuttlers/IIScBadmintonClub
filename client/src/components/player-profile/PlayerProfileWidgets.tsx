@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
 import { lazy, Suspense } from "react";
+import { cssVar } from "@/lib/themeColors";
 
 const ResponsiveContainer = lazy(() => import("recharts").then(m => ({ default: m.ResponsiveContainer })));
 const LineChart = lazy(() => import("recharts").then(m => ({ default: m.LineChart })));
@@ -62,8 +63,8 @@ export const CircularProgress = ({
         />
         <defs>
           <linearGradient id="progressGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#06b6d4" />
+            <stop offset="0%" stopColor={cssVar("success")} />
+            <stop offset="100%" stopColor={cssVar("accent")} />
           </linearGradient>
         </defs>
       </svg>
@@ -465,7 +466,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                       <div className="truncate flex-1">
                         {match.player1?.full_name?.split(' ')[0]} {match.partner1 ? `& ${match.partner1?.full_name?.split(' ')[0]}` : ''}
                       </div>
-                      {match.winner_id === match.player1_id && <span className="text-warning ml-2 text-xs">👑</span>}
+                      {match.winner_id === match.player1_id && <span className="text-gold ml-2 text-xs">👑</span>}
                     </div>
                     <div className="flex justify-between items-center text-xs font-black text-muted-foreground my-0.5">
                       <span className="mx-auto bg-muted-strong px-2 py-0.5 rounded">{displayScore}</span>
@@ -474,7 +475,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                       <div className="truncate flex-1">
                         {match.player2?.full_name?.split(' ')[0]} {match.partner2 ? `& ${match.partner2?.full_name?.split(' ')[0]}` : ''}
                       </div>
-                      {match.winner_id === match.player2_id && <span className="text-warning ml-2 text-xs">👑</span>}
+                      {match.winner_id === match.player2_id && <span className="text-gold ml-2 text-xs">👑</span>}
                     </div>
                   </div>
                 </div>
@@ -485,16 +486,16 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
       )}
 
       <style>{`
-        .react-calendar-heatmap .color-empty { fill: rgba(148, 163, 184, 0.1); }
-        .react-calendar-heatmap .color-scale-1 { fill: #6ee7b7; }
-        .react-calendar-heatmap .color-scale-2 { fill: #34d399; }
-        .react-calendar-heatmap .color-scale-3 { fill: #10b981; }
-        .react-calendar-heatmap .color-scale-4 { fill: #059669; }
+        .react-calendar-heatmap .color-empty { fill: color-mix(in srgb, var(--faint) 10%, transparent); }
+        .react-calendar-heatmap .color-scale-1 { fill: color-mix(in srgb, var(--success) 35%, transparent); }
+        .react-calendar-heatmap .color-scale-2 { fill: color-mix(in srgb, var(--success) 60%, transparent); }
+        .react-calendar-heatmap .color-scale-3 { fill: color-mix(in srgb, var(--success) 85%, transparent); }
+        .react-calendar-heatmap .color-scale-4 { fill: var(--success); }
         .react-calendar-heatmap rect { rx: 2; ry: 2; transition: all 0.2s; cursor: pointer; }
-        .react-calendar-heatmap rect:hover { stroke: #000; stroke-width: 1px; opacity: 0.8; }
-        .dark .react-calendar-heatmap .color-empty { fill: rgba(36, 37, 42, 0.8); }
-        .dark .react-calendar-heatmap rect:hover { stroke: #fff; }
-        .react-calendar-heatmap text { fill: #94a3b8; font-size: 8px; }
+        .react-calendar-heatmap rect:hover { stroke: var(--foreground); stroke-width: 1px; opacity: 0.8; }
+        .dark .react-calendar-heatmap .color-empty { fill: color-mix(in srgb, var(--muted) 80%, transparent); }
+        .dark .react-calendar-heatmap rect:hover { stroke: var(--foreground); }
+        .react-calendar-heatmap text { fill: var(--muted-foreground); font-size: 8px; }
       `}</style>
     </div>
   );

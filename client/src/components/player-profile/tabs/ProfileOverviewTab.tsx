@@ -109,7 +109,7 @@ function CircularProgress({
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="text-primary drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+          className="text-primary drop-shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_50%,transparent)]"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center flex-col">

@@ -164,8 +164,7 @@ export function ContactSection() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2
-              className="text-3xl font-black text-foreground"
-              style={{ fontFamily: "Playfair Display, serif" }}
+              className="text-3xl font-black text-foreground font-display"
             >
               Frequently Asked Questions
             </h2>

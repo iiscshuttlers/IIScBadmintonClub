@@ -166,7 +166,7 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
 
   return (
     <div
-      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#24252a,_#0a0a0b_70%)] text-foreground flex flex-col"
+      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--muted),_var(--background)_70%)] text-foreground flex flex-col"
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button,a")) return;
         next();
@@ -205,7 +205,7 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               transition={spring}
               className={`scroll-mb-28 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
-                latest ? "border-warning bg-warning/10 shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]" : "border-border-strong bg-card/70"
+                latest ? "border-warning bg-warning/10 shadow-[0_0_40px_-10px_color-mix(in_srgb,var(--warning)_60%,transparent)]" : "border-border-strong bg-card/70"
               }`}
             >
               <span className="w-9 h-9 shrink-0 rounded-full bg-muted flex items-center justify-center font-black text-warning tabular-nums">

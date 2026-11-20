@@ -103,8 +103,7 @@ export default function TournamentDetail() {
             ?
           </div>
           <h1
-            className="text-3xl font-black text-foreground"
-            style={{ fontFamily: "Playfair Display, serif" }}
+            className="text-3xl font-black text-foreground font-display"
           >
             Tournament Not Found
           </h1>
@@ -145,8 +144,7 @@ export default function TournamentDetail() {
             {typeLabel}
           </div>
           <h1
-            className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-foreground"
-            style={{ fontFamily: "Playfair Display, serif" }}
+            className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-foreground font-display"
           >
             {tournament.name}
           </h1>

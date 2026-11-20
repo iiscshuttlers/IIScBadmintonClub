@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
 import { AdminLoading } from "./AdminPanel";
+import { themeColorFor } from "@/lib/themeColors";
 
 const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
@@ -154,11 +155,13 @@ export function AdminSettings() {
       } else if (format === 'pdf') {
         // Native PDF print via popup
         const headers = Object.keys(data[0]);
+        const paperBorder = themeColorFor("paper", "border");
+        const paperHeader = themeColorFor("paper", "muted");
         let html = `<html><head><title>${label} Backup - ${timestamp}</title><style>
           body { font-family: sans-serif; margin: 20px; font-size: 10px; }
           table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 4px; text-align: left; }
-          th { background-color: #f2f2f2; }
+          th, td { border: 1px solid ${paperBorder}; padding: 4px; text-align: left; }
+          th { background-color: ${paperHeader}; }
           @media print { @page { size: landscape; } }
         </style></head><body>`;
         html += `<h2>${label} Backup - ${timestamp}</h2>`;

@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useTheme } from "@/contexts/ThemeContext";
+import { ThemePicker } from "@/components/ThemePicker";
 import {
   ArrowLeft,
   User,
@@ -21,10 +21,7 @@ import {
   LogOut,
   ChevronRight,
   BellRing,
-  Sun,
-  Moon,
   Palette,
-  Check,
   Volume2,
   Vibrate,
   ShieldBan,
@@ -45,7 +42,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 export default function SettingsPage() {
   const [, setLocation] = useLocation();
   const { profile, isMasterAdmin, viewAsRole, setViewAsRole, signOut } = useAuth();
-  const { theme, toggleTheme, accent, setAccent } = useTheme();
   const { savedAccounts, switchAccount } = useNavigationAuth();
   const { setMode } = useAppMode();
   const [signOutDialog, setSignOutDialog] = useState(false);
@@ -162,7 +158,7 @@ export default function SettingsPage() {
         badge="Preferences"
         badgeIcon={<SettingsIcon className="w-3.5 h-3.5" />}
         title="Settings & Appearance"
-        subtitle="Manage your profile, notification alerts, display modes, and theme accents."
+        subtitle="Manage your profile, notification alerts and the app theme."
       />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6">
 
@@ -196,50 +192,16 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* S4.3 APPEARANCE & ACCENT THEME */}
+          {/* Appearance: the five app themes */}
           <section>
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5">
-              <Sun className="w-3.5 h-3.5 text-primary" /> Appearance & Theme
+              <Palette className="w-3.5 h-3.5 text-primary" /> Appearance & Theme
             </h2>
-            <div className="bg-card rounded-2xl shadow-sm border border-border p-4 space-y-4">
-              {setAccent && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-soft flex items-center gap-1.5">
-                      <Palette className="w-3.5 h-3.5 text-primary" /> Accent Color
-                    </label>
-                    <span className="text-[11px] font-semibold text-primary capitalize">{accent}</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      { id: "emerald", label: "Lime & Emerald", color: "bg-success" },
-                      { id: "violet", label: "Electric Violet", color: "bg-individual" },
-                      { id: "rose", label: "Neon Rose", color: "bg-danger" },
-                      { id: "amber", label: "Solar Amber", color: "bg-warning" },
-                      { id: "blue", label: "Cobalt Blue", color: "bg-info" },
-                      { id: "cyberpunk", label: "Cyberpunk", color: "bg-gradient-to-r from-individual to-accent" },
-                    ].map((acc) => {
-                      const isActive = accent === acc.id;
-                      return (
-                        <button
-                          key={acc.id}
-                          onClick={() => setAccent(acc.id as any)}
-                          className={cn(
-                            "flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold border transition text-left",
-                            isActive
-                              ? "bg-muted border-primary ring-1 ring-primary/40 text-foreground"
-                              : "bg-card border-border text-muted-foreground hover:border-border-strong"
-                          )}
-                        >
-                          <span className={cn("w-3.5 h-3.5 rounded-full shrink-0 shadow-sm", acc.color)} />
-                          <span className="truncate flex-1">{acc.label}</span>
-                          {isActive && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+            <div className="bg-card rounded-2xl shadow-sm border border-border p-4 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Pick how the app looks. Colours, fonts and buttons change everywhere, on this device.
+              </p>
+              <ThemePicker />
             </div>
           </section>
 

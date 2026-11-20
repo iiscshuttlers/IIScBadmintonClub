@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { cssVar } from "@/lib/themeColors";
 import {
   TrendingUp,
   Flame,
@@ -57,9 +58,9 @@ export function IntensityTrendChart({ motionMatches }: { motionMatches: MotionMa
     <div className="h-56">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.4} />
-          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }} minTickGap={30} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cssVar("border-strong")} opacity={0.4} />
+          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: cssVar("muted-foreground"), fontSize: 10, fontWeight: 600 }} minTickGap={30} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: cssVar("muted-foreground"), fontSize: 10, fontWeight: 600 }} />
           <RechartsTooltip
             content={({ active, payload }: any) =>
               active && payload?.length ? (
@@ -69,15 +70,15 @@ export function IntensityTrendChart({ motionMatches }: { motionMatches: MotionMa
                 </div>
               ) : null
             }
-            cursor={{ stroke: "#475569", strokeWidth: 1, strokeDasharray: "4 4" }}
+            cursor={{ stroke: cssVar("border-strong"), strokeWidth: 1, strokeDasharray: "4 4" }}
           />
           <Line
             type="monotone"
             dataKey="workRate"
-            stroke="#f59e0b"
+            stroke={cssVar("chart-1")}
             strokeWidth={3}
-            dot={{ r: 3, fill: "#24252a", stroke: "#f59e0b", strokeWidth: 2 }}
-            activeDot={{ r: 6, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
+            dot={{ r: 3, fill: cssVar("card"), stroke: cssVar("chart-1"), strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: cssVar("chart-1"), stroke: cssVar("foreground"), strokeWidth: 2 }}
             animationDuration={1200}
           />
         </LineChart>

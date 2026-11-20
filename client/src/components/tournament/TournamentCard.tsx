@@ -161,8 +161,7 @@ export function TournamentCard({
         <div className="mb-3">
           <motion.h2
             layoutId={`tourn-title-${t.id}`}
-            className="text-lg font-black text-foreground group-hover:text-primary transition-colors line-clamp-1"
-            style={{ fontFamily: "Playfair Display, serif" }}
+            className="text-lg font-display font-black text-foreground group-hover:text-primary transition-colors line-clamp-1"
           >
             {t.name}
           </motion.h2>

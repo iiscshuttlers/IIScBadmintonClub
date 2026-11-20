@@ -32,7 +32,7 @@ const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string
     border: "border-info/30",
     iconBg: "bg-info/20",
     iconColor: "text-info",
-    glow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--info)_15%,transparent)]",
     btn: "bg-gradient-to-r from-info to-info hover:from-info/90 hover:to-info/90 shadow-lg shadow-info/25 text-on-accent",
     gradient: "from-info/10 via-transparent to-transparent"
   },
@@ -41,7 +41,7 @@ const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string
     border: "border-success/30",
     iconBg: "bg-success/20",
     iconColor: "text-success",
-    glow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--success)_15%,transparent)]",
     btn: "bg-gradient-to-r from-success to-team hover:from-success/90 hover:to-team/90 shadow-lg shadow-success/25 text-on-accent",
     gradient: "from-success/10 via-transparent to-transparent"
   },
@@ -50,7 +50,7 @@ const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string
     border: "border-warning/30",
     iconBg: "bg-warning/20",
     iconColor: "text-warning",
-    glow: "shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--warning)_15%,transparent)]",
     btn: "bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 shadow-lg shadow-warning/25 text-on-accent",
     gradient: "from-warning/10 via-transparent to-transparent"
   },
@@ -59,7 +59,7 @@ const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string
     border: "border-danger/30",
     iconBg: "bg-danger/20",
     iconColor: "text-danger",
-    glow: "shadow-[0_0_15px_rgba(244,63,94,0.15)]",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_15%,transparent)]",
     btn: "bg-gradient-to-r from-danger to-danger hover:from-danger/90 hover:to-danger/90 shadow-lg shadow-danger/25 text-on-accent",
     gradient: "from-danger/10 via-transparent to-transparent"
   },
@@ -68,7 +68,7 @@ const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string
     border: "border-individual/30",
     iconBg: "bg-individual/20",
     iconColor: "text-individual",
-    glow: "shadow-[0_0_15px_rgba(168,85,247,0.15)]",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--individual)_15%,transparent)]",
     btn: "bg-gradient-to-r from-individual to-individual hover:from-individual/90 hover:to-individual/90 shadow-lg shadow-individual/25 text-on-accent",
     gradient: "from-individual/10 via-transparent to-transparent"
   },

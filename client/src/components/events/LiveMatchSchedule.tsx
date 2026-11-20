@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Phone, MessageCircle, Download, Image, FileText } from "lucide-react";
 import { exportElementToImage, exportElementToPDF } from "@/utils/exportUtils";
+import { themeColor, themeColorFor } from "@/lib/themeColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -292,7 +293,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             e.stopPropagation();
                             setExportMenuDate(null);
                             const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
-                            if (el) await exportElementToImage(el, `schedule_${date.replace(/\s+/g, '_')}`, "#0f172a");
+                            if (el) await exportElementToImage(el, `schedule_${date.replace(/\s+/g, '_')}`, themeColor("background"));
                           }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-soft hover:bg-muted transition"
                         >
@@ -304,7 +305,15 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             e.stopPropagation();
                             setExportMenuDate(null);
                             const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
-                            if (el) await exportElementToPDF(el, `schedule_${date.replace(/\s+/g, '_')}`, "#ffffff");
+                            if (el) {
+                              // Render the capture in the light Paper theme so it reads on a white page.
+                              el.classList.add("print-light-theme");
+                              try {
+                                await exportElementToPDF(el, `schedule_${date.replace(/\s+/g, '_')}`, themeColorFor("paper", "card"));
+                              } finally {
+                                el.classList.remove("print-light-theme");
+                              }
+                            }
                           }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-soft hover:bg-muted transition"
                         >

@@ -915,7 +915,7 @@ export default function Legacy() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {video.tournament && (
-                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-foreground/20 hover:bg-foreground/30 backdrop-blur-md border border-foreground/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-on-media/20 hover:bg-on-media/30 backdrop-blur-md border border-on-media/30 text-on-media text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_color-mix(in_srgb,var(--color-on-media)_30%,transparent)] transition-all">
                           {video.tournament}
                         </div>
                       )}
@@ -948,8 +948,7 @@ export default function Legacy() {
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="w-2 h-8 bg-gradient-to-b from-danger to-secondary rounded-full" />
               <h2
-                className="text-3xl font-black text-foreground"
-                style={{ fontFamily: "Playfair Display, serif" }}
+                className="text-3xl font-black text-foreground font-display"
               >
                 Match Videos
               </h2>
@@ -979,7 +978,7 @@ export default function Legacy() {
                     }}
                   />
                   {video.tournament && (
-                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-foreground/20 hover:bg-foreground/30 backdrop-blur-md border border-foreground/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-on-media/20 hover:bg-on-media/30 backdrop-blur-md border border-on-media/30 text-on-media text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_color-mix(in_srgb,var(--color-on-media)_30%,transparent)] transition-all">
                       {video.tournament}
                     </div>
                   )}

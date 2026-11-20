@@ -401,7 +401,7 @@ export function UmpireTab({
                     id: crypto.randomUUID(),
                     is_edit_mode: false,
                   })}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-success text-foreground font-black text-xs shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-success text-primary-foreground font-black text-xs shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Swords className="w-3.5 h-3.5 text-foreground" />
                   Start Friendly Match

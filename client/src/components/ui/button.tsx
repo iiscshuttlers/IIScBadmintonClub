@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "border bg-transparent shadow-xs hover:bg-input/50 border-input",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent/50",
+        ghost: "hover:bg-muted",
         link: "text-primary underline-offset-4 hover:underline",
         // Bespoke app patterns (centralized so pages stop hand-rolling them):
         heroSolid: "bg-primary text-primary-foreground shadow-lg hover:bg-primary/90",

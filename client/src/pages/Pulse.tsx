@@ -302,8 +302,7 @@ export default function Pulse() {
             />
           </div>
           <h1
-            className="text-3xl md:text-4xl font-black mb-2 text-foreground"
-            style={{ fontFamily: "Playfair Display, serif" }}
+            className="text-3xl md:text-4xl font-black mb-2 text-foreground font-display"
           >
             Action & Updates
           </h1>

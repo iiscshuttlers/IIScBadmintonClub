@@ -48,14 +48,14 @@ export function TeamLogo({
 
   // Pick vibrant, aesthetic modern gradient based on team text seed
   const gradients = [
-    'from-success via-team to-accent',
-    'from-warning via-secondary to-danger',
-    'from-individual via-individual to-danger',
-    'from-accent via-info to-info',
-    'from-primary via-success to-team',
-    'from-individual via-individual to-individual',
-    'from-warning via-primary to-success',
-    'from-danger via-secondary to-warning',
+    'from-chart-1 to-chart-2',
+    'from-chart-2 to-chart-4',
+    'from-chart-3 to-chart-5',
+    'from-chart-4 to-chart-6',
+    'from-chart-5 to-chart-1',
+    'from-chart-6 to-chart-3',
+    'from-chart-1 to-chart-6',
+    'from-chart-3 to-chart-4',
   ];
 
   let hash = 0;

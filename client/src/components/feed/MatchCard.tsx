@@ -36,7 +36,7 @@ interface MatchCardProps {
 const CAT_BOX_COLORS: Record<string, string> = {
   MS: "bg-cat-ms/10 border-cat-ms/25",
   WS: "bg-cat-ws/10 border-cat-ws/25",
-  MD: "bg-primary/10 border-primary/20",
+  MD: "bg-cat-md/10 border-cat-md/20",
   WD: "bg-cat-wd/10 border-cat-wd/25",
   XD: "bg-cat-xd/10 border-cat-xd/25",
   BS: "bg-team/10 border-team/25",
@@ -121,11 +121,11 @@ export function MatchCard({
   const getMatchCodeColor = (code: string | undefined) => {
     if (!code) return { text: "text-warning", bg: "bg-warning/10 border-warning/20 group-hover/header:bg-warning/20" };
     const c = code.toUpperCase();
-    if (c.startsWith("MS")) return { text: "text-info", bg: "bg-info/10 border-info/20 group-hover/header:bg-info/20" };
-    if (c.startsWith("MD")) return { text: "text-success", bg: "bg-success/10 border-success/20 group-hover/header:bg-success/20" };
-    if (c.startsWith("WS")) return { text: "text-individual", bg: "bg-individual/10 border-individual/20 group-hover/header:bg-individual/20" };
-    if (c.startsWith("WD")) return { text: "text-individual", bg: "bg-individual/10 border-individual/20 group-hover/header:bg-individual/20" };
-    if (c.startsWith("XD")) return { text: "text-secondary", bg: "bg-secondary/10 border-secondary/20 group-hover/header:bg-secondary/20" };
+    if (c.startsWith("MS")) return { text: "text-cat-ms", bg: "bg-cat-ms/10 border-cat-ms/20 group-hover/header:bg-cat-ms/20" };
+    if (c.startsWith("MD")) return { text: "text-cat-md", bg: "bg-cat-md/10 border-cat-md/20 group-hover/header:bg-cat-md/20" };
+    if (c.startsWith("WS")) return { text: "text-cat-ws", bg: "bg-cat-ws/10 border-cat-ws/20 group-hover/header:bg-cat-ws/20" };
+    if (c.startsWith("WD")) return { text: "text-cat-wd", bg: "bg-cat-wd/10 border-cat-wd/20 group-hover/header:bg-cat-wd/20" };
+    if (c.startsWith("XD")) return { text: "text-cat-xd", bg: "bg-cat-xd/10 border-cat-xd/20 group-hover/header:bg-cat-xd/20" };
     return { text: "text-warning", bg: "bg-warning/10 border-warning/20 group-hover/header:bg-warning/20" };
   };
 
@@ -345,7 +345,7 @@ export function MatchCard({
 
               {/* Row 2: Name | Score | Name */}
               <div className="flex flex-row items-center justify-between gap-1.5 font-bold">
-                <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-warning' : 'text-soft'}`}>
+                <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-gold' : 'text-soft'}`}>
                   {joinNames(team1)}
                 </span>
 
@@ -359,7 +359,7 @@ export function MatchCard({
                   </div>
                 </div>
 
-                <span className={`text-xs sm:text-sm leading-tight text-left break-words w-full ${team2Win ? 'text-warning' : 'text-soft'}`}>
+                <span className={`text-xs sm:text-sm leading-tight text-left break-words w-full ${team2Win ? 'text-gold' : 'text-soft'}`}>
                   {joinNames(team2)}
                 </span>
               </div>

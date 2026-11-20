@@ -102,7 +102,7 @@ export default function PlayerPersonalPage() {
   if (isLoading || !player) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-[#050505] pb-32 lg:pb-0 lg:flex">
+    <div className="min-h-screen bg-background pb-32 lg:pb-0 lg:flex">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-border bg-card z-50 py-6 px-4">
         <div className="flex flex-col gap-5 px-2 mb-8">
@@ -302,7 +302,7 @@ export default function PlayerPersonalPage() {
       {/* Bottom Navigation - Mobile Only */}
       <div
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_10%,transparent)] dark:shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_60%,transparent)]"
       >
         {MAIN_TABS.map((tab) => (
           <button
@@ -310,7 +310,7 @@ export default function PlayerPersonalPage() {
             onClick={() => navigateTab(tab)}
             className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${
               activeTab === tab
-                ? "text-[#ccff00]"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

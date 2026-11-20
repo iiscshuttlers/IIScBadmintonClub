@@ -90,7 +90,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
       {/* Wrapped card visual */}
       <div ref={cardRef}
         className="relative overflow-hidden rounded-2xl bg-linear-to-br from-card via-info/20 to-primary/90 p-6 text-on-accent">
-        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.4),transparent)]" />
+        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--success)_40%,transparent),transparent)]" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-5">

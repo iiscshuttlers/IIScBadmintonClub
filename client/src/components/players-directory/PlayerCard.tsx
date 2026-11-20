@@ -20,12 +20,12 @@ import type { PlayerRow } from "@/types";
 export type Player = PlayerRow;
 
 const AVATAR_GRADIENTS = [
-  "from-primary to-team",
-  "from-info to-info",
-  "from-individual to-individual",
-  "from-warning to-secondary",
-  "from-danger to-individual",
-  "from-accent to-info",
+  "from-chart-1 to-chart-2",
+  "from-chart-2 to-chart-4",
+  "from-chart-4 to-chart-5",
+  "from-chart-3 to-chart-6",
+  "from-chart-5 to-chart-3",
+  "from-chart-6 to-chart-1",
 ];
 
 function avatarGradient(name: string) {
@@ -256,7 +256,7 @@ export function PlayerCard({
                   />
                 ) : (
                   <div
-                    className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-foreground font-black text-2xl`}
+                    className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-on-accent font-black text-2xl`}
                   >
                     {(player.full_name || "?").charAt(0).toUpperCase()}
                   </div>

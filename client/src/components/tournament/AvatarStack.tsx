@@ -16,11 +16,11 @@ function getInitial(name?: string | null): string {
 
 /** Palette for deterministic avatar background gradients */
 const GRADIENTS = [
-  "from-success to-team",
-  "from-info to-individual",
-  "from-warning to-secondary",
-  "from-danger to-individual",
-  "from-accent to-info",
+  "from-chart-1 to-chart-2",
+  "from-chart-2 to-chart-4",
+  "from-chart-3 to-chart-5",
+  "from-chart-4 to-chart-6",
+  "from-chart-5 to-chart-1",
 ];
 
 export function AvatarStack({
@@ -44,7 +44,7 @@ export function AvatarStack({
           return (
             <div
               key={idx}
-              className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-gradient-to-br ${grad} text-foreground font-black shadow-xs shrink-0 select-none ${sizeCls}`}
+              className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-gradient-to-br ${grad} text-on-accent font-black shadow-xs shrink-0 select-none ${sizeCls}`}
               title={av.name || `Participant ${idx + 1}`}
               aria-label={av.name || `Participant ${idx + 1}`}
             >

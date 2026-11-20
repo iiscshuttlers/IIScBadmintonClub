@@ -503,7 +503,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
                           <span className="truncate group-hover/player:text-primary transition-colors text-foreground">
                             {m.players?.full_name || m.players?.display_name || 'Player'}
                           </span>
-                          {isMe && <span className="text-[10px] text-primary font-bold">(You)</span>}
+                          {isMe && <span className="text-[10px] text-you font-bold">(You)</span>}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {isThisPlayerCaptain ? (

@@ -2,6 +2,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { Target, Dna, Activity, Footprints, Shirt, Star, Zap } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
+import { cssVar, cssVarAlpha } from "@/lib/themeColors";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -135,7 +136,7 @@ export function EquipmentArsenalSection({
           <motion.div
             animate={isOpen ? { scaleX: 1.1, opacity: 0.3 } : { scaleX: 1, opacity: 0.45 }}
             transition={{ duration: 0.5 }}
-            className="absolute -bottom-5 left-10 right-10 h-5 bg-background blur-xl rounded-full"
+            className="absolute -bottom-5 left-10 right-10 h-5 bg-scrim blur-xl rounded-full"
           />
 
           {/* ── Single arched carry handle ── */}
@@ -146,43 +147,43 @@ export function EquipmentArsenalSection({
             }}
             className="absolute left-1/2 -translate-x-1/2"
             style={{ top: -28, width: 72, height: 30,
-                     border: '4px solid #64748b', borderBottom: 'none',
+                     border: `4px solid ${cssVar("faint")}`, borderBottom: 'none',
                      borderRadius: '36px 36px 0 0',
-                     boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.5), 0 -2px 4px rgba(0,0,0,0.3)' }}
+                     boxShadow: `inset 0 3px 6px ${cssVarAlpha("scrim", 0.5)}, 0 -2px 4px ${cssVarAlpha("scrim", 0.3)}` }}
           />
 
           {/* ── Bag body ── */}
           <div className="absolute inset-0 rounded-3xl overflow-hidden"
-               style={{ background: 'linear-gradient(155deg,#1e2438 0%,#141926 50%,#0c1018 100%)',
-                        boxShadow: '0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+               style={{ background: `linear-gradient(155deg,${cssVar("muted-strong")} 0%,${cssVar("card")} 50%,${cssVar("background")} 100%)`,
+                        boxShadow: `0 16px 40px ${cssVarAlpha("scrim", 0.6)}, inset 0 1px 0 ${cssVarAlpha("foreground", 0.06)}` }}>
 
             {/* Fabric weave texture */}
             <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-                 style={{ backgroundImage: 'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 5px)' }} />
+                 style={{ backgroundImage: `repeating-linear-gradient(0deg,${cssVar("foreground")} 0,${cssVar("foreground")} 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,${cssVar("foreground")} 0,${cssVar("foreground")} 1px,transparent 1px,transparent 5px)` }} />
 
             {/* Top highlight rim */}
             <div className="absolute top-0 left-6 right-6 h-px"
-                 style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)' }} />
+                 style={{ background: `linear-gradient(90deg,transparent,${cssVarAlpha("foreground", 0.18)},transparent)` }} />
 
             {/* Violet top accent stripe */}
             <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-3xl"
-                 style={{ background: 'linear-gradient(90deg,#6d28d9,#a855f7,#ec4899,#a855f7,#6d28d9)' }} />
+                 style={{ background: `linear-gradient(90deg,${cssVarAlpha("individual", 0.6)},${cssVar("individual")},${cssVarAlpha("individual", 0.6)})` }} />
 
             {/* Upper panel (above zipper) */}
             <div className="absolute left-0 right-0 top-[3px]" style={{ height: 40,
-                 background: 'linear-gradient(180deg,#1b2135 0%,#131825 100%)',
-                 borderBottom: '1px dashed rgba(255,255,255,0.07)' }} />
+                 background: `linear-gradient(180deg,${cssVar("muted")} 0%,${cssVar("card")} 100%)`,
+                 borderBottom: `1px dashed ${cssVarAlpha("foreground", 0.07)}` }} />
 
             {/* ── Zipper ── */}
             <div className="absolute left-4 right-4" style={{ top: 40 }}>
               {/* Track */}
               <div className="relative h-[11px] rounded-full overflow-hidden"
-                   style={{ background: '#0a0d14', border: '1px solid rgba(100,116,139,0.3)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
+                   style={{ background: cssVar("background"), border: `1px solid ${cssVarAlpha("faint", 0.3)}`, boxShadow: `inset 0 2px 4px ${cssVarAlpha("scrim", 0.6)}` }}>
                 {/* Teeth */}
                 <div className="absolute inset-0 flex items-center px-1 gap-[3px]">
                   {Array.from({ length: 30 }).map((_, i) => (
                     <div key={i} className="flex-shrink-0 rounded-[1px]"
-                         style={{ width: 5, height: 7, background: i % 2 === 0 ? '#2d3748' : '#1a202c' }} />
+                         style={{ width: 5, height: 7, background: i % 2 === 0 ? cssVar("muted-strong") : cssVar("muted") }} />
                   ))}
                 </div>
                 {/* Glow fill */}
@@ -192,8 +193,8 @@ export function EquipmentArsenalSection({
                     open:   { width: '100%', opacity: 1, transition: { duration: 0.6, ease: 'easeInOut' } }
                   }}
                   className="absolute inset-0"
-                  style={{ background: 'linear-gradient(90deg,#7c3aed,#c026d3,#7c3aed)',
-                           boxShadow: '0 0 14px 3px rgba(167,139,250,0.7)' }}
+                  style={{ background: `linear-gradient(90deg,${cssVar("individual")},${cssVarAlpha("individual", 0.7)},${cssVar("individual")})`,
+                           boxShadow: `0 0 14px 3px ${cssVarAlpha("individual", 0.7)}` }}
                 />
               </div>
               {/* Zipper slider */}
@@ -204,13 +205,13 @@ export function EquipmentArsenalSection({
                 }}
                 className="absolute -top-[1px]"
                 style={{ width: 20, height: 13, borderRadius: 3,
-                         background: 'linear-gradient(135deg,#94a3b8,#64748b)',
-                         boxShadow: '0 2px 5px rgba(0,0,0,0.7)' }}
+                         background: `linear-gradient(135deg,${cssVar("muted-foreground")},${cssVar("faint")})`,
+                         boxShadow: `0 2px 5px ${cssVarAlpha("scrim", 0.7)}` }}
               >
                 {/* Pull tab */}
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2"
-                     style={{ width: 8, height: 8, background: '#94a3b8',
-                              borderRadius: '0 0 3px 3px', border: '1px solid #475569' }} />
+                     style={{ width: 8, height: 8, background: cssVar("muted-foreground"),
+                              borderRadius: '0 0 3px 3px', border: `1px solid ${cssVar("border-strong")}` }} />
               </motion.div>
             </div>
 
@@ -220,27 +221,27 @@ export function EquipmentArsenalSection({
               {/* Left front pocket */}
               <div className="absolute left-3 top-3 bottom-3"
                    style={{ width: 52, borderRadius: 10,
-                            background: 'linear-gradient(135deg,#161d2b,#0f1520)',
-                            border: '1px solid rgba(255,255,255,0.07)',
-                            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)' }}>
+                            background: `linear-gradient(135deg,${cssVar("card")},${cssVar("background")})`,
+                            border: `1px solid ${cssVarAlpha("foreground", 0.07)}`,
+                            boxShadow: `inset 0 2px 6px ${cssVarAlpha("scrim", 0.5)}` }}>
                 {/* Pocket zipper */}
                 <div className="absolute top-2 left-2 right-2 h-1.5 rounded-full"
-                     style={{ background: '#0a0d14', border: '0.5px solid rgba(100,116,139,0.2)' }} />
+                     style={{ background: cssVar("background"), border: `0.5px solid ${cssVarAlpha("faint", 0.2)}` }} />
                 {/* Pocket pull */}
                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-2 rounded-sm"
-                     style={{ background: '#475569' }} />
+                     style={{ background: cssVar("border-strong") }} />
               </div>
 
               {/* Right front pocket */}
               <div className="absolute right-3 top-3 bottom-3"
                    style={{ width: 52, borderRadius: 10,
-                            background: 'linear-gradient(225deg,#161d2b,#0f1520)',
-                            border: '1px solid rgba(255,255,255,0.07)',
-                            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)' }}>
+                            background: `linear-gradient(225deg,${cssVar("card")},${cssVar("background")})`,
+                            border: `1px solid ${cssVarAlpha("foreground", 0.07)}`,
+                            boxShadow: `inset 0 2px 6px ${cssVarAlpha("scrim", 0.5)}` }}>
                 <div className="absolute top-2 left-2 right-2 h-1.5 rounded-full"
-                     style={{ background: '#0a0d14', border: '0.5px solid rgba(100,116,139,0.2)' }} />
+                     style={{ background: cssVar("background"), border: `0.5px solid ${cssVarAlpha("faint", 0.2)}` }} />
                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-2 rounded-sm"
-                     style={{ background: '#475569' }} />
+                     style={{ background: cssVar("border-strong") }} />
               </div>
 
               {/* Centre brand area */}
@@ -251,23 +252,23 @@ export function EquipmentArsenalSection({
                 }}
                 className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none"
               >
-                <svg width="22" height="26" viewBox="0 0 22 26" fill="none" opacity="0.35">
-                  <ellipse cx="11" cy="9" rx="7" ry="8.5" stroke="#a78bfa" strokeWidth="1.4"/>
-                  <line x1="11" y1="0.5" x2="11" y2="17.5" stroke="#a78bfa" strokeWidth="0.7" opacity="0.6"/>
-                  <line x1="4" y1="9" x2="18" y2="9" stroke="#a78bfa" strokeWidth="0.7" opacity="0.6"/>
-                  <line x1="7.5" y1="3" x2="14.5" y2="15" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
-                  <line x1="14.5" y1="3" x2="7.5" y2="15" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
-                  <line x1="11" y1="17.5" x2="11" y2="26" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"/>
+                <svg width="22" height="26" viewBox="0 0 22 26" fill="none" opacity="0.35" className="text-individual">
+                  <ellipse cx="11" cy="9" rx="7" ry="8.5" stroke="currentColor" strokeWidth="1.4"/>
+                  <line x1="11" y1="0.5" x2="11" y2="17.5" stroke="currentColor" strokeWidth="0.7" opacity="0.6"/>
+                  <line x1="4" y1="9" x2="18" y2="9" stroke="currentColor" strokeWidth="0.7" opacity="0.6"/>
+                  <line x1="7.5" y1="3" x2="14.5" y2="15" stroke="currentColor" strokeWidth="0.5" opacity="0.3"/>
+                  <line x1="14.5" y1="3" x2="7.5" y2="15" stroke="currentColor" strokeWidth="0.5" opacity="0.3"/>
+                  <line x1="11" y1="17.5" x2="11" y2="26" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
                 <span className="text-individual/80 font-black tracking-[0.4em] text-[11px] uppercase"
-                      style={{ textShadow: '0 0 12px rgba(139,92,246,0.8)' }}>
+                      style={{ textShadow: `0 0 12px ${cssVarAlpha("individual", 0.8)}` }}>
                   PRO GEAR
                 </span>
               </motion.div>
 
               {/* Bottom accent stripe */}
               <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-3xl"
-                   style={{ background: 'linear-gradient(90deg,#6d28d9,#a855f7,#6d28d9)', opacity: 0.6 }} />
+                   style={{ background: `linear-gradient(90deg,${cssVarAlpha("individual", 0.6)},${cssVar("individual")},${cssVarAlpha("individual", 0.6)})`, opacity: 0.6 }} />
             </div>
           </div>
         </motion.div>
@@ -303,7 +304,7 @@ export function EquipmentArsenalSection({
                   {/* Racket string-grid pattern in background */}
                   <div
                     className="absolute inset-0 opacity-[0.06] pointer-events-none"
-                    style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px), repeating-linear-gradient(90deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)", color: item.isMain ? "#8b5cf6" : "#94a3b8" }}
+                    style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px), repeating-linear-gradient(90deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)", color: item.isMain ? cssVar("individual") : cssVar("muted-foreground") }}
                   />
                   <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-individual via-individual to-individual" : "bg-linear-to-r from-foreground/15 to-foreground/10"}`} />
                   <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -349,7 +350,7 @@ export function EquipmentArsenalSection({
                   {/* Shoe tread dot pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
-                    style={{ backgroundImage: "radial-gradient(circle, #3b82f6 1px, transparent 1px)", backgroundSize: "10px 10px" }}
+                    style={{ backgroundImage: `radial-gradient(circle, ${cssVar("info")} 1px, transparent 1px)`, backgroundSize: "10px 10px" }}
                   />
                   <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-info to-accent" : "bg-linear-to-r from-foreground/15 to-foreground/10"}`} />
                   <div className="p-4 sm:p-5 flex items-center justify-between gap-3 relative z-10">
@@ -388,7 +389,7 @@ export function EquipmentArsenalSection({
                   {/* Fabric weave pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
-                    style={{ backgroundImage: "repeating-linear-gradient(45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px), repeating-linear-gradient(-45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px)" }}
+                    style={{ backgroundImage: `repeating-linear-gradient(45deg, ${cssVar("individual")} 0, ${cssVar("individual")} 1px, transparent 1px, transparent 8px), repeating-linear-gradient(-45deg, ${cssVar("individual")} 0, ${cssVar("individual")} 1px, transparent 1px, transparent 8px)` }}
                   />
                   <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-individual to-individual" />
                   <div className="p-4 sm:p-5 flex items-center gap-4 relative z-10">

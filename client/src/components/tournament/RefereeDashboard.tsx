@@ -227,7 +227,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
 
   const STAT_CARDS: { label: string; value: number; icon: typeof Radio; cls: string; onClick?: () => void }[] = [
-    { label: "Live now", value: stats.live, icon: Radio, cls: "text-danger bg-danger/10", onClick: () => setFilter("live") },
+    { label: "Live now", value: stats.live, icon: Radio, cls: "text-live bg-live/10", onClick: () => setFilter("live") },
     { label: "Overdue", value: stats.overdue, icon: AlertTriangle, cls: "text-warning bg-warning/10", onClick: () => setFilter("attention") },
     { label: "Upcoming", value: stats.upcoming, icon: CalendarClock, cls: "text-primary bg-primary/10", onClick: () => setFilter("upcoming") },
     { label: "Completed", value: stats.completed, icon: CheckCircle2, cls: "text-success bg-success/10", onClick: () => setFilter("completed") },

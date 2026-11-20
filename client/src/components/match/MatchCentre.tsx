@@ -110,7 +110,7 @@ function FilterBar({
         label: (
           <>
             {courtLabel(c)}
-            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-danger motion-safe:animate-pulse" aria-hidden />}
+            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-live motion-safe:animate-pulse" aria-hidden />}
           </>
         ),
         srSuffix: isLive ? ", live" : undefined,

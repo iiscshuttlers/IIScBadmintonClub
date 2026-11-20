@@ -149,7 +149,7 @@ export default function DoublesPairProfile() {
     <div className="min-h-screen bg-background pb-24 lg:pb-8">
       {/* Hero */}
       <div className="bg-gradient-to-br from-team/20 via-success to-team/20 text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--success)_50%,transparent),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
           <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
             <ArrowLeft className="w-4 h-4" /> Back to H2H

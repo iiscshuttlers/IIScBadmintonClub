@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { syncBracketNames } from "@/lib/bracketSync";
 import { exportToImage, exportToPDF } from "@/utils/exportUtils";
+import { themeColorFor, withAlpha, type ThemeColorToken } from "@/lib/themeColors";
 import { downloadCSV } from "@/utils/csvUtils";
 import { TournamentMatchesTab } from "./TournamentMatchesTab";
 import type { Tournament, TournamentMatch, RoundRule } from "@/types/tournament";
@@ -244,18 +245,24 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
 
     const sheetName = `Schedule - ${scheduleDate}`;
     const filename = `${tournament.name.replace(/\s+/g, '_')}_schedule_${scheduleDate}`;
+    // The PDF is printed on white paper, so resolve colours from the light "paper" theme.
+    const paperCard = themeColorFor("paper", "card");
+    const paperInk = themeColorFor("paper", "foreground");
+    const categoryTint = (token: ThemeColorToken) => withAlpha(themeColorFor("paper", token), 0.07);
+    const categoryBg: Record<string, string> = {
+      MS: categoryTint("cat-ms"),
+      WS: categoryTint("cat-ws"),
+      MD: categoryTint("cat-md"),
+      WD: categoryTint("cat-wd"),
+      XD: categoryTint("cat-xd"),
+    };
     const cellStyler = (row: any[], _rowIndex: number, colIndex: number) => {
       const cat = row[1];
-      let bgColor = "#ffffff";
-      if (cat === "MS") bgColor = "#eff6ff";
-      else if (cat === "WS") bgColor = "#fdf2f8";
-      else if (cat === "MD") bgColor = "#f0fdf4";
-      else if (cat === "WD") bgColor = "#faf5ff";
-      else if (cat === "XD") bgColor = "#fff7ed";
+      const bgColor = categoryBg[cat] ?? paperCard;
       
       let style = `background-color: ${bgColor};`;
       if (colIndex === 0 || colIndex === 1 || colIndex === 4 || colIndex === 6 || colIndex === 7) {
-        style += " font-weight: 600; color: #0f172a;";
+        style += ` font-weight: 600; color: ${paperInk};`;
       }
       return style;
     };

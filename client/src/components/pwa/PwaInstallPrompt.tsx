@@ -81,7 +81,7 @@ export function PwaInstallPrompt() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="bg-gradient-to-r from-info to-info shadow-md text-on-accent px-4 py-3 flex items-center justify-between"
+          className="bg-gradient-to-r from-info to-info shadow-md on-fill px-4 py-3 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="bg-foreground/20 p-2 rounded-lg">
@@ -90,11 +90,11 @@ export function PwaInstallPrompt() {
             <div>
               <p className="font-bold text-sm">Get the App</p>
               {isIOS ? (
-                <p className="text-xs text-info">
+                <p className="text-xs text-muted-foreground">
                   Tap Share &gt; Add to Home Screen
                 </p>
               ) : (
-                <p className="text-xs text-info">
+                <p className="text-xs text-muted-foreground">
                   Install for a faster, app-like experience.
                 </p>
               )}

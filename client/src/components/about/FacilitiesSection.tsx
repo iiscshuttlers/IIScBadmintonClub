@@ -186,13 +186,13 @@ export function FacilitiesSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="mb-8 bg-gradient-to-r from-success to-primary text-on-accent p-5 rounded-2xl shadow-md relative overflow-hidden"
+                className="mb-8 bg-gradient-to-r from-success to-primary on-fill p-5 rounded-2xl shadow-md relative overflow-hidden"
               >
                 <div className="absolute inset-0 hero-pattern opacity-30" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-foreground/10 border border-foreground/20 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-warning" />
+                      <Clock className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
                       <p className="text-xs font-black text-foreground/60 uppercase tracking-widest">
@@ -204,7 +204,7 @@ export function FacilitiesSection() {
                     </div>
                   </div>
                   <div className="sm:ml-auto bg-foreground/10 border border-foreground/20 px-4 py-2 rounded-xl">
-                    <p className="text-sm font-bold text-warning">
+                    <p className="text-sm font-bold text-foreground">
                       {nextHoliday.date}
                     </p>
                   </div>

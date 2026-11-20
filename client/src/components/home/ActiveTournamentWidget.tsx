@@ -229,7 +229,7 @@ export function ActiveTournamentWidget() {
   if (!tournament && liveMatches.length === 0) return null;
 
   return (
-    <Card className="border-0 bg-[#061f17] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-success/40">
+    <Card className="border-0 bg-[color-mix(in_srgb,var(--success)_10%,var(--card))] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-success/40">
 
       {/* Tournament header */}
       {tournament && (
@@ -493,11 +493,11 @@ export function ActiveTournamentWidget() {
                     
                     const getCategoryColorClass = (cat: string) => {
                       const c = cat?.substring(0, 2).toUpperCase() || "";
-                      if (c === "MS") return "bg-info/10 text-info border-info/30";
-                      if (c === "WS") return "bg-individual/10 text-individual border-individual/30";
-                      if (c === "MD") return "bg-accent/10 text-accent border-accent/30";
-                      if (c === "WD") return "bg-individual/10 text-individual border-individual/30";
-                      if (c === "XD") return "bg-secondary/10 text-secondary border-secondary/30";
+                      if (c === "MS") return "bg-cat-ms/10 text-cat-ms border-cat-ms/30";
+                      if (c === "WS") return "bg-cat-ws/10 text-cat-ws border-cat-ws/30";
+                      if (c === "MD") return "bg-cat-md/10 text-cat-md border-cat-md/30";
+                      if (c === "WD") return "bg-cat-wd/10 text-cat-wd border-cat-wd/30";
+                      if (c === "XD") return "bg-cat-xd/10 text-cat-xd border-cat-xd/30";
                       return "bg-muted text-soft border-border-strong";
                     };
                     const isLive = m.status === "in_progress";

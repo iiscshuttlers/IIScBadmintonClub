@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 import { matchOutcome } from "@/lib/matchView";
+import { cssVar, themeColor, themeColorFor } from "@/lib/themeColors";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +53,7 @@ const LABEL_H = 26;
 const CAT_BOX_COLORS_DARK: Record<string, string> = {
   MS: "bg-cat-ms/10 border-cat-ms/25 hover:border-cat-ms/50 hover:shadow-cat-ms/20",
   WS: "bg-cat-ws/10 border-cat-ws/25 hover:border-cat-ws/50 hover:shadow-cat-ws/20",
-  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
+  MD: "bg-cat-md/10 border-cat-md/20 hover:border-cat-md/50 hover:shadow-cat-md/20",
   WD: "bg-cat-wd/10 border-cat-wd/25 hover:border-cat-wd/50 hover:shadow-cat-wd/20",
   XD: "bg-cat-xd/10 border-cat-xd/25 hover:border-cat-xd/50 hover:shadow-cat-xd/20",
   BS: "bg-team/10 border-team/25 hover:border-team/50 hover:shadow-team/20",
@@ -148,7 +149,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
   const statusIcon = (m: BracketMatch) => {
     if (matchOutcome(m).decided) return <CheckCircle2 size={12} className="text-primary shrink-0" />;
-    if (matchOutcome(m).state === "live") return <Play size={12} className="text-danger shrink-0 animate-pulse" />;
+    if (matchOutcome(m).state === "live") return <Play size={12} className="text-live shrink-0 animate-pulse" />;
     return <Clock size={12} className="text-muted-foreground shrink-0" />;
   };
 
@@ -168,7 +169,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
       <div
         className="fixed inset-x-3 z-50 rounded-2xl border border-border-strong shadow-2xl"
         style={{
-          background: "#0d1117",
+          background: cssVar("background"),
           top: "50%",
           transform: "translateY(-50%)",
           maxWidth: 700,
@@ -251,7 +252,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
                   <div
                     className={`rounded-xl border ${borderColor} overflow-hidden shrink-0 flex flex-col`}
-                    style={{ background: "#161b22", width: cardW }}
+                    style={{ background: cssVar("card"), width: cardW }}
                   >
                     {/* Card header */}
                     <div className="px-2.5 py-1.5 border-b border-border-strong/50 flex items-center justify-between gap-1">
@@ -294,7 +295,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-border-strong/30 ${playerWon ? "bg-primary/10" : ""}`} style={{ minHeight: 36 }}>
                       <div className="flex items-center gap-1 min-w-0">
                         {playerWon && <Trophy size={9} className="text-gold shrink-0" />}
-                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-warning" : playerLost ? "text-muted-foreground" : "text-foreground"}`}>
+                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-gold" : playerLost ? "text-muted-foreground" : "text-foreground"}`}>
                           {playerName}
                         </span>
                       </div>
@@ -355,7 +356,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                   {isEliminated ? (
                     <div
                       className="flex items-center justify-center rounded-xl border border-border-strong/30 shrink-0"
-                      style={{ background: "#161b22", width: 72, minHeight: 80 }}
+                      style={{ background: cssVar("card"), width: 72, minHeight: 80 }}
                     >
                       <div className="text-center px-1">
                         <p className="text-base leading-none mb-1">🏸</p>
@@ -365,7 +366,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                   ) : (
                     <div
                       className="flex items-center justify-center rounded-xl border border-border-strong/40 shrink-0"
-                      style={{ background: "#161b22", width: 60, minHeight: 80 }}
+                      style={{ background: cssVar("card"), width: 60, minHeight: 80 }}
                     >
                       <div className="text-center">
                         <Trophy size={18} className="text-gold/25 mx-auto mb-0.5" />
@@ -602,10 +603,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       const c1 = cur.bySlot.get(slot * 2);
       const c2 = cur.bySlot.get(slot * 2 + 1);
       if (!c1 && !c2) continue;
-      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke="#444" strokeWidth={1.5} />);
-      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
-      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
-      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke="#444" strokeWidth={1.5} />);
+      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
     }
   }
 
@@ -720,7 +721,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
 
   // ── Shared toolbar renderer (used in both normal and fullscreen mode) ──────
   const toolbar = (
-    <div className="flex flex-col md:flex-row gap-2 px-3 py-2 border-b border-border bg-[#0d1117] shadow-sm relative z-10">
+    <div className="flex flex-col md:flex-row gap-2 px-3 py-2 border-b border-border bg-background shadow-sm relative z-10">
       
       {/* --- ROW 1 --- */}
       <div className="flex items-center gap-2 w-full md:w-auto md:flex-1">
@@ -787,8 +788,9 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     if (el) {
                       el.classList.add("print-light-theme");
                       await new Promise(r => setTimeout(r, 50));
+                      const paperCard = themeColorFor("paper", "card");
                       import("@/utils/exportUtils").then(({ exportElementToPDF }) => {
-                        exportElementToPDF(el, `${getExportFilename()}_Print_${pages}Pg`, "#ffffff", { transform: 'scale(1)', backgroundColor: '#ffffff' }, pages).finally(() => {
+                        exportElementToPDF(el, `${getExportFilename()}_Print_${pages}Pg`, paperCard, { transform: 'scale(1)', backgroundColor: paperCard }, pages).finally(() => {
                           el.classList.remove("print-light-theme");
                         });
                       });
@@ -818,7 +820,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToPDF }) => exportElementToPDF(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToPDF }) => exportElementToPDF(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -827,7 +829,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToImage }) => exportElementToImage(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToImage }) => exportElementToImage(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -836,7 +838,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToJpeg }) => exportElementToJpeg(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToJpeg }) => exportElementToJpeg(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -929,7 +931,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     {isFullscreen && (
       <div
         className="fixed inset-0 z-[9999] flex flex-col"
-        style={{ background: "#0d1117" }}
+        style={{ background: cssVar("background") }}
       >
         {/* Fullscreen toolbar (reused) */}
         <div className="shrink-0">{toolbar}</div>
@@ -1026,13 +1028,13 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     )}
 
     {/* ── Normal (in-page) view ──────────────────────────────────────────── */}
-    <div className="rounded-2xl border border-border-strong overflow-hidden" style={{ background: "#0d1117" }}>
+    <div className="rounded-2xl border border-border-strong overflow-hidden" style={{ background: cssVar("background") }}>
       {/* Toolbar */}
       {toolbar}
 
       {/* View Content */}
       {viewMode === "list" ? (
-        <div className="p-4 space-y-8 overflow-y-auto w-full" style={{ maxHeight: isMobile ? "60vh" : "75vh", background: "#0d1117" }}>
+        <div className="p-4 space-y-8 overflow-y-auto w-full" style={{ maxHeight: isMobile ? "60vh" : "75vh", background: cssVar("background") }}>
           {roundData.map(({ ri, label, round, positions }) => (
             <div key={ri} className="space-y-4">
               <div className="flex items-center gap-2 border-b border-border pb-2">
@@ -1196,7 +1198,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                               <span className="text-[10px] font-black text-muted-foreground tracking-widest">TBD</span>
                             )
                           )}
-                          {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-danger" />}
+                          {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-live" />}
                         </span>
                       </div>
                       {/* Players + scores */}
@@ -1205,17 +1207,17 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                           <div
                             onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t1 ? null : t1) : undefined}
                             style={{ minHeight: playerRowH }}
-                            className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${t1Won ? "bg-warning/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
+                            className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${t1Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
-                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-warning" : "text-soft"}`}>{t1}</span>
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-gold" : "text-soft"}`}>{t1}</span>
                             {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                           <div
                             onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t2 ? null : t2) : undefined}
                             style={{ minHeight: playerRowH }}
-                            className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-warning/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
+                            className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
-                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-warning" : "text-soft"}`}>{t2}</span>
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-gold" : "text-soft"}`}>{t2}</span>
                             {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                         </div>
@@ -1223,10 +1225,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                           <div className="flex shrink-0 border-l border-border-strong/50">
                             {sets.map((s, i) => (
                               <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-border-strong/30" : ""}`} style={{ width: 22 }}>
-                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-warning/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-gold/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
                                   {s.t1}
                                 </div>
-                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-warning/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-gold/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
                                   {s.t2}
                                 </div>
                               </div>
@@ -1338,7 +1340,7 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
                 <span className="text-[10px] font-black text-muted-foreground tracking-widest">TBD</span>
               )
             )}
-            {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-danger" />}
+            {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-live" />}
           </span>
         </div>
         {/* Players + scores */}
@@ -1349,12 +1351,12 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               style={{ minHeight: playerRowH }}
               className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${
                 isT1Selected 
-                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
-                  : t1Won ? "bg-warning/20" : ""
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_color-mix(in_srgb,var(--primary)_50%,transparent)]" 
+                  : t1Won ? "bg-gold/20" : ""
               } ${onPlayerClick ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
             >
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
-                isT1Selected ? "text-foreground drop-shadow-md" : t1Won ? "text-warning" : "text-soft"
+                isT1Selected ? "text-foreground drop-shadow-md" : t1Won ? "text-gold" : "text-soft"
               }`}>{t1}</span>
               {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
@@ -1363,12 +1365,12 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               style={{ minHeight: playerRowH }}
               className={`flex-1 flex items-center gap-1 px-2 ${
                 isT2Selected 
-                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
-                  : t2Won ? "bg-warning/20" : ""
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_color-mix(in_srgb,var(--primary)_50%,transparent)]" 
+                  : t2Won ? "bg-gold/20" : ""
               } ${onPlayerClick ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
             >
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
-                isT2Selected ? "text-foreground drop-shadow-md" : t2Won ? "text-warning" : "text-soft"
+                isT2Selected ? "text-foreground drop-shadow-md" : t2Won ? "text-gold" : "text-soft"
               }`}>{t2}</span>
               {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
@@ -1377,10 +1379,10 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
             <div className="flex shrink-0 border-l border-border-strong/50">
               {sets.map((s, i) => (
                 <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-border-strong/30" : ""}`} style={{ width: 22 }}>
-                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-warning/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-gold/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
                     {s.t1}
                   </div>
-                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-warning/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-gold/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
                     {s.t2}
                   </div>
                 </div>

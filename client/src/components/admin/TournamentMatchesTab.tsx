@@ -990,7 +990,7 @@ export function TournamentMatchesTab({
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-info-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -1010,7 +1010,7 @@ export function TournamentMatchesTab({
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-info hover:bg-info/90 text-info-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -1094,7 +1094,7 @@ export function TournamentMatchesTab({
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-info hover:bg-info/90 text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-info hover:bg-info/90 text-info-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}

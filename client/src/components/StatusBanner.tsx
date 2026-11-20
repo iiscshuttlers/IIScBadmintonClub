@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { themeClasses } from "@/lib/legacyColorClasses";
 import { fetchSiteData } from "@/lib/siteData";
 import { feedService } from "@/services/feedService";
 import { Link, useLocation } from "wouter";
@@ -268,7 +269,7 @@ export default function StatusBanner() {
                             className="flex items-center gap-6"
                           >
                               <span
-                                className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
+                                className={isCssColor(msg.colorClass) ? "" : themeClasses(msg.colorClass)}
                                 style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
                               >{msg.text}</span>
                               <span className="inline-block w-1.5 h-1.5 rounded-full bg-foreground/40 flex-shrink-0" />
@@ -284,7 +285,7 @@ export default function StatusBanner() {
             return (
               <div
                 key={flyer.id}
-                className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
+                className={`relative ${bgIsCss ? "" : themeClasses(flyer.bgColorClass)} on-fill py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
                 style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
               >
                 {flyer.url ? (

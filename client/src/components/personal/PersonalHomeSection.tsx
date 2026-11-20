@@ -235,7 +235,7 @@ export function PersonalHomeSection({
                       className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-black ${
                         r === "W"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-series-b text-foreground"
+                          : "bg-series-b text-on-accent"
                       }`}
                     >
                       {r}

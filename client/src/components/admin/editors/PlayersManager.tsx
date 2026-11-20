@@ -788,7 +788,7 @@ export function PlayersManager() {
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("singles")}>Singles (Rank) <SortIcon field="singles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("doubles")}>Doubles (Rank) <SortIcon field="doubles" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("mixed")}>Mixed (Rank) <SortIcon field="mixed" /></th>
-                  <th className="p-3 font-bold text-right sticky right-0 bg-background/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-border">Actions</th>
+                  <th className="p-3 font-bold text-right sticky right-0 bg-background/90 backdrop-blur shadow-[-8px_0_12px_-8px_color-mix(in_srgb,var(--scrim)_15%,transparent)] z-10 border-l border-border">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -873,7 +873,7 @@ export function PlayersManager() {
                           {p.ranks?.mixed !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.mixed}</span>}
                         </div>
                       </td>
-                      <td className="p-3 text-right sticky right-0 bg-background group-hover:bg-muted/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-border/50 z-10">
+                      <td className="p-3 text-right sticky right-0 bg-background group-hover:bg-muted/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_color-mix(in_srgb,var(--scrim)_15%,transparent)] border-l border-border/50 z-10">
                         <div className="flex gap-1.5 shrink-0 justify-end flex-nowrap">
                           {!p.is_approved ? (
                             <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">

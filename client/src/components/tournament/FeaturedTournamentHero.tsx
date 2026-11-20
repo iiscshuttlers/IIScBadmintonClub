@@ -93,8 +93,7 @@ export function FeaturedTournamentHero({
 
             <div>
               <h2
-                className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground group-hover:text-primary transition-colors tracking-tight"
-                style={{ fontFamily: "Playfair Display, serif" }}
+                className="text-xl sm:text-2xl lg:text-3xl font-display font-black text-foreground group-hover:text-primary transition-colors tracking-tight"
               >
                 {t.name}
               </h2>
