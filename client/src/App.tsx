@@ -260,9 +260,9 @@ function AppRoutes() {
             }, [setLoc, session, isInitializing]);
             
             return (
-              <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+              <div className="min-h-screen flex items-center justify-center bg-card text-foreground">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                  <div className="w-8 h-8 rounded-full border-2 border-foreground/20 border-t-foreground animate-spin" />
                   <p className="text-sm font-medium animate-pulse">Verifying login...</p>
                 </div>
               </div>
@@ -386,7 +386,7 @@ function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-on-accent text-sm font-bold py-2 px-4 shadow-lg"
+      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-muted text-foreground text-sm font-bold py-2 px-4 shadow-lg"
     >
       <WifiOff className="w-4 h-4 shrink-0" />
       You're offline — some features may be unavailable

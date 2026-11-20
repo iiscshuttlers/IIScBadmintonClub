@@ -27,8 +27,7 @@
       content="Promoting excellence in badminton at IISc, Bangalore."
     />
     <meta name="twitter:image" content="https://iiscshuttlers.github.io/IIScBadmintonClub/icon-512.png" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0a1020" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -58,43 +57,45 @@
 
 
 
-      // ✅ Theme Persistence
-      (function() {
+      // ✅ Theme boot — apply the saved theme before React loads (no flash of the
+      // wrong colours) and load only that theme's fonts. Mirrors lib/themes.ts and
+      // styles/themes.css: [page background, accent, isDark, Google Fonts families].
+      (function () {
+        var THEMES = {
+          floodlight: ["#0a1020", "#ffc83d", 1, "family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800"],
+          "centre-court": ["#eef3ee", "#0a7a53", 0, "family=Plus+Jakarta+Sans:wght@400;500;600;700;800"],
+          smash: ["#0c0913", "#8b6cff", 1, "family=Unbounded:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800"],
+          paper: ["#f5f5f1", "#2347ff", 0, "family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800"],
+          heritage: ["#0b1611", "#e3b448", 1, "family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700;800"]
+        };
+        var id = "floodlight";
         try {
-          const theme = localStorage.getItem('theme');
-          const accent = localStorage.getItem('accent');
-          if (theme === 'dark' || !theme) {
-            document.documentElement.classList.add('dark');
-          }
-          if (accent && accent !== 'emerald') {
-            document.documentElement.setAttribute('data-accent', accent);
-          }
+          var saved = localStorage.getItem("app-theme");
+          if (saved && THEMES[saved]) id = saved;
         } catch (e) {}
+        var t = THEMES[id];
+        var root = document.documentElement;
+        root.setAttribute("data-theme", id);
+        if (t[2]) root.classList.add("dark");
+        root.style.colorScheme = t[2] ? "dark" : "light";
+        root.style.setProperty("--boot-bg", t[0]);
+        root.style.setProperty("--boot-accent", t[1]);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", t[0]);
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.crossOrigin = "anonymous";
+        link.href = "https://fonts.googleapis.com/css2?" + t[3] + "&display=swap";
+        link.setAttribute("data-theme-fonts", id);
+        document.head.appendChild(link);
       })();
     </script>
 
 
 
-    <!-- Google Fonts — loaded asynchronously so they never block Android startup -->
+    <!-- Google Fonts: the boot script above adds the stylesheet for the saved theme only -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Playfair+Display:wght@700;800&family=Bodoni+Moda:wght@400;500;600;700&family=Cinzel:wght@700;800&family=Caveat:wght@600&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-      crossorigin="anonymous"
-    />
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Playfair+Display:wght@700;800&family=Bodoni+Moda:wght@400;500;600;700&family=Cinzel:wght@700;800&family=Caveat:wght@600&display=swap" rel="stylesheet" />
-    </noscript>
-
-    <style>
-      :root {
-        --font-display: "Outfit", system-ui, sans-serif;
-        --font-body: "Inter", sans-serif;
-      }
-    </style>
 
     <!-- Google Analytics -->
     <script
@@ -116,9 +117,8 @@
   <body>
     <div id="root">
       <style>
-        /* Prevent white flash on dark-mode Android before JS boots */
-        body, html { background-color: #020617; }
-        html:not(.dark) body, html:not(.dark) { background-color: #ffffff; }
+        /* Paint the saved theme's background before JS boots (set by the boot script) */
+        body, html { background-color: var(--boot-bg, var(--background, #0a1020)); }
         #initial-loader {
           position: fixed;
           inset: 0;
@@ -126,18 +126,15 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background-color: #ffffff;
+          background-color: var(--boot-bg, var(--background, #0a1020));
           z-index: 9999;
           transition: opacity 0.3s ease;
-        }
-        html.dark #initial-loader {
-          background-color: #020617; /* tailwind slate-950 */
         }
         .spinner {
           width: 48px;
           height: 48px;
-          border: 4px solid rgba(16, 185, 129, 0.2); /* emerald-500 with opacity */
-          border-left-color: #10b981; /* emerald-500 */
+          border: 4px solid color-mix(in srgb, var(--boot-accent, var(--primary, #ffc83d)) 20%, transparent);
+          border-left-color: var(--boot-accent, var(--primary, #ffc83d));
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }

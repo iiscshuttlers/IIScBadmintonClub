@@ -78,7 +78,7 @@ export function PlayerMergeDialog({
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> Checking every record that references this guest…
           </p>
         ) : preview.isError ? (
-          <p role="alert" className="text-sm text-[var(--danger)]">
+          <p role="alert" className="text-sm text-danger">
             Couldn't preview this merge: {(preview.error as any)?.message ?? "unknown error"}. Nothing was changed.
           </p>
         ) : (
@@ -115,7 +115,7 @@ export function PlayerMergeDialog({
               {blocked && (
                 <ul className="space-y-1.5">
                   {preview.data.blockers.map((b) => (
-                    <li key={b} className="flex gap-2 text-xs text-[var(--danger)]">
+                    <li key={b} className="flex gap-2 text-xs text-danger">
                       <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden /> {mergeBlockerText(b)}
                     </li>
                   ))}
@@ -128,27 +128,27 @@ export function PlayerMergeDialog({
               )}
 
               {error && (
-                <p role="alert" className="flex gap-2 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3">
+                <p role="alert" className="flex gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3">
                   <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden /> {error}
                 </p>
               )}
 
               <div>
                 <label htmlFor="merge-reason" className="block text-xs font-bold mb-1">
-                  How was ownership verified? <span className="text-[var(--danger)]">*</span>
+                  How was ownership verified? <span className="text-danger">*</span>
                 </label>
                 <textarea
                   id="merge-reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full min-h-[88px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3"
+                  className="w-full min-h-[88px] rounded-xl border border-border-strong bg-card p-3"
                   placeholder="e.g. Confirmed in person with the opponent; IISc email on the guest entry matches"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">A matching name on its own is not verification.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => onOpenChange(false)} className="min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 font-bold">
+                <button type="button" onClick={() => onOpenChange(false)} className="min-h-[44px] rounded-xl border border-border-strong font-bold">
                   Cancel
                 </button>
                 <button

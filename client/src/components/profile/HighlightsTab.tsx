@@ -65,37 +65,37 @@ export function HighlightsTab({
       className="space-y-6"
     >
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+        <label className="block text-sm font-semibold text-soft mb-2">
           Bio / About Yourself
         </label>
         <textarea
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
           placeholder="PhD researcher at IISc. Known for aggressive net play and quick reflexes..."
         />
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+        <label className="block text-sm font-semibold text-soft mb-2">
           Motivational Quote
         </label>
         <input
           type="text"
           value={quote}
           onChange={(e) => setQuote(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted text-foreground focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Enjoying the Game is the best strategy"
         />
       </div>
 
       {/* Tournaments tag chips */}
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-3">
+        <label className="block text-sm font-semibold text-soft mb-3">
           Tournaments Played
         </label>
-        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+        <div className="rounded-xl border border-border-strong bg-muted p-3 space-y-3">
           {tournamentsRaw
             .split(",")
             .map((s) => s.trim())
@@ -110,7 +110,7 @@ export function HighlightsTab({
                 .map((t, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-info/10 border border-info/40 text-info text-xs font-bold"
                   >
                     🏸 {t}
                     <button
@@ -123,7 +123,7 @@ export function HighlightsTab({
                           .filter((item) => item !== t);
                         setTournamentsRaw(updated.join(", "));
                       }}
-                      className="ml-0.5 text-blue-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                      className="ml-0.5 text-info hover:text-danger transition font-black text-sm leading-none"
                     >
                       ×
                     </button>
@@ -137,14 +137,14 @@ export function HighlightsTab({
               value={tourName}
               onChange={(e) => setTourName(e.target.value)}
               placeholder="Tournament Name (e.g. Farewell Tournament)"
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-info"
             />
             <input
               type="number"
               value={tourYear}
               onChange={(e) => setTourYear(e.target.value)}
               placeholder="Year (e.g. 2025)"
-              className="w-full sm:w-32 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-32 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-info"
             />
             <button
               type="button"
@@ -159,7 +159,7 @@ export function HighlightsTab({
                 }
               }}
               disabled={!tourName.trim() || !tourYear.trim() || !/^\d{4}$/.test(tourYear.trim())}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-on-accent rounded-xl text-xs font-bold transition shrink-0"
+              className="px-4 py-2 bg-info hover:bg-info/90 disabled:opacity-50 text-on-accent rounded-xl text-xs font-bold transition shrink-0"
             >
               Add
             </button>
@@ -169,10 +169,10 @@ export function HighlightsTab({
 
       {/* Achievements tag chips */}
       <div>
-        <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-3">
+        <label className="block text-sm font-semibold text-soft mb-3">
           Top Achievements
         </label>
-        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+        <div className="rounded-xl border border-border-strong bg-muted p-3 space-y-3">
           {achievementsRaw
             .split(",")
             .map((s) => s.trim())
@@ -187,7 +187,7 @@ export function HighlightsTab({
                 .map((ach, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 dark:bg-primary/30 border border-primary/40 dark:border-primary/80 text-primary dark:text-primary text-xs font-bold"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/30 border border-primary/80 text-primary text-xs font-bold"
                   >
                     🏆 {ach}
                     <button
@@ -200,7 +200,7 @@ export function HighlightsTab({
                           .filter((item) => item !== ach);
                         setAchievementsRaw(updated.join(", "));
                       }}
-                      className="ml-0.5 text-primary hover:text-rose-500 transition font-black text-sm leading-none"
+                      className="ml-0.5 text-primary hover:text-danger transition font-black text-sm leading-none"
                     >
                       ×
                     </button>
@@ -212,7 +212,7 @@ export function HighlightsTab({
             <select
               value={achCategory}
               onChange={(e) => setAchCategory(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Men's">Men's</option>
               <option value="Women's">Women's</option>
@@ -221,7 +221,7 @@ export function HighlightsTab({
             <select
               value={achEventType}
               onChange={(e) => setAchEventType(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Singles">Singles</option>
               <option value="Doubles">Doubles</option>
@@ -230,7 +230,7 @@ export function HighlightsTab({
               <select
                 value={achMedal}
                 onChange={(e) => setAchMedal(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="Gold">🥇 Gold / Winner</option>
                 <option value="Silver">🥈 Silver / Runner-up</option>
@@ -244,13 +244,13 @@ export function HighlightsTab({
                 value={achCustomMedal}
                 onChange={(e) => setAchCustomMedal(e.target.value)}
                 placeholder="e.g. Quarter-Finalist"
-                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
               />
             )}
             <select
               value={achTournament}
               onChange={(e) => setAchTournament(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">-- Select Tournament Played --</option>
               {tournamentsRaw
@@ -291,17 +291,17 @@ export function HighlightsTab({
               Add
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground dark:text-muted-foreground">
+          <p className="text-[10px] text-muted-foreground">
             First add Tournaments below, then select them here.
           </p>
         </div>
       </div>
 
       {/* Career Highlights Builder */}
-      <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+      <div className="pt-6 mt-6 border-t border-border">
         <div className="flex justify-between items-center mb-3">
-          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 flex items-center gap-2">
-            <Star className="w-5 h-5 text-amber-500" />
+          <label className="block text-sm font-semibold text-soft flex items-center gap-2">
+            <Star className="w-5 h-5 text-gold" />
             Career Highlights
           </label>
           <button
@@ -312,15 +312,15 @@ export function HighlightsTab({
                 { year: "", title: "", description: "" },
               ])
             }
-            className="text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/20 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/30 transition shadow-sm"
+            className="text-xs font-bold text-warning hover:text-warning/80 flex items-center gap-1 bg-warning/10 px-3 py-1.5 rounded-lg border border-warning/20 transition shadow-sm"
           >
             + Add Highlight
           </button>
         </div>
 
         {careerHighlights.length === 0 ? (
-          <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-            <p className="text-muted-foreground dark:text-muted-foreground text-sm">
+          <div className="text-center p-6 bg-muted/50 border border-dashed border-border-strong rounded-2xl">
+            <p className="text-muted-foreground text-sm">
               Add custom narrative milestones (e.g. "Joined IISc Team") to show on your profile timeline.
             </p>
           </div>
@@ -329,14 +329,14 @@ export function HighlightsTab({
             {careerHighlights.map((hl, idx) => (
               <div
                 key={idx}
-                className="relative bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm pr-12"
+                className="relative bg-muted/80 p-4 rounded-2xl border border-border-strong shadow-sm pr-12"
               >
                 <button
                   type="button"
                   onClick={() =>
                     setCareerHighlights(careerHighlights.filter((_, i) => i !== idx))
                   }
-                  className="absolute top-4 right-4 text-rose-500 hover:text-rose-600 dark:text-rose-400 font-black p-1 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition"
+                  className="absolute top-4 right-4 text-danger hover:text-danger/80 font-black p-1 hover:bg-danger/10 rounded-lg transition"
                   title="Remove highlight"
                 >
                   ×
@@ -356,7 +356,7 @@ export function HighlightsTab({
                         arr[idx].year = e.target.value;
                         setCareerHighlights(arr);
                       }}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 bg-card border border-border-strong rounded-xl text-sm outline-none focus:ring-2 focus:ring-warning"
                     />
                   </div>
                   <div className="sm:col-span-3">
@@ -372,7 +372,7 @@ export function HighlightsTab({
                         arr[idx].title = e.target.value;
                         setCareerHighlights(arr);
                       }}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-2 bg-card border border-border-strong rounded-xl text-sm outline-none focus:ring-2 focus:ring-warning"
                     />
                   </div>
                   <div className="sm:col-span-4">
@@ -388,7 +388,7 @@ export function HighlightsTab({
                         arr[idx].description = e.target.value;
                         setCareerHighlights(arr);
                       }}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                      className="w-full px-3 py-2 bg-card border border-border-strong rounded-xl text-sm outline-none focus:ring-2 focus:ring-warning resize-none"
                     />
                   </div>
                 </div>

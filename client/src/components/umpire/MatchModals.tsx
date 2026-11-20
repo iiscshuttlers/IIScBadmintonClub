@@ -14,22 +14,22 @@ export function ChangeEndsModal({
 }) {
   const isChangingEnds = title === "Change Ends";
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center bg-card border border-border-strong rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
         {isChangingEnds
-          ? <ArrowLeftRight className="w-14 h-14 text-amber-400" />
-          : <Timer className="w-14 h-14 text-amber-400" />}
+          ? <ArrowLeftRight className="w-14 h-14 text-warning" />
+          : <Timer className="w-14 h-14 text-warning" />}
         <h2 className="text-2xl font-black text-foreground uppercase tracking-wider">{title}</h2>
         <p className="text-muted-foreground font-bold text-sm max-w-xs">{reason}</p>
-        <div className="flex items-center justify-center gap-2 text-amber-400 text-sm font-bold">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        <div className="flex items-center justify-center gap-2 text-warning text-sm font-bold">
+          <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
           {isChangingEnds
             ? "Players change sides of the court now"
             : "60 second interval — players stay on their ends"}
         </div>
         <button
           onClick={onConfirm}
-          className="mt-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-2xl font-black uppercase tracking-widest shadow-xl transition"
+          className="mt-2 w-full py-4 bg-warning hover:bg-warning/90 text-warning-foreground rounded-2xl font-black uppercase tracking-widest shadow-xl transition"
         >
           {isChangingEnds ? "Ends Changed ✓" : "Resume Play ✓"}
         </button>
@@ -54,13 +54,13 @@ export function DisciplineCardModal({
   onIssueCard: (target: CardTarget, cardType: CardType) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-start justify-start bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-start justify-start bg-card border border-border-strong rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between w-full mb-6">
         <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2">
-          <Flag className="w-5 h-5 text-amber-400" /> Issue Discipline Card
+          <Flag className="w-5 h-5 text-warning" /> Issue Discipline Card
         </h2>
-        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-slate-800 rounded-full text-muted-foreground">
+        <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-muted rounded-full text-muted-foreground">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -75,11 +75,11 @@ export function DisciplineCardModal({
           <button
             key={key}
             onClick={() => setCardTarget(key)}
-            className={`py-3 px-4 rounded-xl font-bold text-sm border text-left transition ${cardTarget === key ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-300"}`}
+            className={`py-3 px-4 rounded-xl font-bold text-sm border text-left transition ${cardTarget === key ? "bg-warning/20 border-warning text-warning" : "bg-muted border-border-strong text-soft"}`}
           >
             {label}
             {cards[key].map((c, i) => (
-              <span key={i} className={`inline-block w-2.5 h-2.5 rounded-sm ml-1 ${c === "yellow" ? "bg-yellow-400" : c === "red" ? "bg-red-500" : "bg-white border border-slate-400"}`} />
+              <span key={i} className={`inline-block w-2.5 h-2.5 rounded-sm ml-1 ${c === "yellow" ? "bg-warning" : c === "red" ? "bg-danger" : "bg-foreground border border-border-strong"}`} />
             ))}
           </button>
         ))}
@@ -94,13 +94,13 @@ export function DisciplineCardModal({
             : match.t2.p2Name
           }</span></p>
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => onIssueCard(cardTarget, "yellow")} className="py-4 rounded-2xl font-black text-sm bg-yellow-400/20 border border-yellow-400 text-yellow-300 hover:bg-yellow-400/30 transition">
+            <button onClick={() => onIssueCard(cardTarget, "yellow")} className="py-4 rounded-2xl font-black text-sm bg-warning/20 border border-warning text-warning hover:bg-warning/30 transition">
               ⚠️ Yellow<br/><span className="text-xs font-normal opacity-70">Warning</span>
             </button>
-            <button onClick={() => onIssueCard(cardTarget, "red")} className="py-4 rounded-2xl font-black text-sm bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 transition">
+            <button onClick={() => onIssueCard(cardTarget, "red")} className="py-4 rounded-2xl font-black text-sm bg-danger/20 border border-danger text-danger hover:bg-danger/30 transition">
               🟥 Red<br/><span className="text-xs font-normal opacity-70">+1 pt opponent</span>
             </button>
-            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-slate-700/80 border border-slate-400 text-on-accent hover:bg-slate-600 transition">
+            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-muted-strong/80 border border-border-strong text-foreground hover:bg-faint transition">
               ⬛ Black<br/><span className="text-xs font-normal opacity-70">Disqualify</span>
             </button>
           </div>
@@ -124,20 +124,20 @@ export function RetireModal({
   const t2Name = match ? (match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "")) : "Team 2";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
-        <AlertTriangle className="w-12 h-12 text-rose-400" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center justify-center bg-card border border-border-strong rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
+        <AlertTriangle className="w-12 h-12 text-danger" />
         <h2 className="text-xl font-black text-foreground uppercase tracking-wider">Match Retirement</h2>
         <p className="text-muted-foreground text-sm">Which team is retiring from the match?</p>
         <div className="flex flex-col gap-3 w-full">
-          <button onClick={() => onRetire(1)} className="w-full py-3 px-4 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
+          <button onClick={() => onRetire(1)} className="w-full py-3 px-4 bg-danger/20 border border-danger text-danger rounded-xl font-bold text-sm hover:bg-danger/30 transition">
             {t1Name}
           </button>
-          <button onClick={() => onRetire(2)} className="w-full py-3 px-4 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
+          <button onClick={() => onRetire(2)} className="w-full py-3 px-4 bg-danger/20 border border-danger text-danger rounded-xl font-bold text-sm hover:bg-danger/30 transition">
             {t2Name}
           </button>
         </div>
-        <button onClick={onClose} className="text-muted-foreground text-sm hover:text-slate-300 transition mt-2">Cancel</button>
+        <button onClick={onClose} className="text-muted-foreground text-sm hover:text-soft transition mt-2">Cancel</button>
       </div>
     </div>
   );
@@ -189,10 +189,10 @@ export function DirectScoreModal({
   const setsToShow = Math.min(bestOfSets, Math.max(1, lastFilledSetIdx + 2));
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 pb-20">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full shadow-2xl max-h-[75dvh] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4 pb-20">
+      <div className="bg-card border border-border-strong rounded-3xl max-w-lg w-full shadow-2xl max-h-[75dvh] flex flex-col">
         
-        <div className="p-6 pb-4 shrink-0 border-b border-slate-800">
+        <div className="p-6 pb-4 shrink-0 border-b border-border">
           <h3 className="text-xl font-black text-foreground">Enter Final Score</h3>
         </div>
 
@@ -200,27 +200,27 @@ export function DirectScoreModal({
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Winner</label>
             <div className="flex flex-col sm:flex-row gap-2">
-              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-primary-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t1Name || "Team 1"}</button>
-              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-sky-500 text-on-accent" : "bg-slate-800 text-muted-foreground"}`}>{t2Name || "Team 2"}</button>
+              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{t1Name || "Team 1"}</button>
+              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-info text-on-accent" : "bg-muted text-muted-foreground"}`}>{t2Name || "Team 2"}</button>
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-3">Set Scores</label>
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
-              <div className="grid grid-cols-[auto_1fr_1fr] bg-slate-800 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                <div className="p-3 text-center border-r border-slate-700">Set</div>
-                <div className="p-3 text-center border-r border-slate-700 truncate px-2" title={t1Name}>{t1Name || "Team 1"}</div>
+            <div className="bg-muted/50 rounded-2xl border border-border-strong overflow-hidden">
+              <div className="grid grid-cols-[auto_1fr_1fr] bg-muted text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                <div className="p-3 text-center border-r border-border-strong">Set</div>
+                <div className="p-3 text-center border-r border-border-strong truncate px-2" title={t1Name}>{t1Name || "Team 1"}</div>
                 <div className="p-3 text-center truncate px-2" title={t2Name}>{t2Name || "Team 2"}</div>
               </div>
               {Array.from({ length: setsToShow }).map((_, idx) => (
-                <div key={idx} className="grid grid-cols-[auto_1fr_1fr] border-t border-slate-700/50">
-                  <div className="p-3 flex items-center justify-center font-black text-muted-foreground border-r border-slate-700 bg-slate-800/30 w-12">{idx + 1}</div>
-                  <div className="p-2 border-r border-slate-700">
+                <div key={idx} className="grid grid-cols-[auto_1fr_1fr] border-t border-border-strong/50">
+                  <div className="p-3 flex items-center justify-center font-black text-muted-foreground border-r border-border-strong bg-muted/30 w-12">{idx + 1}</div>
+                  <div className="p-2 border-r border-border-strong">
                     <input 
                       type="number" 
                       value={parsedSets[idx].t1} 
                       onChange={e => handleSetChange(idx, 1, e.target.value)} 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-primary font-bold outline-none focus:border-primary" 
+                      className="w-full bg-card border border-border-strong rounded-lg p-2 text-center text-primary font-bold outline-none focus:border-primary" 
                     />
                   </div>
                   <div className="p-2">
@@ -228,7 +228,7 @@ export function DirectScoreModal({
                       type="number" 
                       value={parsedSets[idx].t2} 
                       onChange={e => handleSetChange(idx, 2, e.target.value)} 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-sky-400 font-bold outline-none focus:border-sky-500" 
+                      className="w-full bg-card border border-border-strong rounded-lg p-2 text-center text-info font-bold outline-none focus:border-info" 
                     />
                   </div>
                 </div>
@@ -237,8 +237,8 @@ export function DirectScoreModal({
           </div>
         </div>
 
-        <div className="p-6 pt-4 border-t border-slate-700 shrink-0 flex gap-2">
-          <button onClick={onClose} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-on-accent rounded-xl font-bold transition">Cancel</button>
+        <div className="p-6 pt-4 border-t border-border-strong shrink-0 flex gap-2">
+          <button onClick={onClose} className="flex-1 py-3 bg-muted hover:bg-muted-strong text-foreground rounded-xl font-bold transition">Cancel</button>
           <button onClick={() => {
             if (!directWinner || !directSetsText) { toast.error("Fill winner and at least 1 set"); return; }
             onSave();
@@ -254,7 +254,7 @@ export function ConfirmActionModal({
   title,
   message,
   confirmLabel = "Confirm",
-  confirmColor = "bg-rose-600 hover:bg-rose-500",
+  confirmColor = "bg-danger hover:bg-danger/90",
   icon: Icon = AlertTriangle,
   onConfirm,
   onClose,
@@ -268,16 +268,16 @@ export function ConfirmActionModal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl">
-        <Icon className="w-12 h-12 text-rose-500 mb-4" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center bg-card border border-border-strong rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl">
+        <Icon className="w-12 h-12 text-danger mb-4" />
         <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider mb-2">{title}</h2>
         <p className="text-muted-foreground font-bold text-xs sm:text-sm mb-6">{message}</p>
         
         <div className="flex w-full gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-on-accent font-bold text-sm rounded-2xl transition"
+            className="flex-1 py-3 bg-muted hover:bg-muted-strong border border-border-strong text-foreground font-bold text-sm rounded-2xl transition"
           >
             Cancel
           </button>

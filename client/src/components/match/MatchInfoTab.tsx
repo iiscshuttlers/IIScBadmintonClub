@@ -77,7 +77,7 @@ export function MatchInfoTab({
   const info = useMatchInfo(view, officials);
   const event = view.discipline ? `${view.discipline} · ${DISCIPLINE_LABELS[view.discipline]}` : view.categoryLabel;
   return (
-    <dl className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
+    <dl className="mt-4 divide-y divide-border">
       <Row label="Tournament">
         <Link href={tournamentPath(tournament.id)} className="font-semibold text-primary underline underline-offset-2">
           {tournament.name}

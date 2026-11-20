@@ -81,12 +81,12 @@ export function BlockedPlayersSection({ myPlayerId }: { myPlayerId: string | nul
   }
 
   return (
-    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+    <div className="divide-y divide-border">
       {rows.map((r) => {
         const name = r.player?.full_name || "Unknown player";
         return (
           <div key={r.blocked_id} className="flex items-center gap-3 px-4 py-3">
-            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
               {r.player?.avatar_url ? (
                 <img src={r.player.avatar_url} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -97,7 +97,7 @@ export function BlockedPlayersSection({ myPlayerId }: { myPlayerId: string | nul
             <button
               onClick={() => unblock(r.blocked_id, name.split(" ")[0])}
               disabled={busyId === r.blocked_id}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-foreground hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-50"
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-muted text-foreground hover:bg-muted-strong transition disabled:opacity-50"
             >
               {busyId === r.blocked_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Unblock"}
             </button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, ChevronDown, ChevronUp, MapPin, Clock, Phone, MessageCircle, Download, Image, FileText } from "lucide-react";
 import { exportElementToImage, exportElementToPDF } from "@/utils/exportUtils";
+import { themeColor, themeColorFor } from "@/lib/themeColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -38,21 +39,21 @@ interface ScheduledMatch {
 interface ContactInfo { id: string; name: string; contact_number: string | null; role?: string; }
 
 const CAT_COLORS: Record<string, string> = {
-  "MS": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
-  "MD": "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
-  "WS": "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
-  "WD": "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800",
-  "XD": "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800",
-  "Team": "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+  "MS": "bg-cat-ms/10 text-cat-ms border-cat-ms/40",
+  "MD": "bg-cat-md/10 text-cat-md border-cat-md/40",
+  "WS": "bg-cat-ws/10 text-cat-ws border-cat-ws/40",
+  "WD": "bg-cat-wd/10 text-cat-wd border-cat-wd/40",
+  "XD": "bg-cat-xd/10 text-cat-xd border-cat-xd/40",
+  "Team": "bg-team/10 text-team border-team/40",
 };
 
 const CAT_BOX_COLORS: Record<string, string> = {
-  "MS": "border-blue-200 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/20",
-  "MD": "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-indigo-950/20",
-  "WS": "border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20",
-  "WD": "border-pink-200 dark:border-pink-900/50 bg-pink-50/30 dark:bg-pink-950/20",
-  "XD": "border-fuchsia-200 dark:border-fuchsia-900/50 bg-fuchsia-50/30 dark:bg-fuchsia-950/20",
-  "Team": "border-violet-200 dark:border-violet-900/50 bg-violet-50/30 dark:bg-violet-950/20",
+  "MS": "border-cat-ms/30 bg-cat-ms/10",
+  "MD": "border-cat-md/30 bg-cat-md/10",
+  "WS": "border-cat-ws/30 bg-cat-ws/10",
+  "WD": "border-cat-wd/30 bg-cat-wd/10",
+  "XD": "border-cat-xd/30 bg-cat-xd/10",
+  "Team": "border-team/30 bg-team/10",
 };
 
 export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: string | null, playerName: string | null }) {
@@ -222,8 +223,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
 
   if (!schedMatches.length) return (
     <div className="py-16 flex flex-col items-center justify-center text-center">
-      <Calendar className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-xl font-black text-muted-foreground dark:text-slate-200 mb-2">Schedule Not Yet Available</h3>
+      <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+      <h3 className="text-xl font-black text-soft mb-2">Schedule Not Yet Available</h3>
       <p className="text-muted-foreground max-w-md">Match schedule will appear here once the admin assigns court times to bracket matches.</p>
     </div>
   );
@@ -268,8 +269,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
             <details key={key} open={isOpen} className="group mb-6 last:mb-0 relative">
               <summary className="flex items-center gap-3 mb-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none outline-none">
                 <Calendar className="w-4 h-4 text-primary" />
-                <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm flex-1">
-                  {date} <span className="text-xs font-bold text-slate-400">({totalMatchesForDate})</span>
+                <h4 className="font-black text-soft text-sm flex-1">
+                  {date} <span className="text-xs font-bold text-muted-foreground">({totalMatchesForDate})</span>
                 </h4>
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -279,24 +280,24 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                         e.stopPropagation();
                         setExportMenuDate(exportMenuDate === date ? null : date);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold"
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-muted text-soft hover:bg-muted-strong transition-colors text-xs font-bold"
                     >
                       <Download className="w-3 h-3" />
                       Export
                     </button>
                     {exportMenuDate === date && (
-                      <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden min-w-[130px]">
+                      <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border-strong rounded-xl shadow-lg overflow-hidden min-w-[130px]">
                         <button
                           onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setExportMenuDate(null);
                             const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
-                            if (el) await exportElementToImage(el, `schedule_${date.replace(/\s+/g, '_')}`, "#0f172a");
+                            if (el) await exportElementToImage(el, `schedule_${date.replace(/\s+/g, '_')}`, themeColor("background"));
                           }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-soft hover:bg-muted transition"
                         >
-                          <Image className="w-3.5 h-3.5 text-emerald-500" /> PNG Image
+                          <Image className="w-3.5 h-3.5 text-success" /> PNG Image
                         </button>
                         <button
                           onClick={async (e) => {
@@ -304,11 +305,19 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             e.stopPropagation();
                             setExportMenuDate(null);
                             const el = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
-                            if (el) await exportElementToPDF(el, `schedule_${date.replace(/\s+/g, '_')}`, "#ffffff");
+                            if (el) {
+                              // Render the capture in the light Paper theme so it reads on a white page.
+                              el.classList.add("print-light-theme");
+                              try {
+                                await exportElementToPDF(el, `schedule_${date.replace(/\s+/g, '_')}`, themeColorFor("paper", "card"));
+                              } finally {
+                                el.classList.remove("print-light-theme");
+                              }
+                            }
                           }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-bold text-soft hover:bg-muted transition"
                         >
-                          <FileText className="w-3.5 h-3.5 text-red-500" /> PDF
+                          <FileText className="w-3.5 h-3.5 text-danger" /> PDF
                         </button>
                       </div>
                     )}
@@ -320,12 +329,12 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                 {/* Print Header (Only visible in print) */}
                 <div className="hidden print:block mb-8 text-center border-b pb-4">
                   <h1 className="text-2xl font-black mb-1">IISc Badminton Club</h1>
-                  <h2 className="text-xl text-slate-600 dark:text-slate-400">Match Schedule - {date}</h2>
+                  <h2 className="text-xl text-muted-foreground">Match Schedule - {date}</h2>
                 </div>
 
                 {Object.entries(categoriesGroup).map(([cat, rawDayMatches]) => {
-                  const catCls = CAT_COLORS[cat] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
-                  const boxCls = CAT_BOX_COLORS[cat] ?? "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900";
+                  const catCls = CAT_COLORS[cat] ?? "bg-muted text-muted-foreground border-border";
+                  const boxCls = CAT_BOX_COLORS[cat] ?? "border-border-strong bg-card";
                   
                   // Live first, then upcoming, then finished (shared status rules).
                   const priority = (m: ScheduledMatch) => {
@@ -367,16 +376,16 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                         
                         let customBoxCls = boxCls;
                         if (isLive) {
-                          customBoxCls = cn(boxCls, "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 shadow-md shadow-red-500/10");
+                          customBoxCls = cn(boxCls, "border-live/40 bg-live/10 shadow-md shadow-live/10");
                         } else if (isMyMatch) {
-                          customBoxCls = cn(boxCls, "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse !bg-primary/5 dark:!bg-primary/10");
+                          customBoxCls = cn(boxCls, "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse !bg-primary/10");
                         }
 
                         return (
-                          <div key={m.id} className={cn("rounded-2xl border p-4 print:break-inside-avoid print:border-slate-300 print:shadow-none transition-all duration-300", customBoxCls)}>
+                          <div key={m.id} className={cn("rounded-2xl border p-4 print:break-inside-avoid print:border-border-strong print:shadow-none transition-all duration-300", customBoxCls)}>
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 w-5">#{idx + 1}</span>
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls} print:bg-transparent print:border-slate-300`}>{m.category}</span>
+                            <span className="text-[10px] font-black text-muted-foreground w-5">#{idx + 1}</span>
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls} print:bg-transparent print:border-border-strong`}>{m.category}</span>
                             <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
                             {view.court && (
                               <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(view.court))}>
@@ -399,7 +408,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                               Details →
                             </Link>
                           </div>
-                          <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                          <div className="divide-y divide-border text-sm">
                             <MatchSideRow side={view.sides[0]} index={0} view={view} />
                             <MatchSideRow side={view.sides[1]} index={1} view={view} />
                           </div>
@@ -420,10 +429,10 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                             const expanded = expandedContacts[m.id];
                             if (!contacts.length && !showOfficials) return null;
                             return (
-                              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 print:hidden">
+                              <div className="mt-2 pt-2 border-t border-border/50 print:hidden">
                                 <button
                                   onClick={() => setExpandedContacts(p => ({ ...p, [m.id]: !p[m.id] }))}
-                                  className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition"
+                                  className="inline-flex items-center gap-1.5 text-[10px] font-black text-success hover:text-success/80 transition"
                                 >
                                   <Phone className="w-3 h-3" />
                                   {expanded ? "Hide Contacts" : `Contact ${isOfficial || isAdmin ? "Players" : "Opponent"}`}
@@ -432,13 +441,13 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                                   <div className="mt-2 space-y-1.5">
                                     {contacts.map(c => (
                                       <div key={c.id} className="flex items-center gap-2 text-xs">
-                                        <span className="font-bold text-slate-700 dark:text-slate-200 min-w-0 truncate flex-1">{c.name}</span>
+                                        <span className="font-bold text-soft min-w-0 truncate flex-1">{c.name}</span>
                                         {c.contact_number ? (
                                           <div className="flex items-center gap-1.5 shrink-0">
-                                            <a href={`tel:${c.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-bold hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition">
+                                            <a href={`tel:${c.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-success/10 text-success font-bold hover:bg-success/20 transition">
                                               <Phone className="w-3 h-3" /> Call
                                             </a>
-                                            <a href={`https://wa.me/${c.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold hover:bg-green-200 dark:hover:bg-green-800/50 transition">
+                                            <a href={`https://wa.me/${c.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-success/10 text-success font-bold hover:bg-success/20 transition">
                                               <MessageCircle className="w-3 h-3" /> WhatsApp
                                             </a>
                                           </div>
@@ -452,15 +461,15 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                                         <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mt-2">Officials</div>
                                         {officials.map((o, i) => (
                                           <div key={`${o.id}-${o.role}-${i}`} className="flex items-center gap-2 text-xs">
-                                            <span className="font-bold text-slate-700 dark:text-slate-200 min-w-0 truncate flex-1">
+                                            <span className="font-bold text-soft min-w-0 truncate flex-1">
                                               {o.name} <span className="text-[10px] text-muted-foreground">({o.role})</span>
                                             </span>
                                             {o.contact_number ? (
                                               <div className="flex items-center gap-1.5 shrink-0">
-                                                <a href={`tel:${o.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-bold hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition">
+                                                <a href={`tel:${o.contact_number}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-success/10 text-success font-bold hover:bg-success/20 transition">
                                                   <Phone className="w-3 h-3" /> Call
                                                 </a>
-                                                <a href={`https://wa.me/${o.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold hover:bg-green-200 dark:hover:bg-green-800/50 transition">
+                                                <a href={`https://wa.me/${o.contact_number.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-success/10 text-success font-bold hover:bg-success/20 transition">
                                                   <MessageCircle className="w-3 h-3" /> WhatsApp
                                                 </a>
                                               </div>
@@ -479,7 +488,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
 
                           {/* Poll Card (Compact) */}
                           {m.match_code && (
-                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 print:hidden">
+                            <div className="mt-2 pt-2 border-t border-border/50 print:hidden">
                               <MatchPredictionCard
                                 compact
                                 matchId={m.id}
@@ -518,7 +527,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
           <select
             value={activeDate}
             onChange={(e) => setActiveDate(e.target.value)}
-            className="pl-9 pr-10 py-1.5 rounded-xl text-sm font-black transition-all bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            className="pl-9 pr-10 py-1.5 rounded-xl text-sm font-black transition-all bg-muted/80 text-soft border border-border-strong hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
           >
             {dates.map((date) => (
               <option key={date} value={date}>
@@ -529,7 +538,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
           <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
         </div>
         
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+        <div className="h-6 w-px bg-muted hidden sm:block" />
 
         {/* Category filter pills */}
         <div className="flex flex-wrap gap-2">
@@ -538,7 +547,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
             className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all border ${
               activeCategory === cat
                 ? "bg-primary text-primary-foreground border-primary shadow"
-                : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:border-primary"
+                : "border-border-strong text-muted-foreground hover:border-primary"
             }`}>
             {cat}
           </button>
@@ -555,20 +564,20 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
           <div className="mt-1">
             <button
               onClick={() => { setShowAllContacts(!showAllContacts); setContactSearch(""); }}
-              className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1 rounded-lg bg-emerald-50/80 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+              className="flex items-center gap-1.5 text-[11px] font-bold text-success hover:text-success/80 transition px-2 py-1 rounded-lg bg-success/10 hover:bg-success/15"
             >
               <Phone className="w-3 h-3" />
               {showAllContacts ? "Hide Contacts" : "All Contacts"}
               {showAllContacts ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
             {showAllContacts && (
-              <div className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 p-3 shadow-sm">
+              <div className="mt-2 rounded-xl border border-success/40 bg-card p-3 shadow-sm">
                 <input
                   type="text"
                   value={contactSearch}
                   onChange={(e) => setContactSearch(e.target.value)}
                   placeholder="Search name or number…"
-                  className="w-full text-xs font-bold px-3 py-2 mb-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-1 focus:ring-emerald-400"
+                  className="w-full text-xs font-bold px-3 py-2 mb-2 rounded-lg border border-border-strong bg-muted outline-none focus:ring-1 focus:ring-success"
                 />
                 {filteredOfficials.length === 0 && filteredPlayers.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4">{q ? "No matches." : "No contacts loaded yet."}</p>
@@ -576,15 +585,15 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {filteredOfficials.length > 0 && (
                       <div>
-                        <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Officials</h5>
+                        <h5 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Officials</h5>
                         <div className="space-y-0.5">
                           {filteredOfficials.map((o) => (
                             <div key={o.id + o.role} className="flex items-center gap-2 text-xs py-1 px-1">
-                              <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{o.name} {o.role && <span className="text-muted-foreground font-normal">· {o.role}</span>}</span>
+                              <span className="flex-1 font-bold text-soft truncate">{o.name} {o.role && <span className="text-muted-foreground font-normal">· {o.role}</span>}</span>
                               {o.contact_number ? (
-                                <a href={`tel:${o.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{o.contact_number}</a>
+                                <a href={`tel:${o.contact_number}`} className="font-mono text-success shrink-0">{o.contact_number}</a>
                               ) : (
-                                <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                                <span className="text-muted-foreground italic text-[10px] shrink-0">no phone</span>
                               )}
                             </div>
                           ))}
@@ -593,15 +602,15 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                     )}
                     {filteredPlayers.length > 0 && (
                       <div>
-                        <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Players</h5>
+                        <h5 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Players</h5>
                         <div className="space-y-0.5">
                           {filteredPlayers.map((c) => (
                             <div key={c.id} className="flex items-center gap-2 text-xs py-1 px-1">
-                              <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
+                              <span className="flex-1 font-bold text-soft truncate">{c.name}</span>
                               {c.contact_number ? (
-                                <a href={`tel:${c.contact_number}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{c.contact_number}</a>
+                                <a href={`tel:${c.contact_number}`} className="font-mono text-success shrink-0">{c.contact_number}</a>
                               ) : (
-                                <span className="text-slate-400 italic text-[10px] shrink-0">no phone</span>
+                                <span className="text-muted-foreground italic text-[10px] shrink-0">no phone</span>
                               )}
                             </div>
                           ))}
@@ -617,13 +626,13 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
       })()}
 
       {filtered.length > 0 ? (
-        <div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl p-1 sm:p-2">
+        <div className="bg-card/50 rounded-3xl p-1 sm:p-2">
           {renderMatchList(filtered)}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <Calendar className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No matches found</h3>
+        <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm">
+          <Calendar className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <h3 className="text-lg font-black text-soft">No matches found</h3>
           <p className="text-sm text-muted-foreground mt-1">Try changing your filters.</p>
         </div>
       )}

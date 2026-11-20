@@ -64,10 +64,10 @@ export function FacilitiesSection() {
   ];
 
   return (
-    <section className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 w-full">
+    <section className="bg-card border-t border-border w-full">
       <div className="w-full">
         {/* Courts + Hours */}
-        <section className="py-6 bg-white dark:bg-slate-900">
+        <section className="py-6 bg-card">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Courts card */}
@@ -78,18 +78,18 @@ export function FacilitiesSection() {
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                <div className="h-full rounded-3xl border-2 border-primary/30 dark:border-primary/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
+                <div className="h-full rounded-3xl border-2 border-primary/50 shadow-md bg-muted overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-1.5 bg-gradient-to-r from-primary to-team" />
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
-                        <Trophy className="w-6 h-6 text-primary dark:text-primary" />
+                      <div className="w-12 h-12 rounded-2xl bg-primary/30 flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-primary" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+                      <h2 className="text-2xl font-black text-foreground">
                         Indoor Courts
                       </h2>
                     </div>
-                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-4">
+                    <p className="text-muted-foreground leading-relaxed mb-4">
                       Three professional-grade wooden courts with synthetic mat
                       flooring and modern lighting, designed for both training
                       and competitive play.
@@ -98,7 +98,7 @@ export function FacilitiesSection() {
                       {courtDetails.map((detail, i) => (
                         <li key={i} className="flex gap-3 items-start">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-muted-foreground dark:text-slate-300 text-sm">
+                          <span className="text-soft text-sm">
                             {detail}
                           </span>
                         </li>
@@ -116,14 +116,14 @@ export function FacilitiesSection() {
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                <div className="h-full rounded-3xl border-2 border-blue-100 dark:border-blue-900/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-1.5 bg-gradient-to-r from-blue-500 to-blue-700" />
+                <div className="h-full rounded-3xl border-2 border-info/30 shadow-md bg-muted overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-1.5 bg-gradient-to-r from-info to-info" />
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-info" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+                      <h2 className="text-2xl font-black text-foreground">
                         Operating Hours
                       </h2>
                     </div>
@@ -133,29 +133,29 @@ export function FacilitiesSection() {
                           key={idx}
                           className={`flex items-center justify-between p-3 rounded-2xl ${
                             idx === 0
-                              ? "bg-gradient-to-r from-primary/10 to-teal-50 dark:from-primary/20 dark:to-teal-950/20 border border-primary/30 dark:border-primary/50"
-                              : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-100 dark:border-red-900/50"
+                              ? "bg-gradient-to-r from-primary/20 to-team/10 border border-primary/50"
+                              : "bg-gradient-to-r from-danger/10 to-secondary/10 border border-danger/30"
                           }`}
                         >
                           <div>
                             <p
-                              className={`font-bold text-sm ${idx === 0 ? "text-primary dark:text-primary/70" : "text-red-700 dark:text-red-400"}`}
+                              className={`font-bold text-sm ${idx === 0 ? "text-primary/70" : "text-danger"}`}
                             >
                               {slot.day}
                             </p>
-                            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {slot.note}
                             </p>
                           </div>
                           <span
-                            className={`font-black text-sm tabular-nums ${idx === 0 ? "text-primary dark:text-primary" : "text-red-600 dark:text-red-400"}`}
+                            className={`font-black text-sm tabular-nums ${idx === 0 ? "text-primary" : "text-danger"}`}
                           >
                             {slot.hours}
                           </span>
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-red-500 dark:text-red-400 font-medium">
+                    <p className="text-xs text-danger font-medium">
                       ✕ Closed on all Gymkhana-declared holidays — see the
                       calendar below.
                     </p>
@@ -167,15 +167,15 @@ export function FacilitiesSection() {
         </section>
 
         {/* Court Closure Days */}
-        <section className="py-6 bg-slate-50 dark:bg-slate-900/50">
+        <section className="py-6 bg-card/50">
           <div className="container mx-auto px-4 max-w-6xl">
             {/* Section header */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
-              <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+              <div className="w-2 h-8 bg-gradient-to-b from-danger to-secondary rounded-full" />
+              <h2 className="text-2xl font-black text-foreground">
                 Court Closure Days — {new Date().getFullYear()}
               </h2>
-              <CalendarX className="w-5 h-5 text-red-500" />
+              <CalendarX className="w-5 h-5 text-danger" />
             </div>
 
             {/* Next Closure highlight */}
@@ -186,13 +186,13 @@ export function FacilitiesSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="mb-8 bg-gradient-to-r from-emerald-700 to-lime-600 text-on-accent p-5 rounded-2xl shadow-md relative overflow-hidden"
+                className="mb-8 bg-gradient-to-r from-success to-primary on-fill p-5 rounded-2xl shadow-md relative overflow-hidden"
               >
                 <div className="absolute inset-0 hero-pattern opacity-30" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-amber-300" />
+                    <div className="w-10 h-10 rounded-xl bg-foreground/10 border border-foreground/20 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
                       <p className="text-xs font-black text-foreground/60 uppercase tracking-widest">
@@ -203,8 +203,8 @@ export function FacilitiesSection() {
                       </p>
                     </div>
                   </div>
-                  <div className="sm:ml-auto bg-white/10 border border-white/20 px-4 py-2 rounded-xl">
-                    <p className="text-sm font-bold text-amber-300">
+                  <div className="sm:ml-auto bg-foreground/10 border border-foreground/20 px-4 py-2 rounded-xl">
+                    <p className="text-sm font-bold text-foreground">
                       {nextHoliday.date}
                     </p>
                   </div>
@@ -232,29 +232,29 @@ export function FacilitiesSection() {
                       viewport={{ once: true }}
                       className={`rounded-2xl p-5 text-center border transition-shadow hover:shadow-md ${
                         isNext
-                          ? "bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 shadow-sm"
+                          ? "bg-warning/10 border-warning shadow-sm"
                           : isPast
-                            ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60"
-                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm"
+                            ? "bg-muted border-border-strong opacity-60"
+                            : "bg-muted border-border-strong shadow-sm"
                       }`}
                     >
                       <p
-                        className={`text-xs font-bold tabular-nums ${isNext ? "text-amber-600 dark:text-amber-400" : isPast ? "text-muted-foreground dark:text-muted-foreground" : "text-muted-foreground dark:text-muted-foreground"}`}
+                        className={`text-xs font-bold tabular-nums ${isNext ? "text-warning" : isPast ? "text-muted-foreground" : "text-muted-foreground"}`}
                       >
                         {h.date}
                       </p>
                       <p
-                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? "text-amber-800 dark:text-amber-300" : isPast ? "text-muted-foreground dark:text-muted-foreground" : "text-blue-900 dark:text-slate-200"}`}
+                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? "text-warning" : isPast ? "text-muted-foreground" : "text-soft"}`}
                       >
                         {h.name}
                       </p>
                       {isNext && (
-                        <span className="mt-2 inline-block text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                        <span className="mt-2 inline-block text-[10px] font-black uppercase tracking-wider text-warning">
                           Next →
                         </span>
                       )}
                       {isPast && (
-                        <span className="mt-2 inline-block text-[10px] text-muted-foreground dark:text-muted-foreground">
+                        <span className="mt-2 inline-block text-[10px] text-muted-foreground">
                           Past
                         </span>
                       )}
@@ -263,19 +263,19 @@ export function FacilitiesSection() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-10 text-gray-400 dark:text-muted-foreground">
+              <div className="text-center py-10 text-muted-foreground">
                 Loading closure dates…
               </div>
             )}
 
-            <p className="mt-8 text-center text-sm text-muted-foreground dark:text-muted-foreground">
+            <p className="mt-8 text-center text-sm text-muted-foreground">
               * Dates may change as per Government announcements
             </p>
           </div>
         </section>
 
         {/* Location + Membership */}
-        <section className="py-6 bg-white dark:bg-slate-900">
+        <section className="py-6 bg-card">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Location */}
@@ -286,28 +286,28 @@ export function FacilitiesSection() {
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
-                  <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600" />
+                <div className="h-full rounded-3xl border border-border-strong shadow-md bg-muted overflow-hidden">
+                  <div className="h-1.5 bg-gradient-to-r from-info to-info" />
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
-                        <MapPin className="w-6 h-6 text-blue-700 dark:text-blue-400" />
+                      <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
+                        <MapPin className="w-6 h-6 text-info" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+                      <h2 className="text-2xl font-black text-foreground">
                         Location
                       </h2>
                     </div>
-                    <h3 className="font-bold text-blue-900 dark:text-foreground text-base mb-2">
+                    <h3 className="font-bold text-foreground text-base mb-2">
                       IISc Gymkhana Badminton Courts
                     </h3>
-                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-2">
+                    <p className="text-muted-foreground leading-relaxed mb-2">
                       Indian Institute of Science
                       <br />
                       Bangalore — 560012
                       <br />
                       India
                     </p>
-                    <p className="text-muted-foreground dark:text-muted-foreground text-sm mb-6">
+                    <p className="text-muted-foreground text-sm mb-6">
                       Located within the IISc campus with easy access, ample
                       parking, and excellent connectivity.
                     </p>
@@ -333,23 +333,23 @@ export function FacilitiesSection() {
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
-                  <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
+                <div className="h-full rounded-3xl border border-border-strong shadow-md bg-muted overflow-hidden">
+                  <div className="h-1.5 bg-gradient-to-r from-primary to-team" />
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-primary dark:text-primary" />
+                      <div className="w-12 h-12 rounded-2xl bg-primary/30 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-primary" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+                      <h2 className="text-2xl font-black text-foreground">
                         Membership & Access
                       </h2>
                     </div>
 
-                    <div className="bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 rounded-2xl p-5 mb-5">
-                      <h3 className="font-black text-primary dark:text-primary text-sm uppercase tracking-wider mb-2">
+                    <div className="bg-primary/20 border border-primary/50 rounded-2xl p-5 mb-5">
+                      <h3 className="font-black text-primary text-sm uppercase tracking-wider mb-2">
                         <span className="normal-case">IISc</span> Members
                       </h3>
-                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
+                      <p className="text-muted-foreground text-sm leading-relaxed">
                         Students, faculty, staff, and eligible members can
                         access the badminton facilities through Gymkhana
                         membership.
@@ -364,7 +364,7 @@ export function FacilitiesSection() {
                       ].map((item, i) => (
                         <li key={i} className="flex gap-3 items-start">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-muted-foreground dark:text-slate-300 text-sm">
+                          <span className="text-soft text-sm">
                             {item}
                           </span>
                         </li>

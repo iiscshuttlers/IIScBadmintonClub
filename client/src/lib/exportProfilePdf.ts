@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { themeColorFor, themeFont, withAlpha, type ThemeColorToken } from "@/lib/themeColors";
 
 export interface ProfilePdfData {
   playerName: string;
@@ -75,6 +76,21 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 
+/** Font stacks of the "paper" theme — the card is printed, so it uses the paper theme's type. */
+function paperFonts() {
+  const probe = document.createElement("div");
+  probe.className = "theme-paper";
+  probe.style.display = "none";
+  document.body.appendChild(probe);
+  const fonts = {
+    display: themeFont("display", probe),
+    body: themeFont("body", probe),
+    stat: themeFont("stat", probe),
+  };
+  probe.remove();
+  return fonts;
+}
+
 export async function exportProfilePdf(data: ProfilePdfData) {
   const toastId = toast.loading("Generating profile card...");
   try {
@@ -101,50 +117,62 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     canvas.height = H;
     const ctx = canvas.getContext("2d")!;
 
-    // ── Theme Selection ──
-    let primaryGradColors = ["#b45309", "#d97706", "#f59e0b"]; // Amber (default)
-    let accentGlow1 = "rgba(245,158,11,0.18)";
-    let accentGlow2 = "rgba(59,130,246,0.12)";
-    let shadowColor = "rgba(245,158,11,0.4)";
-    let strokeColor = "#f59e0b";
-    
+    // ── Theme Selection ── (printed card: colours come from the light "paper" theme)
+    const P = (token: ThemeColorToken) => themeColorFor("paper", token);
+    const FONT = paperFonts();
+    try {
+      await Promise.all([
+        document.fonts?.load(`900 120px ${FONT.display}`),
+        document.fonts?.load(`900 70px ${FONT.stat}`),
+        document.fonts?.load(`600 28px ${FONT.body}`),
+      ]);
+    } catch { /* draw with whatever is available */ }
+    const FG = P("foreground");
+
+    let tier: ThemeColorToken = "gold"; // Amber (default)
+    let tierFg: ThemeColorToken = "gold-foreground";
+    let glow1Alpha = 0.18;
+    let shadowAlpha = 0.4;
     if (winRate >= 70 && totalMatches >= 10) {
-      primaryGradColors = ["#0ea5e9", "#3b82f6", "#2563eb"]; // Blue / Diamond
-      accentGlow1 = "rgba(59,130,246,0.25)";
-      accentGlow2 = "rgba(168,85,247,0.12)";
-      shadowColor = "rgba(59,130,246,0.5)";
-      strokeColor = "#3b82f6";
+      tier = "info"; tierFg = "info-foreground"; // Blue / Diamond
+      glow1Alpha = 0.25;
+      shadowAlpha = 0.5;
     } else if (winRate >= 50 && totalMatches >= 5) {
-      primaryGradColors = ["#059669", "#10b981", "#34d399"]; // Emerald
-      accentGlow1 = "rgba(16,185,129,0.2)";
-      accentGlow2 = "rgba(59,130,246,0.12)";
-      shadowColor = "rgba(16,185,129,0.5)";
-      strokeColor = "#10b981";
+      tier = "success"; tierFg = "success-foreground"; // Emerald
+      glow1Alpha = 0.2;
+      shadowAlpha = 0.5;
     }
+    const strokeColor = P(tier);
+    const tierText = P(tierFg);
+    const primaryGradColors = [strokeColor, withAlpha(strokeColor, 0.9), withAlpha(strokeColor, 0.8)];
+    const accentGlow1 = withAlpha(strokeColor, glow1Alpha);
+    const glow2Base = P(tier === "info" ? "accent" : "info");
+    const accentGlow2 = withAlpha(glow2Base, 0.12);
+    const shadowColor = withAlpha(strokeColor, shadowAlpha);
 
     // ── Background ──
     const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-    bgGrad.addColorStop(0, "#0d1f3c");
-    bgGrad.addColorStop(0.5, "#0a1628");
-    bgGrad.addColorStop(1, "#050d1a");
+    bgGrad.addColorStop(0, P("card"));
+    bgGrad.addColorStop(0.5, P("background"));
+    bgGrad.addColorStop(1, P("muted"));
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
     const glow1 = ctx.createRadialGradient(W, 0, 0, W, 0, 600);
     glow1.addColorStop(0, accentGlow1);
-    glow1.addColorStop(1, "rgba(0,0,0,0)");
+    glow1.addColorStop(1, withAlpha(strokeColor, 0));
     ctx.fillStyle = glow1;
     ctx.fillRect(0, 0, W, H);
 
     const glow2 = ctx.createRadialGradient(0, H, 0, 0, H, 700);
     glow2.addColorStop(0, accentGlow2);
-    glow2.addColorStop(1, "rgba(0,0,0,0)");
+    glow2.addColorStop(1, withAlpha(glow2Base, 0));
     ctx.fillStyle = glow2;
     ctx.fillRect(0, 0, W, H);
 
     ctx.save();
     ctx.globalAlpha = 0.03;
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = FG;
     ctx.lineWidth = 1;
     for (let x = 0; x < W; x += 60) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -178,17 +206,17 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     ctx.save();
     ctx.globalAlpha = 0.15;
     const shine = ctx.createLinearGradient(0, 0, 0, headerH);
-    shine.addColorStop(0, "#ffffff");
-    shine.addColorStop(1, "rgba(255,255,255,0)");
+    shine.addColorStop(0, P("card"));
+    shine.addColorStop(1, withAlpha(P("card"), 0));
     ctx.fillStyle = shine;
     ctx.fillRect(0, 0, W, headerH);
     ctx.restore();
 
-    ctx.fillStyle = "#1a0a00";
-    ctx.font = "900 70px sans-serif";
+    ctx.fillStyle = tierText;
+    ctx.font = `900 70px ${FONT.display}`;
     ctx.textAlign = "left";
     ctx.fillText("IISc BADMINTON CLUB", 54, 105);
-    ctx.font = "700 36px sans-serif";
+    ctx.font = `700 36px ${FONT.body}`;
     ctx.globalAlpha = 0.7;
     ctx.fillText("PLAYER CARD", 54, 160);
     ctx.globalAlpha = 1;
@@ -218,12 +246,12 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       ctx.drawImage(avatarImg, avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
     } else {
       const initGrad = ctx.createLinearGradient(avatarCX - avatarR, avatarCY - avatarR, avatarCX + avatarR, avatarCY + avatarR);
-      initGrad.addColorStop(0, "#1e3a5f");
-      initGrad.addColorStop(1, "#0d2644");
+      initGrad.addColorStop(0, P("muted-strong"));
+      initGrad.addColorStop(1, P("muted"));
       ctx.fillStyle = initGrad;
       ctx.fillRect(avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
       const initials = playerName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-      ctx.font = `900 ${avatarR}px sans-serif`;
+      ctx.font = `900 ${avatarR}px ${FONT.display}`;
       ctx.fillStyle = strokeColor;
       ctx.textAlign = "center";
       ctx.fillText(initials, avatarCX, avatarCY + avatarR * 0.35);
@@ -237,16 +265,16 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     let nameY = avatarCY + avatarR + 80;
 
     if (firstName) {
-      ctx.font = "600 52px sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.font = `600 52px ${FONT.display}`;
+      ctx.fillStyle = P("muted-foreground");
       ctx.textAlign = "center";
       ctx.letterSpacing = "0.2em";
       ctx.fillText(firstName.toUpperCase(), W / 2, nameY);
       nameY += 100;
     }
 
-    ctx.font = "900 120px sans-serif";
-    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 120px ${FONT.display}`;
+    ctx.fillStyle = FG;
     ctx.textAlign = "center";
     ctx.fillText(lastName.toUpperCase(), W / 2, nameY);
 
@@ -261,7 +289,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     if (playingLevel) chips.push(playingLevel);
     if (instagram) chips.push(`@${instagram.replace("@", "")}`);
 
-    ctx.font = "600 28px sans-serif";
+    ctx.font = `600 28px ${FONT.body}`;
     const chipH = 56;
     const chipGap = 18;
     const chipPad = 44;
@@ -289,14 +317,14 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       const totalW = row.reduce((s, c) => s + c.w, 0) + chipGap * (row.length - 1);
       let cx = (W - totalW) / 2;
       row.forEach(({ label, w: cw }) => {
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillStyle = P("muted");
         roundRect(ctx, cx, chipRowY, cw, chipH, chipH / 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.strokeStyle = P("border");
         ctx.lineWidth = 1.5;
         roundRect(ctx, cx, chipRowY, cw, chipH, chipH / 2);
         ctx.stroke();
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillStyle = P("soft");
         ctx.textAlign = "center";
         ctx.fillText(label, cx + cw / 2, chipRowY + 38);
         cx += cw + chipGap;
@@ -339,11 +367,11 @@ export async function exportProfilePdf(data: ProfilePdfData) {
         else ctx.lineTo(x, y);
       }
       ctx.closePath();
-      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.strokeStyle = P("border");
       ctx.lineWidth = 1.5;
       ctx.stroke();
       if (level === 4) {
-        ctx.fillStyle = "rgba(255,255,255,0.02)";
+        ctx.fillStyle = withAlpha(FG, 0.02);
         ctx.fill();
       }
     }
@@ -355,14 +383,14 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(x, y);
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.strokeStyle = P("border-strong");
       ctx.lineWidth = 1;
       ctx.stroke();
       
       const lx = Math.cos(angle) * (radarR + 40);
       const ly = Math.sin(angle) * (radarR + 40);
-      ctx.font = "700 24px sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.font = `700 24px ${FONT.body}`;
+      ctx.fillStyle = P("muted-foreground");
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(radarData[i].label.toUpperCase(), lx, ly);
@@ -397,7 +425,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       const y = Math.sin(angle) * r;
       ctx.beginPath();
       ctx.arc(x, y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = P("card");
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = strokeColor;
@@ -410,21 +438,21 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     const statsH = 260;
     
     const statBox = (x: number, y: number, w: number, h: number, val: string, label: string) => {
-      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillStyle = P("card");
       roundRect(ctx, x, y, w, h, 24);
       ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.strokeStyle = P("border");
       ctx.lineWidth = 1.5;
       roundRect(ctx, x, y, w, h, 24);
       ctx.stroke();
       
-      ctx.font = "900 70px sans-serif";
+      ctx.font = `900 70px ${FONT.stat}`;
       ctx.fillStyle = strokeColor;
       ctx.textAlign = "center";
       ctx.fillText(val, x + w/2, y + h/2 + 10);
       
-      ctx.font = "700 22px sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.font = `700 22px ${FONT.body}`;
+      ctx.fillStyle = P("faint");
       ctx.fillText(label.toUpperCase(), x + w/2, y + h/2 + 55);
     };
 
@@ -439,8 +467,8 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     if (favoriteShot) extras.push(`Fav Shot: ${favoriteShot}`);
     if (favoriteFormat) extras.push(`Fav Format: ${favoriteFormat}`);
     if (extras.length > 0) {
-      ctx.font = "600 28px sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.font = `600 28px ${FONT.body}`;
+      ctx.fillStyle = P("faint");
       ctx.textAlign = "center";
       ctx.fillText(extras.join("   ·   "), W / 2, extY);
     }
@@ -451,8 +479,8 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     footerGrad.addColorStop(1, primaryGradColors[2]);
     ctx.fillStyle = footerGrad;
     ctx.fillRect(0, H - 90, W, 90);
-    ctx.font = "700 30px sans-serif";
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.font = `700 30px ${FONT.body}`;
+    ctx.fillStyle = withAlpha(tierText, 0.85);
     ctx.textAlign = "center";
     ctx.fillText("IISc Badminton Club  ·  Shuttlers, Bangalore", W / 2, H - 30);
 

@@ -81,11 +81,11 @@ export function LiveBracketsSection({
   if (error || !formats.length) {
     return (
       <div className="py-12 flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-          <Trophy className="w-10 h-10 text-muted-foreground dark:text-muted-foreground" />
+        <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+          <Trophy className="w-10 h-10 text-muted-foreground" />
         </div>
-        <h3 className="text-2xl font-black text-slate-800 dark:text-foreground mb-2">Brackets Not Yet Available</h3>
-        <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
+        <h3 className="text-2xl font-black text-foreground mb-2">Brackets Not Yet Available</h3>
+        <p className="text-muted-foreground max-w-md mx-auto">
           Tournament brackets will appear here once the draw has been published.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function LiveBracketsSection({
             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm ${
               activeFormat === fmt
                 ? "bg-primary text-primary-foreground"
-                : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-muted-foreground hover:bg-gray-50 border border-gray-200 dark:border-slate-700"
+                : "bg-card text-muted-foreground hover:bg-muted border border-border-strong"
             }`}
           >
             {fmt}
@@ -115,7 +115,7 @@ export function LiveBracketsSection({
 
       <div className="max-w-7xl mx-auto overflow-x-auto">
         {currentMatches.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 dark:text-muted-foreground italic">
+          <div className="text-center py-12 text-muted-foreground italic">
             No matches scheduled for {activeFormat} yet.
           </div>
         ) : (

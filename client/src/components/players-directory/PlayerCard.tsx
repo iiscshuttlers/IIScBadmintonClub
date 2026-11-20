@@ -20,12 +20,12 @@ import type { PlayerRow } from "@/types";
 export type Player = PlayerRow;
 
 const AVATAR_GRADIENTS = [
-  "from-primary to-teal-500",
-  "from-blue-400 to-indigo-500",
-  "from-violet-400 to-purple-500",
-  "from-amber-400 to-orange-500",
-  "from-rose-400 to-pink-500",
-  "from-cyan-400 to-sky-500",
+  "from-chart-1 to-chart-2",
+  "from-chart-2 to-chart-4",
+  "from-chart-4 to-chart-5",
+  "from-chart-3 to-chart-6",
+  "from-chart-5 to-chart-3",
+  "from-chart-6 to-chart-1",
 ];
 
 function avatarGradient(name: string) {
@@ -77,13 +77,13 @@ export function parseWinPct(record?: string | any): number | null {
 
 const levelColor: Record<string, string> = {
   Advanced:
-    "bg-amber-50   dark:bg-amber-950/20  text-amber-700   dark:text-amber-400  border border-amber-100  dark:border-amber-900/30",
+    "bg-warning/10    text-warning    border border-warning/20 ",
   Professional:
-    "bg-amber-50   dark:bg-amber-950/20  text-amber-700   dark:text-amber-400  border border-amber-100  dark:border-amber-900/30",
+    "bg-warning/10    text-warning    border border-warning/20 ",
   Intermediate:
-    "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/30 dark:border-primary/30",
+    "bg-primary/20 text-primary border border-primary/30",
   Beginner:
-    "bg-slate-100  dark:bg-slate-800      text-muted-foreground   dark:text-slate-300",
+    "bg-muted       text-soft  ",
 };
 
 interface PlayerCardProps {
@@ -216,13 +216,13 @@ export function PlayerCard({
         onClick={() => {
           setLocation(`/player/${player.id}`);
         }}
-        className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
-        hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
+        className={`h-full w-full overflow-hidden cursor-pointer bg-card 
+        hover:bg-muted/50 hover:shadow-xl hover:-translate-y-1
         transition-all duration-300 flex flex-col relative p-2.5 sm:p-4 rounded-3xl border
         ${
           isOwn
-            ? "border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/10 dark:shadow-none"
-            : "border-slate-100 dark:border-slate-800 shadow-sm"
+            ? "border-primary ring-2 ring-primary/20 shadow-primary/10 dark:shadow-none"
+            : "border-border shadow-sm"
         }`}
       >
         {/* Top: Ranking, Avatar, Name, Share */}
@@ -231,7 +231,7 @@ export function PlayerCard({
           {/* 0. Ranking number */}
           {displayRank ? (
             <div className="shrink-0 flex flex-col items-center justify-center w-8 sm:w-10">
-              <span className="font-black text-xl sm:text-2xl text-slate-400 dark:text-slate-500">#{displayRank}</span>
+              <span className="font-black text-xl sm:text-2xl text-muted-foreground">#{displayRank}</span>
               <RankMovementBadge movement={rankMovement} className="mt-0.5" />
             </div>
           ) : (
@@ -256,14 +256,14 @@ export function PlayerCard({
                   />
                 ) : (
                   <div
-                    className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-foreground font-black text-2xl`}
+                    className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-on-accent font-black text-2xl`}
                   >
                     {(player.full_name || "?").charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               {/* Dept Badge */}
-              <div className="absolute -bottom-1 -right-2 flex items-center justify-center min-w-8 h-8 px-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-muted-foreground dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department || "Indian Institute of Science"}>
+              <div className="absolute -bottom-1 -right-2 flex items-center justify-center min-w-8 h-8 px-1 rounded-full bg-muted text-[9px] font-black text-soft border-2 border-border shadow-sm" title={player.department || "Indian Institute of Science"}>
                 {getDepartmentAcronym(player.department)}
               </div>
               
@@ -271,9 +271,9 @@ export function PlayerCard({
                   amber means currently in a match. No dot otherwise, so a green
                   dot can only ever mean available. */}
               {isAvailableNow ? (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-success border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="Available to play now" />
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-success border-2 border-border shadow-sm animate-pulse" title="Available to play now" />
               ) : (player as any).status === "playing" ? (
-                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" title="In a match" />
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-warning border-2 border-border shadow-sm animate-pulse" title="In a match" />
               ) : null}
             </div>
           </div>
@@ -281,14 +281,14 @@ export function PlayerCard({
           {/* 2. Name side */}
           <div className="flex-1 flex flex-col items-start min-w-0 text-left">
             <div className={emphasizeFirst 
-              ? "text-[16px] sm:text-[18px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate" 
-              : "text-[8px] sm:text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
+              ? "text-[16px] sm:text-[18px] font-black text-foreground leading-tight uppercase tracking-tight w-full truncate" 
+              : "text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
             }>
               {displayFirst || "\u00A0"}
             </div>
             <div className={emphasizeFirst 
-              ? "text-[8px] sm:text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
-              : "text-[16px] sm:text-[18px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate"
+              ? "text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
+              : "text-[16px] sm:text-[18px] font-black text-foreground leading-tight uppercase tracking-tight w-full truncate"
             }>
               {lastName}
             </div>
@@ -300,17 +300,17 @@ export function PlayerCard({
                 </span>
               )}
               {player.is_retired && (
-                <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-on-accent shadow-sm">
+                <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-danger text-on-accent shadow-sm">
                   Retired
                 </div>
               )}
               {isHot && (
-                <span className="text-[8px] flex items-center justify-center font-bold text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-1.5 py-0.5 rounded" title={`${streakLen} Match Win Streak!`}>
+                <span className="text-[8px] flex items-center justify-center font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded" title={`${streakLen} Match Win Streak!`}>
                   🔥 HOT
                 </span>
               )}
               {isCold && (
-                <span className="text-[8px] flex items-center justify-center font-bold text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/30 px-1.5 py-0.5 rounded" title={`${streakLen} Match Losing Streak`}>
+                <span className="text-[8px] flex items-center justify-center font-bold text-info bg-info/10 px-1.5 py-0.5 rounded" title={`${streakLen} Match Losing Streak`}>
                   🧊 COLD
                 </span>
               )}
@@ -324,7 +324,7 @@ export function PlayerCard({
               className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
               title="Share profile"
             >
-              <div className="p-1.5 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20">
+              <div className="p-1.5 rounded-full bg-muted hover:bg-primary/20">
                 <Share2 className="w-3.5 h-3.5" />
               </div>
             </button>
@@ -332,11 +332,11 @@ export function PlayerCard({
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
                 className={`flex items-center justify-center transition-colors ${
-                  isPinged ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
+                  isPinged ? "text-warning" : "text-muted-foreground hover:text-warning"
                 }`}
                 title="Ping player"
               >
-                <div className={`p-1.5 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
+                <div className={`p-1.5 rounded-full ${isPinged ? "bg-warning/10" : "bg-muted hover:bg-warning/10"}`}>
                   <BellRing className="w-3.5 h-3.5" />
                 </div>
               </button>
@@ -347,35 +347,35 @@ export function PlayerCard({
         {/* Admin Detailed Stats */}
         {/* Detailed Stats */}
         <div className="w-full mt-0 mb-2">
-          <div className="flex items-center gap-1 text-[8px] sm:text-[9px] uppercase font-bold text-muted-foreground mb-1 tracking-wider border-b border-slate-100 dark:border-slate-800 pb-1">
+          <div className="flex items-center gap-1 text-[8px] sm:text-[9px] uppercase font-bold text-muted-foreground mb-1 tracking-wider border-b border-border pb-1">
             <span>Player Stats</span>
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info 
-                    className="w-3.5 h-3.5 text-slate-400 hover:text-primary transition-colors cursor-help drop-shadow-sm" 
+                    className="w-3.5 h-3.5 text-muted-foreground hover:text-primary transition-colors cursor-help drop-shadow-sm" 
                     onClick={(e) => e.stopPropagation()} 
                   />
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8} className="bg-slate-900/95 backdrop-blur-md text-slate-100 border-slate-700/50 shadow-2xl z-50 rounded-xl px-4 py-3">
+                <TooltipContent side="right" sideOffset={8} className="bg-card/95 backdrop-blur-md text-foreground border-border-strong/50 shadow-2xl z-50 rounded-xl px-4 py-3">
                   <div className="flex flex-col gap-2.5 min-w-[140px]">
-                    <div className="font-bold border-b border-slate-700/50 pb-2 mb-0.5 text-xs tracking-wide text-white">Stats Format</div>
+                    <div className="font-bold border-b border-border-strong/50 pb-2 mb-0.5 text-xs tracking-wide text-foreground">Stats Format</div>
                     <div className="flex items-center gap-2.5">
                       <div className="w-4 h-4 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center text-[9px] font-black">1</div>
-                      <span className="text-[11px] font-medium text-slate-200">Ranking</span>
+                      <span className="text-[11px] font-medium text-soft">Ranking</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <div className="w-4 h-4 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center text-[9px] font-black">2</div>
-                      <span className="text-[11px] font-medium text-slate-200">Win-Loss Record</span>
+                      <span className="text-[11px] font-medium text-soft">Win-Loss Record</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <div className="w-4 h-4 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center text-[9px] font-black">3</div>
-                      <span className="text-[11px] font-medium text-slate-200">Win Percentage</span>
+                      <span className="text-[11px] font-medium text-soft">Win Percentage</span>
                     </div>
                     {isAdmin && (
                       <div className="flex items-center gap-2.5 mt-0.5">
-                        <div className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center justify-center text-[9px] font-black">4</div>
-                        <span className="text-[11px] font-medium text-amber-400">ELO (Admin Only)</span>
+                        <div className="w-4 h-4 rounded-full bg-warning/20 text-warning border border-warning/30 flex items-center justify-center text-[9px] font-black">4</div>
+                        <span className="text-[11px] font-medium text-warning">ELO (Admin Only)</span>
                       </div>
                     )}
                   </div>
@@ -384,40 +384,40 @@ export function PlayerCard({
             </TooltipProvider>
           </div>
           <div className="grid grid-cols-4 gap-1 text-[8.5px] sm:text-[9px] text-center font-medium">
-            <div className="bg-slate-50 dark:bg-slate-800 rounded p-1 flex flex-col justify-between">
+            <div className="bg-muted rounded p-1 flex flex-col justify-between">
               <div className="text-[7.5px] sm:text-[8px] text-muted-foreground uppercase mb-0.5 font-bold">Overall</div>
-              <div className="font-black text-[10px] sm:text-[11px] mb-0.5 text-violet-600 dark:text-violet-400">{allRanks?.overall ? `#${allRanks.overall}` : "UR"}</div>
+              <div className="font-black text-[10px] sm:text-[11px] mb-0.5 text-individual">{allRanks?.overall ? `#${allRanks.overall}` : "UR"}</div>
               <div className="leading-tight">{formatWinLossRecord(player.win_loss_record)}</div>
               <div className="font-bold text-primary">{parseWinPct(player.win_loss_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="ELO Rating">{player.elo_rating ?? "—"}</div>}
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-warning" title="ELO Rating">{player.elo_rating ?? "—"}</div>}
             </div>
-            <div className="bg-sky-50 dark:bg-sky-950/30 rounded p-1 text-sky-700 dark:text-sky-400 flex flex-col justify-between">
+            <div className="bg-info/10 rounded p-1 text-info flex flex-col justify-between">
               <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Singles</div>
               <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.singles ? `#${allRanks.singles}` : "UR"}</div>
               <div className="leading-tight">{formatWinLossRecord(player.singles_record)}</div>
               <div className="font-bold">{parseWinPct(player.singles_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Singles ELO">{player.singles_elo ?? "—"}</div>}
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-warning" title="Singles ELO">{player.singles_elo ?? "—"}</div>}
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1 text-emerald-700 dark:text-emerald-400 flex flex-col justify-between">
+            <div className="bg-success/10 rounded p-1 text-success flex flex-col justify-between">
               <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Doubles</div>
               <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.doubles ? `#${allRanks.doubles}` : "UR"}</div>
               <div className="leading-tight">{formatWinLossRecord(player.doubles_record)}</div>
               <div className="font-bold">{parseWinPct(player.doubles_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Doubles ELO">{player.doubles_elo ?? "—"}</div>}
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-warning" title="Doubles ELO">{player.doubles_elo ?? "—"}</div>}
             </div>
-            <div className="bg-pink-50 dark:bg-pink-950/30 rounded p-1 text-pink-700 dark:text-pink-400 flex flex-col justify-between">
+            <div className="bg-individual/10 rounded p-1 text-individual flex flex-col justify-between">
               <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Mixed</div>
               <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.mixed ? `#${allRanks.mixed}` : "UR"}</div>
               <div className="leading-tight">{formatWinLossRecord(player.mixed_record)}</div>
               <div className="font-bold">{parseWinPct(player.mixed_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Mixed ELO">{player.mixed_elo ?? "—"}</div>}
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-warning" title="Mixed ELO">{player.mixed_elo ?? "—"}</div>}
             </div>
           </div>
         </div>
         
         {/* ACTION BUTTONS */}
         {isPersonalView && !isOwn && onToggleFollow && (
-          <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+          <div className="mt-auto w-full border-t border-border pt-3 space-y-2">
             {/* Row 1: Follow action — full-width pill */}
             <div className="flex gap-2">
               {onToggleFollow && (
@@ -428,8 +428,8 @@ export function PlayerCard({
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
                     isFollowing
-                      ? "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50"
-                      : "text-muted-foreground dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                      ? "text-danger bg-danger/10 border-danger/30"
+                      : "text-muted-foreground bg-muted border-border-strong hover:text-danger hover:border-danger hover:bg-danger/10"
                   }`}
                   title={isFollowing ? "Unfollow" : "Follow"}
                 >

@@ -101,7 +101,7 @@ export function TournamentCard({
             onOpen();
           }
         }}
-        className="group relative h-full flex flex-col bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="group relative h-full flex flex-col bg-card/90 border border-border rounded-2xl p-5 hover:border-primary/50 hover:shadow-xl transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         {/* Top Badges & Status */}
         <div className="flex items-center justify-between gap-2 mb-3">
@@ -114,8 +114,8 @@ export function TournamentCard({
             />
             <RankedBadge ranked={t.counts_for_elo} compact />
             {t.status === "active" && matchStats && matchStats.liveMatches > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-live/25 text-live">
+                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
                 {matchStats.liveMatches} court{matchStats.liveMatches > 1 ? "s" : ""} live
               </span>
             )}
@@ -125,17 +125,17 @@ export function TournamentCard({
           {myRole && (
             <div className="flex items-center gap-1 flex-wrap justify-end">
               {myRole.isCreator && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-individual/15 text-individual">
                   <Shield className="w-3 h-3" /> Organizer
                 </span>
               )}
               {myRole.roles.has("REFEREE") && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-warning/15 text-warning">
                   Referee
                 </span>
               )}
               {myRole.roles.has("UMPIRE") && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md bg-info/15 text-info">
                   Umpire
                 </span>
               )}
@@ -143,10 +143,10 @@ export function TournamentCard({
                 <span
                   className={`inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-md ${
                     myRole.registration === "approved"
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                      ? "bg-success/15 text-success"
                       : myRole.registration === "pending"
-                      ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                      : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      ? "bg-warning/15 text-warning"
+                      : "bg-muted text-soft"
                   }`}
                 >
                   <Award className="w-3 h-3" />
@@ -161,13 +161,12 @@ export function TournamentCard({
         <div className="mb-3">
           <motion.h2
             layoutId={`tourn-title-${t.id}`}
-            className="text-lg font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-1"
-            style={{ fontFamily: "Playfair Display, serif" }}
+            className="text-lg font-display font-black text-foreground group-hover:text-primary transition-colors line-clamp-1"
           >
             {t.name}
           </motion.h2>
           {disambiguate && (dateRangeStr || t.venue) && (
-            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1.5 truncate">
+            <p className="text-[11px] font-bold text-warning mt-0.5 flex items-center gap-1.5 truncate">
               <span>{[dateRangeStr, t.venue].filter(Boolean).join(" · ")}</span>
             </p>
           )}
@@ -180,12 +179,12 @@ export function TournamentCard({
 
         {/* Progress Strip on Active Tournaments */}
         {matchStats && (
-          <div className="mb-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+          <div className="mb-3 p-2 rounded-xl bg-muted/60 border border-border space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
               <span>Match Progress</span>
               <span className="font-mono text-primary">{matchStats.completed}/{matchStats.total} ({matchStats.pct}%)</span>
             </div>
-            <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-muted-strong rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
                 style={{ width: `${Math.max(matchStats.pct, 5)}%` }}
@@ -196,9 +195,9 @@ export function TournamentCard({
 
         {/* Winner Chips on Completed Tournaments */}
         {winnersList.length > 0 && (
-          <div className="mb-3 p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 flex items-center gap-2">
-            <Trophy className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <div className="text-[11px] font-bold text-emerald-800 dark:text-emerald-200 truncate">
+          <div className="mb-3 p-2 rounded-xl bg-success/10 border border-success/25 flex items-center gap-2">
+            <Trophy className="w-3.5 h-3.5 text-success shrink-0" />
+            <div className="text-[11px] font-bold text-success truncate">
               Champion: <span className="font-black">{winnersList.map((w: any) => typeof w === "string" ? w : w.name || w.player_name).join(", ")}</span>
             </div>
           </div>
@@ -206,15 +205,15 @@ export function TournamentCard({
 
         {/* Live Score Peek */}
         {t.status === "active" && liveScore && (
-          <div className="mb-3 p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/50 flex items-center justify-between text-xs">
+          <div className="mb-3 p-2.5 rounded-xl bg-live/10 border border-live/30 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 truncate">
-              <span className="inline-block w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-              <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
+              <span className="inline-block w-2 h-2 rounded-full bg-live animate-ping" />
+              <span className="font-bold text-soft truncate">
                 {liveScore.team1_label || "Side 1"} vs {liveScore.team2_label || "Side 2"}
               </span>
             </div>
             {scoreText && (
-              <span className="font-mono font-black text-rose-600 dark:text-rose-400 shrink-0 ml-2">
+              <span className="font-mono font-black text-danger shrink-0 ml-2">
                 {scoreText}
               </span>
             )}
@@ -227,7 +226,7 @@ export function TournamentCard({
         )}
 
         {/* Meta details (Dates, Venue, Entrants) */}
-        <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 mb-4">
+        <div className="space-y-1.5 text-xs text-muted-foreground mb-4">
           {dateRangeStr && (
             <div className="flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
@@ -258,7 +257,7 @@ export function TournamentCard({
             {t.categories.slice(0, 4).map((c: string) => (
               <span
                 key={c}
-                className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold"
+                className="px-2 py-0.5 rounded-md bg-muted text-soft text-[11px] font-bold"
               >
                 {c}
               </span>
@@ -272,7 +271,7 @@ export function TournamentCard({
         )}
 
         {/* Action Footers */}
-        <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+        <div className="mt-auto pt-3 border-t border-border flex items-center justify-between gap-2">
           {canRegister ? (
             <button
               type="button"
@@ -286,7 +285,7 @@ export function TournamentCard({
               {myRole?.registration ? "Manage entry" : "Register"}
             </button>
           ) : (
-            <span className="text-xs font-bold text-slate-500">
+            <span className="text-xs font-bold text-muted-foreground">
               {t.status === "completed" ? "View results" : "View matches"}
             </span>
           )}

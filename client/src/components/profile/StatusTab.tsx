@@ -30,13 +30,13 @@ export function StatusTab({
     >
       <div className="flex items-center gap-2 mb-2">
         <ShieldAlert className="w-5 h-5 text-primary" />
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+        <h3 className="text-sm font-bold text-soft">
           Account Status & Visibility
         </h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-3 p-4 bg-muted/40 rounded-xl border border-border-strong">
           <input
             type="checkbox"
             id="isGuest"
@@ -49,25 +49,25 @@ export function StatusTab({
                 setDepartment("");
               }
             }}
-            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
+            className="w-5 h-5 rounded border-border-strong text-primary focus:ring-primary bg-card"
           />
-          <label htmlFor="isGuest" className="text-sm font-semibold text-muted-foreground dark:text-slate-300 cursor-pointer">
+          <label htmlFor="isGuest" className="text-sm font-semibold text-soft cursor-pointer">
             I am a Guest / Project Assistant / Intern
             <p className="text-xs text-muted-foreground font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
           </label>
         </div>
 
-        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-rose-200 dark:border-rose-900/50">
+        <div className="flex items-center gap-3 p-4 bg-muted/40 rounded-xl border border-danger/30">
           <input
             type="checkbox"
             id="isRetired"
             checked={isRetired}
             onChange={(e) => setIsRetired(e.target.checked)}
-            className="w-5 h-5 rounded border-rose-300 text-rose-500 focus:ring-rose-500 bg-white dark:bg-slate-900"
+            className="w-5 h-5 rounded border-danger text-danger focus:ring-danger bg-card"
           />
-          <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
+          <label htmlFor="isRetired" className="text-sm font-semibold text-danger cursor-pointer">
             Mark Profile as Retired
-            <p className="text-xs text-rose-400 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
+            <p className="text-xs text-danger font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
           </label>
         </div>
       </div>

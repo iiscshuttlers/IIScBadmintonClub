@@ -30,7 +30,7 @@ function parseMarkdown(text: string) {
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(
       /\[(.*?)\]\((.*?)\)/g,
-      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:#10b981;font-weight:bold;text-decoration:underline;'>$1</a>",
+      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:var(--primary);font-weight:bold;text-decoration:underline;'>$1</a>",
     )
     .replace(/\n/g, "<br/>");
 }
@@ -158,9 +158,9 @@ export function AnnouncementsSection() {
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             // Add a brief highlight effect
-            el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
+            el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
             setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
+              el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
             }, 2000);
           }
         }
@@ -171,29 +171,29 @@ export function AnnouncementsSection() {
   }, [queryData, isQueryLoading]);
 
   const categories = [
-    { id: "all", label: "All", color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50", icon: "📋" },
+    { id: "all", label: "All", color: "bg-muted/50 text-muted-foreground border border-border-strong/50", icon: "📋" },
     {
       id: "tournament",
       label: "Tournament",
-      color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50",
+      color: "bg-warning/10 text-warning border border-warning/30",
       icon: "🏆",
     },
     {
       id: "facility",
       label: "Facility",
-      color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50",
+      color: "bg-info/10 text-info border border-info/30",
       icon: "🏸",
     },
     {
       id: "general",
       label: "General",
-      color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50",
+      color: "bg-individual/10 text-individual border border-individual/30",
       icon: "📢",
     },
     {
       id: "others",
       label: "Others",
-      color: "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50",
+      color: "bg-danger/10 text-danger border border-danger/30",
       icon: "📌",
     },
   ];
@@ -203,7 +203,7 @@ export function AnnouncementsSection() {
     return (
       found ?? {
         label: category,
-        color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50",
+        color: "bg-muted/50 text-muted-foreground border border-border-strong/50",
         icon: "📄",
       }
     );
@@ -248,13 +248,13 @@ export function AnnouncementsSection() {
 
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
-    if (status === "ongoing") return "bg-blue-100 text-blue-700";
-    if (status === "past") return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
-    return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
+    if (status === "ongoing") return "bg-info/10 text-info";
+    if (status === "past") return "bg-muted text-muted-foreground";
+    return "bg-muted text-muted-foreground";
   }
 
   return (
-    <div className="dark:bg-slate-950" id="announcements">
+    <div className="bg-background" id="announcements">
       <div className="container mx-auto px-4 max-w-6xl">
 
         {/* Live Tournament Notice — dynamically from Supabase */}
@@ -262,10 +262,10 @@ export function AnnouncementsSection() {
           <div className="pt-8">
             <div className={`rounded-2xl border p-5 ${
               liveTournament.form_status === "open"
-                ? "bg-primary/5 dark:bg-primary/10 border-primary/30"
+                ? "bg-primary/10 border-primary/30"
                 : liveTournament.form_status === "closing_soon"
-                ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/30"
-                : "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700"
+                ? "bg-warning/10 border-warning/30"
+                : "bg-muted/60 border-border-strong"
             }`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5 flex-1 min-w-0">
@@ -273,25 +273,25 @@ export function AnnouncementsSection() {
                     liveTournament.form_status === "open"
                       ? "bg-primary/15"
                       : liveTournament.form_status === "closing_soon"
-                      ? "bg-amber-500/15"
-                      : "bg-slate-200 dark:bg-slate-700"
+                      ? "bg-gold/15"
+                      : "bg-muted-strong"
                   }`}>
                     <Trophy className={`w-5 h-5 ${
                       liveTournament.form_status === "open"
                         ? "text-primary"
                         : liveTournament.form_status === "closing_soon"
-                        ? "text-amber-500"
-                        : "text-slate-500"
+                        ? "text-gold"
+                        : "text-muted-foreground"
                     }`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <span className="font-black text-sm md:text-base text-foreground">{liveTournament.name}</span>
                       {liveTournament.status === "active" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">🏸 Active</Badge>
+                        <Badge className="text-[10px] font-bold border-0 bg-success/15 text-success">🏸 Active</Badge>
                       )}
                       {liveTournament.status === "upcoming" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400">📅 Upcoming</Badge>
+                        <Badge className="text-[10px] font-bold border-0 bg-info/15 text-info">📅 Upcoming</Badge>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mt-1">
@@ -303,12 +303,12 @@ export function AnnouncementsSection() {
                       )}
                       {liveTournament.venue && (
                         <span className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 opacity-70 text-rose-500" /> 
+                          <MapPin className="w-3.5 h-3.5 opacity-70 text-danger" /> 
                           {liveTournament.venue}
                         </span>
                       )}
                       {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
-                        <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                        <span className="flex items-center gap-1.5 text-warning font-medium">
                           <Clock className="w-3.5 h-3.5" />
                           Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
                         </span>
@@ -326,14 +326,14 @@ export function AnnouncementsSection() {
                       className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all ${
                         liveTournament.form_status === "open"
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-amber-500 text-white hover:bg-amber-600"
+                          : "bg-warning text-warning-foreground hover:bg-warning/90"
                       }`}
                     >
                       Register Now <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
                   {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
-                    <span className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-800 text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-slate-700">
+                    <span className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-muted text-muted-foreground cursor-not-allowed border border-border-strong">
                       <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
                     </span>
                   )}
@@ -350,17 +350,17 @@ export function AnnouncementsSection() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 animate-pulse"
+                  className="rounded-2xl border border-border bg-card p-6 space-y-4 animate-pulse"
                 >
-                  <div className="h-6 w-3/4 rounded bg-gray-200" />
+                  <div className="h-6 w-3/4 rounded bg-soft" />
                   <div className="flex gap-3">
-                    <div className="h-5 w-20 rounded-full bg-gray-200" />
-                    <div className="h-5 w-16 rounded-full bg-gray-200" />
+                    <div className="h-5 w-20 rounded-full bg-soft" />
+                    <div className="h-5 w-16 rounded-full bg-soft" />
                   </div>
                   <div className="space-y-2">
-                    <div className="h-4 w-full rounded bg-gray-200" />
-                    <div className="h-4 w-5/6 rounded bg-gray-200" />
-                    <div className="h-4 w-2/3 rounded bg-gray-200" />
+                    <div className="h-4 w-full rounded bg-soft" />
+                    <div className="h-4 w-5/6 rounded bg-soft" />
+                    <div className="h-4 w-2/3 rounded bg-soft" />
                   </div>
                 </div>
               ))}
@@ -372,15 +372,14 @@ export function AnnouncementsSection() {
           <>
             {/* Pinned */}
             {pinnedAnnouncements.length > 0 && (
-              <section className="py-14 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-900 dark:to-slate-800">
+              <section className="py-14 bg-gradient-to-r from-card to-muted">
                 <div className="container mx-auto px-4">
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full" />
+                    <div className="w-2 h-8 bg-gradient-to-b from-secondary to-warning rounded-full" />
                     <h2
-                      className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
-                      style={{ fontFamily: "Playfair Display, serif" }}
+                      className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                     >
-                      <Pin className="w-6 h-6 text-orange-500" />
+                      <Pin className="w-6 h-6 text-secondary" />
                       Important Announcements
                     </h2>
                   </div>
@@ -393,17 +392,17 @@ export function AnnouncementsSection() {
                         <Card
                           key={index}
                           id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                          className="border-2 border-orange-300 dark:border-orange-900/50 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                          className="border-2 border-secondary/30 bg-muted hover:shadow-lg transition-all duration-300 overflow-hidden"
                         >
-                          <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
+                          <div className="h-1 bg-gradient-to-r from-secondary to-warning" />
                           <CardHeader>
-                            <CardTitle className="text-blue-900 dark:text-foreground text-xl">
+                            <CardTitle className="text-foreground text-xl">
                               {item.url ? (
                                 <a
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
+                                  className="hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -417,14 +416,14 @@ export function AnnouncementsSection() {
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-4 h-4 text-primary" />
-                                  <span className="text-muted-foreground dark:text-muted-foreground text-sm">
+                                  <span className="text-muted-foreground text-sm">
                                     Published: {item.date}
                                   </span>
                                 </div>
                               )}
                               
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                <div className="flex items-center gap-1.5 bg-info/10 px-2.5 py-1 rounded-md text-info font-medium text-xs border border-info/40 w-full">
                                   <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
@@ -456,7 +455,7 @@ export function AnnouncementsSection() {
                           </CardHeader>
                           <CardContent>
                             <p
-                              className="text-muted-foreground dark:text-slate-300 leading-relaxed"
+                              className="text-soft leading-relaxed"
                               dangerouslySetInnerHTML={{
                                 __html: sanitize(item.content),
                               }}
@@ -471,7 +470,7 @@ export function AnnouncementsSection() {
             )}
 
             {/* Filter */}
-            <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-30 shadow-sm">
+            <section className="py-6 border-b bg-background sticky top-16 z-30 shadow-sm">
               <div className="container mx-auto px-4 max-w-md">
                 <div className="flex flex-col gap-2">
                   {categories.filter(c => c.id === 'all').map((cat) => (
@@ -480,7 +479,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`w-full px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-[1.02] border border-primary/50"
                           : `${cat.color} hover:shadow-sm`
                       }`}
                     >
@@ -494,7 +493,7 @@ export function AnnouncementsSection() {
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`w-full px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-1.5 ${
                           selectedCategory === cat.id
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-[1.02] border border-primary/50"
                             : `${cat.color} hover:shadow-sm`
                         }`}
                       >
@@ -507,13 +506,12 @@ export function AnnouncementsSection() {
             </section>
 
             {/* Recent */}
-            <section className="py-14 dark:bg-slate-950">
+            <section className="py-14 bg-background">
               <div className="container mx-auto px-4">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-8 bg-gradient-to-b from-primary to-teal-600 rounded-full" />
+                  <div className="w-2 h-8 bg-gradient-to-b from-primary to-team rounded-full" />
                   <h2
-                    className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
-                    style={{ fontFamily: "Playfair Display, serif" }}
+                    className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                   >
                     <Bell className="w-6 h-6 text-primary" />
                     Recent Updates
@@ -521,8 +519,8 @@ export function AnnouncementsSection() {
                 </div>
 
                 {filteredRecent.length === 0 ? (
-                  <div className="text-center py-16 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-                    <p className="text-muted-foreground dark:text-muted-foreground text-lg">
+                  <div className="text-center py-16 rounded-2xl border-2 border-dashed border-border-strong">
+                    <p className="text-muted-foreground text-lg">
                       No announcements found.
                     </p>
                   </div>
@@ -536,25 +534,25 @@ export function AnnouncementsSection() {
                         <Card
                           key={index}
                           id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                          className="border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                          className="border border-border-strong bg-muted hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                         >
                           <div
                             className={`h-0.5 w-full ${
                               status === "upcoming"
                                 ? "bg-primary"
                                 : status === "ongoing"
-                                  ? "bg-blue-400"
-                                  : "bg-gray-200 dark:bg-slate-600"
+                                  ? "bg-info"
+                                  : "bg-faint"
                             }`}
                           />
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-blue-900 dark:text-foreground text-base font-bold">
+                            <CardTitle className="text-foreground text-base font-bold">
                               {item.url ? (
                                 <a
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
+                                  className="hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -568,14 +566,14 @@ export function AnnouncementsSection() {
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-muted-foreground dark:text-muted-foreground text-xs">
+                                  <span className="text-muted-foreground text-xs">
                                     Published: {item.date}
                                   </span>
                                 </div>
                               )}
                               
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                <div className="flex items-center gap-1.5 bg-info/10 px-2.5 py-1 rounded-md text-info font-medium text-xs border border-info/40 w-full">
                                   <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
@@ -608,7 +606,7 @@ export function AnnouncementsSection() {
 
                           <CardContent>
                             <p
-                              className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed"
+                              className="text-muted-foreground text-sm leading-relaxed"
                               dangerouslySetInnerHTML={{
                                 __html: sanitize(item.content),
                               }}

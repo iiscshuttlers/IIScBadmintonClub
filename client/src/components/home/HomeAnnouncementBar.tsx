@@ -28,49 +28,49 @@ const BANNER_ICONS: Record<string, any> = {
 
 const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string; iconColor: string; glow: string; btn: string; gradient: string }> = {
   blue: {
-    bg: "bg-slate-900/40",
-    border: "border-blue-500/30",
-    iconBg: "bg-blue-500/20",
-    iconColor: "text-blue-400",
-    glow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
-    btn: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 text-white",
-    gradient: "from-blue-500/10 via-transparent to-transparent"
+    bg: "bg-card/40",
+    border: "border-info/30",
+    iconBg: "bg-info/20",
+    iconColor: "text-info",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--info)_15%,transparent)]",
+    btn: "bg-gradient-to-r from-info to-info hover:from-info/90 hover:to-info/90 shadow-lg shadow-info/25 text-on-accent",
+    gradient: "from-info/10 via-transparent to-transparent"
   },
   green: {
-    bg: "bg-slate-900/40",
-    border: "border-emerald-500/30",
-    iconBg: "bg-emerald-500/20",
-    iconColor: "text-emerald-400",
-    glow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
-    btn: "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/25 text-white",
-    gradient: "from-emerald-500/10 via-transparent to-transparent"
+    bg: "bg-card/40",
+    border: "border-success/30",
+    iconBg: "bg-success/20",
+    iconColor: "text-success",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--success)_15%,transparent)]",
+    btn: "bg-gradient-to-r from-success to-team hover:from-success/90 hover:to-team/90 shadow-lg shadow-success/25 text-on-accent",
+    gradient: "from-success/10 via-transparent to-transparent"
   },
   amber: {
-    bg: "bg-slate-900/40",
-    border: "border-amber-500/30",
-    iconBg: "bg-amber-500/20",
-    iconColor: "text-amber-400",
-    glow: "shadow-[0_0_15px_rgba(245,158,11,0.15)]",
-    btn: "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-500/25 text-white",
-    gradient: "from-amber-500/10 via-transparent to-transparent"
+    bg: "bg-card/40",
+    border: "border-warning/30",
+    iconBg: "bg-warning/20",
+    iconColor: "text-warning",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--warning)_15%,transparent)]",
+    btn: "bg-gradient-to-r from-warning to-secondary hover:from-warning/90 hover:to-secondary/90 shadow-lg shadow-warning/25 text-on-accent",
+    gradient: "from-warning/10 via-transparent to-transparent"
   },
   red: {
-    bg: "bg-slate-900/40",
-    border: "border-rose-500/30",
-    iconBg: "bg-rose-500/20",
-    iconColor: "text-rose-400",
-    glow: "shadow-[0_0_15px_rgba(244,63,94,0.15)]",
-    btn: "bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 shadow-lg shadow-rose-500/25 text-white",
-    gradient: "from-rose-500/10 via-transparent to-transparent"
+    bg: "bg-card/40",
+    border: "border-danger/30",
+    iconBg: "bg-danger/20",
+    iconColor: "text-danger",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_15%,transparent)]",
+    btn: "bg-gradient-to-r from-danger to-danger hover:from-danger/90 hover:to-danger/90 shadow-lg shadow-danger/25 text-on-accent",
+    gradient: "from-danger/10 via-transparent to-transparent"
   },
   purple: {
-    bg: "bg-slate-900/40",
-    border: "border-purple-500/30",
-    iconBg: "bg-purple-500/20",
-    iconColor: "text-purple-400",
-    glow: "shadow-[0_0_15px_rgba(168,85,247,0.15)]",
-    btn: "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 shadow-lg shadow-purple-500/25 text-white",
-    gradient: "from-purple-500/10 via-transparent to-transparent"
+    bg: "bg-card/40",
+    border: "border-individual/30",
+    iconBg: "bg-individual/20",
+    iconColor: "text-individual",
+    glow: "shadow-[0_0_15px_color-mix(in_srgb,var(--individual)_15%,transparent)]",
+    btn: "bg-gradient-to-r from-individual to-individual hover:from-individual/90 hover:to-individual/90 shadow-lg shadow-individual/25 text-on-accent",
+    gradient: "from-individual/10 via-transparent to-transparent"
   },
 };
 
@@ -213,18 +213,18 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="py-2 sm:py-3"
             >
-              <div className={`relative group flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300`}>
+              <div className={`relative group flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300`}>
 
                 {/* Icon Container */}
-                <div className={`relative shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${colors.iconBg} border border-white/5 shadow-inner`}>
+                <div className={`relative shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${colors.iconBg} border border-foreground/5 shadow-inner`}>
                   <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.iconColor} drop-shadow-md`} />
                 </div>
 
                 {/* Content */}
                 <div className="relative flex-1 min-w-0 pt-0.5">
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-wide">{banner.title}</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-foreground leading-tight tracking-wide">{banner.title}</h3>
                   {banner.message && (
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{banner.message}</p>
+                    <p className="text-xs sm:text-sm text-soft mt-1.5 leading-relaxed whitespace-pre-wrap">{banner.message}</p>
                   )}
                   
                   {banner.link_url && (
@@ -246,7 +246,7 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
                 {!banner.pinned && (
                   <button
                     onClick={() => handleDismiss(banner)}
-                    className="relative shrink-0 p-1.5 -mr-1 -mt-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                    className="relative shrink-0 p-1.5 -mr-1 -mt-1 rounded-full hover:bg-muted text-muted-foreground hover:text-soft transition-colors cursor-pointer"
                     aria-label="Dismiss"
                   >
                     <X className="w-4 h-4" />

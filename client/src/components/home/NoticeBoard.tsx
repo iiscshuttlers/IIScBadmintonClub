@@ -46,9 +46,9 @@ export function NoticeBoard() {
               description: ann.content ? ann.content.substring(0, 100) + "..." : undefined,
               date: new Date(ann.date || Date.now()),
               badgeText: ann.category || "News",
-              iconWrapperClass: "bg-blue-500/10 dark:bg-blue-400/10",
-              iconClass: "text-blue-600 dark:text-blue-400",
-              badgeClass: "bg-blue-500/15 text-blue-700 dark:bg-blue-400/20 dark:text-blue-300 ring-1 ring-inset ring-blue-500/20 dark:ring-blue-400/20",
+              iconWrapperClass: "bg-info/10",
+              iconClass: "text-info",
+              badgeClass: "bg-info/20 text-info ring-1 ring-inset ring-info/20",
               icon: Bell,
               link: "/pulse#announcements",
             });
@@ -61,20 +61,20 @@ export function NoticeBoard() {
         if (tournaments) {
           tournaments.forEach((t) => {
             let badgeText = "Upcoming";
-            let iconWrapperClass = "bg-fuchsia-500/10 dark:bg-fuchsia-400/10";
-            let iconClass = "text-fuchsia-600 dark:text-fuchsia-400";
-            let badgeClass = "bg-fuchsia-500/15 text-fuchsia-700 dark:bg-fuchsia-400/20 dark:text-fuchsia-300 ring-1 ring-inset ring-fuchsia-500/20 dark:ring-fuchsia-400/20";
+            let iconWrapperClass = "bg-individual/10";
+            let iconClass = "text-individual";
+            let badgeClass = "bg-individual/20 text-individual ring-1 ring-inset ring-individual/20";
 
             if (t.status === "active") {
               badgeText = "Active";
-              iconWrapperClass = "bg-emerald-500/10 dark:bg-emerald-400/10";
-              iconClass = "text-emerald-600 dark:text-emerald-400";
-              badgeClass = "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300 ring-1 ring-inset ring-emerald-500/20 dark:ring-emerald-400/20";
+              iconWrapperClass = "bg-success/10";
+              iconClass = "text-success";
+              badgeClass = "bg-success/20 text-success ring-1 ring-inset ring-success/20";
             } else if (t.status === "archived" || t.status === "completed" || t.status === "cancelled") {
               badgeText = t.status === "archived" ? "Archived" : t.status === "completed" ? "Completed" : "Cancelled";
-              iconWrapperClass = "bg-slate-500/10 dark:bg-slate-400/10";
-              iconClass = "text-slate-500 dark:text-slate-400";
-              badgeClass = "bg-slate-500/15 text-slate-600 dark:bg-slate-400/20 dark:text-slate-400 ring-1 ring-inset ring-slate-500/20 dark:ring-slate-400/20";
+              iconWrapperClass = "bg-muted-foreground/10";
+              iconClass = "text-muted-foreground";
+              badgeClass = "bg-muted-foreground/20 text-muted-foreground ring-1 ring-inset ring-border-strong/20";
             } else if (t.status === "draft") {
               badgeText = "Draft";
             }
@@ -103,21 +103,21 @@ export function NoticeBoard() {
             if (m.team1_label === "BYE" || m.team2_label === "BYE") return;
             
             let badgeText = "Match";
-            let iconWrapperClass = "bg-slate-500/10 dark:bg-slate-400/10";
-            let iconClass = "text-slate-600 dark:text-slate-400";
-            let badgeClass = "bg-slate-500/15 text-slate-700 dark:bg-slate-400/20 dark:text-slate-300 ring-1 ring-inset ring-slate-500/20 dark:ring-slate-400/20";
+            let iconWrapperClass = "bg-muted-foreground/10";
+            let iconClass = "text-muted-foreground";
+            let badgeClass = "bg-muted-foreground/20 text-soft ring-1 ring-inset ring-border-strong/20";
             let description = `${m.team1_label || "TBD"} vs ${m.team2_label || "TBD"}`;
             
             if (m.status === "in_progress") {
               badgeText = "Live Now";
-              iconWrapperClass = "bg-red-500/10 dark:bg-red-400/10";
-              iconClass = "text-red-600 dark:text-red-400 animate-pulse";
-              badgeClass = "bg-red-500/15 text-red-700 dark:bg-red-400/20 dark:text-red-300 ring-1 ring-inset ring-red-500/20 dark:ring-red-400/20 animate-pulse";
+              iconWrapperClass = "bg-live/10";
+              iconClass = "text-live animate-pulse";
+              badgeClass = "bg-live/20 text-live ring-1 ring-inset ring-live/20 animate-pulse";
             } else if (m.status === "scheduled" && m.scheduled_at) {
               badgeText = "Scheduled";
-              iconWrapperClass = "bg-amber-500/10 dark:bg-amber-400/10";
-              iconClass = "text-amber-600 dark:text-amber-400";
-              badgeClass = "bg-amber-500/15 text-amber-700 dark:bg-amber-400/20 dark:text-amber-300 ring-1 ring-inset ring-amber-500/20 dark:ring-amber-400/20";
+              iconWrapperClass = "bg-warning/10";
+              iconClass = "text-warning";
+              badgeClass = "bg-warning/20 text-warning ring-1 ring-inset ring-warning/20";
               description += ` @ ${new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
             } else if (m.status === "completed") {
               badgeText = "Completed";
@@ -153,11 +153,11 @@ export function NoticeBoard() {
               description: isLost ? "Lost Item" : "Found Item",
               date: new Date(post.created_at),
               badgeText: isLost ? "Lost" : "Found",
-              iconWrapperClass: isLost ? "bg-rose-500/10 dark:bg-rose-400/10" : "bg-teal-500/10 dark:bg-teal-400/10",
-              iconClass: isLost ? "text-rose-600 dark:text-rose-400" : "text-teal-600 dark:text-teal-400",
+              iconWrapperClass: isLost ? "bg-danger/10" : "bg-team/10",
+              iconClass: isLost ? "text-danger" : "text-team",
               badgeClass: isLost 
-                ? "bg-rose-500/15 text-rose-700 dark:bg-rose-400/20 dark:text-rose-300 ring-1 ring-inset ring-rose-500/20 dark:ring-rose-400/20"
-                : "bg-teal-500/15 text-teal-700 dark:bg-teal-400/20 dark:text-teal-300 ring-1 ring-inset ring-teal-500/20 dark:ring-teal-400/20",
+                ? "bg-danger/20 text-danger ring-1 ring-inset ring-danger/20"
+                : "bg-team/20 text-team ring-1 ring-inset ring-team/20",
               icon: Search,
               link: "/club?tab=lost-found",
             });
@@ -176,9 +176,9 @@ export function NoticeBoard() {
               description: `₹${listing.price} - ${listing.condition}`,
               date: new Date(listing.created_at),
               badgeText: listing.category,
-              iconWrapperClass: "bg-violet-500/10 dark:bg-violet-400/10",
-              iconClass: "text-violet-600 dark:text-violet-400",
-              badgeClass: "bg-violet-500/15 text-violet-700 dark:bg-violet-400/20 dark:text-violet-300 ring-1 ring-inset ring-violet-500/20 dark:ring-violet-400/20",
+              iconWrapperClass: "bg-individual/10",
+              iconClass: "text-individual",
+              badgeClass: "bg-individual/20 text-individual ring-1 ring-inset ring-individual/20",
               icon: ShoppingBag,
               link: "/club?tab=buy-sell",
             });
@@ -201,8 +201,8 @@ export function NoticeBoard() {
 
   if (loading) {
     return (
-      <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl shadow-xl overflow-hidden mt-8 mb-8">
-        <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 py-4">
+      <Card className="border-border bg-card/50 backdrop-blur-xl shadow-xl overflow-hidden mt-8 mb-8">
+        <CardHeader className="border-b border-border bg-muted/50 py-4">
           <CardTitle className="text-lg font-black flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary animate-pulse" />
             Notice Board
@@ -218,27 +218,27 @@ export function NoticeBoard() {
   }
 
   return (
-    <Card className="border-0 bg-white dark:bg-slate-900/40 backdrop-blur-md shadow-lg overflow-hidden mb-2 mt-2 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+    <Card className="border-0 bg-card/40 backdrop-blur-md shadow-lg overflow-hidden mb-2 mt-2 ring-1 ring-border/50">
       <CardHeader 
-        className="border-b border-slate-100/50 dark:border-slate-800/50 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900/60 dark:to-slate-800/40 py-3.5 px-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-slate-50/80 dark:hover:from-slate-800/60 dark:hover:to-slate-800/40 transition-all duration-300 group"
+        className="border-b border-border/50 bg-gradient-to-r from-card/60 to-muted/40 py-3.5 px-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-foreground/80 hover:from-muted/60 hover:to-muted/40 transition-all duration-300 group"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
-          <div className="w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+        <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5 text-foreground">
+          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
             <Bell className="w-3.5 h-3.5 text-primary" />
           </div>
           Notice Board
         </CardTitle>
         <div className="flex items-center gap-2.5">
-          <span className="text-[10px] sm:text-xs font-bold text-primary dark:text-primary bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded-full border border-primary/20">
+          <span className="text-[10px] sm:text-xs font-bold text-primary bg-primary/20 px-2 py-0.5 rounded-full border border-primary/20">
             Live Feed
           </span>
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-muted group-hover:bg-muted-strong transition-colors"
           >
-            <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           </motion.div>
         </div>
       </CardHeader>
@@ -263,7 +263,7 @@ export function NoticeBoard() {
               <p className="text-sm font-medium">No recent notices</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-border">
               {items.map((item, i) => {
                 const Icon = item.icon;
                 return (
@@ -273,7 +273,7 @@ export function NoticeBoard() {
                     transition={{ delay: i * 0.05 }}
                     key={item.id}
                   >
-                    <Link href={item.link} className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative">
+                    <Link href={item.link} className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-muted/50 transition-colors group relative">
                         <div className={cn("p-2.5 rounded-2xl shrink-0 flex items-center justify-center transition-all group-hover:scale-110", item.iconWrapperClass)}>
                           <Icon className={cn("w-5 h-5", item.iconClass)} />
                         </div>

@@ -43,7 +43,7 @@ export function OfficiatingRecord({ playerId }: { playerId: string }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-sm" aria-labelledby="officiating-heading">
       <h3 id="officiating-heading" className="flex items-center gap-2 text-sm font-black text-foreground">
-        <Flag className="w-4 h-4 text-emerald-500" /> Officiating record
+        <Flag className="w-4 h-4 text-success" /> Officiating record
       </h3>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -63,11 +63,11 @@ export function OfficiatingRecord({ playerId }: { playerId: string }) {
               key={b.id}
               title={b.description}
               className={`rounded-xl border p-2.5 ${
-                b.earned ? "border-emerald-500/40 bg-emerald-500/10" : "border-border bg-muted/30 opacity-70"
+                b.earned ? "border-success/40 bg-success/10" : "border-border bg-muted/30 opacity-70"
               }`}
             >
               <div className="flex items-center gap-1.5">
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${b.earned ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`} />
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${b.earned ? "text-success" : "text-muted-foreground"}`} />
                 <span className="text-xs font-black text-foreground truncate">{b.label}</span>
               </div>
               <div className="mt-0.5 text-[10px] text-muted-foreground leading-tight">

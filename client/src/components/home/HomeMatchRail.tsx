@@ -89,7 +89,7 @@ export function HomeMatchRail() {
   if (!userId || q.isPending) return null;
   if (q.isError) {
     return myPlayerId ? (
-      <div role="alert" className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+      <div role="alert" className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
         <span>Couldn’t load your tournament matches.</span>
         <button type="button" onClick={() => void q.refetch()} className="min-h-[44px] px-3 font-black underline underline-offset-2">Try again</button>
       </div>
@@ -100,8 +100,8 @@ export function HomeMatchRail() {
   if (!myTournament && rail.length === 0) {
     if (follows > 0) return null; // following people, nothing on right now
     return (
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 px-4 py-3">
-        <p className="text-sm text-slate-700 dark:text-slate-200">Follow players to see their tournament matches here first.</p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border-strong px-4 py-3">
+        <p className="text-sm text-soft">Follow players to see their tournament matches here first.</p>
         <Link
           href="/pulse#directory"
           className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full bg-primary text-primary-foreground text-xs font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -119,7 +119,7 @@ export function HomeMatchRail() {
       )}
       {rail.length > 0 && <section aria-labelledby="home-rail-heading" className="mb-3">
       <div className="flex items-center justify-between mb-2">
-        <h2 id="home-rail-heading" className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+        <h2 id="home-rail-heading" className="text-xs font-black uppercase tracking-wider text-soft">
           Following & recent
         </h2>
         {myPlayerId && (
@@ -129,7 +129,7 @@ export function HomeMatchRail() {
         )}
       </div>
       {q.data.partial && (
-        <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">Some follows couldn't be loaded; showing what we have.</p>
+        <p className="text-xs text-warning mb-2">Some follows couldn't be loaded; showing what we have.</p>
       )}
       <ul className="grid gap-2 sm:grid-cols-2">
         {rail.map((item) => (

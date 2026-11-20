@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { PlayerRow } from "@/types";
+import { cssVar, cssVarAlpha } from "@/lib/themeColors";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -42,15 +43,15 @@ export function ProfileStatsTabLeft({
 }: ProfileStatsTabProps) {
   return (
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-6">
-      <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
-        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/60 flex items-center gap-2 mb-6">
-          <Target className="w-4 h-4 text-primary dark:text-primary" /> Player
+      <div className="bg-foreground/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-foreground/8 relative overflow-hidden">
+        <h2 className="text-sm font-black uppercase tracking-widest text-foreground/60 flex items-center gap-2 mb-6">
+          <Target className="w-4 h-4 text-primary" /> Player
           Type Analysis
           <div className="group relative inline-flex ml-auto md:ml-2">
-            <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition-colors cursor-help" />
+            <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-soft transition-colors cursor-help" />
             
             {/* Tooltip positioned to drop DOWNWARD so it doesn't get clipped by the container's overflow-hidden */}
-            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-on-accent text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
+            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-card text-foreground text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
               <ul className="space-y-1">
                 <li><strong className="text-primary">Singles/Doubles/Mixed:</strong> Win % in each format</li>
                 <li><strong className="text-primary">Activity:</strong> Based on total matches logged</li>
@@ -91,14 +92,14 @@ export function ProfileStatsTabLeft({
                 <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
                   <defs>
                     <linearGradient id="colorRadar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.7} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="5%" stopColor={cssVar("success")} stopOpacity={0.7} />
+                      <stop offset="95%" stopColor={cssVar("success")} stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" className="dark:stroke-slate-700/60" />
+                  <PolarGrid stroke={cssVar("faint")} strokeDasharray="3 3" className="stroke-faint/60" />
                   <PolarAngleAxis
                     dataKey="subject"
-                    tick={{ fill: "#94a3b8", fontSize: 13, fontWeight: 700 }}
+                    tick={{ fill: cssVar("muted-foreground"), fontSize: 13, fontWeight: 700 }}
                   />
                   <PolarRadiusAxis
                     angle={90}
@@ -109,21 +110,21 @@ export function ProfileStatsTabLeft({
                   <Radar
                     name="Performance"
                     dataKey="A"
-                    stroke="#10b981"
+                    stroke={cssVar("success")}
                     strokeWidth={4}
                     fill="url(#colorRadar)"
-                    activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: cssVar("success"), stroke: cssVar("foreground"), strokeWidth: 2 }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "rgba(19, 20, 23, 0.95)",
-                      borderColor: "rgba(36, 37, 42, 0.9)",
+                      backgroundColor: cssVarAlpha("popover", 0.95),
+                      borderColor: cssVar("border"),
                       borderRadius: "12px",
                       backdropFilter: "blur(8px)",
-                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+                      boxShadow: `0 10px 25px -5px ${cssVarAlpha("scrim", 0.5)}`,
                     }}
-                    itemStyle={{ color: "#10b981", fontWeight: "black", fontSize: "16px" }}
-                    labelStyle={{ color: "#94a3b8", fontWeight: "bold", marginBottom: "4px" }}
+                    itemStyle={{ color: cssVar("success"), fontWeight: "black", fontSize: "16px" }}
+                    labelStyle={{ color: cssVar("muted-foreground"), fontWeight: "bold", marginBottom: "4px" }}
                   />
                 </RadarChart>
               </ResponsiveContainer>

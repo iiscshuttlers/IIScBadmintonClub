@@ -1,10 +1,10 @@
 import { movementLabel, type RankMovement } from "@/lib/rankMovement";
 
 const TONE: Record<string, string> = {
-  up: "text-emerald-700 dark:text-emerald-400",
-  down: "text-rose-700 dark:text-rose-400",
+  up: "text-success",
+  down: "text-danger",
   same: "text-muted-foreground",
-  new: "text-sky-700 dark:text-sky-400",
+  new: "text-info",
 };
 
 /** ▲3 / ▼1 / – / NEW / RE — arrow and number (or word), never colour alone. */

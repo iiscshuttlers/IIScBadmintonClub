@@ -19,21 +19,21 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
           {tooltip && (
             <div className="group/tooltip relative flex items-center">
               <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-muted-foreground cursor-help transition-colors" />
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-slate-800 text-slate-300 text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl border border-slate-700 leading-relaxed text-center pointer-events-none">
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-muted text-soft text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl border border-border-strong leading-relaxed text-center pointer-events-none">
                 {tooltip}
-                <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-slate-800" />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-border" />
               </div>
             </div>
           )}
         </div>
       )}
       <div className="flex justify-between items-end mb-1 px-0.5">
-        <span className="text-[9px] text-primary dark:text-primary font-bold break-words flex-1">{t1Label}</span>
-        <span className="text-[9px] text-sky-600 dark:text-sky-400 font-bold break-words flex-1 text-right">{t2Label}</span>
+        <span className="text-[9px] text-primary font-bold break-words flex-1">{t1Label}</span>
+        <span className="text-[9px] text-info font-bold break-words flex-1 text-right">{t2Label}</span>
       </div>
       <div className="flex rounded-full overflow-hidden h-2.5">
         {t1Pct > 0 && <div className="bg-primary transition-all duration-700" style={{ width: `${t1Pct}%` }} />}
-        {t2Pct > 0 && <div className="bg-sky-400 transition-all duration-700" style={{ width: `${t2Pct}%` }} />}
+        {t2Pct > 0 && <div className="bg-info transition-all duration-700" style={{ width: `${t2Pct}%` }} />}
       </div>
     </div>
   );
@@ -102,14 +102,14 @@ export function MatchPredictionCard({
   const shouldShowResults = isResultsRevealed;
 
   return (
-    <div className={compact ? "mt-1" : "pt-2 border-t border-slate-700/50 mt-2"}>
+    <div className={compact ? "mt-1" : "pt-2 border-t border-border-strong/50 mt-2"}>
       {myPick || hasStarted ? (
         <>
           <div className="flex items-center justify-between">
             {myPick && (
-              <div className={`flex flex-1 items-center gap-1.5 bg-violet-50 dark:bg-violet-950/20 rounded-lg px-2 ${compact ? "py-1" : "py-1.5"}`}>
-                <Check className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} text-violet-500 shrink-0`} />
-                <p className={`${compact ? "text-[10px]" : "text-xs"} text-violet-700 dark:text-violet-400 font-bold leading-snug line-clamp-1`}>
+              <div className={`flex flex-1 items-center gap-1.5 bg-individual/10 rounded-lg px-2 ${compact ? "py-1" : "py-1.5"}`}>
+                <Check className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} text-individual shrink-0`} />
+                <p className={`${compact ? "text-[10px]" : "text-xs"} text-individual font-bold leading-snug line-clamp-1`}>
                   Picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
                 </p>
               </div>
@@ -118,7 +118,7 @@ export function MatchPredictionCard({
             {isAdmin && onToggleRevealResults && (
               <button
                 onClick={onToggleRevealResults}
-                className={`ml-2 font-bold text-amber-500 hover:text-amber-400 inline-flex items-center justify-center uppercase tracking-wider transition shrink-0 ${compact ? "text-[9px]" : "text-[10px]"}`}
+                className={`ml-2 font-bold text-warning hover:text-warning/80 inline-flex items-center justify-center uppercase tracking-wider transition shrink-0 ${compact ? "text-[9px]" : "text-[10px]"}`}
               >
                 {isResultsRevealed ? "Hide Results" : "Reveal"}
               </button>
@@ -144,7 +144,7 @@ export function MatchPredictionCard({
               )}
             </>
           ) : (
-            <div className={`${compact ? "mt-1 py-1 px-2 text-[9px]" : "mt-2 p-2.5 text-[11px]"} rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-muted-foreground flex items-center justify-between font-medium`}>
+            <div className={`${compact ? "mt-1 py-1 px-2 text-[9px]" : "mt-2 p-2.5 text-[11px]"} rounded-xl bg-muted/60 border border-border-strong/50 text-muted-foreground flex items-center justify-between font-medium`}>
               <span className="flex items-center gap-1.5 line-clamp-1">
                 🔒 Poll results will be revealed when match umpiring starts or when released by admin.
               </span>
@@ -154,8 +154,8 @@ export function MatchPredictionCard({
       ) : (
         <div className="flex flex-col">
           {!compact && (
-            <p className="text-[11px] text-center font-black text-slate-500 mb-2 flex items-center justify-center gap-1.5 uppercase tracking-wider">
-              <TrendingUp className="w-3.5 h-3.5 text-violet-500" /> Predict the winner!
+            <p className="text-[11px] text-center font-black text-muted-foreground mb-2 flex items-center justify-center gap-1.5 uppercase tracking-wider">
+              <TrendingUp className="w-3.5 h-3.5 text-individual" /> Predict the winner!
             </p>
           )}
           <div className={`flex ${compact ? "gap-1.5 flex-row" : "gap-2 flex-col sm:flex-row"}`}>
@@ -164,7 +164,7 @@ export function MatchPredictionCard({
                 setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
                 onPick(1);
               }}
-              className={`flex-1 flex items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/30 border border-primary/40 dark:border-primary font-black text-primary dark:text-primary transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
+              className={`flex-1 flex items-center justify-center rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary font-black text-primary transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
             >
               <span className={`line-clamp-2 break-words ${compact ? "leading-none" : "leading-tight"}`}>{t1Label}</span>
             </button>
@@ -173,7 +173,7 @@ export function MatchPredictionCard({
                 setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
                 onPick(2);
               }}
-              className={`flex-1 flex items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 font-black text-sky-700 dark:text-sky-400 transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
+              className={`flex-1 flex items-center justify-center rounded-lg bg-info/10 hover:bg-info/10 border border-info/40 font-black text-info transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
             >
               <span className={`line-clamp-2 break-words ${compact ? "leading-none" : "leading-tight"}`}>{t2Label}</span>
             </button>
@@ -264,18 +264,18 @@ export function MatchPredictions() {
   if (liveMatches.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+    <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden mb-6">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-violet-500" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">Who's going to win?</h3>
+          <TrendingUp className="w-5 h-5 text-individual" />
+          <h3 className="font-black text-foreground">Who's going to win?</h3>
         </div>
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+        <div className="flex items-center gap-1.5 bg-muted p-1 rounded-xl">
           <button
             onClick={() => setActiveTab("predictions")}
             className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
               activeTab === "predictions"
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                ? "bg-muted-strong text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -285,7 +285,7 @@ export function MatchPredictions() {
             onClick={() => setActiveTab("leaderboard")}
             className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
               activeTab === "leaderboard"
-                ? "bg-violet-600 text-white shadow-sm"
+                ? "bg-individual text-individual-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -299,7 +299,7 @@ export function MatchPredictions() {
           <PredictionLeaderboard />
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="divide-y divide-border">
           {liveMatches.map((m) => (
             <MatchPredictionCard
               key={m.id}

@@ -77,8 +77,8 @@ export function WatchTieButton({
       onClick={() => toggleMutation.mutate()}
       className={`inline-flex items-center gap-1.5 font-bold transition cursor-pointer select-none ${
         isWatching
-          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-          : 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white'
+          ? 'bg-warning/20 text-warning border border-warning/40 hover:bg-warning/30'
+          : 'bg-muted text-soft border border-border-strong hover:bg-muted-strong hover:text-foreground'
       } ${
         compact
           ? 'px-2 py-0.5 rounded-lg text-[10px]'
@@ -89,7 +89,7 @@ export function WatchTieButton({
       {toggleMutation.isPending ? (
         <Loader2 className={compact ? 'w-3 h-3 animate-spin' : 'w-3.5 h-3.5 animate-spin'} />
       ) : (
-        <Bell className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${isWatching ? 'text-amber-400 fill-amber-400/30' : 'text-slate-400'}`} />
+        <Bell className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} ${isWatching ? 'text-warning fill-warning/30' : 'text-muted-foreground'}`} />
       )}
       <span>
         {label || (isWatching ? 'Watching Reveal' : 'Notify on Reveal')}

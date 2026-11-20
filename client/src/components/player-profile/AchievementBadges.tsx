@@ -59,7 +59,7 @@ const BADGES: BadgeDef[] = [
     label: "First Blood",
     description: "Won your very first match",
     icon: Swords,
-    color: "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400",
+    color: "bg-danger/15 text-danger",
     getProgress: ({ wins }) => ({ earned: wins >= 1, current: wins, max: 1 }),
   },
   {
@@ -67,7 +67,7 @@ const BADGES: BadgeDef[] = [
     label: "Hot Streak",
     description: "Win 5 matches in a row",
     icon: Flame,
-    color: "bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400",
+    color: "bg-secondary/15 text-secondary",
     getProgress: ({ matches, playerId }) => {
       const confirmed = matches
         .filter((m) => m.status === "confirmed" && (m.date || m.created_at))
@@ -94,7 +94,7 @@ const BADGES: BadgeDef[] = [
     label: "Centurion",
     description: "Play 100 matches",
     icon: Shield,
-    color: "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground",
+    color: "bg-muted text-muted-foreground",
     getProgress: ({ wins, losses }) => ({ earned: wins + losses >= 100, current: Math.min(wins + losses, 100), max: 100 }),
   },
   {
@@ -102,7 +102,7 @@ const BADGES: BadgeDef[] = [
     label: "Half Century",
     description: "Play 50 matches",
     icon: Target,
-    color: "bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+    color: "bg-info/15 text-info",
     getProgress: ({ wins, losses }) => ({ earned: wins + losses >= 50, current: Math.min(wins + losses, 50), max: 50 }),
   },
   {
@@ -110,7 +110,7 @@ const BADGES: BadgeDef[] = [
     label: "20 Club",
     description: "Win 20 matches",
     icon: Star,
-    color: "bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
+    color: "bg-warning/15 text-warning",
     getProgress: ({ wins }) => ({ earned: wins >= 20, current: Math.min(wins, 20), max: 20 }),
   },
   {
@@ -118,7 +118,7 @@ const BADGES: BadgeDef[] = [
     label: "Champion",
     description: "Win 50 matches",
     icon: Trophy,
-    color: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400",
+    color: "bg-warning/15 text-warning",
     getProgress: ({ wins }) => ({ earned: wins >= 50, current: Math.min(wins, 50), max: 50 }),
   },
 
@@ -127,7 +127,7 @@ const BADGES: BadgeDef[] = [
     label: "Rubber Setter",
     description: "Play 10 three-set matches",
     icon: Award,
-    color: "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400",
+    color: "bg-info/15 text-info",
     getProgress: ({ matches }) => {
       const threeSetters = matches.filter((m) => {
         const score = (m as any).match_score || (m as any).score;
@@ -143,7 +143,7 @@ const BADGES: BadgeDef[] = [
     label: "Clean Sweep",
     description: "Win a match without dropping 10 points",
     icon: Scissors,
-    color: "bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400",
+    color: "bg-info/15 text-info",
     getProgress: ({ matches, playerId }) => {
       let achieved = false;
       matches.filter(m => {
@@ -279,16 +279,16 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
   }, [currentUserId, playerId, matches, earned, queryClient]);
 
   return (
-    <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl border border-slate-200 dark:border-white/8 p-6 overflow-hidden relative">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600" />
+    <div className="bg-foreground/5 shadow-sm dark:shadow-none rounded-3xl border border-foreground/8 p-6 overflow-hidden relative">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-warning via-warning to-warning" />
       
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-          <Trophy className="w-5 h-5 text-amber-500" />
+        <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+          <Trophy className="w-5 h-5 text-gold" />
         </div>
         <div>
-          <h3 className="text-base font-black text-slate-800 dark:text-foreground">Achievements</h3>
-          <p className="text-xs font-bold text-muted-foreground dark:text-muted-foreground">
+          <h3 className="text-base font-black text-foreground">Achievements</h3>
+          <p className="text-xs font-bold text-muted-foreground">
             {earned.length} of {BADGES.length} Unlocked
           </p>
         </div>
@@ -308,7 +308,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
                   title={badge.description}
                   className={`relative overflow-hidden group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black cursor-pointer shadow-sm ${badge.color}`}
                 >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                   <Icon className="w-4 h-4 z-10 relative shrink-0" />
                   <div className="z-10 relative flex flex-col">
                     <span>{badge.label}</span>
@@ -326,9 +326,9 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
       {locked.length > 0 && (
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+            <div className="h-px flex-1 bg-foreground/8" />
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest shrink-0">In Progress</span>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+            <div className="h-px flex-1 bg-foreground/8" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {locked.map(({ badge, progress }) => {
@@ -341,7 +341,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
                 <div
                   key={badge.id}
                   title={badge.description}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border-strong/50 transition-colors hover:bg-muted"
                 >
                   <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${badge.color}`}>
                     <Icon className="w-5 h-5" />
@@ -354,7 +354,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
                       </span>
                     </div>
                     <p className="text-[9px] text-muted-foreground truncate mb-1.5" title={badge.description}>{badge.description}</p>
-                    <div className={`h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ${textColors}`}>
+                    <div className={`h-1.5 w-full bg-muted-strong rounded-full overflow-hidden ${textColors}`}>
                       <div 
                         className="h-full bg-current rounded-full transition-all duration-500" 
                         style={{ width: `${percent}%` }}

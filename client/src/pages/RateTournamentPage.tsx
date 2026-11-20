@@ -77,7 +77,7 @@ export default function RateTournamentPage() {
           <p className="text-sm text-muted-foreground">Only players who took part can rate this tournament.</p>
         ) : done ? (
           <div className="text-center space-y-3 py-6">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+            <CheckCircle2 className="w-12 h-12 text-success mx-auto" />
             <p className="text-lg font-black">Thanks! Your feedback goes to the organisers.</p>
             <Link href="/">
               <span className="text-primary font-bold cursor-pointer">Back to home</span>
@@ -98,7 +98,7 @@ export default function RateTournamentPage() {
                     onClick={() => setRating(n)}
                     className="p-1"
                   >
-                    <Star className={`w-9 h-9 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+                    <Star className={`w-9 h-9 ${n <= rating ? "fill-gold text-gold" : "text-muted-foreground"}`} />
                   </button>
                 ))}
               </div>

@@ -47,7 +47,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     return (
       <div
         ref={containerRef}
-        className={`relative bg-black overflow-hidden select-none group/player ${className ?? ""}`}
+        className={`relative bg-background overflow-hidden select-none group/player ${className ?? ""}`}
         onMouseMove={revealControls}
         onMouseLeave={() => playing && setShowControls(false)}
         onTouchStart={revealControls}
@@ -76,7 +76,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
         {/* Loading spinner */}
         {!ready && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           </div>
         )}
@@ -116,7 +116,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
         {/* Gesture Hint overlay */}
         {player.showGestureHint && (
           <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-200">
-            <div className="bg-black/60 backdrop-blur-md text-foreground font-bold px-6 py-3 rounded-full text-lg shadow-2xl flex items-center gap-2">
+            <div className="bg-media/60 backdrop-blur-md text-on-media font-bold px-6 py-3 rounded-full text-lg shadow-2xl flex items-center gap-2">
               {player.showGestureHint.text}
             </div>
           </div>
@@ -125,7 +125,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
         {/* Big play button in center when paused */}
         {ready && !playing && (
           <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-            <div className="w-20 h-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+            <div className="w-20 h-20 rounded-full bg-media/50 flex items-center justify-center backdrop-blur-sm">
               <Play className="w-9 h-9 text-foreground" fill="white" />
             </div>
           </div>
@@ -141,7 +141,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
         {/* Lock Overlay */}
         {isLocked && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 transition-opacity duration-300 opacity-100">
-             <button onClick={(e) => { e.stopPropagation(); setIsLocked(false); showHint("Screen Unlocked"); }} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full shadow-lg text-foreground pointer-events-auto flex items-center justify-center border border-white/20">
+             <button onClick={(e) => { e.stopPropagation(); setIsLocked(false); showHint("Screen Unlocked"); }} className="p-3 bg-foreground/10 hover:bg-foreground/20 backdrop-blur-md rounded-full shadow-lg text-foreground pointer-events-auto flex items-center justify-center border border-foreground/20">
                <Unlock className="w-6 h-6" />
              </button>
           </div>

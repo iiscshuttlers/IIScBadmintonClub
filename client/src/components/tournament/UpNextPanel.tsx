@@ -47,8 +47,8 @@ export function UpNextPanel({ tournamentId }: { tournamentId: string }) {
   return (
     <div className="mt-8">
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
-        <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">Up Next</h2>
+        <div className="w-1.5 h-6 bg-gradient-to-b from-success to-success rounded-full" />
+        <h2 className="text-2xl font-black text-foreground">Up Next</h2>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -56,7 +56,7 @@ export function UpNextPanel({ tournamentId }: { tournamentId: string }) {
           <section
             key={c.key}
             aria-label={c.title}
-            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 min-w-0"
+            className="rounded-2xl border border-border bg-card/60 p-4 min-w-0"
           >
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="w-4 h-4 text-primary" aria-hidden />

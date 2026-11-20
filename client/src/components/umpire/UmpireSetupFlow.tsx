@@ -53,11 +53,11 @@ export function UmpireSetupFlow({
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-slate-900 rounded-3xl text-on-accent max-w-lg mx-auto shadow-2xl">
+    <div className="bg-card rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl">
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5 shadow-md">
-        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary via-teal-400 to-primary" />
+      <div className="sticky top-0 z-20 bg-gradient-to-br from-muted to-card px-6 pt-6 pb-5 shadow-md">
+        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary via-team to-primary" />
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">
@@ -67,7 +67,7 @@ export function UmpireSetupFlow({
           </div>
           <button
             onClick={() => { if (isEditSetupOpen) setIsEditSetupOpen(false); else handleClose(); }}
-            className="p-2 hover:bg-slate-700 rounded-full text-muted-foreground transition"
+            className="p-2 hover:bg-muted-strong rounded-full text-muted-foreground transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -84,11 +84,11 @@ export function UmpireSetupFlow({
             <div className="flex gap-2">
               <button
                 onClick={() => setMatch({ ...match, isFriendly: true })}
-                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${match.isFriendly ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${match.isFriendly ? "bg-primary/20 border-primary text-primary" : "bg-muted border-border-strong text-muted-foreground hover:border-border-strong/90"}`}
               >Friendly</button>
               <button
                 onClick={() => setMatch({ ...match, isFriendly: false })}
-                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${!match.isFriendly ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${!match.isFriendly ? "bg-warning/20 border-warning text-warning" : "bg-muted border-border-strong text-muted-foreground hover:border-border-strong/90"}`}
               >Tournament</button>
             </div>
           )}
@@ -105,20 +105,20 @@ export function UmpireSetupFlow({
               value={match.matchNumber}
               onChange={(e) => setMatch({ ...match, matchNumber: e.target.value })}
               placeholder="e.g. MS-14"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-on-accent text-sm outline-none focus:border-primary transition"
+              className="w-full bg-muted border border-border-strong rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-primary transition"
             />
           </div>
         )}
 
         {/* ── Format row ── */}
-        <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3">
+        <div className="bg-muted/60 rounded-2xl p-4 space-y-3">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Match Format</p>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               {[1, 3, 5].map(sets => (
                 <button key={sets}
                   onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-info/20 border-info text-info" : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"}`}
                 >BO{sets}</button>
               ))}
             </div>
@@ -126,7 +126,7 @@ export function UmpireSetupFlow({
               {[11, 15, 21, 30].map(pts => (
                 <button key={pts}
                   onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 30 ? 30 : pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"}`}
                 >{pts}pts</button>
               ))}
             </div>
@@ -137,7 +137,7 @@ export function UmpireSetupFlow({
               type="number"
               value={match.goldenPoint}
               onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 0 })}
-              className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition"
+              className="w-16 bg-muted-strong border border-border-strong rounded-lg px-2 py-1 text-center text-sm font-bold text-gold outline-none focus:border-gold transition"
             />
             <span className="text-xs text-muted-foreground">pts</span>
           </div>
@@ -151,7 +151,7 @@ export function UmpireSetupFlow({
           <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
 
             {/* Team 1 */}
-            <div className="bg-slate-800/60 rounded-2xl p-3 space-y-2 border border-slate-700/50">
+            <div className="bg-muted/60 rounded-2xl p-3 space-y-2 border border-border-strong/50">
               {/* Name display */}
               <div className="flex items-center gap-2 min-h-[2rem]">
                 {t1p1Name ? (
@@ -173,7 +173,7 @@ export function UmpireSetupFlow({
                   <span className="text-sm font-black text-foreground">{t1p2Name}</span>
                 </div>
               )}
-              <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
+              <div className="space-y-1.5 pt-1 border-t border-border-strong/50">
                 <PlayerSelect
                   value={match.t1.p1Id}
                   onChange={(v) => setMatch({ ...match, t1: { ...match.t1, p1Id: v } })}
@@ -193,17 +193,17 @@ export function UmpireSetupFlow({
 
             {/* VS divider */}
             <div className="flex flex-col items-center justify-center gap-1 pt-3">
-              <div className="w-px h-6 bg-slate-700" />
+              <div className="w-px h-6 bg-muted-strong" />
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">vs</span>
-              <div className="w-px h-6 bg-slate-700" />
+              <div className="w-px h-6 bg-muted-strong" />
             </div>
 
             {/* Team 2 */}
-            <div className="bg-slate-800/60 rounded-2xl p-3 space-y-2 border border-slate-700/50">
+            <div className="bg-muted/60 rounded-2xl p-3 space-y-2 border border-border-strong/50">
               <div className="flex items-center gap-2 min-h-[2rem]">
                 {t2p1Name ? (
                   <>
-                    <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-[10px] font-black text-sky-400 shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-info/20 border border-info/40 flex items-center justify-center text-[10px] font-black text-info shrink-0">
                       {initials(t2p1Name)}
                     </div>
                     <span className="text-sm font-black text-foreground">{t2p1Name}</span>
@@ -214,13 +214,13 @@ export function UmpireSetupFlow({
               </div>
               {t2p2Name && (
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-[10px] font-black text-sky-500 shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-info/10 border border-info/30 flex items-center justify-center text-[10px] font-black text-info shrink-0">
                     {initials(t2p2Name)}
                   </div>
                   <span className="text-sm font-black text-foreground">{t2p2Name}</span>
                 </div>
               )}
-              <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
+              <div className="space-y-1.5 pt-1 border-t border-border-strong/50">
                 <PlayerSelect
                   value={match.t2.p1Id}
                   onChange={(v) => setMatch({ ...match, t2: { ...match.t2, p1Id: v } })}
@@ -242,7 +242,7 @@ export function UmpireSetupFlow({
 
         {/* ── Category (auto-detected) ── */}
         {playersReady && (
-          <div className="flex items-center gap-3 bg-slate-800/40 rounded-xl px-4 py-3 border border-slate-700/40">
+          <div className="flex items-center gap-3 bg-muted/40 rounded-xl px-4 py-3 border border-border-strong/40">
             <div className="flex-1">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Detected Category</p>
               <p className="text-sm font-black text-primary">{match.customCategory || deduceCategory()}</p>
@@ -254,7 +254,7 @@ export function UmpireSetupFlow({
                   if (e.target.value === "Other") setMatch({ ...match, customCategory: "" });
                   else setMatch({ ...match, customCategory: e.target.value });
                 }}
-                className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
+                className="w-36 bg-card border border-border-strong rounded-lg px-2 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
               >
                 <option value="">Override…</option>
                 <option value="MS">MS</option>
@@ -272,7 +272,7 @@ export function UmpireSetupFlow({
                   onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
                   placeholder="Custom category"
                   autoFocus
-                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
+                  className="w-36 bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
                 />
               )}
             </div>
@@ -292,7 +292,7 @@ export function UmpireSetupFlow({
                     // pair is receiving, so a previously-picked receiver would
                     // now refer to the wrong team.
                     onClick={() => setMatch({ ...match, serverTeam: t, serverPlayerIndex: 0, receiverPlayerIndex: 0 })}
-                    className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                    className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-primary/20 border-primary text-primary" : "bg-muted border-border-strong text-muted-foreground hover:border-border-strong/90"}`}
                   >{label} serves</button>
                 );
               })}
@@ -317,7 +317,7 @@ export function UmpireSetupFlow({
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, serverPlayerIndex: i })}
-                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.serverPlayerIndex === i ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground"}`}
+                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.serverPlayerIndex === i ? "bg-primary/20 border-primary text-primary" : "bg-muted border-border-strong text-muted-foreground"}`}
                       >{pName} serves first</button>
                     );
                   })}
@@ -342,7 +342,7 @@ export function UmpireSetupFlow({
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, receiverPlayerIndex: i })}
-                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.receiverPlayerIndex === i ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-muted-foreground"}`}
+                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.receiverPlayerIndex === i ? "bg-warning/20 border-warning text-warning" : "bg-muted border-border-strong text-muted-foreground"}`}
                       >{pName} receives</button>
                     );
                   })}
@@ -354,7 +354,7 @@ export function UmpireSetupFlow({
 
         {/* ── Buddy gate ── */}
         {!isEditSetupOpen && !buddyCheckPassed && selectedPlayerIds.length > 0 && (
-          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm">
+          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               You must be a <strong>buddy</strong> of at least one player to umpire a friendly match.
@@ -378,7 +378,7 @@ export function UmpireSetupFlow({
               startMatch();
             }
           }}
-          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
+          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_color-mix(in_srgb,var(--primary)_35%,transparent)] transition-all"
         >
           {isEditSetupOpen ? "Save Changes" : (match.pointLog.length > 0 ? "▶ Resume Broadcasting" : "▶ Start Broadcasting")}
         </button>

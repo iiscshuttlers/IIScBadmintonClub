@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { cssVar } from "@/lib/themeColors";
 
 interface Match {
   id: string;
@@ -91,18 +92,18 @@ export function PerformanceTrends({ matches, playerId }: Props) {
   if (!data) return null;
 
   const formConfig = {
-    hot: { label: "On Fire", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-100 dark:bg-orange-950/40", icon: TrendingUp },
-    neutral: { label: "Steady", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-950/40", icon: Minus },
-    cold: { label: "In a Slump", color: "text-muted-foreground dark:text-muted-foreground", bg: "bg-slate-100 dark:bg-slate-800", icon: TrendingDown },
+    hot: { label: "On Fire", color: "text-secondary", bg: "bg-secondary/15", icon: TrendingUp },
+    neutral: { label: "Steady", color: "text-info", bg: "bg-info/15", icon: Minus },
+    cold: { label: "In a Slump", color: "text-muted-foreground", bg: "bg-muted", icon: TrendingDown },
   }[data.recentForm];
 
   const FormIcon = formConfig.icon;
   const eloTrend = data.cumulativeElo[data.cumulativeElo.length - 1];
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 shadow-sm">
+    <div className="bg-card rounded-3xl border border-border p-3.5 sm:p-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-black text-slate-800 dark:text-foreground flex items-center gap-2">
+        <h3 className="text-base font-black text-foreground flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" /> Performance Trends
         </h3>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black ${formConfig.bg} ${formConfig.color}`}>
@@ -113,19 +114,19 @@ export function PerformanceTrends({ matches, playerId }: Props) {
 
       <div className="grid grid-cols-2 gap-2.5 mb-3">
         {/* Rolling Win Rate */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5">
+        <div className="bg-muted/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Win Rate (rolling 5)</p>
-          <SparkLine values={data.winRates} color="#10b981" />
-          <p className="text-xs font-bold text-muted-foreground dark:text-slate-300 mt-1">
+          <SparkLine values={data.winRates} color={cssVar("success")} />
+          <p className="text-xs font-bold text-soft mt-1">
             {data.winRates[data.winRates.length - 1]?.toFixed(0)}% last window
           </p>
         </div>
 
         {/* ELO Movement */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2.5">
+        <div className="bg-muted/50 rounded-2xl p-2.5">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">ELO Movement</p>
-          <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? "#10b981" : "#f43f5e"} />
-          <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary dark:text-primary" : "text-rose-600 dark:text-rose-400"}`}>
+          <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? cssVar("success") : cssVar("danger")} />
+          <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary" : "text-danger"}`}>
             {eloTrend >= 0 ? "+" : ""}{eloTrend} pts overall
           </p>
         </div>
@@ -162,7 +163,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
               
               return (
                 <div key={i} title={won ? "Win" : "Loss"}
-                  className={`h-8 px-2 min-w-[32px] rounded-xl flex items-center justify-center text-[11px] font-black tracking-tight ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                  className={`h-8 px-2 min-w-[32px] rounded-xl flex items-center justify-center text-[11px] font-black tracking-tight ${won ? "bg-primary/40 text-primary" : "bg-danger/15 text-danger"}`}>
                   {matchScoreText}
                 </div>
               );

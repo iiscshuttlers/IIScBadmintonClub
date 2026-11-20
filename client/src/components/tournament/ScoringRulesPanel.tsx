@@ -149,8 +149,8 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
     }
   };
 
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm";
-  const numCls = "w-16 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm font-black text-center outline-none focus:ring-2 focus:ring-primary/40";
+  const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
+  const numCls = "w-16 bg-muted border border-border-strong rounded-lg px-2 py-1.5 text-sm font-black text-center outline-none focus:ring-2 focus:ring-primary/40";
 
   return (
     <ThemeScope {...tournament} className="space-y-4">
@@ -160,7 +160,7 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
           <Gauge className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-black text-slate-800 dark:text-foreground">Scoring Rules</h3>
+          <h3 className="text-base font-black text-foreground">Scoring Rules</h3>
           <p className="text-xs text-muted-foreground">
             Set points, games and the point cap per {tournament.format_family === "TEAM" ? "rubber discipline" : "format"} and round.
             The umpire desk reads these live for every match.
@@ -182,16 +182,16 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
         <div className={`${cardCls} flex items-center justify-center py-12 text-muted-foreground`}><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : loadError ? (
         <div className={`${cardCls} text-center py-10`}>
-          <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-          <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load scoring rules</p>
+          <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
+          <p className="text-sm font-bold text-soft">Couldn't load scoring rules</p>
           <button onClick={load} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">
             <RefreshCw className="w-3.5 h-3.5" /> Retry
           </button>
         </div>
       ) : byCategory.length === 0 ? (
         <div className={`${cardCls} text-center py-10`}>
-          <Layers className="w-9 h-9 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-          <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">No rounds yet</h4>
+          <Layers className="w-9 h-9 text-faint mx-auto mb-2" />
+          <h4 className="text-sm font-black text-soft">No rounds yet</h4>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
             {tournament.format_family === "TEAM"
               ? "Rounds and disciplines appear here once ties are scheduled and their rubbers are made."
@@ -206,12 +206,12 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
               <span className="text-[11px] font-bold text-muted-foreground">{rounds.length} round{rounds.length === 1 ? "" : "s"}</span>
               {/* Quick presets apply to all rounds of this category */}
               <div className="ml-auto flex items-center gap-1.5 flex-wrap">
-                <Wand2 className="w-3.5 h-3.5 text-slate-400" />
+                <Wand2 className="w-3.5 h-3.5 text-muted-foreground" />
                 {PRESETS.map((p) => (
                   <button
                     key={p.label}
                     onClick={() => applyToCategory(category, p.vals)}
-                    className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-black hover:bg-primary/10 hover:text-primary transition"
+                    className="px-2 py-1 rounded-lg bg-muted text-soft text-[10px] font-black hover:bg-primary/10 hover:text-primary transition"
                     title={`Apply "${p.label}" to all rounds`}
                   >
                     {p.label}
@@ -221,7 +221,7 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
             </div>
 
             {/* Column headers */}
-            <div className="hidden sm:grid grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center px-1 mb-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+            <div className="hidden sm:grid grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center px-1 mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
               <span>Round</span>
               <span className="text-center w-16">Points</span>
               <span className="text-center w-16">Best of</span>
@@ -235,10 +235,10 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
                 const dirty = isDirty(category, round);
                 const k = key(category, round);
                 return (
-                  <div key={round} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center py-1.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                  <div key={round} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center py-1.5 border-b border-border last:border-0">
                     <div className="flex items-center gap-2 min-w-0 col-span-2 sm:col-span-1">
-                      <span className="text-sm font-black text-slate-700 dark:text-slate-200 truncate">{round_name ?? `Round ${round}`}</span>
-                      {dirty && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Unsaved" />}
+                      <span className="text-sm font-black text-soft truncate">{round_name ?? `Round ${round}`}</span>
+                      {dirty && <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" title="Unsaved" />}
                     </div>
                     <input type="number" min={1} value={v.points_to_win || ""} onChange={(e) => setField(category, round, "points_to_win", e.target.value)} onBlur={() => { if (!v.points_to_win) setField(category, round, "points_to_win", "1"); }} className={numCls} aria-label="Points to win" />
                     <input type="number" min={1} step={2} value={v.best_of_sets || ""} onChange={(e) => setField(category, round, "best_of_sets", e.target.value)} onBlur={() => { if (!v.best_of_sets) setField(category, round, "best_of_sets", "1"); }} className={numCls} aria-label="Best of games" />

@@ -71,9 +71,9 @@ export function AdminAllFeaturesPanel() {
   });
 
   const statusColors = {
-    active: "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/80",
-    beta: "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
-    "coming-soon": "bg-slate-50 dark:bg-slate-900/30 text-muted-foreground dark:text-muted-foreground border-slate-200 dark:border-slate-700",
+    active: "bg-primary/30 text-primary border-primary/80",
+    beta: "bg-warning/10 text-warning border-warning/40",
+    "coming-soon": "bg-card/30 text-muted-foreground border-border-strong",
   };
 
   const statusIcons = {
@@ -85,7 +85,7 @@ export function AdminAllFeaturesPanel() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <h2 className="text-xl font-black text-slate-800 dark:text-foreground">All Features</h2>
+        <h2 className="text-xl font-black text-foreground">All Features</h2>
         <InfoModal
           title="FEATURE TRACKER"
           mainIcon={<Sparkles className="w-5 h-5" />}
@@ -98,21 +98,21 @@ export function AdminAllFeaturesPanel() {
       </div>
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-primary/10 dark:bg-primary/30 rounded-xl p-4 border border-primary/40 dark:border-primary/80">
-          <div className="text-2xl font-black text-primary dark:text-primary">{stats.active}</div>
-          <div className="text-xs font-bold text-primary dark:text-primary uppercase">Active</div>
+        <div className="bg-primary/30 rounded-xl p-4 border border-primary/80">
+          <div className="text-2xl font-black text-primary">{stats.active}</div>
+          <div className="text-xs font-bold text-primary uppercase">Active</div>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-          <div className="text-2xl font-black text-blue-700 dark:text-blue-400">{stats.total}</div>
-          <div className="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase">Total</div>
+        <div className="bg-info/10 rounded-xl p-4 border border-info/40">
+          <div className="text-2xl font-black text-info">{stats.total}</div>
+          <div className="text-xs font-bold text-info uppercase">Total</div>
         </div>
-        <div className="bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
-          <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{stats.beta}</div>
-          <div className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase">Beta</div>
+        <div className="bg-warning/10 rounded-xl p-4 border border-warning/40">
+          <div className="text-2xl font-black text-warning">{stats.beta}</div>
+          <div className="text-xs font-bold text-warning uppercase">Beta</div>
         </div>
-        <div className="bg-slate-100 dark:bg-slate-900/30 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
-          <div className="text-2xl font-black text-muted-foreground dark:text-muted-foreground">{stats.categories.length}</div>
-          <div className="text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase">Categories</div>
+        <div className="bg-card/30 rounded-xl p-4 border border-border">
+          <div className="text-2xl font-black text-muted-foreground">{stats.categories.length}</div>
+          <div className="text-xs font-bold text-muted-foreground uppercase">Categories</div>
         </div>
       </div>
 
@@ -127,19 +127,19 @@ export function AdminAllFeaturesPanel() {
               placeholder="Search features..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-primary outline-none"
+              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border-strong bg-card text-sm focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border-strong text-muted-foreground hover:text-foreground"}`}
             >
               <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border-strong text-muted-foreground hover:text-foreground"}`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -156,7 +156,7 @@ export function AdminAllFeaturesPanel() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                   statusFilter === status
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground"
+                    : "bg-card border-border-strong text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {status === "all" ? "All" : status === "coming-soon" ? "Coming Soon" : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -171,8 +171,8 @@ export function AdminAllFeaturesPanel() {
             onClick={() => setSelectedCategory(null)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
               !selectedCategory
-                ? "bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400"
-                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
+                ? "bg-info/20 border-info text-info"
+                : "bg-card border-border-strong text-muted-foreground"
             }`}
           >
             All Categories
@@ -183,8 +183,8 @@ export function AdminAllFeaturesPanel() {
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                 selectedCategory === cat
-                  ? "bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400"
-                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
+                  ? "bg-info/20 border-info text-info"
+                  : "bg-card border-border-strong text-muted-foreground"
               }`}
             >
               {cat}
@@ -197,7 +197,7 @@ export function AdminAllFeaturesPanel() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((feature) => (
-            <div key={feature.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 hover:shadow-md transition">
+            <div key={feature.id} className="bg-card rounded-xl border border-border p-4 hover:shadow-md transition">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="text-2xl">{iconMap[feature.icon] || "✨"}</div>
                 <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border ${statusColors[feature.status]}`}>
@@ -206,26 +206,26 @@ export function AdminAllFeaturesPanel() {
                 </span>
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <h4 className="font-bold text-foreground dark:text-foreground text-sm">{feature.name}</h4>
+                <h4 className="font-bold text-foreground text-sm">{feature.name}</h4>
                 <InfoModal
                   title={feature.name.toUpperCase()}
                   items={[{ title: "Description", desc: feature.description }]}
                 />
               </div>
-              <div className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase">{feature.category}</div>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase">{feature.category}</div>
             </div>
           ))}
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((feature) => (
-            <div key={feature.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <div key={feature.id} className="bg-card rounded-lg border border-border p-4 hover:bg-muted/50 transition">
               <div className="flex items-center gap-3 justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="text-xl shrink-0">{iconMap[feature.icon] || "✨"}</div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-foreground dark:text-foreground text-sm">{feature.name}</h4>
+                      <h4 className="font-bold text-foreground text-sm">{feature.name}</h4>
                       <InfoModal
                         title={feature.name.toUpperCase()}
                         items={[{ title: "Description", desc: feature.description }]}
@@ -234,7 +234,7 @@ export function AdminAllFeaturesPanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase px-2 py-1 bg-muted rounded">
                     {feature.category}
                   </span>
                   <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border ${statusColors[feature.status]}`}>
@@ -249,26 +249,26 @@ export function AdminAllFeaturesPanel() {
 
       {filtered.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-muted-foreground dark:text-muted-foreground mb-2">No features match your filters</div>
+          <div className="text-muted-foreground mb-2">No features match your filters</div>
           <button
             onClick={() => {
               setSearchTerm("");
               setSelectedCategory(null);
               setStatusFilter("all");
             }}
-            className="text-sm font-bold text-primary dark:text-primary hover:underline"
+            className="text-sm font-bold text-primary hover:underline"
           >
             Clear filters
           </button>
         </div>
       )}
 
-      <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+      <div className="bg-info/10 rounded-xl border border-info/40 p-4">
         <div className="flex gap-3">
           <div className="text-xl">ℹ️</div>
           <div className="text-sm">
-            <div className="font-bold text-blue-900 dark:text-blue-100 mb-1">Feature Overview</div>
-            <div className="text-xs text-blue-800 dark:text-blue-200">
+            <div className="font-bold text-info mb-1">Feature Overview</div>
+            <div className="text-xs text-info">
               This dashboard tracks all {stats.total} features across {stats.categories.length} categories.
               {stats.active} are actively live, {stats.beta} in beta, and {stats.comingSoon} coming soon.
             </div>

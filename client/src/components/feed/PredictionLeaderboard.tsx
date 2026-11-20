@@ -34,24 +34,24 @@ export function PredictionLeaderboard() {
   if (loading) {
     return (
       <div className="flex justify-center py-6">
-        <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
+        <Loader2 className="w-5 h-5 animate-spin text-individual" />
       </div>
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <div className="p-4 text-center text-xs text-muted-foreground bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+      <div className="p-4 text-center text-xs text-muted-foreground bg-muted/40 rounded-2xl">
         No match predictions tallied yet. Vote on upcoming matches to claim your spot on the leaderboard!
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/60 space-y-3">
+    <div className="bg-muted/50 rounded-2xl p-4 border border-border-strong/60 space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-          <Award className="w-4 h-4 text-amber-500" /> Top Predictors
+        <h4 className="text-xs font-black uppercase tracking-wider text-soft flex items-center gap-1.5">
+          <Award className="w-4 h-4 text-gold" /> Top Predictors
         </h4>
         <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
           Community Accuracy
@@ -62,30 +62,30 @@ export function PredictionLeaderboard() {
         {leaderboard.map((stat, i) => (
           <div
             key={stat.userId}
-            className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm"
+            className="flex items-center justify-between p-2.5 bg-card rounded-xl border border-border shadow-sm"
           >
             <div className="flex items-center gap-2.5">
               <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[11px] ${
-                i === 0 ? "bg-amber-400 text-slate-900" : i === 1 ? "bg-slate-300 text-slate-900" : i === 2 ? "bg-amber-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"
+                i === 0 ? "bg-warning text-warning-foreground" : i === 1 ? "bg-soft text-background" : i === 2 ? "bg-warning text-warning-foreground" : "bg-muted text-muted-foreground"
               }`}>
                 {i + 1}
               </span>
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-soft shrink-0">
                 {stat.avatarUrl ? (
                   <img src={stat.avatarUrl} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-500">
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
                     {stat.name[0]}
                   </div>
                 )}
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-foreground line-clamp-1">
+                <p className="text-xs font-bold text-foreground line-clamp-1">
                   {stat.name}
                 </p>
                 <div className="flex items-center gap-1 flex-wrap">
                   {stat.badges.map((b, idx) => (
-                    <span key={idx} className="text-[9px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-1.5 py-0.5 rounded">
+                    <span key={idx} className="text-[9px] font-black uppercase tracking-wider text-individual bg-individual/15 px-1.5 py-0.5 rounded">
                       {b}
                     </span>
                   ))}
@@ -94,7 +94,7 @@ export function PredictionLeaderboard() {
             </div>
 
             <div className="text-right">
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-black text-success">
                 {stat.correctVotes}/{stat.totalVotes}
               </span>
               <p className="text-[10px] text-muted-foreground font-bold">

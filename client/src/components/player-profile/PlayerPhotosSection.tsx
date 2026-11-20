@@ -74,19 +74,19 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
   return (
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/60 shrink-0 flex items-center gap-2">
-          <Camera className="w-3.5 h-3.5 text-blue-500" /> Through the Lens
+        <div className="h-px flex-1 bg-foreground/8" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-foreground/60 shrink-0 flex items-center gap-2">
+          <Camera className="w-3.5 h-3.5 text-info" /> Through the Lens
         </span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+        <div className="h-px flex-1 bg-foreground/8" />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {photos.map((photo, i) => (
-          <button key={i} onClick={() => setLightboxIndex(i)} className="group relative aspect-square overflow-hidden rounded-2xl block bg-slate-100 dark:bg-slate-800 shadow-sm text-left">
+          <button key={i} onClick={() => setLightboxIndex(i)} className="group relative aspect-square overflow-hidden rounded-2xl block bg-muted shadow-sm text-left">
             <img src={photo.url} alt={photo.title} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-media/0 group-hover:bg-media/10 transition-colors" />
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-media/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
               <p className="text-foreground text-xs font-bold truncate">{photo.title}</p>
             </div>
           </button>
@@ -103,7 +103,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm"
+              className="fixed inset-0 bg-media/95 z-[100] flex items-center justify-center backdrop-blur-sm"
               onClick={() => setLightboxIndex(null)}
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
@@ -148,7 +148,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                 <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
               </button>
 
-              <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-media/90 via-media/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
                 <div className="pointer-events-auto flex flex-col items-center gap-2 w-full max-w-4xl">
                   <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                     {photo.title}
@@ -156,7 +156,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                   <div className="flex items-center gap-3 mt-3">
                     <a
                       href={galleryUrl}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-slate-900 rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-foreground text-background rounded-full text-sm font-bold shadow-lg hover:bg-soft transition-all active:scale-95"
                       onClick={(e) => e.stopPropagation()}
                     >
                       View in Album
@@ -166,8 +166,8 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                       onClick={(e) => { e.stopPropagation(); handleReport(photo); }}
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 ${
                         reportedPaths.has(photo.path)
-                          ? "bg-slate-700 text-muted-foreground cursor-default"
-                          : "bg-rose-600/80 hover:bg-rose-600 text-on-accent"
+                          ? "bg-muted-strong text-muted-foreground cursor-default"
+                          : "bg-danger/80 hover:bg-danger text-on-accent"
                       }`}
                       title="Report this photo"
                     >

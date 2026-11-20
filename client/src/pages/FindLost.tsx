@@ -59,14 +59,14 @@ interface Post {
 
 const TYPE_STYLES: Record<PostType, { bg: string; badge: string; icon: any; label: string }> = {
   lost: {
-    bg: "border-rose-200 dark:border-rose-900/40",
-    badge: "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400",
+    bg: "border-danger/25",
+    badge: "bg-danger/15 text-danger",
     icon: PackageSearch,
     label: "LOST",
   },
   found: {
-    bg: "border-primary/40 dark:border-primary/40",
-    badge: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
+    bg: "border-primary/40",
+    badge: "bg-primary/40 text-primary",
     icon: Package,
     label: "FOUND",
   },
@@ -353,32 +353,32 @@ export default function FindLost() {
     load();
   };
 
-  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
-  const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+  const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background pb-safe pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-on-accent py-3 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
+      <div className="bg-gradient-to-r from-card via-info/20 to-card text-on-accent py-3 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,color-mix(in_srgb,var(--info)_15%,transparent),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-black uppercase tracking-widest mb-1.5">
-            <Search className="w-3 h-3 text-indigo-400" /> Find &amp; Lost
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/10 border border-foreground/20 text-[10px] font-black uppercase tracking-widest mb-1.5">
+            <Search className="w-3 h-3 text-info" /> Find &amp; Lost
             <InfoModal
               title="FIND &amp; LOST"
               items={[
                 { badge: "NOTIFY", title: "Real-time Alerts", desc: "Whenever you post an item, all users will see it in the global feed." },
                 { badge: "CLAIM", title: "Claiming an item", desc: "Click 'Claim' on an item to securely ping the poster that you have their item or want to collect it." }
               ]}
-              triggerClassName="text-foreground hover:text-indigo-200"
+              triggerClassName="text-foreground hover:text-info"
             />
           </div>
           <h1 className="text-xl font-black mb-1">Lost something on court?</h1>
-          <p className="text-slate-300 text-xs leading-snug">Post lost or found items at IISc courts. Get real-time notifications when someone replies.</p>
+          <p className="text-soft text-xs leading-snug">Post lost or found items at IISc courts. Get real-time notifications when someone replies.</p>
           {session && (
             <Button
               onClick={openNewPost}
-              className="mt-3 bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/40"
+              className="mt-3 bg-info hover:bg-info/90 shadow-lg shadow-info/40"
             >
               <Plus className="w-3.5 h-3.5" /> Post Item
             </Button>
@@ -388,9 +388,9 @@ export default function FindLost() {
 
       <div className="container mx-auto px-4 max-w-3xl mt-8 space-y-6">
         {!session ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-center shadow-sm">
-            <Search className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4" />
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Sign in to view Lost & Found</h2>
+          <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-3xl border border-border text-center shadow-sm">
+            <Search className="w-12 h-12 text-faint mb-4" />
+            <h2 className="text-xl font-black text-soft mb-2">Sign in to view Lost & Found</h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
               You must be logged in to see or post items in this section.
             </p>
@@ -407,10 +407,10 @@ export default function FindLost() {
               initial={{ opacity: 0, y: -16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm"
+              className="bg-card rounded-3xl p-6 border border-border shadow-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-black text-slate-800 dark:text-foreground">
+                <h3 className="font-black text-foreground">
                   {editingId ? "Edit Post" : "New Post"}
                 </h3>
                 <Button variant="ghost" size="icon" onClick={() => { setShowForm(false); setEditingId(null); }} aria-label="Close form" className="text-muted-foreground hover:text-foreground">
@@ -419,7 +419,7 @@ export default function FindLost() {
               </div>
 
               {/* Type toggle */}
-              <div className="flex bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl mb-6 shadow-inner ring-1 ring-inset ring-slate-200 dark:ring-slate-800/60">
+              <div className="flex bg-background p-1.5 rounded-2xl mb-6 shadow-inner ring-1 ring-inset ring-border/60">
                 {(["lost", "found"] as PostType[]).map((t) => (
                   <button
                     key={t}
@@ -427,9 +427,9 @@ export default function FindLost() {
                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
                       form.type === t 
                         ? (t === "lost" 
-                            ? "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 ring-1 ring-rose-500/20 dark:ring-rose-400/30 shadow-[0_0_15px_rgba(244,63,94,0.1)]" 
-                            : "bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 ring-1 ring-teal-500/20 dark:ring-teal-400/30 shadow-[0_0_15px_rgba(20,184,166,0.1)]")
-                        : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-900/50"
+                            ? "bg-danger/20 text-danger ring-1 ring-danger/30 shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_10%,transparent)]" 
+                            : "bg-team/20 text-team ring-1 ring-team/30 shadow-[0_0_15px_color-mix(in_srgb,var(--team)_10%,transparent)]")
+                        : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                     }`}
                   >
                     {t === "lost" ? "I Lost Something" : "I Found Something"}
@@ -468,12 +468,12 @@ export default function FindLost() {
                           src={url}
                           alt="Item"
                           onClick={() => openLightbox(form.images, form.images.indexOf(url))}
-                          className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-zoom-in"
+                          className="w-16 h-16 rounded-xl object-cover border border-border-strong cursor-zoom-in"
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(url)}
-                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-on-accent rounded-full p-0.5 shadow"
+                          className="absolute -top-2 -right-2 bg-danger hover:bg-danger/90 text-on-accent rounded-full p-0.5 shadow"
                           aria-label="Remove image"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -481,7 +481,7 @@ export default function FindLost() {
                       </div>
                     ))}
                     {form.images.length < MAX_IMAGES && (
-                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm rounded-xl transition">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted-strong text-soft font-bold text-sm rounded-xl transition">
                         {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
                         {form.images.length > 0 ? "Add More" : "Upload Images"}
                         <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
@@ -530,7 +530,7 @@ export default function FindLost() {
                           key={msg}
                           type="button"
                           onClick={() => setForm(f => ({ ...f, remarks: msg }))}
-                          className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-md transition text-left"
+                          className="text-[10px] font-bold bg-info/10 hover:bg-info/20 text-info px-2 py-1 rounded-md transition text-left"
                         >
                           {msg}
                         </button>
@@ -545,7 +545,7 @@ export default function FindLost() {
                 <Button
                   onClick={submit}
                   disabled={submitting || !form.title.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-on-accent"
+                  className="bg-info hover:bg-info/90 text-on-accent"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (editingId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
                   {submitting ? "Saving…" : (editingId ? "Save Changes" : "Publish Post")}
@@ -563,7 +563,7 @@ export default function FindLost() {
               size="pill"
               variant={filter === f ? "pillActive" : "pillMuted"}
               onClick={() => setFilter(f)}
-              className={filter === f ? "bg-indigo-600 text-white shadow-md" : "border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}
+              className={filter === f ? "bg-info text-info-foreground shadow-md" : "border border-border-strong hover:border-info"}
             >
               {f === "all" ? "All" : f === "lost" ? "Lost" : "Found"}
             </Button>
@@ -572,7 +572,7 @@ export default function FindLost() {
             size="pill"
             variant={showResolved ? "pillActive" : "pillMuted"}
             onClick={() => setShowResolved((v) => !v)}
-            className={`ml-auto ${showResolved ? "bg-indigo-600 text-white" : "border border-slate-200 dark:border-slate-700"}`}
+            className={`ml-auto ${showResolved ? "bg-info text-info-foreground" : "border border-border-strong"}`}
           >
             {showResolved ? "Show Active" : "Show Resolved"}
           </Button>
@@ -580,11 +580,11 @@ export default function FindLost() {
 
         {/* Posts */}
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
+          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-info" /></div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-            <PackageSearch className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-black text-muted-foreground dark:text-slate-300 mb-1">No posts yet</h3>
+          <div className="text-center py-12 bg-card rounded-3xl border border-border">
+            <PackageSearch className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-black text-soft mb-1">No posts yet</h3>
             <p className="text-muted-foreground text-sm">Be the first to post a lost or found item.</p>
           </div>
         ) : (
@@ -600,7 +600,7 @@ export default function FindLost() {
                   key={post.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`bg-white dark:bg-slate-900 rounded-2xl p-5 border shadow-sm ${post.resolved ? "opacity-60" : ""} ${style.bg}`}
+                  className={`bg-card rounded-2xl p-5 border shadow-sm ${post.resolved ? "opacity-60" : ""} ${style.bg}`}
                 >
                   <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0 w-full">
@@ -613,14 +613,14 @@ export default function FindLost() {
                           {style.label}
                         </span>
                         {post.resolved && (
-                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">
+                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                             RESOLVED
                           </span>
                         )}
                       </div>
-                      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-1">{post.title}</h3>
+                      <h3 className="font-black text-foreground text-base mb-1">{post.title}</h3>
                       {post.description && (
-                        <p className="text-sm text-muted-foreground dark:text-slate-300 mb-2">{post.description}</p>
+                        <p className="text-sm text-soft mb-2">{post.description}</p>
                       )}
                       
                       {images.length > 0 && (
@@ -630,14 +630,14 @@ export default function FindLost() {
                               key={url}
                               type="button"
                               onClick={() => openLightbox(images, i)}
-                              className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="relative group rounded-xl overflow-hidden border border-border focus:outline-none focus:ring-2 focus:ring-info"
                             >
                               <img
                                 src={url}
                                 alt={`${post.title} ${i + 1}`}
                                 className={`object-cover cursor-zoom-in transition group-hover:opacity-90 ${images.length === 1 ? "w-full max-w-sm max-h-72" : "w-24 h-24"}`}
                               />
-                              <span className="absolute bottom-1 right-1 bg-black/55 text-foreground rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
+                              <span className="absolute bottom-1 right-1 bg-media/55 text-on-media rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
                                 <ZoomIn className="w-3.5 h-3.5" />
                               </span>
                             </button>
@@ -667,7 +667,7 @@ export default function FindLost() {
                               }
                               
                               return href ? (
-                                <a href={href} target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline transition">
+                                <a href={href} target="_blank" rel="noreferrer" className="text-info hover:underline transition">
                                   {post.contact}
                                 </a>
                               ) : (
@@ -678,7 +678,7 @@ export default function FindLost() {
                         )}
                         {post.remarks && (
                           <span className="flex items-center gap-1">
-                            <CheckCircle className="w-3.5 h-3.5 text-indigo-500" /> <span className="text-indigo-600 dark:text-indigo-400 font-medium">{post.remarks}</span>
+                            <CheckCircle className="w-3.5 h-3.5 text-info" /> <span className="text-info font-medium">{post.remarks}</span>
                           </span>
                         )}
                         <span className="flex items-center gap-1 whitespace-nowrap">
@@ -692,7 +692,7 @@ export default function FindLost() {
                         </span>
                         {post.author && (
                           <span className="flex items-center gap-1 whitespace-nowrap">
-                            by <strong className="text-muted-foreground dark:text-slate-300 truncate max-w-[140px]">{post.author.full_name}</strong>
+                            by <strong className="text-soft truncate max-w-[140px]">{post.author.full_name}</strong>
                           </span>
                         )}
                       </div>
@@ -705,7 +705,7 @@ export default function FindLost() {
                           {/* Resolved status (replaces the "Mark as Resolved" action) */}
                           <span
                             title="This post has been resolved"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary cursor-default"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/40 text-primary cursor-default"
                           >
                             <CheckCircle className="w-4 h-4" /> Resolved
                           </span>
@@ -714,7 +714,7 @@ export default function FindLost() {
                             <div className="flex flex-col gap-1 items-end">
                               <span
                                 title={post.claimed_at ? `${post.type === 'lost' ? 'Found' : 'Claimed'} on ${new Date(post.claimed_at).toLocaleString()}` : `${post.type === 'lost' ? 'Found' : 'Claimed'} by ${post.claimed_by_name}`}
-                                className="flex flex-col px-3 py-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 cursor-default max-w-[12rem] text-right"
+                                className="flex flex-col px-3 py-1.5 rounded-xl bg-info/15 text-info cursor-default max-w-[12rem] text-right"
                               >
                                 <span className="flex items-center justify-end gap-1.5 text-xs font-bold">
                                   <span className="truncate">{post.type === 'lost' ? 'Found' : 'Claimed'} by {post.claimed_by_name}</span>
@@ -726,12 +726,12 @@ export default function FindLost() {
                                   </span>
                                 )}
                                 {post.claim_message && (
-                                  <span className="text-[10px] font-medium mt-1 bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded text-indigo-800 dark:text-indigo-300 inline-block w-full text-right leading-tight">
+                                  <span className="text-[10px] font-medium mt-1 bg-info/10 px-1.5 py-0.5 rounded text-info inline-block w-full text-right leading-tight">
                                     {post.claim_message}
                                   </span>
                                 )}
                                 {post.claim_contact && (
-                                  <span className="text-[10px] font-medium mt-0.5 bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded text-indigo-800 dark:text-indigo-300 inline-flex items-center justify-end gap-1 w-full text-right leading-tight">
+                                  <span className="text-[10px] font-medium mt-0.5 bg-info/10 px-1.5 py-0.5 rounded text-info inline-flex items-center justify-end gap-1 w-full text-right leading-tight">
                                     <Phone className="w-2.5 h-2.5" />
                                     {(() => {
                                       const isEmail = post.claim_contact.includes("@");
@@ -743,7 +743,7 @@ export default function FindLost() {
                                         href = `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`;
                                       }
                                       return href ? (
-                                        <a href={href} target="_blank" rel="noreferrer" className="hover:underline text-indigo-600 dark:text-indigo-400">{post.claim_contact}</a>
+                                        <a href={href} target="_blank" rel="noreferrer" className="hover:underline text-info">{post.claim_contact}</a>
                                       ) : <span>{post.claim_contact}</span>;
                                     })()}
                                   </span>
@@ -754,7 +754,7 @@ export default function FindLost() {
                                   variant="ghost"
                                   size="pill"
                                   onClick={() => unclaimItem(post)}
-                                  className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 gap-1 text-[10px]"
+                                  className="text-danger hover:text-danger/80 hover:bg-danger/10 gap-1 text-[10px]"
                                 >
                                   <RotateCcw className="w-3 h-3" /> Undo {post.type === 'lost' ? 'Find' : 'Claim'}
                                 </Button>
@@ -769,7 +769,7 @@ export default function FindLost() {
                               size="pill"
                               onClick={() => resolve(post)}
                               title="Mark as resolved"
-                              className="bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 hover:bg-teal-200 dark:hover:bg-teal-900/60 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
+                              className="bg-team/15 text-team hover:bg-team/25 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
                             >
                               <CheckCircle className="w-4 h-4" /> Mark as Resolved
                             </Button>
@@ -779,29 +779,29 @@ export default function FindLost() {
                               size="pill"
                               onClick={() => setClaimingPostId(post.id)}
                               title={post.type === "lost" ? "I found this item!" : "Claim this item"}
-                              className="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
+                              className="bg-info/15 text-info hover:bg-info/25 w-full justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs"
                             >
                               <CheckCircle className="w-4 h-4" /> {post.type === "lost" ? "I found this!" : "Claim"}
                             </Button>
                           )}
                           {!isOwn && session && claimingPostId === post.id && (
                             <div className="flex flex-col gap-1.5 items-end mt-1 w-full max-w-[140px]">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Contact / WhatsApp</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Your Contact / WhatsApp</span>
                               <input 
                                 value={claimContactInput}
                                 onChange={e => setClaimContactInput(e.target.value)}
                                 placeholder="Phone or Email (Optional)"
-                                className="text-[10px] w-full text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                className="text-[10px] w-full text-right bg-card border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-info"
                               />
                               {post.type === "lost" ? (
                                 <>
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Where did you keep it?</span>
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">Where did you keep it?</span>
                                   <div className="flex flex-col items-end gap-1.5 w-full">
                                     {["Kept at table", "Kept in wooden wardrobe", "Handed to Court Staff", "It's with me"].map(msg => (
                                       <button
                                         key={msg}
                                         onClick={() => claimItem(post, msg, claimContactInput)}
-                                        className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 px-2 py-1.5 rounded-lg transition w-full text-right"
+                                        className="text-[10px] font-bold bg-info/15 hover:bg-info/25 text-info px-2 py-1.5 rounded-lg transition w-full text-right"
                                       >
                                         {msg}
                                       </button>
@@ -812,7 +812,7 @@ export default function FindLost() {
                                 <Button
                                   size="pill"
                                   onClick={() => claimItem(post, undefined, claimContactInput)}
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white w-full text-center mt-1 px-3 py-1.5 rounded-lg text-[10px]"
+                                  className="bg-info hover:bg-info/90 text-info-foreground w-full text-center mt-1 px-3 py-1.5 rounded-lg text-[10px]"
                                 >
                                   Confirm Claim
                                 </Button>
@@ -830,18 +830,18 @@ export default function FindLost() {
                             variant="ghost"
                             onClick={() => editPost(post)}
                             aria-label="Edit post"
-                            className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 shrink-0"
+                            className="w-8 h-8 rounded-xl bg-warning/15 text-warning hover:bg-warning/25 shrink-0"
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
                           
                           {pendingDelete === post.id ? (
-                            <div className="flex gap-1 bg-rose-50 dark:bg-rose-900/20 p-1 rounded-xl shrink-0">
+                            <div className="flex gap-1 bg-danger/10 p-1 rounded-xl shrink-0">
                               <Button
                                 size="icon"
                                 onClick={() => deletePost(post)}
                                 aria-label="Confirm delete"
-                                className="w-6 h-6 rounded-lg bg-rose-500 text-white hover:bg-rose-600"
+                                className="w-6 h-6 rounded-lg bg-danger text-danger-foreground hover:bg-danger/90"
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
                               </Button>
@@ -850,7 +850,7 @@ export default function FindLost() {
                                 variant="ghost"
                                 onClick={() => setPendingDelete(null)}
                                 aria-label="Cancel delete"
-                                className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 text-muted-foreground hover:bg-slate-300 dark:hover:bg-slate-600"
+                                className="w-6 h-6 rounded-lg bg-muted-strong text-muted-foreground hover:bg-faint"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </Button>
@@ -861,7 +861,7 @@ export default function FindLost() {
                               variant="ghost"
                               onClick={() => setPendingDelete(post.id)}
                               aria-label="Delete post"
-                              className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 shrink-0"
+                              className="w-8 h-8 rounded-xl bg-danger/15 text-danger hover:bg-danger/25 shrink-0"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -887,7 +887,7 @@ export default function FindLost() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-media/95 backdrop-blur-sm flex items-center justify-center"
             onClick={() => setLightbox(null)}
           >
             {/* Counter */}
@@ -917,7 +917,7 @@ export default function FindLost() {
               </button>
               <button
                 onClick={() => setLightbox(null)}
-                className="text-foreground hover:text-rose-400 transition p-2"
+                className="text-foreground hover:text-danger transition p-2"
                 aria-label="Close"
               >
                 <X className="w-7 h-7" />

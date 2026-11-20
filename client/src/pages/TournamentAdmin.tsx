@@ -22,7 +22,7 @@ export default function TournamentAdmin() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -30,9 +30,9 @@ export default function TournamentAdmin() {
 
   if (!isAdmin && !isMainAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 gap-4 p-6 text-center">
-        <ShieldAlert className="w-16 h-16 text-rose-500" />
-        <h1 className="text-2xl font-black text-slate-800 dark:text-foreground">Access Denied</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 p-6 text-center">
+        <ShieldAlert className="w-16 h-16 text-danger" />
+        <h1 className="text-2xl font-black text-foreground">Access Denied</h1>
         <p className="text-muted-foreground">You need admin permissions to access Tournament Manager.</p>
         <Button onClick={() => navigate("/")} className="mt-2">
           Go Home
@@ -43,9 +43,9 @@ export default function TournamentAdmin() {
 
   return (
     <AdminHistoryProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
           <div className="max-w-5xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <Button
@@ -57,17 +57,17 @@ export default function TournamentAdmin() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5 text-amber-500" />
+              <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5 text-gold" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-base font-black text-slate-800 dark:text-foreground leading-tight truncate">
+                <h1 className="text-sm sm:text-base font-black text-foreground leading-tight truncate">
                   Tournament Manager
                 </h1>
                 <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
                   <span>Admin</span>
                   <span>/</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Tournaments</span>
+                  <span className="text-soft font-semibold">Tournaments</span>
                 </div>
               </div>
             </div>

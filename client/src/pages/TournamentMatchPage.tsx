@@ -118,16 +118,16 @@ export default function TournamentMatchPage() {
   const tab: MatchTab = tabs.includes(requestedTab) ? requestedTab : "summary";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10">
+    <div className="min-h-screen bg-background pb-10">
       <div className="container mx-auto px-4 max-w-2xl pt-5 space-y-4">
         <Link
           href={tournamentReturnRoute(t.id)}
-          className="inline-flex items-center gap-1.5 text-sm font-black text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-black text-soft hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden /> {t.name}
         </Link>
 
-        <article ref={scoreCardRef} className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+        <article ref={scoreCardRef} className="bg-card rounded-3xl border border-border shadow-sm p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
             <span>{view.discipline ? `${view.discipline} · ${DISCIPLINE_LABELS[view.discipline]}` : view.categoryLabel}</span>
             {view.roundName && <span>· {view.roundName}</span>}
@@ -140,7 +140,7 @@ export default function TournamentMatchPage() {
           <h1 className="sr-only">
             {view.sides[0].label} versus {view.sides[1].label}
           </h1>
-          <div className="mt-4 divide-y divide-slate-100 dark:divide-slate-800 text-base">
+          <div className="mt-4 divide-y divide-border text-base">
             <MatchSideRow side={view.sides[0]} index={0} view={view} serving={serving === 1} />
             <MatchSideRow side={view.sides[1]} index={1} view={view} serving={serving === 2} />
           </div>
@@ -165,7 +165,7 @@ export default function TournamentMatchPage() {
 
         <section
           aria-label={TAB_LABELS[tab]}
-          className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6"
+          className="bg-card rounded-3xl border border-border shadow-sm p-5 sm:p-6"
         >
           {tab === "summary" && <MatchSummaryTab view={view} tournamentName={t.name} next={next} />}
           {tab === "points" && pointLog.data && (

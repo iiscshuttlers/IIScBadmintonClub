@@ -88,7 +88,7 @@ describe("FormChips", () => {
     const chips = screen.getAllByRole("link");
     // A walkover keeps its result letter and colour, with "w/o" under it (no made-up "L/O").
     expect(chips.map((c) => c.textContent)).toEqual(["W", "Lw/o"]);
-    expect(chips[1].className).toContain("bg-rose-600");
+    expect(chips[1].className).toContain("bg-danger");
     expect(chips[0]).toHaveAccessibleName(/^Won vs Bala, MS · Final, 23 Aug$/);
     expect(chips[1]).toHaveAccessibleName(/^Lost \(walkover\) vs Chitra, MS · SF$/);
   });

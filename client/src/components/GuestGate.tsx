@@ -64,29 +64,29 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-black/30 overflow-hidden">
+        <div className="relative bg-card rounded-3xl border border-border shadow-2xl shadow-media/30 overflow-hidden">
           {/* Gradient accent bar */}
-          <div className="h-1 bg-gradient-to-r from-primary via-teal-400 to-emerald-500" />
+          <div className="h-1 bg-gradient-to-r from-primary via-team to-success" />
 
           <div className="p-8 sm:p-10 text-center">
             {/* Icon */}
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center">
               <Icon className="w-8 h-8 text-primary" />
             </div>
 
             {/* Feature name */}
-            <h2 className="text-2xl font-black text-foreground dark:text-white tracking-tight mb-2">
+            <h2 className="text-2xl font-black text-foreground tracking-tight mb-2">
               {feature}
             </h2>
 
             {/* Members only badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/50 text-amber-700 dark:text-amber-400 text-xs font-bold mb-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/10 border border-warning/50 text-warning text-xs font-bold mb-4">
               <Lock className="w-3 h-3" />
               Members Only
             </div>
 
             {/* Description */}
-            <p className="text-sm text-muted-foreground dark:text-slate-400 leading-relaxed mb-8 max-w-xs mx-auto">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-xs mx-auto">
               {desc}
             </p>
 
@@ -100,15 +100,15 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
 
             {/* Create account link */}
             <Link href="/join" onClick={() => sessionStorage.setItem("return_url", currentReturnUrl())}>
-              <button className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer">
+              <button className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-muted hover:bg-muted-strong text-soft font-bold text-sm transition-colors cursor-pointer">
                 <UserPlus className="w-4 h-4" />
                 Create Account
               </button>
             </Link>
 
             {/* Back link */}
-            <p className="mt-5 text-xs text-muted-foreground dark:text-slate-500">
-                <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="hover:text-foreground dark:hover:text-slate-300 transition-colors font-semibold">
+            <p className="mt-5 text-xs text-muted-foreground">
+                <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="hover:text-soft transition-colors font-semibold">
                   ← Back to Home
                 </button>
             </p>

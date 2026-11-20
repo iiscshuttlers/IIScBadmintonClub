@@ -75,7 +75,7 @@ export function ParticipantSeedingTable({
         }
 
         return (
-          <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/20 px-2 -mx-2 rounded-xl transition-colors">
+          <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-border last:border-0 hover:bg-card/20 px-2 -mx-2 rounded-xl transition-colors">
             {/* Top Row */}
             <div className="flex items-start gap-2 sm:gap-3">
               <div className="flex items-center gap-2 sm:gap-3 mt-1 shrink-0">
@@ -83,41 +83,41 @@ export function ParticipantSeedingTable({
                   type="checkbox"
                   checked={selectedParts.includes(p.id)}
                   onChange={() => toggleSelect(p.id)}
-                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                  className="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary cursor-pointer"
                 />
                 <input
                   type="number"
                   min={1}
                   value={p.seed ?? i + 1}
                   onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}
-                  className="w-10 sm:w-12 text-center text-sm font-black rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
+                  className="w-10 sm:w-12 text-center text-sm font-black rounded-lg border border-border-strong bg-muted py-1 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
                 />
               </div>
 
               <div className="flex-1 flex flex-col min-w-0">
                 {isDoubles ? (
                   <div className="flex flex-col sm:flex-row sm:items-start w-full gap-1.5 sm:gap-3">
-                    <div className="flex flex-col flex-1 min-w-0 sm:pr-3 sm:border-r border-slate-200 dark:border-slate-700">
-                      <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
+                    <div className="flex flex-col flex-1 min-w-0 sm:pr-3 sm:border-r border-border-strong">
+                      <div className="text-sm font-bold text-foreground truncate flex items-center gap-1.5">
                         <span className="truncate">{name1}</span>
-                        {!p.player_id && <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
+                        {!p.player_id && <span className="text-[9px] font-black uppercase text-warning bg-warning/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept1)}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">{getDepartmentAcronym(dept1)}</span>
                     </div>
                     <div className="flex flex-col flex-1 min-w-0 sm:pl-1">
-                      <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
+                      <div className="text-sm font-bold text-foreground truncate flex items-center gap-1.5">
                         <span className="truncate">{name2}</span>
-                        {!p.partner_id && <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
+                        {!p.partner_id && <span className="text-[9px] font-black uppercase text-warning bg-warning/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept2)}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">{getDepartmentAcronym(dept2)}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col justify-center min-h-[32px]">
-                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-2">
+                    <div className="text-sm font-bold text-foreground truncate flex items-center gap-2">
                       <span className="truncate">{p.display_name ?? player?.full_name ?? "Unknown"}</span>
                       {!p.player_id && (
-                        <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
+                        <span className="text-[9px] font-black uppercase text-warning bg-warning/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
                       )}
                     </div>
                     {(() => {
@@ -125,7 +125,7 @@ export function ParticipantSeedingTable({
                       const dept = player?.department ? getDepartmentAcronym(player.department) : null;
                       const info = [dept, emailDisplay].filter(Boolean).join(" · ");
                       return info ? (
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 truncate">{info}</div>
+                        <div className="text-[10px] font-bold text-muted-foreground mt-0.5 truncate">{info}</div>
                       ) : null;
                     })()}
                   </div>
@@ -135,7 +135,7 @@ export function ParticipantSeedingTable({
               <button
                 onClick={() => removeParticipant(p.id)}
                 title="Remove Participant"
-                className="p-1.5 mt-0.5 text-slate-400 hover:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 rounded-lg transition shrink-0 ml-1"
+                className="p-1.5 mt-0.5 text-muted-foreground hover:text-danger hover:bg-danger/30 rounded-lg transition shrink-0 ml-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -148,14 +148,14 @@ export function ParticipantSeedingTable({
                   value={p.entry_round == null ? "" : String(p.entry_round)}
                   onChange={(e) => updateEntryRound(p.id, e.target.value === "" ? null : parseInt(e.target.value))}
                   title="Round this player plays their first match in"
-                  className={`shrink-0 text-[11px] font-bold rounded-lg border py-1.5 px-2 outline-none max-w-[10rem] cursor-pointer transition-colors ${p.entry_round == null ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600" : "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"}`}
+                  className={`shrink-0 text-[11px] font-bold rounded-lg border py-1.5 px-2 outline-none max-w-[10rem] cursor-pointer transition-colors ${p.entry_round == null ? "border-border-strong bg-muted text-muted-foreground hover:border-border-strong/90" : "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"}`}
                 >
-                  <option value="" className="bg-slate-800 text-slate-100">Auto — {entryRoundLabel(effectiveRound, drawPlan.drawSize)}</option>
+                  <option value="" className="bg-muted text-foreground">Auto — {entryRoundLabel(effectiveRound, drawPlan.drawSize)}</option>
                   {Array.from(
                     { length: Math.max(1, Math.min(drawPlan.totalRounds - 1, 4)) },
                     (_, idx) => idx + 1
                   ).map((r) => (
-                    <option key={r} value={r} className="bg-slate-800 text-slate-100">
+                    <option key={r} value={r} className="bg-muted text-foreground">
                       {entryRoundLabel(r, drawPlan.drawSize)}
                       {r > 1 ? ` (${r - 1} bye${r > 2 ? "s" : ""})` : ""}
                     </option>
@@ -163,21 +163,21 @@ export function ParticipantSeedingTable({
                 </select>
               )}
 
-              <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/50">
+              <div className="flex items-center gap-0.5 bg-muted/80 rounded-lg p-0.5 border border-border-strong/50">
                 <button
                   onClick={() => {
                     setEditingName({ id: p.id, name1, name2 });
                     setLinkingId(null);
                   }}
                   title="Edit Names"
-                  className="p-1.5 text-slate-500 hover:text-[var(--info)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition"
+                  className="p-1.5 text-muted-foreground hover:text-info hover:bg-muted-strong rounded-md transition"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); setEditingName(null); }}
                   title={p.player_id ? "Change linked player" : "Link to registered player"}
-                  className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${p.player_id ? "text-[var(--info)]" : "text-slate-500 hover:text-[var(--info)]"}`}
+                  className={`p-1.5 rounded-md transition hover:bg-muted-strong ${p.player_id ? "text-info" : "text-muted-foreground hover:text-info"}`}
                 >
                   <Link className="w-3.5 h-3.5" />
                 </button>
@@ -185,7 +185,7 @@ export function ParticipantSeedingTable({
                   <button
                     onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
                     title="Unlink Player 1"
-                    className="p-1.5 text-[var(--warning)] hover:text-[var(--warning)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition"
+                    className="p-1.5 text-warning hover:text-warning/80 hover:bg-muted-strong rounded-md transition"
                   >
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
@@ -194,7 +194,7 @@ export function ParticipantSeedingTable({
                   <button
                     onClick={() => linkParticipantToPartner(p.id, null, p.display_name?.split('&')[1]?.trim() || "")}
                     title="Unlink Player 2"
-                    className="p-1.5 text-[var(--danger)] hover:text-[var(--danger)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition"
+                    className="p-1.5 text-danger hover:text-danger/80 hover:bg-muted-strong rounded-md transition"
                   >
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
@@ -206,7 +206,7 @@ export function ParticipantSeedingTable({
                       setEditingPhone(editingPhone?.playerId === p.player_id ? null : { playerId: p.player_id, phone: pl?.contact_number ?? "" });
                     }}
                     title="Set phone number"
-                    className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${player?.contact_number ? "text-emerald-500" : "text-slate-400 hover:text-emerald-500"}`}
+                    className={`p-1.5 rounded-md transition hover:bg-muted-strong ${player?.contact_number ? "text-success" : "text-muted-foreground hover:text-success"}`}
                   >
                     <Phone className="w-3.5 h-3.5" />
                   </button>
@@ -216,20 +216,20 @@ export function ParticipantSeedingTable({
 
             {/* Inline Name Editor */}
             {editingName?.id === p.id && (
-              <div className="mt-2 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="mt-2 p-3 rounded-xl bg-muted/80 border border-border-strong space-y-2">
                 <div className="flex gap-2">
                   <input
                     value={editingName.name1}
                     onChange={(e) => setEditingName(p => p ? { ...p, name1: e.target.value } : null)}
                     placeholder={isDoubles ? "Player 1 Name" : "Player Name"}
-                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-border-strong bg-card"
                   />
                   {isDoubles && (
                     <input
                       value={editingName.name2}
                       onChange={(e) => setEditingName(p => p ? { ...p, name2: e.target.value } : null)}
                       placeholder="Player 2 Name"
-                      className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-border-strong bg-card"
                     />
                   )}
                 </div>
@@ -242,7 +242,7 @@ export function ParticipantSeedingTable({
                   </button>
                   <button
                     onClick={() => setEditingName(null)}
-                    className="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-xs font-bold"
+                    className="px-3 py-1 rounded-lg bg-muted-strong text-xs font-bold"
                   >
                     Cancel
                   </button>
@@ -252,15 +252,15 @@ export function ParticipantSeedingTable({
 
             {/* Inline Link Search */}
             {linkingId === p.id && (
-              <div className="mt-2 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 space-y-2">
-                <div className="text-xs font-bold text-blue-700 dark:text-blue-300">
+              <div className="mt-2 p-3 rounded-xl bg-info/10 border border-info/40 space-y-2">
+                <div className="text-xs font-bold text-info">
                   Link {name1} to registered player:
                 </div>
                 <input
                   value={linkSearch}
                   onChange={(e) => setLinkSearch(e.target.value)}
                   placeholder="Search registered players by name or email..."
-                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-border-strong bg-card"
                 />
                 {filteredPlayers(linkSearch).length > 0 && (
                   <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -271,9 +271,9 @@ export function ParticipantSeedingTable({
                           linkParticipantToPlayer(p.id, pl.id, pl.full_name);
                           setLinkingId(null);
                         }}
-                        className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-blue-100/70 dark:hover:bg-blue-900/40 flex items-center justify-between"
+                        className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-info/15 flex items-center justify-between"
                       >
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{pl.full_name}</span>
+                        <span className="font-bold text-soft">{pl.full_name}</span>
                         <span className="text-[10px] text-muted-foreground">{pl.iisc_email || pl.email}</span>
                       </button>
                     ))}
@@ -281,14 +281,14 @@ export function ParticipantSeedingTable({
                 )}
                 {isDoubles && (
                   <>
-                    <div className="text-xs font-bold text-blue-700 dark:text-blue-300 pt-2 border-t border-blue-200/50">
+                    <div className="text-xs font-bold text-info pt-2 border-t border-info/15">
                       Link partner ({name2}) to registered player:
                     </div>
                     <input
                       value={linkSearch2}
                       onChange={(e) => setLinkSearch2(e.target.value)}
                       placeholder="Search partner by name or email..."
-                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-border-strong bg-card"
                     />
                     {filteredPlayers(linkSearch2).length > 0 && (
                       <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -299,9 +299,9 @@ export function ParticipantSeedingTable({
                               linkParticipantToPartner(p.id, pl.id, pl.full_name);
                               setLinkingId(null);
                             }}
-                            className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-blue-100/70 dark:hover:bg-blue-900/40 flex items-center justify-between"
+                            className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-info/15 flex items-center justify-between"
                           >
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{pl.full_name}</span>
+                            <span className="font-bold text-soft">{pl.full_name}</span>
                             <span className="text-[10px] text-muted-foreground">{pl.iisc_email || pl.email}</span>
                           </button>
                         ))}
@@ -317,26 +317,26 @@ export function ParticipantSeedingTable({
 
             {/* Inline Phone Edit */}
             {updatePhone && editingPhone?.playerId === p.player_id && (
-              <div className="mt-2 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
+              <div className="mt-2 p-3 rounded-xl bg-success/10 border border-success/40 space-y-2">
                 <div className="flex gap-2">
                   <input
                     value={editingPhone.phone}
                     onChange={(e) => setEditingPhone(p => p ? { ...p, phone: e.target.value } : null)}
                     placeholder="Phone number"
-                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-border-strong bg-card"
                   />
                   <button
                     onClick={() => {
                       updatePhone(editingPhone.playerId, editingPhone.phone);
                       setEditingPhone(null);
                     }}
-                    className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold"
+                    className="px-3 py-1 rounded-lg bg-success text-success-foreground text-xs font-bold"
                   >
                     Save Phone
                   </button>
                   <button
                     onClick={() => setEditingPhone(null)}
-                    className="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-xs font-bold"
+                    className="px-3 py-1 rounded-lg bg-muted-strong text-xs font-bold"
                   >
                     Cancel
                   </button>

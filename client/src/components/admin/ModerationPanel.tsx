@@ -93,11 +93,11 @@ export function ModerationPanel() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-black text-foreground">{r.reported?.full_name || "Unknown player"}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 text-[10px] font-black uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded-full bg-danger/15 text-danger text-[10px] font-black uppercase tracking-wider">
                       {REASON_LABELS[r.reason] || r.reason}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      r.status === "open" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : r.status === "reviewed" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"
+                      r.status === "open" ? "bg-warning/15 text-warning" : r.status === "reviewed" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
                     }`}>
                       {r.status}
                     </span>

@@ -30,12 +30,12 @@ const ACTIONS: { id: string; title: string; subtitle: string; href: string; keyw
 
 function actionIcon(id: string) {
   if (id === "a-home") return <Home className="w-4 h-4 shrink-0 text-primary" />;
-  if (id === "a-live") return <Radio className="w-4 h-4 shrink-0 text-rose-500" />;
-  if (id === "a-tournaments" || id === "a-host") return <Trophy className="w-4 h-4 shrink-0 text-amber-500" />;
-  if (id === "a-matches") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
-  if (id === "a-directory") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
-  if (id === "a-stats") return <BarChart3 className="w-4 h-4 shrink-0 text-emerald-500" />;
-  return <Settings className="w-4 h-4 shrink-0 text-slate-400" />;
+  if (id === "a-live") return <Radio className="w-4 h-4 shrink-0 text-live" />;
+  if (id === "a-tournaments" || id === "a-host") return <Trophy className="w-4 h-4 shrink-0 text-gold" />;
+  if (id === "a-matches") return <Swords className="w-4 h-4 shrink-0 text-info" />;
+  if (id === "a-directory") return <Users className="w-4 h-4 shrink-0 text-individual" />;
+  if (id === "a-stats") return <BarChart3 className="w-4 h-4 shrink-0 text-success" />;
+  return <Settings className="w-4 h-4 shrink-0 text-muted-foreground" />;
 }
 
 function matchingActions(q: string): SearchResult[] {
@@ -287,8 +287,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const iconFor = (r: SearchResult) => {
     if (r.type === "action") return actionIcon(r.id);
     if (r.type === "player") return <User className="w-4 h-4 shrink-0 text-primary" />;
-    if (r.type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
-    return <Megaphone className="w-4 h-4 shrink-0 text-amber-500" />;
+    if (r.type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-individual" />;
+    return <Megaphone className="w-4 h-4 shrink-0 text-warning" />;
   };
 
   if (!open) return null;
@@ -304,7 +304,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-media/60 backdrop-blur-sm"
         />
 
         {/* Panel */}
@@ -317,11 +317,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Search and quick actions"
-          className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+          className="relative w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border-strong overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Input */}
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
             {loading ? (
               <Loader2 className="w-5 h-5 text-muted-foreground animate-spin shrink-0" />
             ) : (
@@ -332,9 +332,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               value={query}
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Search players, teams, matches, events…"
-              className="flex-1 bg-transparent text-slate-800 dark:text-foreground placeholder-slate-400 text-sm outline-none"
+              className="flex-1 bg-transparent text-foreground placeholder-faint text-sm outline-none"
             />
-            <button onClick={onClose} aria-label="Close search" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button onClick={onClose} aria-label="Close search" className="p-1 rounded-lg hover:bg-muted transition">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -343,7 +343,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           <div className="max-h-80 overflow-y-auto">
             {results.length === 0 && query.length >= 2 && !loading && (
               <div className="py-10 text-center text-muted-foreground text-sm font-medium">
-                No results for "<span className="font-bold text-muted-foreground dark:text-slate-300">{query}</span>"
+                No results for "<span className="font-bold text-soft">{query}</span>"
               </div>
             )}
 
@@ -354,7 +354,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               const labels = { action: query ? "Jump to" : "Quick actions", player: "Players", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
-                  <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-slate-50/80 dark:bg-slate-800/50">
+                  <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted/50">
                     {labels[type]}
                   </div>
                   {group.map((r) => {
@@ -364,17 +364,17 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                       key={`${r.type}-${r.id}`}
                       onMouseEnter={() => setActiveIndex(ordered.findIndex((o) => o.id === r.id && o.type === r.type))}
                       onClick={() => handleSelect(r.href)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors group text-left ${isActive ? "bg-primary/10 dark:bg-primary/20" : "hover:bg-primary/10 dark:hover:bg-primary/20"}`}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors group text-left ${isActive ? "bg-primary/20" : "hover:bg-primary/20"}`}
                     >
                       {r.avatar ? (
-                        <img src={r.avatar} alt="" loading="lazy" decoding="async" className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
+                        <img src={r.avatar} alt="" loading="lazy" decoding="async" className="w-8 h-8 rounded-full object-cover shrink-0 border border-border-strong" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                           {iconFor(r)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className={`text-sm font-bold truncate transition-colors ${isActive ? "text-primary" : "text-slate-800 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary"}`}>
+                        <div className={`text-sm font-bold truncate transition-colors ${isActive ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                           {r.title}
                         </div>
                         {r.subtitle && (
@@ -383,7 +383,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                       </div>
                       {isActive
                         ? <CornerDownLeft className="w-4 h-4 text-primary shrink-0" />
-                        : <ArrowRight className="w-4 h-4 text-slate-300 dark:text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
+                        : <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
                     </button>
                     );
                   })}
@@ -393,11 +393,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           </div>
 
           {/* Footer hint */}
-          <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[11px] text-muted-foreground">
-            <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> navigate</span>
-            <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">↵</kbd> select</span>
-            <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> close</span>
-            <span className="ml-auto"><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd> to open</span>
+          <div className="px-4 py-2 border-t border-border flex items-center gap-4 text-[11px] text-muted-foreground">
+            <span><kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> navigate</span>
+            <span><kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">↵</kbd> select</span>
+            <span><kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> close</span>
+            <span className="ml-auto"><kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd> to open</span>
           </div>
         </motion.div>
       </div>

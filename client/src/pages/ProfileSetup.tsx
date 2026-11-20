@@ -51,16 +51,16 @@ export default function ProfileSetup() {
   const nextTabObj = tabs.find((t) => t.id === nextTabId);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 sm:py-12 px-4 sm:px-6 lg:px-6">
+    <div className="min-h-screen bg-background py-8 sm:py-12 px-4 sm:px-6 lg:px-6">
       <div className="max-w-3xl mx-auto">
         {!setup.isEditing && (
-          <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="mb-6 p-4 rounded-2xl bg-card border border-border shadow-sm space-y-3">
             <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-muted-foreground">
               <span>Onboarding Progress</span>
               <span className="text-primary">Step {Math.max(1, currentIndex + 1)} of 3</span>
             </div>
             {/* Step progress bar */}
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
               <div
                 className="bg-primary h-full transition-all duration-300 rounded-full"
                 style={{ width: `${((Math.max(0, currentIndex) + 1) / 3) * 100}%` }}
@@ -79,7 +79,7 @@ export default function ProfileSetup() {
                       isCurrent
                         ? "bg-primary/10 border border-primary/30 text-primary font-bold"
                         : isCompleted
-                        ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                        ? "text-success font-semibold"
                         : "text-muted-foreground opacity-60"
                     }`}
                   >
@@ -97,16 +97,16 @@ export default function ProfileSetup() {
               {setup.isEditing && (setup.playerSlug || setup.paramId) && (
                   <button
                     onClick={() => window.history.length > 1 ? window.history.back() : setLocation(`/player/${setup.playerSlug || setup.paramId}`)}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary dark:text-muted-foreground dark:hover:text-primary mb-3 transition"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary mb-3 transition"
                   >
                     <ArrowLeft className="w-4 h-4" /> Back to Profile
                   </button>
               )}
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground dark:text-foreground flex items-center justify-center sm:justify-start gap-2 leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground flex items-center justify-center sm:justify-start gap-2 leading-tight">
                 <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-pulse shrink-0" />
                 {setup.isEditing ? "Edit Your Player Profile" : "Complete Your Profile"}
               </h1>
-              <p className="mt-2 text-muted-foreground dark:text-muted-foreground text-base sm:text-lg">
+              <p className="mt-2 text-muted-foreground text-base sm:text-lg">
                 {setup.isEditing
                   ? "Keep your badminton card updated with your latest achievements!"
                   : "Welcome to IISc Badminton Club! Tell us about your game."}
@@ -116,7 +116,7 @@ export default function ProfileSetup() {
             <button
               type="button"
               onClick={setup.handleSignOut}
-              className="self-center sm:self-auto flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900/30 transition shadow-sm"
+              className="self-center sm:self-auto flex items-center justify-center gap-2 px-4 py-2 bg-danger/10 hover:bg-danger/10 text-danger rounded-xl text-sm font-semibold border border-danger/20 transition shadow-sm"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -126,7 +126,7 @@ export default function ProfileSetup() {
           {/* Sleek Tab Navigation */}
           {tabs.length > 1 && (
             <div className="-mx-4 sm:mx-0 px-4 sm:px-0 mb-6 sm:mb-8 space-y-6">
-              <div className="space-y-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="space-y-3 pb-4 border-b border-border">
                 <h3 className="text-[11px] font-black tracking-widest uppercase text-muted-foreground ml-1">Essential Information</h3>
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   {tabs.filter(t => t.id === "basic").map((tab, index, arr) => {
@@ -140,8 +140,8 @@ export default function ProfileSetup() {
                         className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 font-semibold text-sm rounded-xl transition-all outline-none border shadow-sm
                           ${isLastOdd ? "col-span-2" : "col-span-1"}
                           ${isActive
-                            ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border-primary ring-1 ring-primary"
-                            : "bg-white dark:bg-slate-800/80 text-muted-foreground border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            ? "bg-primary/20 text-primary border-primary ring-1 ring-primary"
+                            : "bg-muted/80 text-muted-foreground border-border-strong hover:border-border-strong/90 hover:text-soft hover:bg-muted-strong"
                           }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" />
@@ -152,7 +152,7 @@ export default function ProfileSetup() {
                 </div>
               </div>
 
-              <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="space-y-3 pb-2 border-b border-border">
                 <h3 className="text-[11px] font-black tracking-widest uppercase text-muted-foreground ml-1">Detailed Profile</h3>
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   {tabs.filter(t => t.id !== "basic").map((tab, index, arr) => {
@@ -166,8 +166,8 @@ export default function ProfileSetup() {
                         className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 font-semibold text-sm rounded-xl transition-all outline-none border shadow-sm
                           ${isLastOdd ? "col-span-2" : "col-span-1"}
                           ${isActive
-                            ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border-primary ring-1 ring-primary"
-                            : "bg-white dark:bg-slate-800/80 text-muted-foreground border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            ? "bg-primary/20 text-primary border-primary ring-1 ring-primary"
+                            : "bg-muted/80 text-muted-foreground border-border-strong hover:border-border-strong/90 hover:text-soft hover:bg-muted-strong"
                           }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" />
@@ -180,7 +180,7 @@ export default function ProfileSetup() {
             </div>
           )}
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
+          <div className="bg-card rounded-3xl shadow-xl shadow-media/50 dark:shadow-none border border-border p-5 sm:p-6">
             <form onSubmit={setup.handleSubmit} className="space-y-6">
               <AnimatePresence mode="wait">
                 {setup.activeTab === "basic" && (
@@ -258,7 +258,7 @@ export default function ProfileSetup() {
                 )}
               </AnimatePresence>
 
-              <div className="pt-5 sm:pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+              <div className="pt-5 sm:pt-6 border-t border-border grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
                 {isLastTab ? (
                   <Button
                     type="submit"
@@ -267,7 +267,7 @@ export default function ProfileSetup() {
                   >
                     {setup.loading ? (
                       <>
-                        <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" />
+                        <div className="w-5 h-5 rounded-full border-2 border-border/20 border-t-border/80 animate-spin" />
                         Saving...
                       </>
                     ) : (
@@ -289,7 +289,7 @@ export default function ProfileSetup() {
                   >
                     {setup.loading ? (
                       <>
-                        <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" />
+                        <div className="w-5 h-5 rounded-full border-2 border-border/20 border-t-border/80 animate-spin" />
                         Saving...
                       </>
                     ) : (
@@ -305,7 +305,7 @@ export default function ProfileSetup() {
                       type="button"
                       onClick={(e) => setup.handleSubmit(e as any)}
                       disabled={setup.loading}
-                      className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
+                      className="min-h-[52px] px-6 py-3.5 rounded-xl bg-muted hover:bg-muted-strong text-soft font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
                     >
                       Save & Return to Profile
                     </button>

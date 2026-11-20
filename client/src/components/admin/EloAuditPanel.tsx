@@ -58,9 +58,9 @@ interface EloLogEntry {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Singles:  "bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400",
-  Doubles:  "bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
-  Mixed:    "bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
+  Singles:  "bg-individual/15 text-individual",
+  Doubles:  "bg-team/15 text-team",
+  Mixed:    "bg-warning/15 text-warning",
 };
 
 export function EloAuditPanel() {
@@ -276,10 +276,10 @@ export function EloAuditPanel() {
   }, []);
 
   const renderExpandedTable = (entry: EloLogEntry, highlightPlayerId?: string) => (
-    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+    <div className="mt-3 pt-3 border-t border-border">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-muted-foreground dark:text-muted-foreground">
-          <thead className="uppercase tracking-wider text-[10px] bg-slate-50 dark:bg-slate-800/50">
+        <table className="w-full text-left text-xs text-muted-foreground">
+          <thead className="uppercase tracking-wider text-[10px] bg-muted/50">
             <tr>
               <th className="px-3 py-2 rounded-l-lg font-bold">Player</th>
               <th className="px-3 py-2 font-bold text-center">Category Before</th>
@@ -288,23 +288,23 @@ export function EloAuditPanel() {
               <th className="px-3 py-2 rounded-r-lg font-bold text-center">Overall Δ</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <tbody className="divide-y divide-border/60">
             {entry.all_players_logs?.sort((a, b) => (b.elo_change || 0) - (a.elo_change || 0)).map((pl: any) => {
               const isWin = pl.actual_score === 1 || (pl.elo_change && pl.elo_change > 0);
               const catChange = pl.elo_change || 0;
               const isHighlight = pl.player_id === highlightPlayerId;
               return (
-                <tr key={pl.id || pl.player_id || pl.player?.full_name} className={isHighlight ? "bg-primary/10 dark:bg-primary/20" : ""}>
-                  <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <tr key={pl.id || pl.player_id || pl.player?.full_name} className={isHighlight ? "bg-primary/20" : ""}>
+                  <td className="px-3 py-2 font-bold text-soft flex items-center gap-1.5 whitespace-nowrap">
                     {pl.player?.full_name || "Unknown"}
-                    {isWin ? <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded uppercase font-black">W</span> : <span className="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-1 py-0.5 rounded uppercase font-black">L</span>}
+                    {isWin ? <span className="text-[9px] bg-success/15 text-success px-1 py-0.5 rounded uppercase font-black">W</span> : <span className="text-[9px] bg-danger/10 text-danger px-1 py-0.5 rounded uppercase font-black">L</span>}
                   </td>
                   <td className="px-3 py-2 text-center">{pl.previous_elo}</td>
-                  <td className={`px-3 py-2 text-center font-black ${catChange > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                  <td className={`px-3 py-2 text-center font-black ${catChange > 0 ? "text-success" : "text-danger"}`}>
                     {catChange > 0 ? "+" : ""}{catChange}
                   </td>
-                  <td className="px-3 py-2 text-center font-bold text-muted-foreground dark:text-slate-300">{pl.new_elo}</td>
-                  <td className={`px-3 py-2 text-center font-bold ${catChange > 0 ? "text-emerald-500" : "text-rose-400"}`}>
+                  <td className="px-3 py-2 text-center font-bold text-soft">{pl.new_elo}</td>
+                  <td className={`px-3 py-2 text-center font-bold ${catChange > 0 ? "text-success" : "text-danger"}`}>
                     {catChange > 0 ? "+" : ""}{catChange}
                   </td>
                 </tr>
@@ -318,7 +318,7 @@ export function EloAuditPanel() {
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm";
+  const cardCls = "bg-card rounded-2xl border border-border p-4 shadow-sm";
 
   // ── Player ELO History View ──────────────────────────────────────────────────
   if (selectedPlayer) {
@@ -327,12 +327,12 @@ export function EloAuditPanel() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setSelectedPlayer(null); setEloHistory([]); }}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            className="p-2 rounded-xl border border-border-strong hover:bg-muted transition"
           >
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
           <div>
-            <h3 className="font-black text-slate-800 dark:text-foreground">{selectedPlayer.full_name}</h3>
+            <h3 className="font-black text-foreground">{selectedPlayer.full_name}</h3>
             <p className="text-xs text-muted-foreground">ELO History — last 50 matches</p>
           </div>
         </div>
@@ -357,18 +357,18 @@ export function EloAuditPanel() {
                 onClick={() => setExpandedMatch(isExpanded ? null : `${entry.match_uuid}-${i}`)}>
                 {/* Row summary */}
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-8 rounded-full shrink-0 ${won ? "bg-primary" : "bg-rose-400"}`} />
+                  <div className={`w-2 h-8 rounded-full shrink-0 ${won ? "bg-primary" : "bg-danger"}`} />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${catColor}`}>
                         {entry.match_category || entry.category}
                       </span>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${won ? "bg-primary/40 text-primary" : "bg-danger/15 text-danger"}`}>
                         {won ? "WIN" : "LOSS"}
                       </span>
                     </div>
-                    <p className="text-xs font-bold text-muted-foreground dark:text-slate-200 truncate mt-0.5">
+                    <p className="text-xs font-bold text-soft truncate mt-0.5">
                       {entry.match_code ? `${entry.match_code.replace(/_/g, ' ')} ` : ''}
                       vs {entry.opponent_name || "Unknown"}
                     </p>
@@ -381,18 +381,18 @@ export function EloAuditPanel() {
                   {/* Category ELO change */}
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-muted-foreground font-bold">Category ELO</p>
-                    <p className="text-xs text-muted-foreground dark:text-muted-foreground font-mono">
-                      {entry.previous_elo} → <span className="font-black text-slate-800 dark:text-foreground">{entry.new_elo}</span>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {entry.previous_elo} → <span className="font-black text-foreground">{entry.new_elo}</span>
                     </p>
-                    <p className={`text-sm font-black ${entry.elo_change > 0 ? "text-primary" : "text-rose-500"}`}>
+                    <p className={`text-sm font-black ${entry.elo_change > 0 ? "text-primary" : "text-danger"}`}>
                       {entry.elo_change > 0 ? "+" : ""}{entry.elo_change}
                     </p>
                   </div>
 
                   {/* Overall ELO change */}
-                  <div className="text-right shrink-0 border-l border-slate-100 dark:border-slate-800 pl-3 ml-1">
+                  <div className="text-right shrink-0 border-l border-border pl-3 ml-1">
                     <p className="text-[10px] text-muted-foreground font-bold">Overall</p>
-                    <p className={`text-sm font-black ${overallChange > 0 ? "text-primary" : "text-rose-400"}`}>
+                    <p className={`text-sm font-black ${overallChange > 0 ? "text-primary" : "text-danger"}`}>
                       {overallChange > 0 ? "+" : ""}{overallChange}
                     </p>
                   </div>
@@ -414,7 +414,7 @@ export function EloAuditPanel() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-black text-slate-800 dark:text-foreground">ELO Audit Log</h3>
+          <h3 className="font-black text-foreground">ELO Audit Log</h3>
           <InfoModal
             title="ELO AUDIT & RECALCULATION"
             items={[
@@ -423,7 +423,7 @@ export function EloAuditPanel() {
             ]}
           />
         </div>
-        <button aria-label="Refresh ELO audit" onClick={load} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+        <button aria-label="Refresh ELO audit" onClick={load} className="p-2 rounded-xl border border-border-strong hover:bg-muted transition">
           <RefreshCw className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
@@ -431,7 +431,7 @@ export function EloAuditPanel() {
       <div className="flex flex-col sm:flex-row gap-2">
         {(["history", "snapshot", "matchwise"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-primary-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}>
+            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-primary-foreground shadow-md" : "bg-card border border-border-strong text-soft hover:border-primary/50"}`}>
             {t === "history" ? "Recalculation History" : t === "snapshot" ? "Current ELO Snapshot" : "Matchwise ELO"}
           </button>
         ))}
@@ -440,7 +440,7 @@ export function EloAuditPanel() {
       {tab === "matchwise" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Most recent confirmed matches</p>
+            <p className="text-xs text-muted-foreground">Most recent confirmed matches</p>
           </div>
           {globalMatches.length === 0 && (
              <div className={`${cardCls} text-center py-10 text-muted-foreground text-sm`}>
@@ -457,7 +457,7 @@ export function EloAuditPanel() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       {entry.match_code && (
-                        <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">
+                        <span className="text-[10px] font-black text-soft">
                           {entry.match_code.replace(/_/g, ' ')}
                         </span>
                       )}
@@ -468,7 +468,7 @@ export function EloAuditPanel() {
                         {entry.match_date || entry.created_at ? new Date(entry.match_date || entry.created_at).toLocaleString() : "—"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground dark:text-slate-200">
+                    <div className="flex items-center gap-2 text-xs font-bold text-soft">
                       <span>{entry.all_players_logs?.length} players updated</span>
                     </div>
                   </div>
@@ -484,11 +484,11 @@ export function EloAuditPanel() {
       {tab === "history" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Log of all manual ELO re-sync actions</p>
+            <p className="text-xs text-muted-foreground">Log of all manual ELO re-sync actions</p>
             <button 
               onClick={() => setShowRecalcModal(true)}
               disabled={recalcLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/20 dark:hover:bg-primary/40 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/30 text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/40 transition-colors disabled:opacity-50"
             >
               {recalcLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Recalculate All ELOs
@@ -503,17 +503,17 @@ export function EloAuditPanel() {
             const isFailed = log.action.includes("failed");
             return (
               <div key={log.id} className={`${cardCls} flex items-start gap-3`}>
-                <div className={`p-2 rounded-xl shrink-0 ${isFailed ? "bg-rose-50 dark:bg-rose-950/30 text-rose-500" : "bg-primary/10 dark:bg-primary/30 text-primary"}`}>
+                <div className={`p-2 rounded-xl shrink-0 ${isFailed ? "bg-danger/10 text-danger" : "bg-primary/30 text-primary"}`}>
                   {isFailed ? <TrendingDown className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isFailed ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary"}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isFailed ? "bg-danger/15 text-danger" : "bg-primary/40 text-primary"}`}>
                       {isFailed ? "FAILED" : "SUCCESS"}
                     </span>
-                    <span className="text-xs font-bold text-muted-foreground dark:text-slate-200">{log.action.replace(/_/g, " ")}</span>
+                    <span className="text-xs font-bold text-soft">{log.action.replace(/_/g, " ")}</span>
                   </div>
-                  {log.details && <p className="text-xs text-muted-foreground dark:text-muted-foreground">{log.details}</p>}
+                  {log.details && <p className="text-xs text-muted-foreground">{log.details}</p>}
                   <p className="text-[10px] text-muted-foreground mt-1">{new Date(log.created_at).toLocaleString()}</p>
                 </div>
               </div>
@@ -526,12 +526,12 @@ export function EloAuditPanel() {
 
       {/* Recalculate Confirmation Modal */}
       <Dialog open={showRecalcModal} onOpenChange={setShowRecalcModal}>
-        <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-800 text-white rounded-2xl p-6">
+        <DialogContent className="sm:max-w-md bg-card border border-border text-foreground rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-amber-400 font-black text-lg">
-              <AlertTriangle className="w-5 h-5 text-amber-400" /> Recalculate System ELOs?
+            <DialogTitle className="flex items-center gap-2 text-warning font-black text-lg">
+              <AlertTriangle className="w-5 h-5 text-warning" /> Recalculate System ELOs?
             </DialogTitle>
-            <DialogDescription className="text-slate-300 text-sm mt-2">
+            <DialogDescription className="text-soft text-sm mt-2">
               Are you sure? This will wipe all current ELO ratings and recompute them sequentially from the very first match.
             </DialogDescription>
           </DialogHeader>
@@ -539,14 +539,14 @@ export function EloAuditPanel() {
             <Button
               variant="outline"
               onClick={() => setShowRecalcModal(false)}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl"
+              className="border-border-strong text-soft hover:bg-muted hover:text-foreground rounded-xl"
             >
               Cancel
             </Button>
             <Button
               onClick={executeRecalculate}
               disabled={recalcLoading}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl flex items-center gap-2"
+              className="bg-warning hover:bg-warning/90 text-warning-foreground font-bold rounded-xl flex items-center gap-2"
             >
               {recalcLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
               Confirm Recalculation
@@ -651,7 +651,7 @@ function SnapshotTab({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name or department..."
-            className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+            className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-card border border-border-strong text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -663,12 +663,12 @@ function SnapshotTab({
         {/* Filter button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition border ${showFilters ? "bg-primary text-primary-foreground border-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary/50"}`}
+          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition border ${showFilters ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border-strong text-muted-foreground hover:border-primary/50"}`}
         >
           <Filter className="w-3.5 h-3.5" />
           Filters
           {activeFilterCount > 0 && (
-            <span className="ml-0.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+            <span className="ml-0.5 w-5 h-5 rounded-full bg-danger text-danger-foreground text-[10px] font-black flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
@@ -678,21 +678,21 @@ function SnapshotTab({
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary/50 transition"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-card border border-border-strong text-muted-foreground hover:border-primary/50 transition"
           >
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
           {showExportMenu && (
-            <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden min-w-[180px]">
-              <button onClick={() => handleExport("excel")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition">
-                <FileSpreadsheet className="w-4 h-4 text-green-500" /> Excel (.xlsx)
+            <div className="absolute right-0 top-full mt-1 z-20 bg-card border border-border-strong rounded-xl shadow-xl overflow-hidden min-w-[180px]">
+              <button onClick={() => handleExport("excel")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition">
+                <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (.xlsx)
               </button>
-              <button onClick={() => handleExport("pdf")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition border-t border-slate-100 dark:border-slate-800">
-                <FileText className="w-4 h-4 text-rose-500" /> PDF Document
+              <button onClick={() => handleExport("pdf")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition border-t border-border">
+                <FileText className="w-4 h-4 text-danger" /> PDF Document
               </button>
-              <button onClick={() => handleExport("image")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition border-t border-slate-100 dark:border-slate-800">
-                <FileImage className="w-4 h-4 text-blue-500" /> Image (.png)
+              <button onClick={() => handleExport("image")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition border-t border-border">
+                <FileImage className="w-4 h-4 text-info" /> Image (.png)
               </button>
             </div>
           )}
@@ -700,9 +700,9 @@ function SnapshotTab({
       </div>
 
       {/* ELO Formula Explainer */}
-      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-4">
+      <div className="bg-info/10 border border-info/30 rounded-xl p-4 space-y-4">
         <div>
-          <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+          <h4 className="text-xs font-black text-info mb-2 uppercase tracking-wider flex items-center gap-1.5">
             <InfoModal 
               title="Overall ELO Formula" 
               items={[
@@ -713,14 +713,14 @@ function SnapshotTab({
             />
             Overall ELO Calculation Formula
           </h4>
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-3 font-mono text-xs border border-blue-100 dark:border-slate-800 flex flex-col gap-1.5 overflow-x-auto text-slate-700 dark:text-slate-300">
-            <p><span className="text-blue-600 dark:text-blue-400 font-bold">Overall ELO</span> = (Singles + Doubles + Mixed) / 3</p>
-            <p className="text-[10px] text-muted-foreground mt-1 border-t border-slate-100 dark:border-slate-800 pt-1.5">* Missing formats default to 1200.</p>
+          <div className="bg-card rounded-lg p-3 font-mono text-xs border border-border flex flex-col gap-1.5 overflow-x-auto text-soft">
+            <p><span className="text-info font-bold">Overall ELO</span> = (Singles + Doubles + Mixed) / 3</p>
+            <p className="text-[10px] text-muted-foreground mt-1 border-t border-border pt-1.5">* Missing formats default to 1200.</p>
           </div>
         </div>
         
         <div>
-          <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+          <h4 className="text-xs font-black text-info mb-2 uppercase tracking-wider flex items-center gap-1.5">
             <InfoModal 
               title="Win Probability Formula" 
               items={[
@@ -730,16 +730,16 @@ function SnapshotTab({
             />
             Match Win Probability Formula
           </h4>
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-3 font-mono text-xs border border-blue-100 dark:border-slate-800 flex flex-col gap-1.5 overflow-x-auto text-slate-700 dark:text-slate-300">
-            <p><span className="text-blue-600 dark:text-blue-400 font-bold">P1 Win %</span> = 1 / (1 + 10 ^ ((P2_Elo - P1_Elo) / 400)) * 100</p>
-            <p className="text-[10px] text-muted-foreground mt-1 border-t border-slate-100 dark:border-slate-800 pt-1.5">* Equal ratings evaluate to exactly 50% probability.</p>
+          <div className="bg-card rounded-lg p-3 font-mono text-xs border border-border flex flex-col gap-1.5 overflow-x-auto text-soft">
+            <p><span className="text-info font-bold">P1 Win %</span> = 1 / (1 + 10 ^ ((P2_Elo - P1_Elo) / 400)) * 100</p>
+            <p className="text-[10px] text-muted-foreground mt-1 border-t border-border pt-1.5">* Equal ratings evaluate to exactly 50% probability.</p>
           </div>
         </div>
       </div>
 
       {/* Filter panel (collapsible) */}
       {showFilters && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+        <div className="bg-card border border-border-strong rounded-2xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
           {/* Gender */}
           <div>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Gender</p>
@@ -748,7 +748,7 @@ function SnapshotTab({
                 <button
                   key={g}
                   onClick={() => setGenderFilter(g)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:text-foreground"}`}
                 >
                   {g === "all" ? "All" : g}
                 </button>
@@ -762,15 +762,15 @@ function SnapshotTab({
               {(["overall", "singles", "doubles", "mixed"] as const).map(f => {
                 const colors: Record<string, string> = {
                   overall: "bg-primary text-primary-foreground",
-                  singles: "bg-sky-500 text-white",
-                  doubles: "bg-violet-500 text-white",
-                  mixed: "bg-amber-500 text-white",
+                  singles: "bg-individual text-individual-foreground",
+                  doubles: "bg-team text-team-foreground",
+                  mixed: "bg-warning text-warning-foreground",
                 };
                 return (
                   <button
                     key={f}
                     onClick={() => setFormatSort(f)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${formatSort === f ? `${colors[f]} shadow-sm` : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${formatSort === f ? `${colors[f]} shadow-sm` : "bg-muted text-muted-foreground hover:text-foreground"}`}
                   >
                     {f.charAt(0).toUpperCase() + f.slice(1)}
                   </button>
@@ -782,7 +782,7 @@ function SnapshotTab({
           {activeFilterCount > 0 && (
             <button
               onClick={() => { setGenderFilter("all"); setFormatSort("overall"); setSearchQuery(""); }}
-              className="text-[10px] font-bold text-rose-500 hover:text-rose-400 uppercase tracking-wider transition"
+              className="text-[10px] font-bold text-danger hover:text-danger/80 uppercase tracking-wider transition"
             >
               ✕ Clear all filters
             </button>
@@ -814,28 +814,28 @@ function SnapshotTab({
             onClick={() => loadPlayerHistory(p)}
             className={`${cardCls} flex items-center gap-3 w-full text-left hover:border-primary hover:shadow-md transition-all group`}
           >
-            <span className={`w-7 text-center text-xs font-black shrink-0 ${i < 3 ? "text-amber-500" : "text-muted-foreground"}`}>#{i + 1}</span>
+            <span className={`w-7 text-center text-xs font-black shrink-0 ${i < 3 ? "text-warning" : "text-muted-foreground"}`}>#{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-bold text-slate-800 dark:text-foreground text-sm truncate group-hover:text-primary transition-colors">{p.full_name}</p>
+                <p className="font-bold text-foreground text-sm truncate group-hover:text-primary transition-colors">{p.full_name}</p>
                 {p.gender && (
-                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full ${p.gender === "Male" ? "bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400" : "bg-pink-100 dark:bg-pink-950/30 text-pink-600 dark:text-pink-400"}`}>
+                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full ${p.gender === "Male" ? "bg-info/10 text-info" : "bg-individual/10 text-individual"}`}>
                     {p.gender === "Male" ? "M" : "F"}
                   </span>
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground">{p.wins}W {p.losses}L · {winRate}% WR{p.department ? ` · ${p.department}` : ""}</p>
               <div className="flex gap-1.5 mt-1 flex-wrap">
-                {p.singles_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "singles" ? "bg-sky-500 text-white ring-2 ring-sky-300 dark:ring-sky-700" : "bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400"}`}>S: {p.singles_elo} ({p.singles_matches_played}M)</span>}
-                {p.doubles_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "doubles" ? "bg-violet-500 text-white ring-2 ring-violet-300 dark:ring-violet-700" : "bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400"}`}>D: {p.doubles_elo} ({p.doubles_matches_played}M)</span>}
-                {p.mixed_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "mixed" ? "bg-amber-500 text-white ring-2 ring-amber-300 dark:ring-amber-700" : "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"}`}>M: {p.mixed_elo} ({p.mixed_matches_played}M)</span>}
+                {p.singles_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "singles" ? "bg-info text-info-foreground ring-2 ring-info" : "bg-info/10 text-info"}`}>S: {p.singles_elo} ({p.singles_matches_played}M)</span>}
+                {p.doubles_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "doubles" ? "bg-individual text-individual-foreground ring-2 ring-individual" : "bg-individual/10 text-individual"}`}>D: {p.doubles_elo} ({p.doubles_matches_played}M)</span>}
+                {p.mixed_elo != null && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${formatSort === "mixed" ? "bg-warning text-warning-foreground ring-2 ring-warning" : "bg-warning/10 text-warning"}`}>M: {p.mixed_elo} ({p.mixed_matches_played}M)</span>}
               </div>
             </div>
             <div className="text-right shrink-0">
-              <p className="font-black text-primary dark:text-primary text-base">{displayElo}</p>
+              <p className="font-black text-primary text-base">{displayElo}</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{formatLabel}</p>
             </div>
-            <TrendingUp className="w-4 h-4 text-slate-300 dark:text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+            <TrendingUp className="w-4 h-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
           </button>
         );
       })}

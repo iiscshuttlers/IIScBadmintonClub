@@ -175,8 +175,8 @@ export default defineConfig(({ command }) => {
           name: "IISc Shuttlers",
           short_name: "Shuttlers",
           description: "IISc Badminton Club Application",
-          theme_color: "#10b981",
-          background_color: "#ffffff",
+          theme_color: "#0a1020", // Floodlight (default theme) background; the app updates the meta tag per theme
+          background_color: "#0a1020",
           display: "fullscreen",
           start_url: isGithubPages ? "/IIScBadmintonClub/" : "/",
           scope: isGithubPages ? "/IIScBadmintonClub/" : "/",

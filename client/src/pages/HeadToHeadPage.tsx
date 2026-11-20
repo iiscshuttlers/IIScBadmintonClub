@@ -108,11 +108,11 @@ export default function HeadToHeadPage() {
   const note = result ? sampleNote(result.sample) : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-12">
+    <div className="min-h-screen bg-background pb-12">
       <div className="container mx-auto max-w-3xl px-4 pt-5 space-y-4">
         <h1 className="text-2xl font-black">Head-to-head</h1>
 
-        <div role="radiogroup" aria-label="Compare" className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+        <div role="radiogroup" aria-label="Compare" className="inline-flex rounded-xl border border-border-strong p-1">
           {(["players", "pairs"] as const).map((m) => (
             <button
               key={m}
@@ -136,7 +136,7 @@ export default function HeadToHeadPage() {
           <button
             type="button"
             onClick={() => set({ a: bIds.join(",") || null, b: aIds.join(",") || null })}
-            className="self-center justify-self-center inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-slate-200 dark:border-slate-700"
+            className="self-center justify-self-center inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-border-strong"
             aria-label="Swap sides"
           >
             <ArrowLeftRight className="w-4 h-4" aria-hidden />
@@ -154,7 +154,7 @@ export default function HeadToHeadPage() {
               key={d ?? "all"}
               onClick={() => set({ cat: d })}
               aria-pressed={discipline === d}
-              className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border ${discipline === d ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700"}`}
+              className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border ${discipline === d ? "bg-primary text-primary-foreground border-primary" : "border-border-strong"}`}
               title={d ? DISCIPLINE_LABELS[d as Discipline] : "All disciplines"}
             >
               {d ?? "All"}
@@ -169,7 +169,7 @@ export default function HeadToHeadPage() {
               key={value}
               onClick={() => set({ period: value === "all" ? null : value })}
               aria-pressed={period === value}
-              className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border ${period === value ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700"}`}
+              className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border ${period === value ? "bg-primary text-primary-foreground border-primary" : "border-border-strong"}`}
             >
               {value === "all" ? "All time" : value === "12m" ? "Last 12 months" : "Last 3 years"}
             </button>
@@ -189,13 +189,13 @@ export default function HeadToHeadPage() {
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> Loading meetings…
           </p>
         ) : data.isError || !result ? (
-          <p role="alert" className="text-sm text-[var(--danger)]">
+          <p role="alert" className="text-sm text-danger">
             Couldn't load match history.{" "}
             <button className="underline font-bold" onClick={() => void data.refetch()}>Try again</button>
           </p>
         ) : (
           <>
-            <section aria-label="Summary" className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5">
+            <section aria-label="Summary" className="rounded-3xl bg-card border border-border p-5">
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
                 <p className="font-black break-words">{sideName(aIds)}</p>
                 <p className="text-3xl font-black tabular-nums" aria-label={`${result.aWins} wins to ${result.bWins}`}>
@@ -211,14 +211,14 @@ export default function HeadToHeadPage() {
                   ` · walkovers ${result.walkovers.aWon}–${result.walkovers.bWon} (not counted)`}
                 {result.excluded > 0 && ` · ${result.excluded} not counted`}
               </p>
-              {note && <p className="mt-1 text-center text-xs font-bold text-[var(--warning)]">{note}</p>}
+              {note && <p className="mt-1 text-center text-xs font-bold text-warning">{note}</p>}
               {result.formA.length > 0 && (
                 <p className="mt-3 text-center text-xs">
                   <span className="text-muted-foreground">Last {result.formA.length} meetings for {sideName(aIds)}: </span>
                   {result.formA.map((f, i) => (
                     <span
                       key={i}
-                      className={`inline-block mx-0.5 w-6 rounded font-black ${f === "W" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"}`}
+                      className={`inline-block mx-0.5 w-6 rounded font-black ${f === "W" ? "bg-success/20 text-success" : "bg-danger/20 text-danger"}`}
                       aria-label={f === "W" ? "won" : "lost"}
                     >
                       {f}
@@ -227,12 +227,12 @@ export default function HeadToHeadPage() {
                 </p>
               )}
               {data.data?.truncated && (
-                <p className="mt-2 text-center text-xs text-[var(--warning)]">Very long history: only the first 1000 matches of each kind were checked.</p>
+                <p className="mt-2 text-center text-xs text-warning">Very long history: only the first 1000 matches of each kind were checked.</p>
               )}
             </section>
 
             {result.together && (
-              <section aria-label="Played together" className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 text-sm">
+              <section aria-label="Played together" className="rounded-2xl border border-border-strong p-4 text-sm">
                 <p className="font-bold">As partners</p>
                 {result.together.played === 0 ? (
                   <p className="text-muted-foreground">No counted matches together{discipline ? ` in ${discipline}` : ""}.</p>
@@ -259,7 +259,7 @@ export default function HeadToHeadPage() {
               )}
             </section>
 
-            <details className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 text-sm">
+            <details className="rounded-2xl border border-border-strong p-4 text-sm">
               <summary className="cursor-pointer font-bold inline-flex items-center gap-1.5 min-h-[44px]">
                 <Info className="w-4 h-4" aria-hidden /> What is counted?
               </summary>
@@ -297,7 +297,7 @@ function MeetingRow({ m, aName }: { m: ComparisonMeeting; aName: string }) {
       {m.row.score && <span className="block font-mono text-sm tabular-nums">{m.row.score}</span>}
     </>
   );
-  const cls = "block rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3";
+  const cls = "block rounded-2xl border border-border bg-card p-3";
   return (
     <li>
       {m.row.source === "tournament" && m.row.tournamentId ? (

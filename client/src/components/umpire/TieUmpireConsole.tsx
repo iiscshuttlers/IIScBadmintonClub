@@ -37,22 +37,22 @@ interface Props {
 // Consistent distinctive colors for playing order badges (#1, #2, #3, ...)
 // Both teams proposing the same number get the same color badge for easy matching!
 const ORDER_COLOR_MAP: Record<number, { bg: string; text: string; border: string }> = {
-  1: { bg: 'bg-emerald-500/15 dark:bg-emerald-500/20', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/30' },
-  2: { bg: 'bg-sky-500/15 dark:bg-sky-500/20', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-500/30' },
-  3: { bg: 'bg-violet-500/15 dark:bg-violet-500/20', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-500/30' },
-  4: { bg: 'bg-amber-500/15 dark:bg-amber-500/20', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-500/30' },
-  5: { bg: 'bg-rose-500/15 dark:bg-rose-500/20', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-500/30' },
-  6: { bg: 'bg-teal-500/15 dark:bg-teal-500/20', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-500/30' },
-  7: { bg: 'bg-indigo-500/15 dark:bg-indigo-500/20', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-500/30' },
-  8: { bg: 'bg-fuchsia-500/15 dark:bg-fuchsia-500/20', text: 'text-fuchsia-700 dark:text-fuchsia-300', border: 'border-fuchsia-500/30' },
+  1: { bg: 'bg-success/20', text: 'text-success', border: 'border-success/30' },
+  2: { bg: 'bg-info/20', text: 'text-info', border: 'border-info/30' },
+  3: { bg: 'bg-individual/20', text: 'text-individual', border: 'border-individual/30' },
+  4: { bg: 'bg-warning/20', text: 'text-warning', border: 'border-warning/30' },
+  5: { bg: 'bg-danger/20', text: 'text-danger', border: 'border-danger/30' },
+  6: { bg: 'bg-team/20', text: 'text-team', border: 'border-team/30' },
+  7: { bg: 'bg-info/20', text: 'text-info', border: 'border-info/30' },
+  8: { bg: 'bg-individual/20', text: 'text-individual', border: 'border-individual/30' },
 };
 
 function getPlayingOrderColor(orderNum?: number | null) {
-  if (!orderNum) return { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-300 dark:border-slate-700' };
+  if (!orderNum) return { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border-strong' };
   return ORDER_COLOR_MAP[orderNum] || {
-    bg: 'bg-cyan-500/15 dark:bg-cyan-500/20',
-    text: 'text-cyan-700 dark:text-cyan-300',
-    border: 'border-cyan-500/30'
+    bg: 'bg-accent/20',
+    text: 'text-accent',
+    border: 'border-accent/30'
   };
 }
 
@@ -501,10 +501,10 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-sm space-y-6">
+    <div className="bg-card rounded-3xl border border-border p-5 sm:p-6 shadow-sm space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase">
@@ -512,26 +512,26 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
             </span>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
               tie.state === 'IN_PROGRESS' 
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                ? 'bg-success/20 text-success'
                 : isBothCaptainsLocked
-                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                  ? 'bg-warning/20 text-warning'
+                  : 'bg-muted text-soft'
             }`}>
               {isBothCaptainsLocked && tie.state !== 'IN_PROGRESS' ? 'Awaiting Official Reveal' : tie.state}
             </span>
           </div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2 flex-wrap">
+          <h2 className="text-xl font-black text-foreground mt-1 flex items-center gap-2 flex-wrap">
             <ClickableTeamName 
               team={{ id: tie.team_a_id, name: tie.team_a?.name || "Team A", short_name: tie.team_a?.short_name, tournament_id: tournament?.id }} 
               className="text-xl font-black"
             />
-            <span className="text-slate-400 font-normal text-sm">vs</span>
+            <span className="text-muted-foreground font-normal text-sm">vs</span>
             <ClickableTeamName 
               team={{ id: tie.team_b_id, name: tie.team_b?.name || "Team B", short_name: tie.team_b?.short_name, tournament_id: tournament?.id }} 
               className="text-xl font-black"
             />
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Review secret lineups, compare proposed playing orders, arbitrate differences, and reveal rubbers.
           </p>
         </div>
@@ -542,9 +542,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
             onClick={() => setShowAddDeciderModal(true)}
             variant="outline"
             size="sm"
-            className="rounded-xl font-bold text-xs flex items-center gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+            className="rounded-xl font-bold text-xs flex items-center gap-1.5 border-warning/40 text-warning hover:bg-warning/10"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+            <ShieldAlert className="w-3.5 h-3.5 text-warning" />
             + Add Tiebreaker Decider (XD2/MS2)
           </Button>
 
@@ -570,9 +570,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Official Lineup Submission Status Banner */}
       {(!tie.lineup_locked_a || !tie.lineup_locked_b) ? (
-        <div className="p-4 rounded-2xl border bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 text-amber-950 dark:text-amber-200">
+        <div className="p-4 rounded-2xl border bg-warning/10 border-warning/35 text-warning">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             <div>
               <h4 className="font-black text-sm">
                 {!tie.lineup_locked_a && !tie.lineup_locked_b
@@ -594,9 +594,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
           </div>
         </div>
       ) : (
-        <div className="p-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-3.5 rounded-2xl border bg-success/10 border-success/35 text-success flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
             <div>
               <h4 className="font-black text-sm">Both Teams Have Locked Their Lineups</h4>
               <p className="text-xs opacity-80 mt-0.5">Secret rosters are locked by both captains. Ready for official arbitration and reveal.</p>
@@ -615,9 +615,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Rule Violations Warning Banner for Official */}
       {totalRuleViolations > 0 && (
-        <div className="p-4 rounded-2xl border bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-950 dark:text-rose-200">
+        <div className="p-4 rounded-2xl border bg-danger/10 border-danger/35 text-danger">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
             <div className="space-y-1.5 flex-1">
               <h4 className="font-black text-sm">
                 Lineup Rule Violations Detected ({totalRuleViolations})
@@ -627,8 +627,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
                 {validationA.errors.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-rose-200 dark:border-rose-900/40">
-                    <span className="font-black text-rose-700 dark:text-rose-300 block mb-1">
+                  <div className="p-2.5 rounded-xl bg-card/60 border border-danger/25">
+                    <span className="font-black text-danger block mb-1">
                       {tie.team_a?.name || "Team A"}:
                     </span>
                     <ul className="list-disc list-inside space-y-0.5 opacity-90">
@@ -639,8 +639,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                   </div>
                 )}
                 {validationB.errors.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-rose-200 dark:border-rose-900/40">
-                    <span className="font-black text-rose-700 dark:text-rose-300 block mb-1">
+                  <div className="p-2.5 rounded-xl bg-card/60 border border-danger/25">
+                    <span className="font-black text-danger block mb-1">
                       {tie.team_b?.name || "Team B"}:
                     </span>
                     <ul className="list-disc list-inside space-y-0.5 opacity-90">
@@ -660,15 +660,15 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       <div className={`p-4 rounded-2xl border transition-all ${
         hasOrderDiscrepancy
-          ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 text-amber-950 dark:text-amber-200'
-          : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-200'
+          ? 'bg-warning/10 border-warning/35 text-warning'
+          : 'bg-success/10 border-success/35 text-success'
       }`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-2.5">
             {hasOrderDiscrepancy ? (
-              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             ) : (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
             )}
             <div>
               <h4 className="font-black text-sm">
@@ -696,14 +696,14 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Playing Order Arbitration Editor (when toggled) */}
       {isEditingPlayingOrder && (
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in">
+        <div className="p-4 rounded-2xl bg-muted/40 border border-border-strong space-y-4 animate-in fade-in">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div>
-              <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+              <h4 className="font-black text-sm text-foreground flex items-center gap-1.5">
                 <ArrowUpDown className="w-4 h-4 text-primary" /> Arbitrate Official Playing Order
               </h4>
-              <p className="text-xs text-slate-500 mt-0.5">
-                <GripVertical className="w-3.5 h-3.5 inline-block mr-1 text-slate-400" />
+              <p className="text-xs text-muted-foreground mt-0.5">
+                <GripVertical className="w-3.5 h-3.5 inline-block mr-1 text-muted-foreground" />
                 Drag the rows to reorder the match sequence. The numbers update automatically.
               </p>
             </div>
@@ -752,15 +752,15 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                   onDragOver={(e) => handleDragOver(e, idx)}
                   onDrop={() => handleDrop(idx)}
                   onDragEnd={handleDragEnd}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none ${
                     isDraggingOver
                       ? 'border-primary/60 ring-2 ring-primary/20 shadow-md bg-primary/5'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm'
+                      : 'border-border hover:border-border-strong hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     {/* Drag handle */}
-                    <div className="text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-400 transition-colors shrink-0">
+                    <div className="text-muted-foreground hover:text-muted-foreground/80 transition-colors shrink-0">
                       <GripVertical className="w-4 h-4" />
                     </div>
 
@@ -769,8 +769,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                       #{playingPos}
                     </span>
 
-                    <span className="font-black text-xs text-slate-800 dark:text-slate-200">{rubber.label}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">{rubber.category}</span>
+                    <span className="font-black text-xs text-soft">{rubber.label}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase px-1.5 py-0.5 rounded bg-muted">{rubber.category}</span>
 
                     {/* Proposed order comparison */}
                     <div className="hidden sm:flex items-center gap-1.5 text-xs ml-1">
@@ -789,7 +789,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                         );
                       })()}
                       {item?.isDiscrepant && (
-                        <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-black uppercase text-warning bg-warning/25 border border-warning/40 px-2 py-0.5 rounded-full">
                           Differs
                         </span>
                       )}
@@ -798,7 +798,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
                   {/* Official order indicator (read-only, driven by position) */}
                   <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                    <span className="text-[10px] font-bold text-slate-400">Official Match:</span>
+                    <span className="text-[10px] font-bold text-muted-foreground">Official Match:</span>
                     <span className="px-2.5 py-1 text-xs font-mono font-black border border-primary/30 rounded-lg bg-primary/5 text-primary">
                       #{playingPos}
                     </span>
@@ -808,7 +808,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
             })}
           </div>
 
-          <p className="text-[11px] text-slate-400 text-center">
+          <p className="text-[11px] text-muted-foreground text-center">
             Drag rows up or down to reorder · Click <strong>Save Official Sequence</strong> to confirm
           </p>
         </div>
@@ -827,30 +827,30 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
               key={rubber.order}
               className={`p-4 rounded-2xl border transition-all ${
                 isRevealed 
-                  ? 'bg-emerald-50/20 border-emerald-300 dark:border-emerald-800/70' 
-                  : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
+                  ? 'bg-success/5 border-success/40' 
+                  : 'bg-muted/40 border-border'
               }`}
             >
               {/* Rubber Title bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 font-mono font-black text-xs">
+                  <span className="px-2 py-0.5 rounded-lg bg-muted-strong font-mono font-black text-xs">
                     Match #{matchOrder}
                   </span>
                   <span className="font-black text-sm text-primary">{rubber.label}</span>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-0.5 rounded bg-card border border-border">
                     {rubber.category}
                   </span>
 
                   {(rubber.is_decider_tiebreaker || (match as any)?.is_decider_tiebreaker) && (
-                    <span className="text-[10px] uppercase font-black text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                    <span className="text-[10px] uppercase font-black text-gold bg-gold/20 px-2 py-0.5 rounded-full border border-gold/40">
                       Golden Decider
                     </span>
                   )}
 
                   {/* Proposed order summary */}
                   <div className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono ml-2">
-                    <span className="text-slate-400">Proposed:</span>
+                    <span className="text-muted-foreground">Proposed:</span>
                     {(() => {
                       const colorA = getPlayingOrderColor(item.orderA);
                       const colorB = getPlayingOrderColor(item.orderB);
@@ -859,7 +859,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                           <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${colorA.bg} ${colorA.text} ${colorA.border}`}>
                             {tie.team_a?.short_name || 'A'} #{item.orderA}
                           </span>
-                          <span className="text-slate-400">/</span>
+                          <span className="text-muted-foreground">/</span>
                           <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${colorB.bg} ${colorB.text} ${colorB.border}`}>
                             {tie.team_b?.short_name || 'B'} #{item.orderB}
                           </span>
@@ -871,7 +871,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
                 <div className="flex items-center gap-2">
                   {isRevealed ? (
-                    <span className="text-xs font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span className="text-xs font-black text-success bg-success/20 px-2.5 py-1 rounded-full flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Revealed
                     </span>
                   ) : (rubber.is_decider_tiebreaker || (match as any)?.is_decider_tiebreaker) ? (
@@ -880,12 +880,12 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                         size="sm"
                         onClick={() => revealDeciderMutation.mutate()}
                         disabled={revealDeciderMutation.isPending}
-                        className="rounded-lg text-xs font-black flex items-center gap-1 h-7 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm transition"
+                        className="rounded-lg text-xs font-black flex items-center gap-1 h-7 px-3 bg-warning hover:bg-warning/90 text-warning-foreground shadow-sm transition"
                       >
                         <Eye className="w-3.5 h-3.5" /> Reveal Decider Rubber
                       </Button>
                     ) : (
-                      <span className="text-[11px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg">
+                      <span className="text-[11px] font-bold text-warning bg-warning/15 px-2.5 py-1 rounded-lg">
                         Awaiting Captains Lineup
                       </span>
                     )
@@ -895,7 +895,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                       variant="outline"
                       onClick={() => handleReveal(rubber.order)}
                       disabled={revealMutation.isPending}
-                      className="rounded-lg text-xs font-bold flex items-center gap-1 h-7 px-3 bg-white dark:bg-slate-900 hover:bg-primary hover:text-primary-foreground transition"
+                      className="rounded-lg text-xs font-bold flex items-center gap-1 h-7 px-3 bg-card hover:bg-primary hover:text-primary-foreground transition"
                     >
                       <Eye className="w-3.5 h-3.5" /> Reveal Rubber #{rubber.order}
                     </Button>
@@ -907,9 +907,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 {/* Team A */}
-                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="p-3 bg-card rounded-xl border border-border space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500">{tie.team_a?.name || "Team A"}</span>
+                    <span className="text-xs font-bold text-muted-foreground">{tie.team_a?.name || "Team A"}</span>
                     {(() => {
                       const colorA = getPlayingOrderColor(item.orderA);
                       return (
@@ -927,7 +927,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                         <button
                           type="button"
                           onClick={() => setModifyingRubber({ rubber, side: 'A', pos: 1 })}
-                          className="text-[10px] text-rose-500 hover:underline font-bold flex items-center gap-0.5"
+                          className="text-[10px] text-danger hover:underline font-bold flex items-center gap-0.5"
                         >
                           <Edit3 className="w-3 h-3" /> Emergency Replace
                         </button>
@@ -940,7 +940,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                           <button
                             type="button"
                             onClick={() => setModifyingRubber({ rubber, side: 'A', pos: 2 })}
-                            className="text-[10px] text-rose-500 hover:underline font-bold flex items-center gap-0.5"
+                            className="text-[10px] text-danger hover:underline font-bold flex items-center gap-0.5"
                           >
                             <Edit3 className="w-3 h-3" /> Emergency Replace
                           </button>
@@ -951,9 +951,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 </div>
 
                 {/* Team B */}
-                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="p-3 bg-card rounded-xl border border-border space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500">{tie.team_b?.name || "Team B"}</span>
+                    <span className="text-xs font-bold text-muted-foreground">{tie.team_b?.name || "Team B"}</span>
                     {(() => {
                       const colorB = getPlayingOrderColor(item.orderB);
                       return (
@@ -971,7 +971,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                         <button
                           type="button"
                           onClick={() => setModifyingRubber({ rubber, side: 'B', pos: 1 })}
-                          className="text-[10px] text-rose-500 hover:underline font-bold flex items-center gap-0.5"
+                          className="text-[10px] text-danger hover:underline font-bold flex items-center gap-0.5"
                         >
                           <Edit3 className="w-3 h-3" /> Emergency Replace
                         </button>
@@ -984,7 +984,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                           <button
                             type="button"
                             onClick={() => setModifyingRubber({ rubber, side: 'B', pos: 2 })}
-                            className="text-[10px] text-rose-500 hover:underline font-bold flex items-center gap-0.5"
+                            className="text-[10px] text-danger hover:underline font-bold flex items-center gap-0.5"
                           >
                             <Edit3 className="w-3 h-3" /> Emergency Replace
                           </button>
@@ -998,10 +998,10 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
               {/* Revealer Metadata footer */}
               {isRevealed && (revealerName || revealTimestamp) && (
-                <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <div className="mt-2.5 pt-2 border-t border-border text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>
-                    Revealed by Official <strong className="text-slate-700 dark:text-slate-300">{revealerName || "Referee / Umpire"}</strong>
+                    Revealed by Official <strong className="text-soft">{revealerName || "Referee / Umpire"}</strong>
                     {revealTimestamp && ` at ${format(new Date(revealTimestamp), 'hh:mm a, MMM d')}`}
                   </span>
                 </div>
@@ -1013,26 +1013,26 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Emergency Modification Modal with Dual-Captain Agreement */}
       {modifyingRubber && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-media/75 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-border shadow-2xl p-5 space-y-4">
             <div>
-              <h3 className="font-black text-base flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <h3 className="font-black text-base flex items-center gap-2 text-danger">
                 <AlertTriangle className="w-5 h-5" /> Emergency Player Substitution
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Replacing player in {modifyingRubber.rubber.label} ({modifyingRubber.side === 'A' ? tie.team_a?.name : tie.team_b?.name}). Permitted only in extreme conditions (acute injury/illness) with mandatory consent from both captains.
               </p>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
                   Select Substitute Player (Active Roster)
                 </label>
                 <select
                   value={replacementPlayerId}
                   onChange={(e) => setReplacementPlayerId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   <option value="">Choose an active roster member</option>
                   {(modifyingRubber.side === 'A' ? teamAMembers : teamBMembers).map((m: any) => (
@@ -1044,19 +1044,19 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                  Reason for Emergency Replacement <span className="text-rose-500">*</span>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">
+                  Reason for Emergency Replacement <span className="text-danger">*</span>
                 </label>
                 <textarea
                   value={modificationReason}
                   onChange={(e) => setModificationReason(e.target.value)}
                   placeholder="e.g. Player sustained ankle sprain during warm-up; both team captains notified and agreed."
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs font-medium resize-none h-20 outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full bg-muted border border-border-strong rounded-xl p-3 text-xs font-medium resize-none h-20 outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
               {/* Dual Captain Agreement Verification Checkbox */}
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-warning/10 border border-warning/30">
                 <input
                   type="checkbox"
                   id="bothCaptainsAgreed"
@@ -1064,7 +1064,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                   onChange={(e) => setBothCaptainsAgreed(e.target.checked)}
                   className="mt-0.5 rounded text-primary focus:ring-primary h-4 w-4"
                 />
-                <label htmlFor="bothCaptainsAgreed" className="text-xs text-amber-900 dark:text-amber-200 font-bold leading-snug cursor-pointer">
+                <label htmlFor="bothCaptainsAgreed" className="text-xs text-warning font-bold leading-snug cursor-pointer">
                   Both Captains Agreed: I confirm that both Captain of {tie.team_a?.name || "Team A"} and Captain of {tie.team_b?.name || "Team B"} have formally agreed to this emergency substitution.
                 </label>
               </div>
@@ -1087,7 +1087,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 size="sm"
                 onClick={handleEmergencyModify}
                 disabled={isModifying || !bothCaptainsAgreed || !replacementPlayerId || !modificationReason.trim()}
-                className="rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50"
+                className="rounded-xl font-bold text-xs bg-danger hover:bg-danger/90 text-danger-foreground disabled:opacity-50"
               >
                 {isModifying ? "Submitting..." : "Authorize & Log Substitution"}
               </Button>
@@ -1098,48 +1098,48 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Audit Trail Section */}
       {audits.length > 0 && (
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
-          <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+        <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-3">
+          <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <History className="w-4 h-4 text-primary" />
             Lineup, Reveal &amp; Substitution Audit Trail
           </h4>
 
           <div className="space-y-2">
             {audits.map((a: any) => (
-              <div key={a.id} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div key={a.id} className="p-2.5 rounded-xl bg-card border border-border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${
                     a.action_type === 'PLAYER_SUBSTITUTED' 
-                      ? 'bg-rose-500' 
+                      ? 'bg-danger' 
                       : a.action_type === 'ORDER_CHANGED'
-                        ? 'bg-blue-500'
-                        : 'bg-emerald-500'
+                        ? 'bg-info'
+                        : 'bg-success'
                   }`} />
                   <div>
                     {a.action_type === 'PLAYER_SUBSTITUTED' ? (
                       <div>
                         <span>
-                          <strong className="text-slate-800 dark:text-slate-200">{a.orig_player?.full_name || "Player"}</strong> was replaced by <strong className="text-primary">{a.repl_player?.full_name || "Substitute"}</strong> in Rubber #{a.rubber_order}
+                          <strong className="text-soft">{a.orig_player?.full_name || "Player"}</strong> was replaced by <strong className="text-primary">{a.repl_player?.full_name || "Substitute"}</strong> in Rubber #{a.rubber_order}
                         </span>
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">
+                        <div className="text-[10px] text-warning font-bold mt-0.5">
                           ✓ Both captains agreed · Authorized by {a.referee?.full_name || "Official"}
                         </div>
                       </div>
                     ) : a.action_type === 'ORDER_CHANGED' ? (
                       <div>
                         <span>Playing order arbitrated and updated</span>
-                        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-0.5">
+                        <div className="text-[10px] text-info font-bold mt-0.5">
                           Authorized by {a.referee?.full_name || "Official"}
                         </div>
                       </div>
                     ) : (
                       <span>Rubber #{a.rubber_order || "All"} revealed by {a.referee?.full_name || "Official"}</span>
                     )}
-                    {a.reason && <div className="text-[10px] text-slate-400 italic mt-0.5">Reason: {a.reason}</div>}
+                    {a.reason && <div className="text-[10px] text-muted-foreground italic mt-0.5">Reason: {a.reason}</div>}
                   </div>
                 </div>
 
-                <div className="text-[10px] text-slate-400 text-right shrink-0">
+                <div className="text-[10px] text-muted-foreground text-right shrink-0">
                   <div className="font-mono">{format(new Date(a.created_at), 'hh:mm a, MMM d')}</div>
                 </div>
               </div>
@@ -1150,23 +1150,23 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       {/* Add Decider Modal */}
       {showAddDeciderModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-media/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-border p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center pb-2 border-b border-border">
               <h3 className="text-base font-black flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-amber-500" />
+                <ShieldAlert className="w-5 h-5 text-warning" />
                 Add Tiebreaker Decider Rubber
               </h3>
-              <button onClick={() => setShowAddDeciderModal(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full">
+              <button onClick={() => setShowAddDeciderModal(false)} className="p-1 text-muted-foreground hover:text-faint rounded-full">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Introduce a sudden death decider rubber (e.g. XD2 or MS2) to break a tie. Both captains will submit their lineups for this rubber.
             </p>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Category</label>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">Category</label>
                 <select
                   value={newDeciderCategory}
                   onChange={(e) => {
@@ -1174,7 +1174,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                     setNewDeciderCategory(cat);
                     setNewDeciderLabel(`${cat} 2 (Decider)`);
                   }}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                 >
                   <option value="XD">XD (Mixed Doubles)</option>
                   <option value="MS">MS (Men's Singles)</option>
@@ -1184,33 +1184,33 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Rubber Label</label>
+                <label className="text-xs font-bold text-muted-foreground block mb-1">Rubber Label</label>
                 <input
                   type="text"
                   value={newDeciderLabel}
                   onChange={(e) => setNewDeciderLabel(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                  className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                   placeholder="e.g. XD 2 (Decider)"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Sets</label>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Sets</label>
                   <select
                     value={newDeciderSets}
                     onChange={(e) => setNewDeciderSets(parseInt(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                    className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                   >
                     <option value={1}>1 Set (Sudden Death)</option>
                     <option value={3}>Best of 3 Sets</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Points to Win</label>
+                  <label className="text-xs font-bold text-muted-foreground block mb-1">Points to Win</label>
                   <select
                     value={newDeciderPoints}
                     onChange={(e) => setNewDeciderPoints(parseInt(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                    className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                   >
                     <option value={11}>11 Points (Sprint)</option>
                     <option value={15}>15 Points</option>
@@ -1219,7 +1219,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <Button variant="outline" size="sm" onClick={() => setShowAddDeciderModal(false)} className="rounded-xl font-bold text-xs">
                 Cancel
               </Button>
@@ -1227,7 +1227,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                 size="sm"
                 onClick={() => addDeciderMutation.mutate()}
                 disabled={addDeciderMutation.isPending}
-                className="rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5"
+                className="rounded-xl font-bold text-xs bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-1.5"
               >
                 {addDeciderMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
                 Add Decider Rubber

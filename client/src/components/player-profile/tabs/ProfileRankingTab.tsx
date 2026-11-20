@@ -54,7 +54,7 @@ export function ProfileRankingTab({
 
       {/* Format Rankings */}
       <div className="flex flex-wrap gap-3 md:gap-4">
-        <div className="flex-1 min-w-[140px] bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 flex flex-col shadow-lg shadow-amber-500/20 text-on-accent relative overflow-hidden">
+        <div className="flex-1 min-w-[140px] bg-gradient-to-br from-gold to-secondary rounded-2xl p-4 flex flex-col shadow-lg shadow-gold/20 on-fill relative overflow-hidden">
           <div className="absolute -right-4 -top-4 opacity-20">
             <Trophy className="w-20 h-20" />
           </div>
@@ -62,19 +62,19 @@ export function ProfileRankingTab({
           <span className="text-3xl font-black relative z-10">{eloRank?.overall ? `#${eloRank.overall}` : "N/A"}</span>
         </div>
 
-        <div className="flex-1 min-w-[140px] bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">{singlesLabel}</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
+        <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{singlesLabel}</span>
+          <span className="text-2xl font-black text-foreground">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
         </div>
 
-        <div className="flex-1 min-w-[140px] bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">{doublesLabel}</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
+        <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{doublesLabel}</span>
+          <span className="text-2xl font-black text-foreground">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
         </div>
 
-        <div className="flex-1 min-w-[140px] bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">Mixed Rank</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
+        <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Mixed Rank</span>
+          <span className="text-2xl font-black text-foreground">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
         </div>
       </div>
 
@@ -87,9 +87,9 @@ export function ProfileRankingTab({
       {(!authSession?.user?.id || player.id === authSession.user.id) &&
         eloHistoryData.length <= 1 &&
         liveMatches.length < 5 && (
-          <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 text-center">
-            <Trophy className="w-12 h-12 text-slate-300 dark:text-foreground/10 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/60">
+          <div className="bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 text-center">
+            <Trophy className="w-12 h-12 text-foreground/10 mx-auto mb-3" />
+            <h3 className="text-sm font-bold text-foreground/60">
               Not Enough Data
             </h3>
             <p className="text-xs text-muted-foreground mt-1">

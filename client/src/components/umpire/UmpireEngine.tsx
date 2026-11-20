@@ -480,7 +480,7 @@ export function UmpireEngine({
 
       {isEditSetupOpen && (
         <div
-          className="fixed inset-0 z-50 flex flex-col justify-end p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col justify-end p-2 sm:p-4 bg-background/80 backdrop-blur-sm"
           onClick={() => setIsEditSetupOpen(false)}
         >
           <div

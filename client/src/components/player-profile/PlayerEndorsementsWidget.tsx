@@ -10,18 +10,18 @@ interface EndorsementsWidgetProps {
 }
 
 const SKILLS = [
-  { id: "Smash", label: "Powerful Smash", icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> },
-  { id: "Defense", label: "Iron Defense", icon: <Shield className="w-3.5 h-3.5 text-blue-500" /> },
+  { id: "Smash", label: "Powerful Smash", icon: <Zap className="w-3.5 h-3.5 text-warning" /> },
+  { id: "Defense", label: "Iron Defense", icon: <Shield className="w-3.5 h-3.5 text-info" /> },
   { id: "Agility", label: "Court Coverage", icon: <Target className="w-3.5 h-3.5 text-primary" /> },
-  { id: "Net Play", label: "Net Play", icon: <Swords className="w-3.5 h-3.5 text-rose-500" /> },
-  { id: "Stamina", label: "Endless Stamina", icon: <Heart className="w-3.5 h-3.5 text-pink-500" /> },
-  { id: "Tactics", label: "Tactical Genius", icon: <Brain className="w-3.5 h-3.5 text-purple-500" /> }
+  { id: "Net Play", label: "Net Play", icon: <Swords className="w-3.5 h-3.5 text-danger" /> },
+  { id: "Stamina", label: "Endless Stamina", icon: <Heart className="w-3.5 h-3.5 text-individual" /> },
+  { id: "Tactics", label: "Tactical Genius", icon: <Brain className="w-3.5 h-3.5 text-individual" /> }
 ];
 
 const BEHAVIORS = [
   { id: "Fair Play", label: "Fair Play", icon: <Award className="w-3.5 h-3.5 text-primary" /> },
-  { id: "Great Attitude", label: "Great Attitude", icon: <Star className="w-3.5 h-3.5 text-amber-400" /> },
-  { id: "Team Player", label: "Good Partner", icon: <ThumbsUp className="w-3.5 h-3.5 text-blue-400" /> }
+  { id: "Great Attitude", label: "Great Attitude", icon: <Star className="w-3.5 h-3.5 text-gold" /> },
+  { id: "Team Player", label: "Good Partner", icon: <ThumbsUp className="w-3.5 h-3.5 text-info" /> }
 ];
 
 export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) {
@@ -79,7 +79,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
     }
   };
 
-  if (loading) return <div className="h-20 animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl"></div>;
+  if (loading) return <div className="h-20 animate-pulse bg-foreground/5 rounded-xl"></div>;
 
   const getTraitCount = (trait: string) => endorsements.filter(e => e.trait === trait).length;
   const hasUserVotedForTrait = (trait: string) => endorsements.some(e => e.trait === trait && e.endorser_id === profile?.id);
@@ -106,10 +106,10 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
           disabled={isOwnProfile}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
             ${isVoted 
-              ? 'bg-primary/10 border-primary/30 text-primary dark:text-primary' 
+              ? 'bg-primary/10 border-primary/30 text-primary' 
               : count > 0
-                ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary'
-                : 'bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary'
+                ? 'bg-muted border-border-strong text-soft hover:border-primary'
+                : 'bg-transparent border-dashed border-border-strong text-muted-foreground hover:border-primary hover:text-primary'
             }
             ${isOwnProfile ? 'cursor-default' : 'cursor-pointer hover:shadow-sm'}
           `}
@@ -117,7 +117,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
           {item.icon}
           {item.label}
           {count > 0 && (
-            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${isVoted ? 'bg-primary/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${isVoted ? 'bg-primary/20' : 'bg-muted-strong'}`}>
               {count}
             </span>
           )}
@@ -128,9 +128,9 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
   };
 
   return (
-    <div className="bg-white dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/8">
+    <div className="bg-foreground/5 rounded-2xl p-5 border border-foreground/8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/60">
+        <h3 className="text-xs font-black uppercase tracking-widest text-foreground/60">
           Skills & Endorsements
         </h3>
         {isOwnProfile && (visibleSkills.length < SKILLS.length || visibleBehaviors.length < BEHAVIORS.length) && (

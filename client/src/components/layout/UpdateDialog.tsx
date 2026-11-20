@@ -55,12 +55,12 @@ export function UpdateDialog({
 
   return (
     <Dialog open={true}>
-      <DialogContent className="max-w-[280px] border-0 bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-2xl [&>button]:hidden">
+      <DialogContent className="max-w-[280px] border-0 bg-card rounded-2xl p-4 shadow-2xl [&>button]:hidden">
         <button 
           onClick={onDismiss}
-          className="absolute right-3 top-3 rounded-full p-1 opacity-70 transition-opacity hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="absolute right-3 top-3 rounded-full p-1 opacity-70 transition-opacity hover:opacity-100 hover:bg-muted"
         >
-          <X className="h-4 w-4 text-slate-500" />
+          <X className="h-4 w-4 text-muted-foreground" />
           <span className="sr-only">Close</span>
         </button>
 
@@ -68,12 +68,12 @@ export function UpdateDialog({
         <DialogDescription className="sr-only">Download version {info.versionName}</DialogDescription>
         
         <div className="flex items-center gap-3 mb-1">
-          <div className="text-2xl bg-slate-100 dark:bg-slate-800/50 p-2 rounded-xl flex items-center justify-center h-10 w-10">🏸</div>
+          <div className="text-2xl bg-muted/50 p-2 rounded-xl flex items-center justify-center h-10 w-10">🏸</div>
           <div>
-            <h2 className="text-base font-bold text-foreground dark:text-foreground leading-tight">
+            <h2 className="text-base font-bold text-foreground leading-tight">
               Update Available
             </h2>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Version {info.versionName} is ready
             </p>
           </div>
@@ -91,13 +91,13 @@ export function UpdateDialog({
           <div className="flex gap-1.5">
             <button
               onClick={onDismiss}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold py-1.5 rounded-lg text-xs transition-colors"
+              className="flex-1 bg-muted hover:bg-muted-strong text-soft font-semibold py-1.5 rounded-lg text-xs transition-colors"
             >
               Later
             </button>
             <button
               onClick={onSkip}
-              className="flex-1 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold py-1.5 rounded-lg text-xs transition-colors"
+              className="flex-1 bg-transparent hover:bg-muted text-muted-foreground font-semibold py-1.5 rounded-lg text-xs transition-colors"
             >
               Don't remind me
             </button>

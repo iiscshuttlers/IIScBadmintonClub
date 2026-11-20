@@ -198,16 +198,16 @@ export function MatchesManager() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h3 className="font-black text-slate-800 dark:text-foreground">Match Administration</h3>
+        <h3 className="font-black text-foreground">Match Administration</h3>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button onClick={exportMatchesCsv} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition">
+          <button onClick={exportMatchesCsv} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-border bg-card text-soft font-bold text-xs rounded-xl hover:bg-muted transition">
             <Download className="w-4 h-4" /> Export CSV
           </button>
-          <button onClick={recalculateElo} disabled={actionId === "recalc"} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-100 disabled:opacity-50 transition">
+          <button onClick={recalculateElo} disabled={actionId === "recalc"} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-danger/40 bg-danger/10 text-danger font-bold text-xs rounded-xl hover:bg-danger/10 disabled:opacity-50 transition">
             {actionId === "recalc" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             Recalculate ELOs
           </button>
-          <button aria-label="Refresh matches" onClick={load} className="flex justify-center items-center p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          <button aria-label="Refresh matches" onClick={load} className="flex justify-center items-center p-2 border border-border rounded-xl hover:bg-muted transition">
             <RefreshCw className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -215,7 +215,7 @@ export function MatchesManager() {
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Tournament</label>
-        <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-primary">
+        <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-border-strong rounded-xl bg-card text-foreground outline-none focus:ring-2 focus:ring-primary">
           {tournaments.map(t => (
              <option key={t.id} value={t.id}>{t.name} {t.status === 'completed' ? '(Completed)' : t.status === 'deleted' ? '(Deleted/Trashed)' : ''}</option>
           ))}
@@ -223,9 +223,9 @@ export function MatchesManager() {
         </select>
       </div>
 
-      <div className="flex flex-wrap gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap gap-2 pb-2 border-b border-border">
         {FORMATS.map(f => (
-          <button key={f} onClick={() => setActiveFormat(f)} className={`shrink-0 px-5 py-2 rounded-t-xl text-xs font-black transition-all border-b-2 ${activeFormat === f ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20' : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+          <button key={f} onClick={() => setActiveFormat(f)} className={`shrink-0 px-5 py-2 rounded-t-xl text-xs font-black transition-all border-b-2 ${activeFormat === f ? 'border-primary text-primary bg-primary/20' : 'border-transparent text-muted-foreground hover:text-muted-foreground/80 hover:bg-muted'}`}>
             {f}
           </button>
         ))}
@@ -244,8 +244,8 @@ export function MatchesManager() {
           const busy = actionId === m.id;
           return (
             <MatchCard key={m.id} match={m} currentUser={user} hideActions={true} index={idx}>
-              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-end gap-3 w-full relative z-10">
-                <button onClick={() => undoTournamentMatch(m.id)} disabled={busy} className="px-5 py-2 text-sm font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-xl disabled:opacity-50 transition w-full sm:w-auto text-center flex items-center justify-center gap-2">
+              <div className="pt-3 mt-3 border-t border-border flex flex-col sm:flex-row justify-end gap-3 w-full relative z-10">
+                <button onClick={() => undoTournamentMatch(m.id)} disabled={busy} className="px-5 py-2 text-sm font-bold bg-warning/10 hover:bg-warning/15 text-warning rounded-xl disabled:opacity-50 transition w-full sm:w-auto text-center flex items-center justify-center gap-2">
                   {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                   Undo Match & Recalculate ELO
                 </button>

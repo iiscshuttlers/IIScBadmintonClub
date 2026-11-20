@@ -49,11 +49,11 @@ interface RecentMatchCardProps {
 
 // BWF-style Category Color Accents
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  MS: { bg: "bg-blue-500/10 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", border: "border-blue-500/30" },
-  WS: { bg: "bg-pink-500/10 dark:bg-pink-500/15", text: "text-pink-600 dark:text-pink-400", border: "border-pink-500/30" },
-  MD: { bg: "bg-emerald-500/10 dark:bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-500/30" },
-  WD: { bg: "bg-purple-500/10 dark:bg-purple-500/15", text: "text-purple-600 dark:text-purple-400", border: "border-purple-500/30" },
-  XD: { bg: "bg-amber-500/10 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", border: "border-amber-500/30" },
+  MS: { bg: "bg-cat-ms/15", text: "text-cat-ms", border: "border-cat-ms/30" },
+  WS: { bg: "bg-cat-ws/15", text: "text-cat-ws", border: "border-cat-ws/30" },
+  MD: { bg: "bg-cat-md/15", text: "text-cat-md", border: "border-cat-md/30" },
+  WD: { bg: "bg-cat-wd/15", text: "text-cat-wd", border: "border-cat-wd/30" },
+  XD: { bg: "bg-cat-xd/15", text: "text-cat-xd", border: "border-cat-xd/30" },
 };
 
 export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: RecentMatchCardProps) {
@@ -139,9 +139,9 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
   const team2DisplayName = resolveTeamName(match.player2, match.partner2, match.team2_label);
 
   const catStyle = CATEGORY_COLORS[resolvedCategory] || {
-    bg: "bg-slate-700/30",
-    text: "text-slate-300",
-    border: "border-slate-700",
+    bg: "bg-muted-strong/30",
+    text: "text-soft",
+    border: "border-border-strong",
   };
 
   const isScoredByMe = Boolean(currentUserId && match.scored_by === currentUserId);
@@ -149,10 +149,10 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
 
   return (
     <>
-      <div className="bg-slate-900/90 dark:bg-slate-900/90 rounded-2xl border border-slate-800 hover:border-slate-700/80 transition-all shadow-sm overflow-hidden flex flex-col justify-between">
+      <div className="bg-card/90 rounded-2xl border border-border hover:border-border-strong/80 transition-all shadow-sm overflow-hidden flex flex-col justify-between">
         
         {/* 1. Header Bar: Category, Rubber/Stage, Court & Scored Time */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-950/40 border-b border-slate-800/80 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-background/40 border-b border-border/80 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Category Pill */}
             <span className={`px-2 py-0.5 rounded-md font-black text-[11px] tracking-wider border ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
@@ -161,7 +161,7 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
 
             {/* Match Code / Rubber Label */}
             {match.match_code && (
-              <span className="font-mono font-bold text-[11px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60">
+              <span className="font-mono font-bold text-[11px] text-muted-foreground bg-muted/80 px-2 py-0.5 rounded border border-border-strong/60">
                 {match.match_code}
               </span>
             )}
@@ -174,26 +174,26 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
             )}
 
             {match.tie && (
-              <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
+              <span className="text-[11px] text-muted-foreground font-medium hidden sm:inline">
                 ({match.tie.team_a?.short_name || match.tie.team_a?.name || "Team A"} vs {match.tie.team_b?.short_name || match.tie.team_b?.name || "Team B"})
               </span>
             )}
 
             {match.round && !match.rubber_label && (
-              <span className="text-[11px] text-slate-400 font-medium">
+              <span className="text-[11px] text-muted-foreground font-medium">
                 {match.round}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 text-slate-400 text-[11px] font-medium">
+          <div className="flex items-center gap-2 shrink-0 text-muted-foreground text-[11px] font-medium">
             {courtText && (
-              <span className="px-2 py-0.5 rounded bg-slate-800/60 border border-slate-700/50 font-semibold text-slate-300">
+              <span className="px-2 py-0.5 rounded bg-muted/60 border border-border-strong/50 font-semibold text-soft">
                 Court {courtText}
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-slate-500" />
+              <Clock className="w-3 h-3 text-muted-foreground" />
               <span title={format(new Date(matchTimestamp), "PPPpp")}>
                 {formatDistanceToNowStrict(new Date(matchTimestamp), { addSuffix: true })}
               </span>
@@ -207,23 +207,23 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
           {/* Side 1 Row */}
           <div className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
             side1Won
-              ? "bg-emerald-500/10 dark:bg-emerald-500/10 border-emerald-500/30 text-white"
-              : "bg-slate-800/40 border-slate-800/80 text-slate-300"
+              ? "bg-success/10 border-success/30 text-foreground"
+              : "bg-muted/40 border-border/80 text-soft"
           }`}>
             <div className="flex items-center gap-2.5 min-w-0 pr-3">
               <div className="w-5 flex justify-center shrink-0">
                 {side1Won ? (
-                  <Trophy className="w-4 h-4 text-amber-400 drop-shadow-sm" />
+                  <Trophy className="w-4 h-4 text-gold drop-shadow-sm" />
                 ) : (
-                  <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-faint" />
                 )}
               </div>
               <div className="min-w-0">
-                <span className={`text-sm truncate block ${side1Won ? "font-black text-white" : "font-semibold text-slate-300"}`}>
+                <span className={`text-sm truncate block ${side1Won ? "font-black text-foreground" : "font-semibold text-soft"}`}>
                   {team1DisplayName}
                 </span>
                 {match.team1_label && match.team1_label.trim().toLowerCase() !== team1DisplayName.trim().toLowerCase() && (
-                  <span className="text-[10px] text-slate-400 font-mono block">
+                  <span className="text-[10px] text-muted-foreground font-mono block">
                     {match.team1_label}
                   </span>
                 )}
@@ -237,8 +237,8 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
                   key={idx}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black border transition-all ${
                     s.s1Won
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-xs"
-                      : "bg-slate-900/60 text-slate-400 border-slate-700/60"
+                      ? "bg-success/20 text-success border-success/40 shadow-xs"
+                      : "bg-card/60 text-muted-foreground border-border-strong/60"
                   }`}
                 >
                   {s.s1}
@@ -250,23 +250,23 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
           {/* Side 2 Row */}
           <div className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
             side2Won
-              ? "bg-emerald-500/10 dark:bg-emerald-500/10 border-emerald-500/30 text-white"
-              : "bg-slate-800/40 border-slate-800/80 text-slate-300"
+              ? "bg-success/10 border-success/30 text-foreground"
+              : "bg-muted/40 border-border/80 text-soft"
           }`}>
             <div className="flex items-center gap-2.5 min-w-0 pr-3">
               <div className="w-5 flex justify-center shrink-0">
                 {side2Won ? (
-                  <Trophy className="w-4 h-4 text-amber-400 drop-shadow-sm" />
+                  <Trophy className="w-4 h-4 text-gold drop-shadow-sm" />
                 ) : (
-                  <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-faint" />
                 )}
               </div>
               <div className="min-w-0">
-                <span className={`text-sm truncate block ${side2Won ? "font-black text-white" : "font-semibold text-slate-300"}`}>
+                <span className={`text-sm truncate block ${side2Won ? "font-black text-foreground" : "font-semibold text-soft"}`}>
                   {team2DisplayName}
                 </span>
                 {match.team2_label && match.team2_label.trim().toLowerCase() !== team2DisplayName.trim().toLowerCase() && (
-                  <span className="text-[10px] text-slate-400 font-mono block">
+                  <span className="text-[10px] text-muted-foreground font-mono block">
                     {match.team2_label}
                   </span>
                 )}
@@ -280,8 +280,8 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
                   key={idx}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black border transition-all ${
                     s.s2Won
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-xs"
-                      : "bg-slate-900/60 text-slate-400 border-slate-700/60"
+                      ? "bg-success/20 text-success border-success/40 shadow-xs"
+                      : "bg-card/60 text-muted-foreground border-border-strong/60"
                   }`}
                 >
                   {s.s2}
@@ -293,7 +293,7 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
         </div>
 
         {/* 3. Footer Bar: Edit Countdown Status & Action Buttons */}
-        <div className="px-4 py-2.5 bg-slate-950/30 border-t border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="px-4 py-2.5 bg-background/30 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           
           {/* Status info & Scored attribution */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -305,19 +305,19 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
 
             {/* Grace Period Timer */}
             {isAdmin ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-                <Shield className="w-3 h-3 text-purple-400" /> Admin Override Active
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-individual/10 text-individual border border-individual/30 flex items-center gap-1">
+                <Shield className="w-3 h-3 text-individual" /> Admin Override Active
               </span>
             ) : timeRemaining !== null && timeRemaining > 0 ? (
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
                 isUrgent
-                  ? "bg-rose-500/15 text-rose-300 border-rose-500/30 animate-pulse"
-                  : "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                  ? "bg-danger/15 text-danger border-danger/30 animate-pulse"
+                  : "bg-warning/10 text-warning border-warning/30"
               }`}>
                 <Clock className="w-3 h-3" /> {minutesLeft}m {secondsLeft}s left to edit
               </span>
             ) : (
-              <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+              <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
                 <Lock className="w-3 h-3" /> Edit window closed (10m passed)
               </span>
             )}
@@ -328,9 +328,9 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
             <button
               type="button"
               onClick={() => setShowScorecard(true)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-soft bg-muted hover:bg-muted-strong hover:text-foreground border border-border-strong/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <FileText className="w-3.5 h-3.5 text-slate-400" />
+              <FileText className="w-3.5 h-3.5 text-muted-foreground" />
               Scorecard
             </button>
 
@@ -347,10 +347,10 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
               <button
                 type="button"
                 disabled
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-900 border border-slate-800 cursor-not-allowed flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-faint bg-card border border-border cursor-not-allowed flex items-center gap-1.5"
                 title="Editing is locked 10 minutes after match completion. Contact an administrator to adjust scores."
               >
-                <Lock className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                 Locked
               </button>
             )}
