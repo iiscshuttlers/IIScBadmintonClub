@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Trophy, Activity, Flame, CheckCircle, Smartphone } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { useLocation } from "wouter";
 
 const STORAGE_KEY = "onboarding_completed_v1";
 
@@ -84,17 +85,40 @@ interface OnboardingTourProps {
   onComplete?: () => void;
 }
 
+/**
+ * The tour introduces the whole app, so it opens only when a visit starts on
+ * Home. Someone opening a shared match or tournament link goes straight to
+ * that page; they get the tour on a later visit that starts on Home.
+ */
+export function isTourEntryPath(path: string): boolean {
+  return path === "/" || path === "";
+}
+
 export function OnboardingTour({ onComplete }: OnboardingTourProps) {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [location] = useLocation();
 
   useEffect(() => {
-    const done = localStorage.getItem(STORAGE_KEY);
+    // Only the page the visit starts on counts, so this runs once on mount.
+    if (!isTourEntryPath(location)) return;
+    let done: string | null = null;
+    try {
+      done = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      // Storage blocked: treat as seen rather than showing the tour every visit.
+      done = "1";
+    }
     if (!done) setVisible(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    try {
+      localStorage.setItem(STORAGE_KEY, "1");
+    } catch {
+      // Storage blocked: closing still works for this visit.
+    }
     setVisible(false);
     onComplete?.();
   };

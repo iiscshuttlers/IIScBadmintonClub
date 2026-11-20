@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, Bell, Clock, MapPin } from "lucide-react";
 import { courtLabel, type MatchView } from "@/lib/matchView";
 import { matchPath } from "@/lib/tournamentRoutes";
-import { MatchTimes } from "@/components/match/MatchPrimitives";
+import { matchTimesText } from "@/components/match/MatchPrimitives";
 import { ShareResultButton } from "@/components/match/ShareResultButton";
 import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +57,7 @@ export function MatchSummaryTab({
   const winner = view.sides.find((s) => s.isWinner) ?? null;
   const upcoming = view.state === "scheduled" || view.state === "unscheduled";
   const userId: string | undefined = session?.user?.id;
+  const times = matchTimesText(view);
 
   return (
     <div>
@@ -68,13 +69,14 @@ export function MatchSummaryTab({
           <dt className="sr-only">Court</dt>
           <dd>{view.court ? courtLabel(view.court) : "Court not assigned"}</dd>
         </div>
-        <div className="flex items-start gap-2">
-          <Clock className="w-4 h-4 text-muted-foreground mt-0.5" aria-hidden />
-          <dt className="sr-only">Times</dt>
-          <dd>
-            <MatchTimes view={view} />
-          </dd>
-        </div>
+        {/* No row at all when no time is known, rather than an icon with nothing beside it. */}
+        {times && (
+          <div className="flex items-start gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground mt-0.5" aria-hidden />
+            <dt className="sr-only">Times</dt>
+            <dd className="text-xs text-muted-foreground">{times}</dd>
+          </div>
+        )}
       </dl>
 
       {next && (

@@ -104,10 +104,10 @@ export function useOpenMatchViews(tournamentId: string): MatchViewsResult & { on
 
 export function useFinishedMatchViews(
   tournamentId: string,
-  opts: { discipline?: string | null; court?: string | null; limit: number },
+  opts: { discipline?: string | null; limit: number },
 ): MatchViewsResult & { hasMore: boolean } {
   const q = useQuery({
-    queryKey: ["tournament_matches", tournamentId, "finished-views", opts.discipline ?? "", opts.court ?? "", opts.limit],
+    queryKey: ["tournament_matches", tournamentId, "finished-views", opts.discipline ?? "", opts.limit],
     enabled: !!tournamentId,
     queryFn: async () => {
       let query = supabase
@@ -119,7 +119,8 @@ export function useFinishedMatchViews(
         .order("round", { ascending: false })
         .order("match_number", { ascending: true })
         .range(0, opts.limit); // one extra row tells us whether more exist
-      if (opts.court) query = query.eq("court_number", opts.court);
+      // No court filter here: one court can be stored as "1", "C1" or
+      // "Court 1", so callers filter by courtKey() on the client.
       // Paging must respect the discipline filter, otherwise a page can be
       // mostly other disciplines. The client re-checks with disciplineOf().
       if (opts.discipline && /^(MS|WS|MD|WD|XD)$/.test(opts.discipline)) {

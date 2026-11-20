@@ -12,6 +12,7 @@ import {
   buildCourtQueues,
   compareCourtQueue,
   compareUpcoming,
+  courtKey,
   courtLabel,
   filterMatches,
   matchDay,
@@ -294,7 +295,9 @@ export function MatchCentre({
     setViewParam(v);
   };
   const [catRaw, setCat] = useQueryState<string>("cat", "ALL", true);
-  const [court, setCourt] = useQueryState<string>("court", "", true);
+  const [courtRaw, setCourt] = useQueryState<string>("court", "", true);
+  // Older links may say `court=C1`; chips use the merged key ("1").
+  const court = courtKey(courtRaw) ?? "";
   const [date, setDate] = useQueryState<string>("date", "", true);
   const cat = parseDiscipline(catRaw) ?? "ALL";
   const discipline = cat === "ALL" ? null : cat;
@@ -303,9 +306,10 @@ export function MatchCentre({
   // Results are grouped Final-first, which needs every round on the page:
   // paging by finish time would leave early rounds half-loaded. Rounds before
   // the quarter-finals render collapsed, so the full set stays light.
+  // Court is filtered on the client (filterMatches): one court can be stored
+  // as "1", "C1" or "Court 1", which a single equality filter would miss.
   const finished = useFinishedMatchViews(tournamentId, {
     discipline,
-    court: court || null,
     limit: mode === "results" ? RESULTS_ALL_LIMIT : COMPLETED_PAGE_SIZE,
   });
 
