@@ -354,7 +354,7 @@ export default function ScheduleCalendar() {
                           <DropdownMenuContent
                             sideOffset={4}
                             collisionPadding={20}
-                            className="z-[100] bg-muted text-on-accent border-border-strong w-[85vw] sm:w-[60vw] md:w-auto md:min-w-[15rem] md:max-w-md max-h-[min(70vh,var(--radix-dropdown-menu-content-available-height))] shadow-2xl p-0 rounded-xl flex flex-col !overflow-hidden"
+                            className="z-[100] bg-muted text-foreground border-border-strong w-[85vw] sm:w-[60vw] md:w-auto md:min-w-[15rem] md:max-w-md max-h-[min(70vh,var(--radix-dropdown-menu-content-available-height))] shadow-2xl p-0 rounded-xl flex flex-col !overflow-hidden"
                           >
                             <div className="flex items-center justify-between p-2 border-b border-border-strong bg-muted shrink-0">
                               <span className="text-xs font-bold text-muted-foreground pl-2">

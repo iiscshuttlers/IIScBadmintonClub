@@ -375,11 +375,11 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
           {/* Visual / List switch */}
           <div className="flex rounded-xl border border-border-strong overflow-hidden text-xs font-black w-full">
             <button onClick={() => setViewMode("visual")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-muted text-on-accent" : "text-muted-foreground hover:text-soft"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-soft"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-muted text-on-accent" : "text-muted-foreground hover:text-soft"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-soft"}`}>
               List
             </button>
           </div>

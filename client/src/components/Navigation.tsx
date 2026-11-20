@@ -34,6 +34,7 @@ import {
   Calendar,
   AlertTriangle,
   Award,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -415,6 +416,14 @@ export default function Navigation() {
             >
               <Search className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setIsPreferencesOpen(true)}
+              className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
+              aria-label="App theme"
+              title="App theme"
+            >
+              <Palette className="w-4 h-4" />
+            </button>
             {!authLoading && (
               isLoggedIn ? (
                 <div className="flex items-center gap-3 ml-2 border-l border-border pl-3">
@@ -503,6 +512,16 @@ export default function Navigation() {
                     <span className="text-[11px] font-semibold opacity-80">v{updateInfo.versionName}</span>
                   </button>
                 )}
+
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-3 mb-1 rounded-xl hover:bg-muted text-soft font-bold text-sm transition-colors cursor-pointer"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsPreferencesOpen(true);
+                  }}
+                >
+                  <Palette className="h-4 w-4 text-primary" /> App theme
+                </button>
 
                 {authLoading ? (
                   <div className="h-10 bg-muted rounded-xl animate-pulse" />

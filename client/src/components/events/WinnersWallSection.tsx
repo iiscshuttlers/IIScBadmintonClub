@@ -322,7 +322,7 @@ export function WinnersWallSection() {
           <div className="bg-card p-1.5 rounded-2xl shadow-sm border border-border flex gap-1">
             <button
               onClick={() => setFilter("all")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-info/20 text-on-accent shadow-md" : "text-muted-foreground hover:bg-muted"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-info/20 text-info shadow-md" : "text-muted-foreground hover:bg-muted"}`}
             >
               All Events
             </button>

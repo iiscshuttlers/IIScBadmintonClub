@@ -123,7 +123,7 @@ export function PlayerPreviewModal({ isOpen, onClose, player }: PlayerPreviewMod
           <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-foreground/20 blur-xl pointer-events-none" />
 
           {/* Tier Pill */}
-          <div className="relative z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-media/45 backdrop-blur-md border border-foreground/20 text-on-media text-[11px] font-black uppercase tracking-wider shadow-md">
+          <div className="relative z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-media/45 backdrop-blur-md border border-on-media/20 text-on-media text-[11px] font-black uppercase tracking-wider shadow-md">
             <span>{tier.icon}</span>
             <span className="font-extrabold">{tier.name}</span>
             <span className="opacity-40">·</span>

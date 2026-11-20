@@ -573,7 +573,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               placeholder="Search player, match #..."
               value={upcomingSearch}
               onChange={e => setUpcomingSearch(e.target.value)}
-              className="w-full bg-muted border border-border-strong text-xs text-on-accent rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+              className="w-full bg-muted border border-border-strong text-xs text-foreground rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
             />
 
             {/* Status pills */}
@@ -821,7 +821,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep("format"); setSelectedCategory(null); }}
-            className="p-2 rounded-xl bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-on-accent"
+            className="p-2 rounded-xl bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -834,7 +834,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               rounds.forEach(r => { next[r] = !allCollapsed; });
               setCollapsedRounds(prev => ({ ...prev, ...next }));
             }}
-            className="ml-auto p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-on-accent text-[10px] font-bold"
+            className="ml-auto p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground text-[10px] font-bold"
             title={rounds.every(r => collapsedRounds[r] ?? true) ? "Expand all" : "Collapse all"}
           >
             {rounds.every(r => collapsedRounds[r] ?? true) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -1047,7 +1047,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
-            className="p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-on-accent"
+            className="p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>

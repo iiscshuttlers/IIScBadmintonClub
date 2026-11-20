@@ -302,7 +302,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">{file.name.split('.').pop()}</span>
                         <button 
                           onClick={() => removeFile(i)}
-                          className="absolute top-1 right-1 bg-media/60 text-on-accent rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-danger"
+                          className="absolute top-1 right-1 bg-media/60 text-on-media rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-danger"
                         >
                           <X className="w-3 h-3" />
                         </button>

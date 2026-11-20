@@ -55,7 +55,7 @@ export function UmpireSetupScreen({
     const badgeCls = CAT_BADGE[tm.category] ?? "bg-faint";
 
     return (
-      <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-on-accent max-w-lg mx-auto shadow-2xl relative">
+      <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-foreground max-w-lg mx-auto shadow-2xl relative">
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-info rounded-t-2xl" />
 
         {/* Header */}
@@ -70,7 +70,7 @@ export function UmpireSetupScreen({
           </div>
           <button
             onClick={() => handleClose()}
-            className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-on-accent transition shrink-0"
+            className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition shrink-0"
           >
             <X className="w-3.5 h-3.5" />
           </button>

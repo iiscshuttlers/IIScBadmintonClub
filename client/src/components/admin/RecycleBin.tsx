@@ -140,7 +140,7 @@ export function RecycleBin() {
             onClick={() => setFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
               filter === "all"
-                ? "bg-foreground text-on-accent"
+                ? "bg-foreground text-background"
                 : "bg-card border border-border text-muted-foreground hover:border-border-strong"
             }`}
           >
@@ -152,7 +152,7 @@ export function RecycleBin() {
               onClick={() => setFilter(t)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition capitalize ${
                 filter === t
-                  ? "bg-foreground text-on-accent"
+                  ? "bg-foreground text-background"
                   : "bg-card border border-border text-muted-foreground hover:border-border-strong"
               }`}
             >

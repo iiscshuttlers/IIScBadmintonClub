@@ -116,7 +116,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
         {/* Gesture Hint overlay */}
         {player.showGestureHint && (
           <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-200">
-            <div className="bg-media/60 backdrop-blur-md text-foreground font-bold px-6 py-3 rounded-full text-lg shadow-2xl flex items-center gap-2">
+            <div className="bg-media/60 backdrop-blur-md text-on-media font-bold px-6 py-3 rounded-full text-lg shadow-2xl flex items-center gap-2">
               {player.showGestureHint.text}
             </div>
           </div>

@@ -77,7 +77,7 @@ export function VideoEditor({
       <div className="bg-primary/20 border border-primary/50 rounded-2xl p-5 text-sm text-primary/70">
         <h4 className="font-black flex items-center gap-2 mb-3 text-primary"><Activity className="w-5 h-5" /> Live Scoreboard & Scoring Mode Guide</h4>
         <ul className="list-disc list-inside space-y-2 opacity-90 marker:text-primary">
-          <li><strong>Auto-Extracting Names:</strong> Name your video title with exactly this format: <code className="bg-media/30 px-1.5 py-0.5 rounded font-bold">Player A and Player B vs Player C and Player D || Match Title</code> to automatically populate the BWF player names on the live scoreboard.</li>
+          <li><strong>Auto-Extracting Names:</strong> Name your video title with exactly this format: <code className="bg-muted px-1.5 py-0.5 rounded font-bold">Player A and Player B vs Player C and Player D || Match Title</code> to automatically populate the BWF player names on the live scoreboard.</li>
           <li><strong>Scoring a Match:</strong> Open any video in the front-end Gallery. Click the "Score Mode" toggle in the top right of the title bar. Click the player buttons as you watch to record timestamps.</li>
           <li><strong>Importing Scores:</strong> When finished, click the red "Copy JSON Data" button in the player. Come back here, find the video, and click the <strong>"Paste from Clipboard"</strong> button below to instantly attach the live scoreboard!</li>
         </ul>

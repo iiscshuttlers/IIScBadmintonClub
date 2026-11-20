@@ -157,7 +157,7 @@ export function GalleryLightboxTags({
                           className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
                             isTagged || isPending
                               ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
-                              : "text-on-accent hover:bg-muted"
+                              : "text-foreground hover:bg-muted"
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();

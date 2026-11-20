@@ -100,7 +100,7 @@ export function DisciplineCardModal({
             <button onClick={() => onIssueCard(cardTarget, "red")} className="py-4 rounded-2xl font-black text-sm bg-danger/20 border border-danger text-danger hover:bg-danger/30 transition">
               🟥 Red<br/><span className="text-xs font-normal opacity-70">+1 pt opponent</span>
             </button>
-            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-muted-strong/80 border border-border-strong text-on-accent hover:bg-faint transition">
+            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-muted-strong/80 border border-border-strong text-foreground hover:bg-faint transition">
               ⬛ Black<br/><span className="text-xs font-normal opacity-70">Disqualify</span>
             </button>
           </div>
@@ -238,7 +238,7 @@ export function DirectScoreModal({
         </div>
 
         <div className="p-6 pt-4 border-t border-border-strong shrink-0 flex gap-2">
-          <button onClick={onClose} className="flex-1 py-3 bg-muted hover:bg-muted-strong text-on-accent rounded-xl font-bold transition">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-3 bg-muted hover:bg-muted-strong text-foreground rounded-xl font-bold transition">Cancel</button>
           <button onClick={() => {
             if (!directWinner || !directSetsText) { toast.error("Fill winner and at least 1 set"); return; }
             onSave();
@@ -277,7 +277,7 @@ export function ConfirmActionModal({
         <div className="flex w-full gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-muted hover:bg-muted-strong border border-border-strong text-on-accent font-bold text-sm rounded-2xl transition"
+            className="flex-1 py-3 bg-muted hover:bg-muted-strong border border-border-strong text-foreground font-bold text-sm rounded-2xl transition"
           >
             Cancel
           </button>

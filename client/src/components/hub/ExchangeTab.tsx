@@ -347,7 +347,7 @@ export default function ExchangeTab() {
                     ) : (
                       <ImageIcon className="w-10 h-10 text-muted-foreground" />
                     )}
-                    <div className="absolute top-3 left-3 bg-media/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-soft z-20">
+                    <div className="absolute top-3 left-3 bg-media/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-on-media/90 z-20">
                       {item.condition}
                     </div>
                     {item.listing_type === 'buy' && (

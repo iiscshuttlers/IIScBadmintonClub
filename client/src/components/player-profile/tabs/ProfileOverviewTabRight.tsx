@@ -120,7 +120,7 @@ export function ProfileOverviewTabRight({
         </h2>
 
         {/* W/L block */}
-        <div className="mb-6 p-5 bg-media/40 rounded-xl relative overflow-hidden border border-foreground/6">
+        <div className="mb-6 p-5 bg-muted/60 rounded-xl relative overflow-hidden border border-border">
           <div className="absolute inset-0 bg-gradient-to-r from-warning/[0.08] to-transparent" />
           <div className="relative z-10">
             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-warning mb-2">

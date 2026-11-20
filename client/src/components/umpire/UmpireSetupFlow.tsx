@@ -53,7 +53,7 @@ export function UmpireSetupFlow({
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-card rounded-3xl text-on-accent max-w-lg mx-auto shadow-2xl">
+    <div className="bg-card rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl">
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 bg-gradient-to-br from-muted to-card px-6 pt-6 pb-5 shadow-md">
@@ -105,7 +105,7 @@ export function UmpireSetupFlow({
               value={match.matchNumber}
               onChange={(e) => setMatch({ ...match, matchNumber: e.target.value })}
               placeholder="e.g. MS-14"
-              className="w-full bg-muted border border-border-strong rounded-xl px-4 py-2.5 text-on-accent text-sm outline-none focus:border-primary transition"
+              className="w-full bg-muted border border-border-strong rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-primary transition"
             />
           </div>
         )}
@@ -254,7 +254,7 @@ export function UmpireSetupFlow({
                   if (e.target.value === "Other") setMatch({ ...match, customCategory: "" });
                   else setMatch({ ...match, customCategory: e.target.value });
                 }}
-                className="w-36 bg-card border border-border-strong rounded-lg px-2 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
+                className="w-36 bg-card border border-border-strong rounded-lg px-2 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
               >
                 <option value="">Override…</option>
                 <option value="MS">MS</option>
@@ -272,7 +272,7 @@ export function UmpireSetupFlow({
                   onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
                   placeholder="Custom category"
                   autoFocus
-                  className="w-36 bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
+                  className="w-36 bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
                 />
               )}
             </div>

@@ -637,7 +637,7 @@ export default function FindLost() {
                                 alt={`${post.title} ${i + 1}`}
                                 className={`object-cover cursor-zoom-in transition group-hover:opacity-90 ${images.length === 1 ? "w-full max-w-sm max-h-72" : "w-24 h-24"}`}
                               />
-                              <span className="absolute bottom-1 right-1 bg-media/55 text-foreground rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
+                              <span className="absolute bottom-1 right-1 bg-media/55 text-on-media rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
                                 <ZoomIn className="w-3.5 h-3.5" />
                               </span>
                             </button>
@@ -726,12 +726,12 @@ export default function FindLost() {
                                   </span>
                                 )}
                                 {post.claim_message && (
-                                  <span className="text-[10px] font-medium mt-1 bg-media/20 px-1.5 py-0.5 rounded text-info inline-block w-full text-right leading-tight">
+                                  <span className="text-[10px] font-medium mt-1 bg-info/10 px-1.5 py-0.5 rounded text-info inline-block w-full text-right leading-tight">
                                     {post.claim_message}
                                   </span>
                                 )}
                                 {post.claim_contact && (
-                                  <span className="text-[10px] font-medium mt-0.5 bg-media/20 px-1.5 py-0.5 rounded text-info inline-flex items-center justify-end gap-1 w-full text-right leading-tight">
+                                  <span className="text-[10px] font-medium mt-0.5 bg-info/10 px-1.5 py-0.5 rounded text-info inline-flex items-center justify-end gap-1 w-full text-right leading-tight">
                                     <Phone className="w-2.5 h-2.5" />
                                     {(() => {
                                       const isEmail = post.claim_contact.includes("@");

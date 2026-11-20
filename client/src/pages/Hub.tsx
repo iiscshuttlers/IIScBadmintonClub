@@ -58,7 +58,7 @@ export default function Hub() {
       >
         {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
         <div className="flex justify-center w-full px-2">
-          <div className="flex w-full sm:w-auto bg-media/20 backdrop-blur-md p-1 rounded-2xl border border-border/10 gap-1 flex-wrap justify-center shadow-inner">
+          <div className="flex w-full sm:w-auto bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border gap-1 flex-wrap justify-center shadow-inner">
             <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
               {[
                 { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
@@ -74,7 +74,7 @@ export default function Hub() {
                   className={
                     activeTab === id
                       ? activeClass
-                      : "text-on-media/80 hover:text-on-media hover:bg-media/20 scale-95"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                   }
                 >
                   {icon} {label}

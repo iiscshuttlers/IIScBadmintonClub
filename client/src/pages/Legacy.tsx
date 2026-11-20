@@ -598,7 +598,7 @@ export default function Legacy() {
         subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
       >
         <div className="flex justify-center w-full px-2">
-          <div className="grid grid-cols-3 sm:flex bg-media/20 backdrop-blur-md p-1 rounded-2xl border border-border/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
               <Button
                 asChild
                 variant="tab"
@@ -606,7 +606,7 @@ export default function Legacy() {
                 className={`w-full sm:w-auto ${
                   activeTab === "champions"
                     ? "bg-card text-gold shadow-md scale-100"
-                    : "text-on-media/80 hover:text-on-media hover:bg-media/20 scale-95"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a href="#champions" onClick={() => setActiveTab("champions")}>
@@ -620,7 +620,7 @@ export default function Legacy() {
                 className={`w-full sm:w-auto ${
                   activeTab === "records"
                     ? "bg-card text-success shadow-md scale-100"
-                    : "text-on-media/80 hover:text-on-media hover:bg-media/20 scale-95"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a href="#records" onClick={() => setActiveTab("records")}>
@@ -634,7 +634,7 @@ export default function Legacy() {
                 className={`w-full sm:w-auto ${
                   activeTab !== "champions" && activeTab !== "records"
                     ? "bg-card text-info shadow-md scale-100"
-                    : "text-on-media/80 hover:text-on-media hover:bg-media/20 scale-95"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a
@@ -821,7 +821,7 @@ export default function Legacy() {
                           <CheckCircle2 className="w-4 h-4" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-media/40 border-2 border-foreground/80 text-transparent flex items-center justify-center shadow-lg backdrop-blur-sm" />
+                        <div className="w-6 h-6 rounded-full bg-media/40 border-2 border-on-media/80 text-transparent flex items-center justify-center shadow-lg backdrop-blur-sm" />
                       )}
                     </div>
                   )}
@@ -1266,7 +1266,7 @@ export default function Legacy() {
       {session && (activeTab === "albums" || activeTab === "photos") && (
         <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
           {isSelectionMode ? (
-            <div className="bg-card text-on-accent px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+            <div className="bg-card text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>
               <button
                 className="text-primary hover:text-primary/70 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
@@ -1319,7 +1319,7 @@ export default function Legacy() {
             </div>
           ) : (
             <button
-              className="bg-card/80 hover:bg-card backdrop-blur-md text-on-accent px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
+              className="bg-card/80 hover:bg-card backdrop-blur-md text-foreground px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
               onClick={toggleSelectionMode}
             >
               Select Photos

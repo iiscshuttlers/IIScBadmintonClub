@@ -19,11 +19,11 @@ const quickLinks = [
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-team/20 via-success to-primary flex flex-col items-center justify-center px-4 text-on-accent relative overflow-hidden">
+    <div className="min-h-screen bg-background bg-gradient-to-tr from-team/15 via-background to-primary/15 flex flex-col items-center justify-center px-4 text-foreground relative overflow-hidden">
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
-          className="w-full h-full text-on-accent"
+          className="w-full h-full text-foreground"
           viewBox="0 0 800 600"
           preserveAspectRatio="none"
         >

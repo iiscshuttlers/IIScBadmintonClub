@@ -112,7 +112,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
         {!isInPip && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-50 text-foreground/70 hover:text-foreground bg-media/60 hover:bg-media/80 rounded-full p-2 transition-colors"
+            className="absolute top-3 right-3 z-50 text-on-media/70 hover:text-on-media bg-media/60 hover:bg-media/80 rounded-full p-2 transition-colors"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -152,7 +152,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                 )}
                 <button
                   onClick={() => setEnableScoringMode(v => !v)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-danger text-on-accent shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_50%,transparent)]' : 'bg-foreground/10 text-on-accent/70 hover:bg-foreground/20'}`}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-danger text-on-accent shadow-[0_0_15px_color-mix(in_srgb,var(--danger)_50%,transparent)]' : 'bg-foreground/10 text-muted-foreground hover:bg-foreground/20'}`}
                 >
                   {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
                 </button>

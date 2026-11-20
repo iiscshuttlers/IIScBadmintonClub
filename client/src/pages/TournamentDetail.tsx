@@ -99,7 +99,7 @@ export default function TournamentDetail() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center space-y-5 max-w-md">
-          <div className="text-8xl font-black text-background select-none">
+          <div className="text-8xl font-black text-foreground/15 select-none">
             ?
           </div>
           <h1
@@ -358,7 +358,7 @@ export default function TournamentDetail() {
                     </button>
                   </Link>
                   <Link href="/legacy#champions">
-                    <button className="w-full flex items-center justify-center gap-2 bg-info/20 hover:bg-info text-on-accent font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                    <button className="w-full flex items-center justify-center gap-2 bg-info/20 hover:bg-info text-info hover:text-info-foreground font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
                       Hall of Fame
                     </button>

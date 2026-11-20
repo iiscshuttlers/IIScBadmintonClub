@@ -455,7 +455,7 @@ export function UmpireScoringScreen({
                 >
                   <button
                     onClick={(e) => { e.stopPropagation(); deductPoint(team); }}
-                    className="absolute top-2 left-2 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-media/30 hover:bg-foreground/10 backdrop-blur-sm flex items-center justify-center border border-foreground/10 z-10 transition"
+                    className="absolute top-2 left-2 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-foreground/10 hover:bg-foreground/15 backdrop-blur-sm flex items-center justify-center border border-foreground/10 z-10 transition"
                     aria-label="Deduct point"
                   >
                     <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
@@ -971,7 +971,7 @@ export function UmpireScoringScreen({
                 onClick={() => {
                   updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "rejected" } });
                 }}
-                className="flex-1 py-3 bg-muted hover:bg-muted-strong text-on-accent font-bold rounded-xl transition"
+                className="flex-1 py-3 bg-muted hover:bg-muted-strong text-foreground font-bold rounded-xl transition"
               >
                 Reject
               </button>

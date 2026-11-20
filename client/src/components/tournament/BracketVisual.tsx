@@ -188,7 +188,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-on-accent hover:bg-muted-strong active:bg-faint transition-colors"
+            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors"
             aria-label="Close"
           >
             <X size={16} />
