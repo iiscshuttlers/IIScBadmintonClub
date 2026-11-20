@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { BarChart3, Target, Users, Zap, TrendingUp, Clock, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -35,14 +36,9 @@ function parseScore(score: string): number[][] {
   }).filter((p) => p.length === 2);
 }
 
-/** The result comes from winner_side; winner_id is NULL when a guest wins. */
+/** The result comes from winner_side (lib/matchResult); winner_id is NULL when a guest wins. */
 function isWinner(match: Match, playerId: string): boolean {
-  const mySide = match.player1_id === playerId || match.team1_partner_id === playerId ? 1 : 2;
-  if (match.winner_side === 1 || match.winner_side === 2) return match.winner_side === mySide;
-  if (!match.winner_id) return false;
-  return mySide === 1
-    ? match.winner_id === match.player1_id || match.winner_id === match.team1_partner_id
-    : match.winner_id === match.player2_id || match.winner_id === match.team2_partner_id;
+  return playerWon(match, playerId) === true;
 }
 
 /**

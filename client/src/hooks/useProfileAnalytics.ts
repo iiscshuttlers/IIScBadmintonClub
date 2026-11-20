@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import type { PlayerRow } from "@/types";
 
@@ -53,7 +54,7 @@ export function useProfileAnalytics(
     let highestElo = -1;
     let bestOpp: AnalyticsOpponent | null = null;
     for (const m of confirmed) {
-      if (m.winner_id === id) {
+      if (playerWon(m, id) === true) {
         const isP1 = m.player1_id === id || m.team1_partner_id === id;
         const opps = isP1 ? [m.player2, m.partner2] : [m.player1, m.partner1];
         for (const op of opps) {

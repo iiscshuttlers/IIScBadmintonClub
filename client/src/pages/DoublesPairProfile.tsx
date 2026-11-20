@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useParams, Link } from "wouter";
 import { useEffect, useState, useMemo } from "react";
 import { fetchDoublesPairData } from "@/services/playerService";
@@ -202,13 +203,8 @@ export default function DoublesPairProfile() {
               <h3 className="font-black text-foreground mb-4">Recent Matches Together</h3>
               <div className="space-y-2">
                 {pairMatches.slice(0, 10).map((m) => {
-                  let won = false;
-                  if (m.winner_id) won = m.winner_id === p1 || m.winner_id === p2;
-                  else if (m.winner_side) {
-                    const p1Team = (m.player1_id === p1 || m.team1_partner_id === p1) ? 1 : 2;
-                    won = m.winner_side === p1Team;
-                  }
-                  
+                  const won = playerWon(m, p1) === true;
+
                   const p1TeamNum = (m.player1_id === p1 || m.team1_partner_id === p1) ? 1 : 2;
                   let opponents = "";
                   

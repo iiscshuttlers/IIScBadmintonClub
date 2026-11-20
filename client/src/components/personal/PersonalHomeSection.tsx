@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import React, { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -36,14 +37,7 @@ export function PersonalHomeSection({
   const { matches: allMatches } = usePlayerMatches(player?.id);
 
   const stats = useMemo(() => {
-    const isWinner = (m: any) => {
-      const isTeam1 = m.player1_id === player?.id || m.team1_partner_id === player?.id;
-      if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-      const isTeam1Winner = m.winner_side
-        ? m.winner_side === 1
-        : m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-      return isTeam1 ? isTeam1Winner : !isTeam1Winner;
-    };
+    const isWinner = (m: any) => playerWon(m, player?.id) === true;
 
     const isStraightSetWin = (m: any) => {
       if (!isWinner(m)) return false;

@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import type { PlayerRow, MatchWithPlayers } from "@/types";
 import type { TournamentRun } from "./useTournamentMatchHistory";
@@ -38,10 +39,9 @@ export function usePlayerStats(
 
     const computeStats = (matches: MatchWithPlayers[]) => {
       const matchResults = matches.map(m => {
-        if (!m.winner_id) return "D";
-        const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
-        const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-        return (isTeam1 ? isTeam1Winner : !isTeam1Winner) ? "W" : "L";
+        const won = playerWon(m, id);
+        if (won == null) return "D";
+        return won ? "W" : "L";
       });
 
       const wins = matchResults.filter(r => r === "W").length;
@@ -168,14 +168,13 @@ export function usePlayerStats(
     let current = 0;
     let max = 0;
     confirmed.forEach(m => {
-      if (!m.winner_id) {
+      const result = playerWon(m, id);
+      if (result == null) {
         current = 0;
         return;
       }
-      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
-      const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-      const won = isTeam1 ? isTeam1Winner : !isTeam1Winner;
-      
+      const won = result;
+
       if (won) {
         current++;
         if (current > max) max = current;

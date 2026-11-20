@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { Trophy, TrendingUp, TrendingDown, Target, Minus, Award, Swords, ChevronRight, Zap, Flame, Crown, Hand, Play, Sparkles } from "lucide-react";
 import { Link } from "wouter";
@@ -25,17 +26,8 @@ export function HeadToHeadWidget({
       return 0;
     };
 
-    // Did the given player's side win? Handles winner_side (tournament) and
-    // match_winner_id (friendly).
-    const didWin = (m: any, uid: string): boolean => {
-      const side = teamOf(m, uid);
-      if (side === 0) return false;
-      if (m.winner_side === 1 || m.winner_side === 2) return m.winner_side === side;
-      const w = m.match_winner_id || m.winner_id;
-      if (!w) return false;
-      if (side === 1) return w === m.player1_id || w === m.team1_partner_id;
-      return w === m.player2_id || w === m.team2_partner_id;
-    };
+    // Did the given player's side win? (lib/matchResult: winner_side first)
+    const didWin = (m: any, uid: string): boolean => playerWon(m, uid) === true;
 
     const stats = useMemo(() => {
     let wins = 0;

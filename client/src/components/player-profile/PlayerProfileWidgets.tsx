@@ -1,3 +1,4 @@
+import { playerWon, sideOf, winningSide } from "@/lib/matchResult";
 import { Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
@@ -203,7 +204,7 @@ export const Badges = ({
 
     // Giant Slayer: Won against someone with 150+ more ELO
     const giantSlayer = matches.some((m) => {
-      if (m.winner_id !== playerId) return false;
+      if (playerWon(m, playerId) !== true) return false;
       const opponent = m.player1_id === playerId ? m.player2 : m.player1;
       const myElo =
         m.player1_id === playerId
@@ -222,14 +223,13 @@ export const Badges = ({
 
     // Clean Sweep: Win where opponent score < 5
     const cleanSweep = matches.some((m) => {
-      if (m.winner_id !== playerId) return false;
+      if (playerWon(m, playerId) !== true) return false;
+      const mySide = sideOf(m, playerId);
       // Parse match_score JSON to see if any set had opponent score < 5
       if (m.match_score && Array.isArray(m.match_score)) {
         return m.match_score.some((set: any) => {
-          const myScore =
-            m.winner_id === m.player1_id ? set.p1_score : set.p2_score;
-          const oppScore =
-            m.winner_id === m.player1_id ? set.p2_score : set.p1_score;
+          const myScore = mySide === 1 ? set.p1_score : set.p2_score;
+          const oppScore = mySide === 1 ? set.p2_score : set.p1_score;
           return myScore > oppScore && oppScore < 5;
         });
       }
@@ -311,7 +311,7 @@ export const Badges = ({
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       )
       .forEach((m) => {
-        if (m.winner_id === playerId) streak++;
+        if (playerWon(m, playerId) === true) streak++;
         else streak = 0;
         maxStreak = Math.max(maxStreak, streak);
       });
@@ -466,7 +466,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                       <div className="truncate flex-1">
                         {match.player1?.full_name?.split(' ')[0]} {match.partner1 ? `& ${match.partner1?.full_name?.split(' ')[0]}` : ''}
                       </div>
-                      {match.winner_id === match.player1_id && <span className="text-gold ml-2 text-xs">👑</span>}
+                      {winningSide(match) === 1 && <span className="text-gold ml-2 text-xs">👑</span>}
                     </div>
                     <div className="flex justify-between items-center text-xs font-black text-muted-foreground my-0.5">
                       <span className="mx-auto bg-muted-strong px-2 py-0.5 rounded">{displayScore}</span>
@@ -475,7 +475,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                       <div className="truncate flex-1">
                         {match.player2?.full_name?.split(' ')[0]} {match.partner2 ? `& ${match.partner2?.full_name?.split(' ')[0]}` : ''}
                       </div>
-                      {match.winner_id === match.player2_id && <span className="text-gold ml-2 text-xs">👑</span>}
+                      {winningSide(match) === 2 && <span className="text-gold ml-2 text-xs">👑</span>}
                     </div>
                   </div>
                 </div>
@@ -537,75 +537,6 @@ export function LoadingScreen() {
   );
 }
 
-export const HeadToHeadWidget = ({
-  currentUser,
-  targetPlayer,
-  matches,
-}: {
-  currentUser: any;
-  targetPlayer: any;
-  matches: any[];
-}) => {
-  if (!currentUser || !targetPlayer || currentUser.id === targetPlayer.id)
-    return null;
-
-  const h2hMatches = matches.filter(
-    (m) =>
-      (m.player1_id === currentUser.id && m.player2_id === targetPlayer.id) ||
-      (m.player2_id === currentUser.id && m.player1_id === targetPlayer.id),
-  );
-
-  if (h2hMatches.length === 0) return null;
-
-  let wins = 0;
-  let losses = 0;
-  h2hMatches.forEach((m) => {
-    if (m.match_winner_id === currentUser.id) wins++;
-    else if (m.match_winner_id === targetPlayer.id) losses++;
-  });
-
-  const winPct = Math.round((wins / (wins + losses)) * 100) || 0;
-
-  return (
-    <div className="bg-muted/80 rounded-3xl p-5 shadow-xl shadow-media/40 dark:shadow-none border border-border-strong/50 mt-6 md:mt-8">
-      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2">
-        ?? HEAD-TO-HEAD
-      </h3>
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <div className="text-xs font-bold text-muted-foreground mb-1">YOU</div>
-            <div className="text-3xl font-black text-primary">{wins}</div>
-          </div>
-          <div className="text-xl font-black text-muted-foreground">
-            -
-          </div>
-          <div className="text-center">
-            <div className="text-xs font-bold text-muted-foreground mb-1">THEM</div>
-            <div className="text-3xl font-black text-danger">{losses}</div>
-          </div>
-        </div>
-        <div className="flex-1 w-full max-w-xs">
-          <div className="flex justify-between text-xs font-bold mb-2">
-            <span className="text-primary">{winPct}% Win Rate</span>
-            <span className="text-muted-foreground">{h2hMatches.length} Matches</span>
-          </div>
-          <div className="h-3 w-full bg-muted-strong rounded-full overflow-hidden flex">
-            <div
-              className="h-full bg-primary"
-              style={{ width: `${winPct}%` }}
-            />
-            <div
-              className="h-full bg-danger"
-              style={{ width: `${100 - winPct}%` }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const DoublesSynergyWidget = ({
   matches,
   playerId,
@@ -622,20 +553,16 @@ export const DoublesSynergyWidget = ({
     matches.forEach((m) => {
       // Determine if I played doubles and who my partner was
       let partnerId = null;
-      let myTeamWon = false;
+      const myTeamWon = playerWon(m, playerId) === true;
 
       if (m.player1_id === playerId && m.team1_partner_id) {
         partnerId = m.team1_partner_id;
-        myTeamWon = m.winner_id === m.player1_id;
       } else if (m.team1_partner_id === playerId) {
         partnerId = m.player1_id;
-        myTeamWon = m.winner_id === m.player1_id;
       } else if (m.player2_id === playerId && m.team2_partner_id) {
         partnerId = m.team2_partner_id;
-        myTeamWon = m.winner_id === m.player2_id;
       } else if (m.team2_partner_id === playerId) {
         partnerId = m.player2_id;
-        myTeamWon = m.winner_id === m.player2_id;
       }
 
       if (partnerId) {

@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -60,7 +61,6 @@ export function MatchCard({
 }: MatchCardProps) {
   const p1 = match.player1;
   const p2 = match.player2;
-  const isP1Winner = match.winner_id === p1?.id || match.winner_id === match.partner1?.id;
   const { isAdmin } = useAuth();
   const { confirm } = useConfirm();
   const matchAlerts = useUserMatchAlerts(currentUser?.id);
@@ -139,8 +139,8 @@ export function MatchCard({
   );
 
   // Tournament rows use the shared WP6 rules: status from the `status` column,
-  // winners only for completed/walkover, games via parseGames. Club matches
-  // (friendlies) keep their own winner_id-based display.
+  // winners only for completed/walkover, games via parseGames. Other rows
+  // fall back to lib/matchResult (winner_side first).
   const isTournamentRow =
     match.is_friendly === false && !!match.tournament_id && typeof match.status === "string" && "winner_side" in match;
   const outcome = isTournamentRow ? matchOutcome(match) : null;
@@ -167,12 +167,11 @@ export function MatchCard({
   const actualP1 = p1 || mockPlayer(match.team1_label);
   const actualP2 = p2 || mockPlayer(match.team2_label);
 
-  const hasWinner = outcome ? outcome.t1Won || outcome.t2Won : !!match.winner_id || !!match.winner_side;
+  const fallbackSide = outcome ? null : winningSide(match);
+  const hasWinner = outcome ? outcome.t1Won || outcome.t2Won : fallbackSide != null;
   const actualIsLiveNow = isLiveNow && !hasWinner;
 
-  const team1Win = outcome
-    ? outcome.t1Won
-    : hasWinner && (match.winner_side === 1 || match.winner_id === p1?.id || match.winner_id === match.partner1?.id);
+  const team1Win = outcome ? outcome.t1Won : fallbackSide === 1;
   const team2Win = outcome ? outcome.t2Won : hasWinner && !team1Win;
   const courtText = match.court_number ? (outcome ? courtLabel(String(match.court_number)) : `Court ${match.court_number}`) : null;
 

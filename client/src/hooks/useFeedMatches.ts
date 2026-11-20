@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchFeedMatches } from "@/services/matchService";
 
@@ -153,8 +154,9 @@ export function useFeedMatches(
       if (m.partner1) addPlayer(m.partner1.id, m.partner1.full_name, m.elo_change_p3 || 0);
       if (m.partner2) addPlayer(m.partner2.id, m.partner2.full_name, m.elo_change_p4 || 0);
 
-      const isP1Winner = m.winner_id === m.player1?.id;
-      if (m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined && m.player1 && m.player2) {
+      const winner = winningSide(m);
+      const isP1Winner = winner === 1;
+      if (winner != null && m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined && m.player1 && m.player2) {
         const eloDiff = m.player1.elo_rating - m.player2.elo_rating;
         if ((isP1Winner && eloDiff < -50) || (!isP1Winner && eloDiff > 50)) {
           const diff = Math.abs(eloDiff);

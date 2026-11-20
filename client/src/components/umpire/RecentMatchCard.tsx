@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import React, { useState, useEffect } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Trophy, Clock, Shield, Edit2, Lock, FileText, CheckCircle2 } from "lucide-react";
@@ -124,15 +125,15 @@ export function RecentMatchCard({ match, isAdmin, currentUserId, onEdit }: Recen
     .filter(Boolean) as { s1: number; s2: number; s1Won: boolean; s2Won: boolean }[];
 
   // Determine winner sides
-  const side1Won = match.winner_side === 1 || 
-    match.winner_id === match.player1_id || 
-    (match.team1_partner_id && match.winner_id === match.team1_partner_id) ||
-    parsedSets.filter(s => s.s1Won).length > parsedSets.filter(s => s.s2Won).length;
+  // The recorded result wins; games decide only when none is recorded.
+  const recordedSide = winningSide(match);
+  const side1Won = recordedSide != null
+    ? recordedSide === 1
+    : parsedSets.filter(s => s.s1Won).length > parsedSets.filter(s => s.s2Won).length;
 
-  const side2Won = match.winner_side === 2 || 
-    match.winner_id === match.player2_id || 
-    (match.team2_partner_id && match.winner_id === match.team2_partner_id) ||
-    (!side1Won && parsedSets.filter(s => s.s2Won).length > parsedSets.filter(s => s.s1Won).length);
+  const side2Won = recordedSide != null
+    ? recordedSide === 2
+    : !side1Won && parsedSets.filter(s => s.s2Won).length > parsedSets.filter(s => s.s1Won).length;
 
   // Names
   const team1DisplayName = resolveTeamName(match.player1, match.partner1, match.team1_label);

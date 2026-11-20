@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useRef, useState } from "react";
 import { Share2, Download, Trophy, Flame, Target, TrendingUp, Zap } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -32,14 +33,14 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
     return new Date(m.created_at).getFullYear() === year && m.status === "confirmed";
   });
 
-  const wins = yearMatches.filter((m) => m.winner_id === playerId).length;
+  const wins = yearMatches.filter((m) => playerWon(m, playerId) === true).length;
   const losses = yearMatches.length - wins;
   const winRate = yearMatches.length > 0 ? Math.round((wins / yearMatches.length) * 100) : 0;
 
   // Best streak
   let bestStreak = 0, currentStreak = 0;
   for (const m of yearMatches) {
-    if (m.winner_id === playerId) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+    if (playerWon(m, playerId) === true) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
     else currentStreak = 0;
   }
 

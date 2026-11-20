@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { matchShortPath } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { fetchLiveMatchesRow, subscribeToHomeLiveMatches } from "@/services/matchService";
@@ -50,7 +51,7 @@ interface TodayMatch {
   status: string;
   scheduled_at: string | null;
   score: string | null;
-  winner_id: string | null;
+  winner_side: 1 | 2 | null;
   player1_id: string | null;
 }
 
@@ -157,7 +158,7 @@ export function ActiveTournamentWidget() {
             status: m.status,
             scheduled_at: m.scheduled_at,
             score: m.score || null,
-            winner_id: m.winner_id,
+            winner_side: winningSide(m),
             player1_id: m.player1_id,
           }));
 
@@ -488,8 +489,8 @@ export function ActiveTournamentWidget() {
                 <div className="space-y-2">
                   {todayMatches.map((m) => {
                     const isCompleted = m.status === "completed" || m.status === "walkover";
-                    const isT1Winner = isCompleted && !!m.winner_id && m.winner_id === m.player1_id;
-                    const isT2Winner = isCompleted && !!m.winner_id && m.winner_id !== m.player1_id;
+                    const isT1Winner = isCompleted && m.winner_side === 1;
+                    const isT2Winner = isCompleted && m.winner_side === 2;
                     
                     const getCategoryColorClass = (cat: string) => {
                       const c = cat?.substring(0, 2).toUpperCase() || "";

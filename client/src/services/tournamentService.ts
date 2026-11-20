@@ -116,7 +116,7 @@ export async function fetchFeederMatches(tournamentId: string, matchCode: string
 export async function fetchTournamentMatchesScheduledBetween(fromIso: string, toIso: string) {
   const { data } = await supabase
     .from("tournament_matches")
-    .select("id, category, round_name, match_code, court_number, status, scheduled_at, score, winner_id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label")
+    .select("id, category, round_name, match_code, court_number, status, scheduled_at, score, winner_id, winner_side, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label")
     .gte("scheduled_at", fromIso)
     .lte("scheduled_at", toIso);
   return data;

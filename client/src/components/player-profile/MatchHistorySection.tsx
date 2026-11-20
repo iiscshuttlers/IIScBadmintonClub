@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
@@ -248,7 +249,7 @@ export function MatchHistorySection({
                         }
                       }
 
-                      const won = isTeam1 ? m.winner_id === m.player1_id : m.winner_id === m.player2_id;
+                      const won = playerWon(m, id) === true;
                       const matchDate = new Date(m.created_at);
                       const isFriendly = m.is_friendly !== false;
 
