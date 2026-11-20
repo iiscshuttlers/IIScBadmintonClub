@@ -22,6 +22,7 @@
     "cap:sync": "npx cap sync",
     "build:aab": "vite build && npx cap sync android && cd android && gradlew bundleRelease",
     "build:release": "node scripts/release.mjs",
+    "play:upload": "node scripts/play-upload.mjs",
     "codebase-map": "node scripts/generate-codebase-map.mjs",
     "verify:wp10": "npm run check && npx vitest run && npm run build && npx playwright test",
     "benchmark:wp10": "npx playwright test tests/wp10-performance.spec.ts --workers=1"

@@ -9,12 +9,14 @@
  *  4. Syncs Capacitor
  *  5. Builds the signed release APK
  *  6. Copies APK to OneDrive
- *  7. Creates a GitHub Release and uploads the APK
+ *  6b. Uploads the AAB to Google Play as a production draft (if a
+ *      service-account key is set up; see docs/play-store-upload.md)
+ *  7. Tags the release
  *  8. Commits + pushes version files (triggers GitHub Pages deploy)
  */
 
 import { readFileSync, writeFileSync, existsSync, copyFileSync } from "fs";
-import { execSync, spawn } from "child_process";
+import { execSync, spawn, spawnSync } from "child_process";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -221,6 +223,20 @@ try {
   ok("APK and AAB copied to OneDrive and local releases directory");
 } catch {
   console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");
+}
+
+/* ── 6b. Upload to Google Play as a draft ───────────────────────── */
+// Drafts reach no users; roll out in Play Console or with
+// `node scripts/play-upload.mjs --existing <code> --rollout`. Non-fatal.
+log("Uploading AAB to Google Play (draft)…");
+{
+  const r = spawnSync(process.execPath, [resolve(root, "scripts/play-upload.mjs"), "--aab", AAB_SRC], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  if (r.status === 0) ok("Play draft created");
+  else if (r.status === 2) console.warn("⚠ No Play service-account key — skipped (see docs/play-store-upload.md)");
+  else console.warn("⚠ Play upload failed (non-fatal) — upload the AAB by hand or rerun: npm run play:upload");
 }
 
 /* ── 7. Git Tag ─────────────────────────────────────────────── */
