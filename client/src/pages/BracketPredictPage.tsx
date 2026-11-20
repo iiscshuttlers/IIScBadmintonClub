@@ -217,11 +217,11 @@ export default function BracketPredictPage() {
         {/* Status: lock + progress + points */}
         <div
           className={`rounded-2xl border p-4 flex items-center gap-4 ${
-            locked ? "border-amber-500/40 bg-amber-500/10" : "border-primary/30 bg-primary/5"
+            locked ? "border-warning/40 bg-warning/10" : "border-primary/30 bg-primary/5"
           }`}
           aria-live="polite"
         >
-          <span className={`w-10 h-10 shrink-0 rounded-full grid place-items-center ${locked ? "bg-amber-500/20 text-amber-500" : "bg-primary/15 text-primary"}`}>
+          <span className={`w-10 h-10 shrink-0 rounded-full grid place-items-center ${locked ? "bg-warning/20 text-warning" : "bg-primary/15 text-primary"}`}>
             {locked ? <Lock className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
           </span>
           <div className="flex-1 min-w-0">
@@ -279,15 +279,15 @@ export default function BracketPredictPage() {
                         <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] font-black text-muted-foreground">{m.match_code}</span>
                         <span className="ml-auto text-[10px] font-black uppercase tracking-wider">
                           {result === "right" ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-500"><CheckCircle2 className="w-3.5 h-3.5" /> +{roundPoints(i, roundsList.length)}</span>
+                            <span className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="w-3.5 h-3.5" /> +{roundPoints(i, roundsList.length)}</span>
                           ) : result === "wrong" ? (
-                            <span className="inline-flex items-center gap-1 text-rose-500"><XCircle className="w-3.5 h-3.5" /> Missed</span>
+                            <span className="inline-flex items-center gap-1 text-danger"><XCircle className="w-3.5 h-3.5" /> Missed</span>
                           ) : m.winner_side ? (
                             <span className="text-muted-foreground">Done</span>
                           ) : myPick ? (
                             <span className="inline-flex items-center gap-1 text-primary">{matchLocked(m) && <Lock className="w-3 h-3" />} {matchLocked(m) ? "Locked in" : "Picked"}</span>
                           ) : matchLocked(m) ? (
-                            <span className="inline-flex items-center gap-1 text-amber-500"><Lock className="w-3 h-3" /> {myPick ? "Locked" : "No pick"}</span>
+                            <span className="inline-flex items-center gap-1 text-warning"><Lock className="w-3 h-3" /> {myPick ? "Locked" : "No pick"}</span>
                           ) : (
                             <span className="text-muted-foreground">Tap to pick</span>
                           )}
@@ -299,7 +299,7 @@ export default function BracketPredictPage() {
                           const won = m.winner_side === k + 1;
                           return (
                             <Fragment key={k}>
-                              {k === 1 && <span className="self-center text-[10px] font-black text-rose-400 shrink-0">VS</span>}
+                              {k === 1 && <span className="self-center text-[10px] font-black text-danger shrink-0">VS</span>}
                               <button
                                 type="button"
                                 disabled={!c || matchLocked(m) || !me}
@@ -308,13 +308,13 @@ export default function BracketPredictPage() {
                                 className={`flex-1 min-w-0 min-h-[3.25rem] rounded-xl border px-3 py-2 text-sm font-bold transition flex items-center gap-2 ${k ? "justify-end text-right" : ""} ${
                                   picked
                                     ? result === "wrong"
-                                      ? "border-rose-500/60 bg-rose-500/10"
+                                      ? "border-danger/60 bg-danger/10"
                                       : "border-primary bg-primary/15 text-foreground ring-2 ring-primary/30"
                                     : "border-border bg-muted/30 text-foreground/90 enabled:hover:border-primary/50"
                                 } disabled:cursor-default`}
                               >
                                 {picked && k === 0 && <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />}
-                                <span className={`line-clamp-2 break-words ${won ? "text-emerald-500" : !c && !(k ? m.team2_label : m.team1_label) ? "text-muted-foreground italic font-medium" : ""}`}>
+                                <span className={`line-clamp-2 break-words ${won ? "text-success" : !c && !(k ? m.team2_label : m.team1_label) ? "text-muted-foreground italic font-medium" : ""}`}>
                                   {c?.label ?? ((k ? m.team2_label : m.team1_label) || "Winner of earlier pick")}
                                 </span>
                                 {picked && k === 1 && <CheckCircle2 className="w-4 h-4 shrink-0 text-primary" />}
@@ -336,7 +336,7 @@ export default function BracketPredictPage() {
                           <div className="mt-2 space-y-1">
                             <div className="flex items-center gap-1.5 h-2 rounded-full overflow-hidden bg-muted/50">
                               {p1Pct > 0 && <div className="h-full rounded-full bg-primary/60" style={{ width: `${p1Pct}%` }} />}
-                              {p2Pct > 0 && <div className="h-full rounded-full bg-sky-500/60 ml-auto" style={{ width: `${p2Pct}%` }} />}
+                              {p2Pct > 0 && <div className="h-full rounded-full bg-info/60 ml-auto" style={{ width: `${p2Pct}%` }} />}
                             </div>
                             <div className="flex justify-between text-[9px] font-bold text-muted-foreground">
                               <span>{p1Pct}% picked</span>
@@ -356,7 +356,7 @@ export default function BracketPredictPage() {
         {started && (
           <section className="rounded-2xl border border-border bg-card p-4" aria-labelledby="lb-h">
             <h3 id="lb-h" className="flex items-center gap-2 text-sm font-black">
-              <Medal className="w-4 h-4 text-amber-500" /> Leaderboard · {CAT[cat] ?? cat}
+              <Medal className="w-4 h-4 text-gold" /> Leaderboard · {CAT[cat] ?? cat}
             </h3>
             {leaderboard.length === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">Nobody predicted this category.</p>

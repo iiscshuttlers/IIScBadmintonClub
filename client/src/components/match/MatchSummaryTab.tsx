@@ -22,7 +22,7 @@ export function GamesTable({ view }: { view: MatchView }) {
           <th scope="col" className="text-right py-1 font-black truncate max-w-[8rem]">{view.sides[1].label}</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+      <tbody className="divide-y divide-border">
         {view.games.map((g, i) => {
           const inProgress = live && i === view.games.length - 1;
           const w1 = !inProgress && g.side1 > g.side2;
@@ -31,7 +31,7 @@ export function GamesTable({ view }: { view: MatchView }) {
             <tr key={i}>
               <th scope="row" className="text-left py-1.5 font-semibold">
                 Game {i + 1}
-                {inProgress && <span className="ml-2 text-[11px] font-black text-red-600 dark:text-red-400">In progress</span>}
+                {inProgress && <span className="ml-2 text-[11px] font-black text-live">In progress</span>}
               </th>
               <td className={`text-right py-1.5 font-mono tabular-nums ${w1 ? "font-black" : "text-muted-foreground"}`}>{g.side1}</td>
               <td className={`text-right py-1.5 font-mono tabular-nums ${w2 ? "font-black" : "text-muted-foreground"}`}>{g.side2}</td>
@@ -80,7 +80,7 @@ export function MatchSummaryTab({
       {next && (
         <Link
           href={matchPath(view.tournamentId, next.id)}
-          className="mt-5 flex items-center justify-between gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 min-h-[44px] text-sm font-bold hover:border-primary transition-colors"
+          className="mt-5 flex items-center justify-between gap-2 rounded-2xl border border-border-strong px-4 py-3 min-h-[44px] text-sm font-bold hover:border-primary transition-colors"
         >
           <span>
             {winner ? `${winner.label} advances to` : "Winner advances to"} {next.round_name}
@@ -95,7 +95,7 @@ export function MatchSummaryTab({
           <button
             type="button"
             onClick={() => setReminderOpen(true)}
-            className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-full border border-slate-200 dark:border-slate-700 text-sm font-black hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-full border border-border-strong text-sm font-black hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <Bell className="w-4 h-4" aria-hidden /> Remind me
           </button>

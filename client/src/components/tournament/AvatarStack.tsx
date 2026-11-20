@@ -16,11 +16,11 @@ function getInitial(name?: string | null): string {
 
 /** Palette for deterministic avatar background gradients */
 const GRADIENTS = [
-  "from-emerald-400 to-teal-500",
-  "from-indigo-400 to-violet-500",
-  "from-amber-400 to-orange-500",
-  "from-rose-400 to-pink-500",
-  "from-cyan-400 to-blue-500",
+  "from-chart-1 to-chart-2",
+  "from-chart-2 to-chart-4",
+  "from-chart-3 to-chart-5",
+  "from-chart-4 to-chart-6",
+  "from-chart-5 to-chart-1",
 ];
 
 export function AvatarStack({
@@ -44,7 +44,7 @@ export function AvatarStack({
           return (
             <div
               key={idx}
-              className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-white dark:ring-slate-900 bg-gradient-to-br ${grad} text-white font-black shadow-xs shrink-0 select-none ${sizeCls}`}
+              className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-gradient-to-br ${grad} text-on-accent font-black shadow-xs shrink-0 select-none ${sizeCls}`}
               title={av.name || `Participant ${idx + 1}`}
               aria-label={av.name || `Participant ${idx + 1}`}
             >
@@ -64,7 +64,7 @@ export function AvatarStack({
         {/* Remainder badge when participants exceed visible avatars */}
         {remainder > 0 && (
           <div
-            className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-white dark:ring-slate-900 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black shadow-xs shrink-0 select-none ${sizeCls}`}
+            className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-muted-strong text-soft font-black shadow-xs shrink-0 select-none ${sizeCls}`}
             title={`+${remainder} more entered`}
             aria-label={`Plus ${remainder} more participants`}
           >
@@ -73,7 +73,7 @@ export function AvatarStack({
         )}
       </div>
 
-      <span className="font-semibold text-slate-700 dark:text-slate-300">
+      <span className="font-semibold text-soft">
         {totalCount} {totalCount === 1 ? "entered" : "entered"}
       </span>
     </div>

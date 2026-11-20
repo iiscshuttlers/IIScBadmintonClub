@@ -11,11 +11,12 @@ import {
 } from "lucide-react";
 import { syncBracketNames } from "@/lib/bracketSync";
 import { exportToImage, exportToPDF } from "@/utils/exportUtils";
+import { themeColorFor, withAlpha, type ThemeColorToken } from "@/lib/themeColors";
 import { downloadCSV } from "@/utils/csvUtils";
 import { TournamentMatchesTab } from "./TournamentMatchesTab";
 import type { Tournament, TournamentMatch, RoundRule } from "@/types/tournament";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 
 export interface TournamentBracketTabProps {
   tournament: Tournament;
@@ -244,18 +245,24 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
 
     const sheetName = `Schedule - ${scheduleDate}`;
     const filename = `${tournament.name.replace(/\s+/g, '_')}_schedule_${scheduleDate}`;
+    // The PDF is printed on white paper, so resolve colours from the light "paper" theme.
+    const paperCard = themeColorFor("paper", "card");
+    const paperInk = themeColorFor("paper", "foreground");
+    const categoryTint = (token: ThemeColorToken) => withAlpha(themeColorFor("paper", token), 0.07);
+    const categoryBg: Record<string, string> = {
+      MS: categoryTint("cat-ms"),
+      WS: categoryTint("cat-ws"),
+      MD: categoryTint("cat-md"),
+      WD: categoryTint("cat-wd"),
+      XD: categoryTint("cat-xd"),
+    };
     const cellStyler = (row: any[], _rowIndex: number, colIndex: number) => {
       const cat = row[1];
-      let bgColor = "#ffffff";
-      if (cat === "MS") bgColor = "#eff6ff";
-      else if (cat === "WS") bgColor = "#fdf2f8";
-      else if (cat === "MD") bgColor = "#f0fdf4";
-      else if (cat === "WD") bgColor = "#faf5ff";
-      else if (cat === "XD") bgColor = "#fff7ed";
+      const bgColor = categoryBg[cat] ?? paperCard;
       
       let style = `background-color: ${bgColor};`;
       if (colIndex === 0 || colIndex === 1 || colIndex === 4 || colIndex === 6 || colIndex === 7) {
-        style += " font-weight: 600; color: #0f172a;";
+        style += ` font-weight: 600; color: ${paperInk};`;
       }
       return style;
     };
@@ -344,7 +351,7 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   if (!matches.length) return (
     <div className={`${cardCls} text-center py-10`}>
-      <Swords className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+      <Swords className="w-10 h-10 text-soft mx-auto mb-3" />
       <p className="text-muted-foreground font-bold">No bracket yet. Go to Participants tab and click Generate Bracket.</p>
     </div>
   );
@@ -359,20 +366,20 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
         <div className="flex flex-wrap gap-2">
           {(tournament.categories || []).map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"}`}>
+              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-card border border-border text-soft hover:border-primary"}`}>
               {cat}
             </button>
           ))}
         </div>
         <div className="flex flex-col gap-2 w-full sm:w-auto">
           {/* Visual / List switch */}
-          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full">
+          <div className="flex rounded-xl border border-border-strong overflow-hidden text-xs font-black w-full">
             <button onClick={() => setViewMode("visual")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-on-accent" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-soft"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-on-accent" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-soft"}`}>
               List
             </button>
           </div>
@@ -380,29 +387,29 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
           {/* Export PDF / CSV */}
           <div className="flex gap-2 w-full">
             <button onClick={() => downloadMatchesPDF(activeCategory)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--danger)] dark:border-[var(--danger)] text-xs font-black text-[var(--danger)] dark:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 transition">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-danger text-xs font-black text-danger hover:bg-danger/30 transition">
               <FileText className="w-3.5 h-3.5 shrink-0" /> Export PDF
             </button>
             <button onClick={() => downloadMatchesCSV(activeCategory)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--success)] dark:border-[var(--success)] text-xs font-black text-[var(--success)] dark:text-[var(--success)] hover:bg-emerald-50 dark:hover:bg-[var(--success)]/30 transition">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-success text-xs font-black text-success hover:bg-success/30 transition">
               <Download className="w-3.5 h-3.5 shrink-0" /> Export CSV
             </button>
           </div>
 
           {/* Daily Schedule Print */}
-          <div className="flex gap-2 w-full items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex gap-2 w-full items-center bg-card/50 p-2 rounded-xl border border-border">
             <input 
               type="date"
               value={scheduleDate}
               onChange={(e) => setScheduleDate(e.target.value)}
-              className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold w-32 focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-800 dark:text-slate-200"
+              className="px-2 py-1.5 rounded-lg border border-border-strong bg-background text-xs font-bold w-32 focus:outline-none focus:ring-2 focus:ring-primary/50 text-soft"
             />
             <button onClick={printDailySchedulePDF}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 text-xs font-black transition">
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-info/10 text-info hover:bg-info/20 border border-info/40 text-xs font-black transition">
               <FileText className="w-3.5 h-3.5 shrink-0" /> PDF
             </button>
             <button onClick={printDailyScheduleImage}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-xs font-black transition">
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 text-success hover:bg-success/20 border border-success/40 text-xs font-black transition">
               <Camera className="w-3.5 h-3.5 shrink-0" /> PNG
             </button>
           </div>
@@ -410,7 +417,7 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
           {/* Admin Actions */}
           <div className="flex flex-wrap gap-2 w-full">
             <button onClick={() => setShowBulkSchedule(true)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--info)] dark:border-[var(--info)] text-xs font-black text-[var(--info)] dark:text-[var(--info)] hover:bg-blue-50 dark:hover:bg-[var(--info)]/30 transition min-w-[120px]">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-info text-xs font-black text-info hover:bg-info/30 transition min-w-[120px]">
               <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
             </button>
             <button 
@@ -452,7 +459,7 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
                   setIsSyncing(false); 
                 }
               }}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--warning)] dark:border-[var(--warning)] text-xs font-black text-[var(--warning)] dark:text-[var(--warning)] hover:bg-amber-50 dark:hover:bg-[var(--warning)]/30 transition min-w-[120px] disabled:opacity-50">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-warning text-xs font-black text-warning hover:bg-warning/30 transition min-w-[120px] disabled:opacity-50">
               {isSyncing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 shrink-0" />} Sync Names
             </button>
             <button 
@@ -461,7 +468,7 @@ export function TournamentBracketTab({ tournament, isMasterAdmin }: TournamentBr
                 setIsAdvancing(true);
                 try { await batchAdvance(); } finally { setIsAdvancing(false); }
               }}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-on-accent text-xs font-black transition min-w-[120px] disabled:opacity-50">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-individual hover:bg-individual/90 text-on-accent text-xs font-black transition min-w-[120px] disabled:opacity-50">
               {isAdvancing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <SkipForward className="w-3.5 h-3.5 shrink-0" />} Batch Advance
             </button>
           </div>

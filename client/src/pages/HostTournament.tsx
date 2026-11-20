@@ -42,7 +42,7 @@ export default function HostTournament() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-8">
       <PageHeader
         backTo="/tournaments"
         backLabel="Tournaments"
@@ -58,14 +58,14 @@ export default function HostTournament() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 rounded-2xl bg-slate-200 dark:bg-slate-900 animate-pulse" />
+              <div key={i} className="h-40 rounded-2xl bg-card animate-pulse" />
             ))}
           </div>
         ) : tournaments.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <Briefcase className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
+          <div className="text-center py-16 bg-card/50 rounded-3xl border border-border shadow-sm">
+            <Briefcase className="w-12 h-12 text-faint mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">No tournaments yet</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto">Create one in four short steps. It stays a private draft until you go live.</p>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">Create one in four short steps. It stays a private draft until you go live.</p>
             <div className="flex justify-center">{createButton}</div>
           </div>
         ) : (
@@ -73,18 +73,18 @@ export default function HostTournament() {
             {tournaments.map((t) => (
               <div
                 key={t.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl p-5 flex flex-col justify-between hover:border-primary/30 transition-colors"
+                className="bg-card border border-border shadow-sm rounded-2xl p-5 flex flex-col justify-between hover:border-primary/30 transition-colors"
               >
                 <div>
                   <div className="mb-3"><StatusChip status={t.status} /></div>
-                  <h3 className="text-lg font-black leading-tight mb-2 text-slate-900 dark:text-white">{t.name}</h3>
-                  <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                  <h3 className="text-lg font-black leading-tight mb-2 text-foreground">{t.name}</h3>
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{t.venue || 'No venue yet'} · {t.format_family === 'TEAM' ? 'Team event' : 'Open event'}</span>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
+                <div className="mt-5 pt-4 border-t border-border grid grid-cols-2 gap-2">
                   <Link
                     href={tournamentManagePath(t.id, isAdmin)}
                     className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-lg text-xs font-bold transition-colors"
@@ -93,7 +93,7 @@ export default function HostTournament() {
                   </Link>
                   <Link
                     href={tournamentPath(t.id)}
-                    className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-lg text-xs font-bold transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-muted hover:bg-muted-strong text-soft py-2 rounded-lg text-xs font-bold transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" /> Public page
                   </Link>

@@ -9,15 +9,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Tournament } from "@/types/tournament";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm";
+const cardCls = "bg-card rounded-2xl border border-border p-4 shadow-sm";
 
 export function StatusChip({ status }: { status: string }) {
   const map: Record<string, string> = {
-    draft: "bg-slate-100 dark:bg-slate-800 text-muted-foreground",
-    active: "bg-primary/15 dark:bg-primary/20 text-primary",
-    completed: "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400",
-    archived: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400",
-    deleted: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400",
+    draft: "bg-muted text-muted-foreground",
+    active: "bg-primary/20 text-primary",
+    completed: "bg-info/15 text-info",
+    archived: "bg-warning/15 text-warning",
+    deleted: "bg-danger/15 text-danger",
   };
   const label: Record<string, string> = { active: "live" };
   return (
@@ -76,10 +76,10 @@ export function TournamentHeader({
               const t = tournaments.find((item) => item.id === e.target.value);
               if (t) onSelectTournament(t);
             }}
-            className="w-full text-sm font-black text-slate-800 dark:text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 pr-8 appearance-none outline-none focus:ring-2 focus:ring-primary/40 truncate cursor-pointer transition-all"
+            className="w-full text-sm font-black text-foreground bg-muted/80 border border-border-strong rounded-xl px-3 py-2.5 pr-8 appearance-none outline-none focus:ring-2 focus:ring-primary/40 truncate cursor-pointer transition-all"
           >
             {filteredTournaments.map((t) => (
-              <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+              <option key={t.id} value={t.id} className="bg-card text-foreground">
                 {t.name}
               </option>
             ))}
@@ -87,7 +87,7 @@ export function TournamentHeader({
               <option disabled value="">No {statusFilter} tournaments</option>
             )}
           </select>
-          <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
         </div>
 
         {selected && <div className="shrink-0"><StatusChip status={selected.status} /></div>}
@@ -96,7 +96,7 @@ export function TournamentHeader({
           <DropdownMenuTrigger asChild>
             <button
               aria-label="More actions"
-              className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-xl border border-border-strong text-muted-foreground hover:text-foreground hover:bg-muted transition"
             >
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreHorizontal className="w-4 h-4" />}
             </button>
@@ -142,7 +142,7 @@ export function TournamentHeader({
       </div>
 
       {viewingBin && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <span className="text-xs text-muted-foreground mr-auto">
             Showing {statusFilter === "deleted" ? "the trash" : "archived tournaments"}.{" "}
             <button onClick={() => setStatusFilter("active")} className="font-bold text-primary hover:underline">
@@ -160,7 +160,7 @@ export function TournamentHeader({
               </button>
               <button
                 onClick={() => onPermanentlyDelete(selected)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-black transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-danger/10 hover:bg-danger/20 text-danger text-xs font-black transition"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Delete forever

@@ -8,14 +8,14 @@ import { PLACEMENT_META, expandCategory, formatCertDate } from "@/lib/certificat
 function CertificateResult({ cert }: { cert: VerifiedCertificate }) {
   const meta = PLACEMENT_META[cert.placement];
   return (
-    <div className="rounded-3xl border-2 border-emerald-500/40 bg-emerald-500/5 p-6 text-center space-y-4">
+    <div className="rounded-3xl border-2 border-success/40 bg-success/5 p-6 text-center space-y-4">
       <div className="flex justify-center">
-        <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-          <ShieldCheck className="w-7 h-7 text-emerald-500" />
+        <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
+          <ShieldCheck className="w-7 h-7 text-success" />
         </div>
       </div>
       <div>
-        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Verified Certificate</p>
+        <p className="text-sm font-bold text-success uppercase tracking-wider">Verified Certificate</p>
         <p className="text-xs text-muted-foreground mt-1">{cert.code}</p>
       </div>
       <div className="space-y-1">
@@ -37,13 +37,13 @@ function CertificateResult({ cert }: { cert: VerifiedCertificate }) {
 
 function NotFound({ code }: { code: string }) {
   return (
-    <div className="rounded-3xl border-2 border-red-500/30 bg-red-500/5 p-6 text-center space-y-3">
+    <div className="rounded-3xl border-2 border-danger/30 bg-danger/5 p-6 text-center space-y-3">
       <div className="flex justify-center">
-        <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-          <ShieldX className="w-7 h-7 text-red-500" />
+        <div className="w-14 h-14 rounded-full bg-danger/10 flex items-center justify-center">
+          <ShieldX className="w-7 h-7 text-danger" />
         </div>
       </div>
-      <p className="font-bold text-red-600 dark:text-red-400">Certificate not found</p>
+      <p className="font-bold text-danger">Certificate not found</p>
       <p className="text-sm text-muted-foreground">
         No certificate with code <span className="font-mono font-bold">{code}</span> exists in our records.
       </p>

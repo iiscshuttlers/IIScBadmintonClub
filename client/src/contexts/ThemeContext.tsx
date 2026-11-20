@@ -1,16 +1,28 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import {
+  DEFAULT_THEME,
+  THEMES,
+  THEME_STORAGE_KEY,
+  ensureThemeFonts,
+  getThemeMeta,
+  isThemeId,
+  type ThemeId,
+  type ThemeMeta,
+} from "@/lib/themes";
+import { THEME_CHANGE_EVENT, themeColor } from "@/lib/themeColors";
 
-type Theme = "light" | "dark";
-type Accent = "emerald" | "violet" | "rose" | "amber" | "blue" | "cyberpunk";
+type Mode = "light" | "dark";
 
 interface ThemeContextType {
-  theme: Theme;
-  accent: Accent;
-  toggleTheme?: () => void;
-  setAccent?: (a: Accent) => void;
+  /** The selected theme (one of the five in lib/themes.ts). */
+  themeId: ThemeId;
+  setThemeId: (id: ThemeId) => void;
+  themes: readonly ThemeMeta[];
+  /** Whether the selected theme is light or dark (for the few places that need to know). */
+  theme: Mode;
   switchable: boolean;
 }
 
@@ -18,77 +30,70 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultTheme?: Theme;
   switchable?: boolean;
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "dark",
-  switchable = false,
-}: ThemeProviderProps) {
-  // Enforce dark theme
-  const [theme, setTheme] = useState<Theme>("dark");
+function readStoredTheme(): ThemeId {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (isThemeId(stored)) return stored;
+  } catch {
+    /* storage blocked — fall back to the default */
+  }
+  return DEFAULT_THEME;
+}
 
-  const [accent, setAccentState] = useState<Accent>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("accent");
-      return (stored as Accent) || "emerald";
-    }
-    return "emerald";
-  });
+export function ThemeProvider({ children, switchable = false }: ThemeProviderProps) {
+  const [themeId, setThemeState] = useState<ThemeId>(() => (switchable ? readStoredTheme() : DEFAULT_THEME));
+  const meta = getThemeMeta(themeId);
 
   useEffect(() => {
     const root = document.documentElement;
-    const isDark = theme === "dark";
-
-    if (isDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
-    // Update all theme-color meta tags
-    document.querySelectorAll('meta[name="theme-color"]').forEach((el) => {
-      el.setAttribute("content", isDark ? "#000000" : "#1e3a5f");
-    });
-
-    if (accent === "emerald") {
-      root.removeAttribute("data-accent");
-    } else {
-      root.setAttribute("data-accent", accent);
-    }
+    root.setAttribute("data-theme", themeId);
+    root.classList.toggle("dark", meta.dark);
+    root.style.colorScheme = meta.dark ? "dark" : "light";
+    // The pre-React boot colours are no longer needed once the stylesheet applies the theme.
+    root.style.removeProperty("--boot-bg");
+    root.style.removeProperty("--boot-accent");
+    ensureThemeFonts(themeId);
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
-      localStorage.setItem("accent", accent);
-    }
-
-    // Sync Android status bar style with theme
-    if (Capacitor.isNativePlatform()) {
-      StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
-      StatusBar.setBackgroundColor({ color: isDark ? "#000000" : "#1e3a5f" }).catch(() => {});
-    }
-  }, [theme, accent, switchable]);
-
-  const toggleTheme = switchable
-    ? async () => {
-        // Enforced dark theme, do nothing for theme change
-        if (Capacitor.isNativePlatform()) {
-          try {
-            await Haptics.impact({ style: ImpactStyle.Light });
-          } catch (e) {
-            console.warn("Haptics failed", e);
-          }
-        }
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, themeId);
+        // Old preferences from the accent picker and the light/dark toggle.
+        localStorage.removeItem("accent");
+        localStorage.removeItem("theme");
+      } catch {
+        /* ignore */
       }
-    : undefined;
+    }
+    root.removeAttribute("data-accent");
 
-  const setAccent = switchable ? setAccentState : undefined;
+    const background = themeColor("background");
+    if (background) {
+      document.querySelectorAll('meta[name="theme-color"]').forEach((el) => el.setAttribute("content", background));
+    }
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: meta.dark ? Style.Dark : Style.Light }).catch(() => {});
+      if (background) StatusBar.setBackgroundColor({ color: background }).catch(() => {});
+    }
+    root.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: { themeId } }));
+  }, [themeId, meta.dark, switchable]);
+
+  const setThemeId = useCallback(
+    (id: ThemeId) => {
+      if (!switchable || !isThemeId(id)) return;
+      setThemeState(id);
+      if (Capacitor.isNativePlatform()) {
+        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+      }
+    },
+    [switchable],
+  );
 
   return (
     <ThemeContext.Provider
-      value={{ theme, accent, toggleTheme, setAccent, switchable }}
+      value={{ themeId, setThemeId, themes: THEMES, theme: meta.dark ? "dark" : "light", switchable }}
     >
       {children}
     </ThemeContext.Provider>

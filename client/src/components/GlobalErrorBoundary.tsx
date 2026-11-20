@@ -26,21 +26,21 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-200 p-6">
-          <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-rose-500" />
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center text-soft p-6">
+          <div className="max-w-md w-full bg-card border border-border rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-danger/20 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-danger" />
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-2xl font-black text-white">Something went wrong</h2>
-              <p className="text-slate-400 text-sm">
+              <h2 className="text-2xl font-black text-foreground">Something went wrong</h2>
+              <p className="text-muted-foreground text-sm">
                 The application encountered an unexpected error.
               </p>
             </div>
 
-            <div className="w-full bg-slate-950 rounded-xl p-4 overflow-x-auto text-left border border-slate-800">
-              <code className="text-xs text-rose-400 font-mono">
+            <div className="w-full bg-background rounded-xl p-4 overflow-x-auto text-left border border-border">
+              <code className="text-xs text-danger font-mono">
                 {this.state.error?.message || "Unknown error"}
               </code>
             </div>

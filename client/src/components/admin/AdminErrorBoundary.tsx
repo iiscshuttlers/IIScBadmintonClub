@@ -34,8 +34,8 @@ export class AdminErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
 
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-rose-500/40 bg-rose-500/5 py-16 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+      <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-danger/40 bg-danger/5 py-16 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-danger/15 text-danger">
           <AlertTriangle className="h-6 w-6" />
         </div>
         <p className="text-base font-black text-foreground">

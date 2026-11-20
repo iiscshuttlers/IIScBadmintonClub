@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { themeClasses } from "@/lib/legacyColorClasses";
 import { fetchSiteData } from "@/lib/siteData";
 import { feedService } from "@/services/feedService";
 import { Link, useLocation } from "wouter";
@@ -195,7 +196,7 @@ export default function StatusBanner() {
   return (
     <div className="flex flex-col">
       {maintenance.mode && (
-        <div className="bg-rose-600 text-on-accent p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
+        <div className="bg-danger text-on-accent p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
           <span className="animate-pulse">🔴</span>
           {maintenance.msg}
         </div>
@@ -233,10 +234,10 @@ export default function StatusBanner() {
       </Link>
       <button
         onClick={() => setIsClosed(true)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/20 hover:bg-black/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-black/10"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-media/20 hover:bg-media/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-background/10"
         aria-label="Close banner"
       >
-        <X className="w-5 h-5 text-white" />
+        <X className="w-5 h-5 text-foreground" />
       </button>
     </div>
   )}
@@ -268,10 +269,10 @@ export default function StatusBanner() {
                             className="flex items-center gap-6"
                           >
                               <span
-                                className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
+                                className={isCssColor(msg.colorClass) ? "" : themeClasses(msg.colorClass)}
                                 style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
                               >{msg.text}</span>
-                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-foreground/40 flex-shrink-0" />
                             </span>
                         );
                       })}
@@ -284,7 +285,7 @@ export default function StatusBanner() {
             return (
               <div
                 key={flyer.id}
-                className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
+                className={`relative ${bgIsCss ? "" : themeClasses(flyer.bgColorClass)} on-fill py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
                 style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
               >
                 {flyer.url ? (
@@ -300,10 +301,10 @@ export default function StatusBanner() {
                     newClosed.add(flyer.id);
                     setClosedFlyers(newClosed);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/20 hover:bg-black/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-black/10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-media/20 hover:bg-media/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-background/10"
                   aria-label="Close flyer"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="w-5 h-5 text-foreground" />
                 </button>
               </div>
             );

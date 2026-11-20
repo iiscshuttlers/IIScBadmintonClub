@@ -80,7 +80,7 @@ export function CertificateDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-500" /> Certificate
+            <Award className="w-5 h-5 text-gold" /> Certificate
           </DialogTitle>
           <DialogDescription>
             {input ? `${input.recipient} · ${certificateWording(input).highlight} · ${expandCategory(input.category)}` : ""}
@@ -97,9 +97,9 @@ export function CertificateDialog({
           <button
             type="button"
             onClick={copyCode}
-            className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm"
+            className="flex items-center justify-center gap-2 rounded-xl border border-success/30 bg-success/5 px-3 py-2 text-sm"
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <ShieldCheck className="w-4 h-4 text-success" />
             <span className="font-mono font-bold">{certCode}</span>
             <Copy className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">· Verify at /verify</span>
@@ -145,7 +145,7 @@ export function CertificateButton({
       onClick={() => onOpen(recipient, placement)}
       aria-label={`Certificate for ${recipient}`}
       title="Certificate & share card"
-      className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+      className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg text-gold hover:bg-gold/10 transition-colors"
     >
       <Award className="w-4 h-4" />
     </button>

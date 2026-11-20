@@ -31,7 +31,7 @@ export function TeamLogo({
     }[size];
 
     return (
-      <div className={`relative shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-xs bg-slate-900 ${sizeClasses} ${className}`}>
+      <div className={`relative shrink-0 overflow-hidden border border-border-strong/80 shadow-xs bg-card ${sizeClasses} ${className}`}>
         <img
           src={logoUrl}
           alt={name || shortName || 'Team Logo'}
@@ -48,14 +48,14 @@ export function TeamLogo({
 
   // Pick vibrant, aesthetic modern gradient based on team text seed
   const gradients = [
-    'from-emerald-400 via-teal-300 to-cyan-400',
-    'from-amber-400 via-orange-400 to-rose-400',
-    'from-fuchsia-400 via-pink-400 to-rose-400',
-    'from-cyan-400 via-sky-400 to-indigo-400',
-    'from-lime-400 via-emerald-400 to-teal-400',
-    'from-violet-400 via-purple-400 to-pink-400',
-    'from-yellow-300 via-lime-400 to-emerald-400',
-    'from-rose-400 via-orange-400 to-amber-300',
+    'from-chart-1 to-chart-2',
+    'from-chart-2 to-chart-4',
+    'from-chart-3 to-chart-5',
+    'from-chart-4 to-chart-6',
+    'from-chart-5 to-chart-1',
+    'from-chart-6 to-chart-3',
+    'from-chart-1 to-chart-6',
+    'from-chart-3 to-chart-4',
   ];
 
   let hash = 0;
@@ -81,11 +81,11 @@ export function TeamLogo({
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center shrink-0 border border-slate-700/80 dark:border-slate-800 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 text-white font-black shadow-md shadow-slate-950/40 select-none overflow-hidden ${sizeStyles.box} ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 border border-border bg-gradient-to-b from-card/95 via-card to-background text-foreground font-black shadow-md shadow-media/40 select-none overflow-hidden ${sizeStyles.box} ${className}`}
       title={name || acronym}
     >
       {/* Subtle top sheen highlight */}
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-foreground/25 to-transparent pointer-events-none" />
 
       {/* Colorful Gradient Typography */}
       <span

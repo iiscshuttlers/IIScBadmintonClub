@@ -17,9 +17,9 @@ import { calculateMinRosterRequirements } from "@/lib/teamLineupRules";
 import type { Tournament } from "@/types/tournament";
 import type { LifecycleReadinessReport } from "@/lib/tournamentReadiness";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 const CATEGORIES = ["MS", "WS", "MD", "WD", "XD"];
 
 /** Readiness checks name the old tab ids; label them by where they live now. */
@@ -349,14 +349,14 @@ export function TournamentSettingsTab({
               <ol className="flex items-center gap-1 sm:gap-2" aria-label="Tournament status">
                 {STEPS.map((s, i) => (
                   <li key={s.key} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0" aria-current={i === idx ? "step" : undefined}>
-                    <span className={`w-7 h-7 shrink-0 rounded-full grid place-items-center text-xs font-black ${i < idx ? "bg-emerald-500 text-white" : i === idx ? "bg-primary text-primary-foreground ring-4 ring-primary/25" : "bg-muted text-muted-foreground"}`}>
+                    <span className={`w-7 h-7 shrink-0 rounded-full grid place-items-center text-xs font-black ${i < idx ? "bg-success text-success-foreground" : i === idx ? "bg-primary text-primary-foreground ring-4 ring-primary/25" : "bg-muted text-muted-foreground"}`}>
                       {i < idx ? <Check className="w-3.5 h-3.5" /> : i + 1}
                     </span>
                     <span className="min-w-0">
                       <span className={`block text-xs font-black truncate ${i === idx ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
                       <span className="hidden sm:block text-[10px] text-muted-foreground truncate">{s.hint}</span>
                     </span>
-                    {i < STEPS.length - 1 && <span className={`flex-1 h-0.5 min-w-2 rounded ${i < idx ? "bg-emerald-500" : "bg-border"}`} />}
+                    {i < STEPS.length - 1 && <span className={`flex-1 h-0.5 min-w-2 rounded ${i < idx ? "bg-success" : "bg-border"}`} />}
                   </li>
                 ))}
               </ol>
@@ -379,7 +379,7 @@ export function TournamentSettingsTab({
                 {form.status === "draft" && (
                   <Link
                     href={`/tournament-setup/${tournament.id}`}
-                    className="px-3.5 py-2 text-xs font-bold rounded-xl border border-border text-slate-700 dark:text-slate-200 hover:border-primary inline-flex items-center gap-1.5 transition"
+                    className="px-3.5 py-2 text-xs font-bold rounded-xl border border-border text-soft hover:border-primary inline-flex items-center gap-1.5 transition"
                   >
                     <ListChecks className="w-3.5 h-3.5 text-primary" />
                     What's left before going live?
@@ -392,15 +392,15 @@ export function TournamentSettingsTab({
       </div>
 
       {readinessModalOpen && readinessReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-media/60 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-2xl ${readinessReport.allowed ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600" : "bg-rose-50 dark:bg-rose-950/40 text-rose-600"}`}>
+                <div className={`p-2.5 rounded-2xl ${readinessReport.allowed ? "bg-success/15 text-success" : "bg-danger/15 text-danger"}`}>
                   {readinessReport.allowed ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  <h3 className="text-base font-black text-foreground">
                     {readinessReport.action === "announce"
                       ? "Announcement Readiness"
                       : readinessReport.action === "publish_draw"
@@ -416,7 +416,7 @@ export function TournamentSettingsTab({
               </div>
               <button
                 onClick={() => setReadinessModalOpen(false)}
-                className="p-2 rounded-xl text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -424,22 +424,22 @@ export function TournamentSettingsTab({
 
             {readinessReport.blockers.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                <h4 className="text-xs font-black uppercase tracking-wider text-danger">
                   Required Fixes ({readinessReport.blockers.length})
                 </h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                   {readinessReport.blockers.map((b, i) => (
                     <div
                       key={i}
-                      className="p-3 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 flex items-center justify-between gap-3 text-xs"
+                      className="p-3 rounded-2xl border border-danger/30 bg-danger/10 flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-rose-200/60 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200">
+                          <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-danger/25 text-danger">
                             {b.code}
                           </span>
                         </div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">{b.message}</p>
+                        <p className="font-semibold text-soft">{b.message}</p>
                       </div>
                       {onNavigateTab && (
                         <button
@@ -447,7 +447,7 @@ export function TournamentSettingsTab({
                             setReadinessModalOpen(false);
                             onNavigateTab(b.fix_tab);
                           }}
-                          className="shrink-0 px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary text-slate-900 dark:text-slate-100 transition shadow-sm"
+                          className="shrink-0 px-3 py-1.5 rounded-xl font-bold bg-muted border border-border-strong hover:border-primary text-foreground transition shadow-sm"
                         >
                           Fix in {FIX_LABEL[b.fix_tab] ?? b.fix_tab}
                         </button>
@@ -460,22 +460,22 @@ export function TournamentSettingsTab({
 
             {readinessReport.warnings.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                <h4 className="text-xs font-black uppercase tracking-wider text-warning">
                   Optional Warnings ({readinessReport.warnings.length})
                 </h4>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                   {readinessReport.warnings.map((w, i) => (
                     <div
                       key={i}
-                      className="p-3 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-between gap-3 text-xs"
+                      className="p-3 rounded-2xl border border-warning/30 bg-warning/10 flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">
+                          <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-warning/25 text-warning">
                             {w.code}
                           </span>
                         </div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">{w.message}</p>
+                        <p className="font-semibold text-soft">{w.message}</p>
                       </div>
                       {onNavigateTab && (
                         <button
@@ -483,7 +483,7 @@ export function TournamentSettingsTab({
                             setReadinessModalOpen(false);
                             onNavigateTab(w.fix_tab);
                           }}
-                          className="shrink-0 px-3 py-1.5 rounded-xl font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary text-slate-900 dark:text-slate-100 transition shadow-sm"
+                          className="shrink-0 px-3 py-1.5 rounded-xl font-bold bg-muted border border-border-strong hover:border-primary text-foreground transition shadow-sm"
                         >
                           Review
                         </button>
@@ -494,10 +494,10 @@ export function TournamentSettingsTab({
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <button
                 onClick={() => setReadinessModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold rounded-xl border border-border bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-border bg-muted hover:bg-muted-strong transition"
               >
                 Close
               </button>
@@ -509,7 +509,7 @@ export function TournamentSettingsTab({
       {/* Basics */}
       <div className={cardCls}>
         <div className="flex items-baseline justify-between gap-2 mb-4">
-          <h3 className="font-black text-slate-800 dark:text-foreground">Basics</h3>
+          <h3 className="font-black text-foreground">Basics</h3>
           <span className="text-xs text-muted-foreground">{isTeam ? "Team event" : "Open event"}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -538,7 +538,7 @@ export function TournamentSettingsTab({
                   return (
                     <button key={cat} type="button"
                       onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...(form.categories ?? []), cat])}
-                      className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
+                      className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "border-border-strong text-muted-foreground hover:border-primary"}`}>
                       {cat}
                     </button>
                   );
@@ -559,10 +559,10 @@ export function TournamentSettingsTab({
 
       {/* Registration */}
       <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">How players sign up</h3>
+        <h3 className="font-black text-foreground mb-4">How players sign up</h3>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
+            <span className="font-bold text-soft text-sm flex items-center gap-1.5">
               <ClipboardList className="w-4 h-4 text-primary" /> Sign up in the app
             </span>
             <p className="text-xs text-muted-foreground">
@@ -575,13 +575,13 @@ export function TournamentSettingsTab({
             aria-checked={!!form.require_app_registration}
             aria-label="Sign up in the app"
             onClick={() => upd("require_app_registration", !form.require_app_registration)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${form.require_app_registration ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${form.require_app_registration ? "bg-primary" : "bg-muted-strong"}`}
           >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.require_app_registration ? "translate-x-6" : "translate-x-1"}`} />
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform ${form.require_app_registration ? "translate-x-6" : "translate-x-1"}`} />
           </button>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mt-4 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
           {!form.require_app_registration && (
             <div className="sm:col-span-2">
               <label className={labelCls}>Or link an external form</label>
@@ -625,27 +625,27 @@ export function TournamentSettingsTab({
           {form.format_family === 'TEAM' && (
             <div className="sm:col-span-2">
               <label className={labelCls}>Rubbers in a tie</label>
-              <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <div className="space-y-2 border border-border rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-3">Quickly add or remove rubbers to build the default order of play for a tie.</p>
                 
                 <div className="flex flex-wrap gap-4 mb-6">
                   {CATEGORIES.map(cat => (
                     <div key={cat} className="flex flex-col items-center">
                       <span className="text-[10px] font-black text-muted-foreground mb-1">{cat}</span>
-                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-1 border border-slate-200 dark:border-slate-700/50">
+                      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 border border-border-strong/50">
                         <button 
                           onClick={() => removeLastOfCategory(cat)} 
                           disabled={!categoriesCount[cat]} 
-                          className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-700 shadow-sm disabled:opacity-30 disabled:shadow-none transition-all hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold"
+                          className="w-7 h-7 flex items-center justify-center rounded-md bg-muted-strong shadow-sm disabled:opacity-30 disabled:shadow-none transition-all hover:bg-faint text-soft font-bold"
                         >
                           -
                         </button>
-                        <span className="w-6 text-center text-sm font-black text-slate-800 dark:text-slate-200">
+                        <span className="w-6 text-center text-sm font-black text-soft">
                           {categoriesCount[cat] || 0}
                         </span>
                         <button 
                           onClick={() => addOfCategory(cat)} 
-                          className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold"
+                          className="w-7 h-7 flex items-center justify-center rounded-md bg-muted-strong shadow-sm transition-all hover:bg-faint text-soft font-bold"
                         >
                           +
                         </button>
@@ -662,14 +662,14 @@ export function TournamentSettingsTab({
                     onDragStart={(e) => handleDragStart(e, i)}
                     onDragOver={(e) => handleDragOver(e, i)}
                     onDrop={(e) => handleDrop(e, i)}
-                    className={`flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0 group transition-all cursor-move ${
+                    className={`flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-border last:border-0 group transition-all cursor-move ${
                       draggedRubberIndex === i ? 'opacity-50 scale-[0.98]' : ''
                     }`}
                   >
-                    <div className="flex flex-col items-center pr-2 border-r border-slate-200 dark:border-slate-700 cursor-move text-slate-300 hover:text-primary transition-colors">
+                    <div className="flex flex-col items-center pr-2 border-r border-border-strong cursor-move text-soft hover:text-primary transition-colors">
                       <GripVertical className="w-4 h-4" />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 w-4 text-center">#{i+1}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground w-4 text-center">#{i+1}</span>
                     <input 
                       className={`${inputCls} !w-24 !py-1`} 
                       placeholder="Label (e.g. MS1)" 
@@ -710,7 +710,7 @@ export function TournamentSettingsTab({
                         newConfig.splice(i, 1);
                         updateRubbersList(autoLabelRubbers(newConfig));
                       }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                      className="p-1.5 text-danger hover:bg-danger/10 rounded"
                       title="Remove Rubber"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -746,10 +746,10 @@ export function TournamentSettingsTab({
             };
 
             return (
-              <div className="sm:col-span-2 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/60 dark:bg-slate-900/40 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="sm:col-span-2 border border-border rounded-2xl p-5 bg-card/40 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
                   <div>
-                    <h4 className="font-black text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <h4 className="font-black text-sm text-foreground flex items-center gap-2">
                       <Users className="w-4 h-4 text-primary" />
                       Player Repetition &amp; Lineup Restrictions
                     </h4>
@@ -760,7 +760,7 @@ export function TournamentSettingsTab({
                   <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
                     <span>Dynamic Roster Minimum:</span>
                     <span className="font-black text-sm">{rosterReq.minTotalPlayers} players</span>
-                    <span className="text-[11px] font-medium text-slate-500">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                       ({rosterReq.minMalePlayers}♂, {rosterReq.minFemalePlayers}♀)
                     </span>
                   </div>
@@ -768,7 +768,7 @@ export function TournamentSettingsTab({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    <label className="text-xs font-bold text-soft block mb-1">
                       Max Rubbers per Male Player
                     </label>
                     <select
@@ -787,7 +787,7 @@ export function TournamentSettingsTab({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    <label className="text-xs font-bold text-soft block mb-1">
                       Max Rubbers per Female Player
                     </label>
                     <select
@@ -806,7 +806,7 @@ export function TournamentSettingsTab({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    <label className="text-xs font-bold text-soft block mb-1">
                       Minimum Squad Size Required
                     </label>
                     <input
@@ -822,7 +822,7 @@ export function TournamentSettingsTab({
                   </div>
                 </div>
 
-                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-200 dark:border-slate-800">
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-border">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -831,7 +831,7 @@ export function TournamentSettingsTab({
                       className="w-4 h-4 accent-primary rounded mt-0.5"
                     />
                     <div>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                      <span className="text-xs font-bold text-soft block">
                         Disallow Same-Discipline Repeats
                       </span>
                       <span className="text-[11px] text-muted-foreground block">
@@ -848,7 +848,7 @@ export function TournamentSettingsTab({
                       className="w-4 h-4 accent-primary rounded mt-0.5"
                     />
                     <div>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                      <span className="text-xs font-bold text-soft block">
                         Allow Same Event Player in Decider
                       </span>
                       <span className="text-[11px] text-muted-foreground block">
@@ -866,10 +866,10 @@ export function TournamentSettingsTab({
                 type="checkbox"
                 checked={form.ignore_gender_rules ?? false}
                 onChange={(e) => upd("ignore_gender_rules", e.target.checked)}
-                className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+                className="w-5 h-5 accent-primary rounded border-border-strong mt-0.5"
               />
               <div>
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Ignore gender rules</span>
+                <span className="text-sm font-bold text-soft block">Ignore gender rules</span>
                 <span className="text-xs text-muted-foreground block">Allow any player to play any rubber (e.g. women in MS).</span>
               </div>
             </label>
@@ -878,10 +878,10 @@ export function TournamentSettingsTab({
                 type="checkbox"
                 checked={form.play_dead_rubbers ?? true}
                 onChange={(e) => upd("play_dead_rubbers", e.target.checked)}
-                className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5"
+                className="w-5 h-5 accent-primary rounded border-border-strong mt-0.5"
               />
               <div>
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Play dead rubbers</span>
+                <span className="text-sm font-bold text-soft block">Play dead rubbers</span>
                 <span className="text-xs text-muted-foreground block">Play all remaining rubbers even if the tie is already won.</span>
               </div>
             </label>
@@ -927,35 +927,35 @@ export function TournamentSettingsTab({
             </div>
             <div className="space-y-2.5 sm:pt-6">
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={!!form.show_participants} onChange={(e) => upd("show_participants", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300" />
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show the player list publicly</span>
+                <input type="checkbox" checked={!!form.show_participants} onChange={(e) => upd("show_participants", e.target.checked)} className="w-5 h-5 accent-primary rounded border-border-strong" />
+                <span className="text-sm font-bold text-soft">Show the player list publicly</span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={!!form.show_brackets} onChange={(e) => upd("show_brackets", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300" />
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show the draw publicly</span>
+                <input type="checkbox" checked={!!form.show_brackets} onChange={(e) => upd("show_brackets", e.target.checked)} className="w-5 h-5 accent-primary rounded border-border-strong" />
+                <span className="text-sm font-bold text-soft">Show the draw publicly</span>
               </label>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={form.counts_for_elo ?? true} onChange={(e) => upd("counts_for_elo", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5" />
+              <input type="checkbox" checked={form.counts_for_elo ?? true} onChange={(e) => upd("counts_for_elo", e.target.checked)} className="w-5 h-5 accent-primary rounded border-border-strong mt-0.5" />
               <div>
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Counts for ELO</span>
+                <span className="text-sm font-bold text-soft block">Counts for ELO</span>
                 <span className="text-xs text-muted-foreground block">Results update players' ratings. Turn off for casual events.</span>
               </div>
             </label>
             <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={form.auto_reminders_enabled !== false} onChange={(e) => upd("auto_reminders_enabled", e.target.checked)} className="w-5 h-5 accent-primary rounded border-slate-300 mt-0.5" />
+              <input type="checkbox" checked={form.auto_reminders_enabled !== false} onChange={(e) => upd("auto_reminders_enabled", e.target.checked)} className="w-5 h-5 accent-primary rounded border-border-strong mt-0.5" />
               <div>
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-[var(--warning)]" /> Match reminders</span>
+                <span className="text-sm font-bold text-soft flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-warning" /> Match reminders</span>
                 <span className="text-xs text-muted-foreground block">Push and email players and umpires 30 minutes before each match.</span>
               </div>
             </label>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
+          <div className="pt-4 border-t border-border">
+            <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">
               <Clock className="w-4 h-4 text-primary" /> Scheduling
             </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -993,10 +993,10 @@ export function TournamentSettingsTab({
         </div>
 
         {/* Unavailable Court Periods / Blackout times */}
-        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="mt-5 pt-4 border-t border-border">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              <h4 className="text-xs font-black uppercase tracking-wider text-soft">
                 Unavailable Court Periods & Blackouts
               </h4>
               <p className="text-[11px] text-muted-foreground">
@@ -1030,7 +1030,7 @@ export function TournamentSettingsTab({
           ) : (
             <div className="space-y-3">
               {form.unavailable_court_periods.map((period, idx) => (
-                <div key={period.id || idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center gap-2">
+                <div key={period.id || idx} className="p-3 rounded-xl border border-border bg-card/50 flex flex-wrap items-center gap-2">
                   <div className="w-20">
                     <label className="text-[10px] font-bold text-muted-foreground block mb-0.5">Court</label>
                     <input
@@ -1092,7 +1092,7 @@ export function TournamentSettingsTab({
                       current.splice(idx, 1);
                       upd("unavailable_court_periods", current);
                     }}
-                    className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded mt-4"
+                    className="p-1.5 text-danger hover:bg-danger/10 rounded mt-4"
                     title="Remove period"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1111,18 +1111,18 @@ export function TournamentSettingsTab({
         <button
           onClick={trashTournament}
           disabled={saving || transitioning}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-[var(--danger)] hover:bg-[var(--danger)]/10 disabled:opacity-50 transition"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-danger hover:bg-danger/10 disabled:opacity-50 transition"
         >
           <Trash2 className="w-3.5 h-3.5" />
           Move to trash
         </button>
         <div className="sticky bottom-24 lg:bottom-4 z-20 ml-auto">
           {saving ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted text-xs font-bold text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…
             </span>
           ) : saveError ? (
-            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-bold text-rose-500">
+            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-danger/10 border border-danger/30 text-xs font-bold text-danger">
               <AlertTriangle className="w-3.5 h-3.5" /> {saveError}
               <button onClick={() => save(false)} className="underline">Retry</button>
             </span>
@@ -1132,7 +1132,7 @@ export function TournamentSettingsTab({
             </button>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-muted-foreground">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> All changes saved
+              <Check className="w-3.5 h-3.5 text-success" /> All changes saved
             </span>
           )}
         </div>

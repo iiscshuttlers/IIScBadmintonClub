@@ -108,8 +108,8 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
               onClick={() => setCategory(cat)}
               className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${
                 category === cat
-                  ? "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700"
-                  : "bg-white dark:bg-slate-900 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
+                  ? "bg-individual/10 text-individual border border-individual"
+                  : "bg-card text-muted-foreground hover:bg-muted border border-border"
               }`}
             >
               {cat === "doubles" ? "Doubles" : "Mixed Doubles"}
@@ -119,12 +119,12 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
 
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-individual" />
           </div>
         ) : filteredTeams.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 shadow-sm">
-            <Users className="w-16 h-16 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-black text-foreground dark:text-foreground mb-2">No Teams Found</h3>
+          <div className="bg-card rounded-3xl p-12 text-center border border-border shadow-sm">
+            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-black text-foreground mb-2">No Teams Found</h3>
             <p className="text-muted-foreground">There are no registered {category === "doubles" ? "Doubles" : "Mixed Doubles"} teams yet. Be the first to register a team!</p>
           </div>
         ) : (
@@ -134,20 +134,20 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
               const p2 = players?.find((p) => p.id === team.player2_id);
 
               return (
-                <Link key={team.id} href={`/doubles/${team.player1_id}/${team.player2_id}`} className="flex items-center gap-2 sm:gap-4 bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all cursor-pointer group">
+                <Link key={team.id} href={`/doubles/${team.player1_id}/${team.player2_id}`} className="flex items-center gap-2 sm:gap-4 bg-card rounded-2xl p-3 sm:p-5 border border-border shadow-sm hover:shadow-md hover:border-individual transition-all cursor-pointer group">
                   <div className="flex-shrink-0 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center font-black text-base sm:text-xl text-muted-foreground">
                     #{index + 1}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-base leading-snug font-black text-foreground dark:text-foreground line-clamp-2 pr-1">
-                      {p1?.full_name || "Unknown"} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-bold mx-0.5">&</span> {p2?.full_name || "Unknown"}
+                    <h3 className="text-sm sm:text-base leading-snug font-black text-foreground line-clamp-2 pr-1">
+                      {p1?.full_name || "Unknown"} <span className="text-[10px] sm:text-xs text-muted-foreground font-bold mx-0.5">&</span> {p2?.full_name || "Unknown"}
                     </h3>
 
                   </div>
 
                   <div className="flex flex-col items-end text-right shrink-0 ml-1">
-                    <div className="flex items-center gap-1 text-base sm:text-lg font-black text-primary dark:text-primary">
+                    <div className="flex items-center gap-1 text-base sm:text-lg font-black text-primary">
                       <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {Math.round((team.matches_won / team.matches_played) * 100)}%
                     </div>

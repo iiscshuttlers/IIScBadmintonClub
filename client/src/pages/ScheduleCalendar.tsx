@@ -1,6 +1,7 @@
 import { matchPath, tournamentLink } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
+import { cssVar, cssVarAlpha } from "@/lib/themeColors";
 import { fetchTournamentConfig, getTournaments } from "@/lib/tournaments";
 import { tournamentService } from "@/services/tournamentService";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
@@ -51,57 +52,57 @@ interface Holiday {
 
 const HOLIDAY_COLORS = [
   {
-    bg: "bg-rose-50 dark:bg-rose-900/20",
-    border: "border-rose-200 dark:border-rose-800",
-    text: "text-rose-500",
-    textDark: "text-rose-600 dark:text-rose-400",
-    badge: "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400",
-    solid: "bg-rose-500",
-    hex: "#f43f5e",
-    hexBg: "rgba(244, 63, 94, 0.1)",
+    bg: "bg-danger/10",
+    border: "border-danger/40",
+    text: "text-danger",
+    textDark: "text-danger",
+    badge: "bg-danger/10 text-danger",
+    solid: "bg-danger",
+    hex: cssVar("danger"),
+    hexBg: cssVarAlpha("danger", 0.1),
   },
   {
-    bg: "bg-purple-50 dark:bg-purple-900/20",
-    border: "border-purple-200 dark:border-purple-800",
-    text: "text-purple-500",
-    textDark: "text-purple-600 dark:text-purple-400",
+    bg: "bg-individual/10",
+    border: "border-individual/40",
+    text: "text-individual",
+    textDark: "text-individual",
     badge:
-      "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
-    solid: "bg-purple-500",
-    hex: "#a855f7",
-    hexBg: "rgba(168, 85, 247, 0.1)",
+      "bg-individual/10 text-individual",
+    solid: "bg-individual",
+    hex: cssVar("individual"),
+    hexBg: cssVarAlpha("individual", 0.1),
   },
   {
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    border: "border-amber-200 dark:border-amber-800",
-    text: "text-amber-500",
-    textDark: "text-amber-600 dark:text-amber-400",
+    bg: "bg-warning/10",
+    border: "border-warning/40",
+    text: "text-warning",
+    textDark: "text-warning",
     badge:
-      "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
-    solid: "bg-amber-500",
-    hex: "#f59e0b",
-    hexBg: "rgba(245, 158, 11, 0.1)",
+      "bg-warning/10 text-warning",
+    solid: "bg-warning",
+    hex: cssVar("warning"),
+    hexBg: cssVarAlpha("warning", 0.1),
   },
   {
-    bg: "bg-cyan-50 dark:bg-cyan-900/20",
-    border: "border-cyan-200 dark:border-cyan-800",
-    text: "text-cyan-500",
-    textDark: "text-cyan-600 dark:text-cyan-400",
-    badge: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400",
-    solid: "bg-cyan-500",
-    hex: "#06b6d4",
-    hexBg: "rgba(6, 182, 212, 0.1)",
+    bg: "bg-accent/10",
+    border: "border-accent/40",
+    text: "text-accent",
+    textDark: "text-accent",
+    badge: "bg-accent/10 text-accent",
+    solid: "bg-accent",
+    hex: cssVar("accent"),
+    hexBg: cssVarAlpha("accent", 0.1),
   },
   {
-    bg: "bg-fuchsia-50 dark:bg-fuchsia-900/20",
-    border: "border-fuchsia-200 dark:border-fuchsia-800",
-    text: "text-fuchsia-500",
-    textDark: "text-fuchsia-600 dark:text-fuchsia-400",
+    bg: "bg-individual/10",
+    border: "border-individual/40",
+    text: "text-individual",
+    textDark: "text-individual",
     badge:
-      "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400",
-    solid: "bg-fuchsia-500",
-    hex: "#d946ef",
-    hexBg: "rgba(217, 70, 239, 0.1)",
+      "bg-individual/10 text-individual",
+    solid: "bg-individual",
+    hex: cssVar("individual"),
+    hexBg: cssVarAlpha("individual", 0.1),
   },
 ];
 
@@ -266,8 +267,8 @@ export default function ScheduleCalendar() {
     <section className="font-sans pb-32 lg:pb-12">
       <div className="container mx-auto px-4 relative z-20 pt-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-1.5 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
-          <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
+          <div className="w-1.5 h-6 bg-gradient-to-b from-info to-info rounded-full" />
+          <h2 className="text-2xl font-black text-foreground">
             Match Calendar
           </h2>
         </div>
@@ -281,7 +282,7 @@ export default function ScheduleCalendar() {
               transition={{ delay: 0.3 }}
               className="flex flex-col"
             >
-              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden p-1 sm:p-2 max-w-full h-full flex flex-col justify-center">
+              <Card className="rounded-3xl shadow-xl border-border bg-card/80 backdrop-blur-xl overflow-hidden p-1 sm:p-2 max-w-full h-full flex flex-col justify-center">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -353,26 +354,26 @@ export default function ScheduleCalendar() {
                           <DropdownMenuContent
                             sideOffset={4}
                             collisionPadding={20}
-                            className="z-[100] bg-slate-800 text-on-accent border-slate-700 w-[85vw] sm:w-[60vw] md:w-auto md:min-w-[15rem] md:max-w-md max-h-[min(70vh,var(--radix-dropdown-menu-content-available-height))] shadow-2xl p-0 rounded-xl flex flex-col !overflow-hidden"
+                            className="z-[100] bg-muted text-foreground border-border-strong w-[85vw] sm:w-[60vw] md:w-auto md:min-w-[15rem] md:max-w-md max-h-[min(70vh,var(--radix-dropdown-menu-content-available-height))] shadow-2xl p-0 rounded-xl flex flex-col !overflow-hidden"
                           >
-                            <div className="flex items-center justify-between p-2 border-b border-slate-700 bg-slate-800 shrink-0">
-                              <span className="text-xs font-bold text-slate-400 pl-2">
+                            <div className="flex items-center justify-between p-2 border-b border-border-strong bg-muted shrink-0">
+                              <span className="text-xs font-bold text-muted-foreground pl-2">
                                 {dayEvents.length} Matches
                               </span>
-                              <DropdownMenuItem className="p-1.5 rounded-lg hover:bg-slate-700 cursor-pointer focus:bg-slate-700 text-slate-300 h-8 w-8 flex items-center justify-center">
+                              <DropdownMenuItem className="p-1.5 rounded-lg hover:bg-muted-strong cursor-pointer focus:bg-muted-strong text-soft h-8 w-8 flex items-center justify-center">
                                 <X className="w-4 h-4" />
                               </DropdownMenuItem>
                             </div>
                             <div className="space-y-2 p-2 overflow-y-auto flex-1 overscroll-contain">
                               {dayEvents.map((e, i) => {
-                                let catColor = "text-slate-200";
+                                let catColor = "text-soft";
                                 if (e.type !== "holiday") {
                                   const cat = e.title.split(" • ")[0];
-                                  if (cat === "MS") catColor = "text-blue-400";
-                                  else if (cat === "MD") catColor = "text-emerald-400";
-                                  else if (cat === "WS") catColor = "text-pink-400";
-                                  else if (cat === "WD") catColor = "text-purple-400";
-                                  else if (cat === "XD") catColor = "text-orange-400";
+                                  if (cat === "MS") catColor = "text-cat-ms";
+                                  else if (cat === "MD") catColor = "text-cat-md";
+                                  else if (cat === "WS") catColor = "text-cat-ws";
+                                  else if (cat === "WD") catColor = "text-cat-wd";
+                                  else if (cat === "XD") catColor = "text-cat-xd";
                                 }
                                 return (
                                   <div
@@ -383,16 +384,16 @@ export default function ScheduleCalendar() {
                                       className={`w-2 h-2 mt-1 shrink-0 rounded-full ${e.type === "holiday" ? getHolidayColor(e.title).solid : "bg-primary"}`}
                                     />
                                     <div className="flex flex-col gap-0.5 leading-tight pr-2">
-                                      <span className={`font-semibold text-xs ${e.type === "holiday" ? "text-slate-200" : catColor}`}>
+                                      <span className={`font-semibold text-xs ${e.type === "holiday" ? "text-soft" : catColor}`}>
                                         {e.title}
                                       </span>
                                       {e.type !== "holiday" && e.date === dateStr && (
                                         <div className="flex items-center gap-1.5 mt-0.5">
-                                          <span className="text-[10px] w-fit bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded uppercase font-bold">
+                                          <span className="text-[10px] w-fit bg-info/20 text-info px-1.5 py-0.5 rounded uppercase font-bold">
                                             Starts
                                           </span>
                                           {e.time && (
-                                            <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                            <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
                                               <Clock className="w-3 h-3" /> {e.time}
                                             </span>
                                           )}
@@ -413,13 +414,13 @@ export default function ScheduleCalendar() {
                 modifiersStyles={{
                   hasEventStart: {
                     fontWeight: "900",
-                    color: "#0ea5e9",
-                    backgroundColor: "rgba(14, 165, 233, 0.15)",
+                    color: cssVar("info"),
+                    backgroundColor: cssVarAlpha("info", 0.15),
                   },
                   hasEventOngoing: {
                     fontWeight: "900",
-                    color: "#10b981",
-                    backgroundColor: "rgba(16, 185, 129, 0.1)",
+                    color: cssVar("success"),
+                    backgroundColor: cssVarAlpha("success", 0.1),
                   },
                   hasHoliday_0: {
                     fontWeight: "900",
@@ -448,8 +449,8 @@ export default function ScheduleCalendar() {
                   },
                   hasDeadline: {
                     fontWeight: "900",
-                    color: "#f59e0b",
-                    backgroundColor: "rgba(245, 158, 11, 0.2)",
+                    color: cssVar("warning"),
+                    backgroundColor: cssVarAlpha("warning", 0.2),
                   },
                 }}
               />
@@ -463,15 +464,15 @@ export default function ScheduleCalendar() {
             className="flex flex-col"
           >
             {holidayEvents.length > 0 && (
-              <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col p-0 gap-0">
+              <Card className="rounded-3xl shadow-lg border-border bg-card overflow-hidden flex flex-col p-0 gap-0">
                 <button 
                   onClick={() => setShowHolidays(!showHolidays)}
-                  className="w-full py-2 px-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-rose-50 dark:bg-rose-950/20 shrink-0 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors"
+                  className="w-full py-2 px-4 border-b border-border flex items-center justify-between bg-danger/10 shrink-0 cursor-pointer hover:bg-danger/15 transition-colors"
                 >
-                  <h3 className="font-bold text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                  <h3 className="font-bold text-xs text-danger flex items-center gap-1.5">
                     <CalendarDays className="w-3.5 h-3.5" /> Gymkhana Holidays {new Date().getFullYear()}
                   </h3>
-                  {showHolidays ? <ChevronUp className="w-4 h-4 text-rose-700" /> : <ChevronDown className="w-4 h-4 text-rose-700" />}
+                  {showHolidays ? <ChevronUp className="w-4 h-4 text-danger" /> : <ChevronDown className="w-4 h-4 text-danger" />}
                 </button>
                 {showHolidays && (
                   <div className="p-2 flex flex-wrap gap-1.5 overflow-y-auto">
@@ -501,24 +502,24 @@ export default function ScheduleCalendar() {
             transition={{ delay: 0.3 }}
           >
             {/* Upcoming Summary Card */}
-            <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden p-0 gap-0">
+            <Card className="rounded-3xl shadow-lg border-border bg-card overflow-hidden p-0 gap-0">
               <button 
                 onClick={() => setShowComingUp(!showComingUp)}
-                className="w-full py-2 px-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                className="w-full py-2 px-4 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
               >
-                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                <h3 className="font-bold text-sm text-soft">
                   Coming Up
                 </h3>
-                {showComingUp ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                {showComingUp ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
               </button>
               {showComingUp && (
                 <div className="p-3 grid grid-cols-2 gap-2">
                 {loading ? (
                   <div className="animate-pulse flex gap-2">
-                    <div className="w-8 h-8 bg-slate-200 rounded" />
+                    <div className="w-8 h-8 bg-soft rounded" />
                     <div className="flex-1 space-y-1">
-                      <div className="h-3 bg-slate-200 rounded w-3/4" />
-                      <div className="h-2 bg-slate-200 rounded w-1/2" />
+                      <div className="h-3 bg-soft rounded w-3/4" />
+                      <div className="h-2 bg-soft rounded w-1/2" />
                     </div>
                   </div>
                 ) : (
@@ -536,28 +537,28 @@ export default function ScheduleCalendar() {
                             isHoliday
                               ? `${holidayColor?.bg} ${holidayColor?.border}`
                               : isMultiDayStart
-                                ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                                : "bg-primary/10 dark:bg-primary/20 border-primary/40 dark:border-primary/80"
+                                ? "bg-info/10 border-info/40"
+                                : "bg-primary/20 border-primary/80"
                           }`}
                         >
                           <span
-                            className={`text-[7px] font-black uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-600" : "text-primary"}`}
+                            className={`text-[7px] font-black uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-info" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { weekday: "short" })}
                           </span>
                           <span
-                            className={`text-[13px] font-black leading-none my-[1px] ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-blue-700 dark:text-blue-400" : "text-primary dark:text-primary"}`}
+                            className={`text-[13px] font-black leading-none my-[1px] ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-info" : "text-primary"}`}
                           >
                             {d.getDate()}
                           </span>
                           <span
-                            className={`text-[7px] font-bold uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-500" : "text-primary"}`}
+                            className={`text-[7px] font-bold uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-info" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { month: "short" })}
                           </span>
                         </div>
                         <div className="flex flex-col justify-center overflow-hidden">
-                          <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 line-clamp-1">
+                          <h4 className="font-bold text-xs text-soft line-clamp-1">
                             {e.title}
                           </h4>
                           {e.time ? (
@@ -571,7 +572,7 @@ export default function ScheduleCalendar() {
                               Holiday
                             </div>
                           ) : isMultiDayStart ? (
-                            <div className="text-[9px] text-blue-500 flex items-center gap-0.5 mt-0.5 font-bold truncate">
+                            <div className="text-[9px] text-info flex items-center gap-0.5 mt-0.5 font-bold truncate">
                               Starts
                             </div>
                           ) : null}
@@ -598,13 +599,13 @@ export default function ScheduleCalendar() {
             transition={{ delay: 0.4 }}
           >
 
-            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl max-w-full overflow-hidden p-0 gap-0">
+            <Card className="rounded-3xl shadow-xl border-border bg-card/80 backdrop-blur-xl max-w-full overflow-hidden p-0 gap-0">
               <button 
                 onClick={() => setShowDetails(!showDetails)}
-                className="w-full text-left py-2 px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="w-full text-left py-2 px-4 border-b border-border bg-muted/50 rounded-t-3xl flex items-center justify-between cursor-pointer hover:bg-muted transition-colors"
               >
                 <div>
-                  <h2 className="text-sm font-bold text-slate-800 dark:text-foreground leading-tight">
+                  <h2 className="text-sm font-bold text-foreground leading-tight">
                     {selectedDate
                       ? selectedDate.toLocaleDateString("en-US", {
                           weekday: "long",
@@ -614,12 +615,12 @@ export default function ScheduleCalendar() {
                         })
                       : "Select a date"}
                   </h2>
-                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {selectedEvents.length} event
                     {selectedEvents.length !== 1 ? "s" : ""} scheduled
                   </p>
                 </div>
-                {showDetails ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
+                {showDetails ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
               </button>
 
               {showDetails && (
@@ -634,13 +635,13 @@ export default function ScheduleCalendar() {
                       return (
                         <div
                           key={idx}
-                          className={`p-3 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden group ${isHoliday ? "opacity-80" : ""}`}
+                          className={`p-3 md:p-4 rounded-xl bg-card border border-border-strong shadow-sm relative overflow-hidden group ${isHoliday ? "opacity-80" : ""}`}
                         >
                           <div
                             className={`absolute left-0 top-0 bottom-0 w-1 ${isHoliday ? holidayColor?.solid : "bg-primary"}`}
                           />
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="text-base font-bold text-foreground dark:text-foreground">
+                            <h3 className="text-base font-bold text-foreground">
                               {event.title}
                             </h3>
                             {isHoliday && (
@@ -653,22 +654,22 @@ export default function ScheduleCalendar() {
                             {event.endDate &&
                               event.date === selectedDateStr &&
                               !isHoliday && (
-                                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase">
+                                <span className="px-2 py-0.5 rounded-full bg-info/10 text-info text-xs font-bold uppercase">
                                   Tournament Starts
                                 </span>
                               )}
                             {event.endDate &&
                               event.endDate === selectedDateStr &&
                               !isHoliday && (
-                                <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold uppercase">
+                                <span className="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase">
                                   Final Day
                                 </span>
                               )}
                           </div>
 
                           {/* Date range */}
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300 mb-2">
-                            <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-soft mb-2">
+                            <CalendarDays className="w-3.5 h-3.5 text-info" />
                             {new Date(event.date).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
@@ -691,13 +692,13 @@ export default function ScheduleCalendar() {
 
                           <div className="flex flex-wrap gap-3 mb-3">
                             {event.time && (
-                              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300">
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-soft">
                                 <Clock className="w-3.5 h-3.5 text-primary" />{" "}
                                 {event.time}
                               </div>
                             )}
                             {event.location && (
-                              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300">
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-soft">
                                 <MapPin className="w-3.5 h-3.5 text-primary" />{" "}
                                 {event.location}
                               </div>
@@ -705,7 +706,7 @@ export default function ScheduleCalendar() {
                           </div>
 
                           {event.registrationDeadline && (
-                            <div className="mb-4 inline-block px-3 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md text-amber-700 dark:text-amber-400 text-xs font-bold">
+                            <div className="mb-4 inline-block px-3 py-1 bg-warning/10 border border-warning/40 rounded-md text-warning text-xs font-bold">
                               Registration Deadline:{" "}
                               {event.registrationDeadline}
                             </div>
@@ -713,7 +714,7 @@ export default function ScheduleCalendar() {
 
                           {event.link && (
                             <a href={event.link}>
-                              <button className="flex items-center gap-2 text-sm font-bold text-primary dark:text-primary hover:text-primary transition group-hover:underline">
+                              <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition group-hover:underline">
                                 View Event Details{" "}
                                 <ArrowRight className="w-4 h-4" />
                               </button>
@@ -724,7 +725,7 @@ export default function ScheduleCalendar() {
                               href={event.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-sm font-bold text-primary dark:text-primary hover:text-primary transition group-hover:underline mt-2"
+                              className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition group-hover:underline mt-2"
                             >
                               External Link{" "}
                               <ExternalLink className="w-4 h-4" />
@@ -737,13 +738,13 @@ export default function ScheduleCalendar() {
                 ) : null}
 
                 {selectedEvents.length === 0 && (!tournamentData || !dateFilterHasMatches(tournamentData, selectedDateStr)) && (
-                  <div className="flex items-center gap-3 py-3 px-4 justify-center md:justify-start bg-slate-50/50 dark:bg-slate-800/30 rounded-xl">
-                    <CalendarDays className="w-5 h-5 text-slate-400 shrink-0" />
+                  <div className="flex items-center gap-3 py-3 px-4 justify-center md:justify-start bg-muted/30 rounded-xl">
+                    <CalendarDays className="w-5 h-5 text-muted-foreground shrink-0" />
                     <div className="text-left">
-                      <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-none">
+                      <h3 className="text-xs font-bold text-muted-foreground leading-none">
                         No Events Scheduled
                       </h3>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-tight">
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
                         Enjoy the rest of your day!
                       </p>
                     </div>
@@ -754,9 +755,9 @@ export default function ScheduleCalendar() {
             </Card>
 
             {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
-              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden max-w-full p-0 gap-0">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
+              <Card className="rounded-3xl shadow-xl border-border bg-card/80 backdrop-blur-xl mt-6 overflow-hidden max-w-full p-0 gap-0">
+                <div className="bg-muted/50 p-5 md:p-6 border-b border-border">
+                  <h3 className="text-xl font-black text-foreground flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-primary" />
                     Tournament Matches
                   </h3>

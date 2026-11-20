@@ -36,13 +36,13 @@ export const BeautifulScoreDisplay = memo(function BeautifulScoreDisplay({ score
         return (
           <span
             key={idx}
-            className="font-mono text-[11px] font-black tracking-widest px-2 py-0.5 rounded-md border shadow-sm bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-muted-foreground flex items-center"
+            className="font-mono text-[11px] font-black tracking-widest px-2 py-0.5 rounded-md border shadow-sm bg-muted/50 border-border-strong text-muted-foreground flex items-center"
           >
-            <span className={p1Won ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground opacity-80"}>
+            <span className={p1Won ? "text-primary" : "text-muted-foreground opacity-80"}>
               {s.p1}
             </span>
             <span className="opacity-40 mx-0.5">-</span>
-            <span className={p2Won ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground opacity-80"}>
+            <span className={p2Won ? "text-primary" : "text-muted-foreground opacity-80"}>
               {s.p2}
             </span>
           </span>

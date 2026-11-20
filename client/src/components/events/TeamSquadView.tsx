@@ -92,7 +92,7 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
   ) => {
     if (isLoading) {
       return (
-        <div className="p-6 text-center text-slate-400 animate-pulse text-xs">
+        <div className="p-6 text-center text-muted-foreground animate-pulse text-xs">
           Loading {team?.name || sideLabel} squad...
         </div>
       );
@@ -111,26 +111,26 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
     });
 
     return (
-      <div className="flex-1 bg-slate-900/60 rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
+      <div className="flex-1 bg-card/60 rounded-2xl border border-border overflow-hidden flex flex-col">
         {/* Team Header */}
-        <div className="p-3.5 bg-slate-800/70 border-b border-slate-800 flex items-center justify-between gap-2">
+        <div className="p-3.5 bg-muted/70 border-b border-border flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 truncate">
             {team?.logo_url ? (
               <img
                 src={team.logo_url}
                 alt=""
-                className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
+                className="w-7 h-7 rounded-full object-cover border border-foreground/20 shrink-0"
               />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-black text-white shrink-0">
+              <div className="w-7 h-7 rounded-full bg-muted-strong flex items-center justify-center text-xs font-black text-foreground shrink-0">
                 {team?.short_name?.slice(0, 2) || sideLabel.slice(0, 1)}
               </div>
             )}
             <div className="truncate">
-              <h4 className="font-bold text-sm text-slate-100 truncate">
+              <h4 className="font-bold text-sm text-foreground truncate">
                 {team?.name || sideLabel}
               </h4>
-              <span className="text-[10px] text-slate-400 font-medium">
+              <span className="text-[10px] text-muted-foreground font-medium">
                 {isRevealed && playingMembers.length > 0
                   ? `Playing ${playingMembers.length} · Bench ${benchMembers.length}`
                   : `${squad.length} squad ${squad.length === 1 ? 'member' : 'members'}`
@@ -152,7 +152,7 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
             <>
               {/* Playing Lineup Section */}
               <div>
-                <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-400 uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-black text-success uppercase tracking-wider mb-2">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Playing Lineup ({playingMembers.length})
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -163,20 +163,20 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
                         key={m.id}
                         type="button"
                         onClick={() => p?.id && openPlayerModal(p.id)}
-                        className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 transition text-left cursor-pointer border border-emerald-500/20"
+                        className="flex items-center gap-2 p-1.5 rounded-xl bg-muted/80 hover:bg-muted transition text-left cursor-pointer border border-success/20"
                       >
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                        <div className="w-6 h-6 rounded-lg bg-success/20 text-success flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
                           {p?.avatar_url ? (
                             <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             p?.full_name?.charAt(0) || <User className="w-3.5 h-3.5" />
                           )}
                         </div>
-                        <span className="text-xs font-bold text-slate-200 truncate flex-1">
+                        <span className="text-xs font-bold text-soft truncate flex-1">
                           {p?.full_name || 'Player'}
                         </span>
                         {m.role === 'captain' && (
-                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-warning/20 text-warning border border-warning/30">
                             C
                           </span>
                         )}
@@ -188,8 +188,8 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
 
               {/* Bench Section */}
               {benchMembers.length > 0 && (
-                <div className="pt-2 border-t border-slate-800">
-                  <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">
+                <div className="pt-2 border-t border-border">
+                  <div className="flex items-center gap-1.5 text-[11px] font-black text-muted-foreground uppercase tracking-wider mb-2">
                     <Users className="w-3.5 h-3.5" /> Bench ({benchMembers.length})
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -200,20 +200,20 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
                           key={m.id}
                           type="button"
                           onClick={() => p?.id && openPlayerModal(p.id)}
-                          className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-800/40 hover:bg-slate-800 transition text-left cursor-pointer border border-slate-800"
+                          className="flex items-center gap-2 p-1.5 rounded-xl bg-muted/40 hover:bg-muted transition text-left cursor-pointer border border-border"
                         >
-                          <div className="w-6 h-6 rounded-lg bg-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                          <div className="w-6 h-6 rounded-lg bg-muted-strong text-muted-foreground flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
                             {p?.avatar_url ? (
                               <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : (
                               p?.full_name?.charAt(0) || <User className="w-3.5 h-3.5" />
                             )}
                           </div>
-                          <span className="text-xs font-medium text-slate-300 truncate flex-1">
+                          <span className="text-xs font-medium text-soft truncate flex-1">
                             {p?.full_name || 'Player'}
                           </span>
                           {m.role === 'captain' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-warning/20 text-warning border border-warning/30">
                               C
                             </span>
                           )}
@@ -227,17 +227,17 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
           ) : (
             /* Squad List before Lineup Reveal */
             <div>
-              <div className="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">
+              <div className="flex items-center justify-between text-[11px] font-black text-muted-foreground uppercase tracking-wider mb-2">
                 <span className="flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5" /> Full Squad
                 </span>
-                <span className="text-amber-400/90 text-[10px] normal-case font-bold">
+                <span className="text-warning/90 text-[10px] normal-case font-bold">
                   Pairings reveal on match start
                 </span>
               </div>
 
               {squad.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-500 font-medium">
+                <div className="p-4 text-center text-xs text-muted-foreground font-medium">
                   No squad members registered yet
                 </div>
               ) : (
@@ -249,20 +249,20 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
                         key={m.id}
                         type="button"
                         onClick={() => p?.id && openPlayerModal(p.id)}
-                        className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition text-left cursor-pointer border border-slate-800/80"
+                        className="flex items-center gap-2 p-1.5 rounded-xl bg-muted/50 hover:bg-muted transition text-left cursor-pointer border border-border/80"
                       >
-                        <div className="w-6 h-6 rounded-lg bg-slate-700/80 text-slate-300 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                        <div className="w-6 h-6 rounded-lg bg-muted-strong/80 text-soft flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
                           {p?.avatar_url ? (
                             <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             p?.full_name?.charAt(0) || <User className="w-3.5 h-3.5" />
                           )}
                         </div>
-                        <span className="text-xs font-medium text-slate-200 truncate flex-1">
+                        <span className="text-xs font-medium text-soft truncate flex-1">
                           {p?.full_name || 'Player'}
                         </span>
                         {m.role === 'captain' && (
-                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-warning/20 text-warning border border-warning/30">
                             C
                           </span>
                         )}
@@ -282,10 +282,10 @@ export function TeamSquadView({ tie, rubbers = [], tournament }: TeamSquadViewPr
     <ThemeScope family="team" className="my-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-xs font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-primary" /> Squads
           </h3>
-          <span className="text-[11px] text-slate-500 font-semibold">
+          <span className="text-[11px] text-muted-foreground font-semibold">
             {isTieRevealed ? 'Lineup announced' : 'Squad overview'}
           </span>
         </div>

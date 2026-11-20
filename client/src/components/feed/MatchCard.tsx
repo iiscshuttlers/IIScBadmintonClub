@@ -34,15 +34,15 @@ interface MatchCardProps {
 }
 
 const CAT_BOX_COLORS: Record<string, string> = {
-  MS: "bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40",
-  WS: "bg-pink-50/80 dark:bg-pink-900/20 border-pink-200 dark:border-pink-900/40",
-  MD: "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20",
-  WD: "bg-purple-50/80 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900/40",
-  XD: "bg-orange-50/80 dark:bg-orange-900/20 border-orange-200 dark:border-orange-900/40",
-  BS: "bg-teal-50/80 dark:bg-teal-900/20 border-teal-200 dark:border-teal-900/40",
-  GS: "bg-rose-50/80 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/40",
-  BD: "bg-cyan-50/80 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-900/40",
-  GD: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 border-fuchsia-200 dark:border-fuchsia-900/40",
+  MS: "bg-cat-ms/10 border-cat-ms/25",
+  WS: "bg-cat-ws/10 border-cat-ws/25",
+  MD: "bg-cat-md/10 border-cat-md/20",
+  WD: "bg-cat-wd/10 border-cat-wd/25",
+  XD: "bg-cat-xd/10 border-cat-xd/25",
+  BS: "bg-team/10 border-team/25",
+  GS: "bg-danger/10 border-danger/25",
+  BD: "bg-accent/10 border-accent/25",
+  GD: "bg-individual/10 border-individual/25",
 };
 
 export function MatchCard({
@@ -119,14 +119,14 @@ export function MatchCard({
   };
 
   const getMatchCodeColor = (code: string | undefined) => {
-    if (!code) return { text: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20 group-hover/header:bg-amber-500/20" };
+    if (!code) return { text: "text-warning", bg: "bg-warning/10 border-warning/20 group-hover/header:bg-warning/20" };
     const c = code.toUpperCase();
-    if (c.startsWith("MS")) return { text: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10 border-blue-500/20 group-hover/header:bg-blue-500/20" };
-    if (c.startsWith("MD")) return { text: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20 group-hover/header:bg-emerald-500/20" };
-    if (c.startsWith("WS")) return { text: "text-pink-500 dark:text-pink-400", bg: "bg-pink-500/10 border-pink-500/20 group-hover/header:bg-pink-500/20" };
-    if (c.startsWith("WD")) return { text: "text-purple-500 dark:text-purple-400", bg: "bg-purple-500/10 border-purple-500/20 group-hover/header:bg-purple-500/20" };
-    if (c.startsWith("XD")) return { text: "text-orange-500 dark:text-orange-400", bg: "bg-orange-500/10 border-orange-500/20 group-hover/header:bg-orange-500/20" };
-    return { text: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20 group-hover/header:bg-amber-500/20" };
+    if (c.startsWith("MS")) return { text: "text-cat-ms", bg: "bg-cat-ms/10 border-cat-ms/20 group-hover/header:bg-cat-ms/20" };
+    if (c.startsWith("MD")) return { text: "text-cat-md", bg: "bg-cat-md/10 border-cat-md/20 group-hover/header:bg-cat-md/20" };
+    if (c.startsWith("WS")) return { text: "text-cat-ws", bg: "bg-cat-ws/10 border-cat-ws/20 group-hover/header:bg-cat-ws/20" };
+    if (c.startsWith("WD")) return { text: "text-cat-wd", bg: "bg-cat-wd/10 border-cat-wd/20 group-hover/header:bg-cat-wd/20" };
+    if (c.startsWith("XD")) return { text: "text-cat-xd", bg: "bg-cat-xd/10 border-cat-xd/20 group-hover/header:bg-cat-xd/20" };
+    return { text: "text-warning", bg: "bg-warning/10 border-warning/20 group-hover/header:bg-warning/20" };
   };
 
 
@@ -198,7 +198,7 @@ export function MatchCard({
       {members.map(({ player }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
-            <span className={`font-bold text-xs block group-hover/p:underline break-words whitespace-normal leading-tight ${align === "right" ? "text-right" : "text-left"} ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
+            <span className={`font-bold text-xs block group-hover/p:underline break-words whitespace-normal leading-tight ${align === "right" ? "text-right" : "text-left"} ${win ? "text-primary" : "text-soft"}`}>
               {player.full_name}
             </span>
           </div>
@@ -209,15 +209,15 @@ export function MatchCard({
               <img
                 src={player.avatar_url}
                 loading="lazy"
-                className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
+                className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : dim ? "grayscale opacity-70" : ""}`}
               />
             ) : (
-              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-muted-foreground shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
+              <div className={`w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-black text-muted-foreground shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : dim ? "grayscale opacity-70" : ""}`}>
                 {player.full_name?.substring(0, 2).toUpperCase() || "??"}
               </div>
             )}
             {win && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
+              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5 border border-border shadow-sm">
                 <Trophy className="w-2 h-2" />
               </div>
             )}
@@ -252,7 +252,7 @@ export function MatchCard({
     }
   };
 
-  const formatBoxClass = CAT_BOX_COLORS[match.category] || "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800";
+  const formatBoxClass = CAT_BOX_COLORS[match.category] || "bg-card border-border";
 
   return (
     <motion.div
@@ -261,8 +261,8 @@ export function MatchCard({
       transition={{ delay: index * 0.05 }}
       id={`match-card-${match.id}`}
       className={`${formatBoxClass} rounded-3xl p-1 sm:p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 border ${isMatchOfTheDay
-          ? "border-2 border-indigo-500 shadow-indigo-500/20 shadow-xl hover:shadow-indigo-500/30"
-          : "hover:shadow-lg dark:hover:shadow-slate-700/40"
+          ? "border-2 border-info shadow-info/20 shadow-xl hover:shadow-media/40"
+          : "hover:shadow-lg"
         }`}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
@@ -275,8 +275,8 @@ export function MatchCard({
     >
       {/* LIVE NOW Badge */}
       {actualIsLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-on-accent text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-live to-live text-on-accent text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-foreground animate-ping inline-block" />
           LIVE NOW
         </div>
       )}
@@ -285,14 +285,14 @@ export function MatchCard({
 
       {/* Match of the Day Badge */}
       {isMatchOfTheDay && !actualIsLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-info to-individual text-on-accent text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Match of the Day
         </div>
       )}
 
       {/* Upset Badge */}
       {upsetDiff > 0 && (
-        <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-on-accent text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 right-0 bg-gradient-to-r from-danger to-danger text-on-accent text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
           <TrendingUp className="w-3.5 h-3.5 animate-bounce" /> MASSIVE UPSET
         </div>
       )}
@@ -304,17 +304,17 @@ export function MatchCard({
             <div className="flex flex-col gap-1 flex-1 min-w-0">
               {/* Row 1: Tournament label + match code on left, category + round on right */}
               <div className="flex flex-row items-center justify-between w-full min-w-0">
-                <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>
+                <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-muted-foreground" : "text-primary"}`}>
                   {match.status === "finished" || hasWinner ? <Trophy className="w-3 h-3 shrink-0" /> : <Swords className="w-3 h-3 shrink-0" />}
                   <span className="truncate">Tournament</span>
-                  <span className="text-slate-600 dark:text-slate-400 shrink-0">•</span>
+                  <span className="text-muted-foreground shrink-0">•</span>
                   <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
                 </div>
-                <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold shrink-0 ml-2 flex items-center gap-2">
+                <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold shrink-0 ml-2 flex items-center gap-2">
                   {highlightUrl && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); setIsVideoPlayerOpen(true); }}
-                      className="text-rose-500 hover:text-rose-600 transition-colors"
+                      className="text-danger hover:text-danger/80 transition-colors"
                       title="Play Highlights"
                     >
                       <PlayCircle className="w-4 h-4 animate-pulse" />
@@ -329,13 +329,13 @@ export function MatchCard({
               {(match.scheduled_at || match.court_number) && (
                 <div className="flex flex-row items-center justify-start gap-3 w-full min-w-0 mb-0.5">
                   {match.scheduled_at && (
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground font-bold flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {new Date(match.scheduled_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                     </span>
                   )}
                   {match.court_number && (
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground font-bold flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {courtText}
                     </span>
@@ -345,12 +345,12 @@ export function MatchCard({
 
               {/* Row 2: Name | Score | Name */}
               <div className="flex flex-row items-center justify-between gap-1.5 font-bold">
-                <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-gold' : 'text-soft'}`}>
                   {joinNames(team1)}
                 </span>
 
                 <div className="shrink-0">
-                  <div className={`text-xs sm:text-sm font-black tracking-widest px-2 sm:px-3 py-0.5 rounded-lg border shadow-inner whitespace-nowrap ${hasWinner ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+                  <div className={`text-xs sm:text-sm font-black tracking-widest px-2 sm:px-3 py-0.5 rounded-lg border shadow-inner whitespace-nowrap ${hasWinner ? 'text-gold bg-gold/10 border-gold/20' : 'text-foreground bg-muted/50 border-border-strong'}`}>
                     {parsedSets.length > 0 ? (
                       <span>{setsWonP1}-{setsWonP2}</span>
                     ) : (
@@ -359,15 +359,15 @@ export function MatchCard({
                   </div>
                 </div>
 
-                <span className={`text-xs sm:text-sm leading-tight text-left break-words w-full ${team2Win ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                <span className={`text-xs sm:text-sm leading-tight text-left break-words w-full ${team2Win ? 'text-gold' : 'text-soft'}`}>
                   {joinNames(team2)}
                 </span>
               </div>
             </div>
 
             {/* Expand chevron — spans both rows */}
-            <div className="flex items-center justify-center shrink-0 pl-1 border-l border-slate-200 dark:border-slate-800/50">
-              <button aria-label="Expand match" className="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 rounded-full group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+            <div className="flex items-center justify-center shrink-0 pl-1 border-l border-border/50">
+              <button aria-label="Expand match" className="w-11 h-11 flex items-center justify-center bg-muted/50 text-muted-foreground rounded-full group-hover:bg-muted-strong group-hover:text-foreground transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             </div>
@@ -382,7 +382,7 @@ export function MatchCard({
             title="Collapse Match"
           >
             <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
-              <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
+              <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
                 <Swords className="w-3.5 h-3.5" />
                 Tournament
               </span>
@@ -392,12 +392,12 @@ export function MatchCard({
                 </span>
               )}
               {match.category && (
-                <span className="text-xs font-black text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-black text-soft bg-muted px-2 py-0.5 rounded-full">
                   {getDisplayCategory()}
                 </span>
               )}
               {match.round_name && (
-                <span className="text-[11px] font-semibold text-muted-foreground dark:text-slate-400">
+                <span className="text-[11px] font-semibold text-muted-foreground">
                   • {match.round_name}
                 </span>
               )}
@@ -423,7 +423,7 @@ export function MatchCard({
                 )}
               </div>
             ) : (
-            <div className="flex flex-row items-center justify-center gap-4 text-[10px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-2 mt-1">
+            <div className="flex flex-row items-center justify-center gap-4 text-[10px] text-muted-foreground font-bold uppercase tracking-widest text-center mb-2 mt-1">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {new Date(match.scheduled_at || match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
@@ -439,13 +439,13 @@ export function MatchCard({
           </div>
 
           {/* Scoreboard */}
-      <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-1">
+      <div className="rounded-2xl border border-border bg-muted/30 p-1">
         {/* Teams */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-0.5">
           <div className="flex justify-start w-full min-w-0">
             {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
           </div>
-          <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-black uppercase tracking-widest text-center px-1 py-0.5 sm:py-0">
+          <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest text-center px-1 py-0.5 sm:py-0">
             vs
           </div>
           <div className="flex justify-end w-full min-w-0">
@@ -455,25 +455,25 @@ export function MatchCard({
 
         {/* Sets-won headline */}
         {parsedSets.length > 0 && (
-          <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-1 mb-1 relative">
+          <div className="text-center border-t border-border-strong/60 pt-1 mb-1 relative">
             <div className="flex items-center justify-center gap-2">
               <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-3xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
+                <span className={`text-3xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-team bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground"}`}>
                   {setsWonP1}
                 </span>
               </div>
 
               <div className="flex flex-col items-center justify-center">
-                <span className="text-slate-300 dark:text-muted-foreground text-3xl font-black tracking-tighter leading-none mx-2">–</span>
+                <span className="text-muted-foreground text-3xl font-black tracking-tighter leading-none mx-2">–</span>
               </div>
 
               <div className={`flex items-center relative transition-all ${team2Win ? "scale-110" : team1Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-3xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
+                <span className={`text-3xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-team bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground"}`}>
                   {setsWonP2}
                 </span>
               </div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mt-0.5">sets</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">sets</div>
           </div>
         )}
 
@@ -484,15 +484,15 @@ export function MatchCard({
               const p1Won = s.p1 > s.p2;
               return (
                 <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-                  <span className={`text-xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p1}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-white dark:bg-slate-800 rounded-full px-2 py-0 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
-                  <span className={`text-xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p2}</span>
+                  <span className={`text-xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary" : "font-bold text-danger"}`}>{s.p1}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-muted rounded-full px-2 py-0 border border-border-strong whitespace-nowrap">Set {i + 1}</span>
+                  <span className={`text-xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary" : "font-bold text-danger"}`}>{s.p2}</span>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="border-t border-slate-200 dark:border-slate-700/60 pt-3 text-center text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
+          <div className="border-t border-border-strong/60 pt-3 text-center text-2xl font-black tracking-tight text-foreground">
             {displayScore || "—"}
           </div>
         )}
@@ -501,7 +501,7 @@ export function MatchCard({
           <div className="flex justify-center mt-1.5">
             <button
               onClick={() => setIsVideoPlayerOpen(true)}
-              className="text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition"
+              className="text-[10px] font-bold bg-danger/10 text-danger px-2 py-1 rounded-full border border-danger/40 flex items-center gap-1 hover:scale-105 transition"
             >
               <Video className="w-3 h-3" /> Highlights
             </button>
@@ -510,9 +510,9 @@ export function MatchCard({
           {/* Result recap - Single Sentence */}
       {hasWinner && winnerMembers && loserMembers && (
         <div className="text-center text-[12px] sm:text-[13px] mt-2 px-2 leading-snug">
-          <span className="font-black text-primary dark:text-primary">{joinNames(winnerMembers)}</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold mx-1.5 uppercase text-[10px] sm:text-xs tracking-wider">defeated</span>
-          <span className="font-semibold text-slate-500 dark:text-slate-400">{joinNames(loserMembers)}</span>
+          <span className="font-black text-primary">{joinNames(winnerMembers)}</span>
+          <span className="text-success font-bold mx-1.5 uppercase text-[10px] sm:text-xs tracking-wider">defeated</span>
+          <span className="font-semibold text-muted-foreground">{joinNames(loserMembers)}</span>
 
         </div>
       )}
@@ -555,7 +555,7 @@ export function MatchCard({
 
       {/* Grid Actions & Score Row */}
       {!hideActions && (
-        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 flex flex-col items-center gap-1.5 relative z-10 px-0.5">
+        <div className="mt-2 pt-2 border-t border-border/50 flex flex-col items-center gap-1.5 relative z-10 px-0.5">
           
 
           {/* Action Buttons Row */}
@@ -568,7 +568,7 @@ export function MatchCard({
               <button
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-                className="flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 ring-1 ring-slate-200 dark:ring-slate-700/50 transition-all active:scale-95 shadow-sm max-w-full"
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-soft bg-muted/80 hover:bg-muted-strong ring-1 ring-border-strong/50 transition-all active:scale-95 shadow-sm max-w-full"
               >
                 <BarChart2 className="w-3.5 h-3.5 flex-shrink-0 text-primary" />
                 <span className="truncate">Scoreboard</span>
@@ -580,7 +580,7 @@ export function MatchCard({
               <button
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShare) onShare(); }}
-                className="flex items-center justify-end gap-1.5 px-2 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+                className="flex items-center justify-end gap-1.5 px-2 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-muted transition-all active:scale-95 max-w-full"
               >
                 <span className="truncate">Share</span>
                 <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
@@ -613,7 +613,7 @@ export function MatchCard({
                     <button
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
-                      className="flex items-center justify-end gap-1.5 px-2 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+                      className="flex items-center justify-end gap-1.5 px-2 py-1.5 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-muted transition-all active:scale-95 max-w-full"
                     >
                       <span className="truncate">Notify</span>
                       <Bell className="w-3.5 h-3.5 flex-shrink-0" />
@@ -639,7 +639,7 @@ export function MatchCard({
             <div className="col-span-3 flex justify-center mt-0.5">
               <button
                 onClick={() => setIsEditVideoOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1 min-h-[44px] rounded-full text-[11px] font-bold text-muted-foreground hover:bg-muted transition-all active:scale-95"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 {highlightUrl ? "Edit Video" : "Add Video"}
@@ -651,11 +651,11 @@ export function MatchCard({
 
       </div>
 
-          <div className="mt-2 flex items-center justify-center border-t border-slate-100 dark:border-slate-800/50 pt-1 px-2">
+          <div className="mt-2 flex items-center justify-center border-t border-border/50 pt-1 px-2">
             <button
               onClick={(e) => { e.stopPropagation(); handleSetExpanded(false); }}
               aria-label="Collapse match"
-              className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition shadow-sm"
+              className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-full transition shadow-sm"
               title="Collapse"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>

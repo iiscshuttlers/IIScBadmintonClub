@@ -114,13 +114,13 @@ export function NotificationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-800 text-white p-4 max-h-[60vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md bg-card border border-border text-foreground p-4 max-h-[60vh] overflow-y-auto">
         <DialogHeader className="mb-0">
           <DialogTitle className="flex items-start sm:items-center gap-2 pr-6">
             <Bell className="w-5 h-5 text-accent flex-shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-tight break-words text-lg">{title}</span>
           </DialogTitle>
-          <DialogDescription className="text-slate-400 text-xs">
+          <DialogDescription className="text-muted-foreground text-xs">
             When would you like to be notified before the match starts?
           </DialogDescription>
         </DialogHeader>
@@ -134,11 +134,11 @@ export function NotificationModal({
                 placeholder="00"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                className="w-14 text-center text-lg font-black bg-slate-800 border-slate-700 h-10"
+                className="w-14 text-center text-lg font-black bg-muted border-border-strong h-10"
               />
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Hours</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Hours</span>
             </div>
-            <span className="text-2xl font-black text-slate-600 dark:text-slate-400 mb-4">:</span>
+            <span className="text-2xl font-black text-muted-foreground mb-4">:</span>
             <div className="flex flex-col items-center gap-1">
               <Input
                 type="number"
@@ -147,36 +147,36 @@ export function NotificationModal({
                 placeholder="00"
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
-                className="w-14 text-center text-lg font-black bg-slate-800 border-slate-700 h-10"
+                className="w-14 text-center text-lg font-black bg-muted border-border-strong h-10"
               />
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mins</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Mins</span>
             </div>
           </div>
           
           {/* Quick presets */}
           <div className="flex flex-wrap justify-center gap-1.5">
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("15"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">15 mins</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("30"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">30 mins</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("1"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">1 hour</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("24"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">1 day</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("15"); }} className="border-border-strong bg-muted hover:bg-muted-strong text-[10px] h-7 px-2">15 mins</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("30"); }} className="border-border-strong bg-muted hover:bg-muted-strong text-[10px] h-7 px-2">30 mins</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("1"); setMinutes(""); }} className="border-border-strong bg-muted hover:bg-muted-strong text-[10px] h-7 px-2">1 hour</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("24"); setMinutes(""); }} className="border-border-strong bg-muted hover:bg-muted-strong text-[10px] h-7 px-2">1 day</Button>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-2 flex items-center justify-center gap-1.5 text-xs text-slate-300">
+          <div className="bg-muted/50 rounded-lg p-2 flex items-center justify-center gap-1.5 text-xs text-soft">
             <Clock className="w-4 h-4 text-accent" />
             <span className="font-medium text-center">
-              Alert: <strong className="text-white">{displayTimeStr}</strong> before 
+              Alert: <strong className="text-foreground">{displayTimeStr}</strong> before 
               {notificationTimeStr ? <span className="text-accent ml-1">(at {notificationTimeStr})</span> : " match start"}
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center pt-2 border-t border-slate-800 gap-1.5">
+          <div className="flex flex-col sm:flex-row justify-between items-center pt-2 border-t border-border gap-1.5">
             {isSubscribed && (
-              <Button type="button" variant="destructive" onClick={handleRemove} disabled={loading} className="w-full sm:w-auto bg-red-500/20 text-red-500 hover:bg-red-500/30 border-none font-bold h-8 text-xs">
+              <Button type="button" variant="destructive" onClick={handleRemove} disabled={loading} className="w-full sm:w-auto bg-danger/20 text-danger hover:bg-danger/30 border-none font-bold h-8 text-xs">
                 Remove Alert
               </Button>
             )}
             <div className="flex w-full sm:w-auto gap-1.5">
-              <Button type="button" variant="ghost" onClick={onClose} className="flex-1 sm:flex-none hover:bg-slate-800 h-8 text-xs">Cancel</Button>
+              <Button type="button" variant="ghost" onClick={onClose} className="flex-1 sm:flex-none hover:bg-muted h-8 text-xs">Cancel</Button>
               <Button type="submit" disabled={loading} className="flex-1 sm:flex-none bg-accent text-accent-foreground font-bold px-3 h-8 text-xs">
                 {loading ? "Saving..." : "Set Alert"}
               </Button>

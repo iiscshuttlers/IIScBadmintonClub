@@ -15,20 +15,20 @@ import { canShareResult } from "@/lib/matchViewShare";
  */
 
 const STATE_CLASS: Record<MatchState, string> = {
-  live: "bg-red-600 text-white",
-  scheduled: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  unscheduled: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
-  completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  walkover: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  cancelled: "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-  unknown: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  live: "bg-live text-live-foreground",
+  scheduled: "bg-muted text-soft",
+  unscheduled: "bg-muted text-muted-foreground",
+  completed: "bg-success/20 text-success",
+  walkover: "bg-warning/20 text-warning",
+  cancelled: "bg-muted text-muted-foreground",
+  unknown: "bg-muted text-muted-foreground",
 };
 
 /** Status is always written out; colour is supplementary. */
 export function MatchStatusBadge({ view }: { view: Pick<MatchView, "state" | "statusLabel"> }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black ${STATE_CLASS[view.state]}`}>
-      {view.state === "live" && <span className="w-1.5 h-1.5 rounded-full bg-white motion-safe:animate-pulse" aria-hidden />}
+      {view.state === "live" && <span className="w-1.5 h-1.5 rounded-full bg-foreground motion-safe:animate-pulse" aria-hidden />}
       {view.statusLabel}
     </span>
   );
@@ -56,10 +56,10 @@ export function MatchSideRow({
   // BWF/Cricbuzz-style: the game in progress is boxed so the live score reads first.
   const liveIdx = currentGameIndex(view);
   const nameClass = side.isWinner
-    ? "font-black text-slate-900 dark:text-white"
+    ? "font-black text-foreground"
     : side.isTbd || side.isBye
       ? "italic text-muted-foreground"
-      : "font-medium text-slate-700 dark:text-slate-300";
+      : "font-medium text-soft";
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
       <div className="min-w-0 flex items-start gap-2">
@@ -83,10 +83,10 @@ export function MatchSideRow({
                 key={i}
                 className={`w-7 text-center font-mono text-sm tabular-nums rounded ${
                   i === liveIdx
-                    ? "font-black bg-red-50 text-red-700 ring-1 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900"
+                    ? "font-black bg-danger/15 text-danger ring-1 ring-danger/40"
                     : mine > theirs
-                      ? "font-black text-slate-900 dark:text-white"
-                      : "text-slate-500 dark:text-slate-400"
+                      ? "font-black text-foreground"
+                      : "text-muted-foreground"
                 }`}
               >
                 {mine}
@@ -166,7 +166,7 @@ export function MatchScorecard({
           </span>
         )}
       </div>
-      <div className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">
+      <div className="mt-1 divide-y divide-border">
         <MatchSideRow side={view.sides[0]} index={0} view={view} />
         <MatchSideRow side={view.sides[1]} index={1} view={view} />
       </div>
@@ -178,7 +178,7 @@ export function MatchScorecard({
     </>
   );
   const cls =
-    "block bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-3 sm:p-4";
+    "block bg-card rounded-2xl border border-border shadow-sm p-3 sm:p-4";
   if (!linked) return <div className={cls}>{body}{footer && <div className="mt-2">{footer}</div>}</div>;
   const card = (
     <Link
@@ -222,7 +222,7 @@ export function FormChips({
     return (
       <span className="inline-flex gap-1" aria-hidden>
         {Array.from({ length: 5 }, (_, i) => (
-          <span key={i} className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-800 motion-safe:animate-pulse" />
+          <span key={i} className="w-5 h-5 rounded bg-muted motion-safe:animate-pulse" />
         ))}
       </span>
     );
@@ -241,11 +241,11 @@ export function FormChips({
         const won = e.result === "W";
         const tone = e.walkover
           ? won
-            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-            : "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
+            ? "bg-success/20 text-success"
+            : "bg-danger/20 text-danger"
           : won
-            ? "bg-emerald-600 text-white"
-            : "bg-rose-600 text-white";
+            ? "bg-success text-success-foreground"
+            : "bg-danger text-danger-foreground";
         const date = e.date
           ? new Date(e.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
           : null;

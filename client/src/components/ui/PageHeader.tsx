@@ -73,10 +73,10 @@ export function PageHeader({
       className={cn(
         "relative",
         isCard
-          ? "py-4 px-1 border-b border-slate-100 dark:border-slate-800/80 mb-6 bg-transparent"
+          ? "py-4 px-1 border-b border-border/80 mb-6 bg-transparent"
           : compact
           ? "py-5 sm:py-6"
-          : "py-8 sm:py-12 border-b border-slate-200 dark:border-slate-800/80 bg-gradient-to-b from-slate-100/60 dark:from-slate-900/40 to-transparent",
+          : "py-8 sm:py-12 border-b border-border/80 bg-gradient-to-b from-card/40 to-transparent",
         isCenter ? "text-center" : "text-left",
         className
       )}
@@ -99,11 +99,10 @@ export function PageHeader({
 
             <h1
               className={cn(
-                "font-black tracking-tight text-slate-900 dark:text-white mb-2.5 flex items-center gap-2.5",
+                "font-display font-black tracking-tight text-foreground mb-2.5 flex items-center gap-2.5",
                 compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl md:text-5xl",
                 isCenter && "justify-center"
               )}
-              style={{ fontFamily: "Outfit, Inter, sans-serif" }}
             >
               {icon}
               {title}
@@ -112,7 +111,7 @@ export function PageHeader({
             {subtitle && (
               <p
                 className={cn(
-                  "text-slate-600 dark:text-slate-400 text-sm sm:text-base font-medium max-w-2xl",
+                  "text-muted-foreground text-sm sm:text-base font-medium max-w-2xl",
                   isCenter && "mx-auto",
                   children ? "mb-6" : ""
                 )}

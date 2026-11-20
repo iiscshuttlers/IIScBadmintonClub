@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { cssVar } from "@/lib/themeColors";
 import {
   TrendingUp,
   Flame,
@@ -28,9 +29,9 @@ export function MotionStatBar({ label, pct, color }: { label: string; pct: numbe
     <div>
       <div className="flex items-center justify-between text-xs font-bold mb-1">
         <span className="text-muted-foreground">{label}</span>
-        <span className="text-slate-700 dark:text-slate-200">{pct.toFixed(0)}%</span>
+        <span className="text-soft">{pct.toFixed(0)}%</span>
       </div>
-      <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, pct)}%` }} />
       </div>
     </div>
@@ -57,27 +58,27 @@ export function IntensityTrendChart({ motionMatches }: { motionMatches: MotionMa
     <div className="h-56">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.4} />
-          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }} minTickGap={30} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cssVar("border-strong")} opacity={0.4} />
+          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: cssVar("muted-foreground"), fontSize: 10, fontWeight: 600 }} minTickGap={30} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: cssVar("muted-foreground"), fontSize: 10, fontWeight: 600 }} />
           <RechartsTooltip
             content={({ active, payload }: any) =>
               active && payload?.length ? (
-                <div className="bg-slate-900/95 border border-slate-700/50 p-3 rounded-xl shadow-xl backdrop-blur-sm">
+                <div className="bg-card/95 border border-border-strong/50 p-3 rounded-xl shadow-xl backdrop-blur-sm">
                   <p className="text-xs text-muted-foreground font-medium mb-1">{payload[0].payload.tournamentName}</p>
                   <p className="text-sm font-black text-foreground">Work-rate: {payload[0].payload.workRate}</p>
                 </div>
               ) : null
             }
-            cursor={{ stroke: "#475569", strokeWidth: 1, strokeDasharray: "4 4" }}
+            cursor={{ stroke: cssVar("border-strong"), strokeWidth: 1, strokeDasharray: "4 4" }}
           />
           <Line
             type="monotone"
             dataKey="workRate"
-            stroke="#f59e0b"
+            stroke={cssVar("chart-1")}
             strokeWidth={3}
-            dot={{ r: 3, fill: "#24252a", stroke: "#f59e0b", strokeWidth: 2 }}
-            activeDot={{ r: 6, fill: "#f59e0b", stroke: "#fff", strokeWidth: 2 }}
+            dot={{ r: 3, fill: cssVar("card"), stroke: cssVar("chart-1"), strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: cssVar("chart-1"), stroke: cssVar("foreground"), strokeWidth: 2 }}
             animationDuration={1200}
           />
         </LineChart>
@@ -106,20 +107,20 @@ export function ComparisonRow({
     <div>
       <div className="text-xs font-bold text-muted-foreground mb-1">{label}</div>
       <div className="flex items-center gap-2">
-        <div className="w-10 text-right text-[10px] font-black text-[var(--series-a)]">{aLabel}</div>
+        <div className="w-10 text-right text-[10px] font-black text-series-a">{aLabel}</div>
         <div className="flex-1 flex items-center gap-0.5">
           <div className="flex-1 flex justify-end">
-            <div className="h-2.5 rounded-l-full bg-[var(--series-a)]" style={{ width: `${(a / max) * 100}%` }} />
+            <div className="h-2.5 rounded-l-full bg-series-a" style={{ width: `${(a / max) * 100}%` }} />
           </div>
           <div className="flex-1">
-            <div className="h-2.5 rounded-r-full bg-[var(--series-b)]" style={{ width: `${(b / max) * 100}%` }} />
+            <div className="h-2.5 rounded-r-full bg-series-b" style={{ width: `${(b / max) * 100}%` }} />
           </div>
         </div>
-        <div className="w-10 text-[10px] font-black text-[var(--series-b)]">{bLabel}</div>
+        <div className="w-10 text-[10px] font-black text-series-b">{bLabel}</div>
       </div>
       <div className="flex justify-between mt-0.5">
-        <span className="text-[10px] font-bold text-[var(--series-a)]">{a.toFixed(0)}{suffix}</span>
-        <span className="text-[10px] font-bold text-[var(--series-b)]">{b.toFixed(0)}{suffix}</span>
+        <span className="text-[10px] font-bold text-series-a">{a.toFixed(0)}{suffix}</span>
+        <span className="text-[10px] font-bold text-series-b">{b.toFixed(0)}{suffix}</span>
       </div>
     </div>
   );
@@ -171,22 +172,22 @@ export function MotionAnalyticsPanels({ motionMatches }: { motionMatches: Motion
   return (
     <div className="space-y-4 mt-4">
       {motionMatches.length >= 2 && (
-        <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700/50 p-5">
+        <div className="bg-muted/80 rounded-2xl shadow-md border border-border-strong/50 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-5 h-5 text-amber-500" />
-            <h2 className="font-black text-slate-800 dark:text-slate-100">Intensity Trend</h2>
+            <TrendingUp className="w-5 h-5 text-warning" />
+            <h2 className="font-black text-foreground">Intensity Trend</h2>
           </div>
           <IntensityTrendChart motionMatches={motionMatches} />
         </div>
       )}
 
       {mostIntense && (
-        <div className="bg-gradient-to-br from-[var(--series-b)]/10 to-amber-500/10 rounded-2xl shadow-md border border-[var(--series-b)] dark:border-[var(--series-b)]/30 p-5">
+        <div className="bg-gradient-to-br from-series-b/10 to-warning/10 rounded-2xl shadow-md border border-series-b/30 p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-5 h-5 text-[var(--series-b)]" />
-            <h2 className="font-black text-slate-800 dark:text-slate-100">Most Intense Match</h2>
+            <Flame className="w-5 h-5 text-series-b" />
+            <h2 className="font-black text-foreground">Most Intense Match</h2>
           </div>
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{mostIntense.tournamentName}</p>
+          <p className="text-sm font-bold text-soft">{mostIntense.tournamentName}</p>
           <div className="flex flex-wrap gap-3 mt-2 text-xs font-bold text-muted-foreground">
             <span>{mostIntense.smashSprintPct.toFixed(0)}% smash-sprint</span>
             <span>{mostIntense.runningPct.toFixed(0)}% running</span>
@@ -196,10 +197,10 @@ export function MotionAnalyticsPanels({ motionMatches }: { motionMatches: Motion
       )}
 
       {(winLoss || formatCompare) && (
-        <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700/50 p-5 space-y-5">
+        <div className="bg-muted/80 rounded-2xl shadow-md border border-border-strong/50 p-5 space-y-5">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
-            <h2 className="font-black text-slate-800 dark:text-slate-100">Movement Comparisons</h2>
+            <h2 className="font-black text-foreground">Movement Comparisons</h2>
           </div>
           {winLoss && (
             <div className="space-y-2.5">
@@ -235,8 +236,8 @@ export function MotionAnalyticsPanels({ motionMatches }: { motionMatches: Motion
       )}
 
       {lowQualityCount > 0 && (
-        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-3">
-          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-warning/5 border border-warning/20 rounded-xl p-3">
+          <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
           <span>
             {lowQualityCount} tracked match{lowQualityCount === 1 ? "" : "es"} had a low sample count — those readings may be less reliable.
           </span>
@@ -328,28 +329,28 @@ export function PersonalStatsSection({
         <div>
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Performance by Discipline</h3>
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase">Singles</span>
-                <Swords className="w-3.5 h-3.5 text-[var(--series-a)]" />
+                <Swords className="w-3.5 h-3.5 text-series-a" />
               </div>
-              <div className="text-2xl font-black text-[var(--series-a)]">{stats.singles.winRate}%</div>
+              <div className="text-2xl font-black text-series-a">{stats.singles.winRate}%</div>
               <div className="text-xs text-muted-foreground mt-0.5">{stats.singles.count} matches</div>
             </div>
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase">Doubles</span>
-                <Users className="w-3.5 h-3.5 text-green-500" />
+                <Users className="w-3.5 h-3.5 text-success" />
               </div>
-              <div className="text-2xl font-black text-green-500">{stats.doubles.winRate}%</div>
+              <div className="text-2xl font-black text-success">{stats.doubles.winRate}%</div>
               <div className="text-xs text-muted-foreground mt-0.5">{stats.doubles.count} matches</div>
             </div>
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase">Mixed</span>
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                <Trophy className="w-3.5 h-3.5 text-gold" />
               </div>
-              <div className="text-2xl font-black text-amber-500">{stats.mixedDoubles.winRate}%</div>
+              <div className="text-2xl font-black text-warning">{stats.mixedDoubles.winRate}%</div>
               <div className="text-xs text-muted-foreground mt-0.5">{stats.mixedDoubles.count} matches</div>
             </div>
           </div>
@@ -357,31 +358,31 @@ export function PersonalStatsSection({
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Total Record</div>
-              <div className="text-xl font-black text-slate-800 dark:text-slate-100">
+              <div className="text-xl font-black text-foreground">
                 {wins}W - {losses}L
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">{total ? Math.round((wins / total) * 100) : 0}% win rate</div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Straight Sets</div>
-              <div className="text-xl font-black text-emerald-500">
+              <div className="text-xl font-black text-success">
                 {straightSets}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">2-0 sweeps</div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">3-Set Clutch</div>
-              <div className="text-xl font-black text-amber-500">
+              <div className="text-xl font-black text-warning">
                 {decidersPlayed > 0 ? `${Math.round((decidersWon / decidersPlayed) * 100)}%` : "—"}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">{decidersWon} of {decidersPlayed} deciders</div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-3 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-3 shadow-md border border-border-strong/50">
               <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Tourney vs Club</div>
               <div className="text-xl font-black text-primary">
                 {tourneyMatches.length} / {friendlyMatches.length}
@@ -391,7 +392,7 @@ export function PersonalStatsSection({
           </div>
 
           {player && (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
+            <div className="bg-muted/80 rounded-2xl p-4 shadow-md border border-border-strong/50">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-primary" />
@@ -403,15 +404,15 @@ export function PersonalStatsSection({
               </div>
 
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                <div className="p-3 rounded-xl bg-card/60 border border-border">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase">Singles Elo</div>
                   <div className="text-lg font-black text-foreground mt-1">{Math.round(player.singles_elo ?? player.elo_rating ?? 1200)}</div>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                <div className="p-3 rounded-xl bg-card/60 border border-border">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase">Doubles Elo</div>
                   <div className="text-lg font-black text-foreground mt-1">{Math.round(player.doubles_elo ?? player.elo_rating ?? 1200)}</div>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                <div className="p-3 rounded-xl bg-card/60 border border-border">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase">Mixed Elo</div>
                   <div className="text-lg font-black text-foreground mt-1">{Math.round(player.mixed_elo ?? player.elo_rating ?? 1200)}</div>
                 </div>

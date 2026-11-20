@@ -186,7 +186,7 @@ export function useGlobalNotifications() {
                   label: "View",
                   onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`
                 },
-                className: "bg-background border-primary text-foreground shadow-lg dark:bg-slate-800 dark:border-sky-500 dark:text-sky-50",
+                className: "bg-muted border-info text-info shadow-lg",
               });
               
               if (Capacitor.isNativePlatform()) {

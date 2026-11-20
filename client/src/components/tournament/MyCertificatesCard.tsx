@@ -44,9 +44,9 @@ export function MyCertificatesCard({ tournament }: { tournament: { id: string; n
   if (!finished || !certs.length) return null;
 
   return (
-    <section className="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-4">
+    <section className="mb-6 rounded-3xl border border-gold/30 bg-gold/5 p-4">
       <h3 className="flex items-center gap-2 text-sm font-black mb-3">
-        <Award className="w-4 h-4 text-amber-500" /> My certificates
+        <Award className="w-4 h-4 text-gold" /> My certificates
       </h3>
       <ul className="grid sm:grid-cols-2 gap-2">
         {certs.map((c, i) => (
@@ -54,7 +54,7 @@ export function MyCertificatesCard({ tournament }: { tournament: { id: string; n
             <button
               type="button"
               onClick={() => setOpen(c)}
-              className="w-full text-left flex items-center gap-3 rounded-2xl border border-border bg-background/60 px-3 py-2.5 hover:border-amber-500/60 transition"
+              className="w-full text-left flex items-center gap-3 rounded-2xl border border-border bg-background/60 px-3 py-2.5 hover:border-gold/60 transition"
             >
               <span className="text-2xl" aria-hidden>{PLACEMENT_META[c.placement].medal}</span>
               <span className="min-w-0">

@@ -26,47 +26,47 @@ const FORMAT_COLORS: Record<
   { bg: string; text: string; border: string; dot: string }
 > = {
   MS: {
-    bg: "bg-blue-50 dark:bg-blue-900/30",
-    text: "text-blue-700 dark:text-blue-400",
-    border: "border-blue-100 dark:border-blue-900/50",
-    dot: "bg-blue-500",
+    bg: "bg-cat-ms/10",
+    text: "text-cat-ms",
+    border: "border-cat-ms/30",
+    dot: "bg-cat-ms",
   },
   WS: {
-    bg: "bg-pink-50 dark:bg-pink-900/30",
-    text: "text-pink-700 dark:text-pink-400",
-    border: "border-pink-100 dark:border-pink-900/50",
-    dot: "bg-pink-500",
+    bg: "bg-cat-ws/10",
+    text: "text-cat-ws",
+    border: "border-cat-ws/30",
+    dot: "bg-cat-ws",
   },
   MD: {
-    bg: "bg-primary/10 dark:bg-primary/30",
-    text: "text-primary dark:text-primary",
-    border: "border-primary/30 dark:border-primary/50",
+    bg: "bg-primary/30",
+    text: "text-primary",
+    border: "border-primary/50",
     dot: "bg-primary",
   },
   WD: {
-    bg: "bg-purple-50 dark:bg-purple-900/30",
-    text: "text-purple-700 dark:text-purple-400",
-    border: "border-purple-100 dark:border-purple-900/50",
-    dot: "bg-purple-500",
+    bg: "bg-cat-wd/10",
+    text: "text-cat-wd",
+    border: "border-cat-wd/30",
+    dot: "bg-cat-wd",
   },
   XD: {
-    bg: "bg-orange-50 dark:bg-orange-900/30",
-    text: "text-orange-700 dark:text-orange-400",
-    border: "border-orange-100 dark:border-orange-900/50",
-    dot: "bg-orange-500",
+    bg: "bg-cat-xd/10",
+    text: "text-cat-xd",
+    border: "border-cat-xd/30",
+    dot: "bg-cat-xd",
   },
 };
 
 const POOL_COLORS: Record<string, string> = {
   Finals:
-    "from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-200 dark:border-amber-900/50",
+    "from-warning/10 to-warning/10 border-warning/30",
   "League A":
-    "from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50",
+    "from-info/10 to-info/10 border-info/30",
   "League B":
-    "from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 border-primary/30 dark:border-primary/50",
+    "from-primary/30 to-team/10 border-primary/50",
   League:
-    "from-slate-50 dark:from-slate-900 to-gray-50 border-slate-200 dark:border-slate-700",
-  KO: "from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/30 border-rose-100 dark:border-rose-900/50",
+    "from-card to-muted border-border-strong",
+  KO: "from-danger/10 to-danger/10 border-danger/30",
 };
 
 interface ScheduleViewProps {
@@ -115,13 +115,13 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
 
   if (!tournamentData) return (
     <div className="py-12 flex flex-col items-center justify-center text-center">
-      <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-        <Calendar className="w-10 h-10 text-muted-foreground dark:text-muted-foreground" />
+      <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
+        <Calendar className="w-10 h-10 text-muted-foreground" />
       </div>
-      <h3 className="text-2xl font-black text-slate-800 dark:text-foreground mb-2">
+      <h3 className="text-2xl font-black text-foreground mb-2">
         Schedule Not Yet Available
       </h3>
-      <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
+      <p className="text-muted-foreground max-w-md mx-auto">
         The match schedule will appear here once fixtures have been published. Check back closer to the tournament start date.
       </p>
     </div>
@@ -184,12 +184,12 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-6 font-sans text-foreground dark:text-foreground">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-6 font-sans text-foreground">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground dark:text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Match Schedule
             </h2>
             <InfoModal
@@ -200,7 +200,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
               ]}
             />
           </div>
-          <p className="text-muted-foreground dark:text-muted-foreground text-sm sm:text-base mt-1 flex items-center gap-2">
+          <p className="text-muted-foreground text-sm sm:text-base mt-1 flex items-center gap-2">
             <Calendar size={14} className="sm:w-4 sm:h-4" />
             Tournament Timeline & Live Updates
           </p>
@@ -208,13 +208,13 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
 
         {/* Filter Pills - Scrollable on mobile */}
         <div className="overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
-          <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl flex gap-1 border border-slate-200 dark:border-slate-700/50 backdrop-blur-sm w-max sm:w-auto">
+          <div className="bg-muted/80 p-1 rounded-xl flex gap-1 border border-border-strong/50 backdrop-blur-sm w-max sm:w-auto">
             <button
               onClick={() => setActiveFormat("ALL")}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                 activeFormat === "ALL"
-                  ? "bg-white dark:bg-slate-900 text-foreground dark:text-foreground shadow-sm ring-1 ring-slate-200"
-                  : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
+                  ? "bg-card text-foreground shadow-sm ring-1 ring-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card bg-muted/50"
               }`}
             >
               All Events
@@ -226,8 +226,8 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                   onClick={() => setActiveFormat(code)}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                     activeFormat === code
-                      ? "bg-white dark:bg-slate-900 text-foreground dark:text-foreground shadow-sm ring-1 ring-slate-200"
-                      : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
+                      ? "bg-card text-foreground shadow-sm ring-1 ring-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-card bg-muted/50"
                   }`}
                 >
                   {code}
@@ -241,7 +241,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
       {/* Timeline Container */}
       <div className="relative">
         {/* Vertical Timeline Line - Hidden on very small screens, shown from sm up */}
-        <div className="absolute left-[23px] sm:left-[31px] md:left-[79px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-slate-200 dark:from-slate-800 via-slate-200 dark:via-slate-800 to-transparent hidden xs:block" />
+        <div className="absolute left-[23px] sm:left-[31px] md:left-[79px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-muted via-muted to-transparent hidden xs:block" />
 
         <div className="space-y-6 sm:space-y-10">
           {Object.entries(byTime).map(([time, matches]) => (
@@ -252,10 +252,10 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
               {/* Time Label */}
               <div className="xs:w-12 sm:w-20 flex-shrink-0 pt-1">
                 <div className="sticky top-8 flex items-center xs:justify-end gap-2 sm:gap-3">
-                  <span className="text-xs sm:text-sm font-bold text-muted-foreground dark:text-muted-foreground font-mono bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded xs:bg-transparent xs:p-0">
+                  <span className="text-xs sm:text-sm font-bold text-muted-foreground font-mono bg-muted px-2 py-1 rounded xs:bg-transparent xs:p-0">
                     {time}
                   </span>
-                  <div className="hidden xs:block w-3 h-3 sm:w-4 sm:h-4 rounded-full border-[3px] sm:border-4 border-white bg-slate-300 dark:bg-slate-600 shadow-sm z-10" />
+                  <div className="hidden xs:block w-3 h-3 sm:w-4 sm:h-4 rounded-full border-[3px] sm:border-4 border-foreground bg-faint shadow-sm z-10" />
                 </div>
               </div>
 
@@ -292,15 +292,15 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                     );
 
                   const formatStyle = FORMAT_COLORS[m.format] || {
-                    bg: "bg-slate-50 dark:bg-slate-800",
-                    text: "text-muted-foreground dark:text-slate-300",
-                    border: "border-slate-100 dark:border-slate-700",
-                    dot: "bg-slate-400",
+                    bg: "bg-muted",
+                    text: "text-soft",
+                    border: "border-border-strong",
+                    dot: "bg-muted-foreground",
                   };
                   const poolGradient =
                     POOL_COLORS[m.Pool] ||
                     POOL_COLORS[m.Round] ||
-                    "from-white to-white dark:from-slate-900 dark:to-slate-900 border-slate-200 dark:border-slate-700";
+                    "from-card to-card border-border-strong";
 
                   const sets = parseSets(m);
 
@@ -309,20 +309,20 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                       key={idx}
                       className={`group relative bg-gradient-to-br ${poolGradient} border rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg ${
                         isLive
-                          ? "ring-2 ring-rose-500 ring-offset-1 shadow-lg shadow-rose-100 dark:shadow-rose-900/20"
+                          ? "ring-2 ring-live ring-offset-1 shadow-lg shadow-live/20"
                           : isMyMatch
-                          ? "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse bg-primary/5 dark:bg-primary/10"
+                          ? "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse bg-primary/10"
                           : "shadow-sm"
                       }`}
                     >
                       {isLive && (
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-rose-500 animate-pulse" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-danger animate-pulse" />
                       )}
 
                       {/* Card Header - More compact on mobile */}
-                      <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-between border-b border-black/5 bg-white dark:bg-slate-900/40 backdrop-blur-sm">
+                      <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-between border-b border-border/5 bg-card/40 backdrop-blur-sm">
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <span className="text-[8px] sm:text-[10px] font-bold tracking-widest text-muted-foreground dark:text-muted-foreground uppercase">
+                          <span className="text-[8px] sm:text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
                             {m.Match_ID}
                           </span>
                           <div
@@ -339,11 +339,11 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                         </div>
 
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <span className="text-[8px] sm:text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-tight">
+                          <span className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                             {m.Pool || m.Round}
                           </span>
                           {isLive ? (
-                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-rose-500 text-on-accent text-[8px] sm:text-[10px] font-black animate-pulse">
+                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-live text-on-accent text-[8px] sm:text-[10px] font-black animate-pulse">
                               <Activity
                                 size={8}
                                 className="sm:w-2.5 sm:h-2.5"
@@ -359,7 +359,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               DONE
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground text-[8px] sm:text-[10px] font-black">
+                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[8px] sm:text-[10px] font-black">
                               <Clock size={8} className="sm:w-2.5 sm:h-2.5" />{" "}
                               UPCOMING
                             </span>
@@ -375,7 +375,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                             className={`w-full flex items-center md:justify-end gap-3 sm:gap-4 ${p1Won ? "md:scale-105 md:origin-right" : ""}`}
                           >
                             <div
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 ${p1Won ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 ring-2 ring-amber-200 dark:ring-amber-900/50" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground"}`}
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 ${p1Won ? "bg-warning/15 text-warning ring-2 ring-warning/30" : "bg-muted text-muted-foreground"}`}
                             >
                               {p1List.length > 1 ? (
                                 <Users size={18} className="sm:w-5 sm:h-5" />
@@ -387,13 +387,13 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               {p1List.map((player, pIdx) => (
                                 <p
                                   key={pIdx}
-                                  className={`text-sm sm:text-base font-bold leading-tight ${p1Won ? "text-foreground dark:text-foreground" : "text-muted-foreground dark:text-slate-300"}`}
+                                  className={`text-sm sm:text-base font-bold leading-tight ${p1Won ? "text-foreground" : "text-soft"}`}
                                 >
                                   {player}
                                 </p>
                               ))}
                               {p1Won && (
-                                <span className="text-[8px] sm:text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 md:justify-end pt-0.5">
+                                <span className="text-[8px] sm:text-[10px] font-black text-gold uppercase tracking-widest flex items-center gap-1 md:justify-end pt-0.5">
                                   <Trophy
                                     size={8}
                                     className="sm:w-2.5 sm:h-2.5"
@@ -406,22 +406,22 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
 
                           {/* VS Separator - Hidden on mobile, shown on md */}
                           <div className="hidden md:flex flex-col items-center justify-center gap-4">
-                            <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
-                            <div className="bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">
-                              <span className="text-[10px] font-black text-slate-300 dark:text-muted-foreground tracking-[0.3em] uppercase">
+                            <div className="h-10 w-px bg-muted-strong" />
+                            <div className="bg-muted px-2 py-1 rounded border border-border">
+                              <span className="text-[10px] font-black text-muted-foreground tracking-[0.3em] uppercase">
                                 VS
                               </span>
                             </div>
-                            <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
+                            <div className="h-10 w-px bg-muted-strong" />
                           </div>
 
                           {/* Mobile VS Separator - Horizontal line */}
                           <div className="md:hidden w-full flex items-center gap-3">
-                            <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                            <span className="text-[8px] font-black text-slate-200 dark:text-muted-foreground tracking-[0.2em] uppercase">
+                            <div className="h-px flex-1 bg-muted" />
+                            <span className="text-[8px] font-black text-muted-foreground tracking-[0.2em] uppercase">
                               VS
                             </span>
-                            <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                            <div className="h-px flex-1 bg-muted" />
                           </div>
 
                           {/* Team 2 */}
@@ -429,7 +429,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                             className={`w-full flex items-center gap-3 sm:gap-4 ${p2Won ? "md:scale-105 md:origin-left" : ""}`}
                           >
                             <div
-                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 ${p2Won ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 ring-2 ring-amber-200 dark:ring-amber-900/50" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground"}`}
+                              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 ${p2Won ? "bg-warning/15 text-warning ring-2 ring-warning/30" : "bg-muted text-muted-foreground"}`}
                             >
                               {p2List.length > 1 ? (
                                 <Users size={18} className="sm:w-5 sm:h-5" />
@@ -441,13 +441,13 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               {p2List.map((player, pIdx) => (
                                 <p
                                   key={pIdx}
-                                  className={`text-sm sm:text-base font-bold leading-tight ${p2Won ? "text-foreground dark:text-foreground" : "text-muted-foreground dark:text-slate-300"}`}
+                                  className={`text-sm sm:text-base font-bold leading-tight ${p2Won ? "text-foreground" : "text-soft"}`}
                                 >
                                   {player}
                                 </p>
                               ))}
                               {p2Won && (
-                                <span className="text-[8px] sm:text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 pt-0.5">
+                                <span className="text-[8px] sm:text-[10px] font-black text-gold uppercase tracking-widest flex items-center gap-1 pt-0.5">
                                   <Trophy
                                     size={8}
                                     className="sm:w-2.5 sm:h-2.5"
@@ -473,18 +473,18 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                                   key={sIdx}
                                   className="flex flex-col items-center gap-1 sm:gap-1.5"
                                 >
-                                  <span className="text-[7px] sm:text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">
+                                  <span className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                                     Set {sIdx + 1}
                                   </span>
-                                  <div className="flex items-center bg-slate-900 rounded-lg sm:rounded-xl overflow-hidden shadow-md sm:shadow-lg border border-white/10">
+                                  <div className="flex items-center bg-card rounded-lg sm:rounded-xl overflow-hidden shadow-md sm:shadow-lg border border-foreground/10">
                                     <div
-                                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-base sm:text-xl font-black font-mono min-w-[40px] sm:min-w-[50px] text-center ${s1Won ? "text-amber-400 bg-white dark:bg-slate-900/5" : "text-muted-foreground dark:text-muted-foreground"}`}
+                                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-base sm:text-xl font-black font-mono min-w-[40px] sm:min-w-[50px] text-center ${s1Won ? "text-warning bg-card/5" : "text-muted-foreground"}`}
                                     >
                                       {set.s1}
                                     </div>
-                                    <div className="w-px h-4 sm:h-6 bg-white dark:bg-slate-900/10" />
+                                    <div className="w-px h-4 sm:h-6 bg-card/10" />
                                     <div
-                                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-base sm:text-xl font-black font-mono min-w-[40px] sm:min-w-[50px] text-center ${s2Won ? "text-amber-400 bg-white dark:bg-slate-900/5" : "text-muted-foreground dark:text-muted-foreground"}`}
+                                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-base sm:text-xl font-black font-mono min-w-[40px] sm:min-w-[50px] text-center ${s2Won ? "text-warning bg-card/5" : "text-muted-foreground"}`}
                                     >
                                       {set.s2}
                                     </div>

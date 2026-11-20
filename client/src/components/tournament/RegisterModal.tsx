@@ -44,10 +44,10 @@ interface ExistingReg {
 }
 
 const STATUS_UI: Record<string, { icon: typeof Clock; cls: string; label: string; note: string }> = {
-  pending: { icon: Clock, cls: "text-amber-600 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900", label: "Pending review", note: "The organisers will review your entry soon." },
-  approved: { icon: CheckCircle2, cls: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900", label: "You're in!", note: "Your registration has been approved." },
-  rejected: { icon: XCircle, cls: "text-rose-600 bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900", label: "Not accepted", note: "This entry wasn't accepted. Contact the organisers for details." },
-  withdrawn: { icon: XCircle, cls: "text-slate-500 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800", label: "Withdrawn", note: "You withdrew from this event. You can register again." },
+  pending: { icon: Clock, cls: "text-warning bg-warning/10 border-warning/40", label: "Pending review", note: "The organisers will review your entry soon." },
+  approved: { icon: CheckCircle2, cls: "text-success bg-success/10 border-success/40", label: "You're in!", note: "Your registration has been approved." },
+  rejected: { icon: XCircle, cls: "text-danger bg-danger/10 border-danger/40", label: "Not accepted", note: "This entry wasn't accepted. Contact the organisers for details." },
+  withdrawn: { icon: XCircle, cls: "text-muted-foreground bg-card border-border", label: "Withdrawn", note: "You withdrew from this event. You can register again." },
 };
 
 export function RegisterModal({ open, onClose, tournament, onRegistered }: RegisterModalProps) {
@@ -135,23 +135,23 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
   if (!open) return null;
 
   const fieldCls =
-    "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 text-slate-900 dark:text-slate-100";
+    "w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 text-foreground";
   const showForm = canEdit;
 
   return (
     <ThemeScope {...tournament}>
-      <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-        <div className="bg-white dark:bg-slate-900 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+      <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-media/60 backdrop-blur-sm">
+        <div className="bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl border border-border max-h-[92vh] flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
           {/* Header */}
-          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2.5 shrink-0">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-border flex items-center gap-2.5 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Trophy className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-black text-slate-800 dark:text-foreground truncate">Register</h3>
+              <h3 className="text-base font-black text-foreground truncate">Register</h3>
               <p className="text-xs text-muted-foreground truncate">{tournament.name ?? "This tournament"}</p>
             </div>
-            <button onClick={onClose} aria-label="Close" className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0">
+            <button onClick={onClose} aria-label="Close" className="p-1.5 text-muted-foreground hover:text-soft rounded-lg hover:bg-muted transition shrink-0">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -192,11 +192,11 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
                   <>
                     {/* Categories */}
                     <div className="space-y-2">
-                      <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                         Categories {allCats.length === 0 && <span className="normal-case font-medium text-muted-foreground">— none set by organiser</span>}
                       </p>
                       {allCats.length === 0 && (
-                        <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                        <div className="rounded-xl border border-warning/40 bg-warning/10 px-3 py-2.5 text-xs font-bold text-warning">
                           The organiser hasn't published categories for this event yet. Check back soon or contact them to register.
                         </div>
                       )}
@@ -209,13 +209,13 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
                               type="button"
                               onClick={() => toggleCat(c)}
                               className={`flex items-center gap-2 rounded-xl border p-3 text-left transition-colors ${
-                                active ? "border-primary bg-primary/10" : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                                active ? "border-primary bg-primary/10" : "border-border hover:border-border-strong"
                               }`}
                             >
-                              <span className={`w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 ${active ? "border-primary bg-primary" : "border-slate-300 dark:border-slate-600"}`}>
+                              <span className={`w-4 h-4 rounded-md border-2 flex items-center justify-center shrink-0 ${active ? "border-primary bg-primary" : "border-border-strong"}`}>
                                 {active && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
                               </span>
-                              <span className={`text-sm font-black ${active ? "text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                              <span className={`text-sm font-black ${active ? "text-primary" : "text-soft"}`}>
                                 {CATEGORY_LABELS[c] ?? c}
                               </span>
                             </button>
@@ -227,12 +227,12 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
                     {/* Partners for doubles categories */}
                     {cats.filter(isDoublesCat).length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <p className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                           <Users2 className="w-3.5 h-3.5" /> Partners
                         </p>
                         {cats.filter(isDoublesCat).map((c) => (
                           <div key={c} className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 w-28 shrink-0">{CATEGORY_LABELS[c] ?? c}</span>
+                            <span className="text-xs font-bold text-muted-foreground w-28 shrink-0">{CATEGORY_LABELS[c] ?? c}</span>
                             <input
                               value={partners[c] ?? ""}
                               onChange={(e) => setPartners((p) => ({ ...p, [c]: e.target.value }))}
@@ -257,12 +257,12 @@ export function RegisterModal({ open, onClose, tournament, onRegistered }: Regis
           </div>
 
           {/* Footer */}
-          <div className="px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 shrink-0">
+          <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
             {existing && (existing.status === "pending" || existing.status === "approved") && (
               <button
                 onClick={withdraw}
                 disabled={submitting}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border-strong text-soft text-sm font-bold hover:bg-muted transition disabled:opacity-50"
               >
                 <LogOut className="w-4 h-4" /> Withdraw
               </button>

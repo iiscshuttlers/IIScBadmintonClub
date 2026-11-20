@@ -32,34 +32,34 @@ function TournamentPicker() {
     },
   });
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <Link href="/tv">
-        <span className="inline-flex items-center gap-2 text-slate-400 hover:text-white cursor-pointer text-sm font-bold">
+        <span className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer text-sm font-bold">
           <ArrowLeft className="w-4 h-4" /> TV home
         </span>
       </Link>
       <div className="max-w-2xl mx-auto mt-10 text-center">
-        <Shuffle className="w-12 h-12 mx-auto text-amber-400" />
+        <Shuffle className="w-12 h-12 mx-auto text-warning" />
         <h1 className="mt-4 text-4xl font-black">Tournament Screens</h1>
-        <p className="mt-2 text-slate-400">Reveal the draw, or show who's next on each court with head-to-head stats.</p>
+        <p className="mt-2 text-muted-foreground">Reveal the draw, or show who's next on each court with head-to-head stats.</p>
         <div className="mt-8 space-y-3 text-left">
-          {isLoading && <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-500" />}
+          {isLoading && <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />}
           {!isLoading && (data?.length ?? 0) === 0 && (
-            <p className="text-center text-slate-500">No upcoming or active tournaments with a draw.</p>
+            <p className="text-center text-muted-foreground">No upcoming or active tournaments with a draw.</p>
           )}
           {data?.map((t: any) => (
-            <div key={t.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <div key={t.id} className="rounded-2xl border border-border bg-card p-5">
               <div className="text-lg font-black">{t.name}</div>
-              <div className="text-sm text-slate-400 capitalize">
+              <div className="text-sm text-muted-foreground capitalize">
                 {t.status}
                 {t.start_date ? ` · ${new Date(t.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link href={`/tv/draw/${t.id}`}>
-                  <span className="inline-block cursor-pointer rounded-lg bg-amber-400 text-slate-950 px-3 py-1.5 text-sm font-black">Draw ceremony</span>
+                  <span className="inline-block cursor-pointer rounded-lg bg-warning text-warning-foreground px-3 py-1.5 text-sm font-black">Draw ceremony</span>
                 </Link>
                 <Link href={`/tv/next/${t.id}`}>
-                  <span className="inline-block cursor-pointer rounded-lg bg-sky-400 text-slate-950 px-3 py-1.5 text-sm font-black">Court display</span>
+                  <span className="inline-block cursor-pointer rounded-lg bg-info text-info-foreground px-3 py-1.5 text-sm font-black">Court display</span>
                 </Link>
               </div>
             </div>
@@ -145,18 +145,18 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-400" aria-label="Loading draw" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-warning" aria-label="Loading draw" />
       </div>
     );
   }
   if (error || !current) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-300 flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="min-h-screen bg-background text-soft flex flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-2xl font-bold">{error ? "Couldn't load the draw." : "This tournament has no draw yet."}</p>
-        <p className="text-slate-500">Generate the bracket in Tournament Manager first.</p>
+        <p className="text-muted-foreground">Generate the bracket in Tournament Manager first.</p>
         <Link href="/tv/draw">
-          <span className="text-amber-400 font-bold cursor-pointer">← Choose another tournament</span>
+          <span className="text-warning font-bold cursor-pointer">← Choose another tournament</span>
         </Link>
       </div>
     );
@@ -166,7 +166,7 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
 
   return (
     <div
-      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#24252a,_#0a0a0b_70%)] text-white flex flex-col"
+      className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--muted),_var(--background)_70%)] text-foreground flex flex-col"
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button,a")) return;
         next();
@@ -174,7 +174,7 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
     >
       <header className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-amber-400 font-black tracking-[0.3em] text-xs sm:text-sm uppercase">Official Draw</p>
+          <p className="text-warning font-black tracking-[0.3em] text-xs sm:text-sm uppercase">Official Draw</p>
           <h1 className="text-2xl sm:text-4xl font-black">{data!.name}</h1>
         </div>
         <div className="text-right">
@@ -185,8 +185,8 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
               animate={{ opacity: 1, y: 0 }}
               exit={reduceMotion ? undefined : { opacity: 0, y: 10 }}
             >
-              <div className="text-3xl sm:text-5xl font-black text-amber-300">{CAT_LABELS[current.category] ?? current.category}</div>
-              <div className="text-slate-400 font-bold">
+              <div className="text-3xl sm:text-5xl font-black text-warning">{CAT_LABELS[current.category] ?? current.category}</div>
+              <div className="text-muted-foreground font-bold">
                 {current.roundName} · {revealed}/{total} drawn
               </div>
             </motion.div>
@@ -205,51 +205,51 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               transition={spring}
               className={`scroll-mb-28 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
-                latest ? "border-amber-400 bg-amber-400/10 shadow-[0_0_40px_-10px_rgba(251,191,36,0.6)]" : "border-slate-700 bg-slate-900/70"
+                latest ? "border-warning bg-warning/10 shadow-[0_0_40px_-10px_color-mix(in_srgb,var(--warning)_60%,transparent)]" : "border-border-strong bg-card/70"
               }`}
             >
-              <span className="w-9 h-9 shrink-0 rounded-full bg-slate-800 flex items-center justify-center font-black text-amber-300 tabular-nums">
+              <span className="w-9 h-9 shrink-0 rounded-full bg-muted flex items-center justify-center font-black text-warning tabular-nums">
                 {p.slot}
               </span>
               <div className="min-w-0 flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-base sm:text-xl font-black">
                 <span className="truncate text-right">{p.side1}</span>
-                <span className="text-slate-500 text-sm font-bold">vs</span>
-                <span className={`truncate ${p.isBye ? "text-slate-500 italic" : ""}`}>{p.side2}</span>
+                <span className="text-muted-foreground text-sm font-bold">vs</span>
+                <span className={`truncate ${p.isBye ? "text-muted-foreground italic" : ""}`}>{p.side2}</span>
               </div>
             </motion.div>
           );
         })}
         {revealed === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-24 text-slate-500">
+          <div className="col-span-full flex flex-col items-center justify-center py-24 text-muted-foreground">
             <Shuffle className="w-16 h-16 mb-4" />
             <p className="text-xl font-bold">Press → or tap to draw the first pairing</p>
           </div>
         )}
       </main>
 
-      <footer className="fixed bottom-0 inset-x-0 px-4 py-3 bg-slate-950/80 backdrop-blur border-t border-slate-800 flex items-center justify-between gap-2 text-sm">
+      <footer className="fixed bottom-0 inset-x-0 px-4 py-3 bg-background/80 backdrop-blur border-t border-border flex items-center justify-between gap-2 text-sm">
         <Link href="/tv/draw">
-          <span className="inline-flex items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer font-bold">
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer font-bold">
             <ArrowLeft className="w-4 h-4" /> Exit
           </span>
         </Link>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => switchCat(-1)} disabled={catIdx === 0} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30" aria-label="Previous category">
+          <button type="button" onClick={() => switchCat(-1)} disabled={catIdx === 0} className="p-2 rounded-lg hover:bg-muted disabled:opacity-30" aria-label="Previous category">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="px-2 font-bold text-slate-300 tabular-nums">
+          <span className="px-2 font-bold text-soft tabular-nums">
             {catIdx + 1}/{draws.length}
           </span>
-          <button type="button" onClick={() => switchCat(1)} disabled={catIdx >= draws.length - 1} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30" aria-label="Next category">
+          <button type="button" onClick={() => switchCat(1)} disabled={catIdx >= draws.length - 1} className="p-2 rounded-lg hover:bg-muted disabled:opacity-30" aria-label="Next category">
             <ChevronRight className="w-5 h-5" />
           </button>
-          <button type="button" onClick={() => setRevealed(0)} className="p-2 rounded-lg hover:bg-slate-800" aria-label="Restart category">
+          <button type="button" onClick={() => setRevealed(0)} className="p-2 rounded-lg hover:bg-muted" aria-label="Restart category">
             <RotateCcw className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => setAuto((a) => !a)}
-            className={`ml-1 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold ${auto ? "bg-amber-400 text-slate-950" : "bg-slate-800 hover:bg-slate-700"}`}
+            className={`ml-1 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold ${auto ? "bg-warning text-warning-foreground" : "bg-muted hover:bg-muted-strong"}`}
             aria-pressed={auto}
           >
             {auto ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />} Auto
@@ -257,13 +257,13 @@ function Ceremony({ tournamentId }: { tournamentId: string }) {
           <button
             type="button"
             onClick={() => (document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}))}
-            className="p-2 rounded-lg hover:bg-slate-800 hidden sm:inline-flex"
+            className="p-2 rounded-lg hover:bg-muted hidden sm:inline-flex"
             aria-label="Toggle fullscreen"
           >
             <Maximize2 className="w-5 h-5" />
           </button>
         </div>
-        <button type="button" onClick={next} className="px-4 py-2 rounded-lg bg-white text-slate-950 font-black">
+        <button type="button" onClick={next} className="px-4 py-2 rounded-lg bg-foreground text-background font-black">
           Next →
         </button>
       </footer>

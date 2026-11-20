@@ -64,7 +64,7 @@ export function MatchH2HTab({ view }: { view: MatchView }) {
           <p className="text-sm text-muted-foreground">Couldn't load head-to-head.</p>
         ) : h2h && h2h.meetings.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 items-center text-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 py-3">
+            <div className="grid grid-cols-3 items-center text-center rounded-2xl bg-background/60 border border-border py-3">
               <div className="min-w-0 px-2">
                 <p className="text-3xl font-black tabular-nums">{h2h.aWins}</p>
                 <p className="text-xs font-semibold truncate">{s1.label}</p>
@@ -77,7 +77,7 @@ export function MatchH2HTab({ view }: { view: MatchView }) {
                 <p className="text-xs font-semibold truncate">{s2.label}</p>
               </div>
             </div>
-            <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+            <ul className="mt-3 divide-y divide-border text-sm">
               {h2h.meetings.slice(0, 5).map((m) => (
                 <li key={m.id} className="py-2 flex items-center justify-between gap-2">
                   <span className="min-w-0">

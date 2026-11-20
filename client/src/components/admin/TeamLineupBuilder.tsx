@@ -240,33 +240,33 @@ export function TeamLineupBuilder({
   if (isLoading) return <Loader2 className="animate-spin w-5 h-5 mx-auto" />;
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mt-4 space-y-4">
+    <div className="bg-muted/50 p-4 rounded-2xl border border-border-strong mt-4 space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
-          <h3 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <h3 className="font-black text-foreground flex items-center gap-2">
             Team {side} Lineup &amp; Proposed Playing Order
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Assign players and drag rows or use arrows to propose the order of play. Once locked, the referee/organizer/umpire will review orders and reveal.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {isAnyRevealed ? (
-            <span className="text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <span className="text-xs font-black bg-success/20 text-success px-2.5 py-1 rounded-full flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> REVEALED
             </span>
           ) : isMySideLocked ? (
-            <span className="text-xs font-black bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <span className="text-xs font-black bg-individual/20 text-individual px-2.5 py-1 rounded-full flex items-center gap-1">
               <Lock className="w-3.5 h-3.5" /> LOCKED
             </span>
           ) : submissionCount > 0 ? (
-            <span className="text-xs font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-black bg-info/20 text-info px-2.5 py-1 rounded-full">
               SUBMITTED (v{submissionCount})
             </span>
           ) : (
-            <span className="text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-black bg-warning/20 text-warning px-2.5 py-1 rounded-full">
               DRAFT
             </span>
           )}
@@ -277,8 +277,8 @@ export function TeamLineupBuilder({
       {isMySideLocked && !isAnyRevealed && (
         <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
           isBothLocked
-            ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-200'
-            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+            ? 'bg-warning/10 border-warning/30 text-warning'
+            : 'bg-muted border-border-strong text-soft'
         }`}>
           <Lock className="w-4 h-4 shrink-0 text-primary" />
           <div>
@@ -342,29 +342,29 @@ export function TeamLineupBuilder({
                 setDraggedIndex(null);
                 setDragOverIndex(null);
               }}
-              className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border transition-all ${
+              className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-card rounded-xl border transition-all ${
                 isBeingDragged
                   ? 'opacity-40 border-dashed border-primary ring-2 ring-primary/40 scale-[0.99]'
                   : isOver
-                    ? 'border-primary ring-2 ring-primary/60 bg-primary/5 dark:bg-primary/10 shadow-lg'
+                    ? 'border-primary ring-2 ring-primary/60 bg-primary/10 shadow-lg'
                     : isThisRevealed 
-                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/20' 
+                      ? 'border-success/40 bg-success/5' 
                       : isMySideLocked
-                        ? 'border-slate-200 dark:border-slate-800 opacity-90'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'border-border opacity-90'
+                        : 'border-border hover:border-border-strong'
               }`}
             >
               {/* Drag Handle, Proposed Order Indicator & Reorder Arrows */}
               <div className="flex items-center gap-2">
                 {!isRowDisabled && (
                   <div 
-                    className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-soft p-1 rounded hover:bg-muted transition"
                     title="Drag to reorder match priority"
                   >
                     <GripVertical className="w-4 h-4" />
                   </div>
                 )}
-                <div className="flex flex-col items-center justify-center w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-xs font-black">
+                <div className="flex flex-col items-center justify-center w-7 h-7 rounded-lg bg-muted font-mono text-xs font-black">
                   #{index + 1}
                 </div>
                 {isCaptain && !isThisRevealed && !isMySideLocked && (
@@ -373,7 +373,7 @@ export function TeamLineupBuilder({
                       type="button"
                       onClick={() => moveRubber(index, 'UP')}
                       disabled={index === 0}
-                      className="p-0.5 text-slate-400 hover:text-slate-800 dark:hover:text-white disabled:opacity-20"
+                      className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-20"
                       title="Move up in playing order"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -382,7 +382,7 @@ export function TeamLineupBuilder({
                       type="button"
                       onClick={() => moveRubber(index, 'DOWN')}
                       disabled={index === orderedRubbers.length - 1}
-                      className="p-0.5 text-slate-400 hover:text-slate-800 dark:hover:text-white disabled:opacity-20"
+                      className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-20"
                       title="Move down in playing order"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -394,18 +394,18 @@ export function TeamLineupBuilder({
               {/* Rubber Label & Category */}
               <div className="w-24 shrink-0">
                 <span className="font-black text-xs text-primary block">{rubber.label}</span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">{rubber.category}</span>
+                <span className="text-[10px] text-muted-foreground font-bold uppercase">{rubber.category}</span>
               </div>
 
               {/* Player Selectors */}
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <select 
-                  className="px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700/80 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                  className="px-3 py-2 text-xs font-bold border border-border-strong/80 rounded-xl bg-card text-foreground disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
                   value={assign.player1_id}
                   onChange={e => updateAssignment(rubber.order, 1, e.target.value)}
                   disabled={isRowDisabled}
                 >
-                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Player 1</option>
+                  <option value="" className="bg-card text-foreground">Select Player 1</option>
                   {activeMembers.map(m => {
                     const stats = validationResult.playerAppearanceCounts[m.player_id];
                     const count = stats?.total || 0;
@@ -432,7 +432,7 @@ export function TeamLineupBuilder({
                       <option 
                         key={m.player_id} 
                         value={m.player_id} 
-                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        className="bg-card text-foreground"
                       >
                         {name} ({gender === 'Female' || gender === 'F' ? '♀' : '♂'}) {count > 0 ? `[${count}/${cap} rubbers]` : ''} {!elig.eligible ? `⚠️ (${elig.reason})` : ''}
                       </option>
@@ -442,12 +442,12 @@ export function TeamLineupBuilder({
 
                 {isDoubles && (
                   <select 
-                    className="px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700/80 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+                    className="px-3 py-2 text-xs font-bold border border-border-strong/80 rounded-xl bg-card text-foreground disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
                     value={assign.player2_id}
                     onChange={e => updateAssignment(rubber.order, 2, e.target.value)}
                     disabled={isRowDisabled}
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Player 2</option>
+                    <option value="" className="bg-card text-foreground">Select Player 2</option>
                     {activeMembers.map(m => {
                       const stats = validationResult.playerAppearanceCounts[m.player_id];
                       const count = stats?.total || 0;
@@ -474,7 +474,7 @@ export function TeamLineupBuilder({
                         <option 
                           key={m.player_id} 
                           value={m.player_id} 
-                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                          className="bg-card text-foreground"
                         >
                           {name} ({gender === 'Female' || gender === 'F' ? '♀' : '♂'}) {count > 0 ? `[${count}/${cap} rubbers]` : ''} {!elig.eligible ? `⚠️ (${elig.reason})` : ''}
                         </option>
@@ -486,11 +486,11 @@ export function TeamLineupBuilder({
 
 
               {isThisRevealed ? (
-                <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-black uppercase text-success bg-success/20 px-2 py-0.5 rounded">
                   Revealed
                 </span>
               ) : isMySideLocked ? (
-                <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-black uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   Locked
                 </span>
               ) : null}
@@ -498,9 +498,9 @@ export function TeamLineupBuilder({
           );
         })}
         {orderedRubbers.length === 0 ? (
-          <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-slate-500">
-            <p className="font-bold text-sm text-slate-700 dark:text-slate-300">No rubbers configured for this tie yet</p>
-            <p className="text-xs text-slate-400 mt-1">
+          <div className="p-6 text-center rounded-2xl bg-muted/40 border border-border text-muted-foreground">
+            <p className="font-bold text-sm text-soft">No rubbers configured for this tie yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
               Please define the tie format (e.g. MS, WS, MD, XD) in tournament settings or create rubber matches first.
             </p>
           </div>
@@ -509,12 +509,12 @@ export function TeamLineupBuilder({
 
       {/* Validation Rule Violations Alert */}
       {!validationResult.isValid && (
-        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 space-y-1.5 text-xs">
-          <div className="flex items-center gap-1.5 font-bold text-rose-400">
+        <div className="p-3.5 rounded-xl bg-danger/10 border border-danger/30 text-danger space-y-1.5 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-danger">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Lineup Rule Violations Detected:</span>
           </div>
-          <ul className="list-disc list-inside space-y-1 text-slate-300 pl-1 font-medium">
+          <ul className="list-disc list-inside space-y-1 text-soft pl-1 font-medium">
             {validationResult.errors.map((err, i) => (
               <li key={i}>{err.message}</li>
             ))}
@@ -524,12 +524,12 @@ export function TeamLineupBuilder({
 
       {/* Action Buttons for Captain */}
       {isCaptain && !isAnyRevealed && !isMySideLocked && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-700/80">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-border-strong/80">
           <Button 
             onClick={() => submitLineup.mutate()} 
             disabled={submitLineup.isPending || lockLineupMutation.isPending}
             variant="outline"
-            className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10 border-border-strong hover:bg-muted"
           >
             <Send className="w-3.5 h-3.5" /> 
             {submissionCount > 0 ? "Update Draft" : "Save Proposed Lineup"}
@@ -566,22 +566,22 @@ export function TeamLineupBuilder({
       {deciderMatch && (
         <div className={`p-4 rounded-2xl border-2 space-y-3 transition-all ${
           isDeciderRevealed
-            ? 'bg-emerald-50/20 border-emerald-300 dark:border-emerald-800'
+            ? 'bg-success/5 border-success/40'
             : (tie.has_decider_rubber || tie.decider_status !== 'NOT_APPLICABLE' || (tie.score_team_a === tie.score_team_b && tie.score_team_a > 0))
-              ? 'bg-amber-500/10 border-amber-500/40 ring-2 ring-amber-500/20'
-              : 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 opacity-80'
+              ? 'bg-warning/10 border-warning/40 ring-2 ring-warning/20'
+              : 'bg-muted/40 border-border-strong opacity-80'
         }`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+              <ShieldAlert className="w-5 h-5 text-warning shrink-0" />
               <div>
-                <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <h4 className="font-black text-sm text-foreground flex items-center gap-2">
                   <span>Tiebreaker Decider Match: {deciderMatch.rubber_label}</span>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-0.5 rounded bg-card border border-border">
                     {deciderMatch.category} · {deciderMatch.best_of_sets} Set(s) to {deciderMatch.points_to_win} pts
                   </span>
                 </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {(tie.has_decider_rubber || tie.decider_status !== 'NOT_APPLICABLE' || (tie.score_team_a === tie.score_team_b && tie.score_team_a > 0))
                     ? "Scores are level! Captains must now submit and lock their player for the deciding match."
                     : "Reserved for tiebreak. Lineup submitted later if scores reach a draw."
@@ -592,15 +592,15 @@ export function TeamLineupBuilder({
 
             <div className="flex items-center gap-2">
               {isDeciderRevealed ? (
-                <span className="text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="text-xs font-black bg-success/20 text-success px-2.5 py-1 rounded-full flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> REVEALED
                 </span>
               ) : deciderLineup ? (
-                <span className="text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="text-xs font-black bg-warning/20 text-warning px-2.5 py-1 rounded-full flex items-center gap-1">
                   <Lock className="w-3.5 h-3.5" /> LOCKED
                 </span>
               ) : (
-                <span className="text-xs font-black bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-black bg-muted-strong text-soft px-2.5 py-1 rounded-full">
                   {(tie.has_decider_rubber || tie.decider_status !== 'NOT_APPLICABLE' || (tie.score_team_a === tie.score_team_b && tie.score_team_a > 0)) ? "ACTION REQUIRED" : "STANDBY"}
                 </span>
               )}
@@ -609,14 +609,14 @@ export function TeamLineupBuilder({
 
           {/* Decider Player Selection (Unlocked if tie is active or lineup submitted) */}
           {(tie.has_decider_rubber || tie.decider_status !== 'NOT_APPLICABLE' || (tie.score_team_a === tie.score_team_b && tie.score_team_a > 0) || deciderLineup) && (
-            <div className="pt-2 border-t border-amber-500/20 space-y-3">
+            <div className="pt-2 border-t border-warning/20 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                  <label className="text-[11px] font-bold text-muted-foreground block mb-1">
                     Decider Player 1
                   </label>
                   <select
-                    className="w-full px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 disabled:opacity-50"
+                    className="w-full px-3 py-2 text-xs font-bold border border-border-strong rounded-xl bg-card disabled:opacity-50"
                     value={deciderPlayer1}
                     onChange={(e) => setDeciderPlayer1(e.target.value)}
                     disabled={!isCaptain || isDeciderRevealed || !!deciderLineup}
@@ -657,11 +657,11 @@ export function TeamLineupBuilder({
 
                 {isDeciderDoubles && (
                   <div>
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">
                       Decider Partner (Player 2)
                     </label>
                     <select
-                      className="w-full px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 disabled:opacity-50"
+                      className="w-full px-3 py-2 text-xs font-bold border border-border-strong rounded-xl bg-card disabled:opacity-50"
                       value={deciderPlayer2}
                       onChange={(e) => setDeciderPlayer2(e.target.value)}
                       disabled={!isCaptain || isDeciderRevealed || !!deciderLineup}
@@ -778,7 +778,7 @@ export function TeamLineupBuilder({
                       }
                     }}
                     disabled={submitDeciderLineup.isPending}
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-sm flex items-center gap-1.5"
+                    className="bg-warning hover:bg-warning/90 text-warning-foreground font-black text-xs rounded-xl shadow-sm flex items-center gap-1.5"
                   >
                     {submitDeciderLineup.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
                     Submit &amp; Lock Decider Lineup

@@ -94,13 +94,13 @@ export type DynamicFlyer = {
 };
 
 export const inputCls =
-  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+  "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
 export const labelCls =
-  "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+  "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 export const cardCls =
-  "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+  "bg-card rounded-2xl border border-border p-5 shadow-sm";
 export const colorSwatchCls =
-  "h-10 w-12 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer p-0.5";
+  "h-10 w-12 shrink-0 rounded-lg border border-border-strong bg-transparent cursor-pointer p-0.5";
 
 const HEX_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 export const toHex = (val: string, fallback: string) =>

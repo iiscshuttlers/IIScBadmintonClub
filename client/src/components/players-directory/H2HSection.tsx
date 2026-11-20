@@ -85,12 +85,12 @@ export function H2HSection() {
     if (total === 1)
       return {
         text: `This rivalry is just getting started! The gauntlet has been thrown.`,
-        color: "text-indigo-500",
+        color: "text-info",
       };
     if (p1Wins === p2Wins)
       return {
         text: `Dead even at ${p1Wins}-${p2Wins}! This rivalry is a toss-up â€” next match decides the bragging rights.`,
-        color: "text-amber-500",
+        color: "text-warning",
       };
     const leader = p1Wins > p2Wins ? p1 : p2;
     const trailer = p1Wins > p2Wins ? p2 : p1;
@@ -100,17 +100,17 @@ export function H2HSection() {
     if (gap === 1)
       return {
         text: `${trailer.full_name} is 1 win away from tying the series! Can they even it up?`,
-        color: "text-rose-500",
+        color: "text-danger",
       };
     if (gap === 2)
       return {
         text: `${leader.full_name} leads ${leaderWins}-${trailerWins}. ${trailer.full_name} needs to win 2 straight to level the series.`,
-        color: "text-orange-500",
+        color: "text-secondary",
       };
     if (leaderWins >= 5 && gap >= 3)
       return {
         text: `${leader.full_name} dominates this rivalry ${leaderWins}-${trailerWins}. ${trailer.full_name} is in desperate need of a comeback!`,
-        color: "text-rose-600",
+        color: "text-danger",
       };
     return {
       text: `${leader.full_name} leads ${leaderWins}-${trailerWins}. ${trailer.full_name} has some ground to make up!`,
@@ -185,15 +185,15 @@ export function H2HSection() {
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-4">
       <div className="max-w-4xl mx-auto space-y-4">
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground dark:text-foreground flex items-center justify-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground flex items-center justify-center gap-2">
             <Swords className="w-6 h-6 text-primary" /> Head-to-Head
           </h1>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-border shadow-lg">
                 <img
                   src={p1?.avatar_url || ""}
                   className="w-full h-full object-cover"
@@ -205,15 +205,15 @@ export function H2HSection() {
                   onChange={setP1Id}
                   players={players}
                   placeholder="Player 1"
-                  className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+                  className="text-sm sm:text-xl font-black text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-muted px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none/90 focus:ring-0 focus:border-0/90 border-0 outline-none pr-8"
                 />
-                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-primary dark:text-primary">
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-primary">
                   <ChevronDown className="w-4 h-4 drop-shadow-sm" />
                 </div>
               </div>
               <div className="flex gap-1.5 flex-row justify-center text-[10px] font-black mt-1 mx-auto min-h-[24px] w-full">
                 {!!rankMap[p1?.id || ""]?.overall && (
-                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                  <span className="px-2 py-1 bg-warning/10 text-warning rounded-md border border-warning/30">
                     OVR: #{rankMap[p1?.id || ""].overall}
                   </span>
                 )}
@@ -223,12 +223,12 @@ export function H2HSection() {
                   </span>
                 )}
                 {!!rankMap[p1?.id || ""]?.doubles && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
+                  <span className="px-2 py-1 bg-info/10 text-info rounded-md border border-info/30">
                     D: #{rankMap[p1?.id || ""].doubles}
                   </span>
                 )}
                 {!!rankMap[p1?.id || ""]?.mixed && (
-                  <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
+                  <span className="px-2 py-1 bg-individual/10 text-individual rounded-md border border-individual/30">
                     XD: #{rankMap[p1?.id || ""].mixed}
                   </span>
                 )}
@@ -236,9 +236,9 @@ export function H2HSection() {
             </div>
 
             <div className="flex flex-col items-center w-full px-2">
-              <div className="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 mb-1">
+              <div className="text-3xl sm:text-4xl font-black text-foreground mb-1">
                 {p1Wins}{" "}
-                <span className="text-slate-300 dark:text-muted-foreground">-</span>{" "}
+                <span className="text-muted-foreground">-</span>{" "}
                 {p2Wins}
               </div>
               <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
@@ -248,7 +248,7 @@ export function H2HSection() {
               {/* Link to Deep Analytics */}
               {p1Id && p2Id && (
                 <Link href={`/compare/${p1Id}/${p2Id}`}>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-primary text-primary-foreground rounded-full text-[10px] font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-[10px] font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
                     <BarChart3 className="w-3.5 h-3.5" /> Analytics
                   </button>
                 </Link>
@@ -257,44 +257,44 @@ export function H2HSection() {
               {/* H2H wins visual bar */}
               {totalMatchesPlayed > 0 && (
                 <div className="w-full mb-3" aria-label={`Head to head wins: ${p1?.full_name} ${p1Wins} vs ${p2?.full_name} ${p2Wins}`}>
-                  <div className="flex h-3 rounded-full overflow-hidden w-full shadow-inner bg-slate-100 dark:bg-slate-800">
+                  <div className="flex h-3 rounded-full overflow-hidden w-full shadow-inner bg-muted">
                     <div
                       className="h-full bg-primary transition-all duration-1000 ease-out"
                       style={{ width: `${totalMatchesPlayed > 0 ? (p1Wins / totalMatchesPlayed) * 100 : 50}%` }}
                     />
                     <div
-                      className="h-full bg-indigo-500 transition-all duration-1000 ease-out"
+                      className="h-full bg-info transition-all duration-1000 ease-out"
                       style={{ width: `${totalMatchesPlayed > 0 ? (p2Wins / totalMatchesPlayed) * 100 : 50}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-[10px] font-bold mt-1 px-0.5">
                     <span className="text-primary">{p1Wins} W</span>
-                    <span className="text-indigo-500">{p2Wins} W</span>
+                    <span className="text-info">{p2Wins} W</span>
                   </div>
                 </div>
               )}
 
               {/* Points Scored & Streaks Breakdown */}
               {(h2hPointStats.p1Points > 0 || h2hPointStats.p2Points > 0) && (
-                <div className="w-full mb-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/40 space-y-1.5">
+                <div className="w-full mb-3 p-2 bg-muted/40 rounded-xl border border-border-strong/40 space-y-1.5">
                   <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
                     <span>Pts</span>
-                    <span className="text-slate-700 dark:text-slate-300 font-bold">{h2hPointStats.p1Points} - {h2hPointStats.p2Points}</span>
+                    <span className="text-soft font-bold">{h2hPointStats.p1Points} - {h2hPointStats.p2Points}</span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-700">
+                  <div className="h-1.5 rounded-full overflow-hidden flex bg-muted-strong">
                     <div
-                      className="h-full bg-emerald-500 transition-all duration-700"
+                      className="h-full bg-success transition-all duration-700"
                       style={{ width: `${(h2hPointStats.p1Points / (h2hPointStats.p1Points + h2hPointStats.p2Points || 1)) * 100}%` }}
                     />
                     <div
-                      className="h-full bg-purple-500 transition-all duration-700"
+                      className="h-full bg-individual transition-all duration-700"
                       style={{ width: `${(h2hPointStats.p2Points / (h2hPointStats.p1Points + h2hPointStats.p2Points || 1)) * 100}%` }}
                     />
                   </div>
                   {(h2hPointStats.maxP1Streak > 1 || h2hPointStats.maxP2Streak > 1) && (
-                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
-                      <span className="text-emerald-600 dark:text-emerald-400">Streak: {h2hPointStats.maxP1Streak}</span>
-                      <span className="text-purple-600 dark:text-purple-400">Streak: {h2hPointStats.maxP2Streak}</span>
+                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground pt-1 border-t border-border-strong/50">
+                      <span className="text-success">Streak: {h2hPointStats.maxP1Streak}</span>
+                      <span className="text-individual">Streak: {h2hPointStats.maxP2Streak}</span>
                     </div>
                   )}
                 </div>
@@ -312,25 +312,25 @@ export function H2HSection() {
               )}
 
               {/* Win Probability Predictor */}
-              <div className="w-full bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50">
+              <div className="w-full bg-muted/50 p-2.5 rounded-xl border border-border-strong/50">
                 <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center mb-1.5 flex items-center justify-center gap-1">
-                  <Activity className="w-3 h-3 text-blue-500" /> Win Prob
+                  <Activity className="w-3 h-3 text-info" /> Win Prob
                 </div>
                 <div className="flex justify-between text-[10px] font-bold mb-1 px-1">
-                  <span className="text-primary dark:text-primary">
+                  <span className="text-primary">
                     {p1WinProb}%
                   </span>
-                  <span className="text-indigo-600 dark:text-indigo-400">
+                  <span className="text-info">
                     {p2WinProb}%
                   </span>
                 </div>
-                <div className="h-2 w-full bg-indigo-500/20 rounded-full overflow-hidden flex">
+                <div className="h-2 w-full bg-info/20 rounded-full overflow-hidden flex">
                   <div
                     className="h-full bg-primary transition-all duration-1000 ease-out"
                     style={{ width: `${p1WinProb}%` }}
                   />
                   <div
-                    className="h-full bg-indigo-500 transition-all duration-1000 ease-out"
+                    className="h-full bg-info transition-all duration-1000 ease-out"
                     style={{ width: `${p2WinProb}%` }}
                   />
                 </div>
@@ -338,7 +338,7 @@ export function H2HSection() {
             </div>
 
             <div className="flex flex-col items-center gap-3">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-lg">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-border shadow-lg">
                 <img
                   src={p2?.avatar_url || ""}
                   className="w-full h-full object-cover"
@@ -350,15 +350,15 @@ export function H2HSection() {
                   onChange={setP2Id}
                   players={players}
                   placeholder="Player 2"
-                  className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none focus:ring-0 focus:border-0 border-0 outline-none pr-8"
+                  className="text-sm sm:text-xl font-black text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-muted px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none/90 focus:ring-0 focus:border-0/90 border-0 outline-none pr-8"
                 />
-                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-blue-500 dark:text-blue-400">
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-info">
                   <ChevronDown className="w-4 h-4 drop-shadow-sm" />
                 </div>
               </div>
               <div className="flex gap-1.5 flex-row justify-center text-[10px] font-black mt-1 mx-auto min-h-[24px] w-full">
                 {!!rankMap[p2?.id || ""]?.overall && (
-                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                  <span className="px-2 py-1 bg-warning/10 text-warning rounded-md border border-warning/30">
                     OVR: #{rankMap[p2?.id || ""].overall}
                   </span>
                 )}
@@ -368,12 +368,12 @@ export function H2HSection() {
                   </span>
                 )}
                 {!!rankMap[p2?.id || ""]?.doubles && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
+                  <span className="px-2 py-1 bg-info/10 text-info rounded-md border border-info/30">
                     D: #{rankMap[p2?.id || ""].doubles}
                   </span>
                 )}
                 {!!rankMap[p2?.id || ""]?.mixed && (
-                  <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
+                  <span className="px-2 py-1 bg-individual/10 text-individual rounded-md border border-individual/30">
                     XD: #{rankMap[p2?.id || ""].mixed}
                   </span>
                 )}
@@ -383,7 +383,7 @@ export function H2HSection() {
         </div>
 
         {h2hTournamentMatches.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2 w-full">
               <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                 Match History
@@ -403,17 +403,17 @@ export function H2HSection() {
               return (
                 <div
                   key={i}
-                  className="group relative overflow-hidden rounded-xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/50 dark:bg-amber-950/20 shadow-sm transition-all duration-200 mb-2"
+                  className="group relative overflow-hidden rounded-xl border border-warning/35 bg-warning/10 shadow-sm transition-all duration-200 mb-2"
                 >
                   {/* Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 pt-2.5 pb-1 gap-1 sm:gap-2">
                     <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                       <span className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded font-bold">
+                       <span className="text-[10px] bg-warning/15 text-warning px-2 py-0.5 rounded font-bold">
                         {m.round_name}
                        </span>
                        <span className="text-[10px] font-bold text-muted-foreground mt-0.5 mr-2 sm:hidden">{m.match_code}</span>
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest line-clamp-1 mt-1 sm:mt-0 sm:flex-1 sm:text-center">
+                    <span className="text-[10px] sm:text-xs font-black text-warning uppercase tracking-widest line-clamp-1 mt-1 sm:mt-0 sm:flex-1 sm:text-center">
                       {m.tournaments?.name ?? "Tournament"}
                     </span>
                     <span className="text-[10px] font-bold text-muted-foreground hidden sm:block whitespace-nowrap">{m.match_code}</span>
@@ -422,30 +422,30 @@ export function H2HSection() {
                   {/* Teams */}
                   <div className="px-3 pb-2.5 pt-1">
                     <div className="relative flex flex-col">
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
-                        {team1Won ? <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${team1Won ? "bg-primary/10" : ""}`}>
+                        {team1Won ? <Trophy className="w-3.5 h-3.5 text-gold shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
+                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${team1Won ? "text-primary" : "text-soft"}`}>
                           {mp1?.full_name}{mp3 ? ` & ${mp3.full_name}` : ""}
                         </span>
                         <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
                       </div>
 
                       <div className="flex items-center justify-center gap-3 py-1">
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700/50" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-rose-500">vs</span>
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700/50" />
+                        <div className="flex-1 h-px bg-muted-strong/50" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-danger">vs</span>
+                        <div className="flex-1 h-px bg-muted-strong/50" />
                       </div>
 
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${!team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
-                        {!team1Won ? <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${!team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${!team1Won ? "bg-primary/10" : ""}`}>
+                        {!team1Won ? <Trophy className="w-3.5 h-3.5 text-gold shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
+                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${!team1Won ? "text-primary" : "text-soft"}`}>
                           {mp2?.full_name}{mp4 ? ` & ${mp4.full_name}` : ""}
                         </span>
                         <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
                       </div>
                     </div>
 
-                    <div className="mt-1.5 flex flex-wrap gap-1 border-t border-amber-100 dark:border-amber-900/50 pt-2 pl-2 sm:justify-center sm:pl-0">
+                    <div className="mt-1.5 flex flex-wrap gap-1 border-t border-warning/30 pt-2 pl-2 sm:justify-center sm:pl-0">
                       <BeautifulScoreDisplay score={m.score} />
                     </div>
                   </div>

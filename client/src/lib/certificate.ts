@@ -3,6 +3,43 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { FileOpener } from "@capacitor-community/file-opener";
 
+/**
+ * Fixed print palette. The certificate (and its companion result card) is
+ * artwork that must look the same in every app theme, so its colours do not
+ * come from the theme tokens.
+ */
+const CERT = {
+  navy: "#081529", // raw-color-ok: printed certificate artwork
+  ink: "#111111", // raw-color-ok: printed certificate artwork
+  blueInk: "#1239B3", // raw-color-ok: printed certificate artwork
+  gold: "#B58938", // raw-color-ok: printed certificate artwork
+  clubBlue: "#194a8d", // raw-color-ok: printed certificate artwork
+  dateRule: "#325d91", // raw-color-ok: printed certificate artwork
+  motto: "#234971", // raw-color-ok: printed certificate artwork
+  idGrey: "#62718a", // raw-color-ok: printed certificate artwork
+  cardFrom: "#101E33", // raw-color-ok: printed certificate artwork
+  cardTo: "#213C5F", // raw-color-ok: printed certificate artwork
+  cardFrame: "#8393aa", // raw-color-ok: printed certificate artwork
+  cardTitle: "#E3E9F4", // raw-color-ok: printed certificate artwork
+  cardHighlight: "#FBFAF6", // raw-color-ok: printed certificate artwork
+  cardName: "#FFFFFF", // raw-color-ok: printed certificate artwork
+  cardCategory: "#DBE3EF", // raw-color-ok: printed certificate artwork
+  cardTournament: "#ADBFD5", // raw-color-ok: printed certificate artwork
+  cardDate: "#CAD4E2", // raw-color-ok: printed certificate artwork
+  winner: "#AF8A44", // raw-color-ok: printed certificate artwork
+  winnerLight: "#F5E9D0", // raw-color-ok: printed certificate artwork
+  runnerUp: "#7B879A", // raw-color-ok: printed certificate artwork
+  runnerUpLight: "#E8ECF2", // raw-color-ok: printed certificate artwork
+  third: "#A86B48", // raw-color-ok: printed certificate artwork
+  thirdLight: "#F2DFD1", // raw-color-ok: printed certificate artwork
+  fourth: "#3E628A", // raw-color-ok: printed certificate artwork
+  fourthLight: "#E3ECF5", // raw-color-ok: printed certificate artwork
+  participation: "#3E7E79", // raw-color-ok: printed certificate artwork
+  participationLight: "#DDEDE8", // raw-color-ok: printed certificate artwork
+  official: "#786B96", // raw-color-ok: printed certificate artwork
+  officialLight: "#EDE8F5", // raw-color-ok: printed certificate artwork
+} as const;
+
 /** Drop-in replacement for the IIScShuttlers certificate generator.
  * Put the matching SVG and image assets in Vite's public/ directory.
  * The supplied signatures are ILLUSTRATIVE; replace them with authorised scans.
@@ -20,12 +57,12 @@ export interface CertificateInput {
   signatories?: CertificateSignatory[];
 }
 export const PLACEMENT_META: Record<Placement, { title: string; medal: string; color: string; light: string }> = {
-  winner:        { title: "Champion",    medal: "🥇", color: "#AF8A44", light: "#F5E9D0" },
-  runnerUp:      { title: "Runner-up",   medal: "🥈", color: "#7B879A", light: "#E8ECF2" },
-  third:         { title: "Third Place", medal: "🥉", color: "#A86B48", light: "#F2DFD1" },
-  fourth:        { title: "Fourth Place",medal: "🎖️",color: "#3E628A", light: "#E3ECF5" },
-  participation: { title: "Participant", medal: "🏸", color: "#3E7E79", light: "#DDEDE8" },
-  official:      { title: "Official",    medal: "🛡️",color: "#786B96", light: "#EDE8F5" },
+  winner:        { title: "Champion",    medal: "🥇", color: CERT.winner, light: CERT.winnerLight },
+  runnerUp:      { title: "Runner-up",   medal: "🥈", color: CERT.runnerUp, light: CERT.runnerUpLight },
+  third:         { title: "Third Place", medal: "🥉", color: CERT.third, light: CERT.thirdLight },
+  fourth:        { title: "Fourth Place",medal: "🎖️",color: CERT.fourth, light: CERT.fourthLight },
+  participation: { title: "Participant", medal: "🏸", color: CERT.participation, light: CERT.participationLight },
+  official:      { title: "Official",    medal: "🛡️",color: CERT.official, light: CERT.officialLight },
 };
 export function certificateWording(input: CertificateInput) {
   const meta = PLACEMENT_META[input.placement];
@@ -65,11 +102,13 @@ export function formatCertDate(date?: string): string {
 
 // Vector illustration authored at the same A4 aspect ratio as the PDF.
 const W = 1400, H = 990, OUT_W = 3508, OUT_H = 2480;
-const NAVY = "#081529", INK = "#111111", BLUE_INK = "#1239B3", GOLD = "#B58938";
-const SERIF = '"Playfair Display", Georgia, "Times New Roman", serif';
-const AWARD_SERIF = '"Cinzel", "Playfair Display", Georgia, serif';
+const NAVY = CERT.navy, INK = CERT.ink, BLUE_INK = CERT.blueInk, GOLD = CERT.gold;
+const SERIF = '"Playfair Display", Georgia, "Times New Roman", serif'; // raw-color-ok: certificate fonts
+const AWARD_SERIF = '"Cinzel", "Playfair Display", Georgia, serif'; // raw-color-ok: certificate fonts
 const SANS = '"Inter", "Montserrat", Arial, sans-serif';
-const SCRIPT = '"Caveat", "Segoe Script", cursive';
+const SCRIPT = '"Caveat", "Segoe Script", cursive'; // raw-color-ok: certificate fonts
+// index.html only loads the active theme's fonts, so the certificate brings its own.
+const CERT_FONTS_HREF = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Cinzel:wght@700;800&family=Caveat:wght@600&family=Inter:wght@400;500;600;700&display=swap"; // raw-color-ok: certificate fonts
 const PUBLIC_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/?$/, "/");
 const path = (file: string) => `${PUBLIC_BASE}${file}`;
 const imageCache = new Map<string, Promise<HTMLImageElement | null>>();
@@ -88,14 +127,42 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
   imageCache.set(url, promise);
   return promise;
 }
+let certFontsCss: Promise<void> | null = null;
+/** Add the certificate's Google Fonts stylesheet once and wait for its @font-face rules. */
+function ensureCertificateFonts(): Promise<void> {
+  if (certFontsCss) return certFontsCss;
+  certFontsCss = new Promise<void>((resolve) => {
+    let link = document.querySelector<HTMLLinkElement>("link[data-certificate-fonts]");
+    if (link?.sheet) return resolve();
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.crossOrigin = "anonymous";
+      link.href = CERT_FONTS_HREF;
+      link.setAttribute("data-certificate-fonts", "");
+      document.head.appendChild(link);
+    }
+    const failed = link;
+    link.addEventListener("load", () => resolve(), { once: true });
+    link.addEventListener("error", () => {
+      // Allow a retry next time (e.g. after coming back online).
+      failed.remove();
+      certFontsCss = null;
+      resolve();
+    }, { once: true });
+    setTimeout(resolve, 4000); // never block generation on a slow network
+  });
+  return certFontsCss;
+}
 async function fontsReady() {
   if (!document.fonts) return;
+  await ensureCertificateFonts();
   try {
     await Promise.all([
-      document.fonts.load('700 70px "Playfair Display"'),
-      document.fonts.load('800 64px "Cinzel"'),
+      document.fonts.load('700 70px "Playfair Display"'), // raw-color-ok: certificate fonts
+      document.fonts.load('800 64px "Cinzel"'), // raw-color-ok: certificate fonts
       document.fonts.load('600 32px "Inter"'),
-      document.fonts.load('600 40px "Caveat"'),
+      document.fonts.load('600 40px "Caveat"'), // raw-color-ok: certificate fonts
     ]);
   } catch { /* graceful fallback; see README for recommended fonts */ }
 }
@@ -206,7 +273,7 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
   fittedText(ctx, "Indian Institute of Science", 845, 120,
     { family: SERIF, weight: 700, size: 40, min: 30, width: 530, color: NAVY });
   fittedText(ctx, "IISc Badminton Club", 845, 158,
-    { family: SANS, weight: 500, size: 26, width: 490, color: "#194a8d" });
+    { family: SANS, weight: 500, size: 26, width: 490, color: CERT.clubBlue });
 
   const w = certificateWording(input);
   framedText(ctx, w.heading, 281, { family: SERIF, weight: 700, size: 76, min: 49,
@@ -226,10 +293,10 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
     { family: SANS, weight: 550, size: 24, min: 17, width: 900, color: NAVY });
   const date = formatCertDate(input.date);
   if (date) {
-    ctx.save(); ctx.strokeStyle = "#325d91"; ctx.lineWidth = 1.2;
+    ctx.save(); ctx.strokeStyle = CERT.dateRule; ctx.lineWidth = 1.2;
     ctx.beginPath();ctx.moveTo(510,759);ctx.lineTo(575,759);ctx.moveTo(825,759);ctx.lineTo(890,759);ctx.stroke();ctx.restore();
     framedText(ctx, date, 766, { family: SERIF, size: 25, min: 18,
-      weight: 600, width: 240, color: "#194a8d" });
+      weight: 600, width: 240, color: CERT.clubBlue });
   }
 
   if (signatories.length === 1) {
@@ -239,10 +306,10 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
     displaySignature(ctx, signatureImages[1], signatories[1], 980);
   }
   framedText(ctx, "SPORTSMANSHIP  •  COMMUNITY  •  EXCELLENCE", 928,
-    { family: SANS, weight: 500, size: 12, min: 11, width: 370, color: "#234971", spacing: 1.1 });
+    { family: SANS, weight: 500, size: 12, min: 11, width: 370, color: CERT.motto, spacing: 1.1 });
   if (input.certificateId?.trim()) {
     framedText(ctx, `Certificate ID: ${input.certificateId.trim()}`, 799,
-      { family: SANS, weight: 500, size: 12, min: 10, width: 560, color: "#62718a" });
+      { family: SANS, weight: 500, size: 12, min: 10, width: 560, color: CERT.idGrey });
   }
   ctx.restore();
   return c;
@@ -259,20 +326,20 @@ export async function drawResultCard(input: CertificateInput): Promise<HTMLCanva
   const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Result card canvas unavailable");
   ctx.scale(2,2);ctx.imageSmoothingQuality="high";
   const meta=PLACEMENT_META[input.placement];const words=certificateWording(input);
-  const bg=ctx.createLinearGradient(0,0,S,S);bg.addColorStop(0,"#101E33");bg.addColorStop(1,"#213C5F");
+  const bg=ctx.createLinearGradient(0,0,S,S);bg.addColorStop(0,CERT.cardFrom);bg.addColorStop(1,CERT.cardTo);
   ctx.fillStyle=bg;ctx.fillRect(0,0,S,S);
-  ctx.strokeStyle="#8393aa";ctx.lineWidth=2;ctx.strokeRect(29,29,S-58,S-58);
-  ctx.strokeStyle="#B58938";ctx.lineWidth=1;ctx.strokeRect(36,36,S-72,S-72);
+  ctx.strokeStyle=CERT.cardFrame;ctx.lineWidth=2;ctx.strokeRect(29,29,S-58,S-58);
+  ctx.strokeStyle=GOLD;ctx.lineWidth=1;ctx.strokeRect(36,36,S-72,S-72);
   if(logo)contain(ctx,logo,500,53,80,86);
-  drawCardCentered(ctx,"IISc BADMINTON CLUB",183,{family:SANS,weight:700,size:29,width:840,color:"#E3E9F4",spacing:2});
+  drawCardCentered(ctx,"IISc BADMINTON CLUB",183,{family:SANS,weight:700,size:29,width:840,color:CERT.cardTitle,spacing:2});
   ctx.textAlign="center";ctx.font='166px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
   ctx.fillText(meta.medal,540,417);
-  drawCardCentered(ctx,words.highlight.toUpperCase(),540,{family:AWARD_SERIF,weight:800,size:79,min:35,width:860,color:"#FBFAF6"});
+  drawCardCentered(ctx,words.highlight.toUpperCase(),540,{family:AWARD_SERIF,weight:800,size:79,min:35,width:860,color:CERT.cardHighlight});
   ctx.strokeStyle=meta.color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(380,571);ctx.lineTo(700,571);ctx.stroke();
-  drawCardCentered(ctx,input.recipient,661,{family:SANS,weight:700,size:68,min:29,width:895,color:"#FFFFFF"});
-  drawCardCentered(ctx,expandCategory(input.category),744,{family:SANS,weight:650,size:43,min:22,width:900,color:"#DBE3EF"});
-  drawCardCentered(ctx,input.tournamentName,828,{family:SANS,weight:550,size:34,min:20,width:895,color:"#ADBFD5"});
-  drawCardCentered(ctx,formatCertDate(input.date),890,{family:SANS,weight:500,size:27,width:870,color:"#CAD4E2"});
+  drawCardCentered(ctx,input.recipient,661,{family:SANS,weight:700,size:68,min:29,width:895,color:CERT.cardName});
+  drawCardCentered(ctx,expandCategory(input.category),744,{family:SANS,weight:650,size:43,min:22,width:900,color:CERT.cardCategory});
+  drawCardCentered(ctx,input.tournamentName,828,{family:SANS,weight:550,size:34,min:20,width:895,color:CERT.cardTournament});
+  drawCardCentered(ctx,formatCertDate(input.date),890,{family:SANS,weight:500,size:27,width:870,color:CERT.cardDate});
   ctx.fillStyle=meta.color;ctx.fillRect(0,S-16,S,16);
   return canvas;
 }

@@ -189,7 +189,7 @@ export function ResolveGuestsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-media/60 backdrop-blur-sm">
       {reviewing && (
         <PlayerMergeDialog
           open
@@ -203,15 +203,15 @@ export function ResolveGuestsModal({
           }}
         />
       )}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="bg-card rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
         
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-foreground">Resolve Guests</h2>
-            <p className="text-sm text-slate-500 mt-1">Link ghost profiles to actual registered users.</p>
+            <h2 className="text-xl font-black text-foreground">Resolve Guests</h2>
+            <p className="text-sm text-muted-foreground mt-1">Link ghost profiles to actual registered users.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onClose} aria-label="Close" className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full">
+            <button onClick={onClose} aria-label="Close" className="p-2 text-muted-foreground hover:text-soft bg-muted rounded-full">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -223,9 +223,9 @@ export function ResolveGuestsModal({
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           ) : guests.length === 0 ? (
-            <div className="text-center p-8 text-slate-500">
-              <CheckCheck className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-              <p className="font-bold text-slate-700 dark:text-slate-300">All players are linked to real accounts!</p>
+            <div className="text-center p-8 text-muted-foreground">
+              <CheckCheck className="w-10 h-10 text-success mx-auto mb-2" />
+              <p className="font-bold text-soft">All players are linked to real accounts!</p>
               <p className="text-xs text-muted-foreground mt-1">No unresolved guest profiles found in this tournament.</p>
             </div>
           ) : (
@@ -235,23 +235,23 @@ export function ResolveGuestsModal({
                 const topSuggestion = candidatesForGuest[0]?._isSuggested ? candidatesForGuest[0] : null;
 
                 return (
-                  <div key={guest.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30 flex flex-col md:flex-row gap-4 items-center">
+                  <div key={guest.id} className="p-4 border border-border-strong rounded-xl bg-muted/30 flex flex-col md:flex-row gap-4 items-center">
                     
                     <div className="flex-1 w-full min-w-0">
-                      <div className="font-bold text-slate-800 dark:text-slate-200 truncate">{guest.full_name}</div>
-                      <div className="text-xs text-slate-500 truncate">{guest.email || "No email"}</div>
-                      <div className="text-[10px] font-mono text-slate-400 mt-1 uppercase bg-slate-200 dark:bg-slate-700 inline-block px-1.5 py-0.5 rounded">GUEST</div>
+                      <div className="font-bold text-soft truncate">{guest.full_name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{guest.email || "No email"}</div>
+                      <div className="text-[10px] font-mono text-muted-foreground mt-1 uppercase bg-muted-strong inline-block px-1.5 py-0.5 rounded">GUEST</div>
                     </div>
 
-                    <div className="text-slate-300 dark:text-slate-600 hidden md:block">
+                    <div className="text-faint hidden md:block">
                       <Link2 className="w-5 h-5" />
                     </div>
 
                     <div className="flex-1 w-full min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Link to Real Account</label>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Link to Real Account</label>
                         {topSuggestion && (
-                          <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-warning flex items-center gap-1">
                             <Sparkles className="w-3 h-3" /> Suggested
                           </span>
                         )}

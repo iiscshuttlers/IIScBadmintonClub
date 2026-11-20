@@ -41,8 +41,8 @@ export function ChipStrip({
             onClick={() => onChange(o.value)}
             className={`shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-full text-xs font-black whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               active
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                ? "bg-foreground text-background"
+                : "bg-muted text-soft"
             }`}
           >
             {o.label}

@@ -51,7 +51,7 @@ export function HolidayEditor({
           </div>
           <button
             onClick={() => remove(i)}
-            className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
+            className="p-2 rounded-xl text-danger hover:bg-danger/10 transition"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -59,7 +59,7 @@ export function HolidayEditor({
       ))}
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-strong text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Holiday
       </button>

@@ -1,4 +1,5 @@
 import { isPlayerAtTop, seedRightCourts } from "@/lib/umpire/courtPositions";
+import { cssVar } from "@/lib/themeColors";
 
 export function CourtVisual({
   serverTeam,
@@ -68,7 +69,7 @@ export function CourtVisual({
   const nameColor = (side: "left" | "right", pIdx: 0 | 1) => {
     const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
     if (sideIsServer && serverPlayerIndex === pIdx) return "text-primary";
-    if (!sideIsServer && (!isDoubles || pIdx === receiverPlayerIndex)) return "text-amber-400/80";
+    if (!sideIsServer && (!isDoubles || pIdx === receiverPlayerIndex)) return "text-warning/80";
     return "text-muted-foreground";
   };
 
@@ -87,21 +88,21 @@ export function CourtVisual({
   return (
     <div className="relative w-52 h-32 md:w-64 md:h-40 select-none" title="Court">
       <svg viewBox="0 0 208 128" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="200" height="120" rx="2" stroke="#383a41" strokeWidth="2" fill="#131417" />
-        <line x1="104" y1="4" x2="104" y2="124" stroke="#64748b" strokeWidth="2" strokeDasharray="4 3" />
-        <line x1="4" y1="64" x2="104" y2="64" stroke="#1e3a5f" strokeWidth="1" />
-        <line x1="104" y1="64" x2="204" y2="64" stroke="#1e3a5f" strokeWidth="1" />
+        <rect x="4" y="4" width="200" height="120" rx="2" stroke={cssVar("border-strong")} strokeWidth="2" fill={cssVar("muted")} />
+        <line x1="104" y1="4" x2="104" y2="124" stroke={cssVar("muted-foreground")} strokeWidth="2" strokeDasharray="4 3" />
+        <line x1="4" y1="64" x2="104" y2="64" stroke={cssVar("border-strong")} strokeWidth="1" />
+        <line x1="104" y1="64" x2="204" y2="64" stroke={cssVar("border-strong")} strokeWidth="1" />
         {isDoubles && (
           <>
-            <line x1="4" y1="18" x2="204" y2="18" stroke="#24252a" strokeWidth="1" />
-            <line x1="4" y1="110" x2="204" y2="110" stroke="#24252a" strokeWidth="1" />
+            <line x1="4" y1="18" x2="204" y2="18" stroke={cssVar("border")} strokeWidth="1" />
+            <line x1="4" y1="110" x2="204" y2="110" stroke={cssVar("border")} strokeWidth="1" />
           </>
         )}
         {serverOnLeft
-          ? <rect x="5" y="5" width="98" height="118" rx="1" fill="#10b981" fillOpacity="0.12" />
-          : <rect x="105" y="5" width="98" height="118" rx="1" fill="#10b981" fillOpacity="0.12" />
+          ? <rect x="5" y="5" width="98" height="118" rx="1" fill={cssVar("primary")} fillOpacity="0.12" />
+          : <rect x="105" y="5" width="98" height="118" rx="1" fill={cssVar("primary")} fillOpacity="0.12" />
         }
-        <circle cx={shuttleCx} cy={serverCy} r="6" fill="#10b981" opacity="0.9" />
+        <circle cx={shuttleCx} cy={serverCy} r="6" fill={cssVar("primary")} opacity="0.9" />
       </svg>
 
       {/* Player name overlays */}
@@ -115,7 +116,7 @@ export function CourtVisual({
           >
             {leftP1Name || "T1"}
             {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {!leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {!leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-warning">RECEIVER</span>}
           </div>
           {isDoubles && leftP2Name && (
             <div
@@ -125,7 +126,7 @@ export function CourtVisual({
             >
               {leftP2Name}
               {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {!leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {!leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-warning">RECEIVER</span>}
             </div>
           )}
         </div>
@@ -138,7 +139,7 @@ export function CourtVisual({
           >
             {rightP1Name || "T2"}
             {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-warning">RECEIVER</span>}
           </div>
           {isDoubles && rightP2Name && (
             <div
@@ -148,7 +149,7 @@ export function CourtVisual({
             >
               {rightP2Name}
               {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-warning">RECEIVER</span>}
             </div>
           )}
         </div>

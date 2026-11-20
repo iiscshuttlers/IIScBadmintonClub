@@ -30,9 +30,9 @@ export const DEFAULT_CONVENER_DATA: ConvenerData = {
 };
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+  "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls =
-  "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+  "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
 function ImageUploadField({
   label,
@@ -94,15 +94,15 @@ function ImageUploadField({
 
       {/* Preview */}
       <div className="flex items-center gap-4">
-        <div className="relative w-20 h-20 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
+        <div className="relative w-20 h-20 rounded-2xl border-2 border-dashed border-border-strong overflow-hidden bg-muted flex items-center justify-center shrink-0">
           {displayUrl ? (
             <img src={displayUrl} alt={label} className="w-full h-full object-cover" />
           ) : (
             <User className="w-8 h-8 text-muted-foreground" />
           )}
           {uploading && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 text-white animate-spin" />
+            <div className="absolute inset-0 bg-media/50 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-foreground animate-spin" />
             </div>
           )}
         </div>
@@ -126,7 +126,7 @@ function ImageUploadField({
             <button
               type="button"
               onClick={() => { onUrlChange(""); setPreview(null); }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-danger hover:bg-danger/10 text-xs font-bold transition"
             >
               <X className="w-3 h-3" /> Remove
             </button>
@@ -172,8 +172,8 @@ function PersonCard({
   onChange: (d: ConvenerData["convener"]) => void;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-      <h3 className="text-base font-black text-foreground dark:text-foreground flex items-center gap-2">
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-sm space-y-4">
+      <h3 className="text-base font-black text-foreground flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-primary inline-block" />
         {title}
       </h3>
@@ -222,8 +222,8 @@ export function ConvenerEditor({
 
   return (
     <div className="space-y-6">
-      <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl px-5 py-4 border border-primary/20">
-        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+      <div className="bg-primary/10 rounded-2xl px-5 py-4 border border-primary/20">
+        <p className="text-sm text-muted-foreground">
           Edit the <strong>Convener</strong> and <strong>Co-Convener</strong> profiles displayed on the Home page. 
           Uploaded photos are stored on Cloudinary. Changes take effect after you click <strong>Save Changes</strong>.
         </p>

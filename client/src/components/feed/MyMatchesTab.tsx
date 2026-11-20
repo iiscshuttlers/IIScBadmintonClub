@@ -90,7 +90,7 @@ export function MyMatchesTab() {
       {isCurrentTabLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 h-32" />
+            <div key={i} className="animate-pulse bg-card rounded-2xl p-6 border border-border h-32" />
           ))}
         </div>
       ) : (
@@ -108,7 +108,7 @@ export function MyMatchesTab() {
                 className={`px-4 py-2 rounded-xl text-sm font-black transition whitespace-nowrap ${
                   tab === t.id
                     ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {t.label} <span className="opacity-70">({t.count})</span>
@@ -117,10 +117,10 @@ export function MyMatchesTab() {
           </div>
 
           {visibleMatches.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-2 px-4">
+            <div className="text-center py-16 bg-card rounded-3xl border border-border shadow-sm mt-2 px-4">
               {tab === "following" ? (
                 <>
-                  <Heart className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                  <Heart className="w-12 h-12 text-faint mx-auto mb-4" />
                   <h3 className="text-xl font-black text-foreground mb-2">No followed activity</h3>
                   <p className="text-muted-foreground max-w-md mx-auto mb-6 text-sm">
                     You aren't following any players or tournaments with active fixtures. Follow tournaments or players in the directory to see their live and upcoming matches here.
@@ -131,14 +131,14 @@ export function MyMatchesTab() {
                         Browse Tournaments
                       </button>
                     </Link>
-                    <Link href="/pulse#directory" className="px-4 py-2 text-xs font-bold border border-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <Link href="/pulse#directory" className="px-4 py-2 text-xs font-bold border border-border rounded-xl hover:bg-muted">
                       Player Directory
                     </Link>
                   </div>
                 </>
               ) : (
                 <>
-                  <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                  <Calendar className="w-12 h-12 text-faint mx-auto mb-4" />
                   <h3 className="text-xl font-black text-foreground mb-2">
                     {tab === "playing" ? "No matches yet" : "No umpire duties"}
                   </h3>
@@ -162,23 +162,23 @@ export function MyMatchesTab() {
                 return (
                   <Link key={m.id} href={matchLink}>
                     <div
-                      className={`block bg-white dark:bg-slate-900 rounded-2xl p-4 border shadow-sm transition-all hover:border-primary/50 relative overflow-hidden cursor-pointer group mb-3 ${
+                      className={`block bg-card rounded-2xl p-4 border shadow-sm transition-all hover:border-primary/50 relative overflow-hidden cursor-pointer group mb-3 ${
                         isLive
-                          ? "border-emerald-300 dark:border-emerald-800 ring-2 ring-emerald-500/20"
+                          ? "border-success/40 ring-2 ring-success/20"
                           : isUmpire
-                          ? "border-amber-200 dark:border-amber-900/50"
-                          : "border-slate-200 dark:border-slate-800"
+                          ? "border-warning/30"
+                          : "border-border"
                       }`}
                     >
                       {isLive && (
-                        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl flex items-center gap-1.5 z-10 animate-pulse">
+                        <div className="absolute top-0 right-0 bg-success text-success-foreground text-[10px] font-black px-3 py-1 rounded-bl-xl flex items-center gap-1.5 z-10 animate-pulse">
                           <Activity className="w-3 h-3" />
                           LIVE ON COURT
                         </div>
                       )}
 
                       {!isLive && isUmpire && (
-                        <div className="absolute top-0 right-0 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-3 py-1 rounded-bl-xl flex items-center gap-1.5 z-10">
+                        <div className="absolute top-0 right-0 bg-warning/10 text-warning text-[10px] font-bold px-3 py-1 rounded-bl-xl flex items-center gap-1.5 z-10">
                           <ShieldAlert className="w-3 h-3" />
                           UMPIRE DUTY
                         </div>
@@ -188,7 +188,7 @@ export function MyMatchesTab() {
                         <div className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">
                           {m.category} {m.round_name ? `- ${m.round_name}` : ""}
                         </div>
-                        <span className="text-sm font-semibold text-slate-400 dark:text-slate-500 truncate">
+                        <span className="text-sm font-semibold text-muted-foreground truncate">
                           {m.tournaments?.name}
                         </span>
                       </div>
@@ -210,11 +210,11 @@ export function MyMatchesTab() {
                           )}
                       </div>
 
-                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground bg-background/50 p-3 rounded-xl border border-border">
                         <div className="flex flex-wrap items-center gap-4">
                           {m.scheduled_at && (
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4 text-blue-500" />
+                              <Clock className="w-4 h-4 text-info" />
                               <span className="font-medium text-xs">
                                 {new Date(m.scheduled_at).toLocaleString([], {
                                   weekday: "short",
@@ -228,14 +228,14 @@ export function MyMatchesTab() {
                           )}
                           {m.court_number && (
                             <div className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4 text-rose-500" />
+                              <MapPin className="w-4 h-4 text-danger" />
                               <span className="font-medium text-xs">Court {m.court_number}</span>
                             </div>
                           )}
                           {m.status === "completed" && (
                             <div className="flex items-center gap-1.5">
-                              <Trophy className="w-4 h-4 text-amber-500" />
-                              <span className="font-medium text-xs text-amber-600 dark:text-amber-400">
+                              <Trophy className="w-4 h-4 text-gold" />
+                              <span className="font-medium text-xs text-warning">
                                 Completed
                               </span>
                             </div>

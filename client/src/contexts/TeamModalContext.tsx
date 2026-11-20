@@ -79,7 +79,7 @@ export function ClickableTeamName({
   const { openTeamModal } = useTeamModal();
 
   if (!team || !team.id) {
-    return <span className="text-slate-400 italic text-xs">{fallbackText}</span>;
+    return <span className="text-muted-foreground italic text-xs">{fallbackText}</span>;
   }
 
   return (
@@ -96,7 +96,7 @@ export function ClickableTeamName({
         {team.name}
       </span>
       {showShortName && team.short_name && (
-        <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+        <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
           {team.short_name}
         </span>
       )}

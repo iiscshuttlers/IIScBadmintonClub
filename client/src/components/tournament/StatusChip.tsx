@@ -22,22 +22,22 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   live: {
     label: "LIVE",
     icon: Radio,
-    classes: "bg-rose-500 text-white font-black animate-pulse shadow-sm shadow-rose-950/40",
+    classes: "bg-danger text-danger-foreground font-black animate-pulse shadow-sm shadow-danger/40",
   },
   in_progress: {
     label: "LIVE",
     icon: Radio,
-    classes: "bg-rose-500 text-white font-black animate-pulse shadow-sm shadow-rose-950/40",
+    classes: "bg-danger text-danger-foreground font-black animate-pulse shadow-sm shadow-danger/40",
   },
   active: {
     label: "LIVE",
     icon: Radio,
-    classes: "bg-rose-500 text-white font-black animate-pulse shadow-sm shadow-rose-950/40",
+    classes: "bg-danger text-danger-foreground font-black animate-pulse shadow-sm shadow-danger/40",
   },
   scheduled: {
     label: "SCHEDULED",
     icon: Clock,
-    classes: "bg-slate-700/80 text-slate-200 border border-slate-600/50",
+    classes: "bg-muted-strong/80 text-soft border border-border-strong/50",
   },
   upcoming: {
     label: "UPCOMING",
@@ -47,22 +47,22 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   pending: {
     label: "LINEUP PENDING",
     icon: AlertCircle,
-    classes: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
+    classes: "bg-warning/15 text-warning border border-warning/30",
   },
   locked: {
     label: "LINEUPS LOCKED",
     icon: CheckCircle2,
-    classes: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+    classes: "bg-success/15 text-success border border-success/30",
   },
   completed: {
     label: "COMPLETED",
     icon: CheckCircle2,
-    classes: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+    classes: "bg-success/15 text-success border border-success/30",
   },
   archived: {
     label: "ARCHIVED",
     icon: Archive,
-    classes: "bg-slate-800 text-slate-400 border border-slate-700/60",
+    classes: "bg-muted text-muted-foreground border border-border-strong/60",
   },
 };
 
@@ -83,7 +83,7 @@ export function StatusChip({
   const cfg = STATUS_CONFIG[normalizedKey] || {
     label: customLabel || normalizedKey.toUpperCase() || "UNKNOWN",
     icon: Clock,
-    classes: "bg-slate-800 text-slate-300 border border-slate-700",
+    classes: "bg-muted text-soft border border-border-strong",
   };
 
   const Icon = cfg.icon;

@@ -127,7 +127,7 @@ function savePinnedTabs(pins: TabId[]) {
 const TAB_GROUPS: TabGroup[] = [
   {
     title: "Dashboard",
-    color: "text-sky-400",
+    color: "text-info",
     tabs: [
       { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
       { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
@@ -137,7 +137,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "People",
-    color: "text-violet-400",
+    color: "text-individual",
     tabs: [
       { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
       { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
@@ -146,7 +146,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Competition",
-    color: "text-amber-400",
+    color: "text-warning",
     tabs: [
       { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
       { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
@@ -155,12 +155,12 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Content",
-    color: "text-pink-400",
+    color: "text-individual",
     tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" }],
   },
   {
     title: "System",
-    color: "text-emerald-400",
+    color: "text-success",
     tabs: [
       { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
@@ -171,7 +171,7 @@ const TAB_GROUPS: TabGroup[] = [
   },
   {
     title: "Developer",
-    color: "text-orange-400",
+    color: "text-secondary",
     tabs: [
       { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
       { id: "features", label: "Live Ops", icon: Zap, description: "Toggle live feature flags in real time" },
@@ -275,7 +275,7 @@ function AdminNav({
         onClick={() => onSelect(tab.id)}
         className={`group/tab flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
           active
-            ? "bg-primary/10 text-primary dark:bg-primary/20"
+            ? "bg-primary/20 text-primary"
             : "text-muted-foreground hover:bg-muted hover:text-foreground"
         }`}
       >
@@ -288,7 +288,7 @@ function AdminNav({
         )}
         {tab.master && (
           <span title="Master admin only" className="inline-flex shrink-0">
-            <ShieldAlert className="h-3.5 w-3.5 text-amber-400 opacity-70" aria-label="Master admin only" />
+            <ShieldAlert className="h-3.5 w-3.5 text-warning opacity-70" aria-label="Master admin only" />
           </span>
         )}
         <span
@@ -447,7 +447,7 @@ function SiteAdminInner() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
         <div className="max-w-md rounded-3xl border border-border bg-card p-10 text-center shadow-xl">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-rose-500" />
+          <Shield className="mx-auto mb-4 h-16 w-16 text-danger" />
           <h1 className="mb-2 text-2xl font-black text-foreground">Admin Access Required</h1>
           <p className="mb-6 text-muted-foreground">
             {session ? "Your account does not have admin privileges." : "You need to be signed in with an admin account."}
@@ -585,8 +585,8 @@ function SiteAdminInner() {
                   )}
                   {activeTab === "content" && <ContentHub />}
                   {activeTab === "tournament" && (
-                    <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm dark:from-amber-950/20 dark:to-slate-900">
-                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+                    <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/10 to-card p-8 text-center shadow-sm">
+                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gold/15 text-gold">
                         <Trophy className="h-7 w-7" />
                       </div>
                       <h2 className="text-xl font-black text-foreground">Tournament Manager</h2>
@@ -596,7 +596,7 @@ function SiteAdminInner() {
                       </p>
                       <button
                         onClick={() => setLocation("/tournament-admin")}
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition hover:bg-amber-600"
+                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-bold text-gold-foreground shadow-lg shadow-gold/20 transition hover:bg-gold/90"
                       >
                         <Trophy className="h-4 w-4" />
                         Open Tournament Manager
@@ -638,7 +638,7 @@ function SiteAdminInner() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[60] bg-black/50 lg:hidden"
+              className="fixed inset-0 z-[60] bg-media/50 lg:hidden"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.aside

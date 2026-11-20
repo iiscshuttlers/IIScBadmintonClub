@@ -89,7 +89,7 @@ function LazyImage({
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className="w-full h-full bg-gray-200 animate-pulse" />
+        <div className="w-full h-full bg-soft animate-pulse" />
       )}
     </div>
   );
@@ -593,20 +593,20 @@ export default function Legacy() {
       {/* Standardized Hero Section (S1) */}
       <PageHeader
         badge="Club Legends"
-        badgeIcon={<Trophy className="w-3.5 h-3.5 text-amber-300" />}
+        badgeIcon={<Trophy className="w-3.5 h-3.5 text-gold" />}
         title="Legacy"
         subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
       >
         <div className="flex justify-center w-full px-2">
-          <div className="grid grid-cols-3 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
               <Button
                 asChild
                 variant="tab"
                 size="tab"
                 className={`w-full sm:w-auto ${
                   activeTab === "champions"
-                    ? "bg-slate-900 text-amber-400 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                    ? "bg-card text-gold shadow-md scale-100"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a href="#champions" onClick={() => setActiveTab("champions")}>
@@ -619,8 +619,8 @@ export default function Legacy() {
                 size="tab"
                 className={`w-full sm:w-auto ${
                   activeTab === "records"
-                    ? "bg-slate-900 text-emerald-400 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                    ? "bg-card text-success shadow-md scale-100"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a href="#records" onClick={() => setActiveTab("records")}>
@@ -633,8 +633,8 @@ export default function Legacy() {
                 size="tab"
                 className={`w-full sm:w-auto ${
                   activeTab !== "champions" && activeTab !== "records"
-                    ? "bg-slate-900 text-blue-400 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                    ? "bg-card text-info shadow-md scale-100"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
                 }`}
               >
                 <a
@@ -654,15 +654,15 @@ export default function Legacy() {
       {activeTab === "records" && <RecordsBook />}
 
       {activeTab !== "champions" && activeTab !== "records" && (
-        <section className="pt-6 pb-2 bg-slate-50/50 dark:bg-slate-950/50 relative border-b border-slate-100 dark:border-slate-800">
+        <section className="pt-6 pb-2 bg-background/50 relative border-b border-border">
           <div className="container mx-auto px-4 flex justify-center">
-            <div className="bg-slate-200/50 dark:bg-slate-900 p-1.5 rounded-2xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto shadow-inner">
+            <div className="bg-card p-1.5 rounded-2xl flex gap-1 border border-border w-full sm:w-auto shadow-inner">
               <button
                 onClick={() => setActiveTab("albums")}
                 className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                   activeTab === "albums"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                    ? "bg-muted text-info shadow-md ring-1 ring-foreground/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Camera className="w-4 h-4" /> Albums
@@ -671,8 +671,8 @@ export default function Legacy() {
                 onClick={() => setActiveTab("photos")}
                 className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                   activeTab === "photos"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                    ? "bg-muted text-info shadow-md ring-1 ring-foreground/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Camera className="w-4 h-4" /> Photos
@@ -681,8 +681,8 @@ export default function Legacy() {
                 onClick={() => setActiveTab("videos")}
                 className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                   activeTab === "videos"
-                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                    ? "bg-muted text-info shadow-md ring-1 ring-foreground/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <PlayCircle className="w-4 h-4" /> Videos
@@ -693,7 +693,7 @@ export default function Legacy() {
       )}
 
       {(activeTab === "albums" || activeTab === "photos") && (
-      <section className="py-8 bg-white dark:bg-slate-950 relative">
+      <section className="py-8 bg-background relative">
         <TeaserOverlay isLocked={!session}>
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
@@ -715,12 +715,12 @@ export default function Legacy() {
                     className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${
                       selectedCategory === cat.id
                         ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                        : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                        : "bg-muted text-soft hover:bg-muted-strong"
                     }`}
                   >
                     {cat.label}
                     <span
-                      className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? "bg-white/25" : "bg-gray-200 dark:bg-slate-700 text-muted-foreground dark:text-muted-foreground"}`}
+                      className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? "bg-foreground/25" : "bg-muted-strong text-muted-foreground"}`}
                     >
                       {count}
                     </span>
@@ -740,8 +740,8 @@ export default function Legacy() {
                 }}
                 className={`col-span-2 w-full px-5 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold transition ${
                   selectedSubfolder === "all"
-                    ? "bg-blue-900 dark:bg-blue-700 text-on-accent"
-                    : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
+                    ? "bg-info text-on-accent"
+                    : "bg-muted text-muted-foreground hover:bg-muted-strong"
                 }`}
               >
                 {activeTab === "photos" ? "Photos" : "Albums"}
@@ -757,8 +757,8 @@ export default function Legacy() {
                       }}
                       className={`w-full px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-semibold transition pr-10 truncate ${
                         selectedSubfolder === sub
-                          ? "bg-blue-900 dark:bg-blue-700 text-on-accent shadow-md"
-                          : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
+                          ? "bg-info text-on-accent shadow-md"
+                          : "bg-muted text-muted-foreground hover:bg-muted-strong"
                       }`}
                     >
                       {formatText(sub)}
@@ -768,8 +768,8 @@ export default function Legacy() {
                         onClick={(e) => handleGlobalSubscribe(e, sub)}
                         className={`absolute right-9 p-1.5 rounded-full transition-colors ${
                           defaultSubscribedTags.includes(sub)
-                            ? "text-rose-500 hover:text-rose-600 bg-rose-500/10"
-                            : "text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 opacity-0 sm:group-hover:opacity-100"
+                            ? "text-danger hover:text-danger/80 bg-danger/10"
+                            : "text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 sm:group-hover:opacity-100"
                         }`}
                         title={defaultSubscribedTags.includes(sub) ? "Disable Global Subscription" : "Enable Global Subscription (Everyone)"}
                       >
@@ -781,7 +781,7 @@ export default function Legacy() {
                       className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
                         isSubscribed(sub) 
                           ? "text-primary hover:text-primary bg-primary/10" 
-                          : "text-gray-400 hover:text-primary hover:bg-primary/10 opacity-0 sm:group-hover:opacity-100"
+                          : "text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 sm:group-hover:opacity-100"
                       }`}
                       title={isSubscribed(sub) ? "Unsubscribe" : "Subscribe to notifications"}
                     >
@@ -806,7 +806,7 @@ export default function Legacy() {
               return (
                 <div
                   key={item.id}
-                  className={`group relative ${aspectClass} overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 mb-4 break-inside-avoid ${isSelectionMode && selectedPaths.has(item.path) ? "ring-4 ring-red-500 scale-[0.98]" : ""}`}
+                  className={`group relative ${aspectClass} overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 mb-4 break-inside-avoid ${isSelectionMode && selectedPaths.has(item.path) ? "ring-4 ring-danger scale-[0.98]" : ""}`}
                   style={{
                     animation: `fadeSlideUp 0.4s ease forwards`,
                     animationDelay: `${Math.min(idx * 40, 800)}ms`,
@@ -817,11 +817,11 @@ export default function Legacy() {
                   {isSelectionMode && session && item.url && (
                     <div className="absolute top-3 left-3 z-20">
                       {selectedPaths.has(item.path) ? (
-                        <div className="w-6 h-6 rounded-full bg-red-500 text-on-accent flex items-center justify-center shadow-lg">
+                        <div className="w-6 h-6 rounded-full bg-danger text-on-accent flex items-center justify-center shadow-lg">
                           <CheckCircle2 className="w-4 h-4" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-black/40 border-2 border-white/80 text-transparent flex items-center justify-center shadow-lg backdrop-blur-sm" />
+                        <div className="w-6 h-6 rounded-full bg-media/40 border-2 border-on-media/80 text-transparent flex items-center justify-center shadow-lg backdrop-blur-sm" />
                       )}
                     </div>
                   )}
@@ -835,7 +835,7 @@ export default function Legacy() {
                   />
 
                   {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
+                  <div className="absolute inset-0 bg-media/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
                     <div className="flex items-center gap-2">
                       {!/^\d+$/.test(item.title) ? (
                         <h3 className="text-foreground font-black text-base tracking-wide drop-shadow-md line-clamp-2">
@@ -849,7 +849,7 @@ export default function Legacy() {
                       {isAdmin && item.url && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEditTitle(item); }}
-                          className="p-1.5 hover:bg-white/20 text-white/70 hover:text-white rounded-full transition-all shrink-0"
+                          className="p-1.5 hover:bg-foreground/20 text-foreground/70 hover:text-foreground rounded-full transition-all shrink-0"
                           title="Edit Title"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -869,18 +869,18 @@ export default function Legacy() {
 
           {visibleCount < filteredItems.length && (
             <div ref={observerRef} className="h-20 w-full flex items-center justify-center mt-8">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
           {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
                 <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 20.25h18A2.25 2.25 0 0023.25 18v-12A2.25 2.25 0 0021 3.75H3A2.25 2.25 0 00.75 6v12A2.25 2.25 0 003 20.25z" />
                 </svg>
               </div>
-              <p className="text-muted-foreground dark:text-muted-foreground font-medium">No photos in this category yet.</p>
+              <p className="text-muted-foreground font-medium">No photos in this category yet.</p>
             </div>
           )}
 
@@ -892,8 +892,8 @@ export default function Legacy() {
           }).length > 0 && (
             <div className="mt-12 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
-                <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
+                <div className="w-2 h-8 bg-gradient-to-b from-danger to-secondary rounded-full" />
+                <h2 className="text-3xl font-black text-foreground">
                   Match Videos
                 </h2>
               </div>
@@ -905,7 +905,7 @@ export default function Legacy() {
                 }).map((video) => (
                   <button
                     key={video.id}
-                    className="group text-left bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500"
+                    className="group text-left bg-muted rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-border-strong transition duration-500"
                     onClick={() => setActiveVideo(video)}
                   >
                     <div className="relative aspect-video">
@@ -915,18 +915,18 @@ export default function Legacy() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {video.tournament && (
-                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-on-media/20 hover:bg-on-media/30 backdrop-blur-md border border-on-media/30 text-on-media text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_color-mix(in_srgb,var(--color-on-media)_30%,transparent)] transition-all">
                           {video.tournament}
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-600/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                      <div className="absolute inset-0 bg-media/20 group-hover:bg-media/10 transition-colors flex items-center justify-center">
+                        <div className="w-16 h-16 bg-danger/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-danger transition-all duration-300">
                           <Play className="w-8 h-8 ml-1" fill="currentColor" stroke="none" />
                         </div>
                       </div>
                     </div>
                     <div className="p-5 sm:p-7">
-                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                         {video.title}
                       </h3>
                     </div>
@@ -941,20 +941,19 @@ export default function Legacy() {
       )}
 
       {activeTab === "videos" && (
-      <section className="py-16 bg-white dark:bg-slate-950 relative">
+      <section className="py-16 bg-background relative">
         <TeaserOverlay isLocked={!session}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
+              <div className="w-2 h-8 bg-gradient-to-b from-danger to-secondary rounded-full" />
               <h2
-                className="text-3xl font-black text-blue-900 dark:text-foreground"
-                style={{ fontFamily: "Playfair Display, serif" }}
+                className="text-3xl font-black text-foreground font-display"
               >
                 Match Videos
               </h2>
             </div>
-            <p className="text-muted-foreground dark:text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Championship points, finals and highlights from our YouTube
               channel.
             </p>
@@ -964,7 +963,7 @@ export default function Legacy() {
             {videos.map((video) => (
               <button
                 key={video.id}
-                className="group text-left bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500"
+                className="group text-left bg-muted rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-border-strong transition duration-500"
                 onClick={() => setActiveVideo(video)}
               >
                 <div className="relative aspect-video">
@@ -979,12 +978,12 @@ export default function Legacy() {
                     }}
                   />
                   {video.tournament && (
-                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-on-media/20 hover:bg-on-media/30 backdrop-blur-md border border-on-media/30 text-on-media text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_color-mix(in_srgb,var(--color-on-media)_30%,transparent)] transition-all">
                       {video.tournament}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <div className="w-16 h-16 bg-red-600/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                  <div className="absolute inset-0 bg-media/20 group-hover:bg-media/10 transition-colors flex items-center justify-center">
+                    <div className="w-16 h-16 bg-danger/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-danger transition-all duration-300">
                       <Play
                         className="w-8 h-8 ml-1"
                         fill="currentColor"
@@ -995,7 +994,7 @@ export default function Legacy() {
                 </div>
                 <div className="p-7">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-primary dark:text-primary font-bold text-xs uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
                       <PlayCircle className="w-4 h-4" />
                       {video.category || "Match Highlight"}
                     </div>
@@ -1004,17 +1003,17 @@ export default function Legacy() {
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 text-muted-foreground hover:text-red-600 dark:text-muted-foreground dark:hover:text-red-400 transition-colors bg-gray-100 hover:bg-red-50 dark:bg-slate-800/50 dark:hover:bg-red-900/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                      className="flex items-center gap-1.5 text-muted-foreground hover:text-danger transition-colors bg-muted/50 hover:bg-danger/10 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
                     >
                       <Youtube className="w-3.5 h-3.5" />
                       <span>YouTube</span>
                     </a>
                   </div>
-                  <h3 className="text-xl font-bold text-blue-900 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary transition-colors">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                     {video.title}
                   </h3>
                   {(video.chapters?.length ?? 0) > 0 && (
-                    <p className="text-gray-400 dark:text-muted-foreground text-xs mt-2">
+                    <p className="text-muted-foreground text-xs mt-2">
                       {video.chapters.length} chapter
                       {video.chapters.length !== 1 ? "s" : ""}
                     </p>
@@ -1025,8 +1024,8 @@ export default function Legacy() {
           </div>
 
           {videos.length === 0 && (
-            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-              <p className="text-gray-400 dark:text-muted-foreground italic">
+            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border-strong">
+              <p className="text-muted-foreground italic">
                 New videos are being processed. Stay tuned!
               </p>
             </div>
@@ -1037,7 +1036,7 @@ export default function Legacy() {
               href="https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-3 text-red-600 dark:text-red-400 font-bold hover:text-red-700 dark:hover:text-red-300 transition-colors text-lg"
+              className="inline-flex items-center gap-3 text-danger font-bold hover:text-danger/80 transition-colors text-lg"
             >
               <Youtube className="w-7 h-7" />
               Visit our YouTube Channel
@@ -1050,7 +1049,7 @@ export default function Legacy() {
 
       {/* Social Media */}
       {activeTab === "videos" && (
-        <section className="py-16 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800">
+        <section className="py-16 bg-background border-t border-border">
           <div className="container mx-auto px-4 max-w-4xl">
             <SocialCTA />
           </div>
@@ -1060,7 +1059,7 @@ export default function Legacy() {
       {/* Lightbox */}
       {selectedIndex !== null && (
         <div
-          className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm"
+          className="fixed inset-0 bg-media/95 z-[100] flex items-center justify-center backdrop-blur-sm"
           onClick={() => {
             setSelectedIndex(null);
             setLightboxSrc(null);
@@ -1102,7 +1101,7 @@ export default function Legacy() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div className="w-64 h-64 rounded-xl bg-gray-800 animate-pulse relative z-40" />
+            <div className="w-64 h-64 rounded-xl bg-muted animate-pulse relative z-40" />
           )}
 
           <button
@@ -1116,7 +1115,7 @@ export default function Legacy() {
             <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-media/90 via-media/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
             <div className="pointer-events-auto flex flex-col items-center gap-2 w-full max-w-4xl">
               {selectedIndex !== null && (() => {
                 const item = filteredItems[selectedIndex];
@@ -1134,7 +1133,7 @@ export default function Legacy() {
                         {isAdmin && item?.url && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditTitle(item); }}
-                            className="p-1.5 bg-white/10 hover:bg-primary/20 text-foreground/50 hover:text-primary rounded-full backdrop-blur-sm border border-white/10 transition-all pointer-events-auto"
+                            className="p-1.5 bg-foreground/10 hover:bg-primary/20 text-foreground/50 hover:text-primary rounded-full backdrop-blur-sm border border-foreground/10 transition-all pointer-events-auto"
                             title="Edit Title"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -1157,8 +1156,8 @@ export default function Legacy() {
                               <Heart 
                                 className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
                                   isLiked 
-                                    ? "fill-rose-500 text-rose-500" 
-                                    : "text-foreground hover:text-rose-400"
+                                    ? "fill-danger text-danger" 
+                                    : "text-foreground hover:text-danger"
                                 }`} 
                               />
                             </motion.button>
@@ -1182,7 +1181,7 @@ export default function Legacy() {
                           link.click();
                           document.body.removeChild(link);
                         }}
-                        className="ml-2 p-2 bg-white/10 hover:bg-primary/20 text-foreground/80 hover:text-primary rounded-full backdrop-blur-sm border border-white/10 transition-all pointer-events-auto flex items-center justify-center"
+                        className="ml-2 p-2 bg-foreground/10 hover:bg-primary/20 text-foreground/80 hover:text-primary rounded-full backdrop-blur-sm border border-foreground/10 transition-all pointer-events-auto flex items-center justify-center"
                         title="Download Image"
                       >
                         <Download className="w-5 h-5 md:w-6 md:h-6 drop-shadow-lg" />
@@ -1215,7 +1214,7 @@ export default function Legacy() {
                   {/* Remove Button for Remote Photos */}
                   {isAdmin && item?.url && (
                       <button
-                        className="flex items-center gap-1.5 text-foreground/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
+                        className="flex items-center gap-1.5 text-foreground/50 hover:text-danger text-xs font-bold px-3 py-1.5 rounded-full border border-foreground/20 hover:border-danger/40 hover:bg-danger/10 transition-all"
                         onClick={async (e) => {
                           e.stopPropagation();
                           const ok = await confirm({
@@ -1267,7 +1266,7 @@ export default function Legacy() {
       {session && (activeTab === "albums" || activeTab === "photos") && (
         <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
           {isSelectionMode ? (
-            <div className="bg-slate-900 text-on-accent px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+            <div className="bg-card text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>
               <button
                 className="text-primary hover:text-primary/70 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
@@ -1282,9 +1281,9 @@ export default function Legacy() {
               >
                 {selectedPaths.size > 0 && selectedPaths.size === filteredItems.filter(i => i.url).length ? "Deselect All" : "Select All"}
               </button>
-              <div className="w-px h-6 bg-slate-700" />
+              <div className="w-px h-6 bg-muted-strong" />
               <button
-                className="text-red-400 hover:text-red-300 font-bold transition flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                className="text-danger hover:text-danger/80 font-bold transition flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
                 disabled={selectedPaths.size === 0 || isDeleting}
                 onClick={async () => {
                   const ok = await confirm({
@@ -1320,7 +1319,7 @@ export default function Legacy() {
             </div>
           ) : (
             <button
-              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-on-accent px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
+              className="bg-card/80 hover:bg-card backdrop-blur-md text-foreground px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
               onClick={toggleSelectionMode}
             >
               Select Photos

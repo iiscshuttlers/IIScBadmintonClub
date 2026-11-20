@@ -1,0 +1,565 @@
+/*
+ * IIScShuttlers colour themes
+ * ---------------------------------------------------------------------------
+ * Five themes, picked by the user in Settings (ThemeContext sets
+ * <html data-theme="…"> and toggles the `.dark` class for the dark ones).
+ * Any element can also take a theme locally with the `theme-<id>` class —
+ * the bracket image export uses `theme-paper` to render on white.
+ *
+ * Components must only use the semantic tokens below (bg-card, text-soft,
+ * text-live, bg-success/10, border-border-strong, …). Raw Tailwind palette
+ * classes (bg-emerald-500, text-slate-400, …) and hex colours are blocked by
+ * scripts/check-raw-colors.mjs.
+ *
+ * Token meanings
+ *   background / card / popover   page, cards, menus
+ *   muted / muted-strong          chips, inputs, nested panels; hover/track
+ *   foreground / soft             primary text / secondary body text
+ *   muted-foreground / faint      meta text / placeholder, disabled, hints
+ *   border / border-strong        default dividers / emphasised outlines
+ *   primary                       brand + main action
+ *   secondary                     warm accent (streaks, highlights)
+ *   accent                        cool data accent
+ *   live                          LIVE badges, in-progress
+ *   success / danger              won, positive / lost, errors
+ *   destructive                   delete / withdraw actions
+ *   warning                       check-in due, pending, delayed
+ *   info                          scheduled, neutral information
+ *   you                           "your match", "you", current user
+ *   gold / silver / bronze        medals, champions (winner = gold)
+ *   individual / team             event families (singles / doubles+teams)
+ *   cat-ms … cat-xd               event categories, one colour each
+ *   team-1 / team-2               the two sides on a scoreboard
+ *   hero                          the one loud card per screen (next match)
+ * Every fill token has a matching *-foreground for text placed on it.
+ */
+
+/* Neutral ramp: anything still using a raw grey shade follows the theme. */
+:root,
+[class*="theme-"],
+.print-light-theme {
+  --color-slate-50: var(--n-50);
+  --color-slate-100: var(--n-100);
+  --color-slate-200: var(--n-200);
+  --color-slate-300: var(--n-300);
+  --color-slate-400: var(--n-400);
+  --color-slate-500: var(--n-500);
+  --color-slate-600: var(--n-600);
+  --color-slate-700: var(--n-700);
+  --color-slate-800: var(--n-800);
+  --color-slate-900: var(--n-900);
+  --color-slate-950: var(--n-950);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--primary);
+  --sidebar-accent-foreground: var(--primary-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --winner: var(--gold);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+}
+
+/* ── A · Floodlight (default) — night-match navy, shuttle yellow ─────────── */
+:root,
+:root[data-theme="floodlight"],
+.theme-floodlight {
+  color-scheme: dark;
+  --background: #0a1020;
+  --foreground: #f3f6fb;
+  --card: #121a2c;
+  --card-foreground: #f3f6fb;
+  --popover: #172036;
+  --popover-foreground: #f3f6fb;
+  --muted: #1a2438;
+  --muted-strong: #24304a;
+  --muted-foreground: #a7b1c4;
+  --soft: #c9d1de;
+  --faint: #8590a6;
+  --border: #263149;
+  --border-strong: #34405c;
+  --input: #141d31;
+  --ring: #ffc83d;
+
+  --primary: #ffc83d;
+  --primary-foreground: #1c1400;
+  --secondary: #ff8a4c;
+  --secondary-foreground: #1f0d00;
+  --accent: #4fd1e8;
+  --accent-foreground: #031a20;
+  --success: #34d399;
+  --success-foreground: #04251a;
+  --warning: #ffa24d;
+  --warning-foreground: #241200;
+  --danger: #ff5c7a;
+  --danger-foreground: #2a0610;
+  --live: #f43f5e;
+  --live-foreground: #1a0207;
+  --info: #6cb4ff;
+  --info-foreground: #031529;
+  --you: #ffc83d;
+  --you-foreground: #1c1400;
+  --gold: #ffc83d;
+  --gold-foreground: #1c1400;
+  --silver: #c9d3e3;
+  --silver-foreground: #111827;
+  --bronze: #e0915a;
+  --bronze-foreground: #1f0e03;
+  --individual: #b9a2ff;
+  --individual-foreground: #170a3d;
+  --team: #4fe0c8;
+  --team-foreground: #032620;
+  --cat-ms: #6cb4ff;
+  --cat-ws: #ff7ab6;
+  --cat-md: #4fe0c8;
+  --cat-wd: #b9a2ff;
+  --cat-xd: #ffa24d;
+  --team-1: #4fd1e8;
+  --team-2: #b9a2ff;
+  --series-a: #6cb4ff;
+  --series-b: #ff7ab6;
+  --status-available: #34d399;
+  --status-playing: #ffc83d;
+  --status-resting: #a5b4fc;
+  --status-injured: #ff8fa3;
+  --chart-1: #ffc83d;
+  --chart-2: #6cb4ff;
+  --chart-3: #ff8a4c;
+  --chart-4: #b9a2ff;
+  --chart-5: #ff7ab6;
+  --chart-6: #34d399;
+  --on-accent: #0a1020;
+  --hero: #ffc83d;
+  --hero-foreground: #1c1400;
+  --hero-muted: #5a4709;
+  --hero-accent: #1c1400;
+  --hero-accent-foreground: #ffc83d;
+  --grad-from: #ffc83d;
+  --grad-to: #ffa24d;
+  --grad-warm-from: #ff8a4c;
+  --grad-warm-to: #ff5c7a;
+  --scrim: rgb(4 7 15 / 0.7);
+
+  --theme-font-display: "Barlow Condensed", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-stat: "Barlow Condensed", "Inter", ui-sans-serif, sans-serif;
+  --heading-transform: uppercase;
+  --heading-tracking: 0.005em;
+  --heading-weight: 700;
+  --radius: 0.875rem;
+
+  --n-50: #f3f6fb;
+  --n-100: #e6ebf3;
+  --n-200: #d2d9e5;
+  --n-300: #c9d1de;
+  --n-400: #a7b1c4;
+  --n-500: #939eb4;
+  --n-600: #8590a6;
+  --n-700: #34405c;
+  --n-800: #1a2438;
+  --n-900: #121a2c;
+  --n-950: #0a1020;
+}
+
+/* ── B · Centre Court — light, court green, orange for you ──────────────── */
+:root[data-theme="centre-court"],
+.theme-centre-court {
+  color-scheme: light;
+  --background: #eef3ee;
+  --foreground: #0e1f17;
+  --card: #ffffff;
+  --card-foreground: #0e1f17;
+  --popover: #ffffff;
+  --popover-foreground: #0e1f17;
+  --muted: #e3ebe4;
+  --muted-strong: #d3ded5;
+  --muted-foreground: #455a4f;
+  --soft: #2e4339;
+  --faint: #56685e;
+  --border: #d2ddd4;
+  --border-strong: #b3c3b7;
+  --input: #f5f8f5;
+  --ring: #0a7a53;
+
+  --primary: #0a7a53;
+  --primary-foreground: #ffffff;
+  --secondary: #c2410c;
+  --secondary-foreground: #ffffff;
+  --accent: #0e7490;
+  --accent-foreground: #ffffff;
+  --success: #087a50;
+  --success-foreground: #ffffff;
+  --warning: #8a6100;
+  --warning-foreground: #ffffff;
+  --danger: #c21f31;
+  --danger-foreground: #ffffff;
+  --live: #d62839;
+  --live-foreground: #ffffff;
+  --info: #1d5fd1;
+  --info-foreground: #ffffff;
+  --you: #b84300;
+  --you-foreground: #ffffff;
+  --gold: #9a6b00;
+  --gold-foreground: #ffffff;
+  --silver: #6b7785;
+  --silver-foreground: #ffffff;
+  --bronze: #9a4f1e;
+  --bronze-foreground: #ffffff;
+  --individual: #6a3dd4;
+  --individual-foreground: #ffffff;
+  --team: #0a7180;
+  --team-foreground: #ffffff;
+  --cat-ms: #1d5fd1;
+  --cat-ws: #c2185b;
+  --cat-md: #0a7180;
+  --cat-wd: #6a3dd4;
+  --cat-xd: #b84300;
+  --team-1: #0e7490;
+  --team-2: #6a3dd4;
+  --series-a: #1d5fd1;
+  --series-b: #c2185b;
+  --status-available: #087a50;
+  --status-playing: #8a6100;
+  --status-resting: #4338ca;
+  --status-injured: #be123c;
+  --chart-1: #0a7a53;
+  --chart-2: #1d5fd1;
+  --chart-3: #e85a0c;
+  --chart-4: #6a3dd4;
+  --chart-5: #c2185b;
+  --chart-6: #c08a12;
+  --on-accent: #ffffff;
+  --hero: #0b4d39;
+  --hero-foreground: #ffffff;
+  --hero-muted: #b5d5c7;
+  --hero-accent: #ff6b1a;
+  --hero-accent-foreground: #2a0e00;
+  --grad-from: #0a7a53;
+  --grad-to: #0e9f6e;
+  --grad-warm-from: #e85a0c;
+  --grad-warm-to: #c2185b;
+  --scrim: rgb(9 20 15 / 0.55);
+
+  --theme-font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-stat: "Plus Jakarta Sans", ui-sans-serif, sans-serif;
+  --heading-transform: none;
+  --heading-tracking: -0.02em;
+  --heading-weight: 800;
+  --radius: 1.125rem;
+
+  --n-50: #eef3ee;
+  --n-100: #e3ebe4;
+  --n-200: #d2ddd4;
+  --n-300: #b3c3b7;
+  --n-400: #7d8f84;
+  --n-500: #56685e;
+  --n-600: #455a4f;
+  --n-700: #2e4339;
+  --n-800: #1c3027;
+  --n-900: #0e1f17;
+  --n-950: #08130e;
+}
+
+/* ── C · Smash — electric violet, cyan for you, wide display type ───────── */
+:root[data-theme="smash"],
+.theme-smash {
+  color-scheme: dark;
+  --background: #0c0913;
+  --foreground: #f8f5ff;
+  --card: #16111f;
+  --card-foreground: #f8f5ff;
+  --popover: #1c1628;
+  --popover-foreground: #f8f5ff;
+  --muted: #211a2e;
+  --muted-strong: #2c2340;
+  --muted-foreground: #bbb2cf;
+  --soft: #d8d1e8;
+  --faint: #9187a8;
+  --border: #30284a;
+  --border-strong: #42386a;
+  --input: #130f1c;
+  --ring: #8b6cff;
+
+  --primary: #8b6cff;
+  --primary-foreground: #0e0820;
+  --secondary: #ff9a5c;
+  --secondary-foreground: #260e00;
+  --accent: #3de7ff;
+  --accent-foreground: #00191f;
+  --success: #3dffa0;
+  --success-foreground: #002613;
+  --warning: #ffb13d;
+  --warning-foreground: #261600;
+  --danger: #ff5c7a;
+  --danger-foreground: #2a0610;
+  --live: #ff3b5c;
+  --live-foreground: #1f0008;
+  --info: #6fb6ff;
+  --info-foreground: #021529;
+  --you: #3de7ff;
+  --you-foreground: #00191f;
+  --gold: #ffd24d;
+  --gold-foreground: #261c00;
+  --silver: #cfc8e6;
+  --silver-foreground: #160f24;
+  --bronze: #ff9a5c;
+  --bronze-foreground: #260e00;
+  --individual: #ff7ab6;
+  --individual-foreground: #2a0516;
+  --team: #5cf0d0;
+  --team-foreground: #012a21;
+  --cat-ms: #6fb6ff;
+  --cat-ws: #ff7ab6;
+  --cat-md: #5cf0d0;
+  --cat-wd: #c9b3ff;
+  --cat-xd: #ffb13d;
+  --team-1: #3de7ff;
+  --team-2: #ff7ab6;
+  --series-a: #8b6cff;
+  --series-b: #ff7ab6;
+  --status-available: #3dffa0;
+  --status-playing: #ffb13d;
+  --status-resting: #9db0ff;
+  --status-injured: #ff8fa3;
+  --chart-1: #8b6cff;
+  --chart-2: #3de7ff;
+  --chart-3: #ff7ab6;
+  --chart-4: #3dffa0;
+  --chart-5: #ffb13d;
+  --chart-6: #ff9a5c;
+  --on-accent: #0c0913;
+  --hero: #5b3df0;
+  --hero-foreground: #ffffff;
+  --hero-muted: #e4deff;
+  --hero-accent: #3de7ff;
+  --hero-accent-foreground: #00191f;
+  --grad-from: #8b6cff;
+  --grad-to: #3de7ff;
+  --grad-warm-from: #ff7ab6;
+  --grad-warm-to: #ff9a5c;
+  --scrim: rgb(6 4 12 / 0.72);
+
+  --theme-font-display: "Unbounded", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-stat: "Unbounded", "Manrope", ui-sans-serif, sans-serif;
+  --heading-transform: none;
+  --heading-tracking: -0.02em;
+  --heading-weight: 700;
+  --radius: 1.25rem;
+
+  --n-50: #f8f5ff;
+  --n-100: #ece7f7;
+  --n-200: #ddd6ec;
+  --n-300: #d8d1e8;
+  --n-400: #bbb2cf;
+  --n-500: #a59bbb;
+  --n-600: #9187a8;
+  --n-700: #42386a;
+  --n-800: #211a2e;
+  --n-900: #16111f;
+  --n-950: #0c0913;
+}
+
+/* ── D · Paper & Cobalt — paper white, ink black, one cobalt accent ─────── */
+:root[data-theme="paper"],
+.theme-paper,
+.print-light-theme {
+  color-scheme: light;
+  --background: #f5f5f1;
+  --foreground: #0f1012;
+  --card: #ffffff;
+  --card-foreground: #0f1012;
+  --popover: #ffffff;
+  --popover-foreground: #0f1012;
+  --muted: #edede8;
+  --muted-strong: #e0e0da;
+  --muted-foreground: #4d5058;
+  --soft: #2e3036;
+  --faint: #62656d;
+  --border: #e0e0da;
+  --border-strong: #c4c4bc;
+  --input: #f8f8f5;
+  --ring: #2347ff;
+
+  --primary: #2347ff;
+  --primary-foreground: #ffffff;
+  --secondary: #c2410c;
+  --secondary-foreground: #ffffff;
+  --accent: #0369a1;
+  --accent-foreground: #ffffff;
+  --success: #0a7d45;
+  --success-foreground: #ffffff;
+  --warning: #9a4800;
+  --warning-foreground: #ffffff;
+  --danger: #c41a33;
+  --danger-foreground: #ffffff;
+  --live: #d9213c;
+  --live-foreground: #ffffff;
+  --info: #1d4ed8;
+  --info-foreground: #ffffff;
+  --you: #2347ff;
+  --you-foreground: #ffffff;
+  --gold: #8a6400;
+  --gold-foreground: #ffffff;
+  --silver: #6b7280;
+  --silver-foreground: #ffffff;
+  --bronze: #9a4f1e;
+  --bronze-foreground: #ffffff;
+  --individual: #6a3ce0;
+  --individual-foreground: #ffffff;
+  --team: #00808a;
+  --team-foreground: #ffffff;
+  --cat-ms: #1d4ed8;
+  --cat-ws: #c2185b;
+  --cat-md: #00808a;
+  --cat-wd: #6a3ce0;
+  --cat-xd: #c2410c;
+  --team-1: #2347ff;
+  --team-2: #c2410c;
+  --series-a: #2347ff;
+  --series-b: #c2410c;
+  --status-available: #0a7d45;
+  --status-playing: #9a4800;
+  --status-resting: #4338ca;
+  --status-injured: #be123c;
+  --chart-1: #2347ff;
+  --chart-2: #c2410c;
+  --chart-3: #0a7d45;
+  --chart-4: #6a3ce0;
+  --chart-5: #c2185b;
+  --chart-6: #8a6400;
+  --on-accent: #ffffff;
+  --hero: #0f1012;
+  --hero-foreground: #ffffff;
+  --hero-muted: #b9bbc2;
+  --hero-accent: #2347ff;
+  --hero-accent-foreground: #ffffff;
+  --grad-from: #2347ff;
+  --grad-to: #5b7cff;
+  --grad-warm-from: #c2410c;
+  --grad-warm-to: #c2185b;
+  --scrim: rgb(15 16 18 / 0.5);
+
+  --theme-font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-stat: "Inter Tight", "Inter", ui-sans-serif, sans-serif;
+  --heading-transform: none;
+  --heading-tracking: -0.03em;
+  --heading-weight: 800;
+  --radius: 1.125rem;
+
+  --n-50: #f5f5f1;
+  --n-100: #edede8;
+  --n-200: #e0e0da;
+  --n-300: #c4c4bc;
+  --n-400: #8a8d94;
+  --n-500: #62656d;
+  --n-600: #4d5058;
+  --n-700: #2e3036;
+  --n-800: #1c1d21;
+  --n-900: #0f1012;
+  --n-950: #08090a;
+}
+
+/* ── E · Heritage — deep club green, trophy gold, serif headlines ───────── */
+:root[data-theme="heritage"],
+.theme-heritage {
+  color-scheme: dark;
+  --background: #0b1611;
+  --foreground: #f4eedc;
+  --card: #12221a;
+  --card-foreground: #f4eedc;
+  --popover: #172a21;
+  --popover-foreground: #f4eedc;
+  --muted: #1a2e24;
+  --muted-strong: #233a2e;
+  --muted-foreground: #c2bba3;
+  --soft: #dcd5bf;
+  --faint: #989279;
+  --border: #2a4236;
+  --border-strong: #3a5646;
+  --input: #0f1d16;
+  --ring: #e3b448;
+
+  --primary: #e3b448;
+  --primary-foreground: #1e1604;
+  --secondary: #e58a5c;
+  --secondary-foreground: #2a0f04;
+  --accent: #8dc1ea;
+  --accent-foreground: #06192a;
+  --success: #8fd6a0;
+  --success-foreground: #0a2412;
+  --warning: #f2a65a;
+  --warning-foreground: #2a1503;
+  --danger: #ff8a7a;
+  --danger-foreground: #2a0905;
+  --live: #f0544f;
+  --live-foreground: #1a0503;
+  --info: #8dc1ea;
+  --info-foreground: #06192a;
+  --you: #e3b448;
+  --you-foreground: #1e1604;
+  --gold: #e3b448;
+  --gold-foreground: #1e1604;
+  --silver: #cfcbbe;
+  --silver-foreground: #15140f;
+  --bronze: #c98a5a;
+  --bronze-foreground: #1f0e03;
+  --individual: #c9b3ff;
+  --individual-foreground: #1a0f33;
+  --team: #7ed6cf;
+  --team-foreground: #04221f;
+  --cat-ms: #8dc1ea;
+  --cat-ws: #f0a6c0;
+  --cat-md: #7ed6cf;
+  --cat-wd: #c9b3ff;
+  --cat-xd: #f2a65a;
+  --team-1: #8dc1ea;
+  --team-2: #f0a6c0;
+  --series-a: #e3b448;
+  --series-b: #8dc1ea;
+  --status-available: #8fd6a0;
+  --status-playing: #f2a65a;
+  --status-resting: #b7c3f5;
+  --status-injured: #ff9a8c;
+  --chart-1: #e3b448;
+  --chart-2: #8dc1ea;
+  --chart-3: #8fd6a0;
+  --chart-4: #c9b3ff;
+  --chart-5: #f0a6c0;
+  --chart-6: #e58a5c;
+  --on-accent: #0b1611;
+  --hero: #f4eedc;
+  --hero-foreground: #10231a;
+  --hero-muted: #4e5a4f;
+  --hero-accent: #10231a;
+  --hero-accent-foreground: #f0c870;
+  --grad-from: #e3b448;
+  --grad-to: #c98a2e;
+  --grad-warm-from: #e58a5c;
+  --grad-warm-to: #f0544f;
+  --scrim: rgb(4 10 7 / 0.72);
+
+  --theme-font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --theme-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --theme-font-stat: "Fraunces", Georgia, serif;
+  --heading-transform: none;
+  --heading-tracking: -0.01em;
+  --heading-weight: 700;
+  --radius: 0.75rem;
+
+  --n-50: #f4eedc;
+  --n-100: #ebe4cf;
+  --n-200: #e2dbc5;
+  --n-300: #dcd5bf;
+  --n-400: #c2bba3;
+  --n-500: #aca68e;
+  --n-600: #989279;
+  --n-700: #3a5646;
+  --n-800: #1a2e24;
+  --n-900: #12221a;
+  --n-950: #0b1611;
+}

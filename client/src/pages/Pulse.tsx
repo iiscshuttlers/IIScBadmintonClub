@@ -11,6 +11,7 @@ import { ArchivedTournament, type TournamentStatus } from "@/data/tournamentArch
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { InfoModal } from "@/components/InfoModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -194,22 +195,22 @@ export default function Pulse() {
     const isUpcoming = item.status === "draft";
 
     const cardContent = (
-      <Card className="rounded-2xl border border-primary/30 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
+      <Card className="rounded-2xl border border-border-strong shadow-sm bg-muted hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
         <div
-          className={`h-1 w-full shrink-0 ${liveMode ? "bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" : isUpcoming ? "bg-gradient-to-r from-primary to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`}
+          className={`h-1 w-full shrink-0 ${liveMode ? "bg-gradient-to-r from-danger to-secondary animate-pulse" : isUpcoming ? "bg-gradient-to-r from-primary to-team" : "bg-gradient-to-r from-muted-strong to-muted-foreground"}`}
         />
         <CardContent className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col">
           <div className="flex items-center gap-1.5 overflow-hidden w-full">
             {liveMode ? (
-              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0">
-                <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-live/40 bg-live/15 text-live text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0">
+                <span className="w-1 h-1 rounded-full bg-danger animate-pulse" />
                 LIVE
               </span>
             ) : (
               <span className={`px-1.5 py-0.5 rounded border text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 ${
-                item.status === 'draft' ? 'bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-900/40 dark:border-teal-800/50 dark:text-teal-400' :
-                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400' :
-                'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-400'
+                item.status === 'draft' ? 'bg-team/15 border-team/30 text-team' :
+                item.status === 'completed' || item.status === 'archived' ? 'bg-muted border-border-strong text-muted-foreground' :
+                'bg-info/15 border-info/30 text-info'
               }`}>
                 {item.status === 'draft' ? 'Upcoming' : item.status}
               </span>
@@ -223,23 +224,23 @@ export default function Pulse() {
 
             <RankedBadge ranked={item.counts_for_elo} compact className="shrink-0" />
 
-            <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-muted-foreground dark:text-muted-foreground shrink-0 ml-auto pl-1 truncate">
+            <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-muted-foreground shrink-0 ml-auto pl-1 truncate">
               <Calendar className="w-3 h-3 shrink-0" />
               <span className="truncate">{item.startDate}</span>
             </div>
           </div>
 
-          <h3 className="text-base sm:text-lg font-black text-blue-900 dark:text-foreground leading-tight pt-1 line-clamp-2">
+          <h3 className="text-base sm:text-lg font-black text-foreground leading-tight pt-1 line-clamp-2">
             {item.name}
           </h3>
 
-          <p className="text-muted-foreground dark:text-muted-foreground text-[11px] sm:text-xs line-clamp-2 leading-snug">
+          <p className="text-muted-foreground text-[11px] sm:text-xs line-clamp-2 leading-snug">
             {item.description}
           </p>
           
           <div className="flex-1" />
 
-          <div className="flex items-center gap-1.5 pt-1.5 font-black text-primary dark:text-primary text-[11px] sm:text-xs uppercase tracking-wide">
+          <div className="flex items-center gap-1.5 pt-1.5 font-black text-primary text-[11px] sm:text-xs uppercase tracking-wide">
             {isUpcoming
               ? "View details"
               : item.status === "active"
@@ -283,12 +284,10 @@ export default function Pulse() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/80 px-3 py-1 rounded-full text-xs font-semibold mb-3">
-            <Activity className="w-3.5 h-3.5 text-lime-300" />
+    <div className="min-h-screen bg-background pb-24 lg:pb-8">
+      <PageHeader
+        badge={
+          <span className="inline-flex items-center gap-1.5">
             Pulse
             <InfoModal
               title="PULSE"
@@ -298,45 +297,39 @@ export default function Pulse() {
                 { badge: "CALENDAR", title: "Court Schedule", desc: "View daily court schedules and booking slots." },
                 { badge: "DIRECTORY", title: "Players Directory", desc: "Explore club members and connect with players." }
               ]}
-              triggerClassName="text-white hover:text-lime-200"
+              triggerClassName="text-primary hover:text-primary/70"
             />
-          </div>
-          <h1
-            className="text-3xl md:text-4xl font-black mb-2 text-white"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Action & Updates
-          </h1>
-          <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
-            Live matches, announcements, court calendars, and player directory.
-          </p>
-
-          <div className="mt-6 w-full flex justify-center mb-2 px-2">
-            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
-              {[
-                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-primary shadow-md scale-100" },
-              ].map((tab) => (
-                <Button
-                  key={tab.id}
-                  variant="tab"
-                  size="tab"
-                  onClick={() => setPulseTab(tab.id as any)}
-                  className={
-                    pulseTab === tab.id
-                      ? tab.activeClass
-                      : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
-                  }
-                >
-                  {tab.icon} {tab.label}
-                </Button>
-              ))}
-            </div>
+          </span>
+        }
+        badgeIcon={<Activity className="w-3.5 h-3.5" />}
+        title="Action & Updates"
+        subtitle="Live matches, announcements, court calendars, and player directory."
+      >
+        <div className="w-full flex justify-center px-2">
+          <div className="flex w-full sm:w-auto bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border gap-1 flex-wrap justify-center shadow-inner">
+            {[
+              { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "calendar", label: "Calendar", icon: <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+              { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-card text-primary shadow-md scale-100" },
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                variant="tab"
+                size="tab"
+                onClick={() => setPulseTab(tab.id as any)}
+                className={
+                  pulseTab === tab.id
+                    ? tab.activeClass
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
+                }
+              >
+                {tab.icon} {tab.label}
+              </Button>
+            ))}
           </div>
         </div>
-      </section>
+      </PageHeader>
 
       {pulseTab === "live" && <LiveTab />}
       {pulseTab === "feed" && <AnnouncementsTab />}
@@ -346,10 +339,10 @@ export default function Pulse() {
           <DirectoryWrapper />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
-            <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-              <Users className="w-12 h-12 text-slate-400 dark:text-slate-500" />
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+              <Users className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h2 className="text-3xl font-black text-slate-800 dark:text-foreground mb-4">Feature Disabled</h2>
+            <h2 className="text-3xl font-black text-foreground mb-4">Feature Disabled</h2>
             <p className="text-lg text-muted-foreground max-w-md">
               The player directory is currently hidden by the club administrators.
             </p>

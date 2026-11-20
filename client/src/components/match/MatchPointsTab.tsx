@@ -17,8 +17,8 @@ import type { StoredPointLog } from "@/hooks/queries/useMatchPointLog";
 /**
  * Points tab (cricinfo worm / FotMob momentum): one small chart per game of
  * cumulative points by rally, key moments, and a table view. Side 1 is a solid
- * blue line, side 2 a dashed orange line, so identity never rests on colour.
- * Palette: dataviz reference slots 1–2, stepped per mode.
+ * line, side 2 a dashed line, so identity never rests on colour.
+ * Palette: the theme's scoreboard side tokens (team-1 / team-2).
  */
 
 const W = 320;
@@ -94,7 +94,7 @@ function Worm({ g, names, rules }: { g: GameSeries; names: [string, string]; rul
         )}
       </svg>
       {hovered && (
-        <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[11px] font-semibold px-2 py-1 shadow">
+        <div className="pointer-events-none absolute top-0 right-0 rounded-lg bg-foreground text-background text-[11px] font-semibold px-2 py-1 shadow">
           Rally {hover! + 1}: {hovered.t1}–{hovered.t2} · point to {names[hovered.side - 1]}
         </div>
       )}
@@ -131,28 +131,26 @@ export function MatchPointsTab({
   return (
     <div className="mt-4 space-y-6">
       <style>{`
-        .worm-root { --worm-s1:#2a78d6; --worm-s2:#eb6834; --worm-grid:#e5e4df; --worm-muted:#6b6a65; --worm-ink:#0b0b0b; --worm-surface:#ffffff; --worm-deuce:rgba(235,104,52,0.07); }
-        @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .worm-root { --worm-s1:#3987e5; --worm-s2:#d95926; --worm-grid:#2e2e2b; --worm-muted:#a3a29a; --worm-ink:#f0efec; --worm-surface:#0f172a; --worm-deuce:rgba(217,89,38,0.12); } }
-        :root[data-theme="dark"] .worm-root, .dark .worm-root { --worm-s1:#3987e5; --worm-s2:#d95926; --worm-grid:#2e2e2b; --worm-muted:#a3a29a; --worm-ink:#f0efec; --worm-surface:#0f172a; --worm-deuce:rgba(217,89,38,0.12); }
+        .worm-root { --worm-s1:var(--team-1); --worm-s2:var(--team-2); --worm-grid:var(--border); --worm-muted:var(--muted-foreground); --worm-ink:var(--foreground); --worm-surface:var(--card); --worm-deuce:color-mix(in srgb, var(--warning) 10%, transparent); }
       `}</style>
 
       {coverage === "corrected" && (
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
+        <p className="text-xs font-semibold text-warning" role="note">
           Corrected result · this recorded history predates the correction; it may be incomplete and may not match the final result.
         </p>
       )}
       {coverage === "partial" && (
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400" role="note">
+        <p className="text-xs font-semibold text-warning" role="note">
           Partial point history · charts and key moments cover only the recorded scoring rallies.
         </p>
       )}
       {coverage === "complete" && (
-        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400" role="status">
+        <p className="text-xs font-semibold text-success" role="status">
           Complete point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"}.
         </p>
       )}
       {coverage === "live" && (
-        <p className="text-xs font-semibold text-sky-700 dark:text-sky-400" role="status">
+        <p className="text-xs font-semibold text-info" role="status">
           Live point history · {rallies.length} scoring {rallies.length === 1 ? "rally" : "rallies"} recorded so far.
         </p>
       )}
@@ -224,7 +222,7 @@ export function MatchPointsTab({
                         <th scope="col" className="text-right py-1">{names[1]}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
+                    <tbody className="divide-y divide-border font-mono tabular-nums">
                       {progression(g).map((p) => (
                         <tr key={p.rally}>
                           <td className="py-1">{p.rally}</td>

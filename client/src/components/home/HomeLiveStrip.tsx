@@ -20,10 +20,10 @@ function TournamentTicker({ tournamentId }: { tournamentId: string }) {
       heading={
         <Link
           href={tournamentPath(tournamentId, "live")}
-          className="inline-flex items-center gap-1.5 min-h-[32px] text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+          className="inline-flex items-center gap-1.5 min-h-[32px] text-xs font-black uppercase tracking-wider text-soft hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
-          <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 motion-safe:animate-pulse" aria-hidden />
+          <span className="inline-flex items-center gap-1 text-live">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger motion-safe:animate-pulse" aria-hidden />
             Live now
           </span>
           <span className="text-muted-foreground" aria-hidden>·</span>

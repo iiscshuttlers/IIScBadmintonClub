@@ -155,7 +155,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
   return (
     <div className="w-full max-w-4xl mx-auto pb-12 font-sans relative">
       {isAdmin && (
-        <div className="mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 p-3 rounded-xl flex items-start gap-3">
+        <div className="mb-4 bg-warning/10 border border-warning/40 text-warning p-3 rounded-xl flex items-start gap-3">
           <EyeOff className="w-5 h-5 shrink-0 mt-0.5" />
           <div className="text-sm">
             <span className="font-bold">Admin View:</span> You are seeing this page because you are an admin.
@@ -238,7 +238,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
             className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
               activeCategory === cat
                 ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
+                : "bg-muted text-muted-foreground hover:bg-muted-strong"
             }`}
           >
             {cat === "OVERALL" ? "Overall" : cat}
@@ -248,37 +248,37 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
 
       {/* Leaderboard Table */}
       <div ref={tableRef}>
-        <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl overflow-hidden">
+        <Card className="rounded-3xl shadow-xl border-border bg-card/50 backdrop-blur-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse whitespace-nowrap min-w-[500px]">
               <thead>
-                <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground">
-                  <th className="p-2 sm:p-4 w-12 sm:w-16 text-center cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("rank")}>
+                <tr className="bg-muted/50 border-b border-border text-[10px] sm:text-xs uppercase tracking-widest font-black text-muted-foreground">
+                  <th className="p-2 sm:p-4 w-12 sm:w-16 text-center cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("rank")}>
                     Rank <SortIcon sortConfig={sortConfig} columnKey="rank" />
                   </th>
-                  <th className="p-2 sm:p-4 cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("player")}>
+                  <th className="p-2 sm:p-4 cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("player")}>
                     Player <SortIcon sortConfig={sortConfig} columnKey="player" />
                   </th>
-                  <th className="p-2 sm:p-4 cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("dept")}>
+                  <th className="p-2 sm:p-4 cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("dept")}>
                     Dept <SortIcon sortConfig={sortConfig} columnKey="dept" />
                   </th>
-                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("wins")}>
+                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("wins")}>
                     W-L <SortIcon sortConfig={sortConfig} columnKey="wins" />
                   </th>
-                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("ratio")}>
+                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("ratio")}>
                     Win % <SortIcon sortConfig={sortConfig} columnKey="ratio" />
                   </th>
-                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("played")}>
+                  <th className="p-2 sm:p-4 text-center cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("played")}>
                     Played <SortIcon sortConfig={sortConfig} columnKey="played" />
                   </th>
                   {isAdmin && (
-                    <th className="p-2 sm:p-4 text-right text-amber-600 dark:text-amber-500 cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleSort("elo")}>
+                    <th className="p-2 sm:p-4 text-right text-warning cursor-pointer hover:bg-muted-strong/50 transition-colors" onClick={() => handleSort("elo")}>
                       ELO <SortIcon sortConfig={sortConfig} columnKey="elo" />
                     </th>
                   )}
                 </tr>
               </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+            <tbody className="divide-y divide-border/50">
               {stats.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 7 : 6} className="p-8 text-center text-muted-foreground text-sm">
@@ -291,7 +291,7 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
                   if (!player) return null;
 
                   return (
-                    <tr key={stat.id} className="hover:bg-white dark:hover:bg-slate-800/80 transition-colors group text-xs sm:text-sm">
+                    <tr key={stat.id} className="hover:bg-muted/80 transition-colors group text-xs sm:text-sm">
                       <td className="p-2 sm:p-4 text-center">
                         <span className={`font-black ${(stat as any).originalRank <= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
                           #{ (stat as any).originalRank }
@@ -308,21 +308,21 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
                         </Link>
                       </td>
                       <td className="p-2 sm:p-4">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-wider bg-muted px-2 py-1 rounded-md">
                           {getDepartmentAcronym(player.department) || "-"}
                         </span>
                       </td>
-                      <td className="p-2 sm:p-4 text-center font-bold text-slate-700 dark:text-slate-300">
-                        <span className="text-emerald-600 dark:text-emerald-500">{stat.wins}</span>
+                      <td className="p-2 sm:p-4 text-center font-bold text-soft">
+                        <span className="text-success">{stat.wins}</span>
                         <span className="opacity-50 mx-1">-</span>
-                        <span className="text-slate-500 dark:text-slate-400">{stat.losses}</span>
+                        <span className="text-muted-foreground">{stat.losses}</span>
                       </td>
-                      <td className="p-2 sm:p-4 text-center font-bold text-slate-700 dark:text-slate-300">
+                      <td className="p-2 sm:p-4 text-center font-bold text-soft">
                         {stat.played > 0 ? ((stat.wins / stat.played) * 100).toFixed(1) + "%" : "0%"}
                       </td>
-                      <td className="p-2 sm:p-4 text-center font-semibold text-slate-500">{stat.played}</td>
+                      <td className="p-2 sm:p-4 text-center font-semibold text-muted-foreground">{stat.played}</td>
                       {isAdmin && (
-                        <td className="p-2 sm:p-4 text-right font-black text-amber-600 dark:text-amber-500">
+                        <td className="p-2 sm:p-4 text-right font-black text-warning">
                           {Math.round(
                             activeCategory === "S" ? (player.singles_elo || 1200) :
                             activeCategory === "D" ? (player.doubles_elo || 1200) :

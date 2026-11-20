@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { Bell, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
 export function PushBroadcastPanel() {
   const { session } = useAuth();
@@ -41,8 +41,8 @@ export function PushBroadcastPanel() {
   return (
     <div className={cardCls}>
       <div className="flex items-center gap-2 mb-4">
-        <Bell className="w-5 h-5 text-indigo-500" />
-        <h3 className="font-black text-slate-800 dark:text-foreground">Send Custom Push Notification</h3>
+        <Bell className="w-5 h-5 text-info" />
+        <h3 className="font-black text-foreground">Send Custom Push Notification</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-4">Send a direct push notification to all users immediately. This uses the local websocket channel for active users and native push for mobile users.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -79,7 +79,7 @@ export function PushBroadcastPanel() {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300">
+          <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-soft">
             <input
               type="checkbox"
               checked={showOnHome}
@@ -94,7 +94,7 @@ export function PushBroadcastPanel() {
         <button
           onClick={sendCustomPush}
           disabled={pushing || !customPush.title.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-on-accent font-bold shadow-lg shadow-indigo-500/20 transition disabled:opacity-50"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-info hover:bg-info/90 text-on-accent font-bold shadow-lg shadow-info/20 transition disabled:opacity-50"
         >
           {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
           {pushing ? "Sending…" : "Send Broadcast"}

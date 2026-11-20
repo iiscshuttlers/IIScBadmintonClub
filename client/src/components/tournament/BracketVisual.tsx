@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 import { matchOutcome } from "@/lib/matchView";
+import { cssVar, themeColor, themeColorFor } from "@/lib/themeColors";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,15 +51,15 @@ const PADDING = 16;
 const LABEL_H = 26;
 
 const CAT_BOX_COLORS_DARK: Record<string, string> = {
-  MS: "bg-blue-900/20 border-blue-900/40 hover:border-blue-500/50 hover:shadow-blue-500/20",
-  WS: "bg-pink-900/20 border-pink-900/40 hover:border-pink-500/50 hover:shadow-pink-500/20",
-  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
-  WD: "bg-purple-900/20 border-purple-900/40 hover:border-purple-500/50 hover:shadow-purple-500/20",
-  XD: "bg-orange-900/20 border-orange-900/40 hover:border-orange-500/50 hover:shadow-orange-500/20",
-  BS: "bg-teal-900/20 border-teal-900/40 hover:border-teal-500/50 hover:shadow-teal-500/20",
-  GS: "bg-rose-900/20 border-rose-900/40 hover:border-rose-500/50 hover:shadow-rose-500/20",
-  BD: "bg-cyan-900/20 border-cyan-900/40 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
-  GD: "bg-fuchsia-900/20 border-fuchsia-900/40 hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/20",
+  MS: "bg-cat-ms/10 border-cat-ms/25 hover:border-cat-ms/50 hover:shadow-cat-ms/20",
+  WS: "bg-cat-ws/10 border-cat-ws/25 hover:border-cat-ws/50 hover:shadow-cat-ws/20",
+  MD: "bg-cat-md/10 border-cat-md/20 hover:border-cat-md/50 hover:shadow-cat-md/20",
+  WD: "bg-cat-wd/10 border-cat-wd/25 hover:border-cat-wd/50 hover:shadow-cat-wd/20",
+  XD: "bg-cat-xd/10 border-cat-xd/25 hover:border-cat-xd/50 hover:shadow-cat-xd/20",
+  BS: "bg-team/10 border-team/25 hover:border-team/50 hover:shadow-team/20",
+  GS: "bg-danger/10 border-danger/25 hover:border-danger/50 hover:shadow-danger/20",
+  BD: "bg-accent/10 border-accent/25 hover:border-accent/50 hover:shadow-accent/20",
+  GD: "bg-individual/10 border-individual/25 hover:border-individual/50 hover:shadow-individual/20",
 };
 
 function useIsMobile() {
@@ -148,7 +149,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
   const statusIcon = (m: BracketMatch) => {
     if (matchOutcome(m).decided) return <CheckCircle2 size={12} className="text-primary shrink-0" />;
-    if (matchOutcome(m).state === "live") return <Play size={12} className="text-red-400 shrink-0 animate-pulse" />;
+    if (matchOutcome(m).state === "live") return <Play size={12} className="text-live shrink-0 animate-pulse" />;
     return <Clock size={12} className="text-muted-foreground shrink-0" />;
   };
 
@@ -162,13 +163,13 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-media/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Centered modal — sits in the middle of the viewport */}
       <div
-        className="fixed inset-x-3 z-50 rounded-2xl border border-slate-700 shadow-2xl"
+        className="fixed inset-x-3 z-50 rounded-2xl border border-border-strong shadow-2xl"
         style={{
-          background: "#0d1117",
+          background: cssVar("background"),
           top: "50%",
           transform: "translateY(-50%)",
           maxWidth: 700,
@@ -180,14 +181,14 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="min-w-0">
             <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-0.5">Player Roadmap</p>
             <p className={`font-black text-primary truncate ${isMobile ? "text-sm" : "text-sm"}`}>{player}</p>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors"
             aria-label="Close"
           >
             <X size={16} />
@@ -236,10 +237,10 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                 : null;
 
               const borderColor = isLive
-                ? "border-red-500 ring-1 ring-red-500"
+                ? "border-live ring-1 ring-live"
                 : playerWon
                 ? "border-primary"
-                : "border-slate-700";
+                : "border-border-strong";
 
               return (
                 <React.Fragment key={m.id}>
@@ -251,39 +252,39 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
                   <div
                     className={`rounded-xl border ${borderColor} overflow-hidden shrink-0 flex flex-col`}
-                    style={{ background: "#161b22", width: cardW }}
+                    style={{ background: cssVar("card"), width: cardW }}
                   >
                     {/* Card header */}
-                    <div className="px-2.5 py-1.5 border-b border-slate-700/50 flex items-center justify-between gap-1">
+                    <div className="px-2.5 py-1.5 border-b border-border-strong/50 flex items-center justify-between gap-1">
                       <div className="min-w-0">
-                        <p className="text-[9px] font-black uppercase tracking-wider text-amber-400 truncate">
+                        <p className="text-[9px] font-black uppercase tracking-wider text-warning truncate">
                           {m.round_name ?? `Round ${m.round}`}
                         </p>
                         <p className="text-[8px] text-muted-foreground">{m.match_code}</p>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0 text-right">
                         {statusIcon(m)}
-                        <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>
+                        <span className={`text-[8px] font-bold ${isLive ? "text-live" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>
                           {statusLabel(m)}
                           {isLive || isCompleted || statusLabel(m) === "Advance" ? null : (
                             ((m as any).scheduled_at || m.court_number) ? (
                               <span className="flex items-center gap-1.5 text-[10px] whitespace-nowrap ml-1">
                                 {m.court_number && (
-                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-muted/80 border border-border-strong/50 shadow-sm", getCourtColor(m.court_number))}>
                                     {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
                                   </span>
                                 )}
                                 {(m as any).scheduled_at && (
-                                  <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                                  <span className="text-foreground font-black tracking-wide drop-shadow-sm">
                                     {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                                    <span className="font-bold text-amber-400 ml-1">
+                                    <span className="font-bold text-warning ml-1">
                                       {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
                                     </span>
                                   </span>
                                 )}
                               </span>
                             ) : (
-                              <span className="text-[10px] font-black text-slate-400 ml-1 tracking-widest">TBD</span>
+                              <span className="text-[10px] font-black text-muted-foreground ml-1 tracking-widest">TBD</span>
                             )
                           )}
                         </span>
@@ -291,10 +292,10 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     </div>
 
                     {/* Player row */}
-                    <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-slate-700/30 ${playerWon ? "bg-primary/10" : ""}`} style={{ minHeight: 36 }}>
+                    <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-border-strong/30 ${playerWon ? "bg-primary/10" : ""}`} style={{ minHeight: 36 }}>
                       <div className="flex items-center gap-1 min-w-0">
-                        {playerWon && <Trophy size={9} className="text-amber-400 shrink-0" />}
-                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-amber-300" : playerLost ? "text-muted-foreground" : "text-foreground"}`}>
+                        {playerWon && <Trophy size={9} className="text-gold shrink-0" />}
+                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-gold" : playerLost ? "text-muted-foreground" : "text-foreground"}`}>
                           {playerName}
                         </span>
                       </div>
@@ -310,8 +311,8 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     </div>
 
                     {/* Opponent row */}
-                    <div className={`px-2.5 flex items-center justify-between gap-1 ${playerLost ? "bg-amber-500/10" : ""}`} style={{ minHeight: 36 }}>
-                      <span className={`text-[10px] font-semibold truncate ${playerLost ? "text-amber-300" : "text-muted-foreground"}`}>
+                    <div className={`px-2.5 flex items-center justify-between gap-1 ${playerLost ? "bg-warning/10" : ""}`} style={{ minHeight: 36 }}>
+                      <span className={`text-[10px] font-semibold truncate ${playerLost ? "text-warning" : "text-muted-foreground"}`}>
                         {opponentName}
                       </span>
                       {sets && (
@@ -327,8 +328,8 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
                     {/* Court */}
                     {m.court_number && (
-                      <div className="px-2.5 py-1 border-t border-slate-700/30">
-                        <span className="text-[8px] text-blue-400">Court {m.court_number}</span>
+                      <div className="px-2.5 py-1 border-t border-border-strong/30">
+                        <span className="text-[8px] text-info">Court {m.court_number}</span>
                       </div>
                     )}
                   </div>
@@ -354,8 +355,8 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                   </div>
                   {isEliminated ? (
                     <div
-                      className="flex items-center justify-center rounded-xl border border-slate-700/30 shrink-0"
-                      style={{ background: "#161b22", width: 72, minHeight: 80 }}
+                      className="flex items-center justify-center rounded-xl border border-border-strong/30 shrink-0"
+                      style={{ background: cssVar("card"), width: 72, minHeight: 80 }}
                     >
                       <div className="text-center px-1">
                         <p className="text-base leading-none mb-1">🏸</p>
@@ -364,11 +365,11 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     </div>
                   ) : (
                     <div
-                      className="flex items-center justify-center rounded-xl border border-slate-700/40 shrink-0"
-                      style={{ background: "#161b22", width: 60, minHeight: 80 }}
+                      className="flex items-center justify-center rounded-xl border border-border-strong/40 shrink-0"
+                      style={{ background: cssVar("card"), width: 60, minHeight: 80 }}
                     >
                       <div className="text-center">
-                        <Trophy size={18} className="text-amber-400/25 mx-auto mb-0.5" />
+                        <Trophy size={18} className="text-gold/25 mx-auto mb-0.5" />
                         <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Final</p>
                       </div>
                     </div>
@@ -401,7 +402,7 @@ class BracketVisualErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-4 bg-red-900/50 text-red-200 font-mono text-xs whitespace-pre-wrap">
+        <div className="p-4 bg-danger/20 text-danger font-mono text-xs whitespace-pre-wrap">
           BracketVisual Crash: {this.state.error?.message}
           <br />
           {this.state.error?.stack}
@@ -602,10 +603,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       const c1 = cur.bySlot.get(slot * 2);
       const c2 = cur.bySlot.get(slot * 2 + 1);
       if (!c1 && !c2) continue;
-      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke="#444" strokeWidth={1.5} />);
-      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
-      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
-      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke="#444" strokeWidth={1.5} />);
+      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
+      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
     }
   }
 
@@ -720,45 +721,45 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
 
   // ── Shared toolbar renderer (used in both normal and fullscreen mode) ──────
   const toolbar = (
-    <div className="flex flex-col md:flex-row gap-2 px-3 py-2 border-b border-slate-800 bg-[#0d1117] shadow-sm relative z-10">
+    <div className="flex flex-col md:flex-row gap-2 px-3 py-2 border-b border-border bg-background shadow-sm relative z-10">
       
       {/* --- ROW 1 --- */}
       <div className="flex items-center gap-2 w-full md:w-auto md:flex-1">
         {/* 1. Search & View */}
-        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm flex-1 min-w-0 overflow-x-auto">
+        <div className="flex items-center gap-1 bg-card/80 p-1 rounded-md border border-border-strong/60 shadow-sm flex-1 min-w-0 overflow-x-auto">
           <input
             type="text"
             placeholder="Find player..."
             value={searchTerm}
             onChange={handleSearch}
-            className="bg-transparent text-white text-[10px] px-2 py-1 outline-none focus:text-primary w-24 shrink-0 placeholder:text-slate-500"
+            className="bg-transparent text-foreground text-[10px] px-2 py-1 outline-none focus:text-primary w-24 shrink-0 placeholder:text-muted-foreground"
           />
-          <div className="w-px h-3 bg-slate-700 mx-1 shrink-0" />
+          <div className="w-px h-3 bg-muted-strong mx-1 shrink-0" />
           <select
             value={viewMode}
             onChange={(e) => setViewMode(e.target.value as "tree" | "list")}
-            className="bg-transparent text-slate-300 text-[10px] outline-none cursor-pointer shrink-0"
+            className="bg-transparent text-soft text-[10px] outline-none cursor-pointer shrink-0"
           >
-            <option value="tree" className="bg-slate-900">Tree</option>
-            <option value="list" className="bg-slate-900">List</option>
+            <option value="tree" className="bg-card">Tree</option>
+            <option value="list" className="bg-card">List</option>
           </select>
           {currentBaseSlots >= 16 && (
             <>
-              <div className="w-px h-3 bg-slate-700 mx-1 shrink-0" />
+              <div className="w-px h-3 bg-muted-strong mx-1 shrink-0" />
               <select
                 value={bracketSegment}
                 onChange={(e) => setBracketSegment(e.target.value)}
-                className="bg-transparent text-slate-300 text-[10px] outline-none cursor-pointer shrink-0"
+                className="bg-transparent text-soft text-[10px] outline-none cursor-pointer shrink-0"
               >
-                <option value="full" className="bg-slate-900">Full</option>
-                <option value="top-half" className="bg-slate-900">Top ½</option>
-                <option value="bottom-half" className="bg-slate-900">Bot ½</option>
+                <option value="full" className="bg-card">Full</option>
+                <option value="top-half" className="bg-card">Top ½</option>
+                <option value="bottom-half" className="bg-card">Bot ½</option>
                 {currentBaseSlots >= 32 && (
                   <>
-                    <option value="q1" className="bg-slate-900">Q1</option>
-                    <option value="q2" className="bg-slate-900">Q2</option>
-                    <option value="q3" className="bg-slate-900">Q3</option>
-                    <option value="q4" className="bg-slate-900">Q4</option>
+                    <option value="q1" className="bg-card">Q1</option>
+                    <option value="q2" className="bg-card">Q2</option>
+                    <option value="q3" className="bg-card">Q3</option>
+                    <option value="q4" className="bg-card">Q4</option>
                   </>
                 )}
               </select>
@@ -767,12 +768,12 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
         </div>
 
         {/* 2. Export Controls (Print & Download) */}
-        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm shrink-0">
+        <div className="flex items-center gap-1 bg-card/80 p-1 rounded-md border border-border-strong/60 shadow-sm shrink-0">
           {/* Print Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
                 title="Print..."
               >
                 <Printer size={12} />
@@ -787,8 +788,9 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     if (el) {
                       el.classList.add("print-light-theme");
                       await new Promise(r => setTimeout(r, 50));
+                      const paperCard = themeColorFor("paper", "card");
                       import("@/utils/exportUtils").then(({ exportElementToPDF }) => {
-                        exportElementToPDF(el, `${getExportFilename()}_Print_${pages}Pg`, "#ffffff", { transform: 'scale(1)', backgroundColor: '#ffffff' }, pages).finally(() => {
+                        exportElementToPDF(el, `${getExportFilename()}_Print_${pages}Pg`, paperCard, { transform: 'scale(1)', backgroundColor: paperCard }, pages).finally(() => {
                           el.classList.remove("print-light-theme");
                         });
                       });
@@ -802,13 +804,13 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="w-px h-3 bg-slate-700 mx-0.5 shrink-0" />
+          <div className="w-px h-3 bg-muted-strong mx-0.5 shrink-0" />
 
           {/* Download Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
                 title="Download..."
               >
                 <Download size={12} />
@@ -818,7 +820,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToPDF }) => exportElementToPDF(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToPDF }) => exportElementToPDF(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -827,7 +829,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToImage }) => exportElementToImage(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToImage }) => exportElementToImage(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -836,7 +838,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <DropdownMenuItem
                 onClick={() => {
                   const el = document.getElementById("bracket-visual-export-container");
-                  if (el) import("@/utils/exportUtils").then(({ exportElementToJpeg }) => exportElementToJpeg(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToJpeg }) => exportElementToJpeg(el, getExportFilename(), themeColor("background"), { transform: 'scale(1)' }));
                 }}
                 className="text-xs cursor-pointer"
               >
@@ -845,7 +847,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               {onExportExcel && (
                 <DropdownMenuItem
                   onClick={onExportExcel}
-                  className="text-xs cursor-pointer text-green-500 focus:text-green-400"
+                  className="text-xs cursor-pointer text-success focus:text-success/80"
                 >
                   As Excel
                 </DropdownMenuItem>
@@ -858,7 +860,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
         {isFullscreen && (
           <button
             onClick={() => setIsFullscreen(false)}
-            className="ml-auto w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/90 text-slate-300 border border-slate-700 shadow-sm hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all shrink-0"
+            className="ml-auto w-8 h-8 flex items-center justify-center rounded-full bg-card/90 text-soft border border-border-strong shadow-sm hover:bg-danger/20 hover:text-danger active:scale-95 transition-all shrink-0"
             title="Exit Fullscreen"
           >
             <X size={18} />
@@ -869,27 +871,27 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       {/* --- ROW 2 --- */}
       <div className="flex items-center justify-between gap-2 w-full md:w-auto shrink-0">
         {/* 3. Zoom & Fullscreen Controls */}
-        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm shrink-0 overflow-x-auto">
+        <div className="flex items-center gap-1 bg-card/80 p-1 rounded-md border border-border-strong/60 shadow-sm shrink-0 overflow-x-auto">
           <button
             onClick={() => setScale((s) => Math.max(0.3, +(s - 0.1).toFixed(1)))}
-            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
             aria-label="Zoom out"
           >
             <ZoomOut size={12} />
           </button>
-          <span className="text-[9px] font-mono font-medium text-slate-400 w-7 text-center tabular-nums shrink-0">
+          <span className="text-[9px] font-mono font-medium text-muted-foreground w-7 text-center tabular-nums shrink-0">
             {Math.round(scale * 100)}%
           </span>
           <button
             onClick={() => setScale((s) => Math.min(2.5, +(s + 0.1).toFixed(1)))}
-            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
             aria-label="Zoom in"
           >
             <ZoomIn size={12} />
           </button>
           <button
             onClick={computeScale}
-            className="text-[9px] font-bold uppercase text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+            className="text-[9px] font-bold uppercase text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
           >
             Fit
           </button>
@@ -897,10 +899,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           {/* Fullscreen toggle */}
           {!isFullscreen && (
             <>
-              <div className="w-px h-3 bg-slate-700 mx-0.5 shrink-0" />
+              <div className="w-px h-3 bg-muted-strong mx-0.5 shrink-0" />
               <button
                 onClick={() => setIsFullscreen(true)}
-                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted-strong active:bg-faint transition-colors shrink-0"
                 title="Fullscreen"
               >
                 <Maximize2 size={12} />
@@ -913,7 +915,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
         {hiddenRounds.length > 0 && (
           <button
             onClick={() => setHiddenRounds([])}
-            className="px-2.5 py-1.5 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 transition-colors border border-amber-500/30 shadow-sm shrink-0"
+            className="px-2.5 py-1.5 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-warning bg-warning/10 hover:bg-warning/20 active:bg-warning/30 transition-colors border border-warning/30 shadow-sm shrink-0"
             title="Show hidden rounds"
           >
             Unhide ({hiddenRounds.length})
@@ -929,7 +931,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     {isFullscreen && (
       <div
         className="fixed inset-0 z-[9999] flex flex-col"
-        style={{ background: "#0d1117" }}
+        style={{ background: cssVar("background") }}
       >
         {/* Fullscreen toolbar (reused) */}
         <div className="shrink-0">{toolbar}</div>
@@ -969,7 +971,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               <div className="flex absolute top-0 left-0" style={{ paddingLeft: PADDING, paddingTop: PADDING / 2 }}>
                 {roundData.map(({ ri, label, round }) => (
                   <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
-                    className="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1"
+                    className="text-[10px] font-black uppercase tracking-widest text-info flex items-center gap-1"
                   >
                     <button
                       onClick={() => setHiddenRounds((h) => h.includes(round) ? h.filter((r) => r !== round) : [...h, round])}
@@ -1026,17 +1028,17 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     )}
 
     {/* ── Normal (in-page) view ──────────────────────────────────────────── */}
-    <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
+    <div className="rounded-2xl border border-border-strong overflow-hidden" style={{ background: cssVar("background") }}>
       {/* Toolbar */}
       {toolbar}
 
       {/* View Content */}
       {viewMode === "list" ? (
-        <div className="p-4 space-y-8 overflow-y-auto w-full" style={{ maxHeight: isMobile ? "60vh" : "75vh", background: "#0d1117" }}>
+        <div className="p-4 space-y-8 overflow-y-auto w-full" style={{ maxHeight: isMobile ? "60vh" : "75vh", background: cssVar("background") }}>
           {roundData.map(({ ri, label, round, positions }) => (
             <div key={ri} className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-400">{label}</h3>
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <h3 className="text-sm font-black uppercase tracking-widest text-info">{label}</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {positions.map(({ match: m }) => {
@@ -1052,28 +1054,28 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   return (
                     <div key={m.id} className={cn(
                       "rounded-xl overflow-hidden shadow-sm flex flex-col transition-colors border",
-                      CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900 border-slate-800 hover:border-slate-700"
+                      CAT_BOX_COLORS_DARK[category || ""] || "bg-card border-border hover:border-border-strong"
                     )}>
-                      <div className="flex justify-between items-center px-3 py-1.5 bg-slate-950/50 border-b border-slate-800/50 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <div className="flex justify-between items-center px-3 py-1.5 bg-background/50 border-b border-border/50 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                         <span>{m.match_code}</span>
                         {m.court_number && <span>Court {m.court_number}</span>}
                       </div>
                       <div className="flex flex-col p-3 gap-2 flex-1 justify-center">
-                        <div className={`flex justify-between items-center ${t1Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-slate-200"}`}>
+                        <div className={`flex justify-between items-center ${t1Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
                           <span className="truncate pr-2 text-xs">{t1}</span>
-                          {t1Won && <Trophy size={12} className="text-amber-400 shrink-0" />}
+                          {t1Won && <Trophy size={12} className="text-gold shrink-0" />}
                         </div>
-                        <div className={`flex justify-between items-center ${t2Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-slate-200"}`}>
+                        <div className={`flex justify-between items-center ${t2Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
                           <span className="truncate pr-2 text-xs">{t2}</span>
-                          {t2Won && <Trophy size={12} className="text-amber-400 shrink-0" />}
+                          {t2Won && <Trophy size={12} className="text-gold shrink-0" />}
                         </div>
                       </div>
                       {(m.score || isLive || isCompleted || outcome.state === "cancelled") && (
-                        <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800/50 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                        <div className="px-3 py-2 bg-background/30 border-t border-border/50 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                           {isLive ? (
-                            <span className="text-amber-500 animate-pulse flex items-center gap-1"><Play size={10} /> Live Match</span>
+                            <span className="text-warning animate-pulse flex items-center gap-1"><Play size={10} /> Live Match</span>
                           ) : (
-                            <span className="text-slate-400">{outcome.statusLabel}{m.score ? ` · ${m.score}` : ""}</span>
+                            <span className="text-muted-foreground">{outcome.statusLabel}{m.score ? ` · ${m.score}` : ""}</span>
                           )}
                         </div>
                       )}
@@ -1113,11 +1115,11 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
             <div className="flex absolute top-0 left-0" style={{ paddingLeft: PADDING, paddingTop: PADDING / 2 }}>
               {roundData.map(({ ri, label, round }) => (
                 <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
-                  className="text-[10px] font-black uppercase tracking-widest text-center text-indigo-400 flex items-center justify-center gap-1 group">
+                  className="text-[10px] font-black uppercase tracking-widest text-center text-info flex items-center justify-center gap-1 group">
                   {label}
                   <button
                     onClick={() => setHiddenRounds(prev => [...prev, round])}
-                    className="opacity-50 hover:opacity-100 p-0.5 rounded hover:bg-slate-800 text-indigo-300 hover:text-white transition-all"
+                    className="opacity-50 hover:opacity-100 p-0.5 rounded hover:bg-muted text-info hover:text-foreground transition-all"
                     title="Hide this round"
                   >
                     <X size={12} />
@@ -1161,19 +1163,19 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       opacity
                     }}
                   >
-                    <div className={cn("flex flex-col border rounded overflow-hidden", isMatchOnPath ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'border-slate-700/80 shadow-md', CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900")}>
+                    <div className={cn("flex flex-col border rounded overflow-hidden", isMatchOnPath ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'border-border-strong/80 shadow-md', CAT_BOX_COLORS_DARK[category || ""] || "bg-card")}>
                       {/* Match header */}
-                      <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800/50 text-muted-foreground'}`}>
+                      <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? 'bg-warning/20 text-warning' : 'bg-muted/50 text-muted-foreground'}`}>
                         <span>{m.match_code}</span>
                         <span className="flex items-center gap-1">
                           {isCompleted || outcome.state === "cancelled" ? (
-                            <span className="text-slate-500">{outcome.statusLabel}</span>
+                            <span className="text-muted-foreground">{outcome.statusLabel}</span>
                           ) : (
                             isLive ? (
-                              <span className="flex items-center gap-1 text-amber-500 font-bold">
+                              <span className="flex items-center gap-1 text-warning font-bold">
                                 Live
                                 {m.court_number && (
-                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-muted/80 border border-border-strong/50 shadow-sm", getCourtColor(m.court_number))}>
                                     {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
                                   </span>
                                 )}
@@ -1181,22 +1183,22 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                             ) : (m as any).scheduled_at ? (
                               <span className="flex items-center gap-1 text-[9px]">
                                 {m.court_number && (
-                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-muted/80 border border-border-strong/50 shadow-sm", getCourtColor(m.court_number))}>
                                     {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
                                   </span>
                                 )}
-                                <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                                <span className="text-foreground font-black tracking-wide drop-shadow-sm">
                                   {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                                  <span className="font-bold text-amber-400 ml-1">
+                                  <span className="font-bold text-warning ml-1">
                                     {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
                                   </span>
                                 </span>
                               </span>
                             ) : (
-                              <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
+                              <span className="text-[10px] font-black text-muted-foreground tracking-widest">TBD</span>
                             )
                           )}
-                          {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
+                          {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-live" />}
                         </span>
                       </div>
                       {/* Players + scores */}
@@ -1205,28 +1207,28 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                           <div
                             onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t1 ? null : t1) : undefined}
                             style={{ minHeight: playerRowH }}
-                            className={`flex-1 flex items-center gap-1 px-2 border-b border-slate-700/50 ${t1Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                            className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${t1Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
-                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-amber-300" : "text-slate-300"}`}>{t1}</span>
-                            {t1Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-gold" : "text-soft"}`}>{t1}</span>
+                            {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                           <div
                             onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t2 ? null : t2) : undefined}
                             style={{ minHeight: playerRowH }}
-                            className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                            className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
-                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-amber-300" : "text-slate-300"}`}>{t2}</span>
-                            {t2Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-gold" : "text-soft"}`}>{t2}</span>
+                            {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                         </div>
                         {isCompleted && sets && (
-                          <div className="flex shrink-0 border-l border-slate-700/50">
+                          <div className="flex shrink-0 border-l border-border-strong/50">
                             {sets.map((s, i) => (
-                              <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
-                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                              <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-border-strong/30" : ""}`} style={{ width: 22 }}>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-gold/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
                                   {s.t1}
                                 </div>
-                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-gold/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
                                   {s.t2}
                                 </div>
                               </div>
@@ -1299,23 +1301,23 @@ function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selecte
       }}
     >
       <div className={cn("flex flex-col border rounded overflow-hidden", 
-        CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900 border-slate-800",
+        CAT_BOX_COLORS_DARK[category || ""] || "bg-card border-border",
         isHighlighted ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'shadow-md'
       )}>
         {/* Match header */}
         <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase 
-tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 
-'bg-slate-800/50 text-muted-foreground'}`}>
+tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? 'bg-warning/20 text-warning' : 
+'bg-muted/50 text-muted-foreground'}`}>
           <span>{m.match_code}</span>
           <span className="flex items-center gap-1">
             {isCompleted || outcome.state === "cancelled" ? (
-              <span className="text-slate-500">{outcome.statusLabel}</span>
+              <span className="text-muted-foreground">{outcome.statusLabel}</span>
             ) : (
               isLive ? (
-                <span className="flex items-center gap-1 text-amber-500 font-bold">
+                <span className="flex items-center gap-1 text-warning font-bold">
                   Live
                   {m.court_number && (
-                    <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                    <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-muted/80 border border-border-strong/50 shadow-sm", getCourtColor(m.court_number))}>
                       {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
                     </span>
                   )}
@@ -1323,22 +1325,22 @@ tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-
               ) : (m as any).scheduled_at ? (
                 <span className="flex items-center gap-1 text-[9px]">
                   {m.court_number && (
-                    <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                    <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-muted/80 border border-border-strong/50 shadow-sm", getCourtColor(m.court_number))}>
                       {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
                     </span>
                   )}
-                  <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                  <span className="text-foreground font-black tracking-wide drop-shadow-sm">
                     {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                    <span className="font-bold text-amber-400 ml-1">
+                    <span className="font-bold text-warning ml-1">
                       {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
                     </span>
                   </span>
                 </span>
               ) : (
-                <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
+                <span className="text-[10px] font-black text-muted-foreground tracking-widest">TBD</span>
               )
             )}
-            {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
+            {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-live" />}
           </span>
         </div>
         {/* Players + scores */}
@@ -1347,40 +1349,40 @@ tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-
             <div
               onClick={onPlayerClick ? () => onPlayerClick(t1) : undefined}
               style={{ minHeight: playerRowH }}
-              className={`flex-1 flex items-center gap-1 px-2 border-b border-slate-700/50 ${
+              className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${
                 isT1Selected 
-                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
-                  : t1Won ? "bg-amber-500/20" : ""
-              } ${onPlayerClick ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_color-mix(in_srgb,var(--primary)_50%,transparent)]" 
+                  : t1Won ? "bg-gold/20" : ""
+              } ${onPlayerClick ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
             >
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
-                isT1Selected ? "text-white drop-shadow-md" : t1Won ? "text-amber-300" : "text-slate-300"
+                isT1Selected ? "text-foreground drop-shadow-md" : t1Won ? "text-gold" : "text-soft"
               }`}>{t1}</span>
-              {t1Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+              {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
             <div
               onClick={onPlayerClick ? () => onPlayerClick(t2) : undefined}
               style={{ minHeight: playerRowH }}
               className={`flex-1 flex items-center gap-1 px-2 ${
                 isT2Selected 
-                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
-                  : t2Won ? "bg-amber-500/20" : ""
-              } ${onPlayerClick ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_color-mix(in_srgb,var(--primary)_50%,transparent)]" 
+                  : t2Won ? "bg-gold/20" : ""
+              } ${onPlayerClick ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
             >
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
-                isT2Selected ? "text-white drop-shadow-md" : t2Won ? "text-amber-300" : "text-slate-300"
+                isT2Selected ? "text-foreground drop-shadow-md" : t2Won ? "text-gold" : "text-soft"
               }`}>{t2}</span>
-              {t2Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+              {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
           </div>
           {isCompleted && sets && (
-            <div className="flex shrink-0 border-l border-slate-700/50">
+            <div className="flex shrink-0 border-l border-border-strong/50">
               {sets.map((s, i) => (
-                <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
-                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-border-strong/30" : ""}`} style={{ width: 22 }}>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-border-strong/50 ${t1Won ? "bg-gold/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
                     {s.t1}
                   </div>
-                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-gold/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
                     {s.t2}
                   </div>
                 </div>
