@@ -86,8 +86,11 @@ describe("FormChips", () => {
     );
     expect(screen.getByText("Won 1 of last 2 tournament matches.")).toBeInTheDocument();
     const chips = screen.getAllByRole("link");
-    expect(chips.map((c) => c.textContent)).toEqual(["W", "L/O"]);
+    // A walkover keeps its result letter and colour, with "w/o" under it (no made-up "L/O").
+    expect(chips.map((c) => c.textContent)).toEqual(["W", "Lw/o"]);
+    expect(chips[1].className).toContain("bg-rose-600");
     expect(chips[0]).toHaveAccessibleName(/^Won vs Bala, MS · Final, 23 Aug$/);
+    expect(chips[1]).toHaveAccessibleName(/^Lost \(walkover\) vs Chitra, MS · SF$/);
   });
 
   it("has an empty state", () => {
@@ -154,7 +157,7 @@ describe("MatchPointsTab", () => {
     );
     expect(screen.getByText("Asha won 11 rallies in a row")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Live point history · 12 scoring rallies recorded so far.");
-    expect(screen.getByRole("img", { name: /Game 1 points progression, final score 11–1/ })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Game 1 points progression over 12 rallies, final score 11–1/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "View as table" }));
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument(); // last row: after rally 12

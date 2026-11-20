@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
@@ -22,6 +22,8 @@ import { MatchH2HTab } from "@/components/match/MatchH2HTab";
 import { MatchInfoTab } from "@/components/match/MatchInfoTab";
 import { MatchPointsTab } from "@/components/match/MatchPointsTab";
 import { useMatchPointLog } from "@/hooks/queries/useMatchPointLog";
+import { decodePoints, nextServer } from "@/lib/pointLog";
+import { MatchStickyHeader } from "@/components/match/MatchStickyHeader";
 
 interface RouteMatchData {
   match: MatchRow & {
@@ -56,7 +58,7 @@ async function fetchMatchForRoute(tournamentId: string, matchId: string): Promis
 
 const TAB_LABELS: Record<MatchTab, string> = {
   summary: "Summary",
-  points: "Points",
+  points: "Stats",
   h2h: "H2H & form",
   info: "Info",
 };
@@ -86,6 +88,8 @@ export default function TournamentMatchPage() {
   });
 
   const pointLog = useMatchPointLog(tournamentId, matchId, tState.kind === "ready");
+  const scoreCardRef = useRef<HTMLElement>(null);
+  const rallies = useMemo(() => decodePoints(pointLog.data?.points), [pointLog.data?.points]);
   const view: MatchView | null = mQuery.data ? toMatchView(mQuery.data.match, buildSeedIndex(mQuery.data.seeds)) : null;
   usePageMeta({
     title: view ? `${view.sides[0].label} vs ${view.sides[1].label}` : "Match",
@@ -104,9 +108,11 @@ export default function TournamentMatchPage() {
   const { next, match } = mQuery.data;
   const t = tState.tournament;
   const summary = scoreSummary(view);
+  // Whoever won the last rally serves next; only meaningful while live.
+  const serving = view.state === "live" ? nextServer(rallies) : null;
   const lastUpdated = mQuery.dataUpdatedAt ? new Date(mQuery.dataUpdatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : null;
 
-  // Points appears only once a stored point log exists (Phase C); never an empty tab.
+  // Stats (route key "points") appears only once a stored point log exists; never an empty tab.
   const hasPoints = !!pointLog.data && pointLog.data.pointCount > 0;
   const tabs: MatchTab[] = hasPoints ? ["summary", "points", "h2h", "info"] : ["summary", "h2h", "info"];
   const tab: MatchTab = tabs.includes(requestedTab) ? requestedTab : "summary";
@@ -121,7 +127,7 @@ export default function TournamentMatchPage() {
           <ArrowLeft className="w-4 h-4" aria-hidden /> {t.name}
         </Link>
 
-        <article className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+        <article ref={scoreCardRef} className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
             <span>{view.discipline ? `${view.discipline} · ${DISCIPLINE_LABELS[view.discipline]}` : view.categoryLabel}</span>
             {view.roundName && <span>· {view.roundName}</span>}
@@ -135,8 +141,8 @@ export default function TournamentMatchPage() {
             {view.sides[0].label} versus {view.sides[1].label}
           </h1>
           <div className="mt-4 divide-y divide-slate-100 dark:divide-slate-800 text-base">
-            <MatchSideRow side={view.sides[0]} index={0} view={view} />
-            <MatchSideRow side={view.sides[1]} index={1} view={view} />
+            <MatchSideRow side={view.sides[0]} index={0} view={view} serving={serving === 1} />
+            <MatchSideRow side={view.sides[1]} index={1} view={view} serving={serving === 2} />
           </div>
           {summary && <p className="sr-only">Score: {summary}</p>}
           {view.scoreText && <p className="mt-2 font-mono text-sm tabular-nums">{view.scoreText}</p>}
@@ -149,6 +155,7 @@ export default function TournamentMatchPage() {
                 : null}
           </p>
         </article>
+        <MatchStickyHeader view={view} watch={scoreCardRef} serving={serving} />
 
         <ScrollTabs
           label="Match sections"

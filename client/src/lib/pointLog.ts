@@ -216,6 +216,264 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
   return moments;
 }
 
+// ── Per-side stats (Stats tab) ─────────────────────────────────────────────
+
+/**
+ * Who served each rally. The umpire screen stores the side that serves
+ * *next* (the rally winner), so a rally's server is the winner of the rally
+ * before it; across games this also holds (the game winner serves first).
+ * The match's first serve isn't stored, so it is null.
+ */
+export function rallyServers(rallies: Rally[]): Array<1 | 2 | null> {
+  return rallies.map((_, i) => (i === 0 ? null : rallies[i - 1].side));
+}
+
+/** The side serving the next rally: whoever won the last one. */
+export function nextServer(rallies: Rally[]): 1 | 2 | null {
+  return rallies.length > 0 ? rallies[rallies.length - 1].side : null;
+}
+
+export interface Tally {
+  won: number;
+  of: number;
+}
+
+export interface SideStats {
+  pointsWon: number;
+  /** Most points in a row within one game. */
+  longestRun: number;
+  biggestLead: number;
+  /** Rallies after which this side was ahead. */
+  ralliesAhead: number;
+  /** Rallies this side played at game point (match points included). */
+  gamePoints: Tally;
+  /** Rallies this side served, and how many it won. */
+  onServe: Tally;
+  /** Rallies the other side served, and how many this side won. */
+  onReceive: Tally;
+  /** Rallies from `crunchFrom`-all on (18–18 in a game to 21). */
+  crunch: Tally;
+}
+
+export interface RallyStats {
+  rallies: number;
+  sides: [SideStats, SideStats];
+  /** Times the leader switched (level scores in between don't count). */
+  leadChanges: number;
+  /** Times the score was level after a rally. */
+  ties: number;
+  crunchFrom: number;
+}
+
+function blankSide(): SideStats {
+  return {
+    pointsWon: 0,
+    longestRun: 0,
+    biggestLead: 0,
+    ralliesAhead: 0,
+    gamePoints: { won: 0, of: 0 },
+    onServe: { won: 0, of: 0 },
+    onReceive: { won: 0, of: 0 },
+    crunch: { won: 0, of: 0 },
+  };
+}
+
+/**
+ * Both sides' numbers for the whole match (`game` null) or one game. Takes
+ * every rally of the match even for one game, because a game's first server
+ * comes from the game before it.
+ */
+export function rallyStats(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES, game: number | null = null): RallyStats {
+  const servers = rallyServers(rallies);
+  const crunchFrom = Math.max(0, rules.pointsToWin - 3);
+  const sides: [SideStats, SideStats] = [blankSide(), blankSide()];
+  let count = 0;
+  let leadChanges = 0;
+  let ties = 0;
+  let curGame: number | null = null;
+  let runSide: 1 | 2 | null = null;
+  let run = 0;
+  let leader: 0 | 1 | 2 = 0;
+
+  rallies.forEach((r, i) => {
+    if (game != null && r.game !== game) return;
+    if (r.game !== curGame) {
+      curGame = r.game;
+      runSide = null;
+      run = 0;
+      leader = 0;
+    }
+    count += 1;
+    const s = r.side;
+    const me = sides[s - 1];
+    me.pointsWon += 1;
+    run = runSide === s ? run + 1 : 1;
+    runSide = s;
+    me.longestRun = Math.max(me.longestRun, run);
+
+    const before: [number, number] = [r.t1 - (s === 1 ? 1 : 0), r.t2 - (s === 2 ? 1 : 0)];
+    for (const k of [1, 2] as const) {
+      if (isGamePoint(before[k - 1], before[2 - k], rules)) {
+        sides[k - 1].gamePoints.of += 1;
+        if (s === k) sides[k - 1].gamePoints.won += 1;
+      }
+    }
+    if (before[0] >= crunchFrom && before[1] >= crunchFrom) {
+      sides[0].crunch.of += 1;
+      sides[1].crunch.of += 1;
+      me.crunch.won += 1;
+    }
+
+    const diff = r.t1 - r.t2;
+    if (diff === 0) {
+      ties += 1;
+    } else {
+      const ahead: 1 | 2 = diff > 0 ? 1 : 2;
+      const a = sides[ahead - 1];
+      a.ralliesAhead += 1;
+      a.biggestLead = Math.max(a.biggestLead, Math.abs(diff));
+      if (leader !== 0 && leader !== ahead) leadChanges += 1;
+      leader = ahead;
+    }
+
+    const server = servers[i];
+    if (server) {
+      const receiver: 1 | 2 = server === 1 ? 2 : 1;
+      sides[server - 1].onServe.of += 1;
+      sides[receiver - 1].onReceive.of += 1;
+      if (s === server) sides[server - 1].onServe.won += 1;
+      else sides[receiver - 1].onReceive.won += 1;
+    }
+  });
+
+  return { rallies: count, sides, leadChanges, ties, crunchFrom };
+}
+
+export interface GameFlow {
+  game: number;
+  final: [number, number];
+  winner: 1 | 2 | null;
+  /** Score when the first side reached the interval (11 in a game to 21). */
+  atInterval: [number, number] | null;
+  leadChanges: number;
+  longestRun: { side: 1 | 2; length: number } | null;
+  minutes: number | null;
+}
+
+/** One row per game for the game-by-game table. */
+export function gameFlows(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES): GameFlow[] {
+  const intervalPoint = Math.ceil(rules.pointsToWin / 2);
+  return splitGames(rallies).map((g) => {
+    const atI = g.rallies.find((r) => r.t1 === intervalPoint || r.t2 === intervalPoint);
+    return {
+      game: g.game,
+      final: g.final,
+      winner: g.winner,
+      atInterval: atI ? [atI.t1, atI.t2] : null,
+      leadChanges: rallyStats(g.rallies, rules).leadChanges,
+      longestRun: longestRun(g.rallies),
+      minutes: gameMinutes(g),
+    };
+  });
+}
+
+const pct = (t: Tally) => (t.of > 0 ? Math.round((t.won / t.of) * 100) : 0);
+
+/**
+ * Plain-English takeaways for players, most telling first (at most `max`).
+ * Each needs enough rallies behind it to mean something; names only, no
+ * pronouns. `matchWinner` is the side that won the match, when decided.
+ */
+export function statInsights(
+  stats: RallyStats,
+  names: [string, string],
+  opts: { scope: "match" | "game"; matchWinner?: 1 | 2 | null; max?: number } = { scope: "match" },
+): string[] {
+  const [a, b] = stats.sides;
+  const where = opts.scope === "match" ? "the match" : "the game";
+  const out: Array<{ weight: number; text: string }> = [];
+  const total = stats.rallies;
+  if (total < 6) return [];
+
+  // More points but lost: the most surprising thing a scoreline hides.
+  if (opts.scope === "match" && opts.matchWinner) {
+    const w = opts.matchWinner - 1;
+    const l = 1 - w;
+    if (stats.sides[l].pointsWon > stats.sides[w].pointsWon) {
+      out.push({
+        weight: 100,
+        text: `${names[l]} won more points (${stats.sides[l].pointsWon}–${stats.sides[w].pointsWon}) but ${names[w]} won the match.`,
+      });
+    }
+  }
+
+  // Who controlled it.
+  for (const k of [0, 1] as const) {
+    const other = 1 - k;
+    const share = stats.sides[k].ralliesAhead / total;
+    if (stats.sides[other].ralliesAhead === 0 && stats.sides[k].ralliesAhead > 0) {
+      out.push({ weight: 90, text: `${names[k]} never trailed in ${where}.` });
+    } else if (share >= 0.6) {
+      out.push({ weight: 60 + share * 20, text: `${names[k]} was ahead for ${Math.round(share * 100)}% of ${where}.` });
+    }
+  }
+  if (stats.leadChanges >= 4) {
+    out.push({ weight: 55 + stats.leadChanges, text: `The lead changed hands ${stats.leadChanges} times.` });
+  }
+
+  // Serve: who made more of their own serve.
+  if (a.onServe.of >= 8 && b.onServe.of >= 8) {
+    const pa = pct(a.onServe);
+    const pb = pct(b.onServe);
+    if (Math.abs(pa - pb) >= 8) {
+      const [hi, lo, phi, plo] = pa > pb ? [0, 1, pa, pb] : [1, 0, pb, pa];
+      out.push({
+        weight: 50 + (phi - plo),
+        text: `${names[hi]} won ${phi}% of rallies on serve; ${names[lo]} won ${plo}%.`,
+      });
+    }
+  }
+
+  // Crunch time.
+  const crunch = a.crunch.of;
+  if (crunch >= 3) {
+    const hi = a.crunch.won >= b.crunch.won ? 0 : 1;
+    const won = stats.sides[hi].crunch.won;
+    if (won / crunch >= 0.6) {
+      out.push({
+        weight: 70,
+        text: `From ${stats.crunchFrom}-all, ${names[hi]} won ${won} of ${crunch} points.`,
+      });
+    }
+  }
+
+  // Game points left on the table.
+  for (const k of [0, 1] as const) {
+    const gp = stats.sides[k].gamePoints;
+    const missed = gp.of - gp.won;
+    if (missed >= 2) {
+      out.push({
+        weight: 45 + missed * 5,
+        text: gp.won === 0 ? `${names[k]} had ${gp.of} game points and converted none.` : `${names[k]} converted ${gp.won} of ${gp.of} game points.`,
+      });
+    }
+  }
+
+  // Runs.
+  if (Math.abs(a.longestRun - b.longestRun) >= 3) {
+    const k = a.longestRun > b.longestRun ? 0 : 1;
+    out.push({
+      weight: 40 + stats.sides[k].longestRun,
+      text: `${names[k]}'s best run was ${stats.sides[k].longestRun} points in a row; ${names[1 - k]}'s was ${stats.sides[1 - k].longestRun}.`,
+    });
+  }
+
+  return out
+    .sort((x, y) => y.weight - x.weight)
+    .slice(0, opts.max ?? 4)
+    .map((x) => x.text);
+}
+
 /** Score after every `step` rallies, for the progression table. */
 export function progression(g: GameSeries, step = 5): Array<{ rally: number; t1: number; t2: number }> {
   const out: Array<{ rally: number; t1: number; t2: number }> = [];

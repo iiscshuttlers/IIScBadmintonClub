@@ -10,7 +10,9 @@ function row(p: Partial<FormRow>): FormRow {
     tournament_id: "t",
     category: "MS",
     match_code: null,
+    round: null,
     round_name: "Final",
+    score: null,
     team1_label: "Asha",
     team2_label: "Bala",
     player1_id: "a",
@@ -44,6 +46,38 @@ describe("computeForm", () => {
       2,
     );
     expect(f.a.map((e) => e.matchId)).toEqual(["new", "mid"]);
+  });
+
+  it("puts a later stage first on the same day when there are no finish times", () => {
+    const day = "2026-10-16T09:00:00Z";
+    const f = computeForm(
+      [
+        row({ id: "qf", round: 2, round_name: "Quarterfinal", ended_at: null, created_at: day }),
+        row({ id: "sf", round: 3, round_name: "Semifinal", ended_at: null, created_at: day }),
+        row({ id: "f", round: 4, round_name: "Final", ended_at: null, created_at: day }),
+        row({ id: "aug", round: 4, round_name: "Final", ended_at: "2026-08-23T10:00:00Z" }),
+      ],
+      ["a"],
+      5,
+    );
+    expect(f.a.map((e) => e.matchId)).toEqual(["f", "sf", "qf", "aug"]);
+  });
+
+  it("uses real finish times on the same day when both have them", () => {
+    const f = computeForm(
+      [
+        row({ id: "early-final", round_name: "Final", category: "MS", ended_at: "2026-10-16T10:00:00Z" }),
+        row({ id: "late-qf", round_name: "Quarterfinal", category: "XD", ended_at: "2026-10-16T15:00:00Z" }),
+      ],
+      ["a"],
+      5,
+    );
+    expect(f.a.map((e) => e.matchId)).toEqual(["late-qf", "early-final"]);
+  });
+
+  it("treats a completed match scored W/O as a walkover", () => {
+    const f = computeForm([row({ id: "wo", status: "completed", score: "W/O", winner_side: 2 })], ["a"], 5);
+    expect(f.a[0]).toMatchObject({ result: "L", walkover: true });
   });
 
   it("counts walkovers but skips cancelled, BYEs and missing winners", () => {
