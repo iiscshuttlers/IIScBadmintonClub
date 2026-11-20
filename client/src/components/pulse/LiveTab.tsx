@@ -857,6 +857,11 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                   <>
                     {activeSubTab === "my-matches" ? (
                       <>
+                        {/* "I am here" check-in + opponent status. On a tournament route the
+                            same card already sits above the tabs, so it is not repeated. */}
+                        {!route && activeTournament && session && (
+                          <TournamentNextMatch tournamentId={activeTournament.id} tournamentName={activeTournament.name} />
+                        )}
                         <MyCertificatesCard tournament={activeTournament} />
                         <MatchSection
                           title="My Matches"

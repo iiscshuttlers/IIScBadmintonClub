@@ -22,6 +22,7 @@ import { MatchH2HTab } from "@/components/match/MatchH2HTab";
 import { MatchInfoTab } from "@/components/match/MatchInfoTab";
 import { MatchPointsTab } from "@/components/match/MatchPointsTab";
 import { useMatchPointLog } from "@/hooks/queries/useMatchPointLog";
+import { MatchWhosHere } from "@/components/checkin/MatchWhosHere";
 
 interface RouteMatchData {
   match: MatchRow & {
@@ -149,6 +150,9 @@ export default function TournamentMatchPage() {
                 : null}
           </p>
         </article>
+
+        {/* Check-in: who is here and when they were called (signed-in only). */}
+        <MatchWhosHere tournamentId={t.id} matchId={view.id} />
 
         <ScrollTabs
           label="Match sections"

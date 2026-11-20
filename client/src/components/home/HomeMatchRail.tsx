@@ -10,6 +10,7 @@ import { toMatchView, type MatchRow } from "@/lib/matchView";
 import { buildHomeRail, buildMyTournamentSummary, RECENT_MS } from "@/lib/homeRail";
 import { MatchScorecard } from "@/components/match/MatchPrimitives";
 import { MyTournamentCard } from "@/components/home/MyTournamentCard";
+import { useMyTournamentCheckin } from "@/components/checkin/PlayerCheckin";
 
 /**
  * "Your matches first" (FotMob favourites): my live/next match, then followed
@@ -76,6 +77,8 @@ export function HomeMatchRail() {
 
   const views = useMemo(() => q.data?.rows.map((r) => toMatchView(r)) ?? [], [q.data]);
   const myTournament = useMemo(() => buildMyTournamentSummary(views, myPlayerId ?? null), [views, myPlayerId]);
+  // "I'm here" check-in for the tournament of my next match.
+  const checkin = useMyTournamentCheckin(myTournament?.primary.tournamentId ?? null, myPlayerId ?? null);
   const rail = useMemo(() => {
     if (!q.data) return [];
     return buildHomeRail(views, {
@@ -115,7 +118,7 @@ export function HomeMatchRail() {
   return (
     <>
       {myTournament && myPlayerId && (
-        <MyTournamentCard summary={myTournament} myPlayerId={myPlayerId} tournamentNames={q.data.tournamentNames} />
+        <MyTournamentCard summary={myTournament} myPlayerId={myPlayerId} tournamentNames={q.data.tournamentNames} checkin={checkin} />
       )}
       {rail.length > 0 && <section aria-labelledby="home-rail-heading" className="mb-3">
       <div className="flex items-center justify-between mb-2">

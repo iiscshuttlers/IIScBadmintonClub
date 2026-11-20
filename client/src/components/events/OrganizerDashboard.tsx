@@ -16,6 +16,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { tournamentManagePath } from '@/lib/tournamentRoutes';
 import { HostSetupSections } from './HostSetupSections';
 import { calculateMinRosterRequirements, normalizeGender } from '@/lib/teamLineupRules';
+import { useTournamentReadiness } from '@/hooks/queries/useCheckins';
+import { AllMatchesList } from '@/components/tournament/AllMatchesList';
+import { CheckinStatCards, CourtsAndQueue, WhosHereRoster } from '@/components/checkin/OrganiserCheckin';
 
 
 interface OrganizerDashboardProps {
@@ -288,13 +291,6 @@ function ShowAllButton({ onClick }: { onClick: () => void }) {
 /* Individual events                                                   */
 /* ------------------------------------------------------------------ */
 
-const MATCH_FILTER_LABEL = {
-  ALL: 'All',
-  IN_PROGRESS: 'Live',
-  UNASSIGNED_COURTS: 'No court',
-  SCHEDULED: 'Upcoming',
-} as const;
-
 function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const { data: matches = [], isLoading, refetch } = useQuery({
     queryKey: ['organizer_ind_matches', tournamentId],
@@ -331,24 +327,11 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
   }, [matches]);
 
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'IN_PROGRESS' | 'UNASSIGNED_COURTS' | 'SCHEDULED'>('ALL');
-  // null = follow the default below; true/false = the organizer opened/closed it.
-  const [listOpenChoice, setListOpenChoice] = useState<boolean | null>(null);
-
-  const filteredMatches = useMemo(() => {
-    if (selectedFilter === 'IN_PROGRESS') return inProgressMatches;
-    if (selectedFilter === 'UNASSIGNED_COURTS') return matchesMissingCourt;
-    if (selectedFilter === 'SCHEDULED') return scheduledMatches;
-    return matches;
-  }, [selectedFilter, matches, inProgressMatches, matchesMissingCourt, scheduledMatches]);
-
-  // A long list with nothing wrong in it starts collapsed.
-  const listOpen = listOpenChoice ?? (
-    matchesMissingCourt.length > 0 || matches.length <= 6 || selectedFilter !== 'ALL'
-  );
+  // Check-in readiness, courts and names: shared with the Umpire and Referee panels.
+  const readiness = useTournamentReadiness(tournamentId);
 
   const handleCardClick = (filter: typeof selectedFilter) => {
     setSelectedFilter(prev => prev === filter ? 'ALL' : filter);
-    setListOpenChoice(true);
   };
 
   return (
@@ -378,69 +361,23 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
         ]}
       />
 
-      <section className={sectionClass}>
-        <DisclosureRow
-          open={listOpen}
-          onToggle={() => setListOpenChoice(!listOpen)}
-          label={selectedFilter === 'ALL' ? 'Matches' : `Matches · ${MATCH_FILTER_LABEL[selectedFilter]}`}
-          meta={selectedFilter === 'ALL' ? `${matches.length}` : `${filteredMatches.length} of ${matches.length}`}
-          action={selectedFilter !== 'ALL' && <ShowAllButton onClick={() => setSelectedFilter('ALL')} />}
-        />
+      {/* Player check-in: who's here, courts and the ready queue. */}
+      {readiness.matches.length > 0 && readiness.checkinsAvailable && (
+        <>
+          <CheckinStatCards data={readiness} />
+          <CourtsAndQueue data={readiness} tournamentId={tournamentId} />
+          <WhosHereRoster data={readiness} tournamentId={tournamentId} />
+        </>
+      )}
 
-        {listOpen && (
-          <>
-            {categories.length > 0 && (
-              <p className="text-xs text-muted-foreground">Categories: {categories.join(', ')}</p>
-            )}
-
-            {filteredMatches.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                {selectedFilter === 'ALL' ? 'No matches yet.' : 'No matches in this view.'}
-              </p>
-            ) : (
-              <>
-                <ul className="divide-y divide-slate-800">
-                  {filteredMatches.slice(0, 20).map((match: any) => {
-                    const court = match.court ?? match.court_number;
-                    const detail = [match.category, match.round_name].filter(Boolean).join(' · ');
-                    return (
-                      <li key={match.id} className="flex items-center gap-3 py-2">
-                        <span className={codeClass}>
-                          {match.match_code || `M${match.match_number || '?'}`}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-white">
-                            {match.team1_label || 'TBD'} vs {match.team2_label || 'TBD'}
-                          </p>
-                          {detail && <p className="truncate text-xs text-muted-foreground">{detail}</p>}
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs">
-                          <span className="flex items-center gap-1.5">
-                            {match.score && (
-                              <span className="font-mono font-bold text-white whitespace-nowrap">{match.score}</span>
-                            )}
-                            <StatusText status={match.status} />
-                          </span>
-                          {court ? (
-                            <span className="text-muted-foreground whitespace-nowrap">{courtLabel(court)}</span>
-                          ) : match.status !== 'completed' ? (
-                            <span className="font-semibold text-sky-300 whitespace-nowrap">No court</span>
-                          ) : null}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {filteredMatches.length > 20 && (
-                  <p className="text-center text-xs text-muted-foreground">
-                    Showing 20 of {filteredMatches.length} matches
-                  </p>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </section>
+      {/* All matches: the cards above pick its status or court filter. */}
+      <AllMatchesList
+        key={selectedFilter}
+        tournamentId={tournamentId}
+        data={readiness}
+        initialStatus={selectedFilter === 'IN_PROGRESS' ? 'live' : selectedFilter === 'SCHEDULED' ? 'upcoming' : 'all'}
+        initialCourt={selectedFilter === 'UNASSIGNED_COURTS' ? 'none' : ''}
+      />
     </div>
   );
 }

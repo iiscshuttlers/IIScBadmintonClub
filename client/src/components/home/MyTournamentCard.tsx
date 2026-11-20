@@ -1,8 +1,18 @@
+import type { ReactNode } from "react";
 import { CalendarClock, ChevronRight, Clock3, MapPin, Swords, Trophy } from "lucide-react";
 import { Link } from "wouter";
 import { matchPath, tournamentPath } from "@/lib/tournamentRoutes";
 import { type MyTournamentSummary } from "@/lib/homeRail";
 import type { MatchView } from "@/lib/matchView";
+import { MatchCodeChip } from "@/components/checkin/CheckinBits";
+
+/** Check-in slot (components/checkin/PlayerCheckin `useMyTournamentCheckin`). */
+export interface MyTournamentCheckinSlot {
+  /** "I'm here" / "You're checked in" panel, shown under the header. */
+  panel: ReactNode;
+  /** Opponent/partner status for a match of this tournament, or null. */
+  statusFor: (view: MatchView, compact?: boolean) => ReactNode;
+}
 
 function scheduleLabel(view: MatchView): string {
   if (view.state === "live") return "Playing now";
@@ -29,15 +39,18 @@ export function MyTournamentCard({
   summary,
   myPlayerId,
   tournamentNames,
+  checkin,
 }: {
   summary: MyTournamentSummary;
   myPlayerId: string;
   tournamentNames: Record<string, string>;
+  checkin?: MyTournamentCheckinSlot | null;
 }) {
   const { primary, otherMatches } = summary;
   const sides = sideContext(primary, myPlayerId);
   const tournamentName = tournamentNames[primary.tournamentId] ?? "Tournament";
   const discipline = primary.discipline ?? null;
+  const primaryStatus = checkin?.statusFor(primary) ?? null;
 
   return (
     <section aria-label="My tournament" className="mb-3 overflow-hidden rounded-2xl border border-primary/30 bg-slate-950 text-white shadow-lg">
@@ -53,19 +66,30 @@ export function MyTournamentCard({
         </span>
       </div>
 
+      {checkin?.panel}
+
       <div className="space-y-3 p-4">
         <div>
           <p className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
             <Trophy className="h-3.5 w-3.5" aria-hidden /> {tournamentName}
           </p>
-          <p className="mt-1 text-sm font-black">{compactMatchLabel(primary)}</p>
-          <p className="mt-2 text-sm text-slate-200"><span className="font-bold text-white">Your side:</span> {sides.own.label}</p>
-          <p className="text-sm text-slate-200"><span className="font-bold text-white">Opponents:</span> {sides.opponent.label}</p>
+          <p className="mt-1 flex items-center justify-between gap-2 text-sm font-black">
+            <span className="min-w-0">{compactMatchLabel(primary)}</span>
+            <MatchCodeChip code={primary.matchCode} />
+          </p>
+          {primaryStatus ? null : (
+            <>
+              <p className="mt-2 text-sm text-slate-200"><span className="font-bold text-white">Your side:</span> {sides.own.label}</p>
+              <p className="text-sm text-slate-200"><span className="font-bold text-white">Opponents:</span> {sides.opponent.label}</p>
+            </>
+          )}
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300">
             <span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" aria-hidden /> {scheduleLabel(primary)}</span>
             <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden /> {primary.court ? `Court ${primary.court}` : "Court not assigned"}</span>
           </div>
         </div>
+
+        {primaryStatus && <div className="space-y-2">{primaryStatus}</div>}
 
         <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-3">
           <Link href={matchPath(primary.tournamentId, primary.id)} className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-xl bg-primary px-3 text-xs font-black text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
@@ -88,14 +112,21 @@ export function MyTournamentCard({
               </Link>
             </div>
             <ul className="space-y-1">
-              {otherMatches.slice(0, 3).map((view) => (
-                <li key={view.id}>
-                  <Link href={matchPath(view.tournamentId, view.id)} className="flex min-h-[44px] items-center justify-between gap-3 rounded-lg px-2 text-xs hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                    <span className="min-w-0 truncate font-bold">{compactMatchLabel(view)}</span>
-                    <span className="flex shrink-0 items-center gap-1 text-slate-400">{scheduleLabel(view)} <ChevronRight className="h-3.5 w-3.5" aria-hidden /></span>
-                  </Link>
-                </li>
-              ))}
+              {otherMatches.slice(0, 3).map((view) => {
+                const status = checkin?.statusFor(view, true) ?? null;
+                return (
+                  <li key={view.id} className={status ? "space-y-2 pb-2" : undefined}>
+                    <Link href={matchPath(view.tournamentId, view.id)} className="flex min-h-[44px] items-center justify-between gap-3 rounded-lg px-2 text-xs hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate font-bold">{compactMatchLabel(view)}</span>
+                        {status && <MatchCodeChip code={view.matchCode} />}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1 text-slate-400">{scheduleLabel(view)} <ChevronRight className="h-3.5 w-3.5" aria-hidden /></span>
+                    </Link>
+                    {status && <div className="px-2">{status}</div>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

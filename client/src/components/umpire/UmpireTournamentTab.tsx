@@ -25,6 +25,15 @@ import {
   subscribeToUmpireTournamentMatches,
 } from "@/services/tournamentService";
 import { teamService } from "@/services/teamService";
+import { useTournamentReadiness } from "@/hooks/queries/useCheckins";
+import {
+  CallMissingButton,
+  ReadySections,
+  UmpireWhosHere,
+  WalkoverCheckinRecord,
+  startWarning,
+  walkoverHint,
+} from "@/components/checkin/OfficialBoard";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -136,6 +145,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const { session, profile } = useAuth();
   const isAdmin = profile?.role === 'master_admin' || profile?.role === 'admin';
   const [deletingMatchId, setDeletingMatchId] = useState<string | null>(null);
+
+  // Player check-in (Ready to play, Who's here, walkover record). Same data
+  // for every official surface: hooks/queries/useCheckins.
+  const checkinTid = selectedTournamentId ?? tournamentId ?? null;
+  const readiness = useTournamentReadiness(checkinTid);
+  const readinessMatch = (id: string | undefined) => (id ? readiness.matches.find((m) => m.id === id) ?? null : null);
 
   const openDirectScore = (m: TournamentMatchForUmpire) => {
     const numSets = m.best_of_sets || 3;
@@ -510,6 +525,10 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             )}
           </div>
         )}
+
+        {/* Check-in: courts, Ready to play, Waiting for players, Resting.
+            Nothing here starts a match or records a walkover by itself. */}
+        {checkinTid && <ReadySections data={readiness} tournamentId={checkinTid} />}
 
         {/* Team Ties Requiring Attention */}
         {pendingTies.length > 0 && (
@@ -1099,6 +1118,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               )}
             </div>
 
+            {/* Who's here, with "Check in for them" */}
+            {checkinTid && readinessMatch(selectedMatch.id) && (
+              <UmpireWhosHere data={readiness} match={readinessMatch(selectedMatch.id)!} tournamentId={checkinTid} />
+            )}
+
             {/* Start button */}
             <button
               onClick={async () => {
@@ -1114,6 +1138,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               <Play className="w-4 h-4 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}
             </button>
+            {readinessMatch(selectedMatch.id) && startWarning(readiness, readinessMatch(selectedMatch.id)!) && (
+              <p className="text-center text-[11px] text-amber-300">{startWarning(readiness, readinessMatch(selectedMatch.id)!)}</p>
+            )}
+            {checkinTid && readinessMatch(selectedMatch.id) && selectedMatch.status !== "in_progress" && (
+              <CallMissingButton data={readiness} match={readinessMatch(selectedMatch.id)!} tournamentId={checkinTid} />
+            )}
 
             {/* Call players to the court (push to both sides) */}
             {selectedMatch.status !== "in_progress" && (
@@ -1253,12 +1283,21 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <p className="text-xs text-muted-foreground">Who turned up? The team you pick advances.</p>
               </div>
 
+              {readinessMatch(walkoverFor.id) && (
+                <WalkoverCheckinRecord data={readiness} match={readinessMatch(walkoverFor.id)!} />
+              )}
+
               {([1, 2] as const).map((side) => (
                 <button key={side}
                   disabled={savingWalkover}
                   onClick={() => recordWalkover(walkoverFor, side)}
                   className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-[var(--warning)] text-foreground font-bold text-sm transition disabled:opacity-50 text-left">
-                  <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Team {side} advances</span>
+                  <span className="flex items-center justify-between gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Team {side} advances
+                    {readinessMatch(walkoverFor.id) && walkoverHint(readiness, readinessMatch(walkoverFor.id)!) === side && (
+                      <span className="text-primary">Matches the record</span>
+                    )}
+                  </span>
                   {(side === 1 ? walkoverFor.team1_label : walkoverFor.team2_label) ?? `Team ${side}`}
                 </button>
               ))}
