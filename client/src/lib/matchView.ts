@@ -129,7 +129,7 @@ export function matchState(row: Pick<MatchRow, "status" | "scheduled_at" | "cour
   if (s === "completed" || s === "finished") return "completed";
   if (s === "walkover") return "walkover";
   if (s === "cancelled") return "cancelled";
-  if (s === "scheduled" || s === "pending") return row.scheduled_at || row.court_number ? "scheduled" : "unscheduled";
+  if (s === "scheduled" || s === "pending") return row.scheduled_at || courtKey(row.court_number) ? "scheduled" : "unscheduled";
   return "unknown";
 }
 
@@ -233,7 +233,7 @@ export function toMatchView(row: MatchRow, seeds?: SeedIndex): MatchView {
     statusLabel: stateLabel(state, row.status),
     games,
     scoreText: games.length === 0 && row.score ? row.score : null,
-    court: row.court_number?.trim() || null,
+    court: courtKey(row.court_number),
     scheduledAt: row.scheduled_at,
     startedAt: row.started_at,
     endedAt: row.ended_at,
@@ -281,7 +281,7 @@ export function filterMatches(views: MatchView[], f: MatchFilters): MatchView[] 
   return views.filter(
     (v) =>
       (!f.discipline || v.discipline === f.discipline) &&
-      (!f.court || v.court === f.court) &&
+      (!f.court || v.court === courtKey(f.court)) &&
       (!f.date || matchDay(v) === f.date),
   );
 }
@@ -344,11 +344,28 @@ export function buildCourtQueues(views: MatchView[]): CourtQueue[] {
     });
 }
 
+const COURT_NUMBER = /^(?:c(?:ourt)?[\s#.-]*)?0*(\d+)$/i;
+/** Values organisers type when no court is decided yet. */
+const COURT_PLACEHOLDER = /^(?:c|court|courts|tbd|tba|n\/?a|-+)$/i;
+
+/**
+ * One key per physical court: "1", "C1", "c 1" and "Court 1" are all "1", so
+ * filters and queues don't split one court in two. Placeholders ("Court",
+ * "TBD", "-") mean no court. Other names pass through ("Centre Court").
+ * Mirrors courtQueue.ts.
+ */
+export function courtKey(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim().replace(/\s+/g, " ");
+  if (!t || COURT_PLACEHOLDER.test(t)) return null;
+  const m = t.match(COURT_NUMBER);
+  return m ? m[1] : t;
+}
+
 /** "C1" / "court 1" / "1" → "Court 1"; other names pass through. Mirrors courtQueue.ts. */
 export function courtLabel(raw: string): string {
-  const t = raw.trim();
-  const m = t.match(/^(?:c(?:ourt)?\s*)?(\d+)$/i);
-  return m ? `Court ${m[1]}` : t;
+  const key = courtKey(raw);
+  if (!key) return raw.trim();
+  return /^\d+$/.test(key) ? `Court ${key}` : key;
 }
 
 // ── Lightweight adapter for surfaces that keep their own layout ─────────────

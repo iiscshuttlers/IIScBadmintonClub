@@ -2,7 +2,7 @@ import { CalendarClock, ChevronRight, Clock3, MapPin, Swords, Trophy } from "luc
 import { Link } from "wouter";
 import { matchPath, tournamentPath } from "@/lib/tournamentRoutes";
 import { type MyTournamentSummary } from "@/lib/homeRail";
-import type { MatchView } from "@/lib/matchView";
+import { courtLabel, type MatchView } from "@/lib/matchView";
 
 function scheduleLabel(view: MatchView): string {
   if (view.state === "live") return "Playing now";
@@ -22,7 +22,7 @@ function sideContext(view: MatchView, myPlayerId: string) {
 
 function compactMatchLabel(view: MatchView) {
   const event = view.discipline ?? view.categoryLabel;
-  return [event, view.roundName, view.court ? `Court ${view.court}` : null].filter(Boolean).join(" · ");
+  return [event, view.roundName, view.court ? courtLabel(view.court) : null].filter(Boolean).join(" · ");
 }
 
 export function MyTournamentCard({

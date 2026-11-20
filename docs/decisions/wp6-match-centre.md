@@ -84,3 +84,11 @@ Remaining gaps:
 - There are no team tournaments or rubbers in the data, so the rubber UI was checked only through `rubberView` unit tests.
 - Pulse cards have no seeds yet (the feed query doesn't load `tournament_participants`).
 - The live-scoring `MatchBroadcastCard` (club-wide point-by-point) is outside this model.
+
+## Follow-up 3: one court, one key (20 November 2026)
+
+- Organisers type the same court in different ways. IISM Trials 2026 has `"1"` (17 matches), `"C1"` (10) and `"Court"` (19). The court filter showed "Court 1", "Court 1", "Court", and choosing one hid the other half of that court's matches.
+- `courtKey()` in `matchView.ts` (mirrored in `supabase/functions/_shared/courtQueue.ts`) turns `1`, `01`, `C1`, `c 1`, `Court 1`, `Court-1` into `"1"`. Placeholders (`Court`, `C`, `TBD`, `TBA`, `N/A`, `-`) count as no court, so such a match reads "Not yet scheduled" when it also has no time. Named courts pass through unchanged.
+- `MatchView.court` is now that key, so filters, court queues, the venue scoreboard and Up Next all treat one court as one. Old `court=C1` links still work: the URL value goes through `courtKey()` too.
+- This replaces decision 7's server-side court filter. A single `court_number = …` match can't cover every spelling, so `useFinishedMatchViews` no longer filters by court and `filterMatches()` does it on the client. Results already loads every finished match, so nothing is lost.
+- Push alerts (`notify-up-next`) use the same key, so "you're up next" follows the merged queue. **This needs the edge function redeployed** to take effect. Alerts are deduplicated by (match, player, position), so a changed key can't send one twice.

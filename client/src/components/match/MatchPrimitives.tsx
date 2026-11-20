@@ -112,8 +112,13 @@ function fmt(iso: string | null): string | null {
   return d.toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-/** Scheduled, actual start and actual finish shown separately; never invented. */
-export function MatchTimes({ view, compact = false }: { view: Pick<MatchView, "scheduledAt" | "startedAt" | "endedAt" | "state">; compact?: boolean }) {
+type TimesView = Pick<MatchView, "scheduledAt" | "startedAt" | "endedAt" | "state">;
+
+/**
+ * Scheduled, actual start and actual finish as one line, or null when none
+ * is known (callers then hide the row or say "Not recorded").
+ */
+export function matchTimesText(view: TimesView, compact = false): string | null {
   const parts: string[] = [];
   const scheduled = fmt(view.scheduledAt);
   const started = fmt(view.startedAt);
@@ -123,8 +128,14 @@ export function MatchTimes({ view, compact = false }: { view: Pick<MatchView, "s
   // Compact cards show the actual start only while live; finish time always.
   if (started && (!compact || view.state === "live")) parts.push(`Started ${started}`);
   if (ended) parts.push(`Finished ${ended}`);
-  if (parts.length === 0) return null;
-  return <p className="text-xs text-muted-foreground">{parts.join(" · ")}</p>;
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/** Scheduled, actual start and actual finish shown separately; never invented. */
+export function MatchTimes({ view, compact = false }: { view: TimesView; compact?: boolean }) {
+  const text = matchTimesText(view, compact);
+  if (!text) return null;
+  return <p className="text-xs text-muted-foreground">{text}</p>;
 }
 
 /** Compact scorecard used by Match Centre, court queues and (incrementally) other surfaces. */
