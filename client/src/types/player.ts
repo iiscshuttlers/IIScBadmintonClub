@@ -21,6 +21,7 @@ export interface PlayerRow {
   pref_notify_serve?: boolean;
   pref_notify_whistle?: boolean;
   pref_notify_victory?: boolean;
+  pref_notify_gallery?: boolean;
   pref_notify_buddy_status?: boolean;
   quote: string | null;
   avatar_url: string;

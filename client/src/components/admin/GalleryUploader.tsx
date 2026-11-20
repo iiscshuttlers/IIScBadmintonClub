@@ -137,7 +137,12 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
       const updatedPhotos = [...remotePhotos, ...newItems];
       await saveRemoteGalleryImages(updatedPhotos);
 
-      toast.success(`Successfully uploaded ${files.length} image(s)!`);
+      toast.success(`Successfully uploaded ${files.length} image(s)!`, {
+        // The site_data trigger queues the alert; see migration 20261121100000.
+        description: finalSubfolder.trim()
+          ? `Members with alerts on for ${finalSubfolder.trim()} are notified in a few minutes.`
+          : "Photos outside an album don't send alerts.",
+      });
       setFiles([]);
       setIsOpen(false);
       // Invalidate the query so gallery refreshes immediately

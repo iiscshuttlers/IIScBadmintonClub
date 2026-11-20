@@ -5,10 +5,14 @@ import { Switch } from "@/components/ui/switch";
 import { playerService } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
+import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords, Images } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import { useQuery } from "@tanstack/react-query";
 import { enableWebPush } from "@/hooks/usePushNotifications";
+import { useGalleryAlerts } from "@/hooks/useGalleryAlerts";
+import { fetchRemoteGalleryImages } from "@/lib/galleryStorage";
+import { albumLabel, alertableAlbums } from "@/lib/galleryAlerts";
 
 interface NotificationSettingsModalProps {
   open: boolean;
@@ -249,6 +253,8 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             />
           </div>
 
+          <GalleryAlertSettings open={open} />
+
           {/* ── Activity Preferences ── */}
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
@@ -311,7 +317,67 @@ function CategoryItem({
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={title} className="shrink-0" />
+    </div>
+  );
+}
+
+/**
+ * New-photo alerts: one switch for the whole gallery (on by default) and a
+ * switch per album. The album bells in the gallery change the same settings.
+ */
+function GalleryAlertSettings({ open }: { open: boolean }) {
+  const alerts = useGalleryAlerts();
+  const { data: photos = [] } = useQuery({
+    queryKey: ["gallery-remote-photos"],
+    queryFn: fetchRemoteGalleryImages,
+    enabled: open,
+  });
+  const albums = alertableAlbums(photos);
+
+  const run = (write: Promise<void>, failure: string) => {
+    write.catch((err) => {
+      console.error(err);
+      toast(failure, { icon: "❌" });
+    });
+  };
+
+  return (
+    <div className="space-y-1">
+      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Gallery</h4>
+      <CategoryItem
+        icon={<Images className="w-4 h-4 text-info" />}
+        iconBg="bg-info/10"
+        title="New gallery photos"
+        description="When photos are added to an album, including new albums"
+        checked={alerts.enabled}
+        onCheckedChange={() => run(alerts.setEnabled(!alerts.enabled), "Failed to update preference")}
+      />
+      {alerts.enabled && albums.length > 0 && (
+        <div className="ml-12 mr-1 mt-1 space-y-2 border-l border-border pl-3">
+          <p className="text-[11px] text-muted-foreground">Albums</p>
+          {albums.map(({ album, category }) => {
+            const on = alerts.isOn(album);
+            const mutedForMe = alerts.isMutedForMe(album);
+            return (
+              <div key={album} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground truncate">{albumLabel(album)}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {mutedForMe ? "Muted for everyone by admins" : albumLabel(category)}
+                  </p>
+                </div>
+                <Switch
+                  checked={on}
+                  onCheckedChange={() => run(alerts.setAlbum(album, !on), `Couldn't update ${albumLabel(album)}`)}
+                  aria-label={`Alerts for ${albumLabel(album)}`}
+                  className="shrink-0"
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
