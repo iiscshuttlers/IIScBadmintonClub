@@ -15,7 +15,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 import nodemailer from "npm:nodemailer";
-import { getNotificationTargets } from "../_shared/notifications.ts";
+import { getNotificationTargets, type PreferenceColumn } from "../_shared/notifications.ts";
 import { isDeadToken } from "../_shared/fcm.ts";
 
 const corsHeaders = {
@@ -24,6 +24,32 @@ const corsHeaders = {
 };
 
 const BATCH_LIMIT = 50;
+
+interface DeliveryRule {
+  /** `notifications.type` for the in-app row (drives the icon in the bell menu). */
+  inAppType: string;
+  /** Player preference that gates push (and email). */
+  pref: PreferenceColumn;
+  /**
+   * In-app is the delivery of record and push is a bonus: a recipient list with
+   * no registered devices, or a failed device, does not fail the row.
+   */
+  pushOptional: boolean;
+  action?: string;
+}
+
+// Organiser-sent rows (no event_type) keep the original behaviour.
+const DEFAULT_RULE: DeliveryRule = { inAppType: "tournament_reminder", pref: "pref_notify_whistle", pushOptional: false };
+
+const EVENT_RULES: Record<string, DeliveryRule> = {
+  // Queued by the site_data trigger in migration 20261121150000_gallery_album_alerts.
+  gallery_photos: { inAppType: "gallery_photos", pref: "pref_notify_gallery", pushOptional: true, action: "view_gallery" },
+};
+
+function httpsImage(payload: unknown): string | null {
+  const image = (payload as { image?: unknown } | null)?.image;
+  return typeof image === "string" && image.startsWith("https://") ? image : null;
+}
 
 async function getFirebaseAccessToken(): Promise<{ token: string; projectId: string } | null> {
   const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
@@ -99,7 +125,7 @@ Deno.serve(async (req) => {
 
   const { data: due, error: dueErr } = await supabase
     .from("scheduled_notifications")
-    .select("id, title, body, channels, recipient_ids, tournament_id, match_id, event_type, event_version, link, expires_at")
+    .select("id, title, body, channels, recipient_ids, tournament_id, match_id, event_type, event_version, link, expires_at, payload")
     .eq("status", "pending")
     .lte("scheduled_at", now)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
@@ -129,6 +155,8 @@ Deno.serve(async (req) => {
       const recipients: string[] = Array.from(new Set((row.recipient_ids ?? []).filter(Boolean)));
       const channels: string[] = row.channels ?? [];
       const link = row.link ?? (row.tournament_id ? "/pulse" : "/pulse#announcements");
+      const rule = (row.event_type && EVENT_RULES[row.event_type]) || DEFAULT_RULE;
+      const image = httpsImage(row.payload);
 
       // ── in-app ──────────────────────────────────────────────────────────
       if (channels.includes("in_app") && recipients.length) {
@@ -136,7 +164,7 @@ Deno.serve(async (req) => {
           user_id: uid,
           title: row.title,
           message: row.body,
-          type: "tournament_reminder",
+          type: rule.inAppType,
           link,
           is_read: false,
         }));
@@ -146,7 +174,7 @@ Deno.serve(async (req) => {
 
       // ── email + push (both gated by player prefs) ───────────────────────
       if ((channels.includes("email") || channels.includes("push")) && recipients.length) {
-        const { pushTokens, emails } = await getNotificationTargets(supabase, recipients, "pref_notify_whistle");
+        const { pushTokens, emails } = await getNotificationTargets(supabase, recipients, rule.pref);
 
         if (channels.includes("email") && transporter) {
           await Promise.allSettled(
@@ -165,23 +193,23 @@ Deno.serve(async (req) => {
 
         if (channels.includes("push") && fcm) {
           const uniqueTokens = [...new Map(pushTokens.map((t) => [t.token, t])).values()];
-          if (uniqueTokens.length === 0) {
+          if (uniqueTokens.length === 0 && !rule.pushOptional) {
             throw new Error("push: no eligible device tokens");
           }
-          await Promise.all(
-            uniqueTokens.map(async (t) => {
+          const sends = uniqueTokens.map(async (t) => {
               const response = await fetch(`https://fcm.googleapis.com/v1/projects/${fcm.projectId}/messages:send`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${fcm.token}` },
                 body: JSON.stringify({
                   message: {
                     token: t.token,
-                    notification: { title: row.title, body: row.body },
+                    notification: { title: row.title, body: row.body, ...(image ? { image } : {}) },
                     android: { priority: "high", notification: { channel_id: "notify_whistle" } },
                     webpush: { headers: { Urgency: "high" }, notification: { icon: "icon-192.png", badge: "icon-192.png" } },
                     data: {
                       type: row.event_type ?? "tournament_reminder",
                       action: row.match_id ? "view_match" : "view_announcements",
+                      ...(rule.action ? { action: rule.action } : {}),
                       link,
                       ...(row.tournament_id ? { tournament_id: String(row.tournament_id) } : {}),
                       ...(row.match_id ? { match_id: String(row.match_id) } : {}),
@@ -197,9 +225,18 @@ Deno.serve(async (req) => {
                 }
                 throw new Error(`push: FCM ${response.status}: ${responseText.slice(0, 200)}`);
               }
-            }),
-          );
-        } else if (channels.includes("push") && recipients.length) {
+            });
+          if (rule.pushOptional) {
+            // Best effort: in-app already delivered; log device failures, keep the row "sent".
+            const failed = (await Promise.allSettled(sends)).filter((s): s is PromiseRejectedResult => s.status === "rejected");
+            if (failed.length) {
+              console.warn(`[dispatch] row ${row.id}: ${failed.length}/${sends.length} pushes failed:`, failed[0].reason?.message);
+            }
+          } else {
+            // Only record delivery after FCM accepts every request.
+            await Promise.all(sends);
+          }
+        } else if (channels.includes("push") && recipients.length && !rule.pushOptional) {
           throw new Error("push: Firebase credentials unavailable");
         }
       }

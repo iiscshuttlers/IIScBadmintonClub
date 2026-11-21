@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useHashTab } from "@/hooks/useHashTab";
 import {
   X,
@@ -15,11 +15,14 @@ import {
   Check,
   Heart,
   Bell,
+  BellOff,
   BellRing,
   Trophy,
   Download,
   Megaphone,
+  MegaphoneOff,
 } from "lucide-react";
+import { useGalleryAlerts } from "@/hooks/useGalleryAlerts";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Button } from "@/components/ui/button";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
@@ -118,21 +121,7 @@ export default function Legacy() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
   const [galleryLikes, setGalleryLikes] = useState<Record<string, string[]>>({});
-  const [subscribedTags, setSubscribedTags] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("gallery_subscriptions") || "[]")); }
-    catch { return new Set(); }
-  });
-  const [defaultSubscribedTags, setDefaultSubscribedTags] = useState<string[]>([]);
-  const [unsubscribedTags, setUnsubscribedTags] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("gallery_unsubscriptions") || "[]")); }
-    catch { return new Set(); }
-  });
-
-  const isSubscribed = useCallback((tag: string) => {
-    if (subscribedTags.has(tag)) return true;
-    if (defaultSubscribedTags.includes(tag) && !unsubscribedTags.has(tag)) return true;
-    return false;
-  }, [subscribedTags, defaultSubscribedTags, unsubscribedTags]);
+  const alerts = useGalleryAlerts();
 
   const handleLike = async (e: React.MouseEvent, path: string) => {
     e.stopPropagation();
@@ -166,59 +155,68 @@ export default function Legacy() {
     }
   };
 
-  const handleSubscribe = (e: React.MouseEvent, tag: string) => {
+  // Album bell: the member's own alerts for this album (on by default).
+  const handleAlbumAlert = async (e: React.MouseEvent, album: string) => {
     e.stopPropagation();
-    if (isSubscribed(tag)) {
-      setSubscribedTags(prev => {
-        const next = new Set(prev);
-        next.delete(tag);
-        localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
-        return next;
+    const label = formatText(album);
+    if (!alerts.signedIn) {
+      toast("Sign in to get photo alerts", {
+        description: `Members are notified when new photos are added to ${label}.`,
       });
-      if (defaultSubscribedTags.includes(tag)) {
-        setUnsubscribedTags(prev => {
-          const next = new Set(prev);
-          next.add(tag);
-          localStorage.setItem("gallery_unsubscriptions", JSON.stringify([...next]));
-          return next;
+      return;
+    }
+    if (!alerts.enabled) {
+      toast("Gallery photo alerts are off", {
+        description: "You turned them off in Notification settings.",
+        action: {
+          label: "Turn on",
+          onClick: () => {
+            alerts
+              .setEnabled(true)
+              .then(() => toast.success("Gallery photo alerts are on"))
+              .catch(() => toast.error("Couldn't turn photo alerts on. Try again."));
+          },
+        },
+      });
+      return;
+    }
+    const next = !alerts.isOn(album);
+    try {
+      await alerts.setAlbum(album, next);
+      if (next) {
+        toast.success(`Alerts on for ${label}`, { description: "You'll be notified when new photos are added." });
+      } else {
+        toast(`Alerts off for ${label}`, {
+          description: "You won't be notified about new photos in this album.",
+          icon: <BellOff className="w-4 h-4 text-muted-foreground" />,
         });
       }
-      toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-muted-foreground" /> });
-    } else {
-      setSubscribedTags(prev => {
-        const next = new Set(prev);
-        next.add(tag);
-        localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
-        return next;
-      });
-      if (defaultSubscribedTags.includes(tag)) {
-        setUnsubscribedTags(prev => {
-          const next = new Set(prev);
-          next.delete(tag);
-          localStorage.setItem("gallery_unsubscriptions", JSON.stringify([...next]));
-          return next;
-        });
-      }
-      toast.success("Subscribed to " + formatText(tag) + "! You'll be notified of new photos.");
+    } catch (err) {
+      console.error("Failed to save album alert", err);
+      toast.error(`Couldn't update alerts for ${label}. Try again.`);
     }
   };
 
-  const handleGlobalSubscribe = async (e: React.MouseEvent, tag: string) => {
+  // Album megaphone (admins): new photos alert everyone unless muted here.
+  const handleAlbumMute = async (e: React.MouseEvent, album: string) => {
     e.stopPropagation();
     if (!isAdmin) return;
-    
-    const isCurrentlyGlobal = defaultSubscribedTags.includes(tag);
-    const nextDefaults = isCurrentlyGlobal 
-      ? defaultSubscribedTags.filter(t => t !== tag)
-      : [...defaultSubscribedTags, tag];
-      
-    setDefaultSubscribedTags(nextDefaults);
-    toast(isCurrentlyGlobal ? "Removed global subscription for " + formatText(tag) : "Enabled global subscription for " + formatText(tag));
-    
+    const label = formatText(album);
+    const mute = !alerts.isMutedForEveryone(album);
     try {
-      await galleryService.updateDefaultSubscriptions(nextDefaults);
+      await alerts.setMutedForEveryone(album, mute);
+      if (mute) {
+        toast(`${label} muted for everyone`, {
+          description: "New photos here won't alert members, except those who turn this album's bell on.",
+        });
+      } else {
+        toast.success(`${label} alerts everyone again`, {
+          description: "Members are notified when new photos are added.",
+        });
+      }
     } catch (err) {
-      console.error("Failed to sync global subscription", err);
+      console.error("Failed to save album mute", err);
+      toast.error(`Couldn't update ${label}. Try again.`);
     }
   };
 
@@ -332,9 +330,6 @@ export default function Legacy() {
       .catch(() => {});
     fetchSiteData<Record<string, string[]>>("gallery_likes", null)
       .then((data) => { if (data) setGalleryLikes(data); })
-      .catch(() => {});
-    fetchSiteData<string[]>("gallery_default_subscriptions", null)
-      .then((data) => { if (data) setDefaultSubscribedTags(data); })
       .catch(() => {});
   }, []);
 
@@ -494,6 +489,9 @@ export default function Legacy() {
   if (selectedSubfolder !== "all" && !subfolders.includes(selectedSubfolder)) {
     subfolders.push(selectedSubfolder);
   }
+
+  // Only albums stored in site_data get new-photo alerts; bundled ones never change.
+  const alertAlbums = new Set(remotePhotos.map((p) => p.subfolder).filter(Boolean));
 
 
   // Read URL params to auto-select album
@@ -748,6 +746,22 @@ export default function Legacy() {
               </button>
               {subfolders.map((sub, i) => {
                 const isOddLast = (subfolders.length % 2 !== 0) && (i === subfolders.length - 1);
+                const label = formatText(sub);
+                const canAlert = alertAlbums.has(sub);
+                const showMute = canAlert && isAdmin;
+                const alertOn = alerts.signedIn && alerts.isOn(sub);
+                const mutedForEveryone = alerts.isMutedForEveryone(sub);
+                // On the selected (accent) pill, icons take the pill's text colour for contrast.
+                const selected = selectedSubfolder === sub;
+                const bellTitle = !alerts.signedIn
+                  ? `Sign in to get alerts for new photos in ${label}`
+                  : !alerts.enabled
+                    ? "Gallery photo alerts are off in Notification settings"
+                    : alertOn
+                      ? `Alerts on: you'll be notified about new photos in ${label}. Click to turn off.`
+                      : alerts.isMutedForMe(sub)
+                        ? `Muted for everyone by admins. Click to get alerts for ${label} anyway.`
+                        : `Alerts off for ${label}. Click to turn on.`;
                 return (
                   <div key={sub} className={`flex items-center gap-1 group relative w-full ${isOddLast ? 'col-span-2' : 'col-span-1'}`}>
                     <button
@@ -755,38 +769,60 @@ export default function Legacy() {
                         setSelectedSubfolder(sub);
                         updateUrlFilter(sub, true);
                       }}
-                      className={`w-full px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-semibold transition pr-10 truncate ${
+                      className={`w-full px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-semibold transition truncate ${
+                        showMute ? "pr-[4.5rem]" : canAlert ? "pr-10" : ""
+                      } ${
                         selectedSubfolder === sub
                           ? "bg-info text-on-accent shadow-md"
                           : "bg-muted text-muted-foreground hover:bg-muted-strong"
                       }`}
                     >
-                      {formatText(sub)}
+                      {label}
                     </button>
-                    {isAdmin && (
+                    {showMute && (
                       <button
-                        onClick={(e) => handleGlobalSubscribe(e, sub)}
+                        onClick={(e) => handleAlbumMute(e, sub)}
                         className={`absolute right-9 p-1.5 rounded-full transition-colors ${
-                          defaultSubscribedTags.includes(sub)
-                            ? "text-danger hover:text-danger/80 bg-danger/10"
-                            : "text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 sm:group-hover:opacity-100"
+                          selected
+                            ? mutedForEveryone
+                              ? "text-on-accent/70 hover:text-on-accent hover:bg-on-accent/15"
+                              : "text-on-accent bg-on-accent/15 hover:bg-on-accent/25"
+                            : mutedForEveryone
+                              ? "text-muted-foreground hover:text-danger hover:bg-danger/10"
+                              : "text-danger hover:text-danger/80 bg-danger/10"
                         }`}
-                        title={defaultSubscribedTags.includes(sub) ? "Disable Global Subscription" : "Enable Global Subscription (Everyone)"}
+                        title={mutedForEveryone
+                          ? `Muted for everyone: new photos in ${label} don't alert members. Click to alert everyone.`
+                          : `New photos in ${label} alert everyone. Click to mute this album for everyone.`}
+                        aria-label={mutedForEveryone ? `Alert everyone about ${label}` : `Mute ${label} for everyone`}
+                        aria-pressed={!mutedForEveryone}
                       >
-                        <Megaphone className="w-3.5 h-3.5" />
+                        {mutedForEveryone ? <MegaphoneOff className="w-3.5 h-3.5" /> : <Megaphone className="w-3.5 h-3.5" />}
                       </button>
                     )}
-                    <button
-                      onClick={(e) => handleSubscribe(e, sub)}
-                      className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
-                        isSubscribed(sub) 
-                          ? "text-primary hover:text-primary bg-primary/10" 
-                          : "text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 sm:group-hover:opacity-100"
-                      }`}
-                      title={isSubscribed(sub) ? "Unsubscribe" : "Subscribe to notifications"}
-                    >
-                      {isSubscribed(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
-                    </button>
+                    {canAlert && (
+                      <button
+                        onClick={(e) => handleAlbumAlert(e, sub)}
+                        className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
+                          selected
+                            ? alertOn
+                              ? "text-on-accent bg-on-accent/15 hover:bg-on-accent/25"
+                              : "text-on-accent/70 hover:text-on-accent hover:bg-on-accent/15"
+                            : alertOn
+                              ? "text-primary hover:text-primary bg-primary/10"
+                              : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        }`}
+                        title={bellTitle}
+                        aria-label={alertOn ? `Turn off alerts for ${label}` : `Turn on alerts for ${label}`}
+                        aria-pressed={alertOn}
+                      >
+                        {alertOn
+                          ? <BellRing className="w-3.5 h-3.5" />
+                          : alerts.signedIn
+                            ? <BellOff className="w-3.5 h-3.5" />
+                            : <Bell className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
                   </div>
                 );
               })}

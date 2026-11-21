@@ -405,3 +405,147 @@ test("tournament match back preserves filters and scroll context", async ({ page
   await expect(page).toHaveURL(new RegExp(`${filteredRoute.replace(/[?]/g, "\\?")}$`));
   expectNoPrivatePlayerReads(seen);
 });
+
+// ── Gallery photo alerts (migration 20261121150000_gallery_album_alerts) ──
+
+const GALLERY_PHOTOS = [
+  { id: "g1", title: "Final", category: "Tournaments", subfolder: "Open Tournament August 2026",
+    path: "gallery/Tournaments/Open Tournament August 2026/1.jpg", url: "https://res.cloudinary.com/demo/image/upload/v1/1.jpg" },
+  { id: "g2", title: "Team", category: "Tournaments", subfolder: "BPL-2024",
+    path: "gallery/Tournaments/BPL-2024/2.jpg", url: "https://res.cloudinary.com/demo/image/upload/v1/2.jpg" },
+];
+
+interface GalleryWrite { table: string; method: string; body: any; prefer: string }
+
+/** Stateful fakes for the gallery alert reads and writes, layered over installApi. */
+async function installGallery(page: Page) {
+  const state = {
+    muted: [] as string[],
+    overrides: [] as { album: string; subscribed: boolean }[],
+    enabled: true,
+    writes: [] as GalleryWrite[],
+  };
+  const preflight = (route: Route) =>
+    route.fulfill({ status: 204, headers: { ...CORS, "access-control-allow-methods": "*", "access-control-allow-headers": "*" } });
+  const wantsObject = (route: Route) => (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
+  const record = (table: string, route: Route) => {
+    const req = route.request();
+    const w = { table, method: req.method(), body: req.postDataJSON(), prefer: req.headers()["prefer"] ?? "" };
+    state.writes.push(w);
+    return w;
+  };
+
+  await page.route("**/res.cloudinary.com/**", (r) => r.fulfill({ status: 404, body: "" }));
+  await page.route("**/rest/v1/site_data**", async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return preflight(route);
+    if (req.method() === "POST") {
+      const { body } = record("site_data", route);
+      if (body?.key === "gallery_muted_albums") state.muted = body.value;
+      return route.fulfill({ status: 201, headers: CORS, body: "" });
+    }
+    const key = new URL(req.url()).searchParams.get("key")?.replace(/^eq\./, "");
+    const value = key === "gallery_images" ? GALLERY_PHOTOS : key === "gallery_muted_albums" ? state.muted : null;
+    const rows = value == null ? [] : [{ value }];
+    return fulfill(route, wantsObject(route) ? rows[0] ?? null : rows);
+  });
+  await page.route("**/rest/v1/gallery_album_subscriptions**", async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return preflight(route);
+    if (req.method() === "POST") {
+      const { body, prefer } = record("gallery_album_subscriptions", route);
+      for (const r of Array.isArray(body) ? body : [body]) {
+        const i = state.overrides.findIndex((o) => o.album === r.album);
+        if (i >= 0 && prefer.includes("ignore-duplicates")) continue;
+        if (i >= 0) state.overrides.splice(i, 1);
+        state.overrides.push({ album: r.album, subscribed: r.subscribed });
+      }
+      return route.fulfill({ status: 201, headers: CORS, body: "" });
+    }
+    return fulfill(route, state.overrides);
+  });
+  await page.route("**/rest/v1/players**", async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return preflight(route);
+    if (req.method() === "PATCH") {
+      const { body } = record("players", route);
+      if (typeof body?.pref_notify_gallery === "boolean") state.enabled = body.pref_notify_gallery;
+      return route.fulfill({ status: 204, headers: CORS, body: "" });
+    }
+    if (new URL(req.url()).searchParams.get("select") === "pref_notify_gallery") {
+      const row = { pref_notify_gallery: state.enabled };
+      return fulfill(route, wantsObject(route) ? row : [row]);
+    }
+    return route.fallback();
+  });
+  return state;
+}
+
+test("member controls new-photo alerts per album and for the whole gallery", async ({ page }) => {
+  await installApi(page, MEMBER);
+  const gallery = await installGallery(page);
+  // An opt-out made with the old browser-only bell.
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("legacy-seeded")) return;
+    sessionStorage.setItem("legacy-seeded", "1");
+    localStorage.setItem("gallery_unsubscriptions", JSON.stringify(["BPL-2024"]));
+  });
+
+  await page.goto("/legacy?filter=Open%20Tournament%20August%202026#albums");
+
+  // On by default, with no setup by the member.
+  const openOn = page.getByRole("button", { name: "Turn off alerts for Open Tournament August 2026" });
+  await expect(openOn).toBeVisible();
+  await expect(openOn).toHaveAttribute("aria-pressed", "true");
+
+  // The old opt-out moves to the server without overwriting newer choices, then leaves storage.
+  await expect(page.getByRole("button", { name: "Turn on alerts for BPL 2024" })).toBeVisible();
+  expect(gallery.writes.find((w) => w.table === "gallery_album_subscriptions")).toMatchObject({
+    prefer: expect.stringContaining("ignore-duplicates"),
+    body: [{ user_id: MEMBER, album: "BPL-2024", subscribed: false }],
+  });
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("gallery_unsubscriptions"))).toBeNull();
+
+  // Bundled albums never get uploads, so they have no bell; members can't mute for everyone.
+  await expect(page.getByRole("button", { name: "Spectrum 2026" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /alerts for Spectrum 2026/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /for everyone/ })).toHaveCount(0);
+
+  await openOn.click();
+  await expect(page.getByRole("button", { name: "Turn on alerts for Open Tournament August 2026" })).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(() => gallery.overrides).toContainEqual({ album: "Open Tournament August 2026", subscribed: false });
+
+  // Notification settings show the same choices and the gallery-wide switch.
+  await page.goto("/settings");
+  await page.getByRole("button", { name: /Notification Settings/ }).click();
+  const dialog = page.getByRole("dialog");
+  const master = dialog.getByRole("switch", { name: "New gallery photos" });
+  await expect(master).toBeChecked();
+  await expect(dialog.getByRole("switch", { name: "Alerts for Open Tournament August 2026" })).not.toBeChecked();
+  const bpl = dialog.getByRole("switch", { name: "Alerts for BPL 2024" });
+  await expect(bpl).not.toBeChecked();
+  await bpl.click();
+  await expect(bpl).toBeChecked();
+  await expect.poll(() => gallery.overrides).toContainEqual({ album: "BPL-2024", subscribed: true });
+
+  await master.click();
+  await expect(master).not.toBeChecked();
+  await expect.poll(() => gallery.enabled).toBe(false);
+  await expect(dialog.getByRole("switch", { name: /^Alerts for/ })).toHaveCount(0);
+});
+
+test("admin mutes an album's photo alerts for everyone", async ({ page }) => {
+  await installApi(page, ADMIN);
+  const gallery = await installGallery(page);
+  await page.goto("/legacy?filter=BPL-2024#albums");
+
+  const mute = page.getByRole("button", { name: "Mute BPL 2024 for everyone" });
+  await expect(mute).toHaveAttribute("aria-pressed", "true");
+  await mute.click();
+  await expect(page.getByRole("button", { name: "Alert everyone about BPL 2024" })).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(() => gallery.muted).toEqual(["BPL-2024"]);
+  expect(gallery.writes.find((w) => w.table === "site_data")?.body).toMatchObject({ key: "gallery_muted_albums", value: ["BPL-2024"] });
+  // A muted album is off for members (the admin included) until they turn its bell back on.
+  await expect(page.getByRole("button", { name: "Turn on alerts for BPL 2024" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Turn off alerts for Open Tournament August 2026" })).toBeVisible();
+});
