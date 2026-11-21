@@ -42,7 +42,7 @@ interface DeliveryRule {
 const DEFAULT_RULE: DeliveryRule = { inAppType: "tournament_reminder", pref: "pref_notify_whistle", pushOptional: false };
 
 const EVENT_RULES: Record<string, DeliveryRule> = {
-  // Queued by the site_data trigger in migration 20261121100000_gallery_album_alerts.
+  // Queued by the site_data trigger in migration 20261121150000_gallery_album_alerts.
   gallery_photos: { inAppType: "gallery_photos", pref: "pref_notify_gallery", pushOptional: true, action: "view_gallery" },
 };
 

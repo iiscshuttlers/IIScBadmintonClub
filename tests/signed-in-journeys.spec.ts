@@ -406,7 +406,7 @@ test("tournament match back preserves filters and scroll context", async ({ page
   expectNoPrivatePlayerReads(seen);
 });
 
-// ── Gallery photo alerts (migration 20261121100000_gallery_album_alerts) ──
+// ── Gallery photo alerts (migration 20261121150000_gallery_album_alerts) ──
 
 const GALLERY_PHOTOS = [
   { id: "g1", title: "Final", category: "Tournaments", subfolder: "Open Tournament August 2026",

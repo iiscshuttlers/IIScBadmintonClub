@@ -43,7 +43,7 @@ describe("WP10 integrated release gate", () => {
 
   it("treats push as best-effort only for gallery photo alerts", () => {
     const dispatcher = read("supabase/functions/dispatch-scheduled-notifications/index.ts");
-    const migration = read("supabase/migrations/20261121100000_gallery_album_alerts.sql");
+    const migration = read("supabase/migrations/20261121150000_gallery_album_alerts.sql");
 
     // Organiser/match rows keep the strict default; only gallery_photos opts out.
     expect(dispatcher).toMatch(/DEFAULT_RULE: DeliveryRule = \{[^}]*pushOptional: false/);

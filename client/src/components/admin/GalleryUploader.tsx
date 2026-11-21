@@ -138,7 +138,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
       await saveRemoteGalleryImages(updatedPhotos);
 
       toast.success(`Successfully uploaded ${files.length} image(s)!`, {
-        // The site_data trigger queues the alert; see migration 20261121100000.
+        // The site_data trigger queues the alert; see migration 20261121150000.
         description: finalSubfolder.trim()
           ? `Members with alerts on for ${finalSubfolder.trim()} are notified in a few minutes.`
           : "Photos outside an album don't send alerts.",

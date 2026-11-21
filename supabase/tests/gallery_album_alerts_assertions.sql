@@ -1,5 +1,5 @@
 -- gallery_album_alerts_assertions.sql
--- Verifies migration 20261121100000_gallery_album_alerts:
+-- Verifies migration 20261121150000_gallery_album_alerts:
 --   1. New photos queue one alert per album, on by default (new albums too).
 --   2. Recipients honour: uploader excluded, pref_notify_gallery off, per-album
 --      mute (subscribed=false), admin mute (gallery_muted_albums) with explicit

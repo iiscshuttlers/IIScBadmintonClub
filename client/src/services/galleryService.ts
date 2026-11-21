@@ -19,7 +19,7 @@ export const galleryService = {
     };
   },
 
-  // ── Photo alerts (migration 20261121100000_gallery_album_alerts) ──────────
+  // ── Photo alerts (migration 20261121150000_gallery_album_alerts) ──────────
 
   /** Albums an admin muted for everyone. */
   async fetchMutedAlbums(): Promise<string[]> {

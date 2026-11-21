@@ -1,5 +1,5 @@
 /**
- * Gallery photo alerts (migration 20261121100000_gallery_album_alerts).
+ * Gallery photo alerts (migration 20261121150000_gallery_album_alerts).
  *
  * Alerts are on by default for every album, including albums added later.
  * A member turns them off everywhere with `players.pref_notify_gallery`, or
