@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy, Timer } from "lucide-react";
+import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy, Timer, Images } from "lucide-react";
 import {
   fetchNotifications,
   subscribeToNotifications,
@@ -139,6 +139,8 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       case "achievement":
       case "milestone":
         return <Trophy className="w-5 h-5 text-gold" />;
+      case "gallery_photos":
+        return <Images className="w-5 h-5 text-info" />;
       default:
         return <Info className="w-5 h-5 text-info" />;
     }
