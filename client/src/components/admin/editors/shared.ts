@@ -42,6 +42,13 @@ export type VideoItem = {
   tournament?: string;
   chapters?: Chapter[];
   scoreLogs?: any[];
+  /** Hidden from the site. Kept in the list so the YouTube sync won't re-add it. */
+  hidden?: boolean;
+  /** "youtube" when added by the sync-youtube-videos edge function. */
+  source?: string;
+  /** Title exactly as on YouTube (auto-imported videos only). */
+  youtubeTitle?: string;
+  publishedAt?: string;
 };
 export type Player = {
   id: string;
