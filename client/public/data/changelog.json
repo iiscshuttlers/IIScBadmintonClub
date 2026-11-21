@@ -1,5 +1,20 @@
 [
   {
+    "versionCode": 434,
+    "versionName": "4.34",
+    "date": "2026-11-21T03:47:00.653Z",
+    "changes": [
+      "Five colour themes: pick yours in Settings",
+      "Tournament check-in: tap \"I'm here\" so organisers and umpires know who's ready",
+      "Match page: new Stats tab and a sticky score bar",
+      "Gallery: photo alerts for every album, with a setting to turn them off",
+      "Feed: automatic posts for each tournament stage",
+      "New club YouTube videos appear on their own",
+      "Win/loss records, head-to-head and diversity score fixed",
+      "Archived tournaments show as completed"
+    ]
+  },
+  {
     "versionCode": 433,
     "versionName": "4.33",
     "date": "2026-11-20T05:20:06.724Z",
