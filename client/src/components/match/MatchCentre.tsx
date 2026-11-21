@@ -23,6 +23,8 @@ import { MatchScorecard } from "@/components/match/MatchPrimitives";
 import { dayChipLabel, liveCourts } from "@/lib/matchGrouping";
 import { ChipStrip, type ChipOption } from "@/components/match/ChipStrip";
 import { ResultsByRound } from "@/components/match/ResultsByRound";
+import { useMatchPresence } from "@/hooks/queries/useCheckins";
+import { SpectatorChip } from "@/components/checkin/CheckinBits";
 
 /** Supabase caps a select at 1,000 rows; no club tournament comes close. */
 const RESULTS_ALL_LIMIT = 999;
@@ -179,7 +181,7 @@ function Loading() {
   );
 }
 
-function CourtQueues({ views }: { views: MatchView[] }) {
+function CourtQueues({ views, presence }: { views: MatchView[]; presence: Record<string, boolean> }) {
   const queues = useMemo(() => buildCourtQueues(views), [views]);
   const unassigned = useMemo(
     () => views.filter((v) => !v.court && (v.state === "live" || v.state === "scheduled")).sort(compareUpcoming),
@@ -222,7 +224,11 @@ function CourtQueues({ views }: { views: MatchView[] }) {
                 )}
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-1">Next</p>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Next</p>
+                  {/* Spectators see a flag only: never who is missing or why. */}
+                  {q.next && presence[q.next.id] !== undefined && <SpectatorChip ready={presence[q.next.id]} />}
+                </div>
                 {q.next ? <MatchScorecard view={q.next} showCourt={false} /> : <p className="text-sm text-muted-foreground">Nothing queued</p>}
               </div>
               {q.following.length > 0 && (
@@ -303,6 +309,7 @@ export function MatchCentre({
   const discipline = cat === "ALL" ? null : cat;
 
   const open = useOpenMatchViews(tournamentId);
+  const presence = useMatchPresence(tournamentId, mode === "live");
   // Results are grouped Final-first, which needs every round on the page:
   // paging by finish time would leave early rounds half-loaded. Rounds before
   // the quarter-finals render collapsed, so the full set stays light.
@@ -415,7 +422,7 @@ export function MatchCentre({
       ) : effectiveView === "upcoming" ? (
         list(upcoming, { title: "No upcoming matches", hint: "Matches appear once the draw is published." })
       ) : (
-        <CourtQueues views={filtered} />
+        <CourtQueues views={filtered} presence={presence} />
       )}
 
     </section>

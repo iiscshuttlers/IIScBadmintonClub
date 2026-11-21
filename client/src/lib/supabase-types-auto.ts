@@ -264,18 +264,21 @@ export type Database = {
           called_by: string | null
           id: string
           match_id: string
+          player_ids: string[] | null
         }
         Insert: {
           called_at?: string
           called_by?: string | null
           id?: string
           match_id: string
+          player_ids?: string[] | null
         }
         Update: {
           called_at?: string
           called_by?: string | null
           id?: string
           match_id?: string
+          player_ids?: string[] | null
         }
         Relationships: [
           {
@@ -1982,6 +1985,51 @@ export type Database = {
           },
         ]
       }
+      tournament_checkins: {
+        Row: {
+          tournament_id: string
+          player_id: string
+          state: string
+          checked_in_at: string
+          break_until: string | null
+          break_started_at: string | null
+          here_since: string
+          renewed_at: string
+          checked_in_by: string | null
+          expires_at: string
+          expiry_warned_for: string | null
+          updated_at: string
+        }
+        Insert: {
+          tournament_id: string
+          player_id: string
+          state?: string
+          checked_in_at?: string
+          break_until?: string | null
+          break_started_at?: string | null
+          here_since?: string
+          renewed_at?: string
+          checked_in_by?: string | null
+          expires_at?: string
+          expiry_warned_for?: string | null
+          updated_at?: string
+        }
+        Update: {
+          tournament_id?: string
+          player_id?: string
+          state?: string
+          checked_in_at?: string
+          break_until?: string | null
+          break_started_at?: string | null
+          here_since?: string
+          renewed_at?: string
+          checked_in_by?: string | null
+          expires_at?: string
+          expiry_warned_for?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tournament_matches: {
         Row: {
           advances_to_match: string | null
@@ -3668,6 +3716,19 @@ export type Database = {
           p_singles_matches: number
         }
         Returns: number
+      }
+      tournament_checkin: {
+        Args: {
+          p_tournament_id: string
+          p_player_id: string
+          p_action: string
+          p_break_minutes?: number | null
+        }
+        Returns: Json
+      }
+      tournament_match_presence: {
+        Args: { p_tournament_id: string }
+        Returns: { match_id: string; ready: boolean }[]
       }
       can_umpire_match: {
         Args: { p_match_id: string; p_uid: string }

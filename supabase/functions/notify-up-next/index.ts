@@ -9,7 +9,8 @@ import { computeQueueAlerts, queueAlertText, LIVE_STATUSES, type QueueMatch } fr
  * (migration 20261015100000_court_queue_alerts.sql). For every court with a
  * match in progress, tells the players 1 and 2 places down the queue.
  * Each (match, player, position) is alerted at most once — court_queue_alerts.
- * Exits after one cheap query when no tournament match is live.
+ * Exits after one cheap query when no tournament match is live. First it runs
+ * process_tournament_checkins() (check-in breaks, expiry, "match ready").
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -59,6 +60,17 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async () => {
   try {
+    // 0. Player check-ins (migration 20261120160000): end timed breaks
+    //    ("Your break is over"), warn 10 min before expiry ("Still at the
+    //    venue?"), remove expired check-ins and push "<match> is ready" to the
+    //    umpire or referees. Runs before the live check below because
+    //    check-ins matter before the first match goes on court. A failure here
+    //    must not stop the court-queue alerts.
+    let checkins: unknown = null;
+    const { data: processed, error: checkinErr } = await supabase.rpc("process_tournament_checkins");
+    if (checkinErr) console.error("process_tournament_checkins failed", checkinErr);
+    else checkins = processed;
+
     // 1. Which tournaments have something live on a court right now?
     // Trashed tournaments keep their matches; never alert about them.
     const { data: live, error: liveErr } = await supabase
@@ -69,7 +81,7 @@ Deno.serve(async () => {
       .not("court_number", "is", null);
     if (liveErr) throw liveErr;
     const tournamentIds = Array.from(new Set((live ?? []).map((r) => r.tournament_id)));
-    if (tournamentIds.length === 0) return json({ success: true, sent: 0, live: 0 });
+    if (tournamentIds.length === 0) return json({ success: true, sent: 0, live: 0, checkins });
 
     // 2. Their open matches on courts → queue alerts.
     const { data: open, error: openErr } = await supabase
@@ -83,7 +95,7 @@ Deno.serve(async () => {
     if (openErr) throw openErr;
 
     const alerts = computeQueueAlerts((open ?? []) as QueueMatch[]);
-    if (alerts.length === 0) return json({ success: true, sent: 0, live: tournamentIds.length });
+    if (alerts.length === 0) return json({ success: true, sent: 0, live: tournamentIds.length, checkins });
 
     // 3. Dedupe: skip anyone already told about this match at this position or closer.
     const matchIds = Array.from(new Set(alerts.map((a) => a.match.id)));
@@ -170,7 +182,7 @@ Deno.serve(async () => {
       }
     }
 
-    return json({ success: true, sent, live: tournamentIds.length });
+    return json({ success: true, sent, live: tournamentIds.length, checkins });
   } catch (error: any) {
     console.error("notify-up-next failed:", error);
     return json({ success: false, error: error?.message ?? String(error) }, 500);

@@ -23,6 +23,7 @@ import { MatchInfoTab } from "@/components/match/MatchInfoTab";
 import { MatchPointsTab } from "@/components/match/MatchPointsTab";
 import { MatchScoreStats } from "@/components/match/MatchScoreStats";
 import { useMatchPointLog } from "@/hooks/queries/useMatchPointLog";
+import { MatchWhosHere } from "@/components/checkin/MatchWhosHere";
 import { decodePoints, nextServer } from "@/lib/pointLog";
 import { MatchStickyHeader } from "@/components/match/MatchStickyHeader";
 
@@ -160,6 +161,9 @@ export default function TournamentMatchPage() {
           </p>
         </article>
         <MatchStickyHeader view={view} watch={scoreCardRef} serving={serving} />
+
+        {/* Check-in: who is here and when they were called (signed-in only). */}
+        <MatchWhosHere tournamentId={t.id} matchId={view.id} />
 
         <ScrollTabs
           label="Match sections"

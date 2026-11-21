@@ -6,6 +6,7 @@ import { fetchRail } from "@/components/home/HomeMatchRail";
 import { MyTournamentCard } from "@/components/home/MyTournamentCard";
 import { toMatchView } from "@/lib/matchView";
 import { buildMyTournamentSummary } from "@/lib/homeRail";
+import { useMyTournamentCheckin } from "@/components/checkin/PlayerCheckin";
 
 /**
  * "Your next match" for a signed-in player, shown above a tournament's tabs.
@@ -31,11 +32,13 @@ export function TournamentNextMatch({ tournamentId, tournamentName }: { tourname
       .map((r) => toMatchView(r));
     return buildMyTournamentSummary(views, myPlayerId ?? null);
   }, [q.data, tournamentId, myPlayerId]);
+  // "I'm here" check-in and opponent/partner status (signed-in players only).
+  const checkin = useMyTournamentCheckin(summary ? tournamentId : null, myPlayerId ?? null);
 
   if (!summary || !myPlayerId) return null;
   return (
     <div className="mb-4 text-left">
-      <MyTournamentCard summary={summary} myPlayerId={myPlayerId} tournamentNames={{ [tournamentId]: tournamentName }} />
+      <MyTournamentCard summary={summary} myPlayerId={myPlayerId} tournamentNames={{ [tournamentId]: tournamentName }} checkin={checkin} />
     </div>
   );
 }

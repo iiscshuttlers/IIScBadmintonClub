@@ -4,6 +4,8 @@ import { Maximize2, Minimize2, ArrowLeft, WifiOff, RefreshCw, LayoutGrid, Monito
 import { useOpenMatchViews } from "@/hooks/queries/useMatchViews";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { buildCourtQueues, courtLabel, type MatchView } from "@/lib/matchView";
+import { useMatchPresence } from "@/hooks/queries/useCheckins";
+import { SpectatorChip } from "@/components/checkin/CheckinBits";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { isVenueDataStale, venueTournamentUrl } from "@/lib/venueDisplay";
 
@@ -24,6 +26,8 @@ export default function VenueScoreboardPage() {
 
   const open = useOpenMatchViews(tournamentId);
   const queues = useMemo(() => buildCourtQueues(open.views), [open.views]);
+  // "Both sides here" for each court's next match. A flag only, no names.
+  const presence = useMatchPresence(tournamentId);
 
   const availableCourts = useMemo(() => {
     return Array.from(new Set(queues.map((q) => q.court))).sort((a, b) =>
@@ -170,7 +174,7 @@ export default function VenueScoreboardPage() {
             }`}
           >
             {displayedQueues.map((q) => (
-              <VenueCourtCard key={q.court} court={q.court} playing={q.playing[0] ?? null} next={q.next} />
+              <VenueCourtCard key={q.court} court={q.court} playing={q.playing[0] ?? null} next={q.next} nextReady={q.next ? presence[q.next.id] : undefined} />
             ))}
           </div>
         )}
@@ -196,10 +200,13 @@ function VenueCourtCard({
   court,
   playing,
   next,
+  nextReady,
 }: {
   court: string;
   playing: MatchView | null;
   next: MatchView | null;
+  /** Both sides here (undefined: no check-in data for this match). */
+  nextReady?: boolean;
 }) {
   return (
     <div className="flex flex-col bg-card border border-border rounded-3xl overflow-hidden shadow-2xl">
@@ -252,9 +259,12 @@ function VenueCourtCard({
         {/* Up Next Preview */}
         {next && (
           <div className="pt-4 border-t border-border/80">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">
-              Up Next on this court
-            </p>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Up Next on this court
+              </p>
+              {nextReady !== undefined && <SpectatorChip ready={nextReady} />}
+            </div>
             <p className="text-sm font-bold text-soft truncate">
               {next.sides[0].label} vs {next.sides[1].label}
             </p>

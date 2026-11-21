@@ -10,6 +10,8 @@ import { SendReminderSheet } from "@/components/tournament/SendReminderSheet";
 import { TieUmpireConsole } from "@/components/umpire/TieUmpireConsole";
 import { TeamLogo } from "@/components/events/TeamLogo";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
+import { useTournamentReadiness } from "@/hooks/queries/useCheckins";
+import { isReadyNow } from "@/components/tournament/AllMatchesList";
 import {
   Loader2, Gavel, Radio, Clock, CheckCircle2, AlertTriangle, CalendarClock,
   MapPin, Bell, Search, RefreshCw, Swords, Flag, LayoutGrid, Eye,
@@ -48,7 +50,7 @@ interface RefTournament extends TournamentThemeInput {
   tournament_type?: string;
 }
 
-type StatusFilter = "all" | "attention" | "live" | "upcoming" | "completed";
+type StatusFilter = "all" | "attention" | "ready" | "live" | "upcoming" | "completed";
 
 export function RefereeDashboard({ tournament }: { tournament: RefTournament }) {
   const isTeamEvent = tournament.format_family === "TEAM" || tournament.tournament_type === "TEAM";
@@ -58,6 +60,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>("attention");
+  // Check-in readiness for the "Ready" filter (shared with Umpire and Organiser panels).
+  const readiness = useTournamentReadiness(tournament.id);
   const [category, setCategory] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   const [notifyOpen, setNotifyOpen] = useState(false);
@@ -170,6 +174,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const filteredMatches = useMemo(() => {
     let list = matches;
     if (filter === "attention") list = attentionItems;
+    else if (filter === "ready") list = list.filter((m) => isReadyNow(readiness, m.id));
     else if (filter === "live") list = list.filter((m) => m.status === "in_progress");
     else if (filter === "upcoming") list = list.filter((m) => m.status === "scheduled");
     else if (filter === "completed") list = list.filter((m) => m.status === "completed");
@@ -182,7 +187,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
       );
     }
     return list;
-  }, [matches, attentionItems, filter, category, search]);
+  }, [matches, attentionItems, filter, category, search, readiness]);
 
   const attentionTies = useMemo(() => {
     return ties.filter((t: any) => 
@@ -257,6 +262,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
 
   const FILTERS: { key: StatusFilter; label: string; count: number }[] = [
     { key: "attention", label: "Needs attention", count: matches.length > 0 ? attentionItems.length : attentionTies.length },
+    // Every player checked in, nobody busy or resting (lib/matchReadiness).
+    { key: "ready", label: "Ready", count: matches.filter((m) => isReadyNow(readiness, m.id)).length },
     { key: "live", label: "Live", count: stats.live },
     { key: "upcoming", label: "Upcoming", count: stats.upcoming },
     { key: "completed", label: "Completed", count: stats.completed },

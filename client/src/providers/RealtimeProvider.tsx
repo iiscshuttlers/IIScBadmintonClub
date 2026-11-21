@@ -61,8 +61,11 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => {
           jitteredInvalidate(["tie_matches"]);
           jitteredInvalidate(["tournament_matches"]);
+          // A match going live or finishing changes who is free to play.
+          jitteredInvalidate(["match_presence"]);
         }
       )
+
 
       // "Available to play now" presence — manual toggle, no location. (#31)
       .on(
@@ -95,9 +98,33 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
 
+    // Tournament check-ins ("I'm here", breaks) and court calls (migration
+    // 20261120160000). Signed-in only (RLS); signed-out spectators get the
+    // presence chip from tournament_match_presence(), refreshed with the
+    // matches above. Its own channel: Realtime rejects a whole channel that
+    // names a table outside the publication, so if the app ships before the
+    // migration only this channel fails, not notifications or live scores.
+    const checkins = supabase
+      .channel("tournament-checkins")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_checkins" },
+        () => {
+          jitteredInvalidate(["tournament_checkins"]);
+          jitteredInvalidate(["match_presence"]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "court_calls" },
+        () => jitteredInvalidate(["court_calls"])
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(tournamentStatus);
+      supabase.removeChannel(checkins);
     };
   }, [queryClient, profile?.id]);
 

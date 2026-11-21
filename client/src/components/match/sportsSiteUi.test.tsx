@@ -18,6 +18,10 @@ vi.mock("@/hooks/queries/useMatchViews", () => ({
   useFinishedMatchViews: () => ({ views: [], status: "ready", updatedAt: 0, refreshFailed: false, retry: () => {}, hasMore: false }),
 }));
 
+// Spectator "Both sides here" chip (tournament_match_presence): a flag per match id.
+const presence = vi.hoisted(() => ({ byMatch: {} as Record<string, boolean> }));
+vi.mock("@/hooks/queries/useCheckins", () => ({ useMatchPresence: () => presence.byMatch }));
+
 import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
 import { FormChips } from "@/components/match/MatchPrimitives";
 import { PulseMatchItem } from "@/components/pulse/PulseMatchItem";
@@ -233,6 +237,21 @@ describe("MatchCentre", () => {
     expect(screen.getByRole("heading", { name: "Court 1" })).toBeInTheDocument();
     expect(screen.getByText("Playing")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
+    expect(screen.queryByText("Both sides here")).not.toBeInTheDocument();
+  });
+
+  it("shows spectators only a both-sides-here flag on the next match", () => {
+    liveViews.views = [
+      view({ id: "m1", court: "1", state: "live" }),
+      view({ id: "m2", court: "1", state: "scheduled", scheduledAt: "2026-11-14T11:00:00Z" }),
+      view({ id: "m3", court: "2", state: "scheduled", scheduledAt: "2026-11-14T11:30:00Z" }),
+    ];
+    presence.byMatch = { m2: true, m3: false };
+    render(<MatchCentre tournamentId="t1" mode="live" />);
+    fireEvent.click(screen.getByRole("tab", { name: /Courts/i }));
+    expect(screen.getByText("Both sides here")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for players")).toBeInTheDocument();
+    presence.byMatch = {};
   });
 
   it("warns when multiple matches are marked live on the same court simultaneously", () => {

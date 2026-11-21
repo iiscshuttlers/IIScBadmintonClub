@@ -105,6 +105,27 @@ export function findRestConflicts(
   return out;
 }
 
+/**
+ * When a player has had the minimum rest after their last finished match
+ * (epoch ms), or null when they haven't finished a match yet. Only actual end
+ * times count; walkovers aren't played, so they don't need rest. The
+ * check-in readiness rule (lib/matchReadiness.ts and
+ * tournament_checkin_readiness() in SQL) uses this.
+ */
+export function restEndsAt(
+  playerId: string,
+  matches: ScheduledMatch[],
+  minRestMinutes: number = DEFAULT_MIN_REST_MINS,
+): number | null {
+  let last = Number.NEGATIVE_INFINITY;
+  for (const m of matches) {
+    if (m.status !== "completed" || !ids(m).includes(playerId)) continue;
+    const end = timestamp(m.ended_at);
+    if (Number.isFinite(end) && end > last) last = end;
+  }
+  return Number.isFinite(last) ? last + minRestMinutes * 60_000 : null;
+}
+
 /** Best-effort player name for a warning: the side label containing that player. */
 export function playerSideLabel(m: ScheduledMatch, playerId: string): string {
   if (m.player1_id === playerId || m.player3_id === playerId) return m.team1_label || "A player";
