@@ -34,13 +34,23 @@ export function MatchStatusBadge({ view }: { view: Pick<MatchView, "state" | "st
   );
 }
 
-/** Shuttlecock (cork down, feathers up); decorative, callers add the words. */
-export function ShuttleIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+/**
+ * Shuttlecock in flight (BWF style): three feathers fanning out with clear
+ * gaps, the tied band and a rounded cork, tilted so the cork leads. Solid
+ * fill in currentColor; three feathers (not more) so the gaps still show at
+ * 16px. Decorative: callers add the words.
+ */
+export function ShuttleIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M8.5 15 5 3h14l-3.5 12" />
-      <path d="M10 3.5l1 11.5M14 3.5l-1 11.5" />
-      <path d="M8.5 15h7v1.5a3.5 3.5 0 0 1-7 0z" fill="currentColor" />
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      {/* Drawn upright, then tilted 30° and scaled to fill the box, centred. */}
+      <g transform="translate(12 12) scale(1.22) translate(-14.11 -10.56) rotate(30 12 12)">
+        <path d="M9.8 14.4 5.5 4.2Q7.55 2.4 9.6 4.2L11 14.4Z" />
+        <path d="M11.4 14.4 9.95 4.2Q12 2.4 14.05 4.2L12.6 14.4Z" />
+        <path d="M13 14.4 14.4 4.2Q16.45 2.4 18.5 4.2L14.2 14.4Z" />
+        <rect x="9" y="14" width="6" height="2" rx="0.6" />
+        <path d="M9.2 16.6h5.6v.4a2.8 2.8 0 0 1-5.6 0Z" />
+      </g>
     </svg>
   );
 }
@@ -86,7 +96,7 @@ export function MatchSideRow({
           <SeedMark seed={side.seed} />
           {serving && (
             <span className="inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider text-live" title="Serving">
-              <ShuttleIcon className="w-3.5 h-3.5" />
+              <ShuttleIcon className="w-4 h-4" />
               Serve
             </span>
           )}

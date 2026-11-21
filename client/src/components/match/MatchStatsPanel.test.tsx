@@ -9,6 +9,7 @@ vi.mock("@/hooks/queries/usePlayerAvatars", () => ({
 
 import { MatchPointsTab, rallyTicks } from "@/components/match/MatchPointsTab";
 import { MatchStickyHeader } from "@/components/match/MatchStickyHeader";
+import { MatchScoreStats } from "@/components/match/MatchScoreStats";
 
 function view(p: Partial<MatchView> = {}): MatchView {
   return {
@@ -130,5 +131,18 @@ describe("MatchStickyHeader", () => {
   it("shows games won once decided", () => {
     render(<MatchStickyHeader view={view()} watch={{ current: null }} serving={null} />);
     expect(screen.getByTestId("match-sticky-header")).toHaveTextContent("1–1");
+  });
+});
+
+describe("MatchScoreStats (no point log)", () => {
+  it("shows points won, takeaways, each game and head-to-head from the scores", () => {
+    render(<MatchScoreStats view={view({ games: [{ side1: 24, side2: 22 }, { side1: 21, side2: 17 }] })} />);
+    expect(screen.getByRole("note")).toHaveTextContent("Only the game scores were recorded for this match, so these stats come from them.");
+    expect(screen.getByText("Asha won 45 points (54%), Bala won 39 (46%), out of 84.")).toBeInTheDocument();
+    expect(screen.getByText("Asha won in straight games.")).toBeInTheDocument();
+    expect(screen.getByText("Game 1: Asha 24, Bala 22, went to extra points.")).toBeInTheDocument();
+    expect(screen.getByText("Games won: Asha 2, Bala 0.")).toBeInTheDocument();
+    // Rally-by-rally sections need a point log.
+    expect(screen.queryByRole("img", { name: /Who led after each point/ })).toBeNull();
   });
 });

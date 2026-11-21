@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import React, { useMemo, useState } from "react";
 import { cssVar } from "@/lib/themeColors";
 import {
@@ -289,14 +290,7 @@ export function PersonalStatsSection({
 
   const isWin = (m: any) => {
     if (typeof m.won === "boolean") return m.won;
-    const pId = playerId;
-    if (!pId) return false;
-    const isTeam1 = m.player1_id === pId || m.team1_partner_id === pId || m.player1?.id === pId;
-    if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-    const isTeam1Winner = m.winner_side
-      ? m.winner_side === 1
-      : m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id || m.winner_id === m.player1?.id;
-    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+    return playerWon(m, playerId) === true;
   };
 
   const matchesToUse = fullMatches && fullMatches.length > 0 ? fullMatches : matches;

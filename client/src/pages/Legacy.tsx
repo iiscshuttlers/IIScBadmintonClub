@@ -306,7 +306,8 @@ export default function Legacy() {
 
   const { data: queryVideos = [] } = useQuery({
     queryKey: ["gallery-videos"],
-    queryFn: () => fetchSiteData<any[]>("videos", "videos.json").then((d) => d || []),
+    queryFn: () =>
+      fetchSiteData<any[]>("videos", "videos.json").then((d) => (d || []).filter((v) => !v.hidden)),
     refetchInterval: (query) => (query.state.error ? false : 120_000),
   });
 

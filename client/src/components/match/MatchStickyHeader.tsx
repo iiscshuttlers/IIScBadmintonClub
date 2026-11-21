@@ -72,11 +72,11 @@ function ScoreMini({ view, serving }: { view: MatchView; serving: 1 | 2 | null }
     return (
       <div className="text-center">
         <div className="flex items-center justify-center gap-1.5 font-mono text-lg font-black tabular-nums leading-none">
-          <span className="w-3.5 text-live">{serving === 1 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
+          <span className="w-4 text-live">{serving === 1 && <ShuttleIcon className="w-4 h-4" />}</span>
           <span>{cur.side1}</span>
           <span className="text-muted-foreground">–</span>
           <span>{cur.side2}</span>
-          <span className="w-3.5 text-live">{serving === 2 && <ShuttleIcon className="w-3.5 h-3.5" />}</span>
+          <span className="w-4 text-live">{serving === 2 && <ShuttleIcon className="w-4 h-4" />}</span>
         </div>
         <p className="mt-0.5 text-[10px] font-black uppercase tracking-wider text-live">G{games.length} · Live</p>
       </div>

@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { BarChart3, Target, Users, Zap, TrendingUp, Clock, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -7,7 +8,9 @@ interface Match {
   category?: string;
   score: string;
   created_at: string;
-  winner_id: string;
+  winner_id: string | null;
+  /** 1 = player1/team1 partner side, 2 = player2/team2 partner side. */
+  winner_side?: number | null;
   player1_id: string;
   player2_id: string;
   team1_partner_id?: string;
@@ -33,25 +36,25 @@ function parseScore(score: string): number[][] {
   }).filter((p) => p.length === 2);
 }
 
+/** The result comes from winner_side (lib/matchResult); winner_id is NULL when a guest wins. */
 function isWinner(match: Match, playerId: string): boolean {
-  return match.winner_id === match.player1_id
-    ? match.player1_id === playerId || match.team1_partner_id === playerId
-    : match.player2_id === playerId || match.team2_partner_id === playerId;
+  return playerWon(match, playerId) === true;
 }
 
-function uniqueOpponents(matches: Match[], playerId: string): Set<string> {
+/**
+ * Distinct opponents, and how many opponents were faced in total (2 per
+ * doubles match, 1 per singles, 0 for a bye). Unique ÷ faced is at most 1.
+ */
+function opponentCounts(matches: Match[], playerId: string): { unique: number; faced: number } {
   const ids = new Set<string>();
+  let faced = 0;
   for (const m of matches) {
     const myTeam = m.player1_id === playerId || m.team1_partner_id === playerId ? 1 : 2;
-    if (myTeam === 1) {
-      if (m.player2_id) ids.add(m.player2_id);
-      if (m.team2_partner_id) ids.add(m.team2_partner_id);
-    } else {
-      if (m.player1_id) ids.add(m.player1_id);
-      if (m.team1_partner_id) ids.add(m.team1_partner_id);
-    }
+    const opps = (myTeam === 1 ? [m.player2_id, m.team2_partner_id] : [m.player1_id, m.team1_partner_id]).filter(Boolean);
+    faced += opps.length;
+    for (const id of opps) ids.add(id as string);
   }
-  return ids;
+  return { unique: ids.size, faced };
 }
 
 function winProb(myElo: number, oppElo: number): number {
@@ -193,14 +196,15 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo, allPlayers
 
   /* ── Opponent Diversity ──────────────────────────────────────── */
   const diversityStats = useMemo(() => {
-    const opponents = uniqueOpponents(confirmedMatches, playerId);
-    const total = confirmedMatches.length;
-    const score = total > 0 ? Math.round((opponents.size / total) * 100) : 0;
+    // Share of the opponents faced who were different people. Dividing by
+    // matches instead let doubles players pass 100 (two opponents a match).
+    const { unique, faced } = opponentCounts(confirmedMatches, playerId);
+    const score = faced > 0 ? Math.round((unique / faced) * 100) : 0;
     let label = "Versatile";
     let color = "text-primary";
     if (score < 40) { label = "Specialist"; color = "text-warning"; }
     else if (score > 70) { label = "Explorer"; color = "text-info"; }
-    return { uniqueOpponents: opponents.size, total, diversityScore: score, label, color };
+    return { uniqueOpponents: unique, faced, diversityScore: score, label, color };
   }, [confirmedMatches, playerId]);
 
   /* ── Match Pace Analytics ────────────────────────────────────── */
@@ -350,9 +354,11 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo, allPlayers
           </div>
           <div className={`text-sm font-black ${diversityStats.color} mb-2`}>{diversityStats.label}</div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div className="h-full bg-info rounded-full transition-all" style={{ width: `${Math.min(100, diversityStats.diversityScore)}%` }} />
+            <div className="h-full bg-info rounded-full transition-all" style={{ width: `${diversityStats.diversityScore}%` }} />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">Diversity score: {diversityStats.diversityScore}/100</p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Diversity score: {diversityStats.diversityScore}/100 · {diversityStats.uniqueOpponents} different of {diversityStats.faced} opponents faced
+          </p>
         </div>
 
         {/* Match Pace */}

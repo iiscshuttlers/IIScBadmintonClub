@@ -1,23 +1,13 @@
-import { useState } from "react";
+import { playerWon } from "@/lib/matchResult";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { shareMatch } from "@/lib/shareMatch";
+import { compareSides } from "@/lib/comparison";
+import { fetchComparisonRows } from "@/services/comparisonService";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
-
-// Duplicate the small helper function for encapsulation
-function matchParticipantIds(match: any): string[] {
-  return [
-    match.player1_id,
-    match.player2_id,
-    match.team1_partner_id,
-    match.team2_partner_id,
-  ].filter(Boolean);
-}
-
-function isMatchParticipant(match: any, playerId?: string | null): boolean {
-  return !!playerId && matchParticipantIds(match).includes(playerId);
-}
 
 function getRoundLabel(m: any): string | null {
   if (m.is_friendly !== false) return null; // friendly matches don't have rounds usually, or we hide them
@@ -66,6 +56,22 @@ export function MatchHistorySection({
     "all" | "friendly" | "tournament"
   >("tournament");
 
+  // Head-to-head vs the signed-in viewer: only matches on opposite sides,
+  // decided by winner_side, byes and walkovers not counted. Same query key
+  // and rule as the full page (/h2h?a=<you>&b=<them>), so the numbers agree.
+  const viewerId: string | null =
+    ownPlayerProfile?.id && ownPlayerProfile.id !== id ? ownPlayerProfile.id : null;
+  const h2hQuery = useQuery({
+    queryKey: ["tournament_matches", "comparison", viewerId ?? "", id],
+    queryFn: () => fetchComparisonRows({ ids: [viewerId as string] }, { ids: [id] }),
+    enabled: !!viewerId,
+    staleTime: 60_000,
+  });
+  const h2h = useMemo(
+    () => (viewerId && h2hQuery.data ? compareSides(h2hQuery.data.rows, { ids: [viewerId] }, { ids: [id] }) : null),
+    [h2hQuery.data, viewerId, id],
+  );
+
   const confirmedMatches = liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed");
   if (confirmedMatches.length === 0)
     return null;
@@ -84,16 +90,11 @@ export function MatchHistorySection({
         ? confirmedMatches.filter((m) => m.is_friendly !== false)
         : confirmedMatches.filter((m) => m.is_friendly === false);
 
-  // Rivalry Analytics
-  const isViewingOther = ownPlayerProfile?.id && ownPlayerProfile.id !== id;
-  const h2hMatches = isViewingOther
-    ? confirmedMatches.filter((m) => isMatchParticipant(m, ownPlayerProfile.id))
-    : [];
-
-  const h2hWins = h2hMatches.filter((m) => m.winner_id === id).length; // Wins for the profile we're looking at
-  const h2hLosses = h2hMatches.filter(
-    (m) => m.winner_id === ownPlayerProfile?.id,
-  ).length;
+  const theirWins = h2h?.bWins ?? 0;
+  const yourWins = h2h?.aWins ?? 0;
+  const walkovers = h2h ? h2h.walkovers.aWon + h2h.walkovers.bWon : 0;
+  const together = h2h?.together ?? null;
+  const showRivalry = !!viewerId && !!h2h && (h2h.sample > 0 || walkovers > 0 || (together?.played ?? 0) > 0);
 
   return (
     <motion.section variants={itemVariants}>
@@ -134,45 +135,67 @@ export function MatchHistorySection({
           >
             <div className="pt-4">
               {/* Rivalry Analytics */}
-              {isViewingOther && h2hMatches.length > 0 && (
+              {showRivalry && h2h && (
                 <div className="mb-4 ml-2 bg-gradient-to-r from-muted to-muted/50 rounded-2xl p-4 border border-border-strong shadow-sm relative overflow-hidden">
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--danger)_5%,transparent),transparent)] pointer-events-none" />
                   <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2 relative z-10">
                     <Swords className="w-4 h-4 text-danger" /> Head-to-Head vs
                     You
                   </div>
-                  <div className="flex items-center justify-between relative z-10">
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-black text-danger">
-                        {h2hWins}
+                  {h2h.sample > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="text-center flex-1">
+                          <div className="text-3xl font-black text-danger tabular-nums">
+                            {theirWins}
+                          </div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                            Their Wins
+                          </div>
+                        </div>
+                        <div className="w-px h-10 bg-muted-strong mx-4" />
+                        <div className="text-center flex-1">
+                          <div className="text-3xl font-black text-primary tabular-nums">
+                            {yourWins}
+                          </div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                            Your Wins
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-                        Their Wins
+                      <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-muted-strong relative z-10">
+                        <div
+                          style={{ width: `${(theirWins / h2h.sample) * 100}%` }}
+                          className="bg-danger transition-all duration-1000"
+                        />
+                        <div
+                          style={{ width: `${(yourWins / h2h.sample) * 100}%` }}
+                          className="bg-primary transition-all duration-1000"
+                        />
                       </div>
-                    </div>
-                    <div className="w-px h-10 bg-muted-strong mx-4" />
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-black text-primary">
-                        {h2hLosses}
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-                        Your Wins
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-muted-strong relative z-10">
-                    <div
-                      style={{
-                        width: `${(h2hWins / h2hMatches.length) * 100}%`,
-                      }}
-                      className="bg-danger transition-all duration-1000"
-                    />
-                    <div
-                      style={{
-                        width: `${(h2hLosses / h2hMatches.length) * 100}%`,
-                      }}
-                      className="bg-primary transition-all duration-1000"
-                    />
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground relative z-10">
+                      You haven't played against each other yet.
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground relative z-10">
+                    {walkovers > 0 && (
+                      <span>
+                        Walkovers: you {h2h.walkovers.aWon}, them {h2h.walkovers.bWon} (not counted)
+                      </span>
+                    )}
+                    {together && together.played > 0 && (
+                      <span>
+                        As partners: played {together.played}, won {together.won}, lost {together.lost}
+                      </span>
+                    )}
+                    <Link
+                      href={`/h2h?a=${viewerId}&b=${id}`}
+                      className="inline-flex items-center min-h-[44px] font-bold text-primary underline"
+                    >
+                      Full head-to-head →
+                    </Link>
                   </div>
                 </div>
               )}
@@ -226,7 +249,7 @@ export function MatchHistorySection({
                         }
                       }
 
-                      const won = isTeam1 ? m.winner_id === m.player1_id : m.winner_id === m.player2_id;
+                      const won = playerWon(m, id) === true;
                       const matchDate = new Date(m.created_at);
                       const isFriendly = m.is_friendly !== false;
 

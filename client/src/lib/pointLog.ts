@@ -221,7 +221,9 @@ export function keyMoments(rallies: Rally[], rules: ScoringRules = DEFAULT_RULES
 /** First usable word of a name: skips initials such as "K." or "S". */
 function firstName(person: string): string {
   const words = person.trim().split(/\s+/).filter(Boolean);
-  return words.find((w) => w.replace(/[^\p{L}]/gu, "").length >= 3) ?? words[0] ?? "";
+  const w = words.find((x) => x.replace(/[^\p{L}]/gu, "").length >= 3) ?? words[0] ?? "";
+  // Names typed in capitals ("KOTA") read as shouting in a sentence: "Kota".
+  return w.length > 1 && w === w.toUpperCase() && w !== w.toLowerCase() ? w[0] + w.slice(1).toLowerCase() : w;
 }
 
 /**

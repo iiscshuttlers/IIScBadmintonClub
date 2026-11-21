@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo, useEffect, useRef } from "react";
 import { Trophy, Flame, Zap, Star, Shield, Target, Award, Swords, Crown, TrendingUp, Moon, Sun, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
@@ -79,7 +80,7 @@ const BADGES: BadgeDef[] = [
       let streak = 0;
       let maxStreak = 0;
       for (const m of confirmed) {
-        if (m.winner_id === playerId || m.winner_id === m.player1_id && (m.player1_id === playerId || m.team1_partner_id === playerId) || m.winner_id === m.player2_id && (m.player2_id === playerId || m.team2_partner_id === playerId)) { 
+        if (playerWon(m, playerId) === true) {
           streak++; 
           maxStreak = Math.max(maxStreak, streak);
         } else {
@@ -150,7 +151,7 @@ const BADGES: BadgeDef[] = [
         const score = (m as any).match_score || (m as any).score;
         return m.status === "confirmed" && score && typeof score === "string";
       }).forEach(m => {
-        const won = m.winner_id === playerId || m.winner_id === m.player1_id && (m.player1_id === playerId || m.team1_partner_id === playerId) || m.winner_id === m.player2_id && (m.player2_id === playerId || m.team2_partner_id === playerId);
+        const won = playerWon(m, playerId) === true;
         if (!won) return;
 
         const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
@@ -186,13 +187,7 @@ export function AchievementBadges({ matches: allMatches, playerId, elo, currentU
   const { wins, losses } = useMemo(() => {
     let w = 0;
     let l = 0;
-    const isWinner = (m: any) => {
-      if (!m.winner_id && !m.winner_side) return false;
-      const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
-      if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-      const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-      return isTeam1 ? isTeam1Winner : !isTeam1Winner;
-    };
+    const isWinner = (m: any) => playerWon(m, playerId) === true;
 
     matches
       .filter((m) => m.status === "confirmed" || m.status === "completed")

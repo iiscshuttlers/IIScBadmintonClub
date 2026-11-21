@@ -234,6 +234,7 @@ describe("shortNames", () => {
   it("uses first names, skipping initials, and both partners in doubles", () => {
     expect(shortNames(["Shiv Pratap Singh Rathore", "Uday regon"])).toEqual(["Shiv", "Uday"]);
     expect(shortNames(["Ritul & Prasenjeet Padhi", "K. Ramesh / S Kumar"])).toEqual(["Ritul & Prasenjeet", "Ramesh & Kumar"]);
+    expect(shortNames(["Vivek Kumar & KOTA SRINIVASA RAO", "Varun Varma Thozhiyoor & Piyush Tiwary"])).toEqual(["Vivek & Kota", "Varun & Piyush"]);
   });
   it("keeps full names when the short ones would clash", () => {
     expect(shortNames(["Rahul Iyer", "Rahul Menon"])).toEqual(["Rahul Iyer", "Rahul Menon"]);

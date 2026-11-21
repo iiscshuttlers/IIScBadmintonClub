@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlayer } from "@/services/playerService";
 import { usePlayerPersonal } from "@/hooks/usePlayerPersonal";
@@ -26,13 +27,7 @@ export function usePersonalStats(playerId: string | undefined) {
     winner_side?: number | null;
     winner_id?: string | null;
   }) => {
-    if (!player?.id) return false;
-    const isTeam1 = m.player1_id === player.id || m.team1_partner_id === player.id;
-    if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-    const isTeam1Winner = m.winner_side
-      ? m.winner_side === 1
-      : m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+    return playerWon(m, player?.id) === true;
   };
 
   const tournamentMatches = fullMatches?.filter((m) => m.is_friendly === false) || [];

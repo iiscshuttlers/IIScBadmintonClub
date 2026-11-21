@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { resolveTeamMembers } from "@/lib/teamNames";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Swords, TrendingUp, TrendingDown, Calendar } from "lucide-react";
@@ -29,10 +30,10 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
     return null;
   }).filter(Boolean);
 
-  const isP1Winner = 
-    match.winner_side === 1 || 
-    (match.winner_id && (match.winner_id === p1?.id || match.winner_id === partner1?.id)) ||
-    (match.winner_side === undefined && sets.filter((s: any) => s.p1 > s.p2).length > sets.filter((s: any) => s.p2 > s.p1).length);
+  const recordedSide = winningSide(match);
+  const isP1Winner =
+    recordedSide === 1 ||
+    (recordedSide == null && sets.filter((s: any) => s.p1 > s.p2).length > sets.filter((s: any) => s.p2 > s.p1).length);
 
   return createPortal(
     <AnimatePresence>

@@ -1,3 +1,4 @@
+import { sideIds, winningSide } from "@/lib/matchResult";
 import { useState, useMemo, useRef } from "react";
 import { Link } from "wouter";
 import { EyeOff, Download, Image as ImageIcon, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -59,24 +60,16 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
       const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
       if (!hasTeam1 || !hasTeam2) return; // Skip BYEs!
 
-      const {
-        player1_id, player2_id, team1_partner_id, team2_partner_id,
-        winner_id, winner_partner_id, loser_id, loser_partner_id
-      } = m;
+      // Both players of each side, decided by winner_side (lib/matchResult).
+      const side1 = sideIds(m, 1);
+      const side2 = sideIds(m, 2);
+      const winner = winningSide(m);
 
-      // Add to played
-      if (player1_id && playerStats[player1_id]) playerStats[player1_id].played++;
-      if (player2_id && playerStats[player2_id]) playerStats[player2_id].played++;
-      if (team1_partner_id && playerStats[team1_partner_id]) playerStats[team1_partner_id].played++;
-      if (team2_partner_id && playerStats[team2_partner_id]) playerStats[team2_partner_id].played++;
-
-      // Add to wins
-      if (winner_id && playerStats[winner_id]) playerStats[winner_id].wins++;
-      if (winner_partner_id && playerStats[winner_partner_id]) playerStats[winner_partner_id].wins++;
-
-      // Add to losses
-      if (loser_id && playerStats[loser_id]) playerStats[loser_id].losses++;
-      if (loser_partner_id && playerStats[loser_partner_id]) playerStats[loser_partner_id].losses++;
+      for (const pid of [...side1, ...side2]) if (playerStats[pid]) playerStats[pid].played++;
+      if (winner) {
+        for (const pid of winner === 1 ? side1 : side2) if (playerStats[pid]) playerStats[pid].wins++;
+        for (const pid of winner === 1 ? side2 : side1) if (playerStats[pid]) playerStats[pid].losses++;
+      }
     });
 
     // Filter out players with 0 matches played

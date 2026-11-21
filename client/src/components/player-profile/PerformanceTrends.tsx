@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cssVar } from "@/lib/themeColors";
@@ -40,13 +41,7 @@ function SparkLine({ values, color }: { values: number[]; color: string }) {
 }
 
 export function PerformanceTrends({ matches, playerId }: Props) {
-  const isWinner = (m: any) => {
-    if (!m.winner_id && !m.winner_side) return false;
-    const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
-    if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-    const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
-  };
+  const isWinner = (m: any) => playerWon(m, playerId) === true;
 
   const data = useMemo(() => {
     const confirmed = matches

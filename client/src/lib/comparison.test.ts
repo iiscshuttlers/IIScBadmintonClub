@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalSideIds, compareSides, eligibilityOf, pairKey, relation, rowDiscipline, sampleNote, sideKind, type ComparisonRow } from "./comparison";
+import { canonicalSideIds, compareSides, eligibilityOf, isByeLabel, pairKey, relation, rowDiscipline, sampleNote, sideKind, type ComparisonRow } from "./comparison";
 
 let n = 0;
 const row = (side1: string[], side2: string[], o: Partial<ComparisonRow> = {}): ComparisonRow => ({
@@ -83,6 +83,21 @@ describe("player comparisons", () => {
     const ms = compareSides(rows, { ids: ["a"] }, { ids: ["d"] }, { discipline: "MS" });
     expect(ms.sample).toBe(1);
     expect(compareSides(rows, { ids: ["a"] }, { ids: ["d"] }, { discipline: "MD" }).sample).toBe(0);
+  });
+
+  it("never counts a bye, even as a win together", () => {
+    const rows = [
+      row(["a", "b"], [], { score: "W/O", winnerSide: 1, bye: true }),
+      row(["a", "b"], ["c", "d"], { winnerSide: 1 }),
+      row(["a", "c"], ["b", "d"], { category: "XD", winnerSide: 1 }),
+    ];
+    const r = compareSides(rows, { ids: ["a"] }, { ids: ["b"] });
+    expect([r.aWins, r.bWins, r.sample]).toEqual([1, 0, 1]);
+    expect(r.together).toMatchObject({ played: 1, won: 1, lost: 0 });
+    expect(eligibilityOf(rows[0])).toEqual({ eligibility: "excluded", reason: "Bye" });
+    expect(isByeLabel("BYE")).toBe(true);
+    expect(isByeLabel("Bye (seeded)")).toBe(true);
+    expect(isByeLabel("Abbey & Byers")).toBe(false);
   });
 
   it("does not double count a row seen twice", () => {

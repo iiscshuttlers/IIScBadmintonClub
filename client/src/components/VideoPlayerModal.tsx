@@ -7,6 +7,7 @@ import {
   type ScoreLog,
 } from "./YoutubePlayer";
 import { isCapacitor } from "@/lib/navUtils";
+import { parseTeamsFromTitle } from "@/lib/videoTitle";
 import { Pip } from "@/lib/pip";
 import { MonitorPlay } from "lucide-react";
 import { toast } from "sonner";
@@ -63,22 +64,12 @@ export function VideoPlayerModal({ video, onClose }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // Parse names from title (e.g. "Radhika and Kaling vs Tanisha and Aneesh")
+  // Scoreboard names from the title ("A and B vs C and D || Event", "A & B vs C & D", …).
   useEffect(() => {
-    try {
-       const matchStr = video.title.split("||")[0].trim();
-       if (matchStr.includes(" vs ")) {
-          const teams = matchStr.split(" vs ");
-          if (teams.length === 2) {
-             const parseTeam = (str: string) => str.split(" and ").map(s => s.trim()).filter(Boolean);
-             const a = parseTeam(teams[0]);
-             const b = parseTeam(teams[1]);
-             if (a.length > 0) setTeamA(a);
-             if (b.length > 0) setTeamB(b);
-          }
-        }
-    } catch {
-      /* intentional — fallback if video title is not in standard 'X vs Y' format */
+    const teams = parseTeamsFromTitle(video.title ?? "");
+    if (teams) {
+      setTeamA(teams.teamA);
+      setTeamB(teams.teamB);
     }
   }, [video.title]);
 

@@ -11,13 +11,19 @@ import {
 } from "./shared";
 import { FlyerConfigBuilder } from './FlyerConfigBuilder';
 import { FileUploader } from './FileUploader';
+import { AutoPostsPanel } from './AutoPostsPanel';
 
 export function AnnouncementEditor({
   data,
   onChange,
+  hiddenAuto,
+  onHiddenAutoChange,
 }: {
   data: Announcement[];
   onChange: (d: Announcement[]) => void;
+  /** Keys of automatic tournament posts kept off the Feed. */
+  hiddenAuto?: string[];
+  onHiddenAutoChange?: (keys: string[]) => void;
 }) {
   const [pushingIdx, setPushingIdx] = useState<number | null>(null);
 
@@ -62,6 +68,7 @@ export function AnnouncementEditor({
   const categories = ["tournament", "facility", "general", "event"];
   return (
     <div className="space-y-4">
+      {onHiddenAutoChange && <AutoPostsPanel hidden={hiddenAuto ?? []} onChange={onHiddenAutoChange} />}
       <button
         onClick={add}
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition shadow-md shadow-primary/20"

@@ -7,7 +7,13 @@ interface ContentEditorWrapperProps<T> {
   dbKey: string;
   emptyState: T;
   editorName: string;
-  EditorComponent: React.ComponentType<{ data: T; onChange: (d: T) => void }>;
+  EditorComponent: React.ComponentType<{
+    data: T;
+    onChange: (d: T) => void;
+    /** Re-read the saved value (drops unsaved edits). */
+    reload?: () => Promise<void>;
+    isDirty?: boolean;
+  }>;
   writeTransformer?: (data: T) => any;
   setTabCount?: (count: number) => void;
   countExtractor?: (data: T) => number;
@@ -31,6 +37,7 @@ export function ContentEditorWrapper<T>({
     isSaving,
     save,
     discard,
+    reload,
   } = useSiteDataEditor<T>(dbKey, emptyState);
 
   const [showConfirm, setShowConfirm] = useState(false);
@@ -62,7 +69,7 @@ export function ContentEditorWrapper<T>({
   return (
     <>
       <div className="pb-16">
-        <EditorComponent data={data} onChange={setData} />
+        <EditorComponent data={data} onChange={setData} reload={reload} isDirty={isDirty} />
       </div>
 
       {/* Unsaved changes bar */}

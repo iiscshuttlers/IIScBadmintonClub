@@ -12,6 +12,15 @@ import type { GameFlow, Rally, RallyStats, Tally } from "@/lib/pointLog";
 
 const pct = (t: Tally) => (t.of > 0 ? Math.round((t.won / t.of) * 100) : null);
 
+/** Side colours and chart ink as theme tokens; wrap a Stats view in `.worm-root`. */
+export function VizVars() {
+  return (
+    <style>{`
+      .worm-root { --worm-s1:var(--team-1); --worm-s2:var(--team-2); --worm-grid:var(--border); --worm-muted:var(--muted-foreground); --worm-ink:var(--foreground); --worm-surface:var(--card); --worm-deuce:color-mix(in srgb, var(--warning) 10%, transparent); }
+    `}</style>
+  );
+}
+
 /** One whole split in two, with a 2px gap; each part's length is its share. */
 export function SplitBar({ a, b, thick = false }: { a: number; b: number; thick?: boolean }) {
   const h = thick ? "h-3" : "h-2";
@@ -34,9 +43,9 @@ function Swatch({ side }: { side: 1 | 2 }) {
   );
 }
 
-/** The headline: points won by each side and their share of the rallies. */
-export function PointsHeadline({ stats, names }: { stats: RallyStats; names: [string, string] }) {
-  const [a, b] = stats.sides;
+/** The headline: points won by each side and their share of all points. */
+export function PointsHeadline({ points, names }: { points: [number, number]; names: [string, string] }) {
+  const [a, b] = [{ pointsWon: points[0] }, { pointsWon: points[1] }];
   const total = a.pointsWon + b.pointsWon;
   const share = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
   return (
@@ -108,7 +117,7 @@ interface Cell {
   sub?: string;
 }
 
-interface Row {
+export interface Row {
   label: string;
   left: Cell;
   right: Cell;
@@ -154,6 +163,21 @@ function buildRows(stats: RallyStats): Row[] {
 export function CompareRows({ stats, names }: { stats: RallyStats; names: [string, string] }) {
   const rows = useMemo(() => buildRows(stats), [stats]);
   return (
+    <CompareList
+      rows={rows}
+      names={names}
+      footnote={
+        stats.sides[0].onServe.of + stats.sides[1].onServe.of > 0
+          ? "Serve stats skip the first point of the match: who served it isn't recorded."
+          : null
+      }
+    />
+  );
+}
+
+/** Rows of left value · label · right value over a split bar. */
+export function CompareList({ rows, names, footnote = null }: { rows: Row[]; names: [string, string]; footnote?: string | null }) {
+  return (
     <section aria-labelledby="h2h-num-heading">
       <h2 id="h2h-num-heading" className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-1">
         Head to head
@@ -188,9 +212,7 @@ export function CompareRows({ stats, names }: { stats: RallyStats; names: [strin
           );
         })}
       </ul>
-      {stats.sides[0].onServe.of + stats.sides[1].onServe.of > 0 && (
-        <p className="mt-1 text-[11px] text-muted-foreground">Serve stats skip the first point of the match: who served it isn't recorded.</p>
-      )}
+      {footnote && <p className="mt-1 text-[11px] text-muted-foreground">{footnote}</p>}
     </section>
   );
 }

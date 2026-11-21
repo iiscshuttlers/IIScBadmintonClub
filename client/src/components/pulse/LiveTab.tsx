@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { motion } from "framer-motion";
@@ -798,7 +799,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 const renderCard = (match: any, i: number) => {
                   const p1 = match.player1;
                   const p2 = match.player2;
-                  const isP1Winner = match.winner_id === p1?.id;
+                  const isP1Winner = winningSide(match) === 1;
 
                   let upsetDiff = 0;
                   if (
