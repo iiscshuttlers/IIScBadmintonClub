@@ -21,6 +21,7 @@ import { MatchSummaryTab } from "@/components/match/MatchSummaryTab";
 import { MatchH2HTab } from "@/components/match/MatchH2HTab";
 import { MatchInfoTab } from "@/components/match/MatchInfoTab";
 import { MatchPointsTab } from "@/components/match/MatchPointsTab";
+import { MatchScoreStats } from "@/components/match/MatchScoreStats";
 import { useMatchPointLog } from "@/hooks/queries/useMatchPointLog";
 import { decodePoints, nextServer } from "@/lib/pointLog";
 import { MatchStickyHeader } from "@/components/match/MatchStickyHeader";
@@ -112,9 +113,12 @@ export default function TournamentMatchPage() {
   const serving = view.state === "live" ? nextServer(rallies) : null;
   const lastUpdated = mQuery.dataUpdatedAt ? new Date(mQuery.dataUpdatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : null;
 
-  // Stats (route key "points") appears only once a stored point log exists; never an empty tab.
+  // Stats (route key "points"): the full point-by-point view when a stored
+  // log exists, otherwise stats from the game scores. No scores at all (not
+  // started, or a walkover) means no tab, never an empty one.
   const hasPoints = !!pointLog.data && pointLog.data.pointCount > 0;
-  const tabs: MatchTab[] = hasPoints ? ["summary", "points", "h2h", "info"] : ["summary", "h2h", "info"];
+  const hasScores = view.games.length > 0;
+  const tabs: MatchTab[] = hasPoints || hasScores ? ["summary", "points", "h2h", "info"] : ["summary", "h2h", "info"];
   const tab: MatchTab = tabs.includes(requestedTab) ? requestedTab : "summary";
 
   return (
@@ -168,17 +172,24 @@ export default function TournamentMatchPage() {
           className="bg-card rounded-3xl border border-border shadow-sm p-5 sm:p-6"
         >
           {tab === "summary" && <MatchSummaryTab view={view} tournamentName={t.name} next={next} />}
-          {tab === "points" && pointLog.data && (
-            <MatchPointsTab
-              view={view}
-              log={pointLog.data}
-              rules={{
-                pointsToWin: match.points_to_win ?? 21,
-                goldenPoint: match.golden_point ?? 30,
-                bestOf: match.best_of_sets ?? 3,
-              }}
-            />
-          )}
+          {tab === "points" &&
+            (hasPoints && pointLog.data ? (
+              <MatchPointsTab
+                view={view}
+                log={pointLog.data}
+                rules={{
+                  pointsToWin: match.points_to_win ?? 21,
+                  goldenPoint: match.golden_point ?? 30,
+                  bestOf: match.best_of_sets ?? 3,
+                }}
+              />
+            ) : pointLog.isPending ? (
+              <p className="mt-4 text-sm text-muted-foreground" role="status">
+                Loading stats…
+              </p>
+            ) : (
+              <MatchScoreStats view={view} pointsToWin={match.points_to_win ?? 21} />
+            ))}
           {tab === "h2h" && <MatchH2HTab view={view} />}
           {tab === "info" && (
             <MatchInfoTab

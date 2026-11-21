@@ -16,7 +16,7 @@ import {
   type ScoringRules,
 } from "@/lib/pointLog";
 import type { StoredPointLog } from "@/hooks/queries/useMatchPointLog";
-import { CompareRows, GameFlowTable, LeadTracker, PointsHeadline, Takeaways } from "@/components/match/MatchStatsPanel";
+import { CompareRows, GameFlowTable, LeadTracker, PointsHeadline, Takeaways, VizVars } from "@/components/match/MatchStatsPanel";
 
 /**
  * Stats tab, all from the stored point log: points won, takeaways, who was
@@ -177,9 +177,7 @@ export function MatchPointsTab({
 
   return (
     <div className="worm-root mt-4 space-y-6">
-      <style>{`
-        .worm-root { --worm-s1:var(--team-1); --worm-s2:var(--team-2); --worm-grid:var(--border); --worm-muted:var(--muted-foreground); --worm-ink:var(--foreground); --worm-surface:var(--card); --worm-deuce:color-mix(in srgb, var(--warning) 10%, transparent); }
-      `}</style>
+      <VizVars />
 
       {coverage === "corrected" && (
         <p className="text-xs font-semibold text-warning" role="note">
@@ -224,7 +222,7 @@ export function MatchPointsTab({
         </div>
       )}
 
-      <PointsHeadline stats={stats} names={names} />
+      <PointsHeadline points={[stats.sides[0].pointsWon, stats.sides[1].pointsWon]} names={names} />
       <Takeaways lines={takeaways} />
       <LeadTracker rallies={rallies} names={short} gameNumbers={shownGames.map((g) => g.game)} />
       <CompareRows stats={stats} names={short} />
