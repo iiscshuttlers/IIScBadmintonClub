@@ -18,7 +18,7 @@ interface Props {
 export function MatchScoreDisplay({ sets_history, score, team1_label, team2_label, winner_side, status, compact }: Props) {
   if (status === "walkover") {
     return (
-      <span className="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+      <span className="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-muted-strong text-soft">
         W/O — {winner_side === 1 ? team1_label : team2_label}
       </span>
     );
@@ -34,7 +34,7 @@ export function MatchScoreDisplay({ sets_history, score, team1_label, team2_labe
 
   if (compact) {
     return (
-      <span className="font-mono text-xs text-slate-600 dark:text-slate-300">
+      <span className="font-mono text-xs text-soft">
         {effectiveSets.join(", ")}
       </span>
     );
@@ -59,7 +59,7 @@ export function MatchScoreDisplay({ sets_history, score, team1_label, team2_labe
           <span className="w-4 shrink-0 pt-0.5" aria-hidden>
             {won && <Check className="w-4 h-4 text-primary" strokeWidth={3} />}
           </span>
-          <span className={`min-w-0 text-sm ${won ? "font-black text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"}`}>
+          <span className={`min-w-0 text-sm ${won ? "font-black text-foreground" : "font-medium text-soft"}`}>
             {renderLabel(label)}
             {won && <span className="sr-only"> (winner)</span>}
           </span>
@@ -72,7 +72,7 @@ export function MatchScoreDisplay({ sets_history, score, team1_label, team2_labe
               <span
                 key={i}
                 className={`w-7 text-center font-mono text-sm tabular-nums ${
-                  mine > theirs ? "font-black text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
+                  mine > theirs ? "font-black text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {mine}
@@ -85,7 +85,7 @@ export function MatchScoreDisplay({ sets_history, score, team1_label, team2_labe
   };
 
   return (
-    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+    <div className="divide-y divide-border">
       <p className="sr-only">Score: {parsed.map((g, i) => `Game ${i + 1} ${g.a}–${g.b}`).join(", ")}</p>
       {row(1, team1_label || "Team 1")}
       {row(2, team2_label || "Team 2")}

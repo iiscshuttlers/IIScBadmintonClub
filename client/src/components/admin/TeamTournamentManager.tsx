@@ -213,13 +213,13 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
     <div className="space-y-6">
       {/* Tabs */}
       {view === 'all' && (
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2">
         <button 
           onClick={() => setActiveTab('teams')}
           className={`pb-2.5 px-3 text-xs sm:text-sm font-black border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'teams' 
               ? 'border-primary text-primary' 
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+              : 'border-transparent text-muted-foreground hover:text-soft'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -230,7 +230,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
           className={`pb-2.5 px-3 text-xs sm:text-sm font-black border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'fixtures' 
               ? 'border-primary text-primary' 
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+              : 'border-transparent text-muted-foreground hover:text-soft'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -241,45 +241,45 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
 
       {activeTab === 'teams' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="lg:col-span-1 bg-card rounded-3xl p-6 border border-border shadow-sm">
+            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-border">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-black text-base text-slate-900 dark:text-slate-100 leading-tight">Create Team</h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Register new team and assign captain</p>
+                <h2 className="font-black text-base text-foreground leading-tight">Create Team</h2>
+                <p className="text-[11px] text-muted-foreground">Register new team and assign captain</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Team Name</label>
+                <label className="text-xs font-bold text-soft mb-1.5 block">Team Name</label>
                 <input
                   type="text"
                   placeholder="e.g. IISc Smashers"
-                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-background/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Short Name (max 5)</label>
+                <label className="text-xs font-bold text-soft mb-1.5 block">Short Name (max 5)</label>
                 <input
                   type="text"
                   maxLength={5}
                   placeholder="e.g. SMA"
-                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all uppercase"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-background/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all uppercase"
                   value={newTeamShort}
                   onChange={(e) => setNewTeamShort(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Captain Email</label>
+                <label className="text-xs font-bold text-soft mb-1.5 block">Captain Email</label>
                 <input
                   type="email"
                   placeholder="captain@iisc.ac.in"
-                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-background/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
                   value={captainEmail}
                   onChange={(e) => setCaptainEmail(e.target.value)}
                 />
@@ -300,14 +300,14 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
             <h2 className="font-bold text-lg">Registered Teams ({teams?.length || 0})</h2>
             {teamsLoading ? <Loader2 className="animate-spin text-primary" /> : (
               teams?.map((t: any) => (
-                <div key={t.id} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs">
+                <div key={t.id} className="bg-card rounded-2xl p-4 border border-border flex items-center justify-between shadow-xs">
                   <div>
                     <div className="font-black text-lg">
-                      <ClickableTeamName team={{ id: t.id, name: t.name, short_name: t.short_name, tournament_id: tournamentId, captain_id: t.captain_id }} className="text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
+                      <ClickableTeamName team={{ id: t.id, name: t.name, short_name: t.short_name, tournament_id: tournamentId, captain_id: t.captain_id }} className="text-lg font-black text-foreground hover:text-primary transition-colors" />
                     </div>
-                    <div className="text-sm text-slate-500">Captain: {t.captain?.full_name || t.captain?.nickname || t.captain?.email || 'Not Assigned'}</div>
+                    <div className="text-sm text-muted-foreground">Captain: {t.captain?.full_name || t.captain?.nickname || t.captain?.email || 'Not Assigned'}</div>
                   </div>
-                  <div className="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-300/40 rounded-lg">
+                  <div className="text-xs font-bold px-2.5 py-1 bg-success/25 text-success border border-success/40 rounded-lg">
                     {t.status}
                   </div>
                 </div>
@@ -319,128 +319,128 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
 
       {activeTab === 'fixtures' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="lg:col-span-1 bg-card rounded-3xl p-6 border border-border shadow-sm">
+            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-border">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-black text-base text-slate-900 dark:text-slate-100 leading-tight">Schedule Tie</h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Pair teams for pool matches or knockout ties</p>
+                <h2 className="font-black text-base text-foreground leading-tight">Schedule Tie</h2>
+                <p className="text-[11px] text-muted-foreground">Pair teams for pool matches or knockout ties</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-soft mb-1.5 block">
                   Tie Code (e.g. SF1, Final, A vs B)
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. POOL-A1, SF1, FINAL"
-                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl bg-background/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all"
                   value={tieCode}
                   onChange={(e) => setTieCode(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-soft mb-1.5 block">
                   Team A
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
+                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-border-strong/80 rounded-xl bg-background/80 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
                     value={teamA}
                     onChange={(e) => setTeamA(e.target.value)}
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Team</option>
+                    <option value="" className="bg-card text-foreground">Select Team</option>
                     {teams?.map((t: any) => (
-                      <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                      <option key={t.id} value={t.id} className="bg-card text-foreground">
                         {t.name} ({t.short_name || '—'})
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-soft mb-1.5 block">
                   Team B
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
+                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-border-strong/80 rounded-xl bg-background/80 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
                     value={teamB}
                     onChange={(e) => setTeamB(e.target.value)}
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Team</option>
+                    <option value="" className="bg-card text-foreground">Select Team</option>
                     {teams?.map((t: any) => (
-                      <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                      <option key={t.id} value={t.id} className="bg-card text-foreground">
                         {t.name} ({t.short_name || '—'})
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-soft mb-1.5 block">
                   Stage
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
+                    className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-border-strong/80 rounded-xl bg-background/80 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer transition-all shadow-xs"
                     value={stage}
                     onChange={(e) => setStage(e.target.value)}
                   >
-                    <option value="POOL" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Pool Match</option>
-                    <option value="KNOCKOUT" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Knockout Match</option>
+                    <option value="POOL" className="bg-card text-foreground">Pool Match</option>
+                    <option value="KNOCKOUT" className="bg-card text-foreground">Knockout Match</option>
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
 
               {stage === 'KNOCKOUT' && (
-                <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950/50 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-3 bg-background/50 p-3.5 rounded-2xl border border-border">
                   <div className="col-span-2">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                    <label className="text-xs font-bold text-soft mb-1.5 block">
                       Winner Advances To (Tie)
                     </label>
                     <div className="relative">
                       <select
-                        className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer"
+                        className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-border-strong/80 rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer"
                         value={advancesTo}
                         onChange={(e) => setAdvancesTo(e.target.value)}
                       >
-                        <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">None (Final)</option>
+                        <option value="" className="bg-card text-foreground">None (Final)</option>
                         {ties?.map((t: any) => (
-                          <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                          <option key={t.id} value={t.id} className="bg-card text-foreground">
                             {t.tie_code}
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                      <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                     </div>
                   </div>
                   {advancesTo && (
                     <div className="col-span-2">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                      <label className="text-xs font-bold text-soft mb-1.5 block">
                         Slot
                       </label>
                       <div className="relative">
                         <select
-                          className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer"
+                          className="w-full appearance-none px-3.5 py-2.5 pr-10 border border-border-strong/80 rounded-xl bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm cursor-pointer"
                           value={advancesSlot}
                           onChange={(e) => setAdvancesSlot(e.target.value)}
                         >
-                          <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Select Slot</option>
-                          <option value="A" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Team A</option>
-                          <option value="B" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Team B</option>
+                          <option value="" className="bg-card text-foreground">Select Slot</option>
+                          <option value="A" className="bg-card text-foreground">Team A</option>
+                          <option value="B" className="bg-card text-foreground">Team B</option>
                         </select>
-                        <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <ChevronDown className="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                       </div>
                     </div>
                   )}
@@ -449,7 +449,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold text-soft mb-1.5 block">
                     <MapPin className="w-3.5 h-3.5 inline mr-1 text-primary" /> Court (Optional)
                   </label>
                   <input
@@ -457,18 +457,18 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     placeholder="e.g. C1, C2"
                     value={courtInput}
                     onChange={(e) => setCourtInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all shadow-xs"
+                    className="w-full px-3.5 py-2.5 border border-border-strong/80 rounded-xl bg-background/80 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm transition-all shadow-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold text-soft mb-1.5 block">
                     <Clock className="w-3.5 h-3.5 inline mr-1 text-primary" /> Date &amp; Time
                   </label>
                   <input
                     type="datetime-local"
                     value={scheduledAtInput}
                     onChange={(e) => setScheduledAtInput(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-xs font-bold transition-all shadow-xs"
+                    className="w-full px-3 py-2.5 border border-border-strong/80 rounded-xl bg-background/80 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-xs font-bold transition-all shadow-xs"
                   />
                 </div>
               </div>
@@ -500,17 +500,17 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     <div 
                       className={`rounded-2xl p-4 sm:p-5 border transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                       isLive 
-                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/40 ring-1 ring-rose-500/20' 
+                        ? 'bg-live/10 border-live/40 ring-1 ring-live/20' 
                         : isCompleted
-                        ? 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/60 opacity-85'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-primary/40'
+                        ? 'bg-card/60 border-border/60 opacity-85'
+                        : 'bg-card border-border hover:border-primary/40'
                     }`}
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-xs font-black text-primary uppercase tracking-wider">{tie.tie_code}</span>
                         {tie.stage && (
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                             · {tie.stage}
                           </span>
                         )}
@@ -522,35 +522,35 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                         )}
                       </div>
                       <div className="font-black text-lg flex items-center gap-2 flex-wrap">
-                        <ClickableTeamName team={{ id: tie.team_a_id, name: tie.team_a?.name || 'TBD', short_name: tie.team_a?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
-                        <span className="text-slate-400 font-normal mx-1">vs</span>
-                        <ClickableTeamName team={{ id: tie.team_b_id, name: tie.team_b?.name || 'TBD', short_name: tie.team_b?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 hover:text-primary transition-colors" />
+                        <ClickableTeamName team={{ id: tie.team_a_id, name: tie.team_a?.name || 'TBD', short_name: tie.team_a?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-foreground hover:text-primary transition-colors" />
+                        <span className="text-muted-foreground font-normal mx-1">vs</span>
+                        <ClickableTeamName team={{ id: tie.team_b_id, name: tie.team_b?.name || 'TBD', short_name: tie.team_b?.short_name, tournament_id: tournamentId }} className="text-base sm:text-lg font-black text-foreground hover:text-primary transition-colors" />
                       </div>
-                      <div className="text-sm font-black text-slate-500 mt-0.5">
+                      <div className="text-sm font-black text-muted-foreground mt-0.5">
                         {tie.score_team_a ?? 0} - {tie.score_team_b ?? 0}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       {isLive ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-xl shadow-xs animate-pulse">
-                          <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-live/15 text-live border border-live/30 rounded-xl shadow-xs animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-danger shrink-0" />
                           LIVE ON COURT
                         </span>
                       ) : isCompleted ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-xl shadow-xs">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 bg-success/15 text-success border border-success/30 rounded-xl shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-success shrink-0" />
                           COMPLETED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20 rounded-xl shadow-xs">
-                          <span className="w-2 h-2 rounded-full bg-sky-400 shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-info/10 text-info border border-info/20 rounded-xl shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-info shrink-0" />
                           {tie.state === 'IN_PROGRESS' ? 'UPCOMING' : (tie.state || 'UPCOMING')}
                         </span>
                       )}
 
                       <div className="flex items-center gap-2 flex-wrap">
                         {tie.scheduled_at && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground bg-muted/80 px-2.5 py-1 rounded-xl">
                             <Clock className="w-3 h-3 text-primary" />
                             {new Date(tie.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
                             {new Date(tie.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -567,7 +567,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                             }
                             setEditingScheduleTie(editingScheduleTie?.tieId === tie.id ? null : { tieId: tie.id, court: courtNumber || "", at: localAt });
                           }}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition"
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-border-strong hover:bg-muted text-soft transition"
                         >
                           <CalendarClock className="w-3.5 h-3.5 text-primary" /> Schedule
                         </button>
@@ -579,7 +579,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                             type="button"
                             disabled
                             title="Correct each rubber through its audited match flow. Tie-winner changes remain locked until coordinated recalculation is available."
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 cursor-not-allowed opacity-80"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-gold/30 bg-gold/10 text-gold cursor-not-allowed opacity-80"
                           >
                             <Award className="w-3.5 h-3.5" />
                             Tie correction locked
@@ -590,15 +590,15 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                   </div>
 
                   {editingScheduleTie?.tieId === tie.id && (
-                    <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-150">
+                    <div className="p-3.5 rounded-2xl bg-background/60 border border-border space-y-3 animate-in fade-in duration-150">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <span className="text-xs font-black text-soft flex items-center gap-1.5">
                           <CalendarClock className="w-3.5 h-3.5 text-primary" /> Assign Tie Schedule &amp; Court
                         </span>
                         <button
                           type="button"
                           onClick={() => setEditingScheduleTie(null)}
-                          className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                          className="p-1 rounded-full text-muted-foreground hover:text-soft transition"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -606,7 +606,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                          <label className="text-[11px] font-bold text-muted-foreground block mb-1">
                             <MapPin className="w-3 h-3 inline mr-1 text-primary" /> Court (Optional)
                           </label>
                           <input
@@ -614,19 +614,19 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                             placeholder="e.g. C1, C2"
                             value={editingScheduleTie.court}
                             onChange={(e) => setEditingScheduleTie(prev => prev ? { ...prev, court: e.target.value } : null)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
+                            className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
                           />
                         </div>
 
                         <div>
-                          <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
+                          <label className="text-[11px] font-bold text-muted-foreground block mb-1">
                             <Clock className="w-3 h-3 inline mr-1 text-primary" /> Date &amp; Time
                           </label>
                           <input
                             type="datetime-local"
                             value={editingScheduleTie.at}
                             onChange={(e) => setEditingScheduleTie(prev => prev ? { ...prev, at: e.target.value } : null)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
+                            className="w-full px-3 py-2 rounded-xl border border-border-strong bg-card text-foreground text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
                           />
                         </div>
                       </div>
@@ -635,7 +635,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                         <button
                           type="button"
                           onClick={() => setEditingScheduleTie(null)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted transition"
                         >
                           Cancel
                         </button>
@@ -662,24 +662,24 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
       {/* Resolve Tie with Optional Scores Modal */}
       {resolvingTie && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/70 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setResolvingTie(null)}
         >
           <div 
-            className="w-full max-w-xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 relative overflow-hidden"
+            className="w-full max-w-xl max-h-[90vh] flex flex-col bg-card border border-border rounded-3xl shadow-2xl p-6 relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-start justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-start justify-between pb-3 mb-4 border-b border-border">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                <div className="w-9 h-9 rounded-2xl bg-gold/10 flex items-center justify-center text-gold">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-slate-900 dark:text-slate-100 leading-tight">
+                  <h3 className="font-black text-base text-foreground leading-tight">
                     Resolve Tie: {resolvingTie.tie?.tie_code}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     Assign winner and optionally enter tie scores
                   </p>
                 </div>
@@ -687,7 +687,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
               <button
                 type="button"
                 onClick={() => setResolvingTie(null)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="p-1.5 rounded-full text-muted-foreground hover:text-soft hover:bg-muted transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -696,12 +696,12 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
             {/* Scrollable Body */}
             <div className="overflow-y-auto flex-1 pr-1 -mr-1 space-y-4">
               {/* Winner Selector Banner */}
-              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+              <div className="p-3 rounded-2xl bg-success/15 border border-success/35">
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  <div className="text-[11px] font-bold text-success uppercase tracking-wider">
                     Tie Winner
                   </div>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                  <span className="text-[10px] text-success font-bold">
                     Click to switch if needed
                   </span>
                 </div>
@@ -711,8 +711,8 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     onClick={() => setResolvingTie(prev => prev ? { ...prev, winnerId: prev.tie.team_a_id } : null)}
                     className={`py-1.5 px-3 rounded-xl text-xs font-black truncate transition border ${
                       resolvingTie.winnerId === resolvingTie.tie?.team_a_id
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                        ? 'bg-success text-success-foreground border-success shadow-sm'
+                        : 'bg-card/80 text-soft border-border-strong hover:border-success'
                     }`}
                   >
                     🏆 {resolvingTie.tie?.team_a?.name || 'Team A'}
@@ -722,8 +722,8 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     onClick={() => setResolvingTie(prev => prev ? { ...prev, winnerId: prev.tie.team_b_id } : null)}
                     className={`py-1.5 px-3 rounded-xl text-xs font-black truncate transition border ${
                       resolvingTie.winnerId === resolvingTie.tie?.team_b_id
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                        ? 'bg-success text-success-foreground border-success shadow-sm'
+                        : 'bg-card/80 text-soft border-border-strong hover:border-success'
                     }`}
                   >
                     🏆 {resolvingTie.tie?.team_b?.name || 'Team B'}
@@ -734,16 +734,16 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
             {/* Individual Rubber Scores Section */}
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-bold text-soft">
                   Individual Rubber Scores (Optional)
                 </label>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-muted-foreground">
                   {resolvingTieMatches.length > 0 ? `${resolvingTieMatches.length} Rubbers` : 'No rubbers found'}
                 </span>
               </div>
 
               {resolvingTieMatchesLoading ? (
-                <div className="flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs text-slate-400">
+                <div className="flex items-center justify-center p-4 bg-background/60 rounded-2xl border border-border text-xs text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading rubbers...
                 </div>
               ) : resolvingTieMatches.length > 0 ? (
@@ -803,33 +803,33 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     return (
                       <div
                         key={m.id}
-                        className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 space-y-2 text-xs"
+                        className="p-3 rounded-2xl bg-background/60 border border-border space-y-2 text-xs"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 font-black">
                             <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-mono text-[11px]">
                               #{m.rubber_order ?? (idx + 1)}
                             </span>
-                            <span className="text-slate-800 dark:text-slate-200">
+                            <span className="text-soft">
                               {m.rubber_label || m.category || `Rubber ${idx + 1}`}
                             </span>
                           </div>
                           {m.category && (
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                               {m.category}
                             </span>
                           )}
                         </div>
 
                         {/* Players Side 1 vs Side 2 */}
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 grid grid-cols-2 gap-2">
+                        <div className="text-[11px] text-muted-foreground grid grid-cols-2 gap-2">
                           <span className="truncate" title={side1Player}>
-                            <strong className="text-slate-700 dark:text-slate-300">
+                            <strong className="text-soft">
                               {resolvingTie.tie?.team_a?.short_name || 'Team A'}:
                             </strong> {side1Player}
                           </span>
                           <span className="truncate text-right" title={side2Player}>
-                            <strong className="text-slate-700 dark:text-slate-300">
+                            <strong className="text-soft">
                               {resolvingTie.tie?.team_b?.short_name || 'Team B'}:
                             </strong> {side2Player}
                           </span>
@@ -838,14 +838,14 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                         {/* Winner Toggle & Score Input */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                           {/* Rubber Winner Button Group */}
-                          <div className="flex items-center rounded-xl bg-slate-200/60 dark:bg-slate-800/80 p-0.5 border border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center rounded-xl bg-muted/80 p-0.5 border border-border-strong">
                             <button
                               type="button"
                               onClick={() => handleRubberChange(rData.winnerSide === 1 ? 0 : 1, rData.score)}
                               className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-black truncate transition ${
                                 rData.winnerSide === 1
-                                  ? 'bg-emerald-600 text-white shadow-xs'
-                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                  ? 'bg-success text-success-foreground shadow-xs'
+                                  : 'text-muted-foreground hover:text-soft'
                               }`}
                               title={resolvingTie.tie?.team_a?.name || 'Team A'}
                             >
@@ -856,8 +856,8 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                               onClick={() => handleRubberChange(rData.winnerSide === 2 ? 0 : 2, rData.score)}
                               className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-black truncate transition ${
                                 rData.winnerSide === 2
-                                  ? 'bg-emerald-600 text-white shadow-xs'
-                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                  ? 'bg-success text-success-foreground shadow-xs'
+                                  : 'text-muted-foreground hover:text-soft'
                               }`}
                               title={resolvingTie.tie?.team_b?.name || 'Team B'}
                             >
@@ -871,7 +871,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                             placeholder="Score (e.g. 21-18, 21-19)"
                             value={rData.score}
                             onChange={(e) => handleRubberChange(rData.winnerSide, e.target.value)}
-                            className="w-full px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-[11px] placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            className="w-full px-2.5 py-1 rounded-xl border border-border bg-card text-foreground font-mono text-[11px] placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-primary/40"
                           />
                         </div>
                       </div>
@@ -884,15 +884,15 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
             {/* Optional Tie Score Inputs */}
             <div className="space-y-3 mb-5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-bold text-soft">
                   Total Rubbers Won (Tie Score)
                 </label>
-                <span className="text-[11px] text-slate-400">Auto-calculated or override</span>
+                <span className="text-[11px] text-muted-foreground">Auto-calculated or override</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800">
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-background/60 border border-border">
                 <div>
-                  <label className="text-[11px] font-black text-slate-600 dark:text-slate-400 block mb-1 truncate">
+                  <label className="text-[11px] font-black text-muted-foreground block mb-1 truncate">
                     {resolvingTie.tie?.team_a?.short_name || 'Team A'} Rubbers Won
                   </label>
                   <input
@@ -901,12 +901,12 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     placeholder="e.g. 3"
                     value={resolvingTie.scoreA}
                     onChange={(e) => setResolvingTie((prev) => prev ? { ...prev, scoreA: e.target.value } : null)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-black text-slate-600 dark:text-slate-400 block mb-1 truncate">
+                  <label className="text-[11px] font-black text-muted-foreground block mb-1 truncate">
                     {resolvingTie.tie?.team_b?.short_name || 'Team B'} Rubbers Won
                   </label>
                   <input
@@ -915,7 +915,7 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
                     placeholder="e.g. 1"
                     value={resolvingTie.scoreB}
                     onChange={(e) => setResolvingTie((prev) => prev ? { ...prev, scoreB: e.target.value } : null)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground font-black text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
               </div>
@@ -924,11 +924,11 @@ export function TeamTournamentManager({ tournamentId, view = "all" }: { tourname
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-border shrink-0">
               <button
                 type="button"
                 onClick={() => setResolvingTie(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                className="px-4 py-2.5 rounded-xl border border-border-strong text-soft text-xs font-bold hover:bg-muted transition"
               >
                 Cancel
               </button>

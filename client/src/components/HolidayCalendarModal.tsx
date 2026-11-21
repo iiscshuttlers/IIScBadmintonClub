@@ -45,22 +45,22 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
     .slice(0, 5);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/70 backdrop-blur-sm p-4" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+        className="bg-card border border-border-strong rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-b border-slate-700 p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-info/30 to-individual/30 border-b border-border-strong p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-400" />
-            <h3 className="font-black text-white text-base">Holiday Calendar</h3>
+            <Calendar className="w-5 h-5 text-info" />
+            <h3 className="font-black text-foreground text-base">Holiday Calendar</h3>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition">
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -70,14 +70,14 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-black text-white">{monthStr}</span>
+            <span className="text-sm font-black text-foreground">{monthStr}</span>
             <button
               onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -86,14 +86,14 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-1">
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
-              <div key={d} className="text-center text-[10px] font-black text-slate-500 py-1">{d}</div>
+              <div key={d} className="text-center text-[10px] font-black text-muted-foreground py-1">{d}</div>
             ))}
           </div>
 
           {/* Calendar grid */}
           {loading ? (
             <div className="h-32 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-info border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <div className="grid grid-cols-7 gap-0.5">
@@ -109,13 +109,13 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
                     title={holidayName}
                     className={`relative flex items-center justify-center h-8 rounded-lg text-xs font-bold transition-all ${
                       isToday ? "bg-primary text-primary-foreground" :
-                      holidayName ? "bg-red-900/60 text-red-300 ring-1 ring-red-500/40" :
-                      isSunday ? "text-red-400" : "text-slate-300 hover:bg-slate-800"
+                      holidayName ? "bg-danger/25 text-danger ring-1 ring-danger/40" :
+                      isSunday ? "text-danger" : "text-soft hover:bg-muted"
                     }`}
                   >
                     {day}
                     {holidayName && !isToday && (
-                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-400" />
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-danger" />
                     )}
                   </div>
                 );
@@ -126,12 +126,12 @@ export function HolidayCalendarModal({ onClose }: { onClose: () => void }) {
           {/* Upcoming holidays list */}
           {upcomingHolidays.length > 0 && (
             <div className="mt-4 space-y-1.5">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Upcoming Holidays</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Upcoming Holidays</p>
               {upcomingHolidays.map((h, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-slate-800/60 rounded-xl">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                  <span className="text-xs font-bold text-slate-200 flex-1">{h.name}</span>
-                  <span className="text-[10px] font-black text-slate-500">
+                <div key={i} className="flex items-center gap-2 p-2 bg-muted/60 rounded-xl">
+                  <div className="w-1.5 h-1.5 rounded-full bg-danger shrink-0" />
+                  <span className="text-xs font-bold text-soft flex-1">{h.name}</span>
+                  <span className="text-[10px] font-black text-muted-foreground">
                     {new Date(h.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </span>
                 </div>

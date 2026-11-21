@@ -69,32 +69,32 @@ export default function VenueScoreboardPage() {
   const publicUrl = venueTournamentUrl(tournamentId);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none">
       {/* Top venue header bar */}
-      <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-900 border-b border-slate-800">
+      <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-card border-b border-border">
         <div className="flex items-center gap-4">
           <Link
             href={`/tournaments/${tournamentId}`}
-            className="inline-flex items-center gap-1.5 text-xs font-black text-slate-400 hover:text-white transition"
+            className="inline-flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-foreground transition"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden /> Exit Venue
           </Link>
-          <div className="h-4 w-px bg-slate-700" />
-          <h1 className="text-lg md:text-xl font-black text-white tracking-wide truncate max-w-md">
+          <div className="h-4 w-px bg-muted-strong" />
+          <h1 className="text-lg md:text-xl font-black text-foreground tracking-wide truncate max-w-md">
             {tournament?.name ?? "Tournament Venue Scoreboard"}
           </h1>
-          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+          <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-success/20 text-success border border-success/40 text-[10px] font-black uppercase tracking-wider">
             Venue Live
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Court selector */}
-          <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl text-xs font-bold">
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-xl text-xs font-bold">
             <button
               onClick={() => setSelectedCourt("all")}
               className={`px-3 py-1.5 rounded-lg transition ${
-                selectedCourt === "all" ? "bg-primary text-primary-foreground font-black" : "text-slate-300 hover:text-white"
+                selectedCourt === "all" ? "bg-primary text-primary-foreground font-black" : "text-soft hover:text-foreground"
               }`}
             >
               All Courts
@@ -104,7 +104,7 @@ export default function VenueScoreboardPage() {
                 key={c}
                 onClick={() => setSelectedCourt(c)}
                 className={`px-3 py-1.5 rounded-lg transition ${
-                  selectedCourt === c ? "bg-primary text-primary-foreground font-black" : "text-slate-300 hover:text-white"
+                  selectedCourt === c ? "bg-primary text-primary-foreground font-black" : "text-soft hover:text-foreground"
                 }`}
               >
                 {courtLabel(c)}
@@ -114,7 +114,7 @@ export default function VenueScoreboardPage() {
 
           <button
             onClick={toggleFullscreen}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-muted hover:bg-muted-strong text-soft transition"
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             aria-label="Toggle Fullscreen"
           >
@@ -127,10 +127,10 @@ export default function VenueScoreboardPage() {
       {(!open.online || open.refreshFailed || stale) && (
         <div
           role="status"
-          className="flex items-center justify-between px-6 py-2.5 bg-amber-950 border-b border-amber-800 text-amber-200 text-xs font-bold"
+          className="flex items-center justify-between px-6 py-2.5 bg-warning/20 border-b border-warning/40 text-warning-foreground text-xs font-bold"
         >
           <div className="flex items-center gap-2">
-            <WifiOff className="w-4 h-4 text-amber-400" aria-hidden />
+            <WifiOff className="w-4 h-4 text-warning" aria-hidden />
             <span>
               {!open.online
                 ? `Network disconnected. Scores confirmed at ${lastConfirmed ?? "—"}.`
@@ -148,7 +148,7 @@ export default function VenueScoreboardPage() {
         </div>
       )}
       {fullscreenError && (
-        <p role="status" className="px-6 py-2 bg-slate-900 text-amber-300 text-xs font-bold">
+        <p role="status" className="px-6 py-2 bg-card text-warning text-xs font-bold">
           Fullscreen was not allowed by this browser. The scoreboard remains available in the current window.
         </p>
       )}
@@ -157,9 +157,9 @@ export default function VenueScoreboardPage() {
       <section aria-label="Venue courts" className="flex-1 p-6 overflow-y-auto">
         {displayedQueues.length === 0 ? (
           <div className="h-full min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
-            <Monitor className="w-16 h-16 text-slate-700 dark:text-slate-500 mb-4" />
-            <h2 className="text-2xl font-black text-slate-300">No Matches Currently On Court</h2>
-            <p className="text-slate-500 mt-2 max-w-sm">
+            <Monitor className="w-16 h-16 text-muted-foreground mb-4" />
+            <h2 className="text-2xl font-black text-soft">No Matches Currently On Court</h2>
+            <p className="text-muted-foreground mt-2 max-w-sm">
               When an umpire or tournament desk starts a match on a court, it will immediately display here in high contrast.
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function VenueScoreboardPage() {
       </section>
 
       {/* Footer ticker info */}
-      <footer className="px-6 py-3 bg-slate-900/80 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+      <footer className="px-6 py-3 bg-card/80 border-t border-border/80 flex items-center justify-between text-xs text-muted-foreground">
         <div>
           <span>Last server confirmation: {lastConfirmed ?? "Syncing..."}</span>
         </div>
@@ -209,15 +209,15 @@ function VenueCourtCard({
   nextReady?: boolean;
 }) {
   return (
-    <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+    <div className="flex flex-col bg-card border border-border rounded-3xl overflow-hidden shadow-2xl">
       {/* Court Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-slate-800/80 border-b border-slate-700/60">
-        <h2 className="text-2xl font-black text-white tracking-wider">{courtLabel(court)}</h2>
+      <div className="flex items-center justify-between px-6 py-4 bg-muted/80 border-b border-border-strong/60">
+        <h2 className="text-2xl font-black text-foreground tracking-wider">{courtLabel(court)}</h2>
         <span
           className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
             playing
-              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse"
-              : "bg-slate-700 text-slate-300"
+              ? "bg-live/20 text-live border border-live/30 animate-pulse"
+              : "bg-muted-strong text-soft"
           }`}
         >
           {playing ? "LIVE ON COURT" : "COURT FREE"}
@@ -228,7 +228,7 @@ function VenueCourtCard({
       <div className="flex-1 p-6 flex flex-col justify-between space-y-6">
         {playing ? (
           <div>
-            <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">
+            <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mb-4 uppercase tracking-widest">
               <span>{playing.discipline ?? playing.categoryLabel} · {playing.roundName}</span>
               {playing.games.length > 0 && (
                 <span>Game {playing.games.length}</span>
@@ -242,7 +242,7 @@ function VenueCourtCard({
                 games={playing.games.map((g) => g.side1)}
                 isWinner={playing.sides[0].isWinner}
               />
-              <div className="h-px bg-slate-800" />
+              <div className="h-px bg-muted" />
               <VenuePlayerRow
                 label={playing.sides[1].label}
                 games={playing.games.map((g) => g.side2)}
@@ -251,24 +251,24 @@ function VenueCourtCard({
             </div>
           </div>
         ) : (
-          <div className="py-12 text-center text-slate-500 font-bold">
+          <div className="py-12 text-center text-muted-foreground font-bold">
             No match currently in progress
           </div>
         )}
 
         {/* Up Next Preview */}
         {next && (
-          <div className="pt-4 border-t border-slate-800/80">
+          <div className="pt-4 border-t border-border/80">
             <div className="flex items-center justify-between gap-2 mb-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Up Next on this court
               </p>
               {nextReady !== undefined && <SpectatorChip ready={nextReady} />}
             </div>
-            <p className="text-sm font-bold text-slate-200 truncate">
+            <p className="text-sm font-bold text-soft truncate">
               {next.sides[0].label} vs {next.sides[1].label}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {next.discipline ?? next.categoryLabel} · {next.roundName}
             </p>
           </div>
@@ -289,12 +289,12 @@ function VenuePlayerRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className={`text-xl md:text-2xl font-black truncate ${isWinner ? "text-primary" : "text-white"}`}>
+      <span className={`text-xl md:text-2xl font-black truncate ${isWinner ? "text-primary" : "text-foreground"}`}>
         {label}
       </span>
       <div className="flex items-center gap-3 shrink-0 tabular-nums font-mono">
         {games.length === 0 ? (
-          <span className="text-2xl font-black text-slate-500">0</span>
+          <span className="text-2xl font-black text-muted-foreground">0</span>
         ) : (
           games.map((pts, i) => (
             <span
@@ -302,7 +302,7 @@ function VenuePlayerRow({
               className={`text-2xl md:text-3xl font-black px-2.5 py-1 rounded-xl ${
                 i === games.length - 1
                   ? "bg-primary text-primary-foreground font-black ring-2 ring-primary/40"
-                  : "bg-slate-800 text-slate-300"
+                  : "bg-muted text-soft"
               }`}
             >
               {pts}

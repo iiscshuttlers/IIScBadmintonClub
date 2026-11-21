@@ -79,4 +79,16 @@ describe("computeQueueAlerts", () => {
     expect(courtLabel("3")).toBe("Court 3");
     expect(courtLabel("Centre Court")).toBe("Centre Court");
   });
+
+  it("treats 1, C1 and Court 1 as one court and skips placeholder courts", () => {
+    const alerts = computeQueueAlerts([
+      m({ status: "in_progress", court_number: "C1" }),
+      m({ court_number: "1" }),
+      m({ court_number: "Court 1" }),
+      m({ status: "in_progress", court_number: "Court" }),
+      m({ court_number: "Court" }),
+    ]);
+    expect(alerts.map((a) => [a.court, a.position])).toEqual([["1", 1], ["1", 2]]);
+    expect(queueAlertText(alerts[0]).title).toBe("⏭️ You're up next on Court 1");
+  });
 });

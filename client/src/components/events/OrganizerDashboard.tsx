@@ -61,13 +61,13 @@ function statusLabel(status?: string | null): string {
 function StatusText({ status }: { status?: string | null }) {
   const isLive = (status || '').toLowerCase() === 'in_progress';
   return (
-    <span className={`text-xs font-semibold whitespace-nowrap ${isLive ? 'text-emerald-400' : 'text-muted-foreground'}`}>
+    <span className={`text-xs font-semibold whitespace-nowrap ${isLive ? 'text-success' : 'text-muted-foreground'}`}>
       {statusLabel(status)}
     </span>
   );
 }
 
-const sectionClass = 'rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:p-4 space-y-3';
+const sectionClass = 'rounded-2xl border border-border bg-card p-3 sm:p-4 space-y-3';
 const codeClass = 'shrink-0 max-w-[5.5rem] truncate font-mono text-[11px] font-bold text-primary';
 
 interface HeaderStat {
@@ -98,9 +98,9 @@ function DashboardHeader({
   // The Tournament Manager is admin-only; for a host this panel is the console.
   const { isAdmin } = useAuth();
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 space-y-3">
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 truncate text-base font-black text-white">{title}</h2>
+        <h2 className="min-w-0 truncate text-base font-black text-foreground">{title}</h2>
         <div className="flex shrink-0 items-center gap-1.5">
           <Button
             variant="outline"
@@ -108,7 +108,7 @@ function DashboardHeader({
             onClick={onRefresh}
             aria-label="Refresh"
             title="Refresh"
-            className="h-8 w-8 p-0 rounded-xl border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white"
+            className="h-8 w-8 p-0 rounded-xl border-border-strong bg-muted text-soft hover:bg-muted-strong hover:text-foreground"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
@@ -125,7 +125,7 @@ function DashboardHeader({
 
       <div className="space-y-2">
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800"
+          className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -139,11 +139,11 @@ function DashboardHeader({
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>
-            <strong className="font-bold text-white">{done}/{total}</strong> {unit} done · {percent}%
+            <strong className="font-bold text-foreground">{done}/{total}</strong> {unit} done · {percent}%
           </span>
           {stats.map((s) => (
             <span key={s.label}>
-              <strong className="font-bold text-white">{s.value}</strong> {s.label}
+              <strong className="font-bold text-foreground">{s.value}</strong> {s.label}
             </span>
           ))}
         </div>
@@ -156,24 +156,24 @@ type Tone = 'amber' | 'sky' | 'emerald' | 'slate';
 
 const TONE: Record<Tone, { idle: string; active: string; count: string }> = {
   amber: {
-    idle: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-400/60',
-    active: 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/50',
-    count: 'text-amber-300',
+    idle: 'border-warning/30 bg-warning/5 hover:border-warning/60',
+    active: 'border-warning bg-warning/10 ring-2 ring-warning/50',
+    count: 'text-warning',
   },
   sky: {
-    idle: 'border-sky-500/30 bg-sky-500/5 hover:border-sky-400/60',
-    active: 'border-sky-400 bg-sky-500/10 ring-2 ring-sky-400/50',
-    count: 'text-sky-300',
+    idle: 'border-info/30 bg-info/5 hover:border-info/60',
+    active: 'border-info bg-info/10 ring-2 ring-info/50',
+    count: 'text-info',
   },
   emerald: {
-    idle: 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-400/60',
-    active: 'border-emerald-400 bg-emerald-500/10 ring-2 ring-emerald-400/50',
-    count: 'text-emerald-300',
+    idle: 'border-success/30 bg-success/5 hover:border-success/60',
+    active: 'border-success bg-success/10 ring-2 ring-success/50',
+    count: 'text-success',
   },
   slate: {
-    idle: 'border-slate-800 bg-slate-900 hover:border-slate-700',
-    active: 'border-slate-500 bg-slate-800 ring-2 ring-slate-500/50',
-    count: 'text-white',
+    idle: 'border-border bg-card hover:border-border-strong',
+    active: 'border-border-strong bg-muted ring-2 ring-border-strong/50',
+    count: 'text-foreground',
   },
 };
 
@@ -202,7 +202,7 @@ function AttentionCards<K extends string>({
 }) {
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
         Checking what needs attention…
       </div>
     );
@@ -212,9 +212,9 @@ function AttentionCards<K extends string>({
 
   if (pending.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm">
-        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-        <span className="font-semibold text-white">All clear</span>
+      <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+        <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
+        <span className="font-semibold text-foreground">All clear</span>
         <span className="text-muted-foreground">— nothing needs you right now</span>
       </div>
     );
@@ -235,9 +235,9 @@ function AttentionCards<K extends string>({
           >
             <div className="flex items-center justify-between">
               <span className={`text-2xl font-black leading-none ${tone.count}`}>{item.count}</span>
-              <ChevronRight className="w-4 h-4 text-slate-500 transition-colors group-hover:text-white" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground" />
             </div>
-            <p className="mt-1.5 text-sm font-semibold leading-tight text-white">{item.label}</p>
+            <p className="mt-1.5 text-sm font-semibold leading-tight text-foreground">{item.label}</p>
             {item.hint && <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{item.hint}</p>}
           </button>
         );
@@ -268,10 +268,10 @@ function DisclosureRow({
         aria-expanded={open}
         className="group flex min-w-0 flex-1 items-center gap-1.5 text-left"
       >
-        <span className="shrink-0 text-sm font-bold text-white">{label}</span>
+        <span className="shrink-0 text-sm font-bold text-foreground">{label}</span>
         {meta && <span className="truncate text-xs text-muted-foreground">· {meta}</span>}
         <ChevronRight
-          className={`ml-auto w-4 h-4 shrink-0 text-muted-foreground transition-transform group-hover:text-white ${open ? 'rotate-90' : ''}`}
+          className={`ml-auto w-4 h-4 shrink-0 text-muted-foreground transition-transform group-hover:text-foreground ${open ? 'rotate-90' : ''}`}
         />
       </button>
       {action}
@@ -690,12 +690,12 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
         t.members?.some((m: any) => m.user_id === currentUserId || m.player_id === currentPlayerId));
 
       const note = femaleDeficit > 0
-        ? { text: `Needs ${plural(femaleDeficit, 'woman', 'women')}`, className: 'text-amber-400' }
+        ? { text: `Needs ${plural(femaleDeficit, 'woman', 'women')}`, className: 'text-warning' }
         : maleDeficit > 0
-          ? { text: `Needs ${plural(maleDeficit, 'man', 'men')}`, className: 'text-sky-400' }
+          ? { text: `Needs ${plural(maleDeficit, 'man', 'men')}`, className: 'text-info' }
           : !isReady
-            ? { text: `${neededCount} more needed`, className: 'text-amber-400' }
-            : { text: 'Ready', className: 'text-emerald-400' };
+            ? { text: `${neededCount} more needed`, className: 'text-warning' }
+            : { text: 'Ready', className: 'text-success' };
 
       return { team: t, activeCount, minRequired, isReady, isFullyReady, pct, activeMales, activeFemales, isMyTeam, note };
     });
@@ -735,7 +735,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
   const subTabClass = (active: boolean) =>
     `rounded-lg px-2.5 py-1 font-bold transition ${
-      active ? 'bg-primary text-primary-foreground' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+      active ? 'bg-primary text-primary-foreground' : 'bg-muted text-soft hover:bg-muted-strong'
     }`;
 
   return (
@@ -794,7 +794,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
       {/* Ties */}
       <section className={sectionClass}>
         <div className="flex items-center justify-between gap-3">
-          <h3 className="min-w-0 truncate text-sm font-bold text-white">
+          <h3 className="min-w-0 truncate text-sm font-bold text-foreground">
             {selectedBottleneck === 'ALL' ? 'Ties' : `Ties · ${BOTTLENECK_LABEL[selectedBottleneck]}`}
             <span className="ml-1.5 text-xs font-medium text-muted-foreground">
               · {selectedBottleneck === 'ALL' ? ties.length : `${displayedTies.length} of ${ties.length}`}
@@ -808,7 +808,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
             {selectedBottleneck === 'ALL' ? 'No ties yet.' : 'No ties in this view.'}
           </p>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-border">
             {displayedTies.map((tie: any) => {
               const pending = [
                 !tie.lineup_locked_a && (tie.team_a?.short_name || 'Team A'),
@@ -817,19 +817,19 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
               const lineup = pending.length > 0
                 ? {
                     text: `${pending.length > 1 ? 'Lineups' : 'Lineup'} pending: ${pending.join(', ')}${tie.lineup_revealed ? ' · revealed' : ''}`,
-                    className: 'text-amber-300',
+                    className: 'text-warning',
                   }
                 : tie.lineup_revealed
                   ? { text: 'Lineups revealed', className: 'text-muted-foreground' }
                   : tie.state === 'COMPLETED'
                     ? { text: 'Lineups locked · not revealed', className: 'text-muted-foreground' }
-                    : { text: 'Locked · ready to reveal', className: 'text-amber-300' };
+                    : { text: 'Locked · ready to reveal', className: 'text-warning' };
 
               return (
                 <li key={tie.id} className="flex items-center gap-3 py-2.5">
                   <span className={codeClass} title={tie.tie_code}>{tie.tie_code}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-sm font-semibold text-foreground">
                       {tie.team_a?.name || 'TBD'} vs {tie.team_b?.name || 'TBD'}
                     </p>
                     <p className={`truncate text-xs ${lineup.className}`}>{lineup.text}</p>
@@ -838,7 +838,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                     size="sm"
                     variant="outline"
                     onClick={() => setSelectedTieForConsole(tie)}
-                    className="h-8 shrink-0 rounded-xl border-slate-700 bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700 hover:text-white"
+                    className="h-8 shrink-0 rounded-xl border-border-strong bg-muted text-xs font-bold text-soft hover:bg-muted-strong hover:text-foreground"
                   >
                     Manage
                   </Button>
@@ -871,34 +871,34 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                     key={t.id}
                     type="button"
                     onClick={() => openRoster(t)}
-                    className={`rounded-xl border bg-slate-950/40 p-3 text-left transition hover:bg-slate-800/60 ${
-                      r.isMyTeam ? 'border-amber-400/70' : 'border-slate-800 hover:border-slate-700'
+                    className={`rounded-xl border bg-background/40 p-3 text-left transition hover:bg-muted/60 ${
+                      r.isMyTeam ? 'border-warning/70' : 'border-border hover:border-border-strong'
                     }`}
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-bold text-white">
+                      <p className="min-w-0 truncate text-sm font-bold text-foreground">
                         {t.name}
                         {t.short_name && (
                           <span className="ml-1.5 font-mono text-[11px] font-semibold text-muted-foreground">{t.short_name}</span>
                         )}
                       </p>
                       {tag && (
-                        <span className={`shrink-0 text-[11px] ${r.isMyTeam ? 'text-amber-300' : 'text-muted-foreground'}`}>
+                        <span className={`shrink-0 text-[11px] ${r.isMyTeam ? 'text-warning' : 'text-muted-foreground'}`}>
                           {tag}
                         </span>
                       )}
                     </div>
                     <div className="mt-1.5 flex items-center justify-between gap-2 text-xs">
-                      <span className="text-slate-300">
-                        <strong className="font-bold text-white">{r.activeCount}</strong>/{r.minRequired} players
+                      <span className="text-soft">
+                        <strong className="font-bold text-foreground">{r.activeCount}</strong>/{r.minRequired} players
                         <span className="ml-1 text-muted-foreground">({r.activeMales}M, {r.activeFemales}F)</span>
                       </span>
                       <span className={`shrink-0 font-semibold ${r.note.className}`}>{r.note.text}</span>
                     </div>
-                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                          r.isMyTeam ? 'bg-amber-400' : r.isReady ? 'bg-emerald-500' : 'bg-amber-500'
+                          r.isMyTeam ? 'bg-warning' : r.isReady ? 'bg-success' : 'bg-warning'
                         }`}
                         style={{ width: `${r.pct}%` }}
                       />
@@ -914,40 +914,40 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
       {/* Bottleneck drill-down */}
       {showBottleneckModal && selectedBottleneck !== 'ALL' && (
         <div
-          className="fixed inset-0 z-[70] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-background/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
           onClick={() => setShowBottleneckModal(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={modalHeading[selectedBottleneck].title}
-            className="max-w-2xl w-full max-h-[85vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="max-w-2xl w-full max-h-[85vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-slate-800 flex items-start justify-between gap-3 shrink-0">
+            <div className="p-4 border-b border-border flex items-start justify-between gap-3 shrink-0">
               <div className="min-w-0">
-                <h3 className="text-base font-black text-white">{modalHeading[selectedBottleneck].title}</h3>
+                <h3 className="text-base font-black text-foreground">{modalHeading[selectedBottleneck].title}</h3>
                 <p className="text-xs text-muted-foreground">{modalHeading[selectedBottleneck].text}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowBottleneckModal(false)}
                 aria-label="Close"
-                className="p-2 -m-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 -m-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {selectedBottleneck === 'MISSING_LINEUPS' && (
-              <div className="px-4 py-2 border-b border-slate-800 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground shrink-0">
-                <span>Both missing: <strong className="text-rose-300">{missingLineupsStats.bothMissingCount}</strong></span>
-                <span>One missing: <strong className="text-amber-300">{missingLineupsStats.oneMissingCount}</strong></span>
+              <div className="px-4 py-2 border-b border-border flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground shrink-0">
+                <span>Both missing: <strong className="text-danger">{missingLineupsStats.bothMissingCount}</strong></span>
+                <span>One missing: <strong className="text-warning">{missingLineupsStats.oneMissingCount}</strong></span>
               </div>
             )}
 
             {selectedBottleneck === 'UNASSIGNED_COURTS' && (
-              <div className="px-4 py-2 border-b border-slate-800 flex flex-wrap items-center gap-2 text-xs shrink-0">
+              <div className="px-4 py-2 border-b border-border flex flex-wrap items-center gap-2 text-xs shrink-0">
                 <button type="button" onClick={() => setCourtSubTab('ties')} className={subTabClass(courtSubTab === 'ties')}>
                   Ties ({tiesMissingCourt.length})
                 </button>
@@ -962,7 +962,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                 matchesMissingCourt.length === 0 ? (
                   <p className="py-10 text-center text-sm text-muted-foreground">All rubbers have a court.</p>
                 ) : (
-                  <ul className="divide-y divide-slate-800">
+                  <ul className="divide-y divide-border">
                     {matchesMissingCourt.map((match: any) => {
                       const parentTie = ties.find((t: any) => t.id === match.tie_id);
                       return (
@@ -971,7 +971,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                             {match.match_code || match.rubber_code || `R${match.rubber_number || match.match_number || '?'}`}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-white">
+                            <p className="truncate text-sm font-semibold text-foreground">
                               {match.category || match.discipline || 'Rubber'}
                             </p>
                             {parentTie && (
@@ -989,7 +989,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
               ) : displayedTies.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">Nothing here right now.</p>
               ) : (
-                <ul className="divide-y divide-slate-800">
+                <ul className="divide-y divide-border">
                   {displayedTies.map((tie: any) => {
                     const lockedA = !!tie.lineup_locked_a;
                     const lockedB = !!tie.lineup_locked_b;
@@ -1000,17 +1000,17 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                       <li key={tie.id} className="flex items-center gap-3 py-2.5">
                         <span className={codeClass} title={tie.tie_code || 'TIE'}>{tie.tie_code || 'TIE'}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-white">
+                          <p className="truncate text-sm font-semibold text-foreground">
                             {tie.team_a?.name || 'Team A'} vs {tie.team_b?.name || 'Team B'}
                           </p>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
                             <StatusText status={tie.state || 'SCHEDULED'} />
                             {selectedBottleneck === 'MISSING_LINEUPS' && (
                               <>
-                                <span className={lockedA ? 'text-emerald-400' : 'text-amber-300'}>
+                                <span className={lockedA ? 'text-success' : 'text-warning'}>
                                   {tie.team_a?.short_name || tie.team_a?.name || 'Team A'}: {lockedA ? 'locked' : 'missing'}
                                 </span>
-                                <span className={lockedB ? 'text-emerald-400' : 'text-amber-300'}>
+                                <span className={lockedB ? 'text-success' : 'text-warning'}>
                                   {tie.team_b?.short_name || tie.team_b?.name || 'Team B'}: {lockedB ? 'locked' : 'missing'}
                                 </span>
                               </>

@@ -5,10 +5,14 @@ import { Switch } from "@/components/ui/switch";
 import { playerService } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
+import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords, Images } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import { useQuery } from "@tanstack/react-query";
 import { enableWebPush } from "@/hooks/usePushNotifications";
+import { useGalleryAlerts } from "@/hooks/useGalleryAlerts";
+import { fetchRemoteGalleryImages } from "@/lib/galleryStorage";
+import { albumLabel, alertableAlbums } from "@/lib/galleryAlerts";
 
 interface NotificationSettingsModalProps {
   open: boolean;
@@ -179,9 +183,9 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         <div className="space-y-6 mt-4">
           {/* Master Push Toggle */}
           {/* Master Email Toggle */}
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${prefs.pref_receive_email ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}`}>
+              <div className={`p-2 rounded-lg ${prefs.pref_receive_email ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                 {prefs.pref_receive_email ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
               </div>
               <div>
@@ -193,9 +197,9 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
           </div>
 
           {/* Master Push Toggle (System + App Preference) */}
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${pushGranted && prefs.pref_receive_push ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-800 text-slate-500"}`}>
+              <div className={`p-2 rounded-lg ${pushGranted && prefs.pref_receive_push ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                 {pushGranted && prefs.pref_receive_push ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
               </div>
               <div>
@@ -216,38 +220,40 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
           <div className="space-y-1">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Live Alerts</h4>
             <CategoryItem
-              icon={<Trophy className="w-4 h-4 text-amber-400" />}
-              iconBg="bg-amber-400/10"
+              icon={<Trophy className="w-4 h-4 text-gold" />}
+              iconBg="bg-gold/10"
               title="Match Results"
               description="Tournament match scores when submitted"
               checked={localPrefs.match_results}
               onCheckedChange={() => handleToggleLocal("match_results")}
             />
             <CategoryItem
-              icon={<Swords className="w-4 h-4 text-sky-400" />}
-              iconBg="bg-sky-400/10"
+              icon={<Swords className="w-4 h-4 text-info" />}
+              iconBg="bg-info/10"
               title="Tournament Match Started"
               description="When a tournament match goes live"
               checked={localPrefs.tournament_started}
               onCheckedChange={() => handleToggleLocal("tournament_started")}
             />
             <CategoryItem
-              icon={<Megaphone className="w-4 h-4 text-indigo-400" />}
-              iconBg="bg-indigo-400/10"
+              icon={<Megaphone className="w-4 h-4 text-info" />}
+              iconBg="bg-info/10"
               title="Club Announcements"
               description="New announcements from club admins"
               checked={localPrefs.announcements}
               onCheckedChange={() => handleToggleLocal("announcements")}
             />
             <CategoryItem
-              icon={<ShieldAlert className="w-4 h-4 text-rose-400" />}
-              iconBg="bg-rose-400/10"
+              icon={<ShieldAlert className="w-4 h-4 text-danger" />}
+              iconBg="bg-danger/10"
               title="Admin Alerts"
               description="Important notices pushed by admins"
               checked={localPrefs.admin_push}
               onCheckedChange={() => handleToggleLocal("admin_push")}
             />
           </div>
+
+          <GalleryAlertSettings open={open} />
 
           {/* ── Activity Preferences ── */}
           <div className="space-y-4">
@@ -301,7 +307,7 @@ function CategoryItem({
   onCheckedChange: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors">
+    <div className="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-card/60 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
         <div className={`p-2 rounded-lg shrink-0 ${iconBg}`}>
           {icon}
@@ -311,7 +317,67 @@ function CategoryItem({
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={title} className="shrink-0" />
+    </div>
+  );
+}
+
+/**
+ * New-photo alerts: one switch for the whole gallery (on by default) and a
+ * switch per album. The album bells in the gallery change the same settings.
+ */
+function GalleryAlertSettings({ open }: { open: boolean }) {
+  const alerts = useGalleryAlerts();
+  const { data: photos = [] } = useQuery({
+    queryKey: ["gallery-remote-photos"],
+    queryFn: fetchRemoteGalleryImages,
+    enabled: open,
+  });
+  const albums = alertableAlbums(photos);
+
+  const run = (write: Promise<void>, failure: string) => {
+    write.catch((err) => {
+      console.error(err);
+      toast(failure, { icon: "❌" });
+    });
+  };
+
+  return (
+    <div className="space-y-1">
+      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Gallery</h4>
+      <CategoryItem
+        icon={<Images className="w-4 h-4 text-info" />}
+        iconBg="bg-info/10"
+        title="New gallery photos"
+        description="When photos are added to an album, including new albums"
+        checked={alerts.enabled}
+        onCheckedChange={() => run(alerts.setEnabled(!alerts.enabled), "Failed to update preference")}
+      />
+      {alerts.enabled && albums.length > 0 && (
+        <div className="ml-12 mr-1 mt-1 space-y-2 border-l border-border pl-3">
+          <p className="text-[11px] text-muted-foreground">Albums</p>
+          {albums.map(({ album, category }) => {
+            const on = alerts.isOn(album);
+            const mutedForMe = alerts.isMutedForMe(album);
+            return (
+              <div key={album} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground truncate">{albumLabel(album)}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {mutedForMe ? "Muted for everyone by admins" : albumLabel(category)}
+                  </p>
+                </div>
+                <Switch
+                  checked={on}
+                  onCheckedChange={() => run(alerts.setAlbum(album, !on), `Couldn't update ${albumLabel(album)}`)}
+                  aria-label={`Alerts for ${albumLabel(album)}`}
+                  className="shrink-0"
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

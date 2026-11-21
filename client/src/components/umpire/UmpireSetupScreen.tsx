@@ -46,17 +46,17 @@ export function UmpireSetupScreen({
       (label ?? "").split(/[&,]/).map((s) => s.trim()).filter(Boolean);
 
     const CAT_BADGE: Record<string, string> = {
-      MS: "bg-blue-600",
-      WS: "bg-pink-600",
-      MD: "bg-primary",
-      WD: "bg-purple-600",
-      XD: "bg-orange-600",
+      MS: "bg-cat-ms",
+      WS: "bg-cat-ws",
+      MD: "bg-cat-md",
+      WD: "bg-cat-wd",
+      XD: "bg-cat-xd",
     };
-    const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
+    const badgeCls = CAT_BADGE[tm.category] ?? "bg-faint";
 
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-5 text-on-accent max-w-lg mx-auto shadow-2xl relative">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-[var(--info)] rounded-t-2xl" />
+      <div className="bg-card border border-border rounded-2xl p-3 sm:p-5 text-foreground max-w-lg mx-auto shadow-2xl relative">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-info rounded-t-2xl" />
 
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
@@ -70,7 +70,7 @@ export function UmpireSetupScreen({
           </div>
           <button
             onClick={() => handleClose()}
-            className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-on-accent transition shrink-0"
+            className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition shrink-0"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -79,12 +79,12 @@ export function UmpireSetupScreen({
         {/* Teams — inline */}
         <div className="flex items-center justify-between gap-2 mb-3 px-1">
           <span className="text-foreground font-black text-xs truncate flex-1">{tm.team1_label ?? "TBD"}</span>
-          <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
+          <span className="text-[9px] font-black text-danger shrink-0">vs</span>
           <span className="text-foreground font-black text-xs truncate flex-1 text-right">{tm.team2_label ?? "TBD"}</span>
         </div>
 
         {/* Scoring config (editable) */}
-        <div className="bg-slate-800/60 rounded-xl p-3 space-y-2 mb-3 border border-slate-700/50">
+        <div className="bg-muted/60 rounded-xl p-3 space-y-2 mb-3 border border-border-strong/50">
           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Scoring</p>
           <div className="flex gap-1.5">
             {[1, 3, 5].map((sets) => (
@@ -93,14 +93,14 @@ export function UmpireSetupScreen({
                 onClick={() => setMatch({ ...match, bestOfSets: sets })}
                 className={`flex-1 py-1.5 rounded-lg font-black text-xs border transition ${
                   match.bestOfSets === sets
-                    ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
-                    : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                    ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-info text-info"
+                    : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"
                 }`}
               >
                 BO{sets}
               </button>
             ))}
-            <div className="w-px bg-slate-700 self-stretch" />
+            <div className="w-px bg-muted-strong self-stretch" />
             {[11, 15, 21].map((pts) => (
               <button
                 key={pts}
@@ -114,7 +114,7 @@ export function UmpireSetupScreen({
                 className={`flex-1 py-1.5 rounded-lg font-black text-xs border transition ${
                   match.pointsToWin === pts
                     ? "bg-primary/20 border-primary text-primary"
-                    : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                    : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"
                 }`}
               >
                 {pts}
@@ -127,13 +127,13 @@ export function UmpireSetupScreen({
               type="number"
               value={match.goldenPoint}
               onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 30 })}
-              className="w-14 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-xs font-bold text-amber-400 outline-none focus:border-amber-500 transition"
+              className="w-14 bg-muted-strong border border-border-strong rounded-lg px-2 py-1 text-center text-xs font-bold text-gold outline-none focus:border-gold transition"
             />
           </div>
         </div>
 
         {/* Server selection */}
-        <div className="bg-slate-800/60 rounded-xl p-3 space-y-2 mb-3 border border-slate-700/50">
+        <div className="bg-muted/60 rounded-xl p-3 space-y-2 mb-3 border border-border-strong/50">
           <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">First Server</p>
           <div className="grid grid-cols-2 gap-1.5">
             {[
@@ -153,7 +153,7 @@ export function UmpireSetupScreen({
                 className={`py-2 px-2 rounded-lg font-black text-xs border transition text-center truncate ${
                   match.serverTeam === team
                     ? "bg-primary/20 border-primary text-primary"
-                    : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                    : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"
                 }`}
               >
                 {label}
@@ -177,8 +177,8 @@ export function UmpireSetupScreen({
                       onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
                       className={`py-1.5 px-2 rounded-lg text-[10px] font-black border transition truncate ${
                         match.serverPlayerIndex === idx
-                          ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
-                          : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                          ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-info text-info"
+                          : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"
                       }`}
                     >
                       {name}
@@ -202,8 +202,8 @@ export function UmpireSetupScreen({
                       onClick={() => setMatch({ ...match, receiverPlayerIndex: idx as 0 | 1 })}
                       className={`py-1.5 px-2 rounded-lg text-[10px] font-black border transition truncate ${
                         match.receiverPlayerIndex === idx
-                          ? "bg-[color-mix(in_srgb,var(--warning)_20%,transparent)] border-[var(--warning)] text-[var(--warning)]"
-                          : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                          ? "bg-[color-mix(in_srgb,var(--warning)_20%,transparent)] border-warning text-warning"
+                          : "bg-muted-strong/50 border-border-strong text-muted-foreground hover:border-border-strong/90"
                       }`}
                     >
                       {name}
@@ -220,7 +220,7 @@ export function UmpireSetupScreen({
           onClick={startTournamentMatch}
           className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
         >
-          <Play className="w-4 h-4 fill-white" /> Start Match
+          <Play className="w-4 h-4 fill-foreground" /> Start Match
         </button>
       </div>
     );

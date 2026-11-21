@@ -262,7 +262,7 @@ export function DirectoryWrapper() {
   const isDirectoryLoading = loading || (tournamentFilter !== "All" && (matchesLoading || participantsLoading));
 
   return (
-    <div className="w-full h-full p-4 lg:p-6 bg-slate-50 dark:bg-slate-950 min-h-screen max-w-7xl mx-auto">
+    <div className="w-full h-full p-4 lg:p-6 bg-background min-h-screen max-w-7xl mx-auto">
       <DirectoryTab
         players={players}
         otherPlayersCount={players.length - (profile ? 1 : 0)}

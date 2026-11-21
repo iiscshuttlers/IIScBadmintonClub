@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -21,8 +22,7 @@ export async function shareMatch(match: any) {
   const partner2 = match.partner2;
 
   // Winner can be either primary player or their partner (doubles)
-  const isTeam1Winner =
-    match.winner_id === match.player1_id || match.winner_id === match.team1_partner_id;
+  const isTeam1Winner = winningSide(match) === 1;
 
   const team1Names = [p1?.full_name, partner1?.full_name].filter(Boolean).join(" & ") || "Team 1";
   const team2Names = [p2?.full_name, partner2?.full_name].filter(Boolean).join(" & ") || "Team 2";

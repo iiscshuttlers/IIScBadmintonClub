@@ -81,25 +81,25 @@ const CAT_LABELS: Record<string, string> = {
 };
 
 const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = {
-  MS: { bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300", active: "bg-blue-600 text-foreground border-blue-600", dot: "bg-blue-500" },
-  WS: { bg: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300", active: "bg-pink-600 text-foreground border-pink-600", dot: "bg-pink-500" },
-  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-primary-foreground border-primary", dot: "bg-primary" },
-  WD: { bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300", active: "bg-purple-600 text-foreground border-purple-600", dot: "bg-purple-500" },
-  XD: { bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300", active: "bg-orange-600 text-foreground border-orange-600", dot: "bg-orange-500" },
+  MS: { bg: "bg-cat-ms/10 border-cat-ms/40 text-cat-ms", active: "bg-cat-ms text-on-accent border-cat-ms", dot: "bg-cat-ms" },
+  WS: { bg: "bg-cat-ws/10 border-cat-ws/40 text-cat-ws", active: "bg-cat-ws text-on-accent border-cat-ws", dot: "bg-cat-ws" },
+  MD: { bg: "bg-cat-md/10 border-cat-md/40 text-cat-md", active: "bg-cat-md text-on-accent border-cat-md", dot: "bg-cat-md" },
+  WD: { bg: "bg-cat-wd/10 border-cat-wd/40 text-cat-wd", active: "bg-cat-wd text-on-accent border-cat-wd", dot: "bg-cat-wd" },
+  XD: { bg: "bg-cat-xd/10 border-cat-xd/40 text-cat-xd", active: "bg-cat-xd text-on-accent border-cat-xd", dot: "bg-cat-xd" },
 };
 
-const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-foreground border-slate-600", dot: "bg-slate-400" };
+const DEFAULT_COLORS = { bg: "bg-muted-strong border-border-strong text-soft", active: "bg-faint text-foreground border-border-strong", dot: "bg-muted-foreground" };
 
 const CAT_BOX_COLORS_DARK: Record<string, string> = {
-  MS: "bg-blue-900/20 border-blue-900/40 hover:border-blue-500/50 hover:shadow-blue-500/20",
-  WS: "bg-pink-900/20 border-pink-900/40 hover:border-pink-500/50 hover:shadow-pink-500/20",
-  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
-  WD: "bg-purple-900/20 border-purple-900/40 hover:border-purple-500/50 hover:shadow-purple-500/20",
-  XD: "bg-orange-900/20 border-orange-900/40 hover:border-orange-500/50 hover:shadow-orange-500/20",
-  BS: "bg-teal-900/20 border-teal-900/40 hover:border-teal-500/50 hover:shadow-teal-500/20",
-  GS: "bg-rose-900/20 border-rose-900/40 hover:border-rose-500/50 hover:shadow-rose-500/20",
-  BD: "bg-cyan-900/20 border-cyan-900/40 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
-  GD: "bg-fuchsia-900/20 border-fuchsia-900/40 hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/20",
+  MS: "bg-cat-ms/10 border-cat-ms/25 hover:border-cat-ms/50 hover:shadow-cat-ms/20",
+  WS: "bg-cat-ws/10 border-cat-ws/25 hover:border-cat-ws/50 hover:shadow-cat-ws/20",
+  MD: "bg-cat-md/10 border-cat-md/20 hover:border-cat-md/50 hover:shadow-cat-md/20",
+  WD: "bg-cat-wd/10 border-cat-wd/25 hover:border-cat-wd/50 hover:shadow-cat-wd/20",
+  XD: "bg-cat-xd/10 border-cat-xd/25 hover:border-cat-xd/50 hover:shadow-cat-xd/20",
+  BS: "bg-team/10 border-team/25 hover:border-team/50 hover:shadow-team/20",
+  GS: "bg-danger/10 border-danger/25 hover:border-danger/50 hover:shadow-danger/20",
+  BD: "bg-accent/10 border-accent/25 hover:border-accent/50 hover:shadow-accent/20",
+  GD: "bg-individual/10 border-individual/25 hover:border-individual/50 hover:shadow-individual/20",
 };
 
 export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: Props) {
@@ -432,11 +432,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   );
 
   if (!allMatches.length) return (
-    <div className="flex items-center justify-center gap-3 py-6 px-4 rounded-xl bg-slate-950/40 border border-slate-800/60 text-center sm:text-left">
-      <Swords className="w-5 h-5 text-slate-500 shrink-0" />
+    <div className="flex items-center justify-center gap-3 py-6 px-4 rounded-xl bg-background/40 border border-border/60 text-center sm:text-left">
+      <Swords className="w-5 h-5 text-muted-foreground shrink-0" />
       <div>
-        <p className="text-xs font-bold text-slate-300">No tournament matches need umpiring right now.</p>
-        <p className="text-[11px] text-slate-500">Matches appear here when scheduled or in-progress matches exist in the active tournament.</p>
+        <p className="text-xs font-bold text-soft">No tournament matches need umpiring right now.</p>
+        <p className="text-[11px] text-muted-foreground">Matches appear here when scheduled or in-progress matches exist in the active tournament.</p>
       </div>
     </div>
   );
@@ -493,30 +493,30 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             <button
               onClick={() => availableTournaments.length > 1 && setShowTournamentPicker(!showTournamentPicker)}
               className={cn(
-                "flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-left",
+                "flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-muted border border-border-strong text-left",
                 availableTournaments.length > 1 && "hover:border-primary/50 cursor-pointer"
               )}
             >
-              <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+              <Trophy className="w-4 h-4 text-gold shrink-0" />
               <span className="text-xs font-black text-foreground truncate flex-1">{currentTournament.name}</span>
               {availableTournaments.length > 1 && (
-                <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform", showTournamentPicker && "rotate-180")} />
+                <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform", showTournamentPicker && "rotate-180")} />
               )}
             </button>
             {showTournamentPicker && availableTournaments.length > 1 && (
               <>
               <div className="fixed inset-0 z-40" onClick={() => setShowTournamentPicker(false)} />
-              <div className="absolute z-50 mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+              <div className="absolute z-50 mt-1 w-full bg-card border border-border-strong rounded-xl shadow-2xl overflow-hidden">
                 {availableTournaments.map(t => (
                   <button
                     key={t.id}
                     onClick={() => switchTournament(t.id)}
                     className={cn(
-                      "w-full px-3 py-2.5 text-left text-xs font-bold transition hover:bg-slate-800 flex items-center gap-2",
-                      t.id === selectedTournamentId ? "text-primary bg-primary/10" : "text-slate-300"
+                      "w-full px-3 py-2.5 text-left text-xs font-bold transition hover:bg-muted flex items-center gap-2",
+                      t.id === selectedTournamentId ? "text-primary bg-primary/10" : "text-soft"
                     )}
                   >
-                    <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <Trophy className="w-3.5 h-3.5 text-gold shrink-0" />
                     {t.name}
                   </button>
                 ))}
@@ -532,11 +532,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
         {/* Team Ties Requiring Attention */}
         {pendingTies.length > 0 && (
-          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-800/80 border border-amber-500/30 space-y-3">
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-warning/10 via-muted to-muted/80 border border-warning/30 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Flag className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-black text-amber-200 uppercase tracking-wider">
+                <Flag className="w-4 h-4 text-warning" />
+                <h3 className="text-sm font-black text-warning uppercase tracking-wider">
                   Team Ties Requiring Umpire Attention ({pendingTies.length})
                 </h3>
               </div>
@@ -549,21 +549,21 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 return (
                   <div 
                     key={tie.id} 
-                    className="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 flex items-center justify-between gap-3 text-xs"
+                    className="p-3 rounded-xl bg-card/90 border border-border-strong/80 flex items-center justify-between gap-3 text-xs"
                   >
                     <div>
-                      <div className="font-bold text-slate-100 flex items-center gap-1.5">
+                      <div className="font-bold text-foreground flex items-center gap-1.5">
                         <span className="font-mono text-primary">{tie.tie_code}</span>
                         <span>{tie.team_a?.short_name || 'Team A'} vs {tie.team_b?.short_name || 'Team B'}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
                         <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                          bothLocked ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'
+                          bothLocked ? 'bg-success/20 text-success border border-success/40' : 'bg-danger/20 text-danger border border-danger/40'
                         }`}>
                           {bothLocked ? 'Lineups Ready' : 'Lineups Incomplete'}
                         </span>
                         {bothLocked && !revealed && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-warning/20 text-warning border border-warning/40 animate-pulse">
                             Awaiting Reveal
                           </span>
                         )}
@@ -572,7 +572,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
                     <button
                       onClick={() => setActiveTieForConsole({ tie, tournament: tie.tournament })}
-                      className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-xs flex items-center gap-1 transition"
+                      className="px-2.5 py-1.5 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 font-bold text-xs flex items-center gap-1 transition"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       Arbiter Desk
@@ -592,7 +592,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               placeholder="Search player, match #..."
               value={upcomingSearch}
               onChange={e => setUpcomingSearch(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-xs text-on-accent rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+              className="w-full bg-muted border border-border-strong text-xs text-foreground rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
             />
 
             {/* Status pills */}
@@ -610,8 +610,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     className={cn(
                       "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
                       upcomingStatus === s
-                        ? s === "live" ? "bg-amber-500 text-black border-amber-500" : "bg-primary text-primary-foreground border-primary"
-                        : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                        ? s === "live" ? "bg-warning text-warning-foreground border-warning" : "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/80 text-muted-foreground border-border-strong/60 hover:text-soft"
                     )}
                   >
                     {label} {count > 0 && <span className="opacity-70">({count})</span>}
@@ -630,7 +630,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
                     upcomingFormat === f
                       ? `${(CAT_COLORS[f] ?? {}).active || "bg-primary text-primary-foreground border-primary"}`
-                      : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                      : "bg-muted/80 text-muted-foreground border-border-strong/60 hover:text-soft"
                   )}
                 >
                   {f === "ALL" ? "All" : f}
@@ -647,7 +647,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
                     upcomingCourt === "ALL"
                       ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                      : "bg-muted/80 text-muted-foreground border-border-strong/60 hover:text-soft"
                   )}
                 >
                   All Courts
@@ -659,8 +659,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     className={cn(
                       "px-2.5 py-1 rounded-lg text-[10px] font-black whitespace-nowrap transition-all border",
                       upcomingCourt === c
-                        ? "bg-blue-500 text-black border-blue-500"
-                        : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                        ? "bg-info text-info-foreground border-info"
+                        : "bg-muted/80 text-muted-foreground border-border-strong/60 hover:text-soft"
                     )}
                   >
                     C{c}
@@ -671,12 +671,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
             {/* Match count */}
             <div className="flex items-center gap-2">
-              <Swords className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-[10px] font-bold text-slate-400">{upcomingScheduled.length} match{upcomingScheduled.length !== 1 ? "es" : ""}</span>
+              <Swords className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground">{upcomingScheduled.length} match{upcomingScheduled.length !== 1 ? "es" : ""}</span>
             </div>
             
             {upcomingScheduled.length === 0 ? (
-              <div className="p-4 rounded-2xl border border-slate-700 bg-slate-800/50 text-center text-muted-foreground text-sm">
+              <div className="p-4 rounded-2xl border border-border-strong bg-muted/50 text-center text-muted-foreground text-sm">
                 No scheduled matches match your filters.
               </div>
             ) : (
@@ -696,27 +696,27 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     className={cn(
                       "relative w-full p-3 rounded-xl border text-left transition-all duration-200 group",
                       isDone
-                        ? "bg-slate-800/30 border-slate-800/40"
+                        ? "bg-muted/30 border-border/40"
                         : noPlayers
-                          ? "bg-slate-800/40 border-slate-800/50 opacity-50 cursor-not-allowed"
+                          ? "bg-muted/40 border-border/50 opacity-50 cursor-not-allowed"
                           : isLive
-                            ? "bg-amber-950/30 border-amber-500/40 hover:border-amber-400 cursor-pointer"
-                            : "bg-slate-800/60 border-slate-700/60 hover:border-primary/50 cursor-pointer"
+                            ? "bg-warning/10 border-warning/40 hover:border-warning cursor-pointer"
+                            : "bg-muted/60 border-border-strong/60 hover:border-primary/50 cursor-pointer"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       {/* Left: category + match code */}
-                      <span className="text-[9px] font-black text-muted-foreground uppercase bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase bg-background/50 px-1.5 py-0.5 rounded border border-border shrink-0">
                         {m.category} {m.match_code}
                       </span>
 
                       {isLive && (
-                        <span className="text-[9px] font-black text-amber-400 flex items-center gap-1 shrink-0">
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />LIVE
+                        <span className="text-[9px] font-black text-warning flex items-center gap-1 shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />LIVE
                         </span>
                       )}
                       {isDone && (
-                        <span className="text-[9px] font-black text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 shrink-0">DONE</span>
+                        <span className="text-[9px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border-strong shrink-0">DONE</span>
                       )}
 
                       {/* Right: court + time + notify */}
@@ -725,7 +725,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                           <span className={cn("text-[9px] font-bold", getCourtColor(m.court_number))}>C{m.court_number}</span>
                         )}
                         {m.scheduled_at && (
-                          <span className="text-[9px] text-slate-400">
+                          <span className="text-[9px] text-muted-foreground">
                             {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
@@ -733,7 +733,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                           <button
                             onClick={(e) => handleNotify(e, m.id)}
                             disabled={notifyingId === m.id}
-                            className={cn("p-0.5 z-10", m.reminder_sent ? "text-emerald-400" : "text-primary")}
+                            className={cn("p-0.5 z-10", m.reminder_sent ? "text-success" : "text-primary")}
                             title={m.reminder_sent ? "Notified — tap to resend" : "Send Reminder"}
                           >
                             {notifyingId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className={cn("w-3 h-3", m.reminder_sent && "fill-current")} />}
@@ -748,11 +748,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       const t2Won = m.winner_side === 2 || m.team1_label === "BYE";
                       return (
                         <div className="flex items-center justify-between gap-2 mt-1.5">
-                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-emerald-400" : t2Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-success" : t2Won ? "text-muted-foreground line-through decoration-soft" : "text-foreground")}>
                             {t1Won && <CheckCircle2 className="w-3 h-3 inline mr-0.5 -mt-0.5" />}{m.team1_label ?? "TBD"}
                           </span>
-                          <span className="text-[9px] font-black text-rose-400 shrink-0">vs</span>
-                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-emerald-400" : t1Won ? "text-slate-600 dark:text-slate-400 line-through decoration-slate-700" : "text-slate-100")}>
+                          <span className="text-[9px] font-black text-danger shrink-0">vs</span>
+                          <span className={cn("font-bold text-xs truncate flex-1 text-right", t2Won ? "text-success" : t1Won ? "text-muted-foreground line-through decoration-soft" : "text-foreground")}>
                             {m.team2_label ?? "TBD"}{t2Won && <CheckCircle2 className="w-3 h-3 inline ml-0.5 -mt-0.5" />}
                           </span>
                         </div>
@@ -771,7 +771,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         )}
 
         <div className="flex items-center gap-2 mt-4">
-          <Trophy className="w-5 h-5 text-amber-400" />
+          <Trophy className="w-5 h-5 text-gold" />
           <h3 className="text-sm font-black text-foreground">Select Format</h3>
         </div>
 
@@ -787,7 +787,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               <button
                 key={cat}
                 onClick={() => { setSelectedCategory(cat); setStep("match"); }}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-slate-800 border border-slate-700 hover:border-primary hover:bg-slate-750 transition-all group text-left"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-muted border border-border-strong hover:border-primary hover:bg-muted-strong transition-all group text-left"
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${colors.active} shrink-0`}>
                   {cat}
@@ -797,14 +797,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                   <p className="text-sm text-muted-foreground">
                     {(() => {
                       if (catMatches.length > 0 && upcoming === 0 && inProgress === 0) {
-                        return <span className="text-emerald-400 font-bold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 inline" /> All {done} matches completed</span>;
+                        return <span className="text-success font-bold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 inline" /> All {done} matches completed</span>;
                       }
                       const parts: React.ReactNode[] = [];
                       if (upcoming > 0) parts.push(<span key="u">{upcoming} upcoming</span>);
-                      if (inProgress > 0) parts.push(<span key="l" className="text-amber-400 font-bold">{inProgress} live</span>);
-                      if (done > 0) parts.push(<span key="d" className="text-slate-500">{done} done</span>);
+                      if (inProgress > 0) parts.push(<span key="l" className="text-warning font-bold">{inProgress} live</span>);
+                      if (done > 0) parts.push(<span key="d" className="text-muted-foreground">{done} done</span>);
                       if (parts.length === 0) return <span>No matches</span>;
-                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-slate-600 dark:text-slate-400">·</span>, part], []);
+                      return parts.reduce<React.ReactNode[]>((acc, part, i) => i === 0 ? [part] : [...acc, <span key={`s${i}`} className="mx-1 text-muted-foreground">·</span>, part], []);
                     })()}
                   </p>
                 </div>
@@ -840,7 +840,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep("format"); setSelectedCategory(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
+            className="p-2 rounded-xl bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -853,7 +853,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               rounds.forEach(r => { next[r] = !allCollapsed; });
               setCollapsedRounds(prev => ({ ...prev, ...next }));
             }}
-            className="ml-auto p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent text-[10px] font-bold"
+            className="ml-auto p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground text-[10px] font-bold"
             title={rounds.every(r => collapsedRounds[r] ?? true) ? "Expand all" : "Collapse all"}
           >
             {rounds.every(r => collapsedRounds[r] ?? true) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -871,23 +871,23 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                   onClick={() => setCollapsedRounds(prev => ({ ...prev, [roundName]: !(prev[roundName] ?? true) }))}
                   className={cn(
                     "flex items-center justify-between w-full text-left mb-3 px-4 py-2.5 rounded-xl transition-all duration-300 group shadow-sm",
-                    !isCollapsed ? "bg-slate-800/80 border border-slate-700 hover:border-slate-600" : "bg-slate-800/40 border border-transparent hover:bg-slate-800/60"
+                    !isCollapsed ? "bg-muted/80 border border-border-strong hover:border-border-strong/90" : "bg-muted/40 border border-transparent hover:bg-muted/60"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "flex items-center justify-center w-6 h-6 rounded-md transition-colors",
-                      !isCollapsed ? "bg-primary/20 text-primary" : "bg-slate-700 text-slate-400 group-hover:text-slate-300 group-hover:bg-slate-600"
+                      !isCollapsed ? "bg-primary/20 text-primary" : "bg-muted-strong text-muted-foreground group-hover:text-soft group-hover:bg-faint"
                     )}>
                       {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                     <p className={cn(
                       "text-xs font-black uppercase tracking-widest transition-colors",
-                      !isCollapsed ? "text-slate-200" : "text-slate-400 group-hover:text-slate-300"
+                      !isCollapsed ? "text-soft" : "text-muted-foreground group-hover:text-soft"
                     )}>{roundName}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!isCollapsed && <span className="text-[10px] font-bold text-slate-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full">{roundMatches.length}</span>}
+                    {!isCollapsed && <span className="text-[10px] font-bold text-muted-foreground bg-card border border-border-strong px-2 py-0.5 rounded-full">{roundMatches.length}</span>}
                     {isAdmin && roundName.toLowerCase().includes('3rd') && (
                       <span
                         role="button"
@@ -901,7 +901,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                             })
                             .catch((err: any) => toast.error(err.message || "Failed to delete"));
                         }}
-                        className="p-1 rounded-md bg-rose-950/50 border border-rose-900/50 text-rose-400 hover:bg-rose-900/50 hover:text-rose-300 transition"
+                        className="p-1 rounded-md bg-danger/20 border border-danger/30 text-danger hover:bg-danger/20 hover:text-danger/80 transition"
                         title="Remove 3rd place match"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -927,28 +927,28 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                           className={cn(
                             "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                             isLive
-                              ? "bg-gradient-to-br from-amber-950/40 to-slate-900 border-amber-500/50 hover:border-amber-400 hover:shadow-amber-500/20 hover:-translate-y-1"
+                              ? "bg-gradient-to-br from-warning/15 to-card border-warning/50 hover:border-warning hover:shadow-warning/20 hover:-translate-y-1"
                               : noPlayers
-                                ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
-                                : `${CAT_BOX_COLORS_DARK[m.category] || "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20"} hover:shadow-lg hover:-translate-y-1`
+                                ? "bg-muted/40 border-border/50 opacity-60 cursor-not-allowed"
+                                : `${CAT_BOX_COLORS_DARK[m.category] || "bg-gradient-to-br from-muted to-card border-border-strong hover:border-primary/50 hover:shadow-primary/20"} hover:shadow-lg hover:-translate-y-1`
                           )}
                         >
                           {!noPlayers && !isLive && (
                             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                           )}
                           {isLive && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-pulse pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-warning/0 via-warning/10 to-warning/0 opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-pulse pointer-events-none" />
                           )}
 
                           <div className="relative flex flex-col gap-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-slate-950/50 px-2 py-1 rounded-md border border-slate-800">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-background/50 px-2 py-1 rounded-md border border-border">
                                   {m.match_code}
                                 </span>
                                 {isLive && (
-                                  <span className="text-[10px] font-black text-amber-400 flex items-center gap-1.5 bg-amber-950/50 px-2 py-1 rounded-md border border-amber-900/50">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>LIVE
+                                  <span className="text-[10px] font-black text-warning flex items-center gap-1.5 bg-warning/20 px-2 py-1 rounded-md border border-warning/30">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse"></div>LIVE
                                   </span>
                                 )}
                               </div>
@@ -957,19 +957,19 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                   <button
                                     onClick={(e) => { e.stopPropagation(); deleteThirdPlaceMatch(m); }}
                                     disabled={deletingMatchId === m.id}
-                                    className="p-1 rounded-md bg-rose-950/50 border border-rose-900/50 text-rose-400 hover:bg-rose-900/50 hover:text-rose-300 transition"
+                                    className="p-1 rounded-md bg-danger/20 border border-danger/30 text-danger hover:bg-danger/20 hover:text-danger/80 transition"
                                     title="Remove 3rd place match"
                                   >
                                     {deletingMatchId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                                   </button>
                                 )}
                                 {m.court_number && (
-                                  <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800", getCourtColor(m.court_number))}>
+                                  <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-background/50 border border-border", getCourtColor(m.court_number))}>
                                     <MapPin className="w-3 h-3" /> C{m.court_number}
                                   </span>
                                 )}
                                 {m.scheduled_at && (
-                                  <span className="flex items-center gap-1 text-[10px] font-medium text-slate-300 px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800">
+                                  <span className="flex items-center gap-1 text-[10px] font-medium text-soft px-2 py-1 rounded-md bg-background/50 border border-border">
                                     <Clock className="w-3 h-3 text-primary" />
                                     {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                                   </span>
@@ -987,7 +987,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                     <div className="flex-1 min-w-0">
                                       <span className={cn(
                                         "font-bold text-sm sm:text-base block truncate transition-colors",
-                                        t1Won ? "text-emerald-400" : t2Won ? "text-slate-500" : "text-slate-100 group-hover:text-primary"
+                                        t1Won ? "text-success" : t2Won ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
                                       )}>
                                         {t1Won && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
                                         {m.team1_label ?? "TBD"}
@@ -995,8 +995,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                     </div>
                                     <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
                                       <div className={cn(
-                                        "border text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5",
-                                        isLive ? "bg-amber-950/80 border-amber-700/80 text-amber-500" : "bg-slate-950/80 border-slate-700/80 text-rose-400"
+                                        "border text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-foreground/5",
+                                        isLive ? "bg-warning/25 border-warning/80 text-warning" : "bg-background/80 border-border-strong/80 text-live"
                                       )}>
                                         VS
                                       </div>
@@ -1004,7 +1004,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                     <div className="flex-1 min-w-0 text-right">
                                       <span className={cn(
                                         "font-bold text-sm sm:text-base block truncate transition-colors",
-                                        t2Won ? "text-emerald-400" : t1Won ? "text-slate-500" : "text-slate-100 group-hover:text-primary"
+                                        t2Won ? "text-success" : t1Won ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
                                       )}>
                                         {t2Won && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
                                         {m.team2_label ?? "TBD"}
@@ -1013,17 +1013,17 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                                   </div>
 
                                   {isBye && (
-                                    <p className="text-[11px] text-emerald-400/70 text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                                    <p className="text-[11px] text-success/70 text-center mt-2 italic border-t border-border/50 pt-2">
                                       Advances automatically
                                     </p>
                                   )}
                                   {(t1Won || t2Won) && !isBye && m.score && (
-                                    <p className="text-[11px] text-emerald-400/70 text-center mt-2 border-t border-slate-800/50 pt-2">
+                                    <p className="text-[11px] text-success/70 text-center mt-2 border-t border-border/50 pt-2">
                                       {m.score}
                                     </p>
                                   )}
                                   {noPlayers && (
-                                    <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                                    <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-border/50 pt-2">
                                       Waiting for previous round results
                                     </p>
                                   )}
@@ -1046,7 +1046,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     value={rescheduleReason}
                     onChange={(e) => setRescheduleReason(e.target.value)}
                     placeholder="e.g. Court overrun moved this match to the next available slot"
-                    className="w-full min-h-[72px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                    className="w-full min-h-[72px] bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-info transition"
                   />
                 </div>
               </div>
@@ -1066,14 +1066,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
-            className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
+            className="p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <span className="text-muted-foreground text-xs">Match Details</span>
         </div>
 
-        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="bg-muted rounded-xl border border-border-strong overflow-hidden">
           {/* Category + round banner */}
           <div className={`px-3 py-2 flex items-center gap-2 text-xs ${colors.active}`}>
             <span className="font-black">{selectedMatch.category}</span>
@@ -1089,7 +1089,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <p className="text-[9px] text-muted-foreground font-bold uppercase">Team 1</p>
                 <p className="text-foreground font-black text-xs truncate">{selectedMatch.team1_label ?? "TBD"}</p>
               </div>
-              <span className="text-[9px] font-black text-rose-400 bg-slate-900 px-2 py-0.5 rounded-full shrink-0">VS</span>
+              <span className="text-[9px] font-black text-danger bg-card px-2 py-0.5 rounded-full shrink-0">VS</span>
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[9px] text-muted-foreground font-bold uppercase">Team 2</p>
                 <p className="text-foreground font-black text-xs truncate">{selectedMatch.team2_label ?? "TBD"}</p>
@@ -1097,7 +1097,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             </div>
 
             {/* Scoring config + court/time — single compact row */}
-            <div className="bg-slate-900 rounded-lg px-2.5 py-1.5 flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
+            <div className="bg-card rounded-lg px-2.5 py-1.5 flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
               <Settings2 className="w-3 h-3 text-primary shrink-0" />
               <span><span className="font-bold text-primary">{selectedMatch.points_to_win}</span>pts</span>
               <span>·</span>
@@ -1135,11 +1135,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               }}
               className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-primary/30"
             >
-              <Play className="w-4 h-4 fill-white" />
+              <Play className="w-4 h-4 fill-foreground" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}
             </button>
             {readinessMatch(selectedMatch.id) && startWarning(readiness, readinessMatch(selectedMatch.id)!) && (
-              <p className="text-center text-[11px] text-amber-300">{startWarning(readiness, readinessMatch(selectedMatch.id)!)}</p>
+              <p className="text-center text-[11px] text-warning">{startWarning(readiness, readinessMatch(selectedMatch.id)!)}</p>
             )}
             {checkinTid && readinessMatch(selectedMatch.id) && selectedMatch.status !== "in_progress" && (
               <CallMissingButton data={readiness} match={readinessMatch(selectedMatch.id)!} tournamentId={checkinTid} />
@@ -1160,7 +1160,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     toast.error(detail || error?.message || "Couldn't call the players");
                   }
                 }}
-                className="w-full py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-bold text-[10px] uppercase tracking-wider transition hover:bg-emerald-500/20 flex items-center justify-center gap-1.5"
+                className="w-full py-2 rounded-lg border border-success/40 bg-success/10 text-success font-bold text-[10px] uppercase tracking-wider transition hover:bg-success/20 flex items-center justify-center gap-1.5"
               >
                 <Megaphone className="w-3.5 h-3.5" /> Call players to court
               </button>
@@ -1185,7 +1185,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setWalkoverFor(selectedMatch)}
-                className="py-2 rounded-lg border border-[var(--warning)]/50 text-[var(--warning)] font-bold text-[10px] uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-1.5">
+                className="py-2 rounded-lg border border-warning/50 text-warning font-bold text-[10px] uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-1.5">
                 <Flag className="w-3.5 h-3.5" /> Walkover
               </button>
 
@@ -1193,12 +1193,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <>
                   <button
                     onClick={() => openDirectScore(selectedMatch)}
-                    className="py-2 rounded-lg border border-emerald-500/40 text-emerald-400 font-bold text-[10px] uppercase tracking-wider transition hover:bg-emerald-500/10 flex items-center justify-center gap-1.5">
+                    className="py-2 rounded-lg border border-success/40 text-success font-bold text-[10px] uppercase tracking-wider transition hover:bg-success/10 flex items-center justify-center gap-1.5">
                     <ClipboardEdit className="w-3.5 h-3.5" /> Enter Score
                   </button>
                   <button
                     onClick={() => openReschedule(selectedMatch)}
-                    className="col-span-2 py-2 rounded-lg border border-slate-600 text-slate-300 font-bold text-[10px] uppercase tracking-wider transition hover:border-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5">
+                    className="col-span-2 py-2 rounded-lg border border-border-strong text-soft font-bold text-[10px] uppercase tracking-wider transition hover:border-info hover:text-info flex items-center justify-center gap-1.5">
                     <CalendarDays className="w-3.5 h-3.5" /> Reschedule
                   </button>
                 </>
@@ -1210,10 +1210,10 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         </div>
 
         {rescheduleFor && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+            <div className="bg-card border border-border-strong rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
               <div className="text-center space-y-1">
-                <CalendarDays className="w-10 h-10 text-blue-400 mx-auto" />
+                <CalendarDays className="w-10 h-10 text-info mx-auto" />
                 <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Reschedule</h2>
                 <p className="text-xs text-muted-foreground">
                   {rescheduleFor.match_code} · {rescheduleFor.team1_label ?? "TBD"} vs {rescheduleFor.team2_label ?? "TBD"}
@@ -1229,13 +1229,13 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                   type="datetime-local"
                   value={rescheduleAt}
                   onChange={(e) => setRescheduleAt(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                  className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-info transition"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label htmlFor="reschedule-court" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  Court <span className="normal-case tracking-normal font-bold text-slate-500">(leave blank to unassign)</span>
+                  Court <span className="normal-case tracking-normal font-bold text-muted-foreground">(leave blank to unassign)</span>
                 </label>
                 <input
                   id="reschedule-court"
@@ -1243,7 +1243,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                   value={rescheduleCourt}
                   onChange={(e) => setRescheduleCourt(e.target.value)}
                   placeholder="e.g. C3"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                  className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-info transition"
                 />
                 <datalist id="umpire-court-options">
                   {[...new Set(allMatches.map((m) => m.court_number).filter(Boolean) as string[])]
@@ -1259,7 +1259,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               <button
                 disabled={savingReschedule || !rescheduleReason.trim()}
                 onClick={saveReschedule}
-                className="w-full py-3 px-4 rounded-xl bg-blue-500 hover:bg-blue-400 text-black font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full py-3 px-4 rounded-xl bg-info hover:bg-info/90 text-info-foreground font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2">
                 {savingReschedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
                 {savingReschedule ? "Saving..." : "Save New Slot"}
               </button>
@@ -1275,10 +1275,10 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         )}
 
         {walkoverFor && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+            <div className="bg-card border border-border-strong rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
               <div className="text-center space-y-1">
-                <Flag className="w-10 h-10 text-[var(--warning)] mx-auto" />
+                <Flag className="w-10 h-10 text-warning mx-auto" />
                 <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Record Walkover</h2>
                 <p className="text-xs text-muted-foreground">Who turned up? The team you pick advances.</p>
               </div>
@@ -1291,7 +1291,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <button key={side}
                   disabled={savingWalkover}
                   onClick={() => recordWalkover(walkoverFor, side)}
-                  className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-[var(--warning)] text-foreground font-bold text-sm transition disabled:opacity-50 text-left">
+                  className="w-full py-3 px-4 rounded-xl bg-muted border border-border-strong hover:border-warning text-foreground font-bold text-sm transition disabled:opacity-50 text-left">
                   <span className="flex items-center justify-between gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     Team {side} advances
                     {readinessMatch(walkoverFor.id) && walkoverHint(readiness, readinessMatch(walkoverFor.id)!) === side && (
@@ -1305,7 +1305,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               <button
                 disabled={savingWalkover}
                 onClick={() => recordWalkover(walkoverFor, 0)}
-                className="w-full py-3 px-4 rounded-xl bg-[color-mix(in_srgb,var(--danger)_15%,transparent)] border border-[var(--danger)]/50 text-[var(--danger)] font-bold text-sm transition disabled:opacity-50">
+                className="w-full py-3 px-4 rounded-xl bg-[color-mix(in_srgb,var(--danger)_15%,transparent)] border border-danger/50 text-danger font-bold text-sm transition disabled:opacity-50">
                 Neither turned up (double walkover)
               </button>
 
@@ -1320,10 +1320,10 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         )}
 
         {directScoreFor && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-media/80 backdrop-blur-sm p-4">
+            <div className="bg-card border border-border-strong rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
               <div className="text-center space-y-1">
-                <ClipboardEdit className="w-10 h-10 text-emerald-400 mx-auto" />
+                <ClipboardEdit className="w-10 h-10 text-success mx-auto" />
                 <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Submit Score</h2>
                 <p className="text-xs text-muted-foreground">
                   {directScoreFor.match_code} · {directScoreFor.team1_label ?? "TBD"} vs {directScoreFor.team2_label ?? "TBD"}
@@ -1349,7 +1349,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         setDirectSets(next);
                       }}
                       placeholder="0"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-emerald-400 transition"
+                      className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-success transition"
                     />
                     <span className="text-[10px] font-black text-muted-foreground">Set {i + 1}</span>
                     <input
@@ -1362,7 +1362,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         setDirectSets(next);
                       }}
                       placeholder="0"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-emerald-400 transition"
+                      className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-success transition"
                     />
                   </div>
                 ))}
@@ -1377,7 +1377,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 const winner = t1Wins > t2Wins ? directScoreFor.team1_label : t2Wins > t1Wins ? directScoreFor.team2_label : null;
                 if (!winner || valid.length < 2) return null;
                 return (
-                  <div className="text-center text-xs text-emerald-400 font-bold bg-emerald-950/30 border border-emerald-900/50 rounded-xl py-2">
+                  <div className="text-center text-xs text-success font-bold bg-success/10 border border-success/30 rounded-xl py-2">
                     Winner: {winner} ({t1Wins}-{t2Wins} sets)
                   </div>
                 );
@@ -1386,7 +1386,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               <button
                 disabled={savingDirectScore}
                 onClick={submitDirectScore}
-                className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-success hover:bg-success/90 text-success-foreground font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {savingDirectScore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardEdit className="w-4 h-4" />}
                 {savingDirectScore ? "Submitting..." : "Submit Score"}
@@ -1405,14 +1405,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
         {/* Team Tie Lineup & Reveal Console Modal */}
         {activeTieForConsole && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-              <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                <span className="text-xs font-black uppercase text-slate-400 tracking-wider">Match Official Desk · Tie Arbiter</span>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-card w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-border shadow-2xl overflow-hidden">
+              <div className="flex justify-between items-center p-4 sm:p-5 border-b border-border shrink-0">
+                <span className="text-xs font-black uppercase text-muted-foreground tracking-wider">Match Official Desk · Tie Arbiter</span>
                 <button
                   type="button"
                   onClick={() => setActiveTieForConsole(null)}
-                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="p-1.5 rounded-full text-muted-foreground hover:text-soft hover:bg-muted transition"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />

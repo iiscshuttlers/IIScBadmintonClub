@@ -152,16 +152,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     return (
       <div className="py-12 text-center">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        <p className="text-xs text-slate-400 mt-2 font-bold">Loading team ties &amp; lineups...</p>
+        <p className="text-xs text-muted-foreground mt-2 font-bold">Loading team ties &amp; lineups...</p>
       </div>
     );
   }
 
   if (ties.length === 0) {
     return (
-      <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-        <Users className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-        <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">No Team Ties Scheduled</h3>
+      <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+        <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-lg font-black text-soft">No Team Ties Scheduled</h3>
         <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
           Fixtures will appear here once the tournament manager creates the schedule.
         </p>
@@ -251,11 +251,11 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
-          <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-lg font-black text-foreground flex items-center gap-2">
             <Swords className="w-5 h-5 text-primary" />
             Team Fixtures &amp; Official Playing Orders
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Head-to-head ties, official court playing order, lineups, and substitution audit trail.
           </p>
         </div>
@@ -273,26 +273,26 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
       {/* Captain Desk Banner if user is captain of a team */}
       {userTeamData?.isCaptain && userTeamData?.team && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-primary/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-warning/15 via-primary/10 to-transparent border border-warning/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 shadow-inner">
-              <Crown className="w-6 h-6 text-amber-500" />
+            <div className="w-11 h-11 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0 shadow-inner">
+              <Crown className="w-6 h-6 text-gold" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-black uppercase text-amber-500 tracking-wider">Captain Desk</span>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-200 font-bold border border-slate-700">
+                <span className="text-xs font-black uppercase text-warning tracking-wider">Captain Desk</span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted text-soft font-bold border border-border-strong">
                   {userTeamData.team.name}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Select any tie involving your team below to assign players, reorder the playing sequence, and lock secret lineups.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Link href={`/team-hub/${userTeamData.team.id}`}>
-              <Button size="sm" className="rounded-xl font-black text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 flex items-center gap-1.5 shadow-sm cursor-pointer">
+              <Button size="sm" className="rounded-xl font-black text-xs bg-warning hover:bg-warning/90 text-warning-foreground flex items-center gap-1.5 shadow-sm cursor-pointer">
                 <Shield className="w-3.5 h-3.5" /> Full Team Hub
               </Button>
             </Link>
@@ -302,9 +302,9 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
       {/* Filter Bar (All, Live, Scheduled, Unscheduled) */}
       {ties.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card/60 backdrop-blur-md p-3 sm:p-4 rounded-3xl border border-border shadow-sm">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mr-1 flex items-center gap-1">
               <CalendarClock className="w-3.5 h-3.5 text-primary" /> Schedule
             </span>
             {(
@@ -325,17 +325,17 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 ${
                     isActive
                       ? isLivePill
-                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-[1.02]'
+                        ? 'bg-danger text-danger-foreground shadow-md shadow-danger/20 scale-[1.02]'
                         : 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-muted text-soft hover:bg-muted-strong'
                   }`}
                 >
                   {isLivePill && (
-                    <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white animate-ping' : 'bg-rose-500'}`} />
+                    <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-foreground animate-ping' : 'bg-live'}`} />
                   )}
                   <span>{label}</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    isActive ? 'bg-black/20 text-current' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                    isActive ? 'bg-media/20 text-current' : 'bg-muted-strong text-muted-foreground'
                   }`}>
                     {count}
                   </span>
@@ -344,7 +344,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             })}
           </div>
 
-          <div className="text-xs text-slate-400 font-bold self-end sm:self-center">
+          <div className="text-xs text-muted-foreground font-bold self-end sm:self-center">
             Showing {filteredTies.length} of {ties.length} Ties
           </div>
         </div>
@@ -352,9 +352,9 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
       <div className="grid grid-cols-1 gap-5">
         {filteredTies.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-            <CalendarClock className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-black text-slate-800 dark:text-slate-200">No {statusFilter.toLowerCase()} ties found</h3>
+          <div className="text-center py-12 bg-card rounded-3xl border border-border shadow-sm p-6">
+            <CalendarClock className="w-10 h-10 text-faint mx-auto mb-3" />
+            <h3 className="text-base font-black text-soft">No {statusFilter.toLowerCase()} ties found</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               Try switching your filter to 'All' or adjusting the tournament schedule.
             </p>
@@ -385,14 +385,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             return (
               <div 
                 key={tie.id}
-                className={`bg-white dark:bg-slate-900 rounded-3xl border shadow-sm overflow-hidden transition-all duration-200 ${
+                className={`bg-card rounded-3xl border shadow-sm overflow-hidden transition-all duration-200 ${
                   isMyTeamInThisTie
-                    ? "border-amber-500/40 ring-1 ring-amber-500/20"
-                    : "border-slate-200 dark:border-slate-800 hover:border-primary/40"
+                    ? "border-warning/40 ring-1 ring-warning/20"
+                    : "border-border hover:border-primary/40"
                 }`}
               >
                 {/* Tie Header Bar */}
-                <div className="p-4 sm:p-5 bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800">
+                <div className="p-4 sm:p-5 bg-muted/40 border-b border-border">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     
                     {/* Tie Code, Stage & Court */}
@@ -400,7 +400,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       <span className="font-mono font-black text-xs px-2.5 py-1 rounded-xl bg-primary text-primary-foreground">
                         {tie.tie_code}
                       </span>
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                         {tie.round_name || tie.stage || 'FIXTURE'}
                       </span>
                       {(() => {
@@ -432,7 +432,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       size="sm"
                       variant="outline"
                       onClick={() => setActiveVisualTie(tie)}
-                      className="rounded-xl font-bold text-xs h-8 flex items-center gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                      className="rounded-xl font-bold text-xs h-8 flex items-center gap-1.5 border-border-strong bg-muted"
                     >
                       <Swords className="w-3.5 h-3.5 text-primary" /> Visual Lineup
                     </Button>
@@ -441,7 +441,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       <Button
                         size="sm"
                         onClick={() => setActiveConsoleTie(tie)}
-                        className="rounded-xl font-bold text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white flex items-center gap-1.5 shadow-xs"
+                        className="rounded-xl font-bold text-xs h-8 bg-foreground hover:bg-foreground/90 text-background flex items-center gap-1.5 shadow-xs"
                       >
                         <Tv2 className="w-3.5 h-3.5 text-primary" /> Official Console
                       </Button>
@@ -450,7 +450,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                     <button
                       type="button"
                       onClick={() => setExpandedTieId(expandedTieId === tie.id ? null : tie.id)}
-                      className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                      className="p-1.5 rounded-xl bg-muted text-muted-foreground hover:text-foreground"
                       title={isExpanded ? "Collapse" : "Expand"}
                     >
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -460,32 +460,32 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
                 {/* Lineup Status Alert & Action Row */}
                 {(tie.state !== 'COMPLETED' || canSubmitLineup) && (
-                  <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-col items-center justify-center gap-2 text-center">
+                  <div className="mt-3 pt-2.5 border-t border-border/80 flex flex-col items-center justify-center gap-2 text-center">
                     {/* Lineup Status Badge */}
                     <div className="flex items-center justify-center gap-2">
                       {tie.state === 'COMPLETED' ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Tie Completed
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-success bg-success/15 px-2.5 py-1 rounded-full border border-success/35 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Tie Completed
                         </span>
                       ) : tieMatches.length > 0 && tieMatches.some((m: any) => m.revealed_at || (m.player1_id && m.player2_id)) ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Official Lineup Revealed
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-success bg-success/15 px-2.5 py-1 rounded-full border border-success/35 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Official Lineup Revealed
                         </span>
                       ) : !tie.lineup_locked_a && !tie.lineup_locked_b ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 rounded-full border border-sky-200/80 dark:border-sky-800/60 shadow-2xs">
-                          <Clock className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> Both teams yet to submit lineup
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-info bg-info/15 px-2.5 py-1 rounded-full border border-info/35 shadow-2xs">
+                          <Clock className="w-3.5 h-3.5 text-info" /> Both teams yet to submit lineup
                         </span>
                       ) : !tie.lineup_locked_a ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 rounded-full border border-sky-200/80 dark:border-sky-800/60 shadow-2xs">
-                          <Clock className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> {tie.team_a?.short_name || tie.team_a?.name || "Team A"} yet to submit lineup
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-info bg-info/15 px-2.5 py-1 rounded-full border border-info/35 shadow-2xs">
+                          <Clock className="w-3.5 h-3.5 text-info" /> {tie.team_a?.short_name || tie.team_a?.name || "Team A"} yet to submit lineup
                         </span>
                       ) : !tie.lineup_locked_b ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 rounded-full border border-sky-200/80 dark:border-sky-800/60 shadow-2xs">
-                          <Clock className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" /> {tie.team_b?.short_name || tie.team_b?.name || "Team B"} yet to submit lineup
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-info bg-info/15 px-2.5 py-1 rounded-full border border-info/35 shadow-2xs">
+                          <Clock className="w-3.5 h-3.5 text-info" /> {tie.team_b?.short_name || tie.team_b?.name || "Team B"} yet to submit lineup
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Both lineups locked
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-success bg-success/15 px-2.5 py-1 rounded-full border border-success/35 shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Both lineups locked
                         </span>
                       )}
                     </div>
@@ -504,8 +504,8 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                           })}
                           className={`rounded-xl font-black text-xs h-7.5 px-3 flex items-center gap-1.5 shadow-xs cursor-pointer ${
                             isMySideLocked
-                              ? "bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-                              : "bg-amber-500 hover:bg-amber-600 text-slate-950 animate-pulse"
+                              ? "bg-muted hover:bg-muted-strong text-soft"
+                              : "bg-warning hover:bg-warning/90 text-warning-foreground animate-pulse"
                           }`}
                         >
                           <Lock className="w-3.5 h-3.5" />
@@ -516,7 +516,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       {/* Official override: enter/lock a lineup for an absent captain */}
                       {isUserOfficial && tie.state !== 'COMPLETED' && !isBothLocked && (
                         <div className="flex flex-wrap items-center justify-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-0.5">On behalf:</span>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mr-0.5">On behalf:</span>
                           {(['A', 'B'] as const).map((s) => {
                             const locked = s === 'A' ? tie.lineup_locked_a : tie.lineup_locked_b;
                             // Skip the side the current user already handles as its captain.
@@ -529,7 +529,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                                 variant="outline"
                                 disabled={overrideLoading === `${tie.id}-${s}`}
                                 onClick={() => openOverrideLineup(tie, s)}
-                                className="rounded-lg font-bold text-[11px] h-7 px-2.5 flex items-center gap-1.5 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                                className="rounded-lg font-bold text-[11px] h-7 px-2.5 flex items-center gap-1.5 border-warning/40 text-warning hover:bg-warning/10"
                               >
                                 {overrideLoading === `${tie.id}-${s}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
                                 Enter {t?.short_name || t?.name || `Side ${s}`}
@@ -556,16 +556,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       };
                       if (tData.id) openTeamModal(tData, 'roster');
                     }}
-                    className="flex items-center justify-end gap-2 sm:gap-2.5 min-w-0 text-right cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
+                    className="flex items-center justify-end gap-2 sm:gap-2.5 min-w-0 text-right cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-muted/80 active:scale-[0.99] transition border border-transparent hover:border-border-strong/80"
                     title="Click to view Team A roster and matches"
                     role="button"
                     tabIndex={0}
                   >
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
+                      <h3 className="font-black text-xs sm:text-base text-foreground leading-tight group-hover:text-primary transition-colors truncate">
                         {tie.team_a?.name || "Team A"}
                       </h3>
-                      <span className="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                      <span className="block text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                         {tie.team_a?.short_name || "Side A"}
                       </span>
                     </div>
@@ -582,14 +582,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                     type="button"
                     onClick={() => setScoreDetailTie(tie)}
                     title="Tap for rubber-by-rubber scores"
-                    className="px-2.5 sm:px-4 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center shrink-0 shadow-xs min-w-[56px] sm:min-w-[68px] cursor-pointer hover:border-primary/50 hover:shadow-sm active:scale-[0.97] transition"
+                    className="px-2.5 sm:px-4 py-1.5 rounded-2xl bg-card border border-border flex flex-col items-center justify-center shrink-0 shadow-xs min-w-[56px] sm:min-w-[68px] cursor-pointer hover:border-primary/50 hover:shadow-sm active:scale-[0.97] transition"
                   >
                     <span className="flex items-center justify-center gap-1.5 sm:gap-2.5">
-                      <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
+                      <span className="font-mono text-lg sm:text-2xl font-black text-foreground leading-none">
                         {tie.score_team_a ?? 0}
                       </span>
-                      <span className="text-slate-300 dark:text-slate-500 font-bold leading-none">-</span>
-                      <span className="font-mono text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
+                      <span className="text-muted-foreground font-bold leading-none">-</span>
+                      <span className="font-mono text-lg sm:text-2xl font-black text-foreground leading-none">
                         {tie.score_team_b ?? 0}
                       </span>
                     </span>
@@ -610,7 +610,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       };
                       if (tData.id) openTeamModal(tData, 'roster');
                     }}
-                    className="flex items-center gap-2 sm:gap-2.5 min-w-0 cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 active:scale-[0.99] transition border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80"
+                    className="flex items-center gap-2 sm:gap-2.5 min-w-0 cursor-pointer group p-1 sm:p-1.5 rounded-2xl hover:bg-muted/80 active:scale-[0.99] transition border border-transparent hover:border-border-strong/80"
                     title="Click to view Team B roster and matches"
                     role="button"
                     tabIndex={0}
@@ -622,10 +622,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                       size="md"
                     />
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 className="font-black text-xs sm:text-base text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors truncate">
+                      <h3 className="font-black text-xs sm:text-base text-foreground leading-tight group-hover:text-primary transition-colors truncate">
                         {tie.team_b?.name || "Team B"}
                       </h3>
-                      <span className="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                      <span className="block text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                         {tie.team_b?.short_name || "Side B"}
                       </span>
                     </div>
@@ -633,22 +633,22 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                 </div>
 
                 {/* Scheduled Date, Day, Time & Court bar (Same row) */}
-                <div className="px-3.5 sm:px-5 py-2 bg-slate-100/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="px-3.5 sm:px-5 py-2 bg-muted/20 border-t border-border/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                     {tie.scheduled_at ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-2xs">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-soft bg-muted px-2.5 py-1 rounded-xl border border-border-strong/60 shadow-2xs">
                         <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span>
                           {new Date(tie.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                         </span>
-                        <span className="text-slate-400 font-normal">•</span>
+                        <span className="text-muted-foreground font-normal">•</span>
                         <span>
                           {new Date(tie.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
-                        <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-warning bg-warning/10 px-2.5 py-1 rounded-xl border border-warning/20">
+                        <Clock className="w-3.5 h-3.5 text-warning shrink-0" />
                         Date & Time not set
                       </span>
                     )}
@@ -664,15 +664,15 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                         );
                       }
                       return (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
-                          <MapPin className="w-3 h-3 text-amber-500 shrink-0" />
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-warning bg-warning/10 px-2.5 py-1 rounded-xl border border-warning/20">
+                          <MapPin className="w-3 h-3 text-warning shrink-0" />
                           Court not assigned
                         </span>
                       );
                     })()}
                   </div>
 
-                  <div className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+                  <div className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">
                     {tieMatches.length} rubbers scheduled
                   </div>
                 </div>
@@ -680,8 +680,8 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
               {/* Rubbers List in Official Playing Order */}
               {isExpanded && (
-                <div className="p-4 sm:p-5 space-y-3 bg-white dark:bg-slate-900">
-                  <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+                <div className="p-4 sm:p-5 space-y-3 bg-card">
+                  <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center justify-between pb-1 border-b border-border">
                     <span>Rubbers (Ordered by Official Match Playing Sequence)</span>
                     <span>{tieMatches.length} Matches</span>
                   </div>
@@ -703,8 +703,8 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                           key={rubber.id}
                           className={`p-3.5 rounded-2xl border transition-all ${
                             isRevealed 
-                              ? 'bg-slate-50/50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800'
-                              : 'bg-slate-50/30 dark:bg-slate-800/10 border-dashed border-slate-200 dark:border-slate-800 opacity-90'
+                              ? 'bg-muted/20 border-border'
+                              : 'bg-muted/10 border-dashed border-border opacity-90'
                           }`}
                         >
                           {/* Rubber Header */}
@@ -713,14 +713,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                               <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-mono font-black text-xs flex items-center justify-center">
                                 #{playingSeq}
                               </span>
-                              <span className="font-black text-xs text-slate-800 dark:text-slate-200 break-words">
+                              <span className="font-black text-xs text-soft break-words">
                                 {rubber.rubber_label || rubber.match_code}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase px-1.5 py-0.5 rounded bg-card border border-border">
                                 {rubber.category}
                               </span>
                               {rubber.is_decider_tiebreaker && (
-                                <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                                <span className="text-[10px] font-black uppercase text-gold bg-gold/20 px-2 py-0.5 rounded-full border border-gold/40">
                                   Golden Decider
                                 </span>
                               )}
@@ -733,13 +733,13 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
                           {/* Head-to-Head Lineup + per-game scores (shared primitives) */}
                           {isRevealed ? (
-                            <div className="bg-white dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                            <div className="bg-card px-3 py-1 rounded-xl border border-border divide-y divide-border text-xs">
                               <MatchSideRow side={view.sides[0]} index={0} view={view} />
                               <MatchSideRow side={view.sides[1]} index={1} view={view} />
                             </div>
                           ) : (
-                            <div className="py-2.5 px-3 rounded-xl bg-slate-100/50 dark:bg-slate-800/30 text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
-                              <Lock className="w-3.5 h-3.5 text-slate-400" />
+                            <div className="py-2.5 px-3 rounded-xl bg-muted/30 text-xs text-muted-foreground font-medium flex items-center justify-center gap-2">
+                              <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                               <span>Secret Lineup · Awaiting official reveal by referee/organizer</span>
                             </div>
                           )}
@@ -764,10 +764,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
                           {/* Reveal Metadata */}
                           {isRevealed && (rubber.revealer?.full_name || rubber.revealed_at) && (
-                            <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                              <Clock className="w-3 h-3 text-slate-400" />
+                            <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-1.5 pt-1.5 border-t border-border">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
                               <span>
-                                Revealed by Official <strong className="text-slate-600 dark:text-slate-300">{rubber.revealer?.full_name || "Match Official"}</strong>
+                                Revealed by Official <strong className="text-soft">{rubber.revealer?.full_name || "Match Official"}</strong>
                                 {rubber.revealed_at && ` at ${format(new Date(rubber.revealed_at), 'hh:mm a, MMM d')}`}
                               </span>
                             </div>
@@ -777,11 +777,11 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                           {rubberSubAudits.map((sub: any) => (
                             <div 
                               key={sub.id} 
-                              className="mt-2 p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2"
+                              className="mt-2 p-2 rounded-xl bg-warning/10 border border-warning/25 text-[11px] text-warning flex items-start gap-2"
                             >
-                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
                               <div className="leading-tight">
-                                <strong>Emergency Substitution:</strong> {sub.orig_player?.full_name || "Original Player"} was replaced by <strong className="text-amber-700 dark:text-amber-300">{sub.repl_player?.full_name || "Substitute"}</strong>.
+                                <strong>Emergency Substitution:</strong> {sub.orig_player?.full_name || "Original Player"} was replaced by <strong className="text-warning">{sub.repl_player?.full_name || "Substitute"}</strong>.
                                 <div className="text-[10px] opacity-80 mt-0.5">
                                   ✓ Both captains agreed · Authorized by {sub.referee?.full_name || "Match Official"}{sub.reason ? ` (${sub.reason})` : ""}
                                 </div>
@@ -811,10 +811,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             return orderA - orderB;
           });
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-in fade-in overflow-hidden">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg max-h-[88vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/80 backdrop-blur-md animate-in fade-in overflow-hidden">
+            <div className="bg-card w-full max-w-lg max-h-[88vh] flex flex-col rounded-3xl border border-border shadow-2xl overflow-hidden">
               {/* Header with team names / logos / aggregate score */}
-              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="p-4 sm:p-5 border-b border-border shrink-0">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono font-black text-[11px] px-2 py-0.5 rounded-lg bg-primary text-primary-foreground">
                     {tie.tie_code}
@@ -822,7 +822,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   <button
                     type="button"
                     onClick={() => setScoreDetailTie(null)}
-                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-soft hover:bg-muted cursor-pointer"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
@@ -830,28 +830,28 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                 </div>
                 <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <div className="flex items-center justify-end gap-2 min-w-0 text-right">
-                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white break-words min-w-0">{tie.team_a?.name || "Team A"}</span>
+                    <span className="font-black text-xs sm:text-sm text-foreground break-words min-w-0">{tie.team_a?.name || "Team A"}</span>
                     <TeamLogo name={tie.team_a?.name || "Team A"} shortName={tie.team_a?.short_name} logoUrl={tie.team_a?.logo_url} size="sm" />
                   </div>
-                  <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center gap-1.5 shrink-0">
-                    <span className="font-mono text-lg font-black text-slate-900 dark:text-white leading-none">{tie.score_team_a ?? 0}</span>
-                    <span className="text-slate-400 font-bold leading-none">-</span>
-                    <span className="font-mono text-lg font-black text-slate-900 dark:text-white leading-none">{tie.score_team_b ?? 0}</span>
+                  <div className="px-2.5 py-1 rounded-xl bg-muted flex items-center gap-1.5 shrink-0">
+                    <span className="font-mono text-lg font-black text-foreground leading-none">{tie.score_team_a ?? 0}</span>
+                    <span className="text-muted-foreground font-bold leading-none">-</span>
+                    <span className="font-mono text-lg font-black text-foreground leading-none">{tie.score_team_b ?? 0}</span>
                   </div>
                   <div className="flex items-center gap-2 min-w-0">
                     <TeamLogo name={tie.team_b?.name || "Team B"} shortName={tie.team_b?.short_name} logoUrl={tie.team_b?.logo_url} size="sm" />
-                    <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-white break-words min-w-0">{tie.team_b?.name || "Team B"}</span>
+                    <span className="font-black text-xs sm:text-sm text-foreground break-words min-w-0">{tie.team_b?.name || "Team B"}</span>
                   </div>
                 </div>
               </div>
 
               {/* Rubbers list */}
               <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-2.5">
-                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                   Individual Rubbers ({rubbers.length})
                 </div>
                 {rubbers.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-slate-400 font-medium">No rubbers scheduled yet.</div>
+                  <div className="text-center py-8 text-xs text-muted-foreground font-medium">No rubbers scheduled yet.</div>
                 ) : (
                   rubbers.map((rubber: any, index: number) => {
                     const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
@@ -859,15 +859,15 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                     const view = rubberView(rubber, isRevealed, tournamentId);
                     const summary = scoreSummary(view);
                     return (
-                      <div key={rubber.id} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
+                      <div key={rubber.id} className="p-2.5 rounded-xl border border-border bg-muted/30">
                         <div className="flex items-center justify-between gap-2 mb-1.5">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="w-5 h-5 rounded-md bg-primary/10 text-primary font-mono font-black text-[10px] flex items-center justify-center shrink-0">#{playingSeq}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0">{rubber.category}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase px-1.5 py-0.5 rounded bg-card border border-border shrink-0">{rubber.category}</span>
                           </div>
                           <MatchStatusBadge view={view} />
                         </div>
-                        <div className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs">
+                        <div className="divide-y divide-border text-xs">
                           <MatchSideRow side={view.sides[0]} index={0} view={view} />
                           <MatchSideRow side={view.sides[1]} index={1} view={view} />
                         </div>
@@ -882,7 +882,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
               </div>
 
               {/* Footer: open full details */}
-              <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="p-3 sm:p-4 border-t border-border shrink-0">
                 <Button
                   onClick={() => { setActiveVisualTie(tie); setScoreDetailTie(null); }}
                   className="w-full rounded-xl font-black text-xs h-11 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-1.5 cursor-pointer"
@@ -897,14 +897,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
       {/* Official Console Modal */}
       {activeConsoleTie && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-in fade-in overflow-hidden">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <span className="text-xs font-black uppercase text-slate-400">Match Official Desk</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/80 backdrop-blur-md animate-in fade-in overflow-hidden">
+          <div className="bg-card w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-border shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
+            <div className="flex justify-between items-center pb-3 border-b border-border shrink-0">
+              <span className="text-xs font-black uppercase text-muted-foreground">Match Official Desk</span>
               <button
                 type="button"
                 onClick={() => setActiveConsoleTie(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="p-1 rounded-full text-muted-foreground hover:text-soft hover:bg-muted cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -955,16 +955,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
       {/* Captain Lineup Builder Modal */}
       {activeCaptainLineupTie && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-in fade-in overflow-hidden">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/80 backdrop-blur-md animate-in fade-in overflow-hidden">
+          <div className="bg-card w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-border shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-4 sm:p-5 border-b border-border shrink-0">
               <div className="flex items-center gap-2.5">
-                {activeCaptainLineupTie.onBehalf ? <ShieldCheck className="w-5 h-5 text-amber-500" /> : <Crown className="w-5 h-5 text-amber-500" />}
+                {activeCaptainLineupTie.onBehalf ? <ShieldCheck className="w-5 h-5 text-warning" /> : <Crown className="w-5 h-5 text-gold" />}
                 <div>
-                  <h3 className="font-black text-sm text-slate-900 dark:text-white">
+                  <h3 className="font-black text-sm text-foreground">
                     Submit Team Lineup &amp; Playing Order · {activeCaptainLineupTie.tie.tie_code}
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-bold">
+                  <p className="text-[11px] text-muted-foreground font-bold">
                     {activeCaptainLineupTie.team?.name} (Side {activeCaptainLineupTie.side})
                   </p>
                 </div>
@@ -972,7 +972,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
               <button
                 type="button"
                 onClick={() => setActiveCaptainLineupTie(null)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="p-1.5 rounded-full text-muted-foreground hover:text-soft hover:bg-muted transition cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -980,9 +980,9 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             </div>
             <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {activeCaptainLineupTie.onBehalf && (
-                <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 px-3 py-2.5">
-                  <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <p className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2.5">
+                  <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-warning" />
+                  <p className="text-xs font-bold text-warning">
                     Official override — you're entering and locking this lineup on behalf of {activeCaptainLineupTie.team?.name || "the team"}. This action is recorded.
                   </p>
                 </div>

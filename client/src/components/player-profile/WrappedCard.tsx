@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useRef, useState } from "react";
 import { Share2, Download, Trophy, Flame, Target, TrendingUp, Zap } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -32,14 +33,14 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
     return new Date(m.created_at).getFullYear() === year && m.status === "confirmed";
   });
 
-  const wins = yearMatches.filter((m) => m.winner_id === playerId).length;
+  const wins = yearMatches.filter((m) => playerWon(m, playerId) === true).length;
   const losses = yearMatches.length - wins;
   const winRate = yearMatches.length > 0 ? Math.round((wins / yearMatches.length) * 100) : 0;
 
   // Best streak
   let bestStreak = 0, currentStreak = 0;
   for (const m of yearMatches) {
-    if (m.winner_id === playerId) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+    if (playerWon(m, playerId) === true) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
     else currentStreak = 0;
   }
 
@@ -76,21 +77,21 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
   if (yearMatches.length < 3) return null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+    <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-black text-slate-800 dark:text-foreground flex items-center gap-2">
-          <Zap className="w-5 h-5 text-amber-500" /> {year} Wrapped
+        <h3 className="text-base font-black text-foreground flex items-center gap-2">
+          <Zap className="w-5 h-5 text-warning" /> {year} Wrapped
         </h3>
         <button onClick={share} disabled={sharing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-50">
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted text-soft font-bold text-xs hover:bg-muted-strong transition disabled:opacity-50">
           <Share2 className="w-3.5 h-3.5" /> Share
         </button>
       </div>
 
       {/* Wrapped card visual */}
       <div ref={cardRef}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-indigo-950 to-primary/90 p-6 text-on-accent">
-        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.4),transparent)]" />
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-card via-info/10 to-primary/25 p-6 text-foreground">
+        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--success)_40%,transparent),transparent)]" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-5">
@@ -108,28 +109,28 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+            <div className="bg-foreground/10 backdrop-blur-sm rounded-xl p-3">
               <div className="text-3xl font-black text-primary">{wins}</div>
               <div className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Wins</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+            <div className="bg-foreground/10 backdrop-blur-sm rounded-xl p-3">
               <div className="text-3xl font-black text-foreground/80">{losses}</div>
               <div className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Losses</div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/5 rounded-xl p-2.5 text-center">
-              <Target className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+            <div className="bg-foreground/5 rounded-xl p-2.5 text-center">
+              <Target className="w-4 h-4 text-warning mx-auto mb-1" />
               <div className="text-base font-black text-foreground">{winRate}%</div>
               <div className="text-[10px] text-foreground/50 font-bold">Win Rate</div>
             </div>
-            <div className="bg-white/5 rounded-xl p-2.5 text-center">
-              <Flame className="w-4 h-4 text-orange-400 mx-auto mb-1" />
+            <div className="bg-foreground/5 rounded-xl p-2.5 text-center">
+              <Flame className="w-4 h-4 text-secondary mx-auto mb-1" />
               <div className="text-base font-black text-foreground">{bestStreak}</div>
               <div className="text-[10px] text-foreground/50 font-bold">Best Streak</div>
             </div>
-            <div className="bg-white/5 rounded-xl p-2.5 text-center">
+            <div className="bg-foreground/5 rounded-xl p-2.5 text-center">
               <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
               <div className="text-base font-black text-foreground">{elo}</div>
               <div className="text-[10px] text-foreground/50 font-bold">ELO</div>
@@ -137,9 +138,9 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
           </div>
 
           {busyMonth && (
-            <div className="mt-3 bg-white/5 rounded-xl px-3 py-2 flex items-center justify-between">
+            <div className="mt-3 bg-foreground/5 rounded-xl px-3 py-2 flex items-center justify-between">
               <span className="text-xs text-foreground/60 font-bold">Busiest Month</span>
-              <span className="text-xs font-black text-amber-400">{busyMonthName} ({busyMonth[1]} matches)</span>
+              <span className="text-xs font-black text-warning">{busyMonthName} ({busyMonth[1]} matches)</span>
             </div>
           )}
 

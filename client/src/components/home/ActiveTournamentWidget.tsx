@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { matchShortPath } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
 import { fetchLiveMatchesRow, subscribeToHomeLiveMatches } from "@/services/matchService";
@@ -50,7 +51,7 @@ interface TodayMatch {
   status: string;
   scheduled_at: string | null;
   score: string | null;
-  winner_id: string | null;
+  winner_side: 1 | 2 | null;
   player1_id: string | null;
 }
 
@@ -157,7 +158,7 @@ export function ActiveTournamentWidget() {
             status: m.status,
             scheduled_at: m.scheduled_at,
             score: m.score || null,
-            winner_id: m.winner_id,
+            winner_side: winningSide(m),
             player1_id: m.player1_id,
           }));
 
@@ -229,24 +230,24 @@ export function ActiveTournamentWidget() {
   if (!tournament && liveMatches.length === 0) return null;
 
   return (
-    <Card className="border-0 bg-emerald-50/80 dark:bg-[#061f17] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-emerald-500/30 dark:ring-emerald-500/40">
+    <Card className="border-0 bg-[color-mix(in_srgb,var(--success)_10%,var(--card))] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-success/40">
 
       {/* Tournament header */}
       {tournament && (
-        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 px-4 py-2 sm:p-5 flex flex-row gap-3 items-center justify-between">
+        <div className="border-b border-success/20 px-4 py-2 sm:p-5 flex flex-row gap-3 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-              <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-9 h-9 rounded-full bg-success/20 flex items-center justify-center shrink-0">
+              <Trophy className="w-4 h-4 text-success" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Active Tournament</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-success">Active Tournament</span>
               </div>
-              <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100 leading-tight">
+              <h3 className="text-base sm:text-lg font-black text-foreground leading-tight">
                 {tournament.name}
               </h3>
             </div>
@@ -255,13 +256,13 @@ export function ActiveTournamentWidget() {
           <div className="flex items-center gap-2 shrink-0">
             {tournament.id && tournament.format_family !== "TEAM" && (
               <Link href={`/predict/${tournament.id}`}>
-                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border border-success/50 text-success hover:bg-success/10 cursor-pointer">
                   Predict
                 </span>
               </Link>
             )}
             <Link href={`/tournaments`}>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 shrink-0 border border-emerald-500/50">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground rounded-lg text-xs font-bold shadow-md shadow-success/20 hover:shadow-lg hover:shadow-success/30 transition-all active:scale-95 shrink-0 border border-success/50">
                 View
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -274,8 +275,8 @@ export function ActiveTournamentWidget() {
       <AnimatePresence>
         {liveMatches.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-5">
-            <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
               Live Broadcasted Matches
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -283,14 +284,14 @@ export function ActiveTournamentWidget() {
                 const isT1Leading = m.t1_score > m.t2_score;
                 const isT2Leading = m.t2_score > m.t1_score;
                 return (
-                  <div key={m.id} className="bg-slate-900 rounded-2xl p-4 border border-red-900/40 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500" />
+                  <div key={m.id} className="bg-card rounded-2xl p-4 border border-danger/25 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-danger to-secondary" />
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                      <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-muted text-muted-foreground">
                         {m.category}{m.round_name ? ` · ${m.round_name}` : ""}
                       </span>
                       {m.court_number && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400">
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-info">
                           <MapPin className="w-3 h-3" /> Court {m.court_number}
                         </span>
                       )}
@@ -304,12 +305,12 @@ export function ActiveTournamentWidget() {
                             <div className="flex justify-start">
                               <div className="flex items-center gap-1.5 max-w-full">
                                 <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 1 && m.server_player_index === 0 ? "text-green-400" :
-                                  isT1Leading ? "text-yellow-400" : "text-slate-200"
+                                  m.server_team === 1 && m.server_player_index === 0 ? "text-success" :
+                                  isT1Leading ? "text-warning" : "text-soft"
                                 }`}>{m.t1_p1_name || "TBD"}</p>
                                 <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
                                   {m.server_team === 1 && m.server_player_index === 0 && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                                   )}
                                 </div>
                               </div>
@@ -319,12 +320,12 @@ export function ActiveTournamentWidget() {
                               <div className="flex justify-start mt-0.5">
                                 <div className="flex items-center gap-1.5 max-w-full">
                                   <p className={`text-xs font-black truncate leading-tight ${
-                                    m.server_team === 1 && m.server_player_index === 1 ? "text-green-400" :
-                                    isT1Leading ? "text-yellow-400" : "text-slate-300"
+                                    m.server_team === 1 && m.server_player_index === 1 ? "text-success" :
+                                    isT1Leading ? "text-warning" : "text-soft"
                                   }`}>{m.t1_p2_name}</p>
                                   <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
                                     {m.server_team === 1 && m.server_player_index === 1 && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                                     )}
                                   </div>
                                 </div>
@@ -335,12 +336,12 @@ export function ActiveTournamentWidget() {
                           <div className="flex justify-start">
                             <div className="flex items-center gap-1.5 max-w-full">
                               <p className={`text-sm font-black truncate ${
-                                m.server_team === 1 ? "text-green-400" :
-                                isT1Leading ? "text-yellow-400" : "text-slate-200"
+                                m.server_team === 1 ? "text-success" :
+                                isT1Leading ? "text-warning" : "text-soft"
                               }`}>{m.team1_label || "TBD"}</p>
                               <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
                                 {m.server_team === 1 && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                                 )}
                               </div>
                             </div>
@@ -348,10 +349,10 @@ export function ActiveTournamentWidget() {
                         )}
                       </div>
                       {/* Score */}
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 rounded-xl border border-slate-700 shrink-0">
-                        <span className={`text-xl font-black tabular-nums ${isT1Leading ? "text-yellow-400" : "text-slate-100"}`}>{m.t1_score}</span>
-                        <span className="text-slate-600 dark:text-slate-400 text-xs">-</span>
-                        <span className={`text-xl font-black tabular-nums ${isT2Leading ? "text-yellow-400" : "text-slate-100"}`}>{m.t2_score}</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-xl border border-border-strong shrink-0">
+                        <span className={`text-xl font-black tabular-nums ${isT1Leading ? "text-warning" : "text-foreground"}`}>{m.t1_score}</span>
+                        <span className="text-muted-foreground text-xs">-</span>
+                        <span className={`text-xl font-black tabular-nums ${isT2Leading ? "text-warning" : "text-foreground"}`}>{m.t2_score}</span>
                       </div>
                       {/* Team 2 */}
                       <div className="flex-1 min-w-0 text-right">
@@ -362,12 +363,12 @@ export function ActiveTournamentWidget() {
                               <div className="flex items-center gap-1.5 max-w-full">
                                 <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
                                   {m.server_team === 2 && m.server_player_index === 0 && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                                   )}
                                 </div>
                                 <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 2 && m.server_player_index === 0 ? "text-green-400" :
-                                  isT2Leading ? "text-yellow-400" : "text-slate-200"
+                                  m.server_team === 2 && m.server_player_index === 0 ? "text-success" :
+                                  isT2Leading ? "text-warning" : "text-soft"
                                 }`}>{m.t2_p1_name || "TBD"}</p>
                               </div>
                             </div>
@@ -377,12 +378,12 @@ export function ActiveTournamentWidget() {
                                 <div className="flex items-center gap-1.5 max-w-full">
                                   <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
                                     {m.server_team === 2 && m.server_player_index === 1 && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                                     )}
                                   </div>
                                   <p className={`text-xs font-black truncate leading-tight ${
-                                    m.server_team === 2 && m.server_player_index === 1 ? "text-green-400" :
-                                    isT2Leading ? "text-yellow-400" : "text-slate-300"
+                                    m.server_team === 2 && m.server_player_index === 1 ? "text-success" :
+                                    isT2Leading ? "text-warning" : "text-soft"
                                   }`}>{m.t2_p2_name}</p>
                                 </div>
                               </div>
@@ -392,11 +393,11 @@ export function ActiveTournamentWidget() {
                           <div className="flex justify-end">
                             <div className="relative flex items-center max-w-full">
                               {m.server_team === 2 && (
-                                <span className="absolute right-full mr-1.5 w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                <span className="absolute right-full mr-1.5 w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
                               )}
                               <p className={`text-sm font-black truncate ${
-                                m.server_team === 2 ? "text-green-400" :
-                                isT2Leading ? "text-yellow-400" : "text-slate-200"
+                                m.server_team === 2 ? "text-success" :
+                                isT2Leading ? "text-warning" : "text-soft"
                               }`}>{m.team2_label || "TBD"}</p>
                             </div>
                           </div>
@@ -404,7 +405,7 @@ export function ActiveTournamentWidget() {
                       </div>
                     </div>
                     {m.sets_history.length > 0 && (
-                      <p className="mt-1.5 text-center text-[10px] text-slate-500 font-semibold">{m.sets_history.join(", ")}</p>
+                      <p className="mt-1.5 text-center text-[10px] text-muted-foreground font-semibold">{m.sets_history.join(", ")}</p>
                     )}
                   </div>
                 );
@@ -420,8 +421,8 @@ export function ActiveTournamentWidget() {
           onClick={handleToggleTodayMatches}
           className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
             showTodayMatches
-              ? "bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30"
-              : "bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60 border-indigo-900/50 hover:border-indigo-700/50"
+              ? "bg-info text-info-foreground border-info shadow-lg shadow-info/30"
+              : "bg-info/15 text-info hover:bg-info/25 border-info/30 hover:border-info/50"
           }`}
         >
           <Calendar className="w-3.5 h-3.5 shrink-0" />
@@ -433,8 +434,8 @@ export function ActiveTournamentWidget() {
           onClick={handleTogglePolls}
           className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
             showPolls
-              ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-600/30"
-              : "bg-violet-950/40 text-violet-300 hover:bg-violet-900/60 border-violet-900/50 hover:border-violet-700/50"
+              ? "bg-individual text-individual-foreground border-individual shadow-lg shadow-individual/30"
+              : "bg-individual/15 text-individual hover:bg-individual/25 border-individual/30 hover:border-individual/50"
           }`}
         >
           <BarChart2 className="w-3.5 h-3.5 shrink-0" />
@@ -453,23 +454,23 @@ export function ActiveTournamentWidget() {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-slate-200/50 dark:border-slate-800 p-4 sm:p-5">
+            <div className="border-t border-border p-4 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-info" />
                   {selectedDate.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
                 </h4>
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => adjustDate(-1)} className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors">
+                  <button onClick={() => adjustDate(-1)} className="p-1 rounded-lg bg-muted hover:bg-muted-strong text-soft border border-border-strong transition-colors">
                     <Minus className="w-4 h-4" />
                   </button>
                   <input 
                     type="date" 
-                    className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="bg-muted border border-border-strong text-soft rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-info outline-none"
                     value={toLocalISOString(selectedDate)}
                     onChange={handleDateChange}
                   />
-                  <button onClick={() => adjustDate(1)} className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors">
+                  <button onClick={() => adjustDate(1)} className="p-1 rounded-lg bg-muted hover:bg-muted-strong text-soft border border-border-strong transition-colors">
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
@@ -481,24 +482,24 @@ export function ActiveTournamentWidget() {
                 </div>
               ) : todayMatches.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="w-10 h-10 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-slate-500">No matches scheduled for this date</p>
+                  <Calendar className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm font-bold text-muted-foreground">No matches scheduled for this date</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {todayMatches.map((m) => {
                     const isCompleted = m.status === "completed" || m.status === "walkover";
-                    const isT1Winner = isCompleted && !!m.winner_id && m.winner_id === m.player1_id;
-                    const isT2Winner = isCompleted && !!m.winner_id && m.winner_id !== m.player1_id;
+                    const isT1Winner = isCompleted && m.winner_side === 1;
+                    const isT2Winner = isCompleted && m.winner_side === 2;
                     
                     const getCategoryColorClass = (cat: string) => {
                       const c = cat?.substring(0, 2).toUpperCase() || "";
-                      if (c === "MS") return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50";
-                      if (c === "WS") return "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 border-pink-200 dark:border-pink-800/50";
-                      if (c === "MD") return "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/50";
-                      if (c === "WD") return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800/50";
-                      if (c === "XD") return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800/50";
-                      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+                      if (c === "MS") return "bg-cat-ms/10 text-cat-ms border-cat-ms/30";
+                      if (c === "WS") return "bg-cat-ws/10 text-cat-ws border-cat-ws/30";
+                      if (c === "MD") return "bg-cat-md/10 text-cat-md border-cat-md/30";
+                      if (c === "WD") return "bg-cat-wd/10 text-cat-wd border-cat-wd/30";
+                      if (c === "XD") return "bg-cat-xd/10 text-cat-xd border-cat-xd/30";
+                      return "bg-muted text-soft border-border-strong";
                     };
                     const isLive = m.status === "in_progress";
                     const tabStatus = isCompleted ? "completed" : isLive ? "live" : "upcoming";
@@ -511,21 +512,21 @@ export function ActiveTournamentWidget() {
                         href={href}
                         className={`flex flex-col gap-2 p-3 rounded-xl border transition-all cursor-pointer block ${
                           isCompleted
-                            ? "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-80 hover:opacity-100 hover:border-indigo-300 dark:hover:border-indigo-700/50"
-                            : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-600/50"
+                            ? "bg-card/40 border-border opacity-80 hover:opacity-100 hover:border-info/50"
+                            : "bg-muted/60 border-border-strong shadow-sm hover:shadow-md hover:border-info/50"
                         }`}
                       >
                         {/* Top Row: Time | Format | Round | Status/Score */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="text-[10px] font-black text-slate-400 shrink-0">
+                            <span className="text-[10px] font-black text-muted-foreground shrink-0">
                               {formatTime(m.scheduled_at) || "--:--"}
                             </span>
                             <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${getCategoryColorClass(m.category)}`}>
                               {m.category?.slice(0,2) || "TBD"}
                             </span>
                             {m.round_name && (
-                              <span className="text-[10px] font-bold text-slate-500 truncate max-w-[100px]">
+                              <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[100px]">
                                 {m.round_name}
                               </span>
                             )}
@@ -533,33 +534,33 @@ export function ActiveTournamentWidget() {
                           
                           <div className="shrink-0 ml-2">
                             {isCompleted && m.score ? (
-                              <div className="flex items-center gap-0.5 text-[11px] font-black tracking-wide bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                              <div className="flex items-center gap-0.5 text-[11px] font-black tracking-wide bg-muted px-2 py-1 rounded shadow-sm border border-border-strong/50">
                                 {m.score.split(',').map((setScore, idx, arr) => {
                                   const parts = setScore.trim().split('-');
                                   if (parts.length === 2) {
                                     return (
                                       <span key={idx} className="flex items-center">
-                                        <span className={isT1Winner ? "text-emerald-600 dark:text-emerald-400" : isT2Winner ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-300"}>{parts[0]}</span>
-                                        <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
-                                        <span className={isT2Winner ? "text-emerald-600 dark:text-emerald-400" : isT1Winner ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-300"}>{parts[1]}</span>
-                                        {idx < arr.length - 1 && <span className="text-slate-400 dark:text-slate-500 mr-1.5">,</span>}
+                                        <span className={isT1Winner ? "text-success" : isT2Winner ? "text-muted-foreground" : "text-soft"}>{parts[0]}</span>
+                                        <span className="text-muted-foreground mx-0.5">-</span>
+                                        <span className={isT2Winner ? "text-success" : isT1Winner ? "text-muted-foreground" : "text-soft"}>{parts[1]}</span>
+                                        {idx < arr.length - 1 && <span className="text-muted-foreground mr-1.5">,</span>}
                                       </span>
                                     );
                                   }
                                   return (
-                                    <span key={idx} className="text-slate-600 dark:text-slate-300">
+                                    <span key={idx} className="text-soft">
                                       {setScore}{idx < arr.length - 1 ? ',' : ''}
                                     </span>
                                   );
                                 })}
                               </div>
                             ) : m.status === "in_progress" ? (
-                              <span className="text-[9px] font-black uppercase tracking-wider text-red-500 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full flex items-center gap-1.5 shadow-sm shadow-red-500/10">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-live px-2 py-0.5 bg-live/10 border border-live/20 rounded-full flex items-center gap-1.5 shadow-sm shadow-live/10">
+                                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span>
                                 LIVE
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800/30">
+                              <span className="text-[10px] font-bold text-info bg-info/10 px-1.5 py-0.5 rounded border border-info/20">
                                 {m.match_code || "TBD"}
                               </span>
                             )}
@@ -570,14 +571,14 @@ export function ActiveTournamentWidget() {
                         <div className="flex flex-col gap-1.5 mt-0.5">
                           <div className="flex items-start gap-2">
                             {isT1Winner ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                             ) : isCompleted ? (
                               <div className="w-3.5 h-3.5 shrink-0" />
                             ) : null}
                             <p className={`text-xs sm:text-sm font-bold leading-snug ${
-                              isT1Winner ? "text-emerald-600 dark:text-emerald-400" : 
-                              isCompleted ? "text-slate-500 dark:text-slate-400" : 
-                              "text-slate-800 dark:text-slate-200"
+                              isT1Winner ? "text-success" : 
+                              isCompleted ? "text-muted-foreground" : 
+                              "text-soft"
                             }`}>
                               {m.team1_label}
                             </p>
@@ -585,14 +586,14 @@ export function ActiveTournamentWidget() {
                           
                           <div className="flex items-start gap-2">
                             {isT2Winner ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                             ) : isCompleted ? (
                               <div className="w-3.5 h-3.5 shrink-0" />
                             ) : null}
                             <p className={`text-xs sm:text-sm font-bold leading-snug ${
-                              isT2Winner ? "text-emerald-600 dark:text-emerald-400" : 
-                              isCompleted ? "text-slate-500 dark:text-slate-400" : 
-                              "text-slate-800 dark:text-slate-200"
+                              isT2Winner ? "text-success" : 
+                              isCompleted ? "text-muted-foreground" : 
+                              "text-soft"
                             }`}>
                               {m.team2_label}
                             </p>
@@ -607,7 +608,7 @@ export function ActiveTournamentWidget() {
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={handleToggleTodayMatches}
-                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
+                  className="p-2 text-muted-foreground hover:text-soft hover:bg-muted rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
                 >
                   <ChevronUp className="w-4 h-4" />
                   Close
@@ -628,13 +629,13 @@ export function ActiveTournamentWidget() {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-slate-200/50 dark:border-slate-800 p-4 sm:p-5">
+            <div className="border-t border-border p-4 sm:p-5">
               <PollsSection tournamentId={tournament?.id} />
               
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={handleTogglePolls}
-                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
+                  className="p-2 text-muted-foreground hover:text-soft hover:bg-muted rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
                 >
                   <ChevronUp className="w-4 h-4" />
                   Close

@@ -27,7 +27,7 @@ interface TournamentMatch {
   team2_label: string | null;
 }
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 
 export function TournamentArchiveTab({
   tournament,
@@ -92,13 +92,13 @@ export function TournamentArchiveTab({
         <div className={cardCls}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-black text-slate-800 dark:text-foreground">Archive Tournament</h3>
+              <h3 className="font-black text-foreground">Archive Tournament</h3>
               <p className="text-sm text-muted-foreground mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
             </div>
             <button
               onClick={archive}
               disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:opacity-90 text-slate-950 font-black transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-warning hover:opacity-90 text-warning-foreground font-black transition disabled:opacity-50"
             >
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
@@ -109,7 +109,7 @@ export function TournamentArchiveTab({
 
       {tournament.status === "archived" && (
         <div className="flex flex-col items-center gap-3 py-2">
-          <span className="text-xs font-black text-[var(--warning)] uppercase tracking-widest px-3 py-1.5 bg-[var(--warning)]/15 border border-[var(--warning)]/30 rounded-full">
+          <span className="text-xs font-black text-warning uppercase tracking-widest px-3 py-1.5 bg-warning/15 border border-warning/30 rounded-full">
             Archived {tournament.archived_at ? new Date(tournament.archived_at).toLocaleDateString() : ""}
           </span>
           {isMasterAdmin && (
@@ -134,7 +134,7 @@ export function TournamentArchiveTab({
                 }
               }}
               disabled={archiving}
-              className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-border-strong text-muted-foreground hover:text-soft hover:bg-muted transition disabled:opacity-50"
             >
               {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
               Unarchive
@@ -151,17 +151,17 @@ export function TournamentArchiveTab({
         const stages = groupByStageDesc(catMatches, (m) => m.category);
         return (
           <div key={cat} className={cardCls}>
-            <h3 className="font-black text-slate-800 dark:text-foreground mb-4">{cat} — Full Fixtures</h3>
+            <h3 className="font-black text-foreground mb-4">{cat} — Full Fixtures</h3>
             <div className="space-y-4">
               {stages.map(({ stage, items: roundMatches }) => {
                 return (
                   <div key={stage.key}>
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-300 mb-2">
+                    <p className="text-xs font-black uppercase tracking-widest text-soft mb-2">
                       {stage.label}
                     </p>
                     <div className="space-y-2">
                       {roundMatches.map((m) => (
-                        <div key={m.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                        <div key={m.id} className="bg-muted/50 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-[11px] font-bold text-muted-foreground">{m.match_code}</span>
                             {m.status !== "completed" && (

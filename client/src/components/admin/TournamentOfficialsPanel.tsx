@@ -127,7 +127,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
     }
   };
 
-  const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+  const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 
   return (
     <div className="space-y-5">
@@ -137,7 +137,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
             <ShieldCheck className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-base font-black text-slate-800 dark:text-foreground">Officials</h3>
+            <h3 className="text-base font-black text-foreground">Officials</h3>
             <p className="text-xs text-muted-foreground">
               Whoever creates the tournament is its organiser. Add umpires and referees here.
             </p>
@@ -159,12 +159,12 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                     className={`flex items-start gap-2 rounded-xl border p-3 text-left transition-colors ${
                       active
                         ? "border-primary bg-primary/10"
-                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                        : "border-border hover:border-border-strong"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? "text-primary" : "text-slate-400"}`} />
+                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
                     <div className="min-w-0">
-                      <div className={`text-sm font-black ${active ? "text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                      <div className={`text-sm font-black ${active ? "text-primary" : "text-soft"}`}>
                         {r.label}
                       </div>
                       <div className="text-[11px] text-muted-foreground leading-tight">{r.desc}</div>
@@ -189,7 +189,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                         <button
                           type="button"
                           onClick={() => setSelectedPlayers((prev) => prev.filter((x) => x !== pid))}
-                          className="hover:text-rose-500 transition"
+                          className="hover:text-danger transition"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -207,7 +207,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                     }}
                     players={players.filter((p) => !selectedPlayers.includes(p.id))}
                     placeholder="Search a player to assign…"
-                    className="w-full text-sm font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full text-sm font-bold bg-muted border border-border-strong rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
                 <button
@@ -232,7 +232,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
           </div>
         ) : loadError ? (
           <div className="text-center py-8">
-            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load officials.</p>
+            <p className="text-sm font-bold text-soft">Couldn't load officials.</p>
             <button onClick={load} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition">
               Retry
             </button>
@@ -246,7 +246,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                 <div key={r.key}>
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className="w-4 h-4 text-primary shrink-0" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-soft">
                       {r.label}s
                     </h4>
                     <span className="text-[11px] font-bold text-muted-foreground">({rows.length})</span>
@@ -258,7 +258,7 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                       {rows.map((o) => (
                         <div
                           key={o.id}
-                          className="flex items-center gap-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-3 py-2"
+                          className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2"
                         >
                           {o.user?.avatar_url ? (
                             <img src={o.user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
@@ -267,13 +267,13 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
                               {(o.user?.full_name ?? "?").charAt(0)}
                             </div>
                           )}
-                          <span className="flex-1 min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">
+                          <span className="flex-1 min-w-0 truncate text-sm font-bold text-foreground">
                             {o.user?.full_name ?? "Unknown player"}
                           </span>
                           {canManage && (
                             <button
                               onClick={() => removeOfficial(o)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition shrink-0"
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 transition shrink-0"
                               title="Remove"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -294,11 +294,11 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
       {canManage && (
         <div className={cardCls}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-success" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-black text-slate-800 dark:text-foreground">Share Contacts with Players</h4>
+              <h4 className="text-sm font-black text-foreground">Share Contacts with Players</h4>
               <p className="text-[11px] text-muted-foreground leading-tight">
                 When enabled, players can see their opponent's phone number and officials' contacts on match cards.
                 Officials and admins can always see contacts.
@@ -307,9 +307,9 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
             <button
               onClick={toggleContacts}
               disabled={contactsLoading}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${contactsEnabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${contactsEnabled ? "bg-success" : "bg-muted-strong"}`}
             >
-              <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${contactsEnabled ? "translate-x-6" : "translate-x-1"}`} />
+              <span className={`inline-block h-4 w-4 rounded-full bg-foreground shadow-sm transition-transform ${contactsEnabled ? "translate-x-6" : "translate-x-1"}`} />
             </button>
           </div>
         </div>

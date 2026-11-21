@@ -43,7 +43,7 @@ export function ClaimRecordCard({ guestId, guestName, requesterId }: { guestId: 
   const req = existing.data;
 
   return (
-    <section aria-label="Claim this record" className="mx-4 my-3 rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
+    <section aria-label="Claim this record" className="mx-4 my-3 rounded-2xl border border-warning bg-warning/10 p-4 text-sm">
       <p className="flex items-center gap-2 font-bold">
         <UserCheck className="w-4 h-4" aria-hidden /> “{guestName}” is a guest record.
       </p>
@@ -59,7 +59,7 @@ export function ClaimRecordCard({ guestId, guestName, requesterId }: { guestId: 
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="mt-2 min-h-[44px] px-4 rounded-xl bg-amber-600 text-white font-bold"
+            className="mt-2 min-h-[44px] px-4 rounded-xl bg-warning text-warning-foreground font-bold"
           >
             This is me — request link
           </button>
@@ -73,21 +73,21 @@ export function ClaimRecordCard({ guestId, guestName, requesterId }: { guestId: 
             id="claim-evidence"
             value={evidence}
             onChange={(e) => setEvidence(e.target.value)}
-            className="w-full min-h-[88px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3"
+            className="w-full min-h-[88px] rounded-xl border border-border-strong bg-card p-3"
             placeholder="e.g. I played the 3 Oct friendly against Bina, who can confirm. A shared name alone is not enough."
           />
           {error && (
-            <p role="alert" className="text-xs text-[var(--danger)]">{error}</p>
+            <p role="alert" className="text-xs text-danger">{error}</p>
           )}
           <div className="flex gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="min-h-[44px] px-4 rounded-xl border border-slate-300 dark:border-slate-700 font-bold">
+            <button type="button" onClick={() => setOpen(false)} className="min-h-[44px] px-4 rounded-xl border border-border-strong font-bold">
               Cancel
             </button>
             <button
               type="button"
               onClick={submit}
               disabled={busy || evidence.trim().length < 10}
-              className="min-h-[44px] px-4 rounded-xl bg-amber-600 text-white font-bold disabled:opacity-50 inline-flex items-center gap-2"
+              className="min-h-[44px] px-4 rounded-xl bg-warning text-warning-foreground font-bold disabled:opacity-50 inline-flex items-center gap-2"
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin" aria-hidden />} Send request
             </button>

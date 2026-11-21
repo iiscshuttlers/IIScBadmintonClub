@@ -54,9 +54,9 @@ export function PathToFinalDialog({
               const last = i === data.length - 1;
               return (
                 <li key={s.matchId} className="ml-4">
-                  <span className={`absolute -left-[9px] mt-1 w-4 h-4 rounded-full border-2 ${last ? "bg-amber-400 border-amber-400" : "bg-background border-primary"}`} />
+                  <span className={`absolute -left-[9px] mt-1 w-4 h-4 rounded-full border-2 ${last ? "bg-warning border-warning" : "bg-background border-primary"}`} />
                   <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-muted-foreground">
-                    {last && <Trophy className="w-3.5 h-3.5 text-amber-500" />} {s.roundName}
+                    {last && <Trophy className="w-3.5 h-3.5 text-gold" />} {s.roundName}
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
                     <span className="text-sm font-bold text-foreground truncate">
@@ -65,7 +65,7 @@ export function PathToFinalDialog({
                     </span>
                     {pct != null && (
                       <span
-                        className={`shrink-0 text-[11px] font-black tabular-nums ${pct >= 50 ? "text-emerald-500" : "text-rose-500"}`}
+                        className={`shrink-0 text-[11px] font-black tabular-nums ${pct >= 50 ? "text-success" : "text-danger"}`}
                         title="Your win chance by Elo"
                       >
                         {pct}%

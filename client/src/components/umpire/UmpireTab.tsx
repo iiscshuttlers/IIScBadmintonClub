@@ -313,7 +313,7 @@ export function UmpireTab({
     <div className="w-full max-w-5xl mx-auto p-2 sm:p-4 space-y-6">
       {/* Tabs - Only show when there are in-progress or queued active matches */}
       {activeMatches.length > 0 && (
-        <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-border pb-2">
           {activeMatches.map((m, idx) => {
             let mLabel = `Match ${idx + 1}`;
             if ('category' in m) {
@@ -327,14 +327,14 @@ export function UmpireTab({
                 className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-black transition-all border ${
                   activeMatchIndex === idx
                     ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
-                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                    : "bg-card border-border text-muted-foreground hover:text-soft hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span>{mLabel}</span>
                   <div 
                     onClick={(e) => { e.stopPropagation(); removeMatch(idx); }}
-                    className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-black/20 text-current transition"
+                    className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-media/20 text-current transition"
                   >
                     <span className="text-xs">×</span>
                   </div>
@@ -350,8 +350,8 @@ export function UmpireTab({
             }}
             className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 ${
               showNewMatch
-                ? "bg-slate-800 border-slate-700 text-white shadow-xs"
-                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                ? "bg-muted border-border-strong text-foreground shadow-xs"
+                : "bg-card border-border text-muted-foreground hover:text-soft hover:bg-muted"
             }`}
           >
             <span className="text-sm leading-none">+</span> New Match
@@ -360,7 +360,7 @@ export function UmpireTab({
       )}
 
       {!showNewMatch && currentMatch && (
-        <div className="relative border border-slate-700 rounded-[2rem] overflow-hidden bg-slate-900 shadow-xl">
+        <div className="relative border border-border-strong rounded-[2rem] overflow-hidden bg-card shadow-xl">
           <UmpireEngine
             key={('id' in currentMatch ? currentMatch.id : activeMatchIndex)}
             userId={session.user.id}
@@ -377,7 +377,7 @@ export function UmpireTab({
       {showNewMatch && (
         <div className="space-y-6">
           {/* Umpire Hub Compact Header & Actions */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-800">
+          <div className="relative overflow-hidden bg-gradient-to-br from-card/90 to-background/90 rounded-2xl p-4 sm:p-5 shadow-lg border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -385,11 +385,11 @@ export function UmpireTab({
                     <Swords className="w-3 h-3" />
                     Umpire Desk
                   </span>
-                  <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
                     Start or Officiate Match
                   </h2>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Launch a friendly scrimmage with BWF scoring rules or pick assigned tournament matches.
                 </p>
               </div>
@@ -401,9 +401,9 @@ export function UmpireTab({
                     id: crypto.randomUUID(),
                     is_edit_mode: false,
                   })}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-slate-950 font-black text-xs shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-success text-primary-foreground font-black text-xs shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Swords className="w-3.5 h-3.5 text-slate-950" />
+                  <Swords className="w-3.5 h-3.5 text-foreground" />
                   Start Friendly Match
                 </button>
               </div>
@@ -411,10 +411,10 @@ export function UmpireTab({
 
             {/* Tournament Matches Section */}
             {hasActiveTournament && canRunTournament && (
-              <div className="mt-4 pt-3.5 border-t border-slate-800/80">
+              <div className="mt-4 pt-3.5 border-t border-border/80">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                  <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider">Tournament Matches</h3>
+                  <Trophy className="w-3.5 h-3.5 text-gold" />
+                  <h3 className="text-xs font-black text-soft uppercase tracking-wider">Tournament Matches</h3>
                 </div>
                 <UmpireTournamentTab onStartMatch={startMatch} tournamentId={resolvedTournamentId} tournament={tournament} />
               </div>
@@ -422,23 +422,23 @@ export function UmpireTab({
 
             {/* Informative banner when tournament umpiring is unavailable */}
             {!canRunTournament && (
-              <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 flex gap-3 items-start">
+              <div className="mt-6 rounded-2xl border border-border bg-background/40 p-4 flex gap-3 items-start">
                 {!hasActiveTournament ? (
                   <>
-                    <CalendarX className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+                    <CalendarX className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-slate-300">No Active Tournament Scheduled</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-xs font-bold text-soft">No Active Tournament Scheduled</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
                         Official tournament fixtures and line-ups appear automatically when a tournament is underway. You can always score friendly matches above.
                       </p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <Lock className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-amber-300">Umpire Role Required for Tournament Fixtures</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-xs font-bold text-warning">Umpire Role Required for Tournament Fixtures</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
                         You are currently signed in without the official Umpire or Admin credential. Contact the club desk to unlock tournament scorekeeping.
                       </p>
                     </div>
@@ -594,7 +594,7 @@ function RecentUmpireMatches({
   const displayedMatches = filteredMatches.slice(0, visibleCount);
 
   return (
-    <div className="bg-slate-900 rounded-[2rem] p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+    <div className="bg-card rounded-[2rem] p-5 sm:p-6 shadow-xl border border-border space-y-4">
       {/* Header Bar */}
       <div 
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
@@ -607,18 +607,18 @@ function RecentUmpireMatches({
           <div>
             <h3 className="text-xl font-black text-foreground flex items-center gap-2">
               Recent Submissions
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60 font-mono">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border-strong/60 font-mono">
                 {filteredMatches.length}
               </span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Live score submissions with a 10-minute edit grace period and scorecard review.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <div className="p-1.5 rounded-full hover:bg-slate-800 transition text-slate-400">
+          <div className="p-1.5 rounded-full hover:bg-muted transition text-muted-foreground">
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </div>
         </div>
@@ -626,17 +626,17 @@ function RecentUmpireMatches({
 
       {/* Filter and Search Bar (Kept accessible when expanded) */}
       {isExpanded && (
-        <div className="pt-2 border-t border-slate-800/80 space-y-3">
+        <div className="pt-2 border-t border-border/80 space-y-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search player, team, code, rubber..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950/60 text-white text-xs rounded-xl border border-slate-800 pl-9 pr-3 py-2 outline-none focus:border-primary transition"
+                className="w-full bg-background/60 text-foreground text-xs rounded-xl border border-border pl-9 pr-3 py-2 outline-none focus:border-primary transition"
               />
             </div>
 
@@ -648,7 +648,7 @@ function RecentUmpireMatches({
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
                   filterScoredByMe
                     ? "bg-primary text-primary-foreground border-primary font-black shadow-xs"
-                    : "bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200"
+                    : "bg-muted/80 text-muted-foreground border-border-strong/60 hover:text-soft"
                 }`}
               >
                 <User className="w-3.5 h-3.5" />
@@ -656,7 +656,7 @@ function RecentUmpireMatches({
               </button>
 
               {/* Category Pills */}
-              <div className="flex flex-wrap bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+              <div className="flex flex-wrap bg-background/80 p-1 rounded-xl border border-border">
                 {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
                   <button
                     key={f}
@@ -664,7 +664,7 @@ function RecentUmpireMatches({
                     className={`px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                       filterFormat === f 
                         ? "bg-primary text-primary-foreground shadow-xs" 
-                        : "text-slate-400 hover:text-slate-200"
+                        : "text-muted-foreground hover:text-soft"
                     }`}
                   >
                     {f}
@@ -676,10 +676,10 @@ function RecentUmpireMatches({
 
           {/* Results Grid */}
           {filteredMatches.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/30">
-              <Filter className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-bold text-slate-400">No submissions matching criteria</p>
-              <p className="text-xs text-slate-500 mt-1">Try resetting category or search filters.</p>
+            <div className="py-12 text-center border border-dashed border-border rounded-2xl bg-background/30">
+              <Filter className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-bold text-muted-foreground">No submissions matching criteria</p>
+              <p className="text-xs text-muted-foreground mt-1">Try resetting category or search filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3.5 pt-1">
@@ -699,7 +699,7 @@ function RecentUmpireMatches({
                   <button
                     type="button"
                     onClick={() => setVisibleCount(prev => prev + 8)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-muted hover:bg-muted-strong text-soft hover:text-foreground border border-border-strong transition"
                   >
                     Load More Submissions ({filteredMatches.length - visibleCount} remaining)
                   </button>

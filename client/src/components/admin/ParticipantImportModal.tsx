@@ -165,7 +165,7 @@ export function ParticipantImportModal({
   const entries = bulkText.trim() ? parseBulkLines(bulkText, activeCategory) : [];
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-3">
+    <div className="bg-muted/50 rounded-xl p-3 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-bold text-muted-foreground">
           Paste names — one per line.
@@ -184,13 +184,13 @@ export function ParticipantImportModal({
               }
               toast("Long-press the text box and use your device's Paste", { icon: "📋" });
             }}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-[var(--info)] hover:text-[var(--info)] hover:border-[var(--info)] transition"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-border-strong text-[10px] font-black text-info hover:text-info/80 hover:border-info transition"
           >
             <Clipboard className="w-3 h-3" /> Paste
           </button>
           <button
             onClick={() => downloadParticipantTemplate(activeCategory)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-muted-foreground hover:text-primary hover:border-primary transition"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-border-strong text-[10px] font-black text-muted-foreground hover:text-primary hover:border-primary transition"
           >
             <Download className="w-3 h-3" /> CSV Template
           </button>
@@ -202,9 +202,9 @@ export function ParticipantImportModal({
         value={bulkText}
         onChange={(e) => setBulkText(e.target.value)}
         placeholder={isDoubles(activeCategory) ? "Rahul Sharma\tPriya Nair\nArun K\tMeena R" : "Rahul Sharma\nPriya Nair\nArun Kumar"}
-        className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary resize-none"
+        className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-border-strong bg-card outline-none focus:ring-1 focus:ring-primary resize-none"
       />
-      <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-[var(--info)] transition w-fit">
+      <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-info transition w-fit">
         <Upload className="w-3.5 h-3.5" />
         <span>Upload CSV instead</span>
         <input type="file" accept=".csv" className="hidden"
@@ -213,17 +213,17 @@ export function ParticipantImportModal({
       {entries.length > 0 && (
         <div className="space-y-1 max-h-48 overflow-y-auto">
           {entries.map((e, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-[var(--warning)]"}`} />
+            <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-border last:border-0">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-warning"}`} />
               <span className="flex-1 truncate">
-                <span className="font-bold text-slate-800 dark:text-foreground">{e.name1}</span>
-                {e.email1 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email1}</span>}
-                {e.phone1 && <span className="text-emerald-500 ml-1">{e.phone1}</span>}
-                {e.name2 && <><span className="text-muted-foreground mx-1">&</span><span className="font-bold text-slate-800 dark:text-foreground">{e.name2}</span></>}
-                {e.email2 && <span className="text-slate-400 dark:text-slate-500 ml-1">{e.email2}</span>}
-                {e.phone2 && <span className="text-emerald-500 ml-1">{e.phone2}</span>}
+                <span className="font-bold text-foreground">{e.name1}</span>
+                {e.email1 && <span className="text-muted-foreground ml-1">{e.email1}</span>}
+                {e.phone1 && <span className="text-success ml-1">{e.phone1}</span>}
+                {e.name2 && <><span className="text-muted-foreground mx-1">&</span><span className="font-bold text-foreground">{e.name2}</span></>}
+                {e.email2 && <span className="text-muted-foreground ml-1">{e.email2}</span>}
+                {e.phone2 && <span className="text-success ml-1">{e.phone2}</span>}
               </span>
-              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-[var(--warning)]"}`}>
+              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-warning"}`}>
                 {e.match1 ? "Found" : "External"}
               </span>
             </div>
@@ -239,7 +239,7 @@ export function ParticipantImportModal({
           {bulkImporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
           <span>{bulkImporting ? "Importing..." : "Run Import"}</span>
         </button>
-        <button onClick={onClose} className="px-4 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black py-2 rounded-lg transition">Cancel</button>
+        <button onClick={onClose} className="px-4 bg-muted text-soft text-xs font-black py-2 rounded-lg transition">Cancel</button>
       </div>
     </div>
   );

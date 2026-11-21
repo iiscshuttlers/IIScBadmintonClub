@@ -41,6 +41,18 @@ describe("WP10 integrated release gate", () => {
     expect(dispatcher).toContain("await Promise.all(");
   });
 
+  it("treats push as best-effort only for gallery photo alerts", () => {
+    const dispatcher = read("supabase/functions/dispatch-scheduled-notifications/index.ts");
+    const migration = read("supabase/migrations/20261121150000_gallery_album_alerts.sql");
+
+    // Organiser/match rows keep the strict default; only gallery_photos opts out.
+    expect(dispatcher).toMatch(/DEFAULT_RULE: DeliveryRule = \{[^}]*pushOptional: false/);
+    expect(dispatcher).toMatch(/gallery_photos: \{[^}]*pref: "pref_notify_gallery", pushOptional: true/);
+    expect(dispatcher.match(/pushOptional: true/g)).toHaveLength(1);
+    expect(migration).toContain("'gallery_photos'");
+    expect(migration).toContain("ARRAY['in_app', 'push']");
+  });
+
   it("expires stale match alerts and gives every queued revision a stable identity", () => {
     const migration = read("supabase/migrations/20261115130000_notification_identity_expiry.sql");
     const dispatcher = read("supabase/functions/dispatch-scheduled-notifications/index.ts");

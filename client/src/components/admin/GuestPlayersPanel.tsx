@@ -161,9 +161,9 @@ export function GuestPlayersPanel() {
       <ClaimRequestsSection onResolved={() => void load()} />
       <MergeReversalPanel onReversed={() => void load()} />
       {/* ── Create guest ─────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
-        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-1">
-          <Ghost className="w-5 h-5 text-violet-500" /> Add Guest Player
+      <div className="bg-card rounded-3xl border border-border p-5 sm:p-6">
+        <h2 className="text-lg font-black text-foreground flex items-center gap-2 mb-1">
+          <Ghost className="w-5 h-5 text-individual" /> Add Guest Player
           <InfoModal
             title="GUEST PLAYERS"
             items={[
@@ -182,7 +182,7 @@ export function GuestPlayersPanel() {
             onKeyDown={(e) => e.key === "Enter" && createGuest()}
             placeholder="Guest name (e.g. Visitor John)"
             maxLength={60}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-violet-500"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border-strong text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-individual"
           />
           <div className="flex gap-2">
             {(["Male", "Female"] as const).map((opt) => (
@@ -192,8 +192,8 @@ export function GuestPlayersPanel() {
                 onClick={() => setGender((g) => (g === opt ? "" : opt))}
                 className={`px-4 py-2.5 rounded-xl text-sm font-bold border transition ${
                   gender === opt
-                    ? "bg-violet-50 dark:bg-violet-900/30 border-violet-500 text-violet-700 dark:text-violet-300"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground"
+                    ? "bg-individual/10 border-individual text-individual"
+                    : "bg-card border-border-strong text-muted-foreground"
                 }`}
               >
                 {opt}
@@ -203,7 +203,7 @@ export function GuestPlayersPanel() {
           <button
             onClick={createGuest}
             disabled={creating}
-            className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold transition disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-individual hover:bg-individual/90 text-individual-foreground text-sm font-bold transition disabled:opacity-50"
           >
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
             Add
@@ -213,22 +213,22 @@ export function GuestPlayersPanel() {
 
       {/* ── Guest Roster + Claim side by side ────────────────── */}
       <div>
-        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-3">
-          <Ghost className="w-5 h-5 text-violet-500" /> Guest Roster
+        <h2 className="text-lg font-black text-foreground flex items-center gap-2 mb-3">
+          <Ghost className="w-5 h-5 text-individual" /> Guest Roster
           {guests.length > 0 && (
-            <span className="text-sm font-bold bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full">
+            <span className="text-sm font-bold bg-individual/15 text-individual px-2 py-0.5 rounded-full">
               {guests.length}
             </span>
           )}
           {selectedGuest && (
-            <span className="ml-2 text-sm font-bold text-violet-500">
+            <span className="ml-2 text-sm font-bold text-individual">
               — Linking "{selectedGuest.full_name}"
             </span>
           )}
         </h2>
 
         {loading ? null : guests.length === 0 ? (
-          <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+          <div className="text-center py-10 bg-card rounded-2xl border border-border">
             <p className="text-sm font-bold text-muted-foreground">No guest players yet.</p>
           </div>
         ) : (
@@ -251,15 +251,15 @@ export function GuestPlayersPanel() {
                     }}
                     className={`flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-violet-50 dark:bg-violet-900/30 border-violet-400 dark:border-violet-600 shadow-md"
-                        : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-violet-300 dark:hover:border-violet-700"
+                        ? "bg-individual/10 border-individual shadow-md"
+                        : "bg-card border-border hover:border-individual"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-violet-200 dark:bg-violet-800" : "bg-violet-100 dark:bg-violet-900/40"}`}>
-                      <Ghost className={`w-4 h-4 ${isSelected ? "text-violet-700 dark:text-violet-300" : "text-violet-500"}`} />
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-individual/20" : "bg-individual/15"}`}>
+                      <Ghost className={`w-4 h-4 ${isSelected ? "text-individual" : "text-individual"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-sm text-slate-800 dark:text-foreground truncate">
+                      <p className="font-black text-sm text-foreground truncate">
                         {g.full_name}
                         {g.gender && <span className="ml-2 text-[10px] font-bold uppercase text-muted-foreground">{g.gender}</span>}
                       </p>
@@ -268,12 +268,12 @@ export function GuestPlayersPanel() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      {isSelected && <Link2 className="w-4 h-4 text-violet-500" />}
+                      {isSelected && <Link2 className="w-4 h-4 text-individual" />}
                       <button
                         disabled={isBusy}
                         onClick={(e) => { e.stopPropagation(); deleteGuest(g); }}
                         title="Delete guest"
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition disabled:opacity-50"
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 transition disabled:opacity-50"
                       >
                         {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                       </button>
@@ -288,7 +288,7 @@ export function GuestPlayersPanel() {
             </div>
 
             {/* RIGHT: Real player search */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+            <div className="bg-card rounded-2xl border border-border p-4">
               {!selectedGuest ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center gap-3 text-muted-foreground">
                   <Link2 className="w-8 h-8 opacity-30" />
@@ -298,12 +298,12 @@ export function GuestPlayersPanel() {
                 <div className="space-y-4">
                   {/* Arrow header */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span className="bg-individual/15 text-individual text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
                       <Ghost className="w-3.5 h-3.5" /> {selectedGuest.full_name}
                     </span>
                     <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
                     {selectedReal ? (
-                      <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-black px-3 py-1 rounded-full">
+                      <span className="bg-success/15 text-success text-xs font-black px-3 py-1 rounded-full">
                         {selectedReal.full_name}
                       </span>
                     ) : (
@@ -319,7 +319,7 @@ export function GuestPlayersPanel() {
                       onChange={(e) => { setClaimSearch(e.target.value); setSelectedReal(null); }}
                       placeholder="Type a name to search..."
                       autoFocus
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-violet-500"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted border border-border-strong text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-individual"
                     />
                   </div>
 
@@ -335,8 +335,8 @@ export function GuestPlayersPanel() {
                         onClick={() => setSelectedReal(p)}
                         className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${
                           selectedReal?.id === p.id
-                            ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 font-bold"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                            ? "bg-success/15 text-success font-bold"
+                            : "hover:bg-muted text-soft"
                         }`}
                       >
                         <span className="font-bold">{p.full_name}</span>
@@ -346,17 +346,17 @@ export function GuestPlayersPanel() {
                   </div>
 
                   {/* Link button */}
-                  <div className="flex gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex gap-2 pt-1 border-t border-border">
                     <button
                       onClick={() => { setSelectedGuest(null); setSelectedReal(null); setClaimSearch(""); }}
-                      className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className="flex-1 py-2 rounded-xl border border-border-strong text-muted-foreground font-bold text-sm hover:bg-muted transition"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={executeClaim}
                       disabled={!selectedReal || claiming}
-                      className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="flex-1 py-2 rounded-xl bg-individual hover:bg-individual/90 text-individual-foreground font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
                       Review &amp; link history
@@ -500,15 +500,15 @@ function LinkExternalSection({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
-          <Tag className="w-5 h-5 text-sky-500" /> Link External Players
+        <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+          <Tag className="w-5 h-5 text-info" /> Link External Players
           {labels.length > 0 && (
-            <span className="text-sm font-bold bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 px-2 py-0.5 rounded-full">
+            <span className="text-sm font-bold bg-info/15 text-info px-2 py-0.5 rounded-full">
               {labels.length}
             </span>
           )}
         </h2>
-        <button onClick={loadLabels} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={loadLabels} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-muted">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
@@ -519,7 +519,7 @@ function LinkExternalSection({
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : labels.length === 0 ? (
-        <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+        <div className="text-center py-8 bg-card rounded-2xl border border-border">
           <CheckCircle className="w-9 h-9 text-primary mx-auto mb-2" />
           <p className="text-sm font-bold text-muted-foreground">All external players are linked!</p>
         </div>
@@ -534,7 +534,7 @@ function LinkExternalSection({
                 value={filter}
                 onChange={e => setFilter(e.target.value)}
                 placeholder="Filter by name..."
-                className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted border border-border-strong text-sm text-foreground outline-none focus:ring-2 focus:ring-info"
               />
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -546,21 +546,21 @@ function LinkExternalSection({
                     onClick={() => { if (isSelected) { resetSelection(); } else { resetSelection(); setSelectedLabel(l); } }}
                     className={`flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-sky-50 dark:bg-sky-900/30 border-sky-400 dark:border-sky-600 shadow-md"
-                        : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700"
+                        ? "bg-info/10 border-info shadow-md"
+                        : "bg-card border-border hover:border-info"
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-black ${isSelected ? "bg-sky-200 dark:bg-sky-800 text-sky-700 dark:text-sky-200" : "bg-sky-100 dark:bg-sky-900/40 text-sky-500"}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-black ${isSelected ? "bg-info/20 text-info-foreground" : "bg-info/15 text-info"}`}>
                       {l.label.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-sm text-slate-800 dark:text-foreground truncate">{l.label}</p>
+                      <p className="font-black text-sm text-foreground truncate">{l.label}</p>
                       <p className="text-[11px] text-muted-foreground">
                         {l.matchCount} match{l.matchCount === 1 ? "" : "es"}
                         {l.tournaments.length > 0 && ` · ${l.tournaments.slice(0, 2).join(", ")}`}
                       </p>
                     </div>
-                    {isSelected && <Link2 className="w-4 h-4 text-sky-500 shrink-0" />}
+                    {isSelected && <Link2 className="w-4 h-4 text-info shrink-0" />}
                   </div>
                 );
               })}
@@ -568,7 +568,7 @@ function LinkExternalSection({
           </div>
 
           {/* RIGHT: Player search */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+          <div className="bg-card rounded-2xl border border-border p-4">
             {!selectedLabel ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center gap-3 text-muted-foreground">
                 <Link2 className="w-8 h-8 opacity-30" />
@@ -577,12 +577,12 @@ function LinkExternalSection({
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <span className="bg-info/15 text-info text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5">
                     <Tag className="w-3 h-3" /> {selectedLabel.label}
                   </span>
                   <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   {selectedPlayer ? (
-                    <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-black px-3 py-1 rounded-full">
+                    <span className="bg-success/15 text-success text-xs font-black px-3 py-1 rounded-full">
                       {selectedPlayer.full_name}
                       {doublesMode && selectedPartner && ` + ${selectedPartner.full_name}`}
                     </span>
@@ -603,7 +603,7 @@ function LinkExternalSection({
                       onChange={e => { setPlayerSearch(e.target.value); setSelectedPlayer(null); }}
                       placeholder="Type name to search..."
                       autoFocus
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted border border-border-strong text-sm text-foreground outline-none focus:ring-2 focus:ring-info"
                     />
                   </div>
                 </div>
@@ -619,8 +619,8 @@ function LinkExternalSection({
                       onClick={() => setSelectedPlayer(p)}
                       className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${
                         selectedPlayer?.id === p.id
-                          ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 font-bold"
-                          : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          ? "bg-success/15 text-success font-bold"
+                          : "hover:bg-muted text-soft"
                       }`}
                     >
                       <span className="font-bold">{p.full_name}</span>
@@ -635,8 +635,8 @@ function LinkExternalSection({
                   onClick={() => { setDoublesMode(v => !v); setSelectedPartner(null); setPartnerSearch(""); }}
                   className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-bold transition ${
                     doublesMode
-                      ? "bg-sky-50 dark:bg-sky-900/30 border-sky-400 dark:border-sky-600 text-sky-700 dark:text-sky-300"
-                      : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-sky-300 dark:hover:border-sky-700"
+                      ? "bg-info/10 border-info text-info"
+                      : "border-border-strong text-muted-foreground hover:border-info"
                   }`}
                 >
                   <UserPlus className="w-3.5 h-3.5" />
@@ -657,7 +657,7 @@ function LinkExternalSection({
                           value={partnerSearch}
                           onChange={e => { setPartnerSearch(e.target.value); setSelectedPartner(null); }}
                           placeholder="Type partner name to search..."
-                          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
+                          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted border border-border-strong text-sm text-foreground outline-none focus:ring-2 focus:ring-info"
                         />
                       </div>
                     </div>
@@ -672,8 +672,8 @@ function LinkExternalSection({
                           onClick={() => setSelectedPartner(p)}
                           className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${
                             selectedPartner?.id === p.id
-                              ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 font-bold"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                              ? "bg-success/15 text-success font-bold"
+                              : "hover:bg-muted text-soft"
                           }`}
                         >
                           <span className="font-bold">{p.full_name}</span>
@@ -684,17 +684,17 @@ function LinkExternalSection({
                   </>
                 )}
 
-                <div className="flex gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex gap-2 pt-1 border-t border-border">
                   <button
                     onClick={resetSelection}
-                    className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    className="flex-1 py-2 rounded-xl border border-border-strong text-muted-foreground font-bold text-sm hover:bg-muted transition"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={executeLink}
                     disabled={!selectedPlayer || (doublesMode && !selectedPartner) || linking}
-                    className="flex-1 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 py-2 rounded-xl bg-info hover:bg-info/90 text-info-foreground font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {linking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
                     Link {selectedLabel.matchCount} match{selectedLabel.matchCount === 1 ? "" : "es"}

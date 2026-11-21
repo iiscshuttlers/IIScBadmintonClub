@@ -65,8 +65,8 @@ export function ScrollTabs({
             aria-current={active ? "page" : undefined}
             className={`shrink-0 inline-flex items-center min-h-[44px] px-4 rounded-full text-sm font-black whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               active
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
+                ? "bg-foreground text-background"
+                : "bg-card text-soft border border-border"
             }`}
           >
             {t.label}

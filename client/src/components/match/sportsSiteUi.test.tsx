@@ -90,8 +90,11 @@ describe("FormChips", () => {
     );
     expect(screen.getByText("Won 1 of last 2 tournament matches.")).toBeInTheDocument();
     const chips = screen.getAllByRole("link");
-    expect(chips.map((c) => c.textContent)).toEqual(["W", "L/O"]);
+    // A walkover keeps its result letter and colour, with "w/o" under it (no made-up "L/O").
+    expect(chips.map((c) => c.textContent)).toEqual(["W", "Lw/o"]);
+    expect(chips[1].className).toContain("bg-danger");
     expect(chips[0]).toHaveAccessibleName(/^Won vs Bala, MS · Final, 23 Aug$/);
+    expect(chips[1]).toHaveAccessibleName(/^Lost \(walkover\) vs Chitra, MS · SF$/);
   });
 
   it("has an empty state", () => {
@@ -156,9 +159,9 @@ describe("MatchPointsTab", () => {
         log={{ points, pointCount: points.length, final: false, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByText("Asha won 11 rallies in a row")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Live point history · 12 scoring rallies recorded so far.");
-    expect(screen.getByRole("img", { name: /Game 1 points progression, final score 11–1/ })).toBeInTheDocument();
+    expect(screen.getByText("Asha won 11 points in a row")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Live · 12 points so far.");
+    expect(screen.getByRole("img", { name: /Game 1 points progression over 12 rallies, final score 11–1/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "View as table" }));
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument(); // last row: after rally 12
@@ -168,7 +171,7 @@ describe("MatchPointsTab", () => {
     render(
       <MatchPointsTab view={view()} log={{ points, pointCount: 13, final: true, supersededByCorrection: true, updatedAt: "" }} />,
     );
-    expect(screen.getByRole("note")).toHaveTextContent(/Corrected result/);
+    expect(screen.getByRole("note")).toHaveTextContent(/score was corrected after the match/);
   });
 
   it("uses the configured halfway interval for a 30-point game", () => {
@@ -192,7 +195,7 @@ describe("MatchPointsTab", () => {
         log={{ points: complete, pointCount: complete.length, final: true, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByRole("status")).toHaveTextContent("Complete point history · 21 scoring rallies.");
+    expect(screen.getByRole("status")).toHaveTextContent("All 21 points recorded.");
   });
 
   it("labels a truncated history as partial and avoids unsupported completeness", () => {
@@ -203,8 +206,8 @@ describe("MatchPointsTab", () => {
         log={{ points: partial, pointCount: partial.length, final: true, supersededByCorrection: false, updatedAt: "" }}
       />,
     );
-    expect(screen.getByRole("note")).toHaveTextContent("Partial point history");
-    expect(screen.queryByText(/Complete point history/)).not.toBeInTheDocument();
+    expect(screen.getByRole("note")).toHaveTextContent("Some points weren't recorded");
+    expect(screen.queryByText(/points recorded\./)).not.toBeInTheDocument();
   });
 });
 

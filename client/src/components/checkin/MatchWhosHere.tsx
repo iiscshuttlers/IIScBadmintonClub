@@ -20,11 +20,11 @@ import { useCheckinAction, useTournamentReadiness, type TournamentReadiness } fr
 import { PresenceChip } from "./CheckinBits";
 
 const RING: Record<ReturnType<typeof presenceTone>, string> = {
-  here: "ring-emerald-400",
-  court: "ring-cyan-300",
-  break: "ring-amber-300",
-  rest: "ring-violet-300",
-  none: "ring-slate-700",
+  here: "ring-success",
+  court: "ring-live",
+  break: "ring-warning",
+  rest: "ring-info",
+  none: "ring-border-strong",
 };
 
 function initials(name: string) {
@@ -107,10 +107,10 @@ export function MatchWhosHere({ tournamentId, matchId }: { tournamentId: string;
           </div>
         </div>
       )}
-      <section aria-labelledby="whos-here-heading" className="rounded-3xl border border-slate-800 bg-slate-900 p-4 sm:p-5 space-y-4">
+      <section aria-labelledby="whos-here-heading" className="rounded-3xl border border-border bg-card p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 id="whos-here-heading" className="text-base font-black text-white">Who's here</h2>
-          <span className={`text-xs font-black ${r.hereCount === r.total ? "text-emerald-300" : "text-amber-300"}`}>
+          <h2 id="whos-here-heading" className="text-base font-black text-foreground">Who's here</h2>
+          <span className={`text-xs font-black ${r.hereCount === r.total ? "text-success" : "text-warning"}`}>
             {r.hereCount} of {r.total}
           </span>
         </div>
@@ -119,33 +119,33 @@ export function MatchWhosHere({ tournamentId, matchId }: { tournamentId: string;
             const presence = isLiveStatus(match.status) ? null : playerPresence(data.ctx, id, match.id);
             const name = data.names[id] ?? "Player";
             return (
-              <li key={id} className="flex flex-col items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/60 px-2 py-3 text-center">
+              <li key={id} className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-background/60 px-2 py-3 text-center">
                 <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-base font-black text-white ring-[3px] ${
+                  className={`flex h-12 w-12 items-center justify-center rounded-full bg-muted text-base font-black text-foreground ring-[3px] ${
                     RING[presence ? presenceTone(presence) : "court"]
                   }`}
                   aria-hidden
                 >
                   {initials(name) || "?"}
                 </span>
-                <span className="w-full truncate text-sm font-bold text-white">
+                <span className="w-full truncate text-sm font-bold text-foreground">
                   {id === myPlayerId ? `${name} (you)` : name}
                 </span>
                 {presence ? (
                   <PresenceChip presence={presence} />
                 ) : (
-                  <span className="rounded-full bg-cyan-500/15 px-2.5 py-1 text-xs font-black text-cyan-300">Playing</span>
+                  <span className="rounded-full bg-live/15 px-2.5 py-1 text-xs font-black text-live">Playing</span>
                 )}
               </li>
             );
           })}
         </ul>
         {events.length > 0 && (
-          <ol className="space-y-2 border-t border-slate-800 pt-3" aria-label="Check-in and call times">
+          <ol className="space-y-2 border-t border-border pt-3" aria-label="Check-in and call times">
             {events.map((e, i) => (
               <li key={`${e.kind}-${i}`} className="flex gap-3 text-sm">
-                <span className="w-16 shrink-0 text-slate-400 tabular-nums">{clockLabel(e.at)}</span>
-                <span className={e.kind === "called" ? "font-bold text-primary" : "text-slate-100"}>
+                <span className="w-16 shrink-0 text-muted-foreground tabular-nums">{clockLabel(e.at)}</span>
+                <span className={e.kind === "called" ? "font-bold text-primary" : "text-foreground"}>
                   {eventText(e, data, myPlayerId, r.total)}
                 </span>
               </li>

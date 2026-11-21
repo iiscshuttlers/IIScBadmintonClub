@@ -532,6 +532,30 @@ export type Database = {
           },
         ]
       }
+      gallery_album_subscriptions: {
+        Row: {
+          album: string
+          created_at: string
+          subscribed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          album: string
+          created_at?: string
+          subscribed: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          album?: string
+          created_at?: string
+          subscribed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lineup_deadline_alerts: {
         Row: {
           sent_at: string
@@ -1160,6 +1184,7 @@ export type Database = {
           playing_level: string | null
           playing_style: string | null
           pref_notify_buddy_status: boolean | null
+          pref_notify_gallery: boolean
           pref_notify_point: boolean
           pref_notify_serve: boolean
           pref_notify_smash: boolean
@@ -1240,6 +1265,7 @@ export type Database = {
           playing_level?: string | null
           playing_style?: string | null
           pref_notify_buddy_status?: boolean | null
+          pref_notify_gallery?: boolean
           pref_notify_point?: boolean
           pref_notify_serve?: boolean
           pref_notify_smash?: boolean
@@ -1320,6 +1346,7 @@ export type Database = {
           playing_level?: string | null
           playing_style?: string | null
           pref_notify_buddy_status?: boolean | null
+          pref_notify_gallery?: boolean
           pref_notify_point?: boolean
           pref_notify_serve?: boolean
           pref_notify_smash?: boolean

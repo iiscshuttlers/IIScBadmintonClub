@@ -11,13 +11,19 @@ import {
 } from "./shared";
 import { FlyerConfigBuilder } from './FlyerConfigBuilder';
 import { FileUploader } from './FileUploader';
+import { AutoPostsPanel } from './AutoPostsPanel';
 
 export function AnnouncementEditor({
   data,
   onChange,
+  hiddenAuto,
+  onHiddenAutoChange,
 }: {
   data: Announcement[];
   onChange: (d: Announcement[]) => void;
+  /** Keys of automatic tournament posts kept off the Feed. */
+  hiddenAuto?: string[];
+  onHiddenAutoChange?: (keys: string[]) => void;
 }) {
   const [pushingIdx, setPushingIdx] = useState<number | null>(null);
 
@@ -62,6 +68,7 @@ export function AnnouncementEditor({
   const categories = ["tournament", "facility", "general", "event"];
   return (
     <div className="space-y-4">
+      {onHiddenAutoChange && <AutoPostsPanel hidden={hiddenAuto ?? []} onChange={onHiddenAutoChange} />}
       <button
         onClick={add}
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition shadow-md shadow-primary/20"
@@ -78,14 +85,14 @@ export function AnnouncementEditor({
               <button
                 onClick={() => sendPush(a)}
                 disabled={pushingIdx === i}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-[10px] font-black uppercase tracking-wider transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-info/10 text-info hover:bg-info/10 text-[10px] font-black uppercase tracking-wider transition disabled:opacity-50"
               >
                 {pushingIdx === i ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                 Send Push
               </button>
               <button
                 onClick={() => remove(i)}
-                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
+                className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -100,7 +107,7 @@ export function AnnouncementEditor({
                 className={inputCls}
                 placeholder="Announcement title"
               />
-              <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-muted-foreground dark:text-slate-300">
+              <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-soft">
                 <input
                   type="checkbox"
                   checked={!!a.showOnHome}
@@ -184,7 +191,7 @@ export function AnnouncementEditor({
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
+              <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Content
               </label>
               <FileUploader
@@ -207,8 +214,8 @@ export function AnnouncementEditor({
           </div>
           
           {/* Custom Flyer Config */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300 mb-4 w-max">
+          <div className="pt-4 border-t border-border">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-soft mb-4 w-max">
               <input
                 type="checkbox"
                 checked={!!a.flyer?.enabled}
@@ -217,7 +224,7 @@ export function AnnouncementEditor({
                     update(i, "flyer", {
                       ...(a.flyer || {
                         id: `ann_flyer_${Date.now()}`,
-                        bgColorClass: "bg-gradient-to-r from-primary to-teal-600",
+                        bgColorClass: "bg-gradient-to-r from-primary to-team",
                         items: [{ text: a.title || "New Event", colorClass: "text-foreground" }]
                       }),
                       enabled: true

@@ -142,24 +142,24 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
   const poolLetters = Array.from({ length: numPools }, (_, i) => String.fromCharCode(65 + i));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-media/75 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden">
+      <div className="bg-card w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-border shadow-2xl p-5 sm:p-6 my-auto overflow-hidden">
         
         {/* Header (fixed at top) */}
-        <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 shrink-0">
+        <div className="flex items-start justify-between border-b border-border pb-4 shrink-0">
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-black text-foreground flex items-center gap-2">
               <Trophy className="w-6 h-6 text-primary" />
               Generate Team Tournament Bracket
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Configure tournament format, pools, knockout playoffs, and tiebreaker deciders for {teams.length} teams.
             </p>
           </div>
           <button 
             onClick={onClose}
             aria-label="Close"
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-2 text-muted-foreground hover:text-soft rounded-full hover:bg-muted cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -169,7 +169,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
         <div className="overflow-y-auto flex-1 min-h-0 space-y-6 py-4 pr-1">
         {/* 1. Format Selection */}
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Tournament Structure
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -197,11 +197,11 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                 className={`p-4 rounded-2xl border text-left transition-all ${
                   format === f.id
                     ? 'border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/40'
+                    : 'border-border hover:border-border-strong bg-muted/40'
                 }`}
               >
-                <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">{f.title}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">{f.desc}</div>
+                <div className="font-bold text-sm text-foreground mb-1">{f.title}</div>
+                <div className="text-xs text-muted-foreground">{f.desc}</div>
               </button>
             ))}
           </div>
@@ -209,7 +209,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
         {/* 2. Pool Configuration (If Pools or League selected) */}
         {format !== 'DIRECT_KNOCKOUT' && (
-          <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+          <div className="space-y-4 p-4 rounded-2xl bg-muted/50 border border-border">
             <h3 className="text-sm font-black flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary" />
               Pools & Team Assignment
@@ -217,13 +217,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">
                   Number of Pools
                 </label>
                 <select
                   value={numPools}
                   onChange={(e) => setNumPools(parseInt(e.target.value))}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   <option value={1}>1 Pool (All teams in single pool)</option>
                   <option value={2}>2 Pools (Pool A & Pool B)</option>
@@ -233,13 +233,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">
                   Pool Assignment Method
                 </label>
                 <select
                   value={assignmentMethod}
                   onChange={(e) => setAssignmentMethod(e.target.value as any)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   <option value="SEEDED_SNAKE">Seeded Snake Draw (Recommended)</option>
                   <option value="RANDOM">Random Draw</option>
@@ -252,7 +252,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
             {assignmentMethod === 'MANUAL' && (
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-500">Assign Each Team to a Pool:</span>
+                  <span className="text-xs font-bold text-muted-foreground">Assign Each Team to a Pool:</span>
                   <button
                     type="button"
                     onClick={handleShuffleRandom}
@@ -261,14 +261,14 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                     <Shuffle className="w-3.5 h-3.5" /> Random Shuffle
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-card rounded-xl border border-border">
                   {teams.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/80 text-xs">
+                    <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/80 text-xs">
                       <span className="font-bold truncate max-w-[140px]">{t.name}</span>
                       <select
                         value={manualAssignments[t.id] || poolLetters[0]}
                         onChange={(e) => handleManualPoolChange(t.id, e.target.value)}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 font-bold text-xs"
+                        className="bg-card border border-border-strong rounded px-2 py-1 font-bold text-xs"
                       >
                         {poolLetters.map(p => (
                           <option key={p} value={p}>Pool {p}</option>
@@ -281,16 +281,16 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
             )}
 
             {format === 'POOLS_AND_PLAYOFFS' && (
-              <div className="space-y-4 pt-2 border-t border-slate-200 dark:border-slate-700">
+              <div className="space-y-4 pt-2 border-t border-border-strong">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                    <label className="text-xs font-bold text-muted-foreground mb-1 block">
                       Advancing Teams per Pool
                     </label>
                     <select
                       value={advancingPerPool}
                       onChange={(e) => setAdvancingPerPool(parseInt(e.target.value))}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                      className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                     >
                       <option value={1}>Top 1 per pool (Pool Winners only)</option>
                       <option value={2}>Top 2 per pool (Winner &amp; Runner-up)</option>
@@ -300,13 +300,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                    <label className="text-xs font-bold text-muted-foreground mb-1 block">
                       Playoff Stage Format
                     </label>
                     <select
                       value={playoffFormat}
                       onChange={(e) => setPlayoffFormat(e.target.value as any)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                      className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                     >
                       <option value="KNOCKOUT">
                         Knockout Bracket (with Byes/Play-ins if 6 teams)
@@ -327,9 +327,9 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                     id="include3rd"
                     checked={includeThirdPlace}
                     onChange={(e) => setIncludeThirdPlace(e.target.checked)}
-                    className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary cursor-pointer"
+                    className="w-4 h-4 rounded text-primary border-border-strong focus:ring-primary cursor-pointer"
                   />
-                  <label htmlFor="include3rd" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <label htmlFor="include3rd" className="text-xs font-bold text-soft cursor-pointer">
                     Include 3rd Place Match (Bronze Playoff)
                   </label>
                 </div>
@@ -340,22 +340,22 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
         {/* 3. Direct Knockout 3rd Place Toggle */}
         {format === 'DIRECT_KNOCKOUT' && (
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
             <div>
               <div className="font-bold text-sm">3rd Place Playoff Match</div>
-              <div className="text-xs text-slate-500">Play a bronze medal tie between the two semifinal losers</div>
+              <div className="text-xs text-muted-foreground">Play a bronze medal tie between the two semifinal losers</div>
             </div>
             <input
               type="checkbox"
               checked={includeThirdPlace}
               onChange={(e) => setIncludeThirdPlace(e.target.checked)}
-              className="w-5 h-5 rounded text-primary border-slate-300 focus:ring-primary cursor-pointer"
+              className="w-5 h-5 rounded text-primary border-border-strong focus:ring-primary cursor-pointer"
             />
           </div>
         )}
 
         {/* 4. Tie Decider Rules (For 3-3 ties in rubbers) */}
-        <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+        <div className="space-y-4 p-4 rounded-2xl bg-muted/50 border border-border">
           <h3 className="text-sm font-black flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-primary" />
             Tiebreaker &amp; Decider Settings (e.g. 3-3 in a 6-rubber tie)
@@ -363,13 +363,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">
                 Knockout Tie Decider Rule
               </label>
               <select
                 value={deciderRule}
                 onChange={(e) => setDeciderRule(e.target.value as any)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
               >
                 <option value="EXTRA_DECIDER_RUBBER">Sudden-Death Extra Decider Rubber (e.g. XD2, MS2 - Unlocked ONLY on tie)</option>
                 <option value="SET_DIFF">Net Set Difference across Rubbers</option>
@@ -382,13 +382,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
             {deciderRule === 'SPECIFIC_RUBBER' && (
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">
                   Designated Decider Rubber
                 </label>
                 <select
                   value={specificRubberOrder}
                   onChange={(e) => setSpecificRubberOrder(parseInt(e.target.value))}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   {rubbers.map((r: any) => (
                     <option key={r.order} value={r.order}>
@@ -400,20 +400,20 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
             )}
 
             {(deciderRule === 'EXTRA_DECIDER_RUBBER' || deciderRule === 'GOLDEN_MATCH') && (
-              <div className="sm:col-span-2 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+              <div className="sm:col-span-2 p-3.5 rounded-xl bg-warning/10 border border-warning/30 space-y-3">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                  <ShieldCheck className="w-4 h-4 text-warning" />
+                  <span className="text-xs font-black text-warning">
                     Conditional Tiebreaker Decider Configuration (e.g. 3-3 Tie)
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Category</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Category</label>
                     <select
                       value={deciderCategory}
                       onChange={(e) => setDeciderCategory(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                      className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                     >
                       <option value="XD">XD (Mixed Doubles)</option>
                       <option value="MS">MS (Men's Singles)</option>
@@ -423,32 +423,32 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Rubber Label</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Rubber Label</label>
                     <input
                       type="text"
                       value={deciderLabel}
                       onChange={(e) => setDeciderLabel(e.target.value)}
                       placeholder="e.g. XD 2 or MS 2"
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                      className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Sets Format</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Sets Format</label>
                     <select
                       value={deciderSets}
                       onChange={(e) => setDeciderSets(parseInt(e.target.value))}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                      className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                     >
                       <option value={1}>1 Set (Sudden Death)</option>
                       <option value={3}>Best of 3 Sets</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-500 block mb-1">Points to Win</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Points to Win</label>
                     <select
                       value={deciderPoints}
                       onChange={(e) => setDeciderPoints(parseInt(e.target.value))}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                      className="w-full bg-card border border-border-strong rounded-lg px-2.5 py-1.5 text-xs font-bold"
                     >
                       <option value={11}>11 Points (Sprint)</option>
                       <option value={15}>15 Points</option>
@@ -456,7 +456,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
                     </select>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-muted-foreground">
                   ⚡ <strong>Lineup Submission:</strong> Captains will submit the lineup for this extra decider rubber <em>only after the tie occurs</em> (if scores are level). Both captains submit independently and referee/umpire authorizes the reveal.
                 </p>
               </div>
@@ -464,13 +464,13 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
             {format !== 'DIRECT_KNOCKOUT' && (
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 block">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">
                   Pool Stage Draws
                 </label>
                 <select
                   value={drawAllowedInPools ? 'true' : 'false'}
                   onChange={(e) => setDrawAllowedInPools(e.target.value === 'true')}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold"
+                  className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   <option value="true">Allowed (Ties can end in a draw, 1 pt each)</option>
                   <option value="false">Not Allowed (Apply tie decider in pools too)</option>
@@ -481,41 +481,41 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
 
           {/* Points Table Sorting & League Points */}
           {format !== 'DIRECT_KNOCKOUT' && (
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="pt-3 border-t border-border-strong space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Win</label>
+                  <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Win</label>
                   <input
                     type="number"
                     value={winPoints}
                     onChange={(e) => setWinPoints(parseInt(e.target.value) || 0)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                    className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Draw</label>
+                  <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Draw</label>
                   <input
                     type="number"
                     value={drawPoints}
                     onChange={(e) => setDrawPoints(parseInt(e.target.value) || 0)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                    className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 mb-1 block">Points for Loss</label>
+                  <label className="text-xs font-bold text-muted-foreground mb-1 block">Points for Loss</label>
                   <input
                     type="number"
                     value={lossPoints}
                     onChange={(e) => setLossPoints(parseInt(e.target.value) || 0)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center"
+                    className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-sm font-bold text-center"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 mb-1 block">Points Table Sorting</label>
+                  <label className="text-xs font-bold text-muted-foreground mb-1 block">Points Table Sorting</label>
                   <select
                     value={standingsSortPriority}
                     onChange={(e) => setStandingsSortPriority(e.target.value as any)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold"
+                    className="w-full bg-card border border-border-strong rounded-xl px-3 py-2 text-xs font-bold"
                   >
                     <option value="STANDARD">Pts &gt; Rubbers &gt; Sets &gt; Points</option>
                     <option value="SETS_FIRST">Pts &gt; Sets Diff &gt; Points Diff</option>
@@ -529,7 +529,7 @@ export function TeamBracketGeneratorModal({ isOpen, onClose, teams, tournament, 
         </div>
 
         {/* Footer Actions (fixed at bottom) */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="flex justify-end gap-3 pt-3 border-t border-border shrink-0">
           <Button variant="outline" onClick={onClose} disabled={generating} className="rounded-xl font-bold">
             Cancel
           </Button>

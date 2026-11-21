@@ -1,13 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCircle, CheckCircle2, MapPin } from "lucide-react";
+import { Calendar, Bell, Pin, CalendarDays } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
-import { SocialCTA } from "@/components/SocialCTA";
-import { fetchLatestActiveTournament, subscribeToTournaments } from "@/services/tournamentService";
 import DOMPurify from "dompurify";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
+import { buildAutoAnnouncements, type AutoAnnouncement } from "@/lib/autoAnnouncements";
+import { useAutoFeedTournaments } from "@/hooks/queries/useAutoFeedTournaments";
+import { AutoPostBody } from "@/components/feed/AutoPostBody";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 function sanitize(html: string) {
@@ -30,7 +31,7 @@ function parseMarkdown(text: string) {
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(
       /\[(.*?)\]\((.*?)\)/g,
-      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:#10b981;font-weight:bold;text-decoration:underline;'>$1</a>",
+      "<a href='$2' target='_blank' rel='noopener noreferrer' style='color:var(--primary);font-weight:bold;text-decoration:underline;'>$1</a>",
     )
     .replace(/\n/g, "<br/>");
 }
@@ -43,29 +44,48 @@ type Announcement = {
   category: string;
   content: string;
   url?: string;
+  /** Set on posts built from tournament data (see lib/autoAnnouncements). */
+  auto?: AutoAnnouncement;
 };
 
-type LiveTournament = {
-  id: string;
-  name: string;
-  status: string;
-  form_status: string;
-  form_url: string | null;
-  form_close_date: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  venue: string | null;
-  eligibility: string | null;
-};
+type AnnouncementsValue = { recent?: Announcement[]; hiddenAuto?: string[] };
+
+function sortByNewest(items: Announcement[]) {
+  return [...items].sort(
+    (a, b) =>
+      new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
+  );
+}
+
+function getStatus(item: Announcement) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (item.startDate && item.endDate) {
+    const start = new Date(item.startDate);
+    const end = new Date(item.endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (today < start) return "upcoming";
+    if (today >= start && today <= end) return "ongoing";
+    return "past";
+  }
+
+  if (item.date) {
+    const date = new Date(item.date);
+    date.setHours(0, 0, 0, 0);
+
+    if (today < date) return "upcoming";
+    if (today.getTime() === date.getTime()) return "ongoing";
+    return "past";
+  }
+
+  return "unknown";
+}
 
 export function AnnouncementsSection() {
-  const [pinnedAnnouncements, setPinnedAnnouncements] = useState<
-    Announcement[]
-  >([]);
-  const [recentAnnouncements, setRecentAnnouncements] = useState<
-    Announcement[]
-  >([]);
-  const [liveTournament, setLiveTournament] = useState<LiveTournament | null>(null);
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("cat") || "all";
@@ -82,9 +102,64 @@ export function AnnouncementsSection() {
     const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${hash}`;
     safeReplaceState(newUrl);
   }, [selectedCategory]);
-  const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
   const observerRef = useRef<HTMLDivElement>(null);
+
+  const { data: queryData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => fetchSiteData<AnnouncementsValue>("announcements", "announcements.json"),
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
+  });
+  const { data: autoRows } = useAutoFeedTournaments();
+  const loading = isQueryLoading && !queryData;
+
+  // Tournament posts are worked out from live data and merged with the
+  // hand-written ones; admins can hide one through `hiddenAuto`.
+  const hiddenAuto = queryData?.hiddenAuto;
+  const autoItems = useMemo<Announcement[]>(
+    () =>
+      buildAutoAnnouncements(autoRows, Array.isArray(hiddenAuto) ? hiddenAuto : []).map((post) => ({
+        title: post.title,
+        date: post.date,
+        startDate: post.startDate,
+        endDate: post.endDate,
+        category: post.category,
+        content: "",
+        auto: post,
+      })),
+    [autoRows, hiddenAuto],
+  );
+  const recentAnnouncements = useMemo(
+    () => sortByNewest([...(Array.isArray(queryData?.recent) ? queryData.recent : []), ...autoItems]),
+    [queryData, autoItems],
+  );
+  const pinnedAnnouncements = useMemo(
+    () =>
+      recentAnnouncements.filter((item) => {
+        const status = getStatus(item);
+        return status === "ongoing" || status === "upcoming";
+      }),
+    [recentAnnouncements],
+  );
+
+  // Scroll to a shared #feed-… post once it has rendered.
+  const scrolledHash = useRef<string | null>(null);
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#feed-") || scrolledHash.current === hash) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(hash.substring(1));
+      if (!el) return;
+      scrolledHash.current = hash;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Add a brief highlight effect
+      el.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      setTimeout(() => {
+        el.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      }, 2000);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [recentAnnouncements]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -99,101 +174,30 @@ export function AnnouncementsSection() {
     return () => observer.disconnect();
   }, [loading, selectedCategory]);
 
-  function sortByNewest(items: Announcement[]) {
-    return [...items].sort(
-      (a, b) =>
-        new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
-    );
-  }
-
-  const loadLiveTournament = useCallback(() => {
-    fetchLatestActiveTournament().then((data) => {
-      if (data) {
-        const t = data as LiveTournament;
-        // Override form_status if deadline has passed
-        if (t.form_close_date && t.form_status !== "disabled") {
-          const closeTime = new Date(t.form_close_date).getTime();
-          if (!isNaN(closeTime) && Date.now() >= closeTime) {
-            t.form_status = "closed";
-          }
-        }
-        setLiveTournament(t);
-      } else {
-        setLiveTournament(null);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    loadLiveTournament();
-    const unsubscribe = subscribeToTournaments(() => {
-      loadLiveTournament();
-    });
-    return () => { unsubscribe(); };
-  }, [loadLiveTournament]);
-
-  const { data: queryData, isLoading: isQueryLoading } = useQuery({
-    queryKey: ["announcements"],
-    queryFn: () => fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json"),
-    refetchInterval: (query) => (query.state.error ? false : 60_000),
-  });
-
-  useEffect(() => {
-    if (queryData) {
-      const allAnnouncements = queryData.recent || [];
-      const pinned = allAnnouncements.filter((item: Announcement) => {
-        const status = getStatus(item);
-        return status === "ongoing" || status === "upcoming";
-      });
-
-      setPinnedAnnouncements(sortByNewest(pinned));
-      setRecentAnnouncements(sortByNewest(allAnnouncements));
-      setLoading(false);
-      
-      // Auto-scroll to specific announcement if hash is present
-      setTimeout(() => {
-        const hash = window.location.hash;
-        if (hash && hash.startsWith('#feed-')) {
-          const el = document.getElementById(hash.substring(1));
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Add a brief highlight effect
-            el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
-            setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
-            }, 2000);
-          }
-        }
-      }, 100);
-    } else if (!isQueryLoading) {
-      setLoading(false);
-    }
-  }, [queryData, isQueryLoading]);
-
   const categories = [
-    { id: "all", label: "All", color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50", icon: "📋" },
+    { id: "all", label: "All", color: "bg-muted/50 text-muted-foreground border border-border-strong/50", icon: "📋" },
     {
       id: "tournament",
       label: "Tournament",
-      color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50",
+      color: "bg-warning/10 text-warning border border-warning/30",
       icon: "🏆",
     },
     {
       id: "facility",
       label: "Facility",
-      color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50",
+      color: "bg-info/10 text-info border border-info/30",
       icon: "🏸",
     },
     {
       id: "general",
       label: "General",
-      color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50",
+      color: "bg-individual/10 text-individual border border-individual/30",
       icon: "📢",
     },
     {
       id: "others",
       label: "Others",
-      color: "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50",
+      color: "bg-danger/10 text-danger border border-danger/30",
       icon: "📌",
     },
   ];
@@ -203,7 +207,7 @@ export function AnnouncementsSection() {
     return (
       found ?? {
         label: category,
-        color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50",
+        color: "bg-muted/50 text-muted-foreground border border-border-strong/50",
         icon: "📄",
       }
     );
@@ -218,130 +222,16 @@ export function AnnouncementsSection() {
 
   const visibleRecent = filteredRecent.slice(0, visibleCount);
 
-  function getStatus(item: Announcement) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (item.startDate && item.endDate) {
-      const start = new Date(item.startDate);
-      const end = new Date(item.endDate);
-
-      start.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
-
-      if (today < start) return "upcoming";
-      if (today >= start && today <= end) return "ongoing";
-      return "past";
-    }
-
-    if (item.date) {
-      const date = new Date(item.date);
-      date.setHours(0, 0, 0, 0);
-
-      if (today < date) return "upcoming";
-      if (today.getTime() === date.getTime()) return "ongoing";
-      return "past";
-    }
-
-    return "unknown";
-  }
-
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
-    if (status === "ongoing") return "bg-blue-100 text-blue-700";
-    if (status === "past") return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
-    return "bg-gray-100 dark:bg-slate-800 text-muted-foreground";
+    if (status === "ongoing") return "bg-info/10 text-info";
+    if (status === "past") return "bg-muted text-muted-foreground";
+    return "bg-muted text-muted-foreground";
   }
 
   return (
-    <div className="dark:bg-slate-950" id="announcements">
+    <div className="bg-background" id="announcements">
       <div className="container mx-auto px-4 max-w-6xl">
-
-        {/* Live Tournament Notice — dynamically from Supabase */}
-        {liveTournament && (
-          <div className="pt-8">
-            <div className={`rounded-2xl border p-5 ${
-              liveTournament.form_status === "open"
-                ? "bg-primary/5 dark:bg-primary/10 border-primary/30"
-                : liveTournament.form_status === "closing_soon"
-                ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/30"
-                : "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700"
-            }`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                  <div className={`p-2.5 rounded-xl flex-shrink-0 ${
-                    liveTournament.form_status === "open"
-                      ? "bg-primary/15"
-                      : liveTournament.form_status === "closing_soon"
-                      ? "bg-amber-500/15"
-                      : "bg-slate-200 dark:bg-slate-700"
-                  }`}>
-                    <Trophy className={`w-5 h-5 ${
-                      liveTournament.form_status === "open"
-                        ? "text-primary"
-                        : liveTournament.form_status === "closing_soon"
-                        ? "text-amber-500"
-                        : "text-slate-500"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-black text-sm md:text-base text-foreground">{liveTournament.name}</span>
-                      {liveTournament.status === "active" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">🏸 Active</Badge>
-                      )}
-                      {liveTournament.status === "upcoming" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400">📅 Upcoming</Badge>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mt-1">
-                      {liveTournament.start_date && (
-                        <span className="flex items-center gap-1.5">
-                          <CalendarDays className="w-3.5 h-3.5 opacity-70" />
-                          {liveTournament.start_date}{liveTournament.end_date && liveTournament.end_date !== liveTournament.start_date ? ` – ${liveTournament.end_date}` : ""}
-                        </span>
-                      )}
-                      {liveTournament.venue && (
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 opacity-70 text-rose-500" /> 
-                          {liveTournament.venue}
-                        </span>
-                      )}
-                      {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
-                        <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-                          <Clock className="w-3.5 h-3.5" />
-                          Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex-shrink-0 flex sm:block mt-2 sm:mt-0">
-                  {liveTournament.form_url && liveTournament.form_status !== "closed" && liveTournament.form_status !== "disabled" && (
-                    <a
-                      href={liveTournament.form_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all ${
-                        liveTournament.form_status === "open"
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-amber-500 text-white hover:bg-amber-600"
-                      }`}
-                    >
-                      Register Now <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                  {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
-                    <span className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-800 text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-slate-700">
-                      <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Loading */}
         {loading && (
@@ -350,17 +240,17 @@ export function AnnouncementsSection() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 animate-pulse"
+                  className="rounded-2xl border border-border bg-card p-6 space-y-4 animate-pulse"
                 >
-                  <div className="h-6 w-3/4 rounded bg-gray-200" />
+                  <div className="h-6 w-3/4 rounded bg-soft" />
                   <div className="flex gap-3">
-                    <div className="h-5 w-20 rounded-full bg-gray-200" />
-                    <div className="h-5 w-16 rounded-full bg-gray-200" />
+                    <div className="h-5 w-20 rounded-full bg-soft" />
+                    <div className="h-5 w-16 rounded-full bg-soft" />
                   </div>
                   <div className="space-y-2">
-                    <div className="h-4 w-full rounded bg-gray-200" />
-                    <div className="h-4 w-5/6 rounded bg-gray-200" />
-                    <div className="h-4 w-2/3 rounded bg-gray-200" />
+                    <div className="h-4 w-full rounded bg-soft" />
+                    <div className="h-4 w-5/6 rounded bg-soft" />
+                    <div className="h-4 w-2/3 rounded bg-soft" />
                   </div>
                 </div>
               ))}
@@ -372,15 +262,14 @@ export function AnnouncementsSection() {
           <>
             {/* Pinned */}
             {pinnedAnnouncements.length > 0 && (
-              <section className="py-14 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-900 dark:to-slate-800">
+              <section className="py-14 bg-gradient-to-r from-card to-muted">
                 <div className="container mx-auto px-4">
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full" />
+                    <div className="w-2 h-8 bg-gradient-to-b from-secondary to-warning rounded-full" />
                     <h2
-                      className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
-                      style={{ fontFamily: "Playfair Display, serif" }}
+                      className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                     >
-                      <Pin className="w-6 h-6 text-orange-500" />
+                      <Pin className="w-6 h-6 text-secondary" />
                       Important Announcements
                     </h2>
                   </div>
@@ -393,17 +282,17 @@ export function AnnouncementsSection() {
                         <Card
                           key={index}
                           id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                          className="border-2 border-orange-300 dark:border-orange-900/50 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                          className="border-2 border-secondary/30 bg-muted hover:shadow-lg transition-all duration-300 overflow-hidden"
                         >
-                          <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
+                          <div className="h-1 bg-gradient-to-r from-secondary to-warning" />
                           <CardHeader>
-                            <CardTitle className="text-blue-900 dark:text-foreground text-xl">
+                            <CardTitle className="text-foreground text-xl">
                               {item.url ? (
                                 <a
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
+                                  className="hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -417,14 +306,14 @@ export function AnnouncementsSection() {
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-4 h-4 text-primary" />
-                                  <span className="text-muted-foreground dark:text-muted-foreground text-sm">
+                                  <span className="text-muted-foreground text-sm">
                                     Published: {item.date}
                                   </span>
                                 </div>
                               )}
                               
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                <div className="flex items-center gap-1.5 bg-info/10 px-2.5 py-1 rounded-md text-info font-medium text-xs border border-info/40 w-full">
                                   <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
@@ -455,12 +344,16 @@ export function AnnouncementsSection() {
                             </div>
                           </CardHeader>
                           <CardContent>
-                            <p
-                              className="text-muted-foreground dark:text-slate-300 leading-relaxed"
-                              dangerouslySetInnerHTML={{
-                                __html: sanitize(item.content),
-                              }}
-                            />
+                            {item.auto ? (
+                              <AutoPostBody post={item.auto} />
+                            ) : (
+                              <p
+                                className="text-soft leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitize(item.content),
+                                }}
+                              />
+                            )}
                           </CardContent>
                         </Card>
                       );
@@ -471,7 +364,7 @@ export function AnnouncementsSection() {
             )}
 
             {/* Filter */}
-            <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-30 shadow-sm">
+            <section className="py-6 border-b bg-background sticky top-16 z-30 shadow-sm">
               <div className="container mx-auto px-4 max-w-md">
                 <div className="flex flex-col gap-2">
                   {categories.filter(c => c.id === 'all').map((cat) => (
@@ -480,7 +373,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`w-full px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-[1.02] border border-primary/50"
                           : `${cat.color} hover:shadow-sm`
                       }`}
                     >
@@ -494,7 +387,7 @@ export function AnnouncementsSection() {
                         onClick={() => setSelectedCategory(cat.id)}
                         className={`w-full px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-1.5 ${
                           selectedCategory === cat.id
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/40 scale-[1.02] border border-primary/50"
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-[1.02] border border-primary/50"
                             : `${cat.color} hover:shadow-sm`
                         }`}
                       >
@@ -507,13 +400,12 @@ export function AnnouncementsSection() {
             </section>
 
             {/* Recent */}
-            <section className="py-14 dark:bg-slate-950">
+            <section className="py-14 bg-background">
               <div className="container mx-auto px-4">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-8 bg-gradient-to-b from-primary to-teal-600 rounded-full" />
+                  <div className="w-2 h-8 bg-gradient-to-b from-primary to-team rounded-full" />
                   <h2
-                    className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
-                    style={{ fontFamily: "Playfair Display, serif" }}
+                    className="text-2xl font-black text-foreground flex items-center gap-2 font-display"
                   >
                     <Bell className="w-6 h-6 text-primary" />
                     Recent Updates
@@ -521,8 +413,8 @@ export function AnnouncementsSection() {
                 </div>
 
                 {filteredRecent.length === 0 ? (
-                  <div className="text-center py-16 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-                    <p className="text-muted-foreground dark:text-muted-foreground text-lg">
+                  <div className="text-center py-16 rounded-2xl border-2 border-dashed border-border-strong">
+                    <p className="text-muted-foreground text-lg">
                       No announcements found.
                     </p>
                   </div>
@@ -536,25 +428,25 @@ export function AnnouncementsSection() {
                         <Card
                           key={index}
                           id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                          className="border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                          className="border border-border-strong bg-muted hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                         >
                           <div
                             className={`h-0.5 w-full ${
                               status === "upcoming"
                                 ? "bg-primary"
                                 : status === "ongoing"
-                                  ? "bg-blue-400"
-                                  : "bg-gray-200 dark:bg-slate-600"
+                                  ? "bg-info"
+                                  : "bg-faint"
                             }`}
                           />
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-blue-900 dark:text-foreground text-base font-bold">
+                            <CardTitle className="text-foreground text-base font-bold">
                               {item.url ? (
                                 <a
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
+                                  className="hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -568,14 +460,14 @@ export function AnnouncementsSection() {
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-muted-foreground dark:text-muted-foreground text-xs">
+                                  <span className="text-muted-foreground text-xs">
                                     Published: {item.date}
                                   </span>
                                 </div>
                               )}
                               
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                <div className="flex items-center gap-1.5 bg-info/10 px-2.5 py-1 rounded-md text-info font-medium text-xs border border-info/40 w-full">
                                   <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
@@ -607,12 +499,16 @@ export function AnnouncementsSection() {
                           </CardHeader>
 
                           <CardContent>
-                            <p
-                              className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed"
-                              dangerouslySetInnerHTML={{
-                                __html: sanitize(item.content),
-                              }}
-                            />
+                            {item.auto ? (
+                              <AutoPostBody post={item.auto} compact />
+                            ) : (
+                              <p
+                                className="text-muted-foreground text-sm leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitize(item.content),
+                                }}
+                              />
+                            )}
                           </CardContent>
                         </Card>
                       );

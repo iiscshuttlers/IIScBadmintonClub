@@ -4,6 +4,8 @@ import {
   buildSeedIndex,
   bucketOf,
   compareCompleted,
+  courtKey,
+  courtLabel,
   disciplineOf,
   filterMatches,
   matchOutcome,
@@ -138,6 +140,13 @@ describe("filters and buckets", () => {
     expect(filterMatches(views, { date: matchDay(views[2]) })).toHaveLength(1);
   });
 
+  it("treats 1, C1 and Court 1 as one court in filters (old court=C1 links too)", () => {
+    const mixed = ["1", "C1", "Court 1", " c 1 ", "C2"].map((c) => toMatchView(row({ court_number: c })));
+    expect(new Set(mixed.map((v) => v.court))).toEqual(new Set(["1", "2"]));
+    expect(filterMatches(mixed, { court: "1" })).toHaveLength(4);
+    expect(filterMatches(mixed, { court: "C1" })).toHaveLength(4);
+  });
+
   it("buckets by status", () => {
     expect(views.map(bucketOf)).toEqual(["live", "upcoming", "completed"]);
   });
@@ -160,7 +169,7 @@ describe("buildCourtQueues", () => {
       row({ court_number: null, scheduled_at: "2026-11-14T05:10:00Z" }), // no court → not queued
     ];
     const [q] = buildCourtQueues(rows.map((r) => toMatchView(r)));
-    expect(q.court).toBe("C1");
+    expect(q.court).toBe("1");
     expect(q.playing.map((v) => v.id)).toEqual([rows[1].id]);
     expect(q.next?.id).toBe(rows[2].id);
     expect(q.following.map((v) => v.id)).toEqual([rows[0].id, rows[3].id]);
@@ -177,6 +186,40 @@ describe("buildCourtQueues", () => {
     const alerts = computeQueueAlerts(rows as unknown as QueueMatch[]);
     const byPos = alerts.sort((a, b) => a.position - b.position).map((a) => a.match.id);
     expect([q.next?.id, q.following[0]?.id]).toEqual(byPos);
+  });
+
+  it("queues 1, C1 and Court 1 together, like the push alerts", () => {
+    const rows = [
+      row({ court_number: "C1", status: "in_progress", player1_id: "l1", player2_id: "l2" }),
+      row({ court_number: "1", scheduled_at: "2026-11-14T06:00:00Z", player1_id: "a1", player2_id: "a2" }),
+      row({ court_number: "Court 1", scheduled_at: "2026-11-14T07:00:00Z", player1_id: "b1", player2_id: "b2" }),
+    ];
+    const queues = buildCourtQueues(rows.map((r) => toMatchView(r)));
+    expect(queues).toHaveLength(1);
+    const alerts = computeQueueAlerts(rows as unknown as QueueMatch[]);
+    expect(alerts.map((a) => a.court)).toEqual(["1", "1"]);
+    const byPos = alerts.sort((a, b) => a.position - b.position).map((a) => a.match.id);
+    expect([queues[0].next?.id, queues[0].following[0]?.id]).toEqual(byPos);
+  });
+});
+
+describe("courtKey / courtLabel", () => {
+  it("merges the ways one numbered court is typed", () => {
+    for (const raw of ["1", "01", "C1", "c1", "C 1", "Court 1", "court  1", "Court-1", "Court #1"]) {
+      expect(courtKey(raw)).toBe("1");
+      expect(courtLabel(raw)).toBe("Court 1");
+    }
+  });
+  it("treats placeholders as no court", () => {
+    for (const raw of ["Court", "court", "C", "TBD", "TBA", "N/A", "-", "", "  ", null, undefined]) {
+      expect(courtKey(raw)).toBeNull();
+    }
+    expect(toMatchView(row({ court_number: "Court" })).court).toBeNull();
+    expect(matchOutcome({ status: "pending", court_number: "Court" }).state).toBe("unscheduled");
+  });
+  it("keeps named courts", () => {
+    expect(courtKey("Centre Court")).toBe("Centre Court");
+    expect(courtLabel("Centre Court")).toBe("Centre Court");
   });
 });
 

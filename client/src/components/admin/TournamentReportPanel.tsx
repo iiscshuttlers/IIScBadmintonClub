@@ -15,7 +15,7 @@ import { summariseFeedback, type FeedbackSummary } from "@/lib/tournamentFeedbac
  * archived (useArchivedTournaments derives them from the Final/3rd-place rows).
  */
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 
 const fmtDateTime = (iso?: string) =>
   iso ? new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—";
@@ -203,7 +203,7 @@ export function TournamentReportPanel({
               <FileText className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-800 dark:text-foreground">Wrap-up report</h3>
+              <h3 className="text-base font-black text-foreground">Wrap-up report</h3>
               <p className="text-xs text-muted-foreground">
                 {report.remaining > 0
                   ? `${report.remaining} match${report.remaining === 1 ? "" : "es"} still to play — figures will update.`
@@ -216,7 +216,7 @@ export function TournamentReportPanel({
               type="button"
               onClick={exportCsv}
               disabled={!!exporting || matches.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border-strong px-3 py-2 text-xs font-bold hover:bg-muted disabled:opacity-50"
             >
               {exporting === "csv" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
               CSV
@@ -235,11 +235,11 @@ export function TournamentReportPanel({
 
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3">
+            <div key={s.label} className="rounded-xl bg-muted/60 p-3">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
                 <s.icon className="w-3.5 h-3.5" /> {s.label}
               </div>
-              <div className="mt-1 text-2xl font-black tabular-nums text-slate-800 dark:text-foreground">{s.value}</div>
+              <div className="mt-1 text-2xl font-black tabular-nums text-foreground">{s.value}</div>
               {s.sub && <div className="text-[11px] text-muted-foreground">{s.sub}</div>}
             </div>
           ))}
@@ -251,22 +251,22 @@ export function TournamentReportPanel({
       </div>
 
       <div className={cardCls}>
-        <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
-          <Trophy className="w-4 h-4 text-amber-500" /> Results
+        <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">
+          <Trophy className="w-4 h-4 text-gold" /> Results
         </h4>
         {report.categories.length === 0 ? (
           <p className="text-sm text-muted-foreground">No matches yet.</p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {report.categories.map((c) => (
-              <div key={c.category} className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
-                <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-amber-600 dark:text-amber-400">
+              <div key={c.category} className="rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-gold">
                   <span className="flex items-center gap-1.5"><Medal className="w-3.5 h-3.5" /> {c.category}</span>
                   <span className="text-muted-foreground font-bold normal-case">{c.players} players</span>
                 </div>
                 {c.winner ? (
                   <div className="mt-2 space-y-0.5 text-sm">
-                    <p className="font-bold text-slate-800 dark:text-foreground">🥇 {c.winner}</p>
+                    <p className="font-bold text-foreground">🥇 {c.winner}</p>
                     {c.runnerUp && <p className="text-muted-foreground">🥈 {c.runnerUp}</p>}
                     {c.third.length > 0 && <p className="text-muted-foreground">🥉 {c.third.join(" / ")}</p>}
                   </div>
@@ -281,8 +281,8 @@ export function TournamentReportPanel({
 
       {feedback && (
         <div className={cardCls}>
-          <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
-            <Star className="w-4 h-4 text-amber-500" /> Player feedback
+          <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">
+            <Star className="w-4 h-4 text-gold" /> Player feedback
           </h4>
           {feedback.count === 0 ? (
             <p className="text-sm text-muted-foreground">
@@ -297,8 +297,8 @@ export function TournamentReportPanel({
                   {[5, 4, 3, 2, 1].map((n) => (
                     <div key={n} className="flex items-center gap-1.5 text-[11px] tabular-nums">
                       <span className="w-3">{n}</span>
-                      <div className="w-24 h-1.5 rounded bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                        <div className="h-full bg-amber-400" style={{ width: `${(feedback.distribution[n - 1] / feedback.count) * 100}%` }} />
+                      <div className="w-24 h-1.5 rounded bg-muted overflow-hidden">
+                        <div className="h-full bg-warning" style={{ width: `${(feedback.distribution[n - 1] / feedback.count) * 100}%` }} />
                       </div>
                       <span className="w-4 text-muted-foreground">{feedback.distribution[n - 1]}</span>
                     </div>
@@ -309,7 +309,7 @@ export function TournamentReportPanel({
                 {feedback.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {feedback.tags.map((t) => (
-                      <span key={t.tag} className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                      <span key={t.tag} className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">
                         {t.tag} · {t.count}
                       </span>
                     ))}
@@ -318,7 +318,7 @@ export function TournamentReportPanel({
                 {feedback.comments.length > 0 && (
                   <ul className="space-y-1.5 max-h-48 overflow-y-auto">
                     {feedback.comments.map((c, i) => (
-                      <li key={i} className="text-sm text-slate-700 dark:text-slate-300 border-l-2 border-slate-200 dark:border-slate-700 pl-2">
+                      <li key={i} className="text-sm text-soft border-l-2 border-border-strong pl-2">
                         {c}
                       </li>
                     ))}
@@ -334,13 +334,13 @@ export function TournamentReportPanel({
         <div className="grid md:grid-cols-2 gap-5">
           {report.highlights.length > 0 && (
             <div className={cardCls}>
-              <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
-                <Sparkles className="w-4 h-4 text-violet-500" /> Highlights
+              <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">
+                <Sparkles className="w-4 h-4 text-individual" /> Highlights
               </h4>
               <ul className="space-y-2">
                 {report.highlights.map((h) => (
                   <li key={h.label} className="text-sm">
-                    <span className="font-bold text-slate-800 dark:text-foreground">{h.label}</span>
+                    <span className="font-bold text-foreground">{h.label}</span>
                     <span className="text-muted-foreground"> · {h.detail}</span>
                     <div className="text-xs text-muted-foreground truncate">
                       {h.match.category}: {h.match.team1_label} vs {h.match.team2_label}
@@ -353,13 +353,13 @@ export function TournamentReportPanel({
           )}
           {report.umpires.length > 0 && (
             <div className={cardCls}>
-              <h4 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-foreground mb-3">
-                <Flag className="w-4 h-4 text-emerald-500" /> Officials
+              <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">
+                <Flag className="w-4 h-4 text-success" /> Officials
               </h4>
               <ul className="space-y-1.5">
                 {report.umpires.map((u) => (
                   <li key={u.id} className="flex justify-between text-sm">
-                    <span className="text-slate-700 dark:text-slate-200">{umpireNames[u.id] ?? "Umpire"}</span>
+                    <span className="text-soft">{umpireNames[u.id] ?? "Umpire"}</span>
                     <span className="font-bold tabular-nums">{u.matches}</span>
                   </li>
                 ))}

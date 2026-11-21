@@ -68,7 +68,7 @@ function compareQueue(a: QueueMatch, b: QueueMatch): number {
 export function computeQueueAlerts(matches: QueueMatch[]): QueueAlert[] {
   const byCourt = new Map<string, QueueMatch[]>();
   for (const m of matches) {
-    const court = (m.court_number ?? "").trim();
+    const court = courtKey(m.court_number);
     if (!court) continue;
     if (!LIVE_STATUSES.has(m.status) && !WAITING_STATUSES.has(m.status)) continue;
     const key = `${m.tournament_id}::${court}`;
@@ -90,11 +90,27 @@ export function computeQueueAlerts(matches: QueueMatch[]): QueueAlert[] {
   return alerts;
 }
 
+const COURT_NUMBER = /^(?:c(?:ourt)?[\s#.-]*)?0*(\d+)$/i;
+/** Values organisers type when no court is decided yet. */
+const COURT_PLACEHOLDER = /^(?:c|court|courts|tbd|tba|n\/?a|-+)$/i;
+
+/**
+ * One key per physical court: "1", "C1", "c 1" and "Court 1" are all "1", so
+ * one court is one queue. Placeholders ("Court", "TBD", "-") mean no court.
+ * Other names pass through ("Centre Court"). Mirrored in client matchView.ts.
+ */
+export function courtKey(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim().replace(/\s+/g, " ");
+  if (!t || COURT_PLACEHOLDER.test(t)) return null;
+  const m = t.match(COURT_NUMBER);
+  return m ? m[1] : t;
+}
+
 /** "C1" / "court 1" / "1" → "Court 1"; other names pass through ("Centre Court"). */
 export function courtLabel(raw: string): string {
-  const t = raw.trim();
-  const m = t.match(/^(?:c(?:ourt)?\s*)?(\d+)$/i);
-  return m ? `Court ${m[1]}` : t;
+  const key = courtKey(raw);
+  if (!key) return raw.trim();
+  return /^\d+$/.test(key) ? `Court ${key}` : key;
 }
 
 export function queueAlertText(a: QueueAlert): { title: string; body: string } {

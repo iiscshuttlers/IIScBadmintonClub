@@ -28,31 +28,31 @@ export default function DeleteAccount() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card rounded-3xl p-6 max-w-md w-full shadow-xl border border-border">
           <div className="text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center mx-auto">
-              <Trash2 className="w-7 h-7 text-rose-600 dark:text-rose-400" />
+            <div className="w-14 h-14 rounded-full bg-danger/15 flex items-center justify-center mx-auto">
+              <Trash2 className="w-7 h-7 text-danger" />
             </div>
-            <h2 className="text-xl font-black text-foreground dark:text-foreground">Delete Your Account</h2>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+            <h2 className="text-xl font-black text-foreground">Delete Your Account</h2>
+            <p className="text-sm text-muted-foreground">
               To delete your account through the app, please sign in first.
             </p>
             <Button onClick={() => navigate("/join")} className="w-full py-6 font-bold text-base">
               Sign In to Delete
             </Button>
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-              <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-2">
+            <div className="pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2">
                 Can't sign in? You can also request account deletion by emailing us:
               </p>
               <a
                 href="mailto:iiscbadmintonclub@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account.%20My%20registered%20email%20is%3A%20"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted text-soft text-sm font-bold hover:bg-muted-strong transition"
               >
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <AlertTriangle className="w-4 h-4 text-warning" />
                 Email: iiscbadmintonclub@gmail.com
               </a>
-              <p className="text-[10px] text-muted-foreground dark:text-muted-foreground mt-2">
+              <p className="text-[10px] text-muted-foreground mt-2">
                 Include your registered email address. We will process your request within 7 business days.
               </p>
             </div>
@@ -90,13 +90,13 @@ export default function DeleteAccount() {
 
   if (step === "done") {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
-          <div className="w-14 h-14 rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-7 h-7 text-primary dark:text-primary" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card rounded-3xl p-6 max-w-sm w-full text-center shadow-xl border border-border">
+          <div className="w-14 h-14 rounded-full bg-primary/40 flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-7 h-7 text-primary" />
           </div>
-          <h2 className="text-xl font-black text-foreground dark:text-foreground mb-2">Account Deleted</h2>
-          <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
+          <h2 className="text-xl font-black text-foreground mb-2">Account Deleted</h2>
+          <p className="text-sm text-muted-foreground mb-6">
             Your data has been removed. We're sorry to see you go.
           </p>
           <Button onClick={() => navigate("/")} className="w-full py-6 font-bold text-base">
@@ -108,32 +108,32 @@ export default function DeleteAccount() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background pb-24 lg:pb-8">
       <div className="container mx-auto px-4 max-w-xl py-12">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
           <PageHeader
             variant="card"
             backTo="/settings"
             backLabel="Back to Settings"
             badge="Irreversible"
-            badgeIcon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
+            badgeIcon={<Trash2 className="w-3.5 h-3.5 text-danger" />}
             title="Delete My Account"
             subtitle={session.user.email}
             align="left"
-            className="px-6 pt-5 pb-3 border-b border-rose-100 dark:border-rose-900/40"
+            className="px-6 pt-5 pb-3 border-b border-danger/25"
           />
 
           <div className="p-6 space-y-6">
             {step === "confirm" && (
               <>
-                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl p-4 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="bg-warning/10 border border-warning/25 rounded-2xl p-4 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-2">This will permanently delete:</p>
+                    <p className="text-sm font-bold text-warning mb-2">This will permanently delete:</p>
                     <ul className="space-y-1">
                       {CONSEQUENCES.map((c, i) => (
-                        <li key={i} className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
-                          <span className="text-amber-500 mt-0.5">•</span>{c}
+                        <li key={i} className="text-xs text-warning flex items-start gap-1.5">
+                          <span className="text-warning mt-0.5">•</span>{c}
                         </li>
                       ))}
                     </ul>
@@ -141,7 +141,7 @@ export default function DeleteAccount() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                     Reason for leaving (optional)
                   </label>
                   <textarea
@@ -150,7 +150,7 @@ export default function DeleteAccount() {
                     placeholder="We'd love to know how we can improve..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-border-strong bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-danger resize-none"
                   />
                 </div>
 
@@ -178,8 +178,8 @@ export default function DeleteAccount() {
             {step === "final" && (
               <>
                 <div className="text-center space-y-2">
-                  <p className="text-sm text-muted-foreground dark:text-slate-300">
-                    Type <strong className="font-black text-rose-600">delete my account</strong> to confirm permanent deletion.
+                  <p className="text-sm text-soft">
+                    Type <strong className="font-black text-danger">delete my account</strong> to confirm permanent deletion.
                   </p>
                 </div>
 
@@ -188,7 +188,7 @@ export default function DeleteAccount() {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="delete my account"
-                  className="w-full px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/20 text-sm font-bold text-rose-800 dark:text-rose-300 outline-none focus:ring-2 focus:ring-rose-500 placeholder:font-normal placeholder:text-rose-300 dark:placeholder:text-rose-700"
+                  className="w-full px-4 py-3 rounded-xl border border-danger/25 bg-danger/10 text-sm font-bold text-danger outline-none focus:ring-2 focus:ring-danger placeholder:font-normal placeholder:text-danger"
                 />
 
                 <div className="flex gap-3">
@@ -215,10 +215,10 @@ export default function DeleteAccount() {
               </>
             )}
 
-            <p className="text-center text-xs text-muted-foreground dark:text-muted-foreground">
+            <p className="text-center text-xs text-muted-foreground">
               If you just need a break, consider{" "}
               <button onClick={async () => { await disableBiometricLogin(); await signOut(); navigate("/"); }}
-                className="text-primary dark:text-primary font-bold hover:underline inline-flex items-center gap-1">
+                className="text-primary font-bold hover:underline inline-flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> signing out
               </button>{" "}
               instead.

@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { MatchCard as FeedMatchCard } from "@/components/feed/MatchCard";
 import { shareMatch } from "@/lib/shareMatch";
@@ -28,12 +29,7 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
 
   const isWinner = (m: any) => {
     if (typeof m.won === "boolean") return m.won;
-    const pId = currentUser?.id;
-    if (!pId) return false;
-    const isTeam1 = m.player1_id === pId || m.team1_partner_id === pId || m.player1?.id === pId;
-    if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
-    const isTeam1Winner = m.winner_side ? m.winner_side === 1 : (m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id || m.winner_id === m.player1?.id);
-    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+    return playerWon(m, currentUser?.id) === true;
   };
 
   const stats = useMemo(() => {
@@ -78,19 +74,19 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
             <button
               key={tab}
               onClick={() => setFormatTab(tab)}
-              className={`text-left transition-all bg-white dark:bg-slate-800/80 rounded-2xl shadow-md border p-3.5 sm:p-4 cursor-pointer ${
+              className={`text-left transition-all bg-muted/80 rounded-2xl shadow-md border p-3.5 sm:p-4 cursor-pointer ${
                 isSelected 
-                  ? "border-amber-400 dark:border-amber-500 ring-2 ring-amber-400/50 dark:ring-amber-500/50 scale-[1.02]" 
-                  : "border-slate-100 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                  ? "border-warning ring-2 ring-warning/50 scale-[1.02]" 
+                  : "border-border-strong/50 hover:border-border-strong"
               }`}
             >
               <Icon className={`w-5 h-5 mb-2 ${
-                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-500" : "text-amber-500"
+                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-series-a" : s.color === "green" ? "text-success" : "text-warning"
               }`} />
-              <div className="text-sm font-black text-slate-800 dark:text-slate-100">{s.count}</div>
+              <div className="text-sm font-black text-foreground">{s.count}</div>
               <div className="text-[10px] font-bold text-muted-foreground">{s.label}</div>
               <div className={`text-xs font-bold mt-1 ${
-                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                s.color === "primary" ? "text-primary" : s.color === "blue" ? "text-series-a" : s.color === "green" ? "text-success" : "text-warning"
               }`}>{s.winRate}% win</div>
             </button>
           );
@@ -109,7 +105,7 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
         {filtered.length > 0 ? (
           filtered.map((m) => <PersonalMatchCardItem key={m.id} match={m} currentUser={currentUser} />)
         ) : (
-          <div className="p-8 text-center text-sm text-muted-foreground italic bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+          <div className="p-8 text-center text-sm text-muted-foreground italic bg-muted/80 rounded-2xl border border-border-strong/50">
             No matches found for the selected filters
           </div>
         )}

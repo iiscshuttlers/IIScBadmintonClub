@@ -79,7 +79,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
               aria-selected={viewMode === t.id}
               onClick={() => setViewMode(t.id)}
               className={`flex items-center justify-center gap-1.5 px-4 min-h-[40px] text-xs font-black uppercase tracking-widest rounded-lg transition ${
-                viewMode === t.id ? "bg-slate-700 text-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                viewMode === t.id ? "bg-muted-strong text-foreground shadow" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <t.icon className="w-3.5 h-3.5" aria-hidden /> {t.label}
@@ -97,7 +97,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
                 className={`px-3.5 min-h-[40px] rounded-xl text-xs font-black transition-colors border ${
                   activeCategory === cat
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-slate-300 hover:border-primary hover:text-foreground"
+                    : "border-border text-soft hover:border-primary hover:text-foreground"
                 }`}
               >
                 {cat}

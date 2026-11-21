@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -28,15 +29,18 @@ import { EmptyState } from "@/components/tournament/EmptyState";
 import { staggerContainer } from "@/lib/motion";
 
 type StatusFilter = "all" | "upcoming" | "active" | "completed";
+
+/** Finished tournaments: completed, or completed and then archived to Legacy. */
+const isPast = (s: string | null | undefined) => s === "completed" || s === "archived";
 type TypeFilter = "all" | "open" | "team";
 type RankedFilter = "all" | "ranked" | "casual";
 type SortOption = "date_desc" | "date_asc" | "name_asc";
 
 const STATUS_META: Record<string, { label: string; icon: typeof Radio; cls: string }> = {
-  active: { label: "Live", icon: Radio, cls: "text-rose-600 bg-rose-50 dark:bg-rose-950/30" },
+  active: { label: "Live", icon: Radio, cls: "text-danger bg-danger/10" },
   upcoming: { label: "Upcoming", icon: Clock, cls: "text-primary bg-primary/10" },
-  completed: { label: "Completed", icon: CheckCircle2, cls: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" },
-  archived: { label: "Archived", icon: CheckCircle2, cls: "text-slate-500 bg-slate-100 dark:bg-slate-800" },
+  completed: { label: "Completed", icon: CheckCircle2, cls: "text-success bg-success/10" },
+  archived: { label: "Archived", icon: CheckCircle2, cls: "text-muted-foreground bg-muted" },
 };
 
 export default function TournamentsHub() {
@@ -83,10 +87,10 @@ export default function TournamentsHub() {
   // Registration modal state
   const [registerFor, setRegisterFor] = useState<any | null>(null);
 
-  const visible = useMemo(
-    () => all.filter((t) => t.status !== "draft" && t.status !== "archived"),
-    [all],
-  );
+  // Archived = finished and also saved to Legacy. It stays here as a past
+  // tournament (Completed); hiding it emptied the hub once every event was
+  // archived. Only drafts are hidden.
+  const visible = useMemo(() => all.filter((t) => t.status !== "draft"), [all]);
 
   // My Roles Hook (Phase 0.2 / D)
   const { myRoles, refetch: refetchMyRoles } = useMyTournamentRoles(
@@ -123,7 +127,7 @@ export default function TournamentsHub() {
     visible.forEach((t) => {
       if (t.status === "upcoming") c.upcoming++;
       else if (t.status === "active") c.active++;
-      else if (t.status === "completed") c.completed++;
+      else if (isPast(t.status)) c.completed++;
     });
     return c;
   }, [visible]);
@@ -139,7 +143,8 @@ export default function TournamentsHub() {
   // Filtered tournament list
   const filtered = useMemo(() => {
     let list = listSource;
-    if (status !== "all") list = list.filter((t) => t.status === status);
+    if (status === "completed") list = list.filter((t) => isPast(t.status));
+    else if (status !== "all") list = list.filter((t) => t.status === status);
     if (type !== "all") list = list.filter((t) => t.tournament_type === type);
     if (ranked !== "all") list = list.filter((t) => (ranked === "ranked" ? t.counts_for_elo : !t.counts_for_elo));
     if (search.trim()) {
@@ -179,7 +184,7 @@ export default function TournamentsHub() {
     return {
       active: filtered.filter(t => t.status === "active"),
       upcoming: filtered.filter(t => t.status === "upcoming"),
-      completed: filtered.filter(t => t.status === "completed"),
+      completed: filtered.filter(t => isPast(t.status)),
     };
   }, [filtered]);
 
@@ -220,54 +225,38 @@ export default function TournamentsHub() {
   const featuredFamily = getEventFamily(featuredTournament || {});
 
   return (
-    <ThemeScope family={featuredFamily} className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* Top Banner Hero */}
-      <section className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white py-12 relative overflow-hidden border-b border-slate-800">
-        <div 
-          className="absolute inset-0 pointer-events-none transition-colors duration-700"
-          style={{
-            background: "radial-gradient(ellipse 80% 80% at 50% -20%, var(--family-glow, rgba(120,119,198,0.25)), rgba(255,255,255,0))"
-          }}
-        />
-        <div className="container mx-auto px-4 max-w-5xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" /> Tournaments &amp; Events
-          </div>
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-black mb-2.5 tracking-tight text-white"
-            style={{ fontFamily: "Outfit, Inter, sans-serif" }}
+    <ThemeScope family={featuredFamily} className="min-h-screen bg-background">
+      {/* Page header — same component as every other section page */}
+      <PageHeader
+        badge="Tournaments & Events"
+        badgeIcon={<Sparkles className="w-3.5 h-3.5" />}
+        title="Tournaments"
+        subtitle="Follow live events, register for upcoming draws and look back at past results."
+      >
+        {/* Organisers: one quiet line (the top bar also has + Host). */}
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium -mt-2">
+          Organising one?{" "}
+          <button
+            type="button"
+            onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
+            className="font-black text-primary hover:underline underline-offset-2"
           >
-            Tournaments
-          </h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-medium mb-4">
-            Follow live events, register for upcoming draws and look back at past results.
-          </p>
-
-          {/* Organisers: one quiet line (the top bar also has + Host). */}
-          <p className="text-xs sm:text-sm text-slate-400 font-medium">
-            Organising one?{" "}
-            <button
-              type="button"
-              onClick={() => navigate(isAuthed ? "/host-tournament/new" : "/join")}
-              className="font-black text-primary hover:underline underline-offset-2"
-            >
-              Host a tournament
-            </button>
-            {isAuthed && (
-              <>
-                {" · "}
-                <button
-                  type="button"
-                  onClick={() => navigate("/host-tournament")}
-                  className="font-black text-slate-200 hover:text-primary hover:underline underline-offset-2"
-                >
-                  My tournaments
-                </button>
-              </>
-            )}
-          </p>
-        </div>
-      </section>
+            Host a tournament
+          </button>
+          {isAuthed && (
+            <>
+              {" · "}
+              <button
+                type="button"
+                onClick={() => navigate("/host-tournament")}
+                className="font-black text-soft hover:text-primary hover:underline underline-offset-2"
+              >
+                My tournaments
+              </button>
+            </>
+          )}
+        </p>
+      </PageHeader>
 
       <section className="container mx-auto px-4 max-w-5xl -mt-6 relative z-20 pb-16 space-y-6">
         {/* Phase H: Pinned Featured Tournament Hero */}
@@ -283,35 +272,35 @@ export default function TournamentsHub() {
         {isAuthed && (
           <MyMatchesStrip
             myPlayerId={myPlayerId}
-            className="bg-slate-900/60 rounded-3xl border border-slate-800 p-5 shadow-lg"
+            className="bg-card/60 rounded-3xl border border-border p-5 shadow-lg"
           />
         )}
 
         {/* Phase D: "My Tournaments" Tray (shown only if logged-in user has active roles or during loading) */}
         {isAuthed && (loading || myTournaments.length > 0) && (
-          <div className="bg-gradient-to-r from-purple-950/20 via-slate-900/60 to-purple-950/20 rounded-3xl border border-purple-900/30 p-5 shadow-lg space-y-3">
+          <div className="bg-gradient-to-r from-individual/10 via-card/60 to-individual/10 rounded-3xl border border-individual/20 p-5 shadow-lg space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-purple-500/20 text-purple-400">
+                <span className="p-1.5 rounded-xl bg-individual/20 text-individual">
                   <Award className="w-4 h-4" />
                 </span>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-foreground uppercase tracking-wider">
                   My Tournaments {loading ? "" : `(${myTournaments.length})`}
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 font-medium">Quick Access</span>
+              <span className="text-xs text-muted-foreground font-medium">Quick Access</span>
             </div>
 
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="p-3.5 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse space-y-3">
+                  <div key={i} className="p-3.5 bg-card/90 rounded-2xl border border-border animate-pulse space-y-3">
                     <div className="flex justify-between">
-                      <div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
-                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                      <div className="h-3 w-12 bg-muted rounded" />
+                      <div className="h-3 w-16 bg-muted rounded" />
                     </div>
-                    <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
-                    <div className="h-3 w-1/3 bg-slate-200 dark:bg-slate-800 rounded pt-2" />
+                    <div className="h-4 w-3/4 bg-muted rounded" />
+                    <div className="h-3 w-1/3 bg-muted rounded pt-2" />
                   </div>
                 ))}
               </div>
@@ -325,7 +314,7 @@ export default function TournamentsHub() {
                   return (
                     <div
                       key={t.id}
-                      className="p-3.5 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition flex flex-col justify-between"
+                      className="p-3.5 bg-card/90 rounded-2xl border border-border hover:border-primary/50 transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-1.5">
@@ -334,17 +323,17 @@ export default function TournamentsHub() {
                           </span>
                           <div className="flex gap-1">
                             {isOrganizer && (
-                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300">
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-individual/20 text-individual">
                                 Organizer
                               </span>
                             )}
                             {isOfficiating && (
-                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-info/20 text-info">
                                 Official
                               </span>
                             )}
                             {role?.registration && (
-                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-success/20 text-success">
                                 Player ({role.registration})
                               </span>
                             )}
@@ -352,32 +341,32 @@ export default function TournamentsHub() {
                         </div>
 
                         <h4
-                          className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 cursor-pointer hover:text-primary transition"
+                          className="font-bold text-sm text-foreground line-clamp-1 cursor-pointer hover:text-primary transition"
                           onClick={() => openTournament(t)}
                         >
                           {t.name}
                         </h4>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                      <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-xs">
                         {isOrganizer ? (
                           <button
                             onClick={() => navigate(tournamentManagePath(t.id, isAdmin))}
-                            className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                            className="text-[11px] font-bold text-individual hover:underline"
                           >
                             Organizer Console →
                           </button>
                         ) : isOfficiating ? (
                           <button
                             onClick={() => navigate(tournamentPath(t.id, null, { panel: role?.roles.has("REFEREE") ? "referee" : "umpire" }))}
-                            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                            className="text-[11px] font-bold text-info hover:underline"
                           >
                             Officiate Matches →
                           </button>
                         ) : (
                           <button
                             onClick={() => handleRegisterClick(t)}
-                            className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                            className="text-[11px] font-bold text-success hover:underline"
                           >
                             Manage Entry →
                           </button>
@@ -385,7 +374,7 @@ export default function TournamentsHub() {
 
                         <button
                           onClick={() => openTournament(t)}
-                          className="text-[11px] font-bold text-slate-500 hover:text-primary"
+                          className="text-[11px] font-bold text-muted-foreground hover:text-primary"
                         >
                           View Hub
                         </button>
@@ -399,14 +388,14 @@ export default function TournamentsHub() {
         )}
 
         {/* Search + Filter Controls */}
-        <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-950/5 p-3 sm:p-4 space-y-3">
+        <div className="bg-card/90 backdrop-blur-md rounded-3xl border border-border/80 shadow-xl shadow-media/5 p-3 sm:p-4 space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tournaments by name, venue or category…"
-              className="w-full pl-10 pr-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
+              className="w-full pl-10 pr-3.5 py-2 bg-background border border-border rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
             />
           </div>
 
@@ -419,8 +408,8 @@ export default function TournamentsHub() {
                   <span
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
                       status === s.key
-                        ? "bg-black/15 text-slate-950 dark:text-slate-950"
-                        : "bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300"
+                        ? "bg-media/15 text-background"
+                        : "bg-muted-strong/80 text-soft"
                     }`}
                   >
                     {s.count}
@@ -436,7 +425,7 @@ export default function TournamentsHub() {
               className={`ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition ${
                 showFilters || extraFilterCount > 0
                   ? "border-primary/50 text-primary bg-primary/10"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/40"
+                  : "border-border-strong text-soft hover:border-primary/40"
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -446,24 +435,24 @@ export default function TournamentsHub() {
 
           {/* Type, ranked and sort live behind the Filters button */}
           {showFilters && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-border/80">
             {([["all", "All types"], ["open", "Individual"], ["team", "Team"]] as [TypeFilter, string][]).map(([k, label]) => (
               <Button key={k} size="pill" variant={type === k ? "pillActive" : "pillMuted"} onClick={() => setType(k)}>
                 {label}
               </Button>
             ))}
-            <span className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
+            <span className="w-px h-5 bg-muted mx-1" />
             {([["all", "Any"], ["ranked", "★ Ranked"], ["casual", "Casual"]] as [RankedFilter, string][]).map(([k, label]) => (
               <Button key={k} size="pill" variant={ranked === k ? "pillActive" : "pillMuted"} onClick={() => setRanked(k)}>
                 {label}
               </Button>
             ))}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 sm:ml-auto">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:ml-auto">
               <span className="font-bold">Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-2.5 py-1 font-bold text-xs outline-none border border-slate-200 dark:border-slate-700 cursor-pointer"
+                className="bg-muted text-soft rounded-xl px-2.5 py-1 font-bold text-xs outline-none border border-border-strong cursor-pointer"
               >
                 <option value="date_desc">Latest Date</option>
                 <option value="date_asc">Earliest Date</option>
@@ -480,8 +469,8 @@ export default function TournamentsHub() {
             <TournamentCardSkeleton count={4} />
           </div>
         ) : loadError ? (
-          <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Couldn't load tournaments.</p>
+          <div className="text-center py-16 bg-card rounded-3xl border border-border shadow-sm">
+            <p className="text-sm font-bold text-soft">Couldn't load tournaments.</p>
             <button
               onClick={load}
               className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-black hover:brightness-110 transition shadow-sm"
@@ -507,8 +496,8 @@ export default function TournamentsHub() {
             {grouped.active.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                  <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  <span className="w-2.5 h-2.5 rounded-full bg-live animate-ping" />
+                  <h3 className="text-base font-black text-foreground uppercase tracking-wider">
                     Live Now ({grouped.active.length})
                   </h3>
                 </div>
@@ -539,7 +528,7 @@ export default function TournamentsHub() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-primary" />
-                  <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  <h3 className="text-base font-black text-foreground uppercase tracking-wider">
                     Upcoming Tournaments ({grouped.upcoming.length})
                   </h3>
                 </div>
@@ -568,8 +557,8 @@ export default function TournamentsHub() {
             {grouped.completed.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <h3 className="text-base font-black text-foreground uppercase tracking-wider">
                     Past Tournaments ({grouped.completed.length})
                   </h3>
                 </div>

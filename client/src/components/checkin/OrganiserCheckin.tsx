@@ -24,19 +24,19 @@ import { CourtsStrip, hereCounts, sidesLabel, useOfficialActions, waitingWorthSh
 export function CheckinStatCards({ data }: { data: TournamentReadiness }) {
   const { here, expected } = hereCounts(data);
   const items = [
-    { label: "Players here", value: `${here}`, sub: `/ ${expected}`, tone: "text-emerald-300" },
+    { label: "Players here", value: `${here}`, sub: `/ ${expected}`, tone: "text-success" },
     { label: "Ready to play", value: `${data.board.ready.length}`, tone: "text-primary" },
-    { label: "Waiting for players", value: `${waitingWorthShowing(data).length}`, tone: "text-amber-300" },
-    { label: "Free courts", value: `${data.free.length}`, sub: `/ ${data.courts.length}`, tone: "text-white" },
+    { label: "Waiting for players", value: `${waitingWorthShowing(data).length}`, tone: "text-warning" },
+    { label: "Free courts", value: `${data.free.length}`, sub: `/ ${data.courts.length}`, tone: "text-foreground" },
   ];
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Check-in at a glance">
       {items.map((i) => (
-        <div key={i.label} className="rounded-2xl border border-slate-800 bg-slate-900 p-3">
-          <p className="text-[11px] font-bold text-slate-400">{i.label}</p>
+        <div key={i.label} className="rounded-2xl border border-border bg-card p-3">
+          <p className="text-[11px] font-bold text-muted-foreground">{i.label}</p>
           <p className={`text-2xl font-black leading-tight ${i.tone}`}>
             {i.value}
-            {i.sub && <span className="text-sm font-bold text-slate-400"> {i.sub}</span>}
+            {i.sub && <span className="text-sm font-bold text-muted-foreground"> {i.sub}</span>}
           </p>
         </div>
       ))}
@@ -59,27 +59,27 @@ export function CourtsAndQueue({ data, tournamentId }: { data: TournamentReadine
 
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:p-4">
-        <h3 className="text-sm font-black text-white">Courts</h3>
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h3 className="text-sm font-black text-foreground">Courts</h3>
         <CourtsStrip courts={data.courts} readyByCourt={readyByCourt} columns={2} />
       </div>
-      <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:p-4">
-        <h3 className="text-sm font-black text-white">Ready queue</h3>
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h3 className="text-sm font-black text-foreground">Ready queue</h3>
         {data.board.ready.length === 0 && waiting.length === 0 ? (
-          <p className="text-xs text-slate-400">Matches appear here as players check in.</p>
+          <p className="text-xs text-muted-foreground">Matches appear here as players check in.</p>
         ) : (
           <ul className="space-y-2">
             {data.board.ready.map((m) => {
               const r = data.board.byMatch[m.id];
               const c = suggested[m.id];
               return (
-                <li key={m.id} className="space-y-1.5 rounded-xl border border-primary/40 bg-slate-950/60 p-2.5">
+                <li key={m.id} className="space-y-1.5 rounded-xl border border-primary/40 bg-background/60 p-2.5">
                   <div className="flex min-w-0 items-center gap-2">
                     <MatchCodeChip code={m.match_code} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-white">{sidesLabel(m)}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">{sidesLabel(m)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-black text-emerald-300">
+                    <span className="text-[11px] font-black text-success">
                       {r.total > 2 ? `All ${r.total} here` : "All here"} · {minutesSince(r.readySince, data.now)} min
                     </span>
                     {c ? (
@@ -87,7 +87,7 @@ export function CourtsAndQueue({ data, tournamentId }: { data: TournamentReadine
                         Put on {courtLabel(c)}
                       </SmallButton>
                     ) : (
-                      <span className="text-[11px] text-slate-400">No court free</span>
+                      <span className="text-[11px] text-muted-foreground">No court free</span>
                     )}
                   </div>
                 </li>
@@ -100,13 +100,13 @@ export function CourtsAndQueue({ data, tournamentId }: { data: TournamentReadine
                 .map((p) => `${(data.names[p.playerId] ?? "Player").split(" ")[0]} ${shortReason(p.presence)}`)
                 .join(", ");
               return (
-                <li key={m.id} className="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/60 p-2.5">
+                <li key={m.id} className="space-y-1.5 rounded-xl border border-border bg-background/60 p-2.5">
                   <div className="flex min-w-0 items-center gap-2">
                     <MatchCodeChip code={m.match_code} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-white">{sidesLabel(m)}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">{sidesLabel(m)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold text-amber-300">
+                  <span className="text-[11px] font-bold text-warning">
                     {r.hereCount} of {r.total} · {why}
                   </span>
                   {r.callable.length > 0 && (
@@ -196,22 +196,22 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
   };
 
   return (
-    <section aria-labelledby="whos-here-roster" className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:p-4">
+    <section aria-labelledby="whos-here-roster" className="space-y-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
       <div className="flex items-center justify-between">
-        <h3 id="whos-here-roster" className="text-sm font-black text-white">
+        <h3 id="whos-here-roster" className="text-sm font-black text-foreground">
           Who's here
         </h3>
-        <span className="text-[11px] font-bold text-slate-400">Updates live</span>
+        <span className="text-[11px] font-bold text-muted-foreground">Updates live</span>
       </div>
       <label className="relative block">
         <span className="sr-only">Find a player</span>
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Name or match code"
-          className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 pl-9 pr-3 text-sm text-white focus:border-primary focus:outline-none"
+          className="min-h-[44px] w-full rounded-xl border border-border-strong bg-background pl-9 pr-3 text-sm text-foreground focus:border-primary focus:outline-none"
         />
       </label>
       <div role="group" aria-label="Show" className="flex gap-1.5 overflow-x-auto">
@@ -229,7 +229,7 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
             className={`min-h-[40px] shrink-0 rounded-full px-3 text-xs font-black ${
-              filter === k ? "bg-primary text-primary-foreground" : "border border-slate-700 bg-slate-950 text-slate-300"
+              filter === k ? "bg-primary text-primary-foreground" : "border border-border-strong bg-background text-soft"
             }`}
           >
             {label}
@@ -237,9 +237,9 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
         ))}
       </div>
       {limited.length === 0 ? (
-        <p className="py-4 text-center text-sm text-slate-400">{entries.length === 0 ? "No players with matches left." : "Nobody matches."}</p>
+        <p className="py-4 text-center text-sm text-muted-foreground">{entries.length === 0 ? "No players with matches left." : "Nobody matches."}</p>
       ) : (
-        <ul className="divide-y divide-slate-800">
+        <ul className="divide-y divide-border">
           {limited.map((e) => {
             const checkedIn = data.ctx.checkins.has(e.id);
             const open = openId === e.id;
@@ -252,8 +252,8 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
                     aria-expanded={open}
                     className="min-h-[44px] min-w-0 flex-1 text-left"
                   >
-                    <strong className="block truncate text-sm text-white">{e.name}</strong>
-                    <span className="block truncate text-xs text-slate-400">{detail(e)}</span>
+                    <strong className="block truncate text-sm text-foreground">{e.name}</strong>
+                    <span className="block truncate text-xs text-muted-foreground">{detail(e)}</span>
                   </button>
                   {e.presence.kind === "not_here" ? (
                     <SmallButton busy={actions.checkinBusy} onClick={() => actions.checkIn(e.id, e.name)} label={`Check in ${e.name}`}>
@@ -264,8 +264,8 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
                   )}
                 </div>
                 {open && (
-                  <div className="mt-2 space-y-2 rounded-xl bg-slate-950/60 p-2.5">
-                    <p className="text-xs text-slate-300">
+                  <div className="mt-2 space-y-2 rounded-xl bg-background/60 p-2.5">
+                    <p className="text-xs text-soft">
                       Matches left:{" "}
                       {data.matches
                         .filter((m) => matchPlayerIds(m).includes(e.id) && ["scheduled", "pending", "in_progress"].includes(m.status))
@@ -289,7 +289,7 @@ export function WhosHereRoster({ data, tournamentId }: { data: TournamentReadine
           Show all {shown.length}
         </SmallButton>
       )}
-      <p className="text-xs text-slate-400">Players who aren't here are listed first. Tap a name to check them out or see all their matches.</p>
+      <p className="text-xs text-muted-foreground">Players who aren't here are listed first. Tap a name to check them out or see all their matches.</p>
     </section>
   );
 }

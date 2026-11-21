@@ -1,8 +1,11 @@
 /**
  * Premium Match Share Card Renderer
- * Generates a 1080×1080 canvas image in a BWF broadcast style (navy + gold).
+ * Generates a 1080×1080 canvas image in a BWF broadcast style, coloured from
+ * the user's theme (resolved at draw time).
  * Supports singles and doubles, a set-by-set breakdown, and a sets headline.
  */
+
+import { themeColor, themeFont, withAlpha } from "@/lib/themeColors";
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -98,12 +101,12 @@ function drawRoundedAvatar(
     ctx.drawImage(img, x, y, size, size);
   } else {
     const fallbackGrad = ctx.createLinearGradient(x, y, x + size, y + size);
-    fallbackGrad.addColorStop(0, "#1e3a5f");
-    fallbackGrad.addColorStop(1, "#0f172a");
+    fallbackGrad.addColorStop(0, themeColor("muted-strong"));
+    fallbackGrad.addColorStop(1, themeColor("card"));
     ctx.fillStyle = fallbackGrad;
     ctx.fillRect(x, y, size, size);
-    ctx.fillStyle = "#f59e0b";
-    ctx.font = `bold ${size * 0.45}px sans-serif`;
+    ctx.fillStyle = themeColor("primary");
+    ctx.font = `bold ${size * 0.45}px ${themeFont("display")}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(initial.toUpperCase(), x + size / 2, y + size / 2);
@@ -137,8 +140,6 @@ export interface MatchShareData {
   category?: string;
   tournamentName?: string;
 }
-
-const GOLD = "#f59e0b";
 
 export async function renderMatchShareCard(
   data: MatchShareData,
@@ -178,16 +179,34 @@ export async function renderMatchShareCard(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
+  // Theme colours and fonts, resolved now so the image matches the user's theme.
+  const GOLD = themeColor("gold");
+  const PRIMARY = themeColor("primary");
+  const FG = themeColor("foreground");
+  const SOFT = themeColor("soft");
+  const META = themeColor("muted-foreground");
+  const FAINT = themeColor("faint");
+  const DISPLAY = themeFont("display");
+  const BODY = themeFont("body");
+  const STAT = themeFont("stat");
+  try {
+    await Promise.all([
+      document.fonts?.load(`900 40px ${DISPLAY}`),
+      document.fonts?.load(`900 40px ${STAT}`),
+      document.fonts?.load(`bold 24px ${BODY}`),
+    ]);
+  } catch { /* draw with whatever is available */ }
+
   /* ── Background ── */
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#0a0f1e");
-  bg.addColorStop(0.5, "#0f172a");
-  bg.addColorStop(1, "#020617");
+  bg.addColorStop(0, themeColor("background"));
+  bg.addColorStop(0.5, themeColor("card"));
+  bg.addColorStop(1, themeColor("background"));
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Mesh dots
-  ctx.fillStyle = "rgba(255,255,255,0.012)";
+  ctx.fillStyle = withAlpha(FG, 0.012);
   for (let gx = 0; gx < W; gx += 40) {
     for (let gy = 0; gy < H; gy += 40) {
       ctx.beginPath();
@@ -199,7 +218,7 @@ export async function renderMatchShareCard(
   // Diagonal sport motif
   ctx.save();
   ctx.globalAlpha = 0.02;
-  ctx.strokeStyle = GOLD;
+  ctx.strokeStyle = PRIMARY;
   ctx.lineWidth = 1;
   for (let i = -H; i < W + H; i += 60) {
     ctx.beginPath();
@@ -211,34 +230,34 @@ export async function renderMatchShareCard(
 
   // Ambient glow behind winner side
   const winGlow = ctx.createRadialGradient(W * 0.28, 420, 0, W * 0.28, 420, 360);
-  winGlow.addColorStop(0, "rgba(245,158,11,0.10)");
-  winGlow.addColorStop(1, "rgba(245,158,11,0)");
+  winGlow.addColorStop(0, withAlpha(GOLD, 0.1));
+  winGlow.addColorStop(1, withAlpha(GOLD, 0));
   ctx.fillStyle = winGlow;
   ctx.fillRect(0, 0, W, H);
 
   /* ── Header ── */
   const topLineGrad = ctx.createLinearGradient(0, 0, W, 0);
-  topLineGrad.addColorStop(0, "rgba(245,158,11,0)");
-  topLineGrad.addColorStop(0.5, "rgba(245,158,11,1)");
-  topLineGrad.addColorStop(1, "rgba(245,158,11,0)");
+  topLineGrad.addColorStop(0, withAlpha(PRIMARY, 0));
+  topLineGrad.addColorStop(0.5, withAlpha(PRIMARY, 1));
+  topLineGrad.addColorStop(1, withAlpha(PRIMARY, 0));
   ctx.fillStyle = topLineGrad;
   ctx.fillRect(0, 0, W, 4);
 
-  ctx.fillStyle = GOLD;
-  ctx.font = "bold 38px sans-serif";
+  ctx.fillStyle = PRIMARY;
+  ctx.font = `bold 38px ${DISPLAY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   ctx.fillText("🏸  IISc Badminton Club", W / 2, 66);
 
   const divGrad = ctx.createLinearGradient(160, 0, W - 160, 0);
-  divGrad.addColorStop(0, "rgba(245,158,11,0)");
-  divGrad.addColorStop(0.5, "rgba(245,158,11,0.4)");
-  divGrad.addColorStop(1, "rgba(245,158,11,0)");
+  divGrad.addColorStop(0, withAlpha(PRIMARY, 0));
+  divGrad.addColorStop(0.5, withAlpha(PRIMARY, 0.4));
+  divGrad.addColorStop(1, withAlpha(PRIMARY, 0));
   ctx.fillStyle = divGrad;
   ctx.fillRect(160, 84, W - 320, 2);
 
-  ctx.fillStyle = "#64748b";
-  ctx.font = "900 26px sans-serif";
+  ctx.fillStyle = META;
+  ctx.font = `900 26px ${DISPLAY}`;
   ctx.letterSpacing = "8px";
   ctx.fillText("M A T C H   R E S U L T", W / 2, 124);
   ctx.letterSpacing = "0px";
@@ -251,8 +270,8 @@ export async function renderMatchShareCard(
   if (matchDate) metaParts.push(matchDate.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }));
   
   if (metaParts.length) {
-    ctx.fillStyle = "#475569";
-    ctx.font = "bold 24px sans-serif";
+    ctx.fillStyle = FAINT;
+    ctx.font = `bold 24px ${BODY}`;
     ctx.fillText(metaParts.join("   •   "), W / 2, 162);
   }
 
@@ -278,9 +297,9 @@ export async function renderMatchShareCard(
         ctx, imgs[idx],
         x, avatarY, avatarSize, avatarRadius,
         p.name[0] || "?",
-        isWinner ? GOLD : "#334155",
+        isWinner ? GOLD : themeColor("border-strong"),
         isWinner ? 5 : 4,
-        isWinner ? "rgba(245,158,11,0.5)" : undefined,
+        isWinner ? withAlpha(GOLD, 0.5) : undefined,
       );
       x += avatarSize + gap;
     });
@@ -305,14 +324,14 @@ export async function renderMatchShareCard(
   /* ── Center VS badge ── */
   ctx.save();
   drawRoundedRect(ctx, W / 2 - 40, avatarMidY - 26, 80, 52, 16);
-  ctx.fillStyle = "#1e293b";
+  ctx.fillStyle = themeColor("muted");
   ctx.fill();
-  ctx.strokeStyle = "rgba(245,158,11,0.3)";
+  ctx.strokeStyle = withAlpha(PRIMARY, 0.3);
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
-  ctx.fillStyle = GOLD;
-  ctx.font = "900 30px sans-serif";
+  ctx.fillStyle = PRIMARY;
+  ctx.font = `900 30px ${DISPLAY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("VS", W / 2, avatarMidY);
@@ -326,13 +345,14 @@ export async function renderMatchShareCard(
   const drawEloBadge = (elo: number | string | undefined, cx: number, positive: boolean) => {
     if (elo === undefined || elo === null || elo === "") return;
     const eloStr = typeof elo === "number" ? (elo > 0 ? `+${elo}` : `${elo}`) : elo;
-    ctx.font = "900 22px sans-serif";
+    ctx.font = `900 22px ${STAT}`;
     const eloW = ctx.measureText(`${eloStr} ELO`).width + 28;
     drawRoundedRect(ctx, cx - eloW / 2, eloY - 18, eloW, 36, 10);
-    ctx.fillStyle = positive ? "rgba(16,185,129,0.15)" : "rgba(244,63,94,0.15)";
+    const tone = themeColor(positive ? "success" : "danger");
+    ctx.fillStyle = withAlpha(tone, 0.15);
     ctx.fill();
-    ctx.fillStyle = positive ? "#10b981" : "#f43f5e";
-    ctx.font = "900 22px sans-serif";
+    ctx.fillStyle = tone;
+    ctx.font = `900 22px ${STAT}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillText(`${eloStr} ELO`, cx, eloY + 4);
@@ -340,25 +360,25 @@ export async function renderMatchShareCard(
 
   // Winner
   ctx.fillStyle = GOLD;
-  ctx.font = "900 20px sans-serif";
+  ctx.font = `900 20px ${DISPLAY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   ctx.letterSpacing = "6px";
   ctx.fillText("W I N N E R", leftCenterX, labelY);
   ctx.letterSpacing = "0px";
-  ctx.fillStyle = "#ffffff";
-  fitText(ctx, namesStr(winners), 420, 40, 22);
+  ctx.fillStyle = FG;
+  fitText(ctx, namesStr(winners), 420, 40, 22, "bold", DISPLAY);
   ctx.fillText(namesStr(winners), leftCenterX, nameY);
   drawEloBadge(winnerEloChange, leftCenterX, true);
 
   // Loser
-  ctx.fillStyle = "#475569";
-  ctx.font = "900 20px sans-serif";
+  ctx.fillStyle = FAINT;
+  ctx.font = `900 20px ${DISPLAY}`;
   ctx.letterSpacing = "4px";
   ctx.fillText("D E F E A T E D", rightCenterX, labelY);
   ctx.letterSpacing = "0px";
-  ctx.fillStyle = "#94a3b8";
-  fitText(ctx, namesStr(losers), 420, 40, 22);
+  ctx.fillStyle = META;
+  fitText(ctx, namesStr(losers), 420, 40, 22, "bold", DISPLAY);
   ctx.fillText(namesStr(losers), rightCenterX, nameY);
   drawEloBadge(loserEloChange, rightCenterX, false);
 
@@ -368,7 +388,7 @@ export async function renderMatchShareCard(
     const hy = cursorY + 56;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = "900 86px sans-serif";
+    ctx.font = `900 86px ${STAT}`;
     const dash = "  –  ";
     const wStr = String(setsWon.w);
     const lStr = String(setsWon.l);
@@ -379,14 +399,14 @@ export async function renderMatchShareCard(
     ctx.fillStyle = GOLD;
     ctx.fillText(wStr, cx + wW / 2, hy);
     cx += wW;
-    ctx.fillStyle = "#475569";
+    ctx.fillStyle = FAINT;
     ctx.fillText(dash, cx + dW / 2, hy);
     cx += dW;
-    ctx.fillStyle = "#93c5fd";
+    ctx.fillStyle = themeColor("accent");
     ctx.fillText(lStr, cx + lW / 2, hy);
 
-    ctx.fillStyle = "#64748b";
-    ctx.font = "900 18px sans-serif";
+    ctx.fillStyle = META;
+    ctx.font = `900 18px ${DISPLAY}`;
     ctx.letterSpacing = "6px";
     ctx.fillText("S E T S   W O N", W / 2, hy + 58);
     ctx.letterSpacing = "0px";
@@ -403,19 +423,19 @@ export async function renderMatchShareCard(
     ctx.save();
     drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 24);
     const scoreBg = ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY);
-    scoreBg.addColorStop(0, "#111827");
-    scoreBg.addColorStop(0.5, "#1e293b");
-    scoreBg.addColorStop(1, "#111827");
+    scoreBg.addColorStop(0, themeColor("card"));
+    scoreBg.addColorStop(0.5, themeColor("muted"));
+    scoreBg.addColorStop(1, themeColor("card"));
     ctx.fillStyle = scoreBg;
     ctx.fill();
-    ctx.strokeStyle = "rgba(245,158,11,0.2)";
+    ctx.strokeStyle = withAlpha(PRIMARY, 0.2);
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
 
     // Header label
-    ctx.fillStyle = "#64748b";
-    ctx.font = "900 18px sans-serif";
+    ctx.fillStyle = META;
+    ctx.font = `900 18px ${DISPLAY}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.letterSpacing = "5px";
@@ -436,24 +456,24 @@ export async function renderMatchShareCard(
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
 
-      ctx.font = `900 ${Math.min(56, rowH * 0.7)}px sans-serif`;
-      ctx.fillStyle = wWon ? GOLD : "#64748b";
+      ctx.font = `900 ${Math.min(56, rowH * 0.7)}px ${STAT}`;
+      ctx.fillStyle = wWon ? GOLD : META;
       ctx.fillText(String(s.w), leftX, cy);
-      ctx.fillStyle = !wWon ? "#cbd5e1" : "#64748b";
+      ctx.fillStyle = !wWon ? SOFT : META;
       ctx.fillText(String(s.l), rightX, cy);
 
       // SET n pill
-      ctx.font = "900 18px sans-serif";
+      ctx.font = `900 18px ${DISPLAY}`;
       const pillTxt = `SET ${i + 1}`;
       const pillW = ctx.measureText(pillTxt).width + 28;
       drawRoundedRect(ctx, W / 2 - pillW / 2, cy - 18, pillW, 36, 18);
-      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fillStyle = withAlpha(FG, 0.06);
       ctx.fill();
-      ctx.fillStyle = "#94a3b8";
+      ctx.fillStyle = META;
       ctx.fillText(pillTxt, W / 2, cy + 1);
 
       if (i < n - 1) {
-        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        ctx.strokeStyle = withAlpha(FG, 0.05);
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(boxX + 40, rowsTop + rowH * (i + 1));
@@ -467,35 +487,35 @@ export async function renderMatchShareCard(
     ctx.save();
     drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 24);
     const scoreBg = ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY);
-    scoreBg.addColorStop(0, "#111827");
-    scoreBg.addColorStop(0.5, "#1e293b");
-    scoreBg.addColorStop(1, "#111827");
+    scoreBg.addColorStop(0, themeColor("card"));
+    scoreBg.addColorStop(0.5, themeColor("muted"));
+    scoreBg.addColorStop(1, themeColor("card"));
     ctx.fillStyle = scoreBg;
     ctx.fill();
-    ctx.strokeStyle = "rgba(245,158,11,0.2)";
+    ctx.strokeStyle = withAlpha(PRIMARY, 0.2);
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = FG;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    fitText(ctx, displayScore, boxW - 80, 64, 36, "900", "monospace");
+    fitText(ctx, displayScore, boxW - 80, 64, 36, "900", STAT);
     ctx.fillText(displayScore, W / 2, boxY + boxH / 2 + 2);
   }
 
   /* ── Recap line ── */
   const recapY = hasSets ? boxY + 232 + 52 : boxY + 120 + 52;
-  ctx.fillStyle = "#cbd5e1";
+  ctx.fillStyle = SOFT;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   const recap = `🏆 ${namesStr(winners)} defeated ${namesStr(losers)}`;
-  fitText(ctx, recap, W - 120, 28, 18, "bold");
+  fitText(ctx, recap, W - 120, 28, 18, "bold", BODY);
   ctx.fillText(recap, W / 2, recapY);
 
   /* ── Corner accents ── */
   const cs = 60;
-  ctx.strokeStyle = "rgba(245,158,11,0.15)";
+  ctx.strokeStyle = withAlpha(PRIMARY, 0.15);
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(24, 24 + cs); ctx.lineTo(24, 24); ctx.lineTo(24 + cs, 24); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(W - 24 - cs, 24); ctx.lineTo(W - 24, 24); ctx.lineTo(W - 24, 24 + cs); ctx.stroke();
@@ -503,16 +523,16 @@ export async function renderMatchShareCard(
   ctx.beginPath(); ctx.moveTo(W - 24 - cs, H - 24); ctx.lineTo(W - 24, H - 24); ctx.lineTo(W - 24, H - 24 - cs); ctx.stroke();
 
   /* ── Footer ── */
-  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.fillStyle = withAlpha(FG, 0.03);
   ctx.fillRect(0, H - 90, W, 90);
   const botLineGrad = ctx.createLinearGradient(0, 0, W, 0);
-  botLineGrad.addColorStop(0, "rgba(245,158,11,0)");
-  botLineGrad.addColorStop(0.5, "rgba(245,158,11,0.3)");
-  botLineGrad.addColorStop(1, "rgba(245,158,11,0)");
+  botLineGrad.addColorStop(0, withAlpha(PRIMARY, 0));
+  botLineGrad.addColorStop(0.5, withAlpha(PRIMARY, 0.3));
+  botLineGrad.addColorStop(1, withAlpha(PRIMARY, 0));
   ctx.fillStyle = botLineGrad;
   ctx.fillRect(0, H - 90, W, 2);
-  ctx.fillStyle = "#64748b";
-  ctx.font = "bold 22px sans-serif";
+  ctx.fillStyle = META;
+  ctx.font = `bold 22px ${BODY}`;
   ctx.textAlign = "center";
   ctx.fillText("Tap link to view full match details & stats", W / 2, H - 40);
 

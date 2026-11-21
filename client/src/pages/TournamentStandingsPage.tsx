@@ -41,10 +41,10 @@ export default function TournamentStandingsPage() {
   if (!showStandings && !isAdmin) {
     return (
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-card rounded-full flex items-center justify-center mb-6">
           <Clock className="w-10 h-10 text-muted-foreground" />
         </div>
-        <h1 className="text-3xl font-black text-foreground dark:text-foreground mb-4 text-center">Coming Soon</h1>
+        <h1 className="text-3xl font-black text-foreground mb-4 text-center">Coming Soon</h1>
         <p className="text-muted-foreground text-center max-w-md">
           Tournament standings are currently being calculated. Check back later to see the rankings!
         </p>

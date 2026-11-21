@@ -3,6 +3,10 @@ import { toast } from "sonner";
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import { themeColor, themeColorFor, themeFont, type ThemeColorToken } from "@/lib/themeColors";
+
+/** Sheet exports (PNG/PDF tables) are printed or shared on white, so use the light "paper" theme. */
+const paperColor = (token: ThemeColorToken) => themeColorFor("paper", token);
 
 // xlsx (~480 KB) and jsPDF (~375 KB) load on the first export, not with every
 // page that imports this module (e.g. the public match schedule).
@@ -58,14 +62,18 @@ const createHiddenTableElement = (sheets: ExportSheetDef[]): HTMLElement => {
   container.style.left = "0";
   container.style.zIndex = "-9999";
   container.style.width = "1000px";
-  container.style.backgroundColor = "#ffffff";
-  container.style.color = "#000000";
+  const ink = paperColor("foreground");
+  const soft = paperColor("soft");
+  const line = paperColor("border-strong");
+  const headBg = paperColor("muted");
+  container.style.backgroundColor = paperColor("card");
+  container.style.color = ink;
   container.style.padding = "40px";
-  container.style.fontFamily = "sans-serif";
+  container.style.fontFamily = themeFont("body");
 
   let html = "";
   for (const sheet of sheets) {
-    html += `<h2 style="font-size: 24px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; color: #1e293b;">${sheet.name}</h2>`;
+    html += `<h2 style="font-size: 24px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; color: ${ink};">${sheet.name}</h2>`;
     html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px; text-align: left;">`;
     
     sheet.data.forEach((row, rowIndex) => {
@@ -73,8 +81,8 @@ const createHiddenTableElement = (sheets: ExportSheetDef[]): HTMLElement => {
       html += `<tr>`;
       row.forEach((cell, colIndex) => {
         let style = isHeader 
-          ? "border: 1px solid #cbd5e1; padding: 12px 8px; background-color: #f8fafc; font-weight: bold; color: #0f172a;" 
-          : "border: 1px solid #cbd5e1; padding: 10px 8px; color: #334155;";
+          ? `border: 1px solid ${line}; padding: 12px 8px; background-color: ${headBg}; font-weight: bold; color: ${ink};`
+          : `border: 1px solid ${line}; padding: 10px 8px; color: ${soft};`;
           
         if (sheet.cellStyler && !isHeader) {
           const customStyle = sheet.cellStyler(row, rowIndex, colIndex, cell);
@@ -131,8 +139,8 @@ export const exportToImage = async (sheets: ExportSheetDef[], filename: string, 
     };
 
     if (sheets.length === 1) {
-      const dataUrl = await withExportElement(sheets, (el) => toPng(el, { 
-        backgroundColor: "#ffffff",
+      const dataUrl = await withExportElement(sheets, (el) => toPng(el, {
+        backgroundColor: paperColor("card"),
         style: { margin: "0" },
         pixelRatio: 2
       }));
@@ -141,8 +149,8 @@ export const exportToImage = async (sheets: ExportSheetDef[], filename: string, 
       toast.success(`Generating ${sheets.length} images. Please allow multiple downloads if prompted.`, { duration: 6000 });
       for (let i = 0; i < sheets.length; i++) {
         const sheet = sheets[i];
-        const dataUrl = await withExportElement([sheet], (el) => toPng(el, { 
-          backgroundColor: "#ffffff",
+        const dataUrl = await withExportElement([sheet], (el) => toPng(el, {
+          backgroundColor: paperColor("card"),
           style: { margin: "0" },
           pixelRatio: 2
         }));
@@ -180,8 +188,8 @@ export const exportToPDF = async (sheets: ExportSheetDef[], filename: string, em
     const pages = [];
     for (let i = 0; i < sheets.length; i++) {
       const pageData = await withExportElement([sheets[i]], async (el) => {
-        const url = await toPng(el, { 
-          backgroundColor: "#ffffff",
+        const url = await toPng(el, {
+          backgroundColor: paperColor("card"),
           pixelRatio: 2
         });
         return { dataUrl: url, width: Math.max(el.scrollWidth, 100), height: Math.max(el.scrollHeight, 100) };
@@ -235,7 +243,9 @@ const triggerMailtoFallback = (subject: string, body: string) => {
   window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body + "\n\n(Please attach the downloaded file here)")}`;
 };
 
-export const exportElementToImage = async (element: HTMLElement, filename: string, backgroundColor: string = "#ffffff", style?: any) => {
+// Element exports default to the background the element is drawn on (its own theme,
+// including a local `theme-paper` wrapper), resolved when the export runs.
+export const exportElementToImage = async (element: HTMLElement, filename: string, backgroundColor: string = themeColor("background", element), style?: any) => {
   try {
     toast.loading("Generating Image...", { id: "export-elem-img" });
     const dataUrl = await toPng(element, { 
@@ -267,7 +277,7 @@ export const exportElementToImage = async (element: HTMLElement, filename: strin
   }
 };
 
-export const exportElementToJpeg = async (element: HTMLElement, filename: string, backgroundColor: string = "#ffffff", style?: any) => {
+export const exportElementToJpeg = async (element: HTMLElement, filename: string, backgroundColor: string = themeColor("background", element), style?: any) => {
   try {
     toast.loading("Generating JPG...", { id: "export-elem-jpg" });
     const dataUrl = await toJpeg(element, { 
@@ -303,7 +313,7 @@ export const exportElementToJpeg = async (element: HTMLElement, filename: string
 export const exportElementToPDF = async (
   element: HTMLElement,
   filename: string,
-  backgroundColor: string = "#ffffff",
+  backgroundColor: string = themeColor("background", element),
   style?: any,
   pages: number = 1
 ) => {
@@ -377,8 +387,8 @@ export const exportElementToPDF = async (
         pdf.addPage([width, pageDOMHeight], width > pageDOMHeight ? 'landscape' : 'portrait');
       }
       
-      // Clear canvas with white
-      ctx.fillStyle = '#ffffff';
+      // Clear canvas with the export background
+      ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Draw Header

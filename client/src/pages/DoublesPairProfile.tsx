@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useParams, Link } from "wouter";
 import { useEffect, useState, useMemo } from "react";
 import { fetchDoublesPairData } from "@/services/playerService";
@@ -35,9 +36,9 @@ interface Match {
 
 function Avatar({ player, size = "md" }: { player: Player | null; size?: "sm" | "md" | "lg" }) {
   const sz = size === "lg" ? "w-20 h-20 text-2xl" : size === "sm" ? "w-10 h-10 text-sm" : "w-14 h-14 text-lg";
-  if (!player) return <div className={`${sz} rounded-full bg-slate-200 dark:bg-slate-700`} />;
+  if (!player) return <div className={`${sz} rounded-full bg-muted-strong`} />;
   if (player.avatar_url) return <img src={player.avatar_url} className={`${sz} rounded-full object-cover`} />;
-  return <div className={`${sz} rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center font-black text-primary dark:text-primary`}>{player.full_name[0]}</div>;
+  return <div className={`${sz} rounded-full bg-primary/40 flex items-center justify-center font-black text-primary`}>{player.full_name[0]}</div>;
 }
 
 export default function DoublesPairProfile() {
@@ -138,18 +139,18 @@ export default function DoublesPairProfile() {
   }
 
   const stats = [
-    { label: "Matches Together", value: totalMatches, icon: Swords, color: "text-blue-600" },
+    { label: "Matches Together", value: totalMatches, icon: Swords, color: "text-info" },
     { label: "Wins", value: wins, icon: Trophy, color: "text-primary" },
-    { label: "Losses", value: losses, icon: TrendingUp, color: "text-rose-500" },
-    { label: "Win Rate", value: `${winRate}%`, icon: TrendingUp, color: "text-amber-600" },
-    { label: "Best Streak", value: bestStreak, icon: TrendingUp, color: "text-orange-500" },
+    { label: "Losses", value: losses, icon: TrendingUp, color: "text-danger" },
+    { label: "Win Rate", value: `${winRate}%`, icon: TrendingUp, color: "text-warning" },
+    { label: "Best Streak", value: bestStreak, icon: TrendingUp, color: "text-secondary" },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-background pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-on-accent py-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
+      <div className="bg-gradient-to-br from-team/20 via-success to-team/20 text-on-accent py-6 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--success)_50%,transparent),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
           <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
             <ArrowLeft className="w-4 h-4" /> Back to H2H
@@ -158,25 +159,25 @@ export default function DoublesPairProfile() {
             <div className="flex items-center gap-4">
               <Link href={`/player/${p1}`}><Avatar player={player1} size="lg" /></Link>
               <div className="flex flex-col items-center gap-1">
-                <Users className="w-6 h-6 text-lime-300" />
-                <span className="text-xs font-black text-white/70 uppercase tracking-widest">Pair</span>
+                <Users className="w-6 h-6 text-primary" />
+                <span className="text-xs font-black text-foreground/70 uppercase tracking-widest">Pair</span>
               </div>
               <Link href={`/player/${p2}`}><Avatar player={player2} size="lg" /></Link>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2">
-                <h1 className="text-2xl font-black text-white">{player1.full_name} & {player2.full_name}</h1>
+                <h1 className="text-2xl font-black text-foreground">{player1.full_name} & {player2.full_name}</h1>
                 <InfoModal
                   title="DOUBLES PAIR"
                   items={[
                     { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." },
                     { badge: "ELO", title: "Pair record, not a rating", desc: "A pair has a won–lost record only. Elo ratings are individual: each partner's own doubles or mixed (XD) rating changes after every rated match. Walkovers and unfinished matches are not counted here." }
                   ]}
-                  triggerClassName="text-emerald-200 hover:text-white"
+                  triggerClassName="text-success hover:text-foreground"
                 />
               </div>
-              <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} counted matches together</p>
-              <Link href={`/h2h?mode=pairs&a=${p1},${p2}`} className="inline-flex items-center min-h-[44px] px-3 text-sm font-bold text-white underline">
+              <p className="text-info text-sm mt-1">Doubles Pair Profile · {totalMatches} counted matches together</p>
+              <Link href={`/h2h?mode=pairs&a=${p1},${p2}`} className="inline-flex items-center min-h-[44px] px-3 text-sm font-bold text-foreground underline">
                 Compare this pair with another pair
               </Link>
             </div>
@@ -189,7 +190,7 @@ export default function DoublesPairProfile() {
           {/* Stats grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {stats.map((s) => (
-              <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-sm">
+              <div key={s.label} className="bg-card rounded-2xl border border-border p-4 text-center shadow-sm">
                 <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
               </div>
@@ -198,17 +199,12 @@ export default function DoublesPairProfile() {
 
           {/* Match history */}
           {pairMatches.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-              <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Recent Matches Together</h3>
+            <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
+              <h3 className="font-black text-foreground mb-4">Recent Matches Together</h3>
               <div className="space-y-2">
                 {pairMatches.slice(0, 10).map((m) => {
-                  let won = false;
-                  if (m.winner_id) won = m.winner_id === p1 || m.winner_id === p2;
-                  else if (m.winner_side) {
-                    const p1Team = (m.player1_id === p1 || m.team1_partner_id === p1) ? 1 : 2;
-                    won = m.winner_side === p1Team;
-                  }
-                  
+                  const won = playerWon(m, p1) === true;
+
                   const p1TeamNum = (m.player1_id === p1 || m.team1_partner_id === p1) ? 1 : 2;
                   let opponents = "";
                   
@@ -229,22 +225,22 @@ export default function DoublesPairProfile() {
                   if (!scoreDisplay) scoreDisplay = "No score recorded";
 
                   return (
-                    <div key={m.id} className="flex flex-col gap-1 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <div key={m.id} className="flex flex-col gap-1 py-3 border-b border-border last:border-0">
                       <div className="flex items-center gap-3">
-                        <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                        <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/40 text-primary" : "bg-danger/15 text-danger"}`}>
                           {won ? "W" : "L"}
                         </span>
                         <div className="flex-1 flex flex-col">
-                          <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                          <span className="text-sm font-bold text-foreground leading-tight">
                             {opponents === "BYE" ? "BYE" : `vs ${opponents || "Unknown Opponents"}`}
                           </span>
-                          <span className="text-xs text-muted-foreground dark:text-slate-300 font-mono mt-1">
+                          <span className="text-xs text-soft font-mono mt-1">
                             {scoreDisplay}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center justify-end mt-1">
-                        <span className="text-[10px] font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md max-w-[200px] truncate">
+                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md max-w-[200px] truncate">
                           {m.tname || new Date(m.created_at!).toLocaleDateString()}
                         </span>
                       </div>
@@ -256,10 +252,10 @@ export default function DoublesPairProfile() {
           )}
 
           {pairMatches.length === 0 && (
-            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-              <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-              <p className="font-bold text-muted-foreground dark:text-slate-300">No tournament matches found together yet.</p>
-              <p className="text-sm text-slate-400 mt-2">Play a tournament match together to establish a pair profile!</p>
+            <div className="text-center py-16 bg-card rounded-3xl border border-border">
+              <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="font-bold text-soft">No tournament matches found together yet.</p>
+              <p className="text-sm text-muted-foreground mt-2">Play a tournament match together to establish a pair profile!</p>
             </div>
           )}
         </div>

@@ -41,7 +41,7 @@ export function PlayerActionBar({
           href={`https://instagram.com/${player.instagram.replace("@", "")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 w-max bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-900/50 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 font-bold rounded-2xl transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 w-max bg-card border border-individual/30 text-individual hover:bg-individual/10 font-bold rounded-2xl transition-all shadow-sm"
           title="Instagram"
         >
           <Instagram className="w-5 h-5" />
@@ -55,20 +55,20 @@ export function PlayerActionBar({
       <div className="flex flex-col gap-2">
         {player.department && (
           <div className="flex">
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm flex items-center gap-1.5 w-fit">
-              <MapPin className="w-4 h-4 text-rose-400" /> {player.department}
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-border text-soft text-sm font-bold uppercase shadow-sm flex items-center gap-1.5 w-fit">
+              <MapPin className="w-4 h-4 text-danger" /> {player.department}
             </span>
           </div>
         )}
         <div className="flex flex-wrap gap-2">
           {player.playing_level && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm">
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-border text-soft text-sm font-bold uppercase shadow-sm">
               {player.playing_level}
             </span>
           )}
           {player.dominant_hand && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
-              <User className="w-4 h-4 text-violet-400" />{" "}
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-border text-soft text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
+              <User className="w-4 h-4 text-individual" />{" "}
               {player.dominant_hand.split("-")[0]} Hand
             </span>
           )}
@@ -79,25 +79,25 @@ export function PlayerActionBar({
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
           {player.elo_rating != null && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-amber-500" /> OVR: {eloRank?.overall ? `#${eloRank.overall}` : "N/A"}
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-gold/30 text-soft text-sm font-bold shadow-sm flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-gold" /> OVR: {eloRank?.overall ? `#${eloRank.overall}` : "N/A"}
             </span>
           )}
           {player.singles_elo != null && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-primary/40 dark:border-primary/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-primary/50 text-soft text-sm font-bold shadow-sm flex items-center gap-1.5">
               <User className="w-4 h-4 text-primary" /> S: {eloRank?.singles ? `#${eloRank.singles}` : "N/A"}
             </span>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
           {player.doubles_elo != null && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-blue-500" /> D: {eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-info/30 text-soft text-sm font-bold shadow-sm flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-info" /> D: {eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}
             </span>
           )}
           {player.mixed_elo != null && (
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
-              <Heart className="w-4 h-4 text-rose-500" /> XD: {eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}
+            <span className="px-3 py-1.5 rounded-lg bg-card border border-danger/30 text-soft text-sm font-bold shadow-sm flex items-center gap-1.5">
+              <Heart className="w-4 h-4 text-danger" /> XD: {eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}
             </span>
           )}
         </div>

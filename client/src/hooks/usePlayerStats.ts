@@ -1,3 +1,4 @@
+import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import type { PlayerRow, MatchWithPlayers } from "@/types";
 import type { TournamentRun } from "./useTournamentMatchHistory";
@@ -38,10 +39,9 @@ export function usePlayerStats(
 
     const computeStats = (matches: MatchWithPlayers[]) => {
       const matchResults = matches.map(m => {
-        if (!m.winner_id) return "D";
-        const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
-        const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-        return (isTeam1 ? isTeam1Winner : !isTeam1Winner) ? "W" : "L";
+        const won = playerWon(m, id);
+        if (won == null) return "D";
+        return won ? "W" : "L";
       });
 
       const wins = matchResults.filter(r => r === "W").length;
@@ -168,14 +168,13 @@ export function usePlayerStats(
     let current = 0;
     let max = 0;
     confirmed.forEach(m => {
-      if (!m.winner_id) {
+      const result = playerWon(m, id);
+      if (result == null) {
         current = 0;
         return;
       }
-      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
-      const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
-      const won = isTeam1 ? isTeam1Winner : !isTeam1Winner;
-      
+      const won = result;
+
       if (won) {
         current++;
         if (current > max) max = current;
@@ -206,7 +205,7 @@ export function usePlayerStats(
         icon: "💯",
         description: "Played 100+ matches",
         color:
-          "bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/20",
+          "bg-warning/15 text-warning border-warning/30 ring-warning/20",
       });
     } else if (totalMatches >= 50) {
       _badges.push({
@@ -215,7 +214,7 @@ export function usePlayerStats(
         icon: "⚔️",
         description: "Played 50+ matches",
         color:
-          "bg-slate-500/15 text-muted-foreground border-slate-500/30 ring-slate-500/20",
+          "bg-muted-foreground/15 text-muted-foreground border-border-strong/30 ring-border-strong/20",
       });
     }
 
@@ -230,7 +229,7 @@ export function usePlayerStats(
           icon: "⚡",
           description: "5+ Match Win Streak",
           color:
-            "bg-indigo-500/15 text-indigo-400 border-indigo-500/30 ring-indigo-500/20",
+            "bg-info/15 text-info border-info/30 ring-info/20",
         });
       } else if (streakCount >= 3) {
         _badges.push({
@@ -239,7 +238,7 @@ export function usePlayerStats(
           icon: "🔥",
           description: "3 Match Win Streak",
           color:
-            "bg-orange-500/15 text-orange-400 border-orange-500/30 ring-orange-500/20",
+            "bg-secondary/15 text-secondary border-secondary/30 ring-secondary/20",
         });
       }
     }
@@ -257,7 +256,7 @@ export function usePlayerStats(
         icon: "🗡️",
         description: "Defeated a much higher ranked opponent",
         color:
-          "bg-rose-500/15 text-rose-400 border-rose-500/30 ring-rose-500/20",
+          "bg-danger/15 text-danger border-danger/30 ring-danger/20",
       });
     }
 

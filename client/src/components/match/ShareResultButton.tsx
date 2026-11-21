@@ -49,7 +49,7 @@ export function ShareResultButton({
         aria-label={label}
         title="Share result"
         aria-busy={busy}
-        className="inline-flex items-center justify-center w-11 h-11 rounded-full text-slate-500 hover:text-primary hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+        className="inline-flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-primary hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
       >
         <Icon className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} aria-hidden />
       </button>

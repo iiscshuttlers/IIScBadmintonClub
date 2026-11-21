@@ -1,3 +1,4 @@
+import { winningSide } from "@/lib/matchResult";
 import { resolveTeamMembers } from "@/lib/teamNames";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Swords, TrendingUp, TrendingDown, Calendar } from "lucide-react";
@@ -29,10 +30,10 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
     return null;
   }).filter(Boolean);
 
-  const isP1Winner = 
-    match.winner_side === 1 || 
-    (match.winner_id && (match.winner_id === p1?.id || match.winner_id === partner1?.id)) ||
-    (match.winner_side === undefined && sets.filter((s: any) => s.p1 > s.p2).length > sets.filter((s: any) => s.p2 > s.p1).length);
+  const recordedSide = winningSide(match);
+  const isP1Winner =
+    recordedSide === 1 ||
+    (recordedSide == null && sets.filter((s: any) => s.p1 > s.p2).length > sets.filter((s: any) => s.p2 > s.p1).length);
 
   return createPortal(
     <AnimatePresence>
@@ -42,23 +43,23 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-media/70 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 80 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[80vh] overflow-y-auto"
+            className="relative w-full max-w-md bg-card rounded-3xl shadow-2xl border border-border-strong overflow-hidden max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-card px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Swords className="w-5 h-5 text-primary" />
-                <h2 className="font-black text-slate-800 dark:text-foreground text-base">Match Scorecard</h2>
+                <h2 className="font-black text-foreground text-base">Match Scorecard</h2>
               </div>
-              <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-xl hover:bg-muted transition">
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
@@ -70,7 +71,7 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
                   <Calendar className="w-3.5 h-3.5" />
                   {new Date(match.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground">
+                <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
                   {match.category || "Friendly"}
                 </span>
               </div>
@@ -78,28 +79,28 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
               {/* Players */}
               <div className="flex items-center justify-between gap-3">
                 {/* Team 1 */}
-                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${isP1Winner ? "bg-primary/10 dark:bg-primary/20 ring-2 ring-primary" : "bg-slate-50 dark:bg-slate-800/50"}`}>
+                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${isP1Winner ? "bg-primary/20 ring-2 ring-primary" : "bg-muted/50"}`}>
                   <div className="flex items-center gap-2.5">
                     {p1?.avatar_url ? (
-                      <img src={p1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                      <img src={p1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-foreground shadow shrink-0" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-muted-strong flex items-center justify-center text-xs font-black text-muted-foreground border-2 border-foreground shadow shrink-0">
                         {p1?.full_name?.substring(0, 2).toUpperCase() || "??"}
                       </div>
                     )}
-                    <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{p1?.full_name}</span>
+                    <span className="font-black text-sm text-foreground leading-tight text-left">{p1?.full_name}</span>
                   </div>
 
                   {partner1 && (
                     <div className="flex items-center gap-2.5">
                       {partner1.avatar_url ? (
-                        <img src={partner1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                        <img src={partner1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-foreground shadow shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-muted-strong flex items-center justify-center text-xs font-black text-muted-foreground border-2 border-foreground shadow shrink-0">
                           {partner1.full_name?.substring(0, 2).toUpperCase() || "??"}
                         </div>
                       )}
-                      <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{partner1.full_name}</span>
+                      <span className="font-black text-sm text-foreground leading-tight text-left">{partner1.full_name}</span>
                     </div>
                   )}
 
@@ -112,41 +113,41 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
 
                 {/* Score */}
                 <div className="flex flex-col items-center">
-                  <span className="text-2xl font-black text-slate-800 dark:text-foreground">
+                  <span className="text-2xl font-black text-foreground">
                     {sets.filter((s: any) => s.p1 > s.p2).length} — {sets.filter((s: any) => s.p2 > s.p1).length}
                   </span>
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sets</span>
                 </div>
 
                 {/* Team 2 */}
-                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${!isP1Winner ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400" : "bg-slate-50 dark:bg-slate-800/50"}`}>
+                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${!isP1Winner ? "bg-info/10 ring-2 ring-info" : "bg-muted/50"}`}>
                   <div className="flex items-center gap-2.5">
                     {p2?.avatar_url ? (
-                      <img src={p2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                      <img src={p2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-foreground shadow shrink-0" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-muted-strong flex items-center justify-center text-xs font-black text-muted-foreground border-2 border-foreground shadow shrink-0">
                         {p2?.full_name?.substring(0, 2).toUpperCase() || "??"}
                       </div>
                     )}
-                    <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{p2?.full_name}</span>
+                    <span className="font-black text-sm text-foreground leading-tight text-left">{p2?.full_name}</span>
                   </div>
 
                   {partner2 && (
                     <div className="flex items-center gap-2.5">
                       {partner2.avatar_url ? (
-                        <img src={partner2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                        <img src={partner2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-foreground shadow shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-muted-strong flex items-center justify-center text-xs font-black text-muted-foreground border-2 border-foreground shadow shrink-0">
                           {partner2.full_name?.substring(0, 2).toUpperCase() || "??"}
                         </div>
                       )}
-                      <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{partner2.full_name}</span>
+                      <span className="font-black text-sm text-foreground leading-tight text-left">{partner2.full_name}</span>
                     </div>
                   )}
 
                   {!isP1Winner && (
                     <div className="w-full flex justify-center mt-1">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-info flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>
                     </div>
                   )}
                 </div>
@@ -154,8 +155,8 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
 
               {/* Set-by-Set Breakdown */}
               {sets.length > 0 && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden">
-                  <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <div className="bg-muted/50 rounded-2xl overflow-hidden">
+                  <div className="px-4 py-2 bg-muted flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     <span>{p1?.full_name?.split(" ")[0] || match.team1_label?.split(" ")[0] || "Team 1"}</span>
                     <span>Set</span>
                     <span>{p2?.full_name?.split(" ")[0] || match.team2_label?.split(" ")[0] || "Team 2"}</span>
@@ -163,14 +164,14 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
                   {sets.map((s: any, i: number) => {
                     const p1Won = s.p1 > s.p2;
                     return (
-                      <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                        <span className={`text-lg font-black w-10 text-center ${p1Won ? "text-primary dark:text-primary" : "text-muted-foreground"}`}>{s.p1}</span>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-border-strong/50 last:border-0">
+                        <span className={`text-lg font-black w-10 text-center ${p1Won ? "text-primary" : "text-muted-foreground"}`}>{s.p1}</span>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg">
                           {p1Won && <Trophy className="w-3 h-3 text-primary" />}
                           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">SET {i + 1}</span>
-                          {!p1Won && <Trophy className="w-3 h-3 text-blue-500" />}
+                          {!p1Won && <Trophy className="w-3 h-3 text-info" />}
                         </div>
-                        <span className={`text-lg font-black w-10 text-center ${!p1Won ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}>{s.p2}</span>
+                        <span className={`text-lg font-black w-10 text-center ${!p1Won ? "text-info" : "text-muted-foreground"}`}>{s.p2}</span>
                       </div>
                     );
                   })}
@@ -181,17 +182,17 @@ export function MatchScorecardModal({ match, isOpen, onClose }: MatchScorecardMo
               {(match.elo_change_p1 != null || match.elo_change_p2 != null) && (
                 <div className="flex gap-3">
                   {match.elo_change_p1 != null && (
-                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p1 >= 0 ? "bg-primary/10 dark:bg-primary/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
+                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p1 >= 0 ? "bg-primary/20" : "bg-danger/10"}`}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{p1?.full_name?.split(" ")[0]} ELO</span>
-                      <span className={`text-xl font-black ${match.elo_change_p1 >= 0 ? "text-primary" : "text-rose-500"}`}>
+                      <span className={`text-xl font-black ${match.elo_change_p1 >= 0 ? "text-primary" : "text-danger"}`}>
                         {match.elo_change_p1 >= 0 ? "+" : ""}{match.elo_change_p1}
                       </span>
                     </div>
                   )}
                   {match.elo_change_p2 != null && (
-                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p2 >= 0 ? "bg-primary/10 dark:bg-primary/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
+                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p2 >= 0 ? "bg-primary/20" : "bg-danger/10"}`}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{p2?.full_name?.split(" ")[0]} ELO</span>
-                      <span className={`text-xl font-black ${match.elo_change_p2 >= 0 ? "text-primary" : "text-rose-500"}`}>
+                      <span className={`text-xl font-black ${match.elo_change_p2 >= 0 ? "text-primary" : "text-danger"}`}>
                         {match.elo_change_p2 >= 0 ? "+" : ""}{match.elo_change_p2}
                       </span>
                     </div>

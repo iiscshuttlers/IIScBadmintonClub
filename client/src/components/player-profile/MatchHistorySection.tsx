@@ -1,23 +1,13 @@
-import { useState } from "react";
+import { playerWon } from "@/lib/matchResult";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { shareMatch } from "@/lib/shareMatch";
+import { compareSides } from "@/lib/comparison";
+import { fetchComparisonRows } from "@/services/comparisonService";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
-
-// Duplicate the small helper function for encapsulation
-function matchParticipantIds(match: any): string[] {
-  return [
-    match.player1_id,
-    match.player2_id,
-    match.team1_partner_id,
-    match.team2_partner_id,
-  ].filter(Boolean);
-}
-
-function isMatchParticipant(match: any, playerId?: string | null): boolean {
-  return !!playerId && matchParticipantIds(match).includes(playerId);
-}
 
 function getRoundLabel(m: any): string | null {
   if (m.is_friendly !== false) return null; // friendly matches don't have rounds usually, or we hide them
@@ -66,15 +56,31 @@ export function MatchHistorySection({
     "all" | "friendly" | "tournament"
   >("tournament");
 
+  // Head-to-head vs the signed-in viewer: only matches on opposite sides,
+  // decided by winner_side, byes and walkovers not counted. Same query key
+  // and rule as the full page (/h2h?a=<you>&b=<them>), so the numbers agree.
+  const viewerId: string | null =
+    ownPlayerProfile?.id && ownPlayerProfile.id !== id ? ownPlayerProfile.id : null;
+  const h2hQuery = useQuery({
+    queryKey: ["tournament_matches", "comparison", viewerId ?? "", id],
+    queryFn: () => fetchComparisonRows({ ids: [viewerId as string] }, { ids: [id] }),
+    enabled: !!viewerId,
+    staleTime: 60_000,
+  });
+  const h2h = useMemo(
+    () => (viewerId && h2hQuery.data ? compareSides(h2hQuery.data.rows, { ids: [viewerId] }, { ids: [id] }) : null),
+    [h2hQuery.data, viewerId, id],
+  );
+
   const confirmedMatches = liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed");
   if (confirmedMatches.length === 0)
     return null;
 
   const getGenderColor = (gender?: string | null) => {
     const g = gender?.toLowerCase() || '';
-    if (g === 'female') return 'text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300';
-    if (g === 'male') return 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300';
-    return 'text-slate-800 dark:text-slate-100 hover:text-primary dark:hover:text-primary';
+    if (g === 'female') return 'text-warning hover:text-warning/80';
+    if (g === 'male') return 'text-info hover:text-info/80';
+    return 'text-foreground hover:text-primary';
   };
 
   const filteredMatches =
@@ -84,16 +90,11 @@ export function MatchHistorySection({
         ? confirmedMatches.filter((m) => m.is_friendly !== false)
         : confirmedMatches.filter((m) => m.is_friendly === false);
 
-  // Rivalry Analytics
-  const isViewingOther = ownPlayerProfile?.id && ownPlayerProfile.id !== id;
-  const h2hMatches = isViewingOther
-    ? confirmedMatches.filter((m) => isMatchParticipant(m, ownPlayerProfile.id))
-    : [];
-
-  const h2hWins = h2hMatches.filter((m) => m.winner_id === id).length; // Wins for the profile we're looking at
-  const h2hLosses = h2hMatches.filter(
-    (m) => m.winner_id === ownPlayerProfile?.id,
-  ).length;
+  const theirWins = h2h?.bWins ?? 0;
+  const yourWins = h2h?.aWins ?? 0;
+  const walkovers = h2h ? h2h.walkovers.aWon + h2h.walkovers.bWon : 0;
+  const together = h2h?.together ?? null;
+  const showRivalry = !!viewerId && !!h2h && (h2h.sample > 0 || walkovers > 0 || (together?.played ?? 0) > 0);
 
   return (
     <motion.section variants={itemVariants}>
@@ -101,18 +102,18 @@ export function MatchHistorySection({
         type="button"
         onClick={() => setIsMatchHistoryOpen((open) => !open)}
         aria-expanded={isMatchHistoryOpen}
-        className="w-full bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 p-5 sm:p-6 flex items-center justify-between gap-4 text-left hover:border-blue-200 dark:hover:border-blue-800/60 transition-colors"
+        className="w-full bg-muted/80 rounded-3xl shadow-xl shadow-media/40 dark:shadow-none border border-border-strong/50 p-5 sm:p-6 flex items-center justify-between gap-4 text-left hover:border-info/35 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-blue-500" />
+          <div className="w-11 h-11 rounded-2xl bg-info/10 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 text-info" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100">
+            <h2 className="text-xl sm:text-2xl font-black text-foreground">
               Match History
             </h2>
             <div className="mt-1 flex flex-wrap gap-2 text-[10px] sm:text-xs font-bold">
-              <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+              <span className="px-2 py-0.5 rounded-full bg-info/20 text-info">
                 {confirmedMatches.length} matches
               </span>
             </div>
@@ -134,45 +135,67 @@ export function MatchHistorySection({
           >
             <div className="pt-4">
               {/* Rivalry Analytics */}
-              {isViewingOther && h2hMatches.length > 0 && (
-                <div className="mb-4 ml-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.05),transparent)] pointer-events-none" />
-                  <div className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-3 flex items-center gap-2 relative z-10">
-                    <Swords className="w-4 h-4 text-rose-500" /> Head-to-Head vs
+              {showRivalry && h2h && (
+                <div className="mb-4 ml-2 bg-gradient-to-r from-muted to-muted/50 rounded-2xl p-4 border border-border-strong shadow-sm relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--danger)_5%,transparent),transparent)] pointer-events-none" />
+                  <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2 relative z-10">
+                    <Swords className="w-4 h-4 text-danger" /> Head-to-Head vs
                     You
                   </div>
-                  <div className="flex items-center justify-between relative z-10">
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
-                        {h2hWins}
+                  {h2h.sample > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="text-center flex-1">
+                          <div className="text-3xl font-black text-danger tabular-nums">
+                            {theirWins}
+                          </div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                            Their Wins
+                          </div>
+                        </div>
+                        <div className="w-px h-10 bg-muted-strong mx-4" />
+                        <div className="text-center flex-1">
+                          <div className="text-3xl font-black text-primary tabular-nums">
+                            {yourWins}
+                          </div>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                            Your Wins
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-                        Their Wins
+                      <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-muted-strong relative z-10">
+                        <div
+                          style={{ width: `${(theirWins / h2h.sample) * 100}%` }}
+                          className="bg-danger transition-all duration-1000"
+                        />
+                        <div
+                          style={{ width: `${(yourWins / h2h.sample) * 100}%` }}
+                          className="bg-primary transition-all duration-1000"
+                        />
                       </div>
-                    </div>
-                    <div className="w-px h-10 bg-slate-200 dark:bg-slate-700 mx-4" />
-                    <div className="text-center flex-1">
-                      <div className="text-3xl font-black text-primary dark:text-primary">
-                        {h2hLosses}
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
-                        Your Wins
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative z-10">
-                    <div
-                      style={{
-                        width: `${(h2hWins / h2hMatches.length) * 100}%`,
-                      }}
-                      className="bg-rose-500 transition-all duration-1000"
-                    />
-                    <div
-                      style={{
-                        width: `${(h2hLosses / h2hMatches.length) * 100}%`,
-                      }}
-                      className="bg-primary transition-all duration-1000"
-                    />
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground relative z-10">
+                      You haven't played against each other yet.
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground relative z-10">
+                    {walkovers > 0 && (
+                      <span>
+                        Walkovers: you {h2h.walkovers.aWon}, them {h2h.walkovers.bWon} (not counted)
+                      </span>
+                    )}
+                    {together && together.played > 0 && (
+                      <span>
+                        As partners: played {together.played}, won {together.won}, lost {together.lost}
+                      </span>
+                    )}
+                    <Link
+                      href={`/h2h?a=${viewerId}&b=${id}`}
+                      className="inline-flex items-center min-h-[44px] font-bold text-primary underline"
+                    >
+                      Full head-to-head →
+                    </Link>
                   </div>
                 </div>
               )}
@@ -180,9 +203,9 @@ export function MatchHistorySection({
               {/* Filter Tabs temporarily removed to show only tournament matches */}
 
               {/* Match List — BWF table style */}
-              <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+              <div className="bg-muted/80 rounded-3xl shadow-xl shadow-media/40 dark:shadow-none border border-border-strong/50 overflow-hidden">
                 {/* Table Header */}
-                <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground border-b border-slate-100 dark:border-slate-700/50">
+                <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-muted text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b border-border-strong/50">
                   <div className="col-span-1 text-center">Result</div>
                   <div className="col-span-2">Match Details</div>
                   <div className="col-span-3">Opponent</div>
@@ -190,7 +213,7 @@ export function MatchHistorySection({
                   <div className="col-span-3 text-right">Date & Time</div>
                 </div>
 
-                <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                <div className="divide-y divide-border-strong/50">
                   {filteredMatches.length > 0 ? (
                     filteredMatches.map((m, idx) => {
                       const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
@@ -226,7 +249,7 @@ export function MatchHistorySection({
                         }
                       }
 
-                      const won = isTeam1 ? m.winner_id === m.player1_id : m.winner_id === m.player2_id;
+                      const won = playerWon(m, id) === true;
                       const matchDate = new Date(m.created_at);
                       const isFriendly = m.is_friendly !== false;
 
@@ -257,13 +280,13 @@ export function MatchHistorySection({
                       }
 
                       const scoreBg = won 
-                        ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/50" 
-                        : "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40";
+                        ? "bg-primary/30 text-primary border-primary/50" 
+                        : "bg-danger/10 text-danger border-danger/25";
 
                       return (
                         <div
                           key={idx}
-                          className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors sm:items-center relative"
+                          className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-muted/40 transition-colors sm:items-center relative"
                         >
                           {/* Mobile Top Row & Desktop Col 1-3 */}
                           <div className="flex items-start justify-between sm:contents">
@@ -274,8 +297,8 @@ export function MatchHistorySection({
                                   className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm
                                 ${
                                   won
-                                    ? "bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-emerald-500/30"
-                                    : "bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-rose-500/30"
+                                    ? "bg-gradient-to-br from-success to-success text-on-accent shadow-success/30"
+                                    : "bg-gradient-to-br from-danger to-danger text-on-accent shadow-danger/30"
                                 }`}
                                 >
                                   {won ? "W" : "L"}
@@ -288,13 +311,13 @@ export function MatchHistorySection({
                                   <span
                                     className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md shadow-sm ${
                                       isFriendly
-                                        ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-blue-500/20 border border-blue-400/20"
-                                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/20 border border-amber-400/20"
+                                        ? "bg-gradient-to-r from-info to-info text-on-accent shadow-info/20 border border-info/20"
+                                        : "bg-gradient-to-r from-warning to-secondary text-on-accent shadow-warning/20 border border-warning/20"
                                     }`}
                                   >
                                     {isFriendly ? "FRD" : "TRN"}
                                   </span>
-                                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">
+                                  <span className="text-[10px] font-black text-muted-foreground uppercase">
                                     {formatLabel}
                                   </span>
                                 </div>
@@ -302,7 +325,7 @@ export function MatchHistorySection({
                                   const roundLabel = getRoundLabel(m);
                                   if (!roundLabel) return null;
                                   return (
-                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                                       {roundLabel}
                                     </div>
                                   );
@@ -312,14 +335,14 @@ export function MatchHistorySection({
 
                             {/* Mobile Date */}
                             <div className="sm:hidden flex flex-col items-end">
-                              <div className="text-[10px] font-bold text-muted-foreground dark:text-slate-400">
+                              <div className="text-[10px] font-bold text-muted-foreground">
                                 {matchDate.toLocaleDateString("en-IN", {
                                   day: "numeric",
                                   month: "short",
                                   year: "2-digit",
                                 })}
                               </div>
-                              <div className="text-[9px] font-medium text-slate-400">
+                              <div className="text-[9px] font-medium text-muted-foreground">
                                 {matchDate.toLocaleTimeString("en-IN", {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -334,7 +357,7 @@ export function MatchHistorySection({
                             <div className="flex flex-col gap-1.5">
                               {partner && (
                                 <div className="flex items-center gap-2 mb-0.5 leading-none">
-                                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">with</span>
+                                  <span className="text-[9px] font-black text-muted-foreground uppercase w-6 text-right">with</span>
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); partner.id && setLocation(`/player/${partner.id}`); }} 
                                     className={`text-sm font-bold transition-colors text-left truncate ${getGenderColor(partner.gender)}`}
@@ -346,9 +369,9 @@ export function MatchHistorySection({
                               {opponents.map((opp, i) => (
                                 <div key={i} className="flex items-center gap-2 leading-none">
                                   {i === 0 ? (
-                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">vs</span>
+                                    <span className="text-[9px] font-black text-muted-foreground uppercase w-6 text-right">vs</span>
                                   ) : (
-                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">&</span>
+                                    <span className="text-[9px] font-black text-muted-foreground uppercase w-6 text-right">&</span>
                                   )}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); opp?.id && setLocation(`/player/${opp.id}`); }}
@@ -372,7 +395,7 @@ export function MatchHistorySection({
                                 e.stopPropagation();
                                 await shareMatch(m);
                               }}
-                              className="sm:hidden p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-full transition-colors ml-auto -mr-2"
+                              className="sm:hidden p-2 text-muted-foreground hover:text-primary hover:bg-primary/20 rounded-full transition-colors ml-auto -mr-2"
                               title="Share Match Result"
                             >
                               <Share2 className="w-4 h-4" />
@@ -382,14 +405,14 @@ export function MatchHistorySection({
                           {/* Desktop Date & Time & Share */}
                           <div className="hidden sm:col-span-3 sm:flex items-center justify-end gap-3 text-right">
                             <div>
-                              <div className="text-xs font-bold text-muted-foreground dark:text-slate-300">
+                              <div className="text-xs font-bold text-soft">
                                 {matchDate.toLocaleDateString("en-IN", {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
                                 })}
                               </div>
-                              <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-medium">
+                              <div className="text-[10px] text-muted-foreground font-medium">
                                 {matchDate.toLocaleTimeString("en-IN", {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -402,7 +425,7 @@ export function MatchHistorySection({
                                 e.stopPropagation();
                                 await shareMatch(m);
                               }}
-                              className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-colors"
+                              className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/20 rounded-lg transition-colors"
                               title="Share Match Result"
                             >
                               <Share2 className="w-4 h-4" />
@@ -412,7 +435,7 @@ export function MatchHistorySection({
                       );
                     })
                   ) : (
-                    <div className="p-6 text-center text-sm text-muted-foreground dark:text-muted-foreground italic">
+                    <div className="p-6 text-center text-sm text-muted-foreground italic">
                       No{" "}
                       {matchHistoryFilter === "all" ? "" : matchHistoryFilter}{" "}
                       matches found

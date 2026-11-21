@@ -100,13 +100,13 @@ export function TeamFormatConfigPanel({
   );
 
   return (
-    <div className="space-y-6 mt-6 p-5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-900/50">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">Custom Tie Configuration</h3>
+    <div className="space-y-6 mt-6 p-5 border border-border rounded-2xl bg-card/50">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
+        <h3 className="font-black text-lg text-foreground">Custom Tie Configuration</h3>
         <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
           <span>Dynamic Roster Minimum:</span>
           <span className="font-black text-sm">{rosterReq.minTotalPlayers} players</span>
-          <span className="text-[11px] font-medium text-slate-500">
+          <span className="text-[11px] font-medium text-muted-foreground">
             ({rosterReq.minMalePlayers}♂, {rosterReq.minFemalePlayers}♀)
           </span>
         </div>
@@ -114,18 +114,18 @@ export function TeamFormatConfigPanel({
 
       
       <div className="space-y-4">
-        <h4 className="font-bold text-sm text-slate-600 dark:text-slate-400">Rubbers (Matches per Tie)</h4>
+        <h4 className="font-bold text-sm text-muted-foreground">Rubbers (Matches per Tie)</h4>
         
         {rubbers.map((rubber, index) => (
-          <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+          <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-muted border border-border-strong rounded-xl">
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs font-bold text-slate-400 w-5">{rubber.order}.</span>
+              <span className="text-xs font-bold text-muted-foreground w-5">{rubber.order}.</span>
               <input 
                 type="text" 
                 value={rubber.label} 
                 onChange={e => updateRubber(index, 'label', e.target.value)}
                 placeholder="Label (e.g. MS1)"
-                className="flex-1 sm:w-24 px-2 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                className="flex-1 sm:w-24 px-2 py-1.5 text-sm rounded bg-card border border-border-strong"
               />
             </div>
             
@@ -133,7 +133,7 @@ export function TeamFormatConfigPanel({
               <select 
                 value={rubber.category}
                 onChange={e => updateRubber(index, 'category', e.target.value)}
-                className="w-20 px-2 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                className="w-20 px-2 py-1.5 text-sm rounded bg-card border border-border-strong"
               >
                 <option value="MS">MS</option>
                 <option value="WS">WS</option>
@@ -143,18 +143,18 @@ export function TeamFormatConfigPanel({
               </select>
               
               <div className="flex items-center gap-1">
-                <span className="text-xs text-slate-500 whitespace-nowrap">Pts:</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Pts:</span>
                 <input 
                   type="number" 
                   min="1"
                   value={rubber.points} 
                   onChange={e => updateRubber(index, 'points', parseInt(e.target.value) || 1)}
-                  className="w-16 px-2 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                  className="w-16 px-2 py-1.5 text-sm rounded bg-card border border-border-strong"
                 />
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="text-xs text-slate-500 whitespace-nowrap">Format:</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Format:</span>
                 <select 
                   value={`${rubber.best_of_sets}x${rubber.points_to_win}`}
                   onChange={e => {
@@ -162,7 +162,7 @@ export function TeamFormatConfigPanel({
                     updateRubber(index, 'best_of_sets', sets);
                     updateRubber(index, 'points_to_win', pts);
                   }}
-                  className="w-28 px-2 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                  className="w-28 px-2 py-1.5 text-sm rounded bg-card border border-border-strong"
                 >
                   <option value="3x21">3x21 (Std)</option>
                   <option value="1x21">1x21</option>
@@ -172,7 +172,7 @@ export function TeamFormatConfigPanel({
 
               <button 
                 onClick={() => removeRubber(index)}
-                className="ml-auto p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded"
+                className="ml-auto p-1.5 text-danger hover:bg-danger/10 rounded"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -188,40 +188,40 @@ export function TeamFormatConfigPanel({
         </button>
       </div>
 
-      <div className="pt-4 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <h4 className="font-bold text-sm text-slate-600 dark:text-slate-400 mb-3">League Scoring</h4>
+          <h4 className="font-bold text-sm text-muted-foreground mb-3">League Scoring</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold">Points for Win</span>
-              <input type="number" value={tiePointsWin} onChange={e => setTiePointsWin(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-slate-900" />
+              <input type="number" value={tiePointsWin} onChange={e => setTiePointsWin(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-card" />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold">Points for Draw</span>
-              <input type="number" value={tiePointsDraw} onChange={e => setTiePointsDraw(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-slate-900" />
+              <input type="number" value={tiePointsDraw} onChange={e => setTiePointsDraw(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-card" />
             </div>
           </div>
         </div>
 
         <div>
-          <h4 className="font-bold text-sm text-slate-600 dark:text-slate-400 mb-3">Roster Limits</h4>
+          <h4 className="font-bold text-sm text-muted-foreground mb-3">Roster Limits</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold">Min Players</span>
-              <input type="number" value={teamRosterMin} min={rosterReq.minTotalPlayers} onChange={e => setTeamRosterMin(parseInt(e.target.value) || rosterReq.minTotalPlayers)} className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-slate-900" />
+              <input type="number" value={teamRosterMin} min={rosterReq.minTotalPlayers} onChange={e => setTeamRosterMin(parseInt(e.target.value) || rosterReq.minTotalPlayers)} className="w-20 px-2 py-1 text-sm border rounded bg-card" />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold">Max Players</span>
-              <input type="number" value={teamRosterMax} onChange={e => setTeamRosterMax(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-slate-900" />
+              <input type="number" value={teamRosterMax} onChange={e => setTeamRosterMax(parseInt(e.target.value))} className="w-20 px-2 py-1 text-sm border rounded bg-card" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Advanced Repetition & Lineup Rules */}
-      <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="pt-4 border-t border-border space-y-4">
         <div>
-          <h4 className="font-black text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h4 className="font-black text-sm text-foreground flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             Player Repetition &amp; Lineup Restrictions
           </h4>
@@ -232,13 +232,13 @@ export function TeamFormatConfigPanel({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <label className="text-xs font-bold text-soft block mb-1">
               Max Rubbers per Male Player
             </label>
             <select
               value={maxRubbersPerMale}
               onChange={e => setMaxRubbersPerMale?.(parseInt(e.target.value) || 2)}
-              className="w-full px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
+              className="w-full px-3 py-2 text-xs font-bold border border-border-strong rounded-xl bg-card"
             >
               <option value={1}>1 rubber only (No repeats)</option>
               <option value={2}>At most 2 rubbers (Standard)</option>
@@ -251,13 +251,13 @@ export function TeamFormatConfigPanel({
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <label className="text-xs font-bold text-soft block mb-1">
               Max Rubbers per Female Player
             </label>
             <select
               value={maxRubbersPerFemale}
               onChange={e => setMaxRubbersPerFemale?.(parseInt(e.target.value) || 2)}
-              className="w-full px-3 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
+              className="w-full px-3 py-2 text-xs font-bold border border-border-strong rounded-xl bg-card"
             >
               <option value={1}>1 rubber only (No repeats)</option>
               <option value={2}>At most 2 rubbers (Standard)</option>
@@ -270,7 +270,7 @@ export function TeamFormatConfigPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input
               type="checkbox"
@@ -279,7 +279,7 @@ export function TeamFormatConfigPanel({
               className="w-4 h-4 accent-primary rounded mt-0.5"
             />
             <div>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+              <span className="text-xs font-bold text-soft block">
                 Disallow Same-Discipline Repeats
               </span>
               <span className="text-[11px] text-muted-foreground block">
@@ -296,7 +296,7 @@ export function TeamFormatConfigPanel({
               className="w-4 h-4 accent-primary rounded mt-0.5"
             />
             <div>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+              <span className="text-xs font-bold text-soft block">
                 Allow Same Event Player in Decider
               </span>
               <span className="text-[11px] text-muted-foreground block">

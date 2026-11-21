@@ -30,7 +30,7 @@ const persister = createSyncStoragePersister({
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider defaultTheme="dark" switchable>
+    <ThemeProvider switchable>
       {/* reducedMotion="user" makes every framer-motion component respect the
           OS "reduce motion" setting — disables transform/layout animation while
           keeping opacity fades. Complements the CSS net in index.css. (#34) */}

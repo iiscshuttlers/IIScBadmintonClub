@@ -15,22 +15,43 @@ import { canShareResult } from "@/lib/matchViewShare";
  */
 
 const STATE_CLASS: Record<MatchState, string> = {
-  live: "bg-red-600 text-white",
-  scheduled: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  unscheduled: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
-  completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  walkover: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  cancelled: "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-  unknown: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  live: "bg-live text-live-foreground",
+  scheduled: "bg-muted text-soft",
+  unscheduled: "bg-muted text-muted-foreground",
+  completed: "bg-success/20 text-success",
+  walkover: "bg-warning/20 text-warning",
+  cancelled: "bg-muted text-muted-foreground",
+  unknown: "bg-muted text-muted-foreground",
 };
 
 /** Status is always written out; colour is supplementary. */
 export function MatchStatusBadge({ view }: { view: Pick<MatchView, "state" | "statusLabel"> }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black ${STATE_CLASS[view.state]}`}>
-      {view.state === "live" && <span className="w-1.5 h-1.5 rounded-full bg-white motion-safe:animate-pulse" aria-hidden />}
+      {view.state === "live" && <span className="w-1.5 h-1.5 rounded-full bg-foreground motion-safe:animate-pulse" aria-hidden />}
       {view.statusLabel}
     </span>
+  );
+}
+
+/**
+ * Shuttlecock in flight (BWF style): three feathers fanning out with clear
+ * gaps, the tied band and a rounded cork, tilted so the cork leads. Solid
+ * fill in currentColor; three feathers (not more) so the gaps still show at
+ * 16px. Decorative: callers add the words.
+ */
+export function ShuttleIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      {/* Drawn upright, then tilted 30° and scaled to fill the box, centred. */}
+      <g transform="translate(12 12) scale(1.22) translate(-14.11 -10.56) rotate(30 12 12)">
+        <path d="M9.8 14.4 5.5 4.2Q7.55 2.4 9.6 4.2L11 14.4Z" />
+        <path d="M11.4 14.4 9.95 4.2Q12 2.4 14.05 4.2L12.6 14.4Z" />
+        <path d="M13 14.4 14.4 4.2Q16.45 2.4 18.5 4.2L14.2 14.4Z" />
+        <rect x="9" y="14" width="6" height="2" rx="0.6" />
+        <path d="M9.2 16.6h5.6v.4a2.8 2.8 0 0 1-5.6 0Z" />
+      </g>
+    </svg>
   );
 }
 
@@ -48,18 +69,21 @@ export function MatchSideRow({
   side,
   index,
   view,
+  serving = false,
 }: {
   side: MatchSide;
   index: 0 | 1;
   view: Pick<MatchView, "games" | "state">;
+  /** Live only: this side serves the next rally. */
+  serving?: boolean;
 }) {
   // BWF/Cricbuzz-style: the game in progress is boxed so the live score reads first.
   const liveIdx = currentGameIndex(view);
   const nameClass = side.isWinner
-    ? "font-black text-slate-900 dark:text-white"
+    ? "font-black text-foreground"
     : side.isTbd || side.isBye
       ? "italic text-muted-foreground"
-      : "font-medium text-slate-700 dark:text-slate-300";
+      : "font-medium text-soft";
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
       <div className="min-w-0 flex items-start gap-2">
@@ -70,6 +94,12 @@ export function MatchSideRow({
         <span className="min-w-0 flex items-baseline gap-1.5 flex-wrap">
           <span className={`break-words ${nameClass}`}>{side.label}</span>
           <SeedMark seed={side.seed} />
+          {serving && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider text-live" title="Serving">
+              <ShuttleIcon className="w-4 h-4" />
+              Serve
+            </span>
+          )}
           {side.isWinner && <span className="sr-only">(winner)</span>}
         </span>
       </div>
@@ -83,10 +113,10 @@ export function MatchSideRow({
                 key={i}
                 className={`w-7 text-center font-mono text-sm tabular-nums rounded ${
                   i === liveIdx
-                    ? "font-black bg-red-50 text-red-700 ring-1 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900"
+                    ? "font-black bg-danger/15 text-danger ring-1 ring-danger/40"
                     : mine > theirs
-                      ? "font-black text-slate-900 dark:text-white"
-                      : "text-slate-500 dark:text-slate-400"
+                      ? "font-black text-foreground"
+                      : "text-muted-foreground"
                 }`}
               >
                 {mine}
@@ -112,8 +142,13 @@ function fmt(iso: string | null): string | null {
   return d.toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-/** Scheduled, actual start and actual finish shown separately; never invented. */
-export function MatchTimes({ view, compact = false }: { view: Pick<MatchView, "scheduledAt" | "startedAt" | "endedAt" | "state">; compact?: boolean }) {
+type TimesView = Pick<MatchView, "scheduledAt" | "startedAt" | "endedAt" | "state">;
+
+/**
+ * Scheduled, actual start and actual finish as one line, or null when none
+ * is known (callers then hide the row or say "Not recorded").
+ */
+export function matchTimesText(view: TimesView, compact = false): string | null {
   const parts: string[] = [];
   const scheduled = fmt(view.scheduledAt);
   const started = fmt(view.startedAt);
@@ -123,8 +158,14 @@ export function MatchTimes({ view, compact = false }: { view: Pick<MatchView, "s
   // Compact cards show the actual start only while live; finish time always.
   if (started && (!compact || view.state === "live")) parts.push(`Started ${started}`);
   if (ended) parts.push(`Finished ${ended}`);
-  if (parts.length === 0) return null;
-  return <p className="text-xs text-muted-foreground">{parts.join(" · ")}</p>;
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/** Scheduled, actual start and actual finish shown separately; never invented. */
+export function MatchTimes({ view, compact = false }: { view: TimesView; compact?: boolean }) {
+  const text = matchTimesText(view, compact);
+  if (!text) return null;
+  return <p className="text-xs text-muted-foreground">{text}</p>;
 }
 
 /** Compact scorecard used by Match Centre, court queues and (incrementally) other surfaces. */
@@ -166,7 +207,7 @@ export function MatchScorecard({
           </span>
         )}
       </div>
-      <div className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">
+      <div className="mt-1 divide-y divide-border">
         <MatchSideRow side={view.sides[0]} index={0} view={view} />
         <MatchSideRow side={view.sides[1]} index={1} view={view} />
       </div>
@@ -178,7 +219,7 @@ export function MatchScorecard({
     </>
   );
   const cls =
-    "block bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-3 sm:p-4";
+    "block bg-card rounded-2xl border border-border shadow-sm p-3 sm:p-4";
   if (!linked) return <div className={cls}>{body}{footer && <div className="mt-2">{footer}</div>}</div>;
   const card = (
     <Link
@@ -207,7 +248,9 @@ export function MatchScorecard({
 
 /**
  * Last-n form chips (FotMob/BWF style), newest on the left. Letter and colour
- * together (never colour alone); walkovers are lighter and read "W/O"/"L/O".
+ * together (never colour alone). A walkover keeps its result's letter and
+ * colour and adds a small "w/o" under the letter: badminton writes W/O for
+ * the match itself, so "L/O" would mean nothing to players.
  */
 export function FormChips({
   entries,
@@ -222,7 +265,7 @@ export function FormChips({
     return (
       <span className="inline-flex gap-1" aria-hidden>
         {Array.from({ length: 5 }, (_, i) => (
-          <span key={i} className="w-5 h-5 rounded bg-slate-200 dark:bg-slate-800 motion-safe:animate-pulse" />
+          <span key={i} className="w-5 h-6 rounded bg-muted motion-safe:animate-pulse" />
         ))}
       </span>
     );
@@ -231,7 +274,8 @@ export function FormChips({
     return <span className="text-xs text-muted-foreground">No completed tournament matches yet</span>;
   }
   const wins = entries.filter((e) => e.result === "W").length;
-  const box = size === "md" ? "min-w-6 h-6 text-xs" : "min-w-5 h-5 text-[10px]";
+  const box = size === "md" ? "min-w-6 h-7 text-xs" : "min-w-5 h-6 text-[10px]";
+  const woText = size === "md" ? "text-[8px]" : "text-[7px]";
   return (
     <span className="inline-flex items-center gap-1">
       <span className="sr-only">
@@ -239,13 +283,7 @@ export function FormChips({
       </span>
       {entries.map((e) => {
         const won = e.result === "W";
-        const tone = e.walkover
-          ? won
-            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-            : "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
-          : won
-            ? "bg-emerald-600 text-white"
-            : "bg-rose-600 text-white";
+        const tone = won ? "bg-success text-success-foreground" : "bg-danger text-danger-foreground";
         const date = e.date
           ? new Date(e.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
           : null;
@@ -258,7 +296,14 @@ export function FormChips({
             aria-label={title}
             className={`${box} px-1 inline-flex items-center justify-center rounded font-black tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tone}`}
           >
-            {e.walkover ? `${e.result}/O` : e.result}
+            {e.walkover ? (
+              <span className="flex flex-col items-center leading-none" aria-hidden>
+                <span>{e.result}</span>
+                <span className={`${woText} font-bold lowercase tracking-tight opacity-90`}>w/o</span>
+              </span>
+            ) : (
+              e.result
+            )}
           </Link>
         );
       })}

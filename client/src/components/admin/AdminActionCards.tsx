@@ -40,7 +40,7 @@ export function AdminActionCards({ onOpenTab }: { onOpenTab: (tab: string) => vo
           <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> Checking…
         </p>
       ) : q.isError && !q.data ? (
-        <p role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4 text-sm">
+        <p role="alert" className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
           {denied
             ? "You don't have permission to inspect these operational issue sources. No all-clear can be calculated. "
             : "Couldn't check for outstanding items, so their status is unknown. "}
@@ -48,7 +48,7 @@ export function AdminActionCards({ onOpenTab }: { onOpenTab: (tab: string) => vo
         </p>
       ) : (q.data ?? []).length === 0 ? (
         <p className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 text-sm">
-          <CheckCircle2 className="w-4 h-4 text-[var(--success)]" aria-hidden /> Nothing needs attention right now.
+          <CheckCircle2 className="w-4 h-4 text-success" aria-hidden /> Nothing needs attention right now.
         </p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
@@ -58,12 +58,12 @@ export function AdminActionCards({ onOpenTab }: { onOpenTab: (tab: string) => vo
                 type="button"
                 onClick={() => open(card)}
                 className={`w-full text-left rounded-2xl border p-4 min-h-[44px] bg-card transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  card.severity === "high" ? "border-[var(--danger)]/50" : "border-border"
+                  card.severity === "high" ? "border-danger/50" : "border-border"
                 }`}
               >
                 <span className="flex items-start gap-2">
                   <AlertTriangle
-                    className={`w-4 h-4 shrink-0 mt-0.5 ${card.severity === "high" ? "text-[var(--danger)]" : "text-[var(--warning)]"}`}
+                    className={`w-4 h-4 shrink-0 mt-0.5 ${card.severity === "high" ? "text-danger" : "text-warning"}`}
                     aria-hidden
                   />
                   <span className="min-w-0 flex-1">

@@ -54,9 +54,9 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-12 sm:pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-background flex flex-col pt-12 sm:pt-20 pb-12 px-4">
       <div className="max-w-md w-full mx-auto">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-3xl p-6 sm:p-6 shadow-xl shadow-media/20 border border-border">
           <PageHeader
             variant="card"
             backTo="/settings"
@@ -69,7 +69,7 @@ export default function ChangePassword() {
           />
 
           {success ? (
-            <div className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/30 dark:border-primary/40">
+            <div className="bg-primary/20 text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/40">
               <CheckCircle2 className="w-10 h-10" />
               <div className="font-bold">Password Updated</div>
               <p className="text-sm opacity-80">Taking you back home...</p>
@@ -77,7 +77,7 @@ export default function ChangePassword() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-muted-foreground dark:text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-soft mb-2 uppercase tracking-wider">
                   New Password
                 </label>
                 <div className="relative">
@@ -86,7 +86,7 @@ export default function ChangePassword() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground dark:text-foreground"
+                    className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground"
                     placeholder="Min. 6 characters"
                   />
                 </div>
@@ -98,11 +98,11 @@ export default function ChangePassword() {
                         className={`h-1.5 flex-1 rounded-full transition-colors ${
                           level <= strength
                             ? strength < 2
-                              ? "bg-rose-500"
+                              ? "bg-danger"
                               : strength < 3
-                                ? "bg-amber-500"
+                                ? "bg-warning"
                                 : "bg-primary"
-                            : "bg-slate-200 dark:bg-slate-800"
+                            : "bg-muted"
                         }`}
                       />
                     ))}
@@ -111,7 +111,7 @@ export default function ChangePassword() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-muted-foreground dark:text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-soft mb-2 uppercase tracking-wider">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -120,7 +120,7 @@ export default function ChangePassword() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground dark:text-foreground"
+                    className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground"
                     placeholder="Type password again"
                   />
                 </div>

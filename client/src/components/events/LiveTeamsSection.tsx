@@ -291,18 +291,18 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Loading Teams & Squads...</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Loading Teams & Squads...</p>
       </div>
     );
   }
 
   if (teams.length === 0) {
     return (
-      <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-8 shadow-sm">
+      <div className="text-center py-16 bg-card rounded-3xl border border-border p-8 shadow-sm">
         <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
           <Shield className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-1">
+        <h3 className="text-lg font-black text-soft mb-1">
           No Teams Registered Yet
         </h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
@@ -317,22 +317,22 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header & Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/60 p-4 sm:p-5 rounded-3xl border border-border shadow-xs">
         {/* Left: Summary Chips */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-xs font-black">
             <Shield className="w-3.5 h-3.5" />
             {totalStats.teamsCount} Teams
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted text-soft text-xs font-bold">
             <Users className="w-3.5 h-3.5" />
             {totalStats.totalPlayers} Players
           </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 text-xs font-bold border border-sky-200 dark:border-sky-800/40">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info/15 text-info text-xs font-bold border border-info/25">
             <span>♂</span>
             <span>{totalStats.maleCount}</span>
           </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800/40">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-danger/15 text-danger text-xs font-bold border border-danger/25">
             <span>♀</span>
             <span>{totalStats.femaleCount}</span>
           </span>
@@ -341,22 +341,22 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
         {/* Right: Search & Expand All */}
         <div className="flex items-center gap-2 flex-1 md:max-w-md justify-end">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search team or player..."
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-primary/20 transition shadow-2xs"
+              className="w-full pl-9 pr-4 py-2 bg-muted border border-border-strong rounded-full text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-primary/20 transition shadow-2xs"
             />
           </div>
 
           <button
             onClick={toggleAll}
-            className="shrink-0 px-3.5 py-2 rounded-full text-xs font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition shadow-2xs flex items-center gap-1.5"
+            className="shrink-0 px-3.5 py-2 rounded-full text-xs font-bold bg-muted hover:bg-muted-strong text-soft border border-border-strong transition shadow-2xs flex items-center gap-1.5"
             title={allExpanded ? "Collapse all teams" : "Expand all teams"}
           >
-            <Layers className="w-3.5 h-3.5 text-slate-400" />
+            <Layers className="w-3.5 h-3.5 text-muted-foreground" />
             <span>{allExpanded ? "Collapse All" : "Expand All"}</span>
           </button>
         </div>
@@ -369,8 +369,8 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
             onClick={() => setSelectedPool("ALL")}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               selectedPool === "ALL"
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                ? "bg-foreground text-background shadow-xs"
+                : "bg-muted text-muted-foreground hover:bg-muted-strong"
             }`}
           >
             All Pools ({teams.length})
@@ -383,8 +383,8 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                 onClick={() => setSelectedPool(p)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
                   selectedPool === p
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? "bg-foreground text-background shadow-xs"
+                    : "bg-muted text-muted-foreground hover:bg-muted-strong"
                 }`}
               >
                 Pool {p} ({count})
@@ -397,12 +397,12 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
       {/* Teams Accordion List */}
       <div className="space-y-4">
         {filteredTeams.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-            <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+          <div className="text-center py-12 bg-card rounded-3xl border border-dashed border-border">
+            <Users className="w-10 h-10 text-faint mx-auto mb-2" />
+            <p className="font-bold text-sm text-soft">
               No teams matching "{searchQuery}"
             </p>
-            <p className="text-xs text-slate-400 mt-1">Try clearing your search query or switching pools.</p>
+            <p className="text-xs text-muted-foreground mt-1">Try clearing your search query or switching pools.</p>
           </div>
         ) : (
           filteredTeams.map((team) => {
@@ -415,17 +415,17 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
             return (
               <div
                 key={team.id}
-                className={`bg-white dark:bg-slate-900 rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs ${
+                className={`bg-card rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs ${
                   isExpanded
                     ? "border-primary/40 ring-1 ring-primary/20 shadow-md"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    : "border-border hover:border-border-strong"
                 }`}
               >
                 {/* Team Card Header (Clickable Accordion Trigger) */}
                 <button
                   type="button"
                   onClick={() => toggleTeam(team.id)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40 select-none cursor-pointer"
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left transition-colors hover:bg-muted/40 select-none cursor-pointer"
                 >
                   {/* Left: Team Name & Details */}
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -442,26 +442,26 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                             e.stopPropagation();
                             openTeamModal({ id: team.id, name: team.name, short_name: team.short_name, pool: team.pool, captain_id: team.captain_id, tournament_id: team.tournament_id });
                           }}
-                          className="font-black text-base sm:text-lg text-slate-900 dark:text-white leading-tight hover:text-primary transition-colors cursor-pointer hover:underline underline-offset-2 flex items-center gap-1.5 group"
+                          className="font-black text-base sm:text-lg text-foreground leading-tight hover:text-primary transition-colors cursor-pointer hover:underline underline-offset-2 flex items-center gap-1.5 group"
                           title="Click to view full team roster and live/upcoming/completed matches"
                         >
                           {team.name}
                           <ExternalLink className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
                         </h4>
                         {team.short_name && (
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-soft">
                             {team.short_name}
                           </span>
                         )}
                         {team.pool && (
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
+                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-warning/15 text-warning border border-warning/25">
                             Pool {team.pool}
                           </span>
                         )}
                       </div>
 
                       {/* Captain & Manager preview line when collapsed */}
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
                         {manager && (
                           <button
                             type="button"
@@ -469,7 +469,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                               e.stopPropagation();
                               openPlayerModal(manager.player.id || manager.player_id);
                             }}
-                            className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                            className="inline-flex items-center gap-1 font-semibold text-individual hover:underline cursor-pointer"
                           >
                             <Briefcase className="w-3 h-3" />
                             Mgr: {manager.player.full_name}
@@ -483,7 +483,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                               e.stopPropagation();
                               openPlayerModal(captain.player.id || captain.player_id);
                             }}
-                            className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+                            className="inline-flex items-center gap-1 font-semibold text-warning hover:underline cursor-pointer"
                           >
                             <Crown className="w-3 h-3 fill-current" />
                             Capt: {captain.player.full_name}
@@ -495,35 +495,35 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
 
                   {/* Right: Squad Stats & Chevron */}
                   <div className="flex items-center gap-2.5 shrink-0">
-                    <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                       <span className={`px-2.5 py-1 rounded-full ${
                         rosterRequirements && team.members.length < rosterRequirements.minTotalPlayers
-                          ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          ? "bg-warning/15 text-warning border border-warning/25"
+                          : "bg-muted text-soft"
                       }`}>
                         {team.members.length}{rosterRequirements ? `/${rosterRequirements.minTotalPlayers}` : ''} players
                       </span>
                       <span className={`px-2 py-1 rounded-full text-[11px] border ${
                         rosterRequirements && mCount < rosterRequirements.minMalePlayers
-                          ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800"
-                          : "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/40"
+                          ? "bg-danger/15 text-danger border-danger/40"
+                          : "bg-info/15 text-info border-info/25"
                       }`}>
                         ♂ {mCount}{rosterRequirements ? `/${rosterRequirements.minMalePlayers}` : ''}
                       </span>
                       <span className={`px-2 py-1 rounded-full text-[11px] border ${
                         rosterRequirements && fCount < rosterRequirements.minFemalePlayers
-                          ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800"
-                          : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40"
+                          ? "bg-danger/15 text-danger border-danger/40"
+                          : "bg-danger/15 text-danger border-danger/25"
                       }`}>
                         ♀ {fCount}{rosterRequirements ? `/${rosterRequirements.minFemalePlayers}` : ''}
                       </span>
                       {rosterRequirements && (
                         (fCount < rosterRequirements.minFemalePlayers) ? (
-                          <span className="text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                          <span className="text-[10px] font-bold text-danger bg-danger/20 px-2 py-0.5 rounded-full border border-danger/40">
                             Needs {rosterRequirements.minFemalePlayers - fCount}♀
                           </span>
                         ) : (mCount < rosterRequirements.minMalePlayers) ? (
-                          <span className="text-[10px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+                          <span className="text-[10px] font-bold text-info bg-info/20 px-2 py-0.5 rounded-full border border-info/40">
                             Needs {rosterRequirements.minMalePlayers - mCount}♂
                           </span>
                         ) : null
@@ -531,7 +531,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                     </div>
 
 
-                    <div className={`p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${
+                    <div className={`p-1.5 rounded-full bg-muted text-muted-foreground transition-transform duration-200 ${
                       isExpanded ? "rotate-180 bg-primary/10 text-primary" : ""
                     }`}>
                       <ChevronDown className="w-4 h-4" />
@@ -548,7 +548,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/40"
+                      className="overflow-hidden border-t border-border/80 bg-card/40"
                     >
                       <div className="p-4 sm:p-5 space-y-2.5">
                         <button
@@ -559,7 +559,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                           <Eye className="w-3.5 h-3.5" /> View Team Roster & Schedule (Live · Upcoming · Completed)
                         </button>
                         {team.members.length === 0 ? (
-                          <div className="text-center py-6 text-xs text-slate-400 font-semibold">
+                          <div className="text-center py-6 text-xs text-muted-foreground font-semibold">
                             No players assigned to this team yet.
                           </div>
                         ) : (
@@ -575,14 +575,14 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                                 onClick={() => openPlayerModal(member.player.id || member.player_id)}
                                 className={`p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-all duration-150 cursor-pointer hover:shadow-md hover:scale-[1.005] active:scale-[0.99] ${
                                   isManager
-                                    ? "bg-gradient-to-r from-purple-500/15 via-purple-500/5 to-transparent border-2 border-purple-400 dark:border-purple-500/60 shadow-xs hover:border-purple-500"
+                                    ? "bg-gradient-to-r from-individual/15 via-individual/5 to-transparent border-2 border-individual/60 shadow-xs hover:border-individual"
                                     : isCaptain
-                                    ? "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-2 border-amber-400 dark:border-amber-500/60 shadow-xs hover:border-amber-500"
+                                    ? "bg-gradient-to-r from-warning/15 via-warning/5 to-transparent border-2 border-warning/60 shadow-xs hover:border-warning"
                                     : isViceCaptain
-                                    ? "bg-gradient-to-r from-indigo-500/15 via-indigo-500/5 to-transparent border-2 border-indigo-400 dark:border-indigo-500/60 shadow-xs hover:border-indigo-500"
+                                    ? "bg-gradient-to-r from-info/15 via-info/5 to-transparent border-2 border-info/60 shadow-xs hover:border-info"
                                     : isFemale
-                                    ? "bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 hover:border-rose-300"
-                                    : "bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 hover:border-sky-300"
+                                    ? "bg-danger/10 border border-danger/25 hover:border-danger"
+                                    : "bg-info/10 border border-info/25 hover:border-info"
                                 }`}
                                 title="Click to view player stats & profile"
                               >
@@ -592,14 +592,14 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                                   <div
                                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ${
                                       isManager
-                                        ? "bg-purple-600 text-white ring-2 ring-purple-400/50"
+                                        ? "bg-individual text-individual-foreground ring-2 ring-individual/50"
                                         : isCaptain
-                                        ? "bg-amber-500 text-slate-950 ring-2 ring-amber-400/50"
+                                        ? "bg-warning text-warning-foreground ring-2 ring-warning/50"
                                         : isViceCaptain
-                                        ? "bg-indigo-600 text-white ring-2 ring-indigo-400/50"
+                                        ? "bg-info text-info-foreground ring-2 ring-info/50"
                                         : isFemale
-                                        ? "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300 ring-2 ring-rose-300/40"
-                                        : "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300 ring-2 ring-sky-300/40"
+                                        ? "bg-danger/25 text-danger ring-2 ring-danger/40"
+                                        : "bg-info/25 text-info ring-2 ring-info/40"
                                     }`}
                                   >
                                     {isManager ? (
@@ -616,25 +616,25 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                                   {/* Name and Badges */}
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                                      <span className="font-bold text-sm text-foreground truncate">
                                         {member.player.full_name}
                                       </span>
 
                                       {/* Role Badges */}
                                       {isManager && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-2xs">
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-individual text-individual-foreground shadow-2xs">
                                           <Briefcase className="w-3 h-3" />
                                           Manager
                                         </span>
                                       )}
                                       {isCaptain && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 shadow-2xs">
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold text-gold-foreground shadow-2xs">
                                           <Crown className="w-3 h-3 fill-current" />
                                           Captain
                                         </span>
                                       )}
                                       {isViceCaptain && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs">
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-info text-info-foreground shadow-2xs">
                                           <Award className="w-3 h-3" />
                                           Vice-Captain
                                         </span>
@@ -642,7 +642,7 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                                     </div>
 
                                     {member.player.email && (
-                                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                                         {member.player.email}
                                       </p>
                                     )}
@@ -652,12 +652,12 @@ export function LiveTeamsSection({ tournamentId, showParticipants }: LiveTeamsSe
                                 {/* Right: Gender Pill Badge */}
                                 <div className="shrink-0 flex items-center gap-1.5">
                                   {isFemale ? (
-                                    <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-300/60 dark:border-rose-800 shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-danger/20 text-danger border border-danger/40 shadow-2xs">
                                       <span>♀</span>
                                       <span className="hidden sm:inline">Female</span>
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 border border-sky-300/60 dark:border-sky-800 shadow-2xs">
+                                    <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-full bg-info/20 text-info border border-info/40 shadow-2xs">
                                       <span>♂</span>
                                       <span className="hidden sm:inline">Male</span>
                                     </span>

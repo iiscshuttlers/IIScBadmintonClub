@@ -274,7 +274,7 @@ export default function TournamentSetupChecklist() {
   const totalVerified = totalItems.filter(i => i.done).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20">
       <PageHeader
         backTo={`/tournament-admin?id=${tournamentId}`}
         backLabel="Tournament Manager"
@@ -283,8 +283,8 @@ export default function TournamentSetupChecklist() {
         title={tournament?.name || 'Tournament Launch Checklist'}
         subtitle={`${isTeam ? 'Team Tournament' : 'Open Knockout Tournament'} · ${tournament?.venue || 'Campus Badminton Courts'} · Status: ${tournament?.status ?? 'draft'}`}
         action={
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-            <span className="text-xs font-bold text-slate-400">Total Progress:</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted border border-border-strong">
+            <span className="text-xs font-bold text-muted-foreground">Total Progress:</span>
             <span className="text-xs font-mono font-bold text-primary">{totalVerified}/{totalItems.length}</span>
           </div>
         }
@@ -293,57 +293,57 @@ export default function TournamentSetupChecklist() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
 
         {dataError && (
-          <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 flex items-center gap-2">
+          <div role="alert" className="rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm font-semibold text-warning flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <span>Some tournament readiness data could not be loaded. Please refresh before publishing or starting play.</span>
           </div>
         )}
 
         {/* Section 1: Announce Stage */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-3xl p-6 sm:p-8 border border-border shadow-sm space-y-4">
+          <div className="flex items-start justify-between gap-4 pb-2 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-2xl ${announceReport.allowed ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600'}`}>
+              <div className={`p-2.5 rounded-2xl ${announceReport.allowed ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
                 <Megaphone className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <span>Stage 1: Announce Event &amp; Registration</span>
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Publish dates, venue, rules, and open player registrations
                 </p>
               </div>
             </div>
             <div className="shrink-0">
               {announceReport.allowed ? (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-success/15 text-success">
                   Ready to Announce
                 </span>
               ) : (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-danger/15 text-danger">
                   {announceReport.blockers.length} Blocker(s)
                 </span>
               )}
             </div>
           </div>
 
-          <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="space-y-3 divide-y divide-border">
             {stage1Items.map((item, idx) => (
               <div key={idx} className="pt-3.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">
                     {item.done ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      <CheckCircle2 className="w-5 h-5 text-success" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-danger' : 'text-muted-foreground'}`} />
                     )}
                   </div>
                   <div>
-                    <h3 className={`text-sm font-bold ${item.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                    <h3 className={`text-sm font-bold ${item.done ? 'text-success' : 'text-foreground'}`}>
                       {item.title}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                 </div>
 
@@ -363,50 +363,50 @@ export default function TournamentSetupChecklist() {
         </div>
 
         {/* Section 2: Publish Draw Stage */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-3xl p-6 sm:p-8 border border-border shadow-sm space-y-4">
+          <div className="flex items-start justify-between gap-4 pb-2 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-2xl ${publishDrawReport.allowed ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600'}`}>
+              <div className={`p-2.5 rounded-2xl ${publishDrawReport.allowed ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
                 <Layers className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <span>Stage 2: Publish Draw &amp; Fixtures</span>
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Safely release brackets, resolved participant pairs, and scoring rules to players
                 </p>
               </div>
             </div>
             <div className="shrink-0">
               {publishDrawReport.allowed ? (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-success/15 text-success">
                   Ready to Publish
                 </span>
               ) : (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-danger/15 text-danger">
                   {publishDrawReport.blockers.length} Blocker(s)
                 </span>
               )}
             </div>
           </div>
 
-          <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="space-y-3 divide-y divide-border">
             {stage2Items.map((item, idx) => (
               <div key={idx} className="pt-3.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">
                     {item.done ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      <CheckCircle2 className="w-5 h-5 text-success" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-danger' : 'text-muted-foreground'}`} />
                     )}
                   </div>
                   <div>
-                    <h3 className={`text-sm font-bold ${item.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                    <h3 className={`text-sm font-bold ${item.done ? 'text-success' : 'text-foreground'}`}>
                       {item.title}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                 </div>
 
@@ -426,54 +426,54 @@ export default function TournamentSetupChecklist() {
         </div>
 
         {/* Section 3: Start Play Stage */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-card rounded-3xl p-6 sm:p-8 border border-border shadow-sm space-y-4">
+          <div className="flex items-start justify-between gap-4 pb-2 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-2xl ${startPlayReport.allowed ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600'}`}>
+              <div className={`p-2.5 rounded-2xl ${startPlayReport.allowed ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
                 <PlayCircle className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <span>Stage 3: Start Live Tournament Play</span>
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Open live courts, umpire scoring screens, court callouts, and live feeds
                 </p>
               </div>
             </div>
             <div className="shrink-0">
               {tournament?.status === 'active' ? (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-success/15 text-success">
                   Live &amp; Active
                 </span>
               ) : startPlayReport.allowed ? (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-success/15 text-success">
                   Ready for Play
                 </span>
               ) : (
-                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                <span className="px-2.5 py-1 text-xs font-black rounded-full bg-danger/15 text-danger">
                   {startPlayReport.blockers.length} Blocker(s)
                 </span>
               )}
             </div>
           </div>
 
-          <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="space-y-3 divide-y divide-border">
             {stage3Items.map((item, idx) => (
               <div key={idx} className="pt-3.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">
                     {item.done ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      <CheckCircle2 className="w-5 h-5 text-success" />
                     ) : (
-                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-rose-400' : 'text-slate-300 dark:text-slate-500'}`} />
+                      <Circle className={`w-5 h-5 ${item.blocking ? 'text-danger' : 'text-muted-foreground'}`} />
                     )}
                   </div>
                   <div>
-                    <h3 className={`text-sm font-bold ${item.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                    <h3 className={`text-sm font-bold ${item.done ? 'text-success' : 'text-foreground'}`}>
                       {item.title}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                 </div>
 

@@ -48,7 +48,7 @@ export function ConfirmDialog({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-950/75 backdrop-blur-md"
+          className="fixed inset-0 bg-background/75 backdrop-blur-md"
           onClick={onCancel}
         />
         <motion.div
@@ -56,13 +56,13 @@ export function ConfirmDialog({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 12 }}
           transition={{ type: "spring", damping: 25, stiffness: 350 }}
-          className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-sm sm:max-w-md overflow-hidden z-10"
+          className="relative bg-card rounded-3xl shadow-2xl border border-border p-6 w-full max-w-sm sm:max-w-md overflow-hidden z-10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onCancel}
-            className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-soft rounded-full hover:bg-muted transition"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -73,7 +73,7 @@ export function ConfirmDialog({
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${
                 isDanger
-                  ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                  ? "bg-danger/10 text-danger border border-danger/20"
                   : "bg-primary/10 text-primary border border-primary/20"
               }`}
             >
@@ -87,12 +87,12 @@ export function ConfirmDialog({
             <div className="flex-1 min-w-0 pr-6">
               <h2
                 id="confirm-dialog-title"
-                className="text-lg font-black text-slate-900 dark:text-white leading-tight"
+                className="text-lg font-black text-foreground leading-tight"
               >
                 {title}
               </h2>
               {description && (
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed">
                   {description}
                 </p>
               )}
@@ -104,7 +104,7 @@ export function ConfirmDialog({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 text-center"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-border text-soft font-bold text-xs hover:bg-muted transition active:scale-95 text-center"
             >
               {cancelLabel}
             </button>
@@ -114,7 +114,7 @@ export function ConfirmDialog({
               onClick={onConfirm}
               className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition shadow-md active:scale-95 text-center ${
                 isDanger
-                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20"
+                  ? "bg-danger hover:bg-danger/90 text-danger-foreground shadow-danger/20"
                   : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
               }`}
             >

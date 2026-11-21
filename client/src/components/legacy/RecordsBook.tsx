@@ -41,12 +41,12 @@ async function fetchRecordData() {
 
 function PlayerTable({ title, unit, rows }: { title: string; unit: string; rows: PlayerRecordRow[] }) {
   return (
-    <section className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+    <section className="rounded-3xl bg-card border border-border p-4">
       <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-2">{title}</h3>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No record yet.</p>
       ) : (
-        <ol className="divide-y divide-slate-100 dark:divide-slate-800">
+        <ol className="divide-y divide-border">
           {rows.map((r, i) => (
             <li key={r.playerId} className="flex items-center justify-between gap-3 py-2 min-h-[44px]">
               <span className="flex items-center gap-2 min-w-0">
@@ -71,7 +71,7 @@ function PlayerTable({ title, unit, rows }: { title: string; unit: string; rows:
 
 function MatchTable({ title, unit, rows }: { title: string; unit: (v: number) => string; rows: MatchRecordRow[] }) {
   return (
-    <section className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+    <section className="rounded-3xl bg-card border border-border p-4">
       <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-2">{title}</h3>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No record yet.</p>
@@ -81,7 +81,7 @@ function MatchTable({ title, unit, rows }: { title: string; unit: (v: number) =>
             <li key={r.matchId}>
               <Link
                 href={matchPath(r.tournamentId, r.matchId)}
-                className="flex items-start justify-between gap-3 rounded-xl px-2 py-2 min-h-[44px] hover:bg-slate-50 dark:hover:bg-slate-800/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex items-start justify-between gap-3 rounded-xl px-2 py-2 min-h-[44px] hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold break-words">{r.title}</span>

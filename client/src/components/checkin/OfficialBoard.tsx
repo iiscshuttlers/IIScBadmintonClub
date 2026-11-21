@@ -95,7 +95,7 @@ export type OfficialActions = ReturnType<typeof useOfficialActions>;
 
 export function CourtsStrip({ courts, readyByCourt, columns = 3 }: { courts: CourtState[]; readyByCourt?: Record<string, string | null>; columns?: 2 | 3 }) {
   if (courts.length === 0) {
-    return <p className="text-xs text-slate-400">No courts yet. Courts appear once a match is scheduled on one.</p>;
+    return <p className="text-xs text-muted-foreground">No courts yet. Courts appear once a match is scheduled on one.</p>;
   }
   return (
     <ul className={`grid gap-1.5 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`} aria-label="Courts">
@@ -103,18 +103,18 @@ export function CourtsStrip({ courts, readyByCourt, columns = 3 }: { courts: Cou
         <li
           key={c.court}
           className={`flex min-w-0 flex-col gap-0.5 rounded-xl border p-2 ${
-            c.kind === "free" ? "border-primary/70 bg-primary/5" : "border-slate-800 bg-slate-900"
+            c.kind === "free" ? "border-primary/70 bg-primary/5" : "border-border bg-card"
           }`}
         >
-          <strong className="truncate text-[13px] text-white">{courtLabel(c.court)}</strong>
+          <strong className="truncate text-[13px] text-foreground">{courtLabel(c.court)}</strong>
           {c.kind === "free" ? (
             <span className="truncate text-xs font-black text-primary">
               Free{readyByCourt?.[c.court] ? ` · next ${readyByCourt[c.court]}` : ""}
             </span>
           ) : c.kind === "live" ? (
-            <span className="truncate text-xs font-bold text-cyan-300">Live · {c.match.match_code ?? "match"}</span>
+            <span className="truncate text-xs font-bold text-live">Live · {c.match.match_code ?? "match"}</span>
           ) : (
-            <span className="truncate text-xs font-bold text-amber-300">Called · {c.match.match_code ?? "match"}</span>
+            <span className="truncate text-xs font-bold text-warning">Called · {c.match.match_code ?? "match"}</span>
           )}
         </li>
       ))}
@@ -146,29 +146,29 @@ function ReadyCard({
   }, [data.free, suggested]);
   const waited = minutesSince(r.readySince, data.now);
   return (
-    <li className="space-y-2.5 rounded-2xl border border-primary/40 bg-slate-900 p-3.5">
+    <li className="space-y-2.5 rounded-2xl border border-primary/40 bg-card p-3.5">
       <div className="flex items-center justify-between gap-2">
         <MatchCodeChip code={m.match_code} />
-        <span className="truncate text-xs text-slate-400">{eventLine(m)}</span>
+        <span className="truncate text-xs text-muted-foreground">{eventLine(m)}</span>
       </div>
-      <p className="text-sm font-black text-white">{sidesLabel(m)}</p>
+      <p className="text-sm font-black text-foreground">{sidesLabel(m)}</p>
       <div className="flex flex-wrap gap-1.5">
-        <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-black text-emerald-300">
+        <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-black text-success">
           {hereSummary(r)}
           {waited != null ? ` · waiting ${waited} min` : ""}
         </span>
-        <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-300">Rest OK</span>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-soft">Rest OK</span>
       </div>
       {options.length > 0 ? (
         <div className="flex items-center gap-2">
-          <div role="group" aria-label="Court" className="flex shrink-0 overflow-hidden rounded-xl border border-slate-700">
+          <div role="group" aria-label="Court" className="flex shrink-0 overflow-hidden rounded-xl border border-border-strong">
             {options.map((c) => (
               <button
                 key={c}
                 type="button"
                 aria-pressed={pick === c}
                 onClick={() => setCourt(c)}
-                className={`min-h-[44px] px-3 text-xs font-black ${pick === c ? "bg-primary text-primary-foreground" : "bg-slate-900 text-slate-300"}`}
+                className={`min-h-[44px] px-3 text-xs font-black ${pick === c ? "bg-primary text-primary-foreground" : "bg-card text-soft"}`}
               >
                 {shortCourt(c)}
               </button>
@@ -185,7 +185,7 @@ function ReadyCard({
           </SmallButton>
         </div>
       ) : (
-        <p className="text-xs text-slate-400">No court is free right now. It stays at the top of this list.</p>
+        <p className="text-xs text-muted-foreground">No court is free right now. It stays at the top of this list.</p>
       )}
     </li>
   );
@@ -195,24 +195,24 @@ function WaitingCard({ m, r, data, actions }: { m: ReadinessMatch; r: MatchReadi
   const calls = callsForMatch(data.calls, m.id);
   const last = calls[calls.length - 1];
   return (
-    <li className="space-y-2.5 rounded-2xl border border-slate-800 bg-slate-900 p-3.5">
+    <li className="space-y-2.5 rounded-2xl border border-border bg-card p-3.5">
       <div className="flex items-center justify-between gap-2">
         <MatchCodeChip code={m.match_code} />
-        <span className="text-xs font-black text-amber-300">{hereSummary(r)}</span>
+        <span className="text-xs font-black text-warning">{hereSummary(r)}</span>
       </div>
-      <p className="text-sm font-black text-white">{sidesLabel(m)}</p>
+      <p className="text-sm font-black text-foreground">{sidesLabel(m)}</p>
       <ul className="space-y-1.5 text-[13px]">
         {r.players
           .filter((p) => r.missing.includes(p.playerId))
           .map((p) => (
             <li key={p.playerId} className="flex items-center justify-between gap-2">
-              <span className="truncate text-slate-100">{data.names[p.playerId] ?? "Player"}</span>
+              <span className="truncate text-foreground">{data.names[p.playerId] ?? "Player"}</span>
               <PresenceChip presence={p.presence} />
             </li>
           ))}
       </ul>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-muted-foreground">
           {calls.length === 0 ? "Not called yet" : `Called ${calls.length === 1 ? "once" : `${calls.length} times`} · ${clockLabel(last.called_at)}`}
         </span>
         {r.callable.length > 0 ? (
@@ -220,7 +220,7 @@ function WaitingCard({ m, r, data, actions }: { m: ReadinessMatch; r: MatchReadi
             Call missing ({r.callable.length})
           </CallButton>
         ) : (
-          <span className="text-xs text-slate-400">Nobody to call: everyone missing is busy or on a break.</span>
+          <span className="text-xs text-muted-foreground">Nobody to call: everyone missing is busy or on a break.</span>
         )}
       </div>
     </li>
@@ -264,21 +264,21 @@ export function ReadySections({ data, tournamentId, title = true }: { data: Tour
     <section aria-label="Check-in" className="space-y-4">
       {title && (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">Check-in</p>
-          <span className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-200">
+          <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Check-in</p>
+          <span className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-bold text-soft">
             {counts.here} of {counts.expected} here
           </span>
         </div>
       )}
       <div className="space-y-2">
-        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">Courts</p>
+        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Courts</p>
         <CourtsStrip courts={data.courts} />
       </div>
 
       <div className="space-y-2">
         <SectionTitle dot="bg-primary" title="Ready to play" count={data.board.ready.length} />
         {data.board.ready.length === 0 ? (
-          <p className="text-xs text-slate-400">No match has every player here yet.</p>
+          <p className="text-xs text-muted-foreground">No match has every player here yet.</p>
         ) : (
           <ul className="space-y-2">
             {data.board.ready.map((m) => (
@@ -290,7 +290,7 @@ export function ReadySections({ data, tournamentId, title = true }: { data: Tour
 
       {waiting.length > 0 && (
         <div className="space-y-2">
-          <SectionTitle dot="bg-amber-400" title="Waiting for players" count={waiting.length} />
+          <SectionTitle dot="bg-warning" title="Waiting for players" count={waiting.length} />
           <ul className="space-y-2">
             {(showAllWaiting ? waiting : waiting.slice(0, 4)).map((m) => (
               <WaitingCard key={m.id} m={m} r={data.board.byMatch[m.id]} data={data} actions={actions} />
@@ -305,15 +305,15 @@ export function ReadySections({ data, tournamentId, title = true }: { data: Tour
       )}
 
       {data.board.resting.length > 0 && (
-        <div className="flex items-start gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-3.5 py-3">
-          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-violet-300" aria-hidden />
+        <div className="flex items-start gap-2 rounded-2xl border border-border bg-card px-3.5 py-3">
+          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-info" aria-hidden />
           <div className="text-[13px]">
-            <strong className="text-white">Resting · {data.board.resting.length}</strong>
+            <strong className="text-foreground">Resting · {data.board.resting.length}</strong>
             {data.board.resting.slice(0, 3).map((m) => {
               const r = data.board.byMatch[m.id];
               const who = r.players.filter((p) => p.presence.kind === "resting");
               return (
-                <span key={m.id} className="block text-slate-300">
+                <span key={m.id} className="block text-soft">
                   {m.match_code ?? "Match"}: {who.map((p) => data.names[p.playerId] ?? "A player").join(", ")} can play from {clockLabel(r.restOkAt)}
                 </span>
               );
@@ -336,10 +336,10 @@ export function UmpireWhosHere({ data, match, tournamentId }: { data: Tournament
   const ids = matchPlayerIds(match);
   if (!data.checkinsAvailable || ids.length < 2 || r.state === "not_applicable") return null;
   return (
-    <div className="space-y-2 rounded-lg bg-slate-900 p-2.5">
+    <div className="space-y-2 rounded-lg bg-card p-2.5">
       <div className="flex items-center justify-between">
-        <strong className="text-xs text-white">Who's here</strong>
-        <span className={`text-[11px] font-black ${r.hereCount === r.total ? "text-emerald-300" : "text-amber-300"}`}>
+        <strong className="text-xs text-foreground">Who's here</strong>
+        <span className={`text-[11px] font-black ${r.hereCount === r.total ? "text-success" : "text-warning"}`}>
           {r.hereCount} of {r.total}
         </span>
       </div>
@@ -352,8 +352,8 @@ export function UmpireWhosHere({ data, match, tournamentId }: { data: Tournament
             return (
               <li key={id} className="flex items-center justify-between gap-2">
                 <span className="min-w-0">
-                  <span className="block truncate text-xs font-bold text-white">{name}</span>
-                  <span className="block text-[10px] text-slate-400">
+                  <span className="block truncate text-xs font-bold text-foreground">{name}</span>
+                  <span className="block text-[10px] text-muted-foreground">
                     Side {sideOf(match, id)}
                     {presence.kind === "not_here" ? " · not here yet" : ""}
                   </span>
@@ -368,7 +368,7 @@ export function UmpireWhosHere({ data, match, tournamentId }: { data: Tournament
           })}
       </ul>
       {last && (
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-muted-foreground">
           Called {calls.length === 1 ? "once" : `${calls.length} times`} · {clockLabel(last.called_at)} ({minutesSince(Date.parse(last.called_at), data.now)} min ago)
         </p>
       )}
@@ -395,7 +395,7 @@ export function CallMissingButton({ data, match, tournamentId }: { data: Tournam
       type="button"
       disabled={actions.busyKey?.startsWith(`call:${match.id}`)}
       onClick={() => actions.call(match, r.callable, data.names)}
-      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-500/20 disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-warning/40 bg-warning/10 py-2 text-[10px] font-bold uppercase tracking-wider text-warning transition hover:bg-warning/20 disabled:opacity-50"
     >
       Call missing players ({r.callable.length})
     </button>
@@ -423,7 +423,7 @@ export function WalkoverCheckinRecord({ data, match }: { data: TournamentReadine
   const side = (s: 1 | 2) => {
     const list = ids.filter((id) => sideOf(match, id) === s);
     const here = list.filter((id) => data.ctx.checkins.has(id));
-    const tone = here.length === list.length ? "text-emerald-300" : here.length === 0 ? "text-rose-300" : "text-amber-300";
+    const tone = here.length === list.length ? "text-success" : here.length === 0 ? "text-danger" : "text-warning";
     const summary =
       here.length === list.length
         ? list.length > 1 ? "both here" : "here"
@@ -440,8 +440,8 @@ export function WalkoverCheckinRecord({ data, match }: { data: TournamentReadine
           const presence = playerPresence(data.ctx, id, match.id);
           return (
             <div key={id} className="flex justify-between gap-2 text-[13px]">
-              <span className="truncate text-slate-100">{data.names[id] ?? "Player"}</span>
-              <span className={`shrink-0 font-bold ${row ? "text-emerald-300" : "text-slate-400"}`}>
+              <span className="truncate text-foreground">{data.names[id] ?? "Player"}</span>
+              <span className={`shrink-0 font-bold ${row ? "text-success" : "text-muted-foreground"}`}>
                 {row
                   ? presence.kind === "break"
                     ? "On a break"
@@ -455,21 +455,21 @@ export function WalkoverCheckinRecord({ data, match }: { data: TournamentReadine
     );
   };
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950 p-3.5 text-left">
-      <strong className="text-sm text-white">Check-in record</strong>
+    <div className="space-y-3 rounded-2xl border border-border bg-background p-3.5 text-left">
+      <strong className="text-sm text-foreground">Check-in record</strong>
       {side(1)}
-      <div className="h-px bg-slate-800" />
+      <div className="h-px bg-muted" />
       {side(2)}
-      <div className="h-px bg-slate-800" />
+      <div className="h-px bg-muted" />
       <div className="space-y-1 text-[13px]">
-        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">Calls to court</p>
+        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Calls to court</p>
         {calls.length === 0 ? (
-          <p className="text-slate-400">No calls yet</p>
+          <p className="text-muted-foreground">No calls yet</p>
         ) : (
           calls.map((c) => (
             <div key={c.id} className="flex justify-between">
-              <span className="text-slate-100">{clockLabel(c.called_at)}</span>
-              <span className="text-slate-400">{callCoversEveryone(c, match) ? "Everyone called" : "Missing players called"}</span>
+              <span className="text-foreground">{clockLabel(c.called_at)}</span>
+              <span className="text-muted-foreground">{callCoversEveryone(c, match) ? "Everyone called" : "Missing players called"}</span>
             </div>
           ))
         )}
@@ -482,7 +482,7 @@ export function WalkoverCheckinRecord({ data, match }: { data: TournamentReadine
 
 export function OpenMatchLink({ tournamentId, matchId, children }: { tournamentId: string; matchId: string; children: React.ReactNode }) {
   return (
-    <Link href={matchPath(tournamentId, matchId)} className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-700 px-3 text-xs font-black text-slate-100 hover:bg-slate-800">
+    <Link href={matchPath(tournamentId, matchId)} className="inline-flex min-h-[44px] items-center rounded-xl border border-border-strong px-3 text-xs font-black text-foreground hover:bg-muted">
       {children}
     </Link>
   );

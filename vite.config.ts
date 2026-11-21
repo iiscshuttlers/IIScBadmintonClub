@@ -146,6 +146,9 @@ export default defineConfig(({ command }) => {
   const isCapacitor = process.env.CAPACITOR === "true";
   const isGithubPages = process.env.GITHUB_PAGES === "true";
   const isDevServer = command === "serve";
+  // The Manus helpers only matter inside the Manus editor. Opt in with
+  // MANUS_RUNTIME=1; a plain `npm run dev` skips them.
+  const useManusRuntime = isDevServer && process.env.MANUS_RUNTIME === "1";
   const basePath = isCapacitor ? "./" : isGithubPages ? "/IIScBadmintonClub/" : "/";
   const manifestIconPath = (name: string) => isGithubPages ? `/IIScBadmintonClub/${name}` : `/${name}`;
 
@@ -157,11 +160,11 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
-      // Manus inspection and storage helpers are useful while developing, but
-      // the runtime is injected inline into index.html. Keeping these plugins
-      // out of production avoids shipping a second React/CSS payload before the
-      // application can start.
-      ...(isDevServer
+      // The Manus runtime is injected inline into index.html: a second
+      // React/CSS payload plus an `unload` listener that Chrome blocks with a
+      // Permissions-Policy violation. Never ship it, and in dev load it only on
+      // request (MANUS_RUNTIME=1) so ordinary local runs stay lean.
+      ...(useManusRuntime
         ? [vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()]
         : []),
 
@@ -172,8 +175,8 @@ export default defineConfig(({ command }) => {
           name: "IISc Shuttlers",
           short_name: "Shuttlers",
           description: "IISc Badminton Club Application",
-          theme_color: "#10b981",
-          background_color: "#ffffff",
+          theme_color: "#0a1020", // Floodlight (default theme) background; the app updates the meta tag per theme
+          background_color: "#0a1020",
           display: "fullscreen",
           start_url: isGithubPages ? "/IIScBadmintonClub/" : "/",
           scope: isGithubPages ? "/IIScBadmintonClub/" : "/",

@@ -31,10 +31,10 @@ type PlayersFilter = "any" | "here" | "missing";
 type SortKey = "status" | "time" | "court" | "round" | "format";
 
 const GROUPS: Array<{ key: Exclude<ListStatus, "all">; label: string; note?: string; dot: string; initial: number; folded?: boolean }> = [
-  { key: "live", label: "Live", dot: "bg-cyan-300", initial: 2 },
+  { key: "live", label: "Live", dot: "bg-live", initial: 2 },
   { key: "upcoming", label: "Upcoming", note: "by scheduled time", dot: "bg-primary", initial: 3 },
-  { key: "unscheduled", label: "Unscheduled", note: "no time set yet", dot: "bg-amber-300", initial: 1 },
-  { key: "completed", label: "Completed", note: "newest first, folded", dot: "bg-slate-500", initial: 0, folded: true },
+  { key: "unscheduled", label: "Unscheduled", note: "no time set yet", dot: "bg-warning", initial: 1 },
+  { key: "completed", label: "Completed", note: "newest first, folded", dot: "bg-muted-foreground", initial: 0, folded: true },
 ];
 
 function bucket(m: ReadinessMatch): Exclude<ListStatus, "all"> {
@@ -81,7 +81,7 @@ function comparator(sort: SortKey) {
 }
 
 const selectCls =
-  "min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-2 text-xs font-bold text-slate-100 focus:border-primary focus:outline-none";
+  "min-h-[44px] w-full rounded-xl border border-border-strong bg-background px-2 text-xs font-bold text-foreground focus:border-primary focus:outline-none";
 
 export function AllMatchesList({
   tournamentId,
@@ -167,21 +167,21 @@ export function AllMatchesList({
       if (live) {
         return (
           <span key={id} className="flex min-w-0 flex-col">
-            <strong className="truncate text-[13px] text-white">{name}</strong>
-            <span className="text-[11px] font-bold text-cyan-300">Playing</span>
+            <strong className="truncate text-[13px] text-foreground">{name}</strong>
+            <span className="text-[11px] font-bold text-live">Playing</span>
           </span>
         );
       }
       if (!open) {
         return (
-          <span key={id} className="truncate text-[13px] font-bold text-slate-200">
+          <span key={id} className="truncate text-[13px] font-bold text-soft">
             {name}
           </span>
         );
       }
       if (!data.checkinsAvailable) {
         return (
-          <span key={id} className="truncate text-[13px] font-bold text-slate-200">
+          <span key={id} className="truncate text-[13px] font-bold text-soft">
             {name}
           </span>
         );
@@ -190,7 +190,7 @@ export function AllMatchesList({
       const canCall = r?.state !== "not_applicable" && (presence.kind === "not_here" || presence.kind === "break");
       return (
         <span key={id} className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <strong className="truncate text-[13px] text-white">{name}</strong>
+          <strong className="truncate text-[13px] text-foreground">{name}</strong>
           <PresenceChip presence={presence} withTime={false} className="!px-2 !py-0.5 !text-[11px]" />
           {canCall && (
             <CallButton name={name} busy={actions.busyKey === `call:${m.id}:${id}`} onClick={() => actions.call(m, [id], data.names)} />
@@ -201,20 +201,20 @@ export function AllMatchesList({
 
     const side = (s: 1 | 2) => {
       const list = sideIds(s);
-      if (list.length === 0) return <span className="truncate text-[13px] text-slate-400">{sideLabel(s)}</span>;
+      if (list.length === 0) return <span className="truncate text-[13px] text-muted-foreground">{sideLabel(s)}</span>;
       return <div className="flex min-w-0 flex-col gap-1">{list.map(playerCell)}</div>;
     };
 
     let action: React.ReactNode = null;
     if (live || b === "completed") {
       action = (
-        <Link href={matchPath(tournamentId, m.id)} className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-700 px-3 text-xs font-black text-slate-100 hover:bg-slate-800">
+        <Link href={matchPath(tournamentId, m.id)} className="inline-flex min-h-[44px] items-center rounded-xl border border-border-strong px-3 text-xs font-black text-foreground hover:bg-muted">
           Open
         </Link>
       );
     } else if (!data.checkinsAvailable) {
       action = (
-        <Link href={matchPath(tournamentId, m.id)} className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-700 px-3 text-xs font-black text-slate-100 hover:bg-slate-800">
+        <Link href={matchPath(tournamentId, m.id)} className="inline-flex min-h-[44px] items-center rounded-xl border border-border-strong px-3 text-xs font-black text-foreground hover:bg-muted">
           Open
         </Link>
       );
@@ -225,13 +225,13 @@ export function AllMatchesList({
           Put on {courtLabel(c)}
         </SmallButton>
       ) : (
-        <span className="text-xs font-bold text-emerald-300">All here · no court free</span>
+        <span className="text-xs font-bold text-success">All here · no court free</span>
       );
     } else if (b === "unscheduled") {
       action = (
         <Link
           href={isAdmin ? tournamentManagePath(tournamentId, true) : tournamentPath(tournamentId, null, { panel: "umpire" })}
-          className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-700 px-3 text-xs font-black text-slate-100 hover:bg-slate-800"
+          className="inline-flex min-h-[44px] items-center rounded-xl border border-border-strong px-3 text-xs font-black text-foreground hover:bg-muted"
         >
           Set time &amp; court
         </Link>
@@ -247,28 +247,28 @@ export function AllMatchesList({
         </CallButton>
       );
     } else if (r && r.state !== "not_applicable") {
-      action = <span className="text-xs font-bold text-amber-300">{r.hereCount} of {r.total} here</span>;
+      action = <span className="text-xs font-bold text-warning">{r.hereCount} of {r.total} here</span>;
     }
 
     return (
-      <li key={m.id} className="grid gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto] sm:items-center">
+      <li key={m.id} className="grid gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto] sm:items-center">
         <div className="flex items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
           <MatchCodeChip code={m.match_code ?? "—"} />
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-muted-foreground">
             {formatOf(m)} · {roundShort(m)}
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs sm:flex-col sm:items-start sm:gap-0.5">
-          <strong className="text-white">
+          <strong className="text-foreground">
             {live ? (m.court_number ? courtLabel(m.court_number) : "On court") : m.scheduled_at ? clockLabel(m.scheduled_at) : "No time"}
           </strong>
-          <span className="text-slate-400">
+          <span className="text-muted-foreground">
             {live ? (m as { score?: string | null }).score || "Live" : m.court_number ? courtLabel(m.court_number) : b === "completed" ? "" : "No court yet"}
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-2">
           <div className="min-w-0 flex-1">{side(1)}</div>
-          <span className="shrink-0 text-xs text-slate-500">vs</span>
+          <span className="shrink-0 text-xs text-muted-foreground">vs</span>
           <div className="min-w-0 flex-1">{side(2)}</div>
         </div>
         <div className="flex justify-end">{action}</div>
@@ -279,23 +279,23 @@ export function AllMatchesList({
   const sorted = useMemo(() => [...visible].sort(comparator(sort)), [visible, sort]);
 
   return (
-    <section aria-label="All matches" className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3 sm:p-4">
+    <section aria-label="All matches" className="space-y-3 rounded-2xl border border-border bg-card/60 p-3 sm:p-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h3 className="text-base font-black text-white">All matches</h3>
-          <p className="text-xs text-slate-400">
+          <h3 className="text-base font-black text-foreground">All matches</h3>
+          <p className="text-xs text-muted-foreground">
             {matches.length} matches · every player's status, and a Call button next to anyone who isn't here
           </p>
         </div>
         <label className="relative w-full sm:w-64">
           <span className="sr-only">Search</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Player name or match code"
-            className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 pl-9 pr-3 text-sm text-white focus:border-primary focus:outline-none"
+            className="min-h-[44px] w-full rounded-xl border border-border-strong bg-background pl-9 pr-3 text-sm text-foreground focus:border-primary focus:outline-none"
           />
         </label>
       </div>
@@ -309,7 +309,7 @@ export function AllMatchesList({
             aria-selected={status === s}
             onClick={() => setStatus(s)}
             className={`min-h-[40px] shrink-0 rounded-full px-3.5 text-xs font-black ${
-              status === s ? "bg-primary text-primary-foreground" : "border border-slate-700 bg-slate-900 text-slate-300"
+              status === s ? "bg-primary text-primary-foreground" : "border border-border-strong bg-card text-soft"
             }`}
           >
             {s === "all" ? "All" : GROUPS.find((g) => g.key === s)!.label} {counts[s]}
@@ -318,7 +318,7 @@ export function AllMatchesList({
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <label className="flex flex-col gap-1 text-[11px] font-bold text-slate-400">
+        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground">
           Court
           <select value={court} onChange={(e) => setCourt(e.target.value)} className={selectCls}>
             <option value="">All courts</option>
@@ -330,7 +330,7 @@ export function AllMatchesList({
             <option value="none">No court yet</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] font-bold text-slate-400">
+        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground">
           Format
           <select value={format} onChange={(e) => setFormat(e.target.value)} className={selectCls}>
             <option value="">All formats</option>
@@ -341,7 +341,7 @@ export function AllMatchesList({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] font-bold text-slate-400">
+        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground">
           Round
           <select value={round} onChange={(e) => setRound(e.target.value)} className={selectCls}>
             <option value="">All rounds</option>
@@ -352,7 +352,7 @@ export function AllMatchesList({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] font-bold text-slate-400">
+        <label className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground">
           Players
           <select value={players} onChange={(e) => setPlayers(e.target.value as PlayersFilter)} className={selectCls}>
             <option value="any">Anyone</option>
@@ -360,7 +360,7 @@ export function AllMatchesList({
             <option value="missing">Someone missing</option>
           </select>
         </label>
-        <label className="col-span-2 flex flex-col gap-1 text-[11px] font-bold text-slate-400 sm:col-span-1">
+        <label className="col-span-2 flex flex-col gap-1 text-[11px] font-bold text-muted-foreground sm:col-span-1">
           Sort by
           <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={selectCls}>
             <option value="status">Status: live first</option>
@@ -373,7 +373,7 @@ export function AllMatchesList({
       </div>
 
       {sorted.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-400">No matches match these filters.</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">No matches match these filters.</p>
       ) : sort !== "status" ? (
         <ul className="space-y-2">{sorted.slice(0, expanded.flat ? undefined : 30).map(row)}</ul>
       ) : (
@@ -388,10 +388,10 @@ export function AllMatchesList({
               <div key={g.key} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${g.dot}`} aria-hidden />
-                  <strong className="text-sm text-white">
+                  <strong className="text-sm text-foreground">
                     {g.label} · {list.length}
                   </strong>
-                  {g.note && <span className="text-xs text-slate-400">· {g.note}</span>}
+                  {g.note && <span className="text-xs text-muted-foreground">· {g.note}</span>}
                   {g.folded && status === "all" && !expanded[g.key] && (
                     <SmallButton className="ml-auto" onClick={() => setExpanded((e) => ({ ...e, [g.key]: true }))}>
                       Show
@@ -414,7 +414,7 @@ export function AllMatchesList({
           Show all {sorted.length}
         </SmallButton>
       )}
-      <p className="text-xs leading-relaxed text-slate-400">
+      <p className="text-xs leading-relaxed text-muted-foreground">
         "Call" pushes to that one player only. Players who are playing on another court get no Call button.
       </p>
     </section>

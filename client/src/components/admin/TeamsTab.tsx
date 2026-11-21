@@ -135,7 +135,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
   };
 
   const handleDeleteTeam = async (teamId: string) => {
-    if (await confirm({ title: "Delete Team?", message: "Are you sure you want to remove this team? All roster data will be lost.", confirmText: "Delete", confirmColor: "bg-red-600" })) {
+    if (await confirm({ title: "Delete Team?", message: "Are you sure you want to remove this team? All roster data will be lost.", confirmText: "Delete", confirmColor: "bg-danger" })) {
       try {
         await teamService.deleteTeamHard(teamId);
         toast.success("Team deleted");
@@ -247,7 +247,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
       title: "Remove Player?", 
       message: `Are you sure you want to remove ${memberName || "this player"} from the team roster?`, 
       confirmText: "Remove", 
-      confirmColor: "bg-red-600" 
+      confirmColor: "bg-danger" 
     })) {
       try {
         await teamService.deleteTeamMemberHard(memberId);
@@ -424,22 +424,22 @@ export function TeamsTab({ tournament }: { tournament: any }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-2xl p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-foreground">Teams</h2>
+            <h2 className="text-xl font-black text-foreground">Teams</h2>
             <p className="text-sm text-muted-foreground mt-1">Manage teams, rosters, and imports.</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <button 
               onClick={() => setResolvingGuests(true)}
-              className="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50 font-bold rounded-xl text-sm transition"
+              className="flex items-center gap-2 px-3 py-2 bg-warning/10 text-warning hover:bg-warning/20 font-bold rounded-xl text-sm transition"
             >
               <Users className="w-4 h-4" /> Resolve Guests
             </button>
             <button 
               onClick={() => { setBulkImporting(!bulkImporting); setAddingTeam(false); }}
-              className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold rounded-xl text-sm transition"
+              className="flex items-center gap-2 px-3 py-2 bg-muted text-soft hover:bg-muted-strong font-bold rounded-xl text-sm transition"
             >
               <Upload className="w-4 h-4" /> Bulk / CSV
             </button>
@@ -453,31 +453,31 @@ export function TeamsTab({ tournament }: { tournament: any }) {
         </div>
 
         {addingTeam && (
-          <div className="mb-6 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/50 space-y-4">
+          <div className="mb-6 p-4 border border-border rounded-xl bg-muted/50 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Team Name</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1">Team Name</label>
                 <input 
                   type="text" 
                   value={newTeam.name} 
                   onChange={e => setNewTeam({...newTeam, name: e.target.value})} 
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm" 
+                  className="w-full bg-card border border-border-strong rounded-lg px-3 py-2 text-sm" 
                   placeholder="e.g. Physics Smashers"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Short Name (Max 5 chars)</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1">Short Name (Max 5 chars)</label>
                 <input 
                   type="text" 
                   value={newTeam.short_name} 
                   onChange={e => setNewTeam({...newTeam, short_name: e.target.value.toUpperCase().substring(0, 5)})} 
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm" 
+                  className="w-full bg-card border border-border-strong rounded-lg px-3 py-2 text-sm" 
                   placeholder="e.g. PHY"
                   maxLength={5}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">Captain</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-1">Captain</label>
                 <PlayerSelect 
                   value={newTeam.captain_id || ""} 
                   onChange={v => setNewTeam({...newTeam, captain_id: v})} 
@@ -487,17 +487,17 @@ export function TeamsTab({ tournament }: { tournament: any }) {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setAddingTeam(false)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Cancel</button>
+              <button onClick={() => setAddingTeam(false)} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-soft">Cancel</button>
               <button onClick={handleAddTeam} className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg">Save Team</button>
             </div>
           </div>
         )}
 
         {bulkImporting && (
-          <div className="mb-6 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/50 space-y-4">
+          <div className="mb-6 p-4 border border-border rounded-xl bg-muted/50 space-y-4">
             <div>
               <div className="flex justify-between items-end mb-1">
-                <label className="block text-xs font-bold text-slate-500">Paste or Upload CSV Data</label>
+                <label className="block text-xs font-bold text-muted-foreground">Paste or Upload CSV Data</label>
                 <label className="cursor-pointer text-xs font-bold text-primary hover:underline flex items-center gap-1">
                   <Upload className="w-3 h-3" />
                   Upload File
@@ -521,13 +521,13 @@ export function TeamsTab({ tournament }: { tournament: any }) {
               </div>
               <textarea 
                 rows={6}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono placeholder:text-slate-400"
+                className="w-full bg-card border border-border-strong rounded-lg px-3 py-2 text-sm font-mono placeholder:text-muted-foreground"
                 placeholder="Team Name, Short Name, Email, Role&#10;Physics Smashers, PHY, captain@iisc.ac.in, CAPTAIN&#10;Physics Smashers, PHY, player1@iisc.ac.in, PLAYER"
                 value={bulkText}
                 onChange={e => setBulkText(e.target.value)}
               />
               <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
-                Header row is optional. Columns must be: <strong className="text-primary dark:text-primary">Team Name</strong>, <strong className="text-[var(--info)] dark:text-[var(--info)]">Short Name</strong>, <strong className="text-[var(--warning)] dark:text-[var(--warning)]">Player Name</strong>, <strong className="text-[var(--success)] dark:text-[var(--success)]">Player Email</strong>, <strong className="text-[var(--danger)] dark:text-[var(--danger)]">Role</strong> (<span className="text-slate-600 dark:text-slate-300 font-mono text-[9px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">CAPTAIN</span> / <span className="text-slate-600 dark:text-slate-300 font-mono text-[9px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">VICE_CAPTAIN</span> / <span className="text-slate-600 dark:text-slate-300 font-mono text-[9px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">MANAGER</span> / <span className="text-slate-600 dark:text-slate-300 font-mono text-[9px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">PLAYER</span>).
+                Header row is optional. Columns must be: <strong className="text-primary">Team Name</strong>, <strong className="text-info">Short Name</strong>, <strong className="text-warning">Player Name</strong>, <strong className="text-success">Player Email</strong>, <strong className="text-danger">Role</strong> (<span className="text-soft font-mono text-[9px] bg-muted px-1 py-0.5 rounded">CAPTAIN</span> / <span className="text-soft font-mono text-[9px] bg-muted px-1 py-0.5 rounded">VICE_CAPTAIN</span> / <span className="text-soft font-mono text-[9px] bg-muted px-1 py-0.5 rounded">MANAGER</span> / <span className="text-soft font-mono text-[9px] bg-muted px-1 py-0.5 rounded">PLAYER</span>).
                 If the team does not exist, it will be created. The first player parsed for a new team will be set as its Captain in the system.
               </p>
             </div>
@@ -551,14 +551,14 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                   <select 
                     value={importMode} 
                     onChange={(e) => setImportMode(e.target.value as any)}
-                    className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-2 outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                    className="text-xs font-bold text-soft bg-muted border border-border-strong rounded-lg px-2 py-2 outline-none cursor-pointer hover:bg-muted-strong transition"
                   >
                     <option value="merge">Mode: Merge (Skip existing)</option>
                     <option value="update">Mode: Update Roles</option>
                     <option value="replace">Mode: Replace Team</option>
                   </select>
                 )}
-                <button onClick={() => setBulkImporting(false)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Cancel</button>
+                <button onClick={() => setBulkImporting(false)} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-soft">Cancel</button>
                 <button onClick={handleBulkImport} disabled={bulkLoading || !bulkText.trim()} className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg disabled:opacity-50">
                   {bulkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Import Teams"}
                 </button>
@@ -568,11 +568,11 @@ export function TeamsTab({ tournament }: { tournament: any }) {
         )}
 
         {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : teams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-            <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4" />
-            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">No Teams Added</h3>
+          <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl">
+            <Users className="w-12 h-12 text-faint mb-4" />
+            <h3 className="text-lg font-bold text-soft">No Teams Added</h3>
             <p className="text-sm text-muted-foreground max-w-sm mt-2">
               Click the "Add Team" button above to register the first team manually, or use the bulk uploader.
             </p>
@@ -580,17 +580,17 @@ export function TeamsTab({ tournament }: { tournament: any }) {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {teams.map(team => (
-              <div key={team.id} className="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={team.id} className="flex flex-col bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 
                 {/* Card Header */}
                 <div 
-                  className="p-5 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/20 flex justify-between items-start cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
+                  className="p-5 border-b border-border/60 bg-muted/20 flex justify-between items-start cursor-pointer hover:bg-muted/40 transition-colors"
                   onClick={() => toggleExpand(team.id)}
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1.5">
-                      {expandedTeamId === team.id ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                      <h4 className="font-black text-lg text-slate-800 dark:text-slate-100 leading-none">{team.name}</h4>
+                      {expandedTeamId === team.id ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                      <h4 className="font-black text-lg text-foreground leading-none">{team.name}</h4>
                       <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] uppercase font-black tracking-wider border border-primary/20">
                         {team.short_name}
                       </span>
@@ -604,23 +604,23 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                             e.stopPropagation();
                             openPlayerModal(team.captain_id);
                           }}
-                          className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors hover:underline text-left cursor-pointer"
+                          className="text-soft hover:text-primary transition-colors hover:underline text-left cursor-pointer"
                         >
                           {team.captain.full_name}
                         </button>
                       ) : (
-                        <span className="text-slate-400">Unassigned</span>
+                        <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </p>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full mr-2">
+                    <span className="text-[10px] font-black text-muted-foreground bg-muted px-2 py-1 rounded-full mr-2">
                        {teamMembers[team.id]?.length || 0}
                     </span>
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteTeam(team.id); }}
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors shrink-0"
+                      className="p-2 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-xl transition-colors shrink-0"
                       title="Delete Team"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -633,18 +633,18 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                   <>
                     <div className="flex-1 p-5">
                       <div className="flex items-center justify-between mb-4">
-                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400">Team Roster</h5>
+                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Team Roster</h5>
                       </div>
 
                       {team.captain_id && !teamMembers[team.id]?.some(m => m.player_id === team.captain_id) && (
-                        <div className="mb-3 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-center justify-between text-xs">
-                          <span className="text-amber-800 dark:text-amber-200 text-xs">
+                        <div className="mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/30 flex items-center justify-between text-xs">
+                          <span className="text-warning text-xs">
                             Captain (<strong>{team.captain?.full_name}</strong>) is not in roster
                           </span>
                           <button 
                             type="button"
                             onClick={() => handleAddCaptainToRoster(team.id, team.captain_id)}
-                            className="font-bold text-amber-700 dark:text-amber-300 hover:underline shrink-0 ml-2"
+                            className="font-bold text-warning hover:underline shrink-0 ml-2"
                           >
                             + Add to Roster
                           </button>
@@ -652,17 +652,17 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                       )}
                       
                       {!teamMembers[team.id] ? (
-                        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
+                        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-soft" /></div>
                       ) : teamMembers[team.id]?.length === 0 ? (
-                        <div className="py-8 text-center text-slate-400 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
+                        <div className="py-8 text-center text-muted-foreground border-2 border-dashed border-border rounded-xl">
                            <p className="text-xs font-bold">No players added</p>
                         </div>
                       ) : (
-                        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                        <div className="overflow-hidden rounded-xl border border-border">
                            <table className="w-full text-sm text-left">
-                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                             <tbody className="divide-y divide-border">
                                {teamMembers[team.id].map(member => (
-                                 <tr key={member.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors">
+                                 <tr key={member.id} className="hover:bg-muted/50 group transition-colors">
                                    <td className="px-3 py-2.5">
                                      <button
                                        type="button"
@@ -670,30 +670,30 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                                        className="flex flex-col text-left group/player cursor-pointer hover:opacity-80 transition"
                                        title="View player profile"
                                      >
-                                       <span className="font-bold text-slate-700 dark:text-slate-200 group-hover/player:text-primary dark:group-hover/player:text-primary transition-colors text-xs truncate max-w-[140px]">
+                                       <span className="font-bold text-soft group-hover/player:text-primary transition-colors text-xs truncate max-w-[140px]">
                                          {member.player?.full_name || "Unknown Player"}
                                        </span>
-                                       {member.player?.is_guest && <span className="text-[8px] uppercase font-black tracking-widest text-slate-400 mt-0.5">Guest</span>}
+                                       {member.player?.is_guest && <span className="text-[8px] uppercase font-black tracking-widest text-muted-foreground mt-0.5">Guest</span>}
                                      </button>
                                    </td>
                                    <td className="px-2 py-2.5 w-28">
                                      <select 
                                        value={member.role}
                                        onChange={(e) => handleChangeRole(member.id, team.id, member.player_id, e.target.value)}
-                                       className="w-full bg-transparent text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 outline-none cursor-pointer hover:text-primary transition-colors focus:ring-0 appearance-none"
+                                       className="w-full bg-transparent text-[10px] font-black uppercase text-muted-foreground outline-none cursor-pointer hover:text-primary transition-colors focus:ring-0 appearance-none"
                                        style={{ backgroundImage: 'none' }}
                                      >
-                                       <option value="PLAYER" className="dark:bg-slate-800">Player</option>
-                                       <option value="CAPTAIN" className="dark:bg-slate-800">Captain</option>
-                                       <option value="VICE_CAPTAIN" className="dark:bg-slate-800">Vice Capt</option>
-                                       <option value="MANAGER" className="dark:bg-slate-800">Manager</option>
+                                       <option value="PLAYER" className="bg-muted">Player</option>
+                                       <option value="CAPTAIN" className="bg-muted">Captain</option>
+                                       <option value="VICE_CAPTAIN" className="bg-muted">Vice Capt</option>
+                                       <option value="MANAGER" className="bg-muted">Manager</option>
                                      </select>
                                    </td>
                                    <td className="px-2 py-2.5 text-right w-10">
                                      <button 
                                        type="button"
                                        onClick={() => handleDeleteMember(member.id, member.player_id, member.player?.full_name || "Player", team.id, team.captain_id)}
-                                       className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors inline-flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                       className="p-1.5 text-soft hover:text-danger hover:bg-danger/10 rounded-md transition-colors inline-flex items-center justify-center opacity-0 group-hover:opacity-100"
                                        title="Remove player"
                                      >
                                        <Trash2 className="w-3.5 h-3.5" />
@@ -708,11 +708,11 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                     </div>
 
                     {/* Card Footer: Add Player */}
-                    <div className="p-3 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/20">
+                    <div className="p-3 border-t border-border/60 bg-muted/20">
                        {addingPlayerTeamId === team.id ? (
-                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-3 shadow-sm">
+                         <div className="p-3 bg-card border border-border-strong rounded-xl space-y-3 shadow-sm">
                            <div className="flex items-center justify-between">
-                             <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                             <span className="text-xs font-bold text-soft flex items-center gap-1.5">
                                <Users className="w-3.5 h-3.5 text-primary" /> Add Player to {team.name}
                              </span>
                              <button 
@@ -721,7 +721,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                                  setAddingPlayerTeamId(null);
                                  setSelectedPlayerId("");
                                }}
-                               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-semibold"
+                               className="text-muted-foreground hover:text-soft text-xs font-semibold"
                              >
                                Cancel
                              </button>
@@ -729,7 +729,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
 
                            <div className="space-y-2">
                              <div>
-                               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                               <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                                  Player
                                </label>
                                <PlayerSelect 
@@ -742,13 +742,13 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                              </div>
 
                              <div>
-                               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                               <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                                  Role
                                </label>
                                <select 
                                  value={selectedRole}
                                  onChange={(e) => setSelectedRole(e.target.value)}
-                                 className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary"
+                                 className="w-full bg-muted/60 border border-border-strong rounded-lg px-3 py-2 text-xs font-semibold text-soft outline-none focus:ring-2 focus:ring-primary"
                                >
                                  <option value="PLAYER">Player</option>
                                  <option value="CAPTAIN">Captain</option>
@@ -765,7 +765,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                                  setAddingPlayerTeamId(null);
                                  setSelectedPlayerId("");
                                }}
-                               className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg transition"
+                               className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-soft rounded-lg transition"
                              >
                                Cancel
                              </button>
@@ -795,7 +795,7 @@ export function TeamsTab({ tournament }: { tournament: any }) {
                              setSelectedPlayerId("");
                              setSelectedRole("PLAYER");
                            }}
-                           className="w-full py-2 flex items-center justify-center gap-2 text-xs font-black text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                           className="w-full py-2 flex items-center justify-center gap-2 text-xs font-black text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                          >
                            <Plus className="w-4 h-4"/> ADD PLAYER
                          </button>

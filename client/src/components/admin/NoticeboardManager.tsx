@@ -38,7 +38,7 @@ export function NoticeboardManager({
   return (
     <div className="space-y-6">
       {/* Sub-navigation */}
-      <div className="grid grid-cols-2 sm:flex bg-white dark:bg-slate-900 rounded-2xl p-1.5 border border-slate-200 dark:border-slate-800 w-full sm:w-fit sm:max-w-full overflow-x-auto mx-auto sm:mx-0 shadow-sm gap-1 sm:gap-0">
+      <div className="grid grid-cols-2 sm:flex bg-card rounded-2xl p-1.5 border border-border w-full sm:w-fit sm:max-w-full overflow-x-auto mx-auto sm:mx-0 shadow-sm gap-1 sm:gap-0">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.id;
@@ -48,8 +48,8 @@ export function NoticeboardManager({
               onClick={() => setActiveTab(t.id)}
               className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-5 py-2 rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all ${
                 active
-                  ? "bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  ? "bg-primary/40 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-soft hover:bg-muted"
               }`}
             >
               <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -68,11 +68,15 @@ export function NoticeboardManager({
           EditorComponent={(props: any) => (
             <AnnouncementEditor
               data={props.data.recent || []}
-              onChange={(d) => props.onChange({ recent: d })}
+              onChange={(d) => props.onChange({ ...props.data, recent: d })}
+              hiddenAuto={Array.isArray(props.data.hiddenAuto) ? props.data.hiddenAuto : []}
+              onHiddenAutoChange={(keys) => props.onChange({ ...props.data, hiddenAuto: keys })}
             />
           )}
           writeTransformer={(data: any) => ({
             recent: data.recent.filter((a: any) => a.title),
+            // Automatic tournament posts an admin chose to keep off the Feed.
+            hiddenAuto: Array.isArray(data.hiddenAuto) ? data.hiddenAuto : [],
           })}
           setTabCount={(c) =>
             setTabCounts((prev) => prev.announcements === c ? prev : { ...prev, announcements: c })

@@ -81,14 +81,14 @@ export function CheckinPanel({
 
   if (!row) {
     return (
-      <div className="flex flex-col gap-3 border-b border-white/10 bg-primary/5 p-4">
+      <div className="flex flex-col gap-3 border-b border-foreground/10 bg-primary/5 p-4">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <Home className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <p className="text-base font-black text-white">Are you at the venue?</p>
-            <p className="text-sm leading-snug text-slate-300">
+            <p className="text-base font-black text-foreground">Are you at the venue?</p>
+            <p className="text-sm leading-snug text-soft">
               Tap when you arrive. Your opponents and the umpires will see you're ready for all your matches today.
             </p>
           </div>
@@ -97,11 +97,11 @@ export function CheckinPanel({
           type="button"
           disabled={busy}
           onClick={() => act({ playerId: myPlayerId, action: "check_in", label: "You're checked in" })}
-          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-base font-black text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-base font-black text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
         >
           <Check className="h-5 w-5" strokeWidth={3} aria-hidden /> I'm here, ready to play
         </button>
-        <p className="text-center text-xs text-slate-400">No location is used. Check-in lasts 4 hours and renews after each match.</p>
+        <p className="text-center text-xs text-muted-foreground">No location is used. Check-in lasts 4 hours and renews after each match.</p>
       </div>
     );
   }
@@ -110,14 +110,14 @@ export function CheckinPanel({
   const onBreak = isOnBreak(row, now);
 
   return (
-    <div className={`flex flex-col gap-3 border-b p-4 ${onBreak ? "border-amber-500/30 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`}>
+    <div className={`flex flex-col gap-3 border-b p-4 ${onBreak ? "border-warning/30 bg-warning/5" : "border-success/30 bg-success/5"}`}>
       <div className="flex items-center gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${onBreak ? "bg-amber-400 text-slate-950" : "bg-emerald-400 text-slate-950"}`}>
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${onBreak ? "bg-warning text-warning-foreground" : "bg-success text-success-foreground"}`}>
           {onBreak ? <Coffee className="h-5 w-5" aria-hidden /> : <Check className="h-5 w-5" strokeWidth={3} aria-hidden />}
         </span>
         <div className="min-w-0">
-          <p className="text-base font-black text-white">{onBreak ? "You're on a break" : "You're checked in"}</p>
-          <p className={`text-sm leading-snug ${onBreak ? "text-amber-100" : "text-emerald-100"}`}>
+          <p className="text-base font-black text-foreground">{onBreak ? "You're on a break" : "You're checked in"}</p>
+          <p className={`text-sm leading-snug ${onBreak ? "text-foreground" : "text-foreground"}`}>
             {onBreak
               ? row.break_until
                 ? `Back at ${clockLabel(row.break_until)}. Umpires see you as away until then.`
@@ -130,8 +130,8 @@ export function CheckinPanel({
       </div>
 
       {expiringSoon && (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
-          <span className="text-sm font-bold text-amber-100">Still at the venue? Your check-in ends at {clockLabel(row.expires_at)}.</span>
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3">
+          <span className="text-sm font-bold text-foreground">Still at the venue? Your check-in ends at {clockLabel(row.expires_at)}.</span>
           <SmallButton tone="primary" busy={busy} onClick={() => act({ playerId: myPlayerId, action: "renew" })}>
             Stay checked in
           </SmallButton>
@@ -149,7 +149,7 @@ export function CheckinPanel({
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-black uppercase tracking-wider text-emerald-200">Take a break</p>
+          <p className="text-[11px] font-black uppercase tracking-wider text-success">Take a break</p>
           <div className="grid grid-cols-2 gap-1.5">
             <SmallButton tone="warning" busy={busy} onClick={() => act({ playerId: myPlayerId, action: "break", minutes: 15, label: "Break until " + clockLabel(now + 15 * 60_000) })}>
               15 min
@@ -175,7 +175,7 @@ export function CheckinPanel({
                 setCustomOpen(false);
               }}
             >
-              <label className="flex flex-1 flex-col gap-1 text-xs font-bold text-slate-300">
+              <label className="flex flex-1 flex-col gap-1 text-xs font-bold text-soft">
                 Minutes (1–240)
                 <input
                   type="number"
@@ -184,13 +184,13 @@ export function CheckinPanel({
                   max={240}
                   value={customMins}
                   onChange={(e) => setCustomMins(e.target.value)}
-                  className="min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white focus:border-primary focus:outline-none"
+                  className="min-h-[44px] rounded-xl border border-border-strong bg-card px-3 text-sm text-foreground focus:border-primary focus:outline-none"
                 />
               </label>
               <button
                 type="submit"
                 disabled={busy}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-3 text-xs font-black text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-3 text-xs font-black text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
               >
                 Start break
               </button>
@@ -243,7 +243,7 @@ export function MatchStatusForPlayer({
         <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
         <div>
           <p className="text-sm font-black text-primary">{r.total > 2 ? `All ${r.total} here` : "Both players here"}</p>
-          <p className="text-xs text-slate-200">
+          <p className="text-xs text-soft">
             {position > 0 ? `${ordinal(position)} in line for the next free court. ` : ""}Keep your phone close for the court call.
           </p>
         </div>
@@ -251,16 +251,16 @@ export function MatchStatusForPlayer({
     );
   } else if (r.state === "resting") {
     banner = (
-      <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm">
-        <span className="font-black text-violet-200">Everyone's here</span>
-        <span className="text-violet-100"> · resting until {clockLabel(r.restOkAt)}, then it's in the ready list</span>
+      <div className="rounded-xl border border-info/30 bg-info/10 px-3 py-2 text-sm">
+        <span className="font-black text-info">Everyone's here</span>
+        <span className="text-foreground"> · resting until {clockLabel(r.restOkAt)}, then it's in the ready list</span>
       </div>
     );
   } else if (r.state === "waiting" && r.hereCount > 0) {
     banner = (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm">
-        <span className="font-black text-amber-300">{hereSummary(r)}</span>
-        {others.length > 0 && <span className="text-amber-100"> · waiting for {firstNames(data.names, others)}</span>}
+      <div className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-sm">
+        <span className="font-black text-warning">{hereSummary(r)}</span>
+        {others.length > 0 && <span className="text-foreground"> · waiting for {firstNames(data.names, others)}</span>}
       </div>
     );
   }
@@ -273,17 +273,17 @@ export function MatchStatusForPlayer({
   return (
     <div className="flex flex-col gap-2">
       {banner}
-      <ul className={`flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-950/60 ${compact ? "p-2.5" : "p-3"}`}>
+      <ul className={`flex flex-col gap-2 rounded-2xl border border-border bg-background/60 ${compact ? "p-2.5" : "p-3"}`}>
         {ordered.map((id) => {
           const role = id === myPlayerId ? "You" : sideOf(match, id) === mySide ? "Partner" : "Opponent";
           const presence = playerPresence(data.ctx, id, match.id);
           return (
             <li key={id} className="flex items-center justify-between gap-2">
               <span className="min-w-0">
-                {!compact && <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">{role}</span>}
-                <span className="block truncate text-sm font-bold text-white">
+                {!compact && <span className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">{role}</span>}
+                <span className="block truncate text-sm font-bold text-foreground">
                   {id === myPlayerId && compact ? "You" : nameOr(data.names, id, role)}
-                  {compact && role === "Partner" && <span className="font-normal text-slate-400"> (partner)</span>}
+                  {compact && role === "Partner" && <span className="font-normal text-muted-foreground"> (partner)</span>}
                 </span>
               </span>
               <PresenceChip presence={presence} />

@@ -12,6 +12,7 @@ import {
   buildCourtQueues,
   compareCourtQueue,
   compareUpcoming,
+  courtKey,
   courtLabel,
   filterMatches,
   matchDay,
@@ -55,15 +56,15 @@ function FreshnessBar({
   let icon: ReactNode = null;
   let text = time ? `Confirmed by server at ${time}` : "Not yet loaded from the server";
   if (!online) {
-    tone = "text-amber-700 dark:text-amber-400";
+    tone = "text-warning";
     icon = <WifiOff className="w-3.5 h-3.5" aria-hidden />;
     text = `You're offline. Showing results confirmed at ${time ?? "—"}; live scores may have changed.`;
   } else if (refreshFailed) {
-    tone = "text-amber-700 dark:text-amber-400";
+    tone = "text-warning";
     icon = <AlertTriangle className="w-3.5 h-3.5" aria-hidden />;
     text = `Couldn't refresh. Showing results confirmed at ${time ?? "—"}.`;
   } else if (stale) {
-    tone = "text-amber-700 dark:text-amber-400";
+    tone = "text-warning";
     icon = <AlertTriangle className="w-3.5 h-3.5" aria-hidden />;
     text = `Last confirmed at ${time}; may be out of date.`;
   }
@@ -112,7 +113,7 @@ function FilterBar({
         label: (
           <>
             {courtLabel(c)}
-            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-red-600 motion-safe:animate-pulse" aria-hidden />}
+            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-live motion-safe:animate-pulse" aria-hidden />}
           </>
         ),
         srSuffix: isLive ? ", live" : undefined,
@@ -129,7 +130,7 @@ function FilterBar({
             aria-pressed={cat === c}
             onClick={() => setCat(c)}
             className={`min-h-[44px] min-w-[44px] px-3 rounded-xl text-xs font-black transition-colors ${
-              cat === c ? "bg-primary text-primary-foreground" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              cat === c ? "bg-primary text-primary-foreground" : "bg-muted text-soft"
             }`}
           >
             {c === "ALL" ? "All" : c}
@@ -152,8 +153,8 @@ function FilterBar({
 
 function Empty({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-      <p className="font-black text-slate-700 dark:text-slate-200">{title}</p>
+    <div className="text-center py-10 bg-card rounded-2xl border border-dashed border-border-strong">
+      <p className="font-black text-soft">{title}</p>
       {hint && <p className="text-sm text-muted-foreground mt-1">{hint}</p>}
     </div>
   );
@@ -161,8 +162,8 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
 
 function LoadFailed({ onRetry }: { onRetry: () => void }) {
   return (
-    <div role="alert" className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
-      <p className="font-black text-slate-700 dark:text-slate-200">Couldn't load matches</p>
+    <div role="alert" className="text-center py-10 bg-card rounded-2xl border border-border-strong">
+      <p className="font-black text-soft">Couldn't load matches</p>
       <p className="text-sm text-muted-foreground mt-1">Nothing is shown rather than an out-of-date list.</p>
       <button type="button" onClick={onRetry} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] rounded-xl bg-primary text-primary-foreground text-sm font-black">
         <RefreshCw className="w-4 h-4" aria-hidden /> Retry
@@ -199,14 +200,14 @@ function CourtQueues({ views, presence }: { views: MatchView[]; presence: Record
             <section
               key={q.court}
               aria-labelledby={`court-${q.court}`}
-              className="bg-slate-50 dark:bg-slate-950/50 rounded-3xl border border-slate-200 dark:border-slate-800 p-3 space-y-3"
+              className="bg-background/50 rounded-3xl border border-border p-3 space-y-3"
             >
-              <h3 id={`court-${q.court}`} className="font-black text-slate-800 dark:text-slate-100">
+              <h3 id={`court-${q.court}`} className="font-black text-foreground">
                 {courtLabel(q.court)}
               </h3>
               {q.playing.length > 1 && (
-                <div role="alert" className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-bold">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                <div role="alert" className="flex items-center gap-1.5 p-2 rounded-xl bg-warning/15 border border-warning/40 text-warning text-xs font-bold">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-warning" aria-hidden />
                   <span>Court conflict: {q.playing.length} matches marked live simultaneously</span>
                 </div>
               )}
@@ -257,9 +258,9 @@ function CourtQueues({ views, presence }: { views: MatchView[]; presence: Record
       )}
 
       {unassigned.length > 0 && (
-        <section aria-labelledby="unassigned-heading" className="bg-slate-50 dark:bg-slate-950/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 p-4 space-y-3">
+        <section aria-labelledby="unassigned-heading" className="bg-background/50 rounded-3xl border border-dashed border-border p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 id="unassigned-heading" className="font-black text-slate-800 dark:text-slate-100 text-sm">
+            <h3 id="unassigned-heading" className="font-black text-foreground text-sm">
               Unassigned fixtures
             </h3>
             <span className="text-xs font-bold text-muted-foreground tabular-nums">{unassigned.length} {unassigned.length === 1 ? "fixture" : "fixtures"}</span>
@@ -300,7 +301,9 @@ export function MatchCentre({
     setViewParam(v);
   };
   const [catRaw, setCat] = useQueryState<string>("cat", "ALL", true);
-  const [court, setCourt] = useQueryState<string>("court", "", true);
+  const [courtRaw, setCourt] = useQueryState<string>("court", "", true);
+  // Older links may say `court=C1`; chips use the merged key ("1").
+  const court = courtKey(courtRaw) ?? "";
   const [date, setDate] = useQueryState<string>("date", "", true);
   const cat = parseDiscipline(catRaw) ?? "ALL";
   const discipline = cat === "ALL" ? null : cat;
@@ -310,9 +313,10 @@ export function MatchCentre({
   // Results are grouped Final-first, which needs every round on the page:
   // paging by finish time would leave early rounds half-loaded. Rounds before
   // the quarter-finals render collapsed, so the full set stays light.
+  // Court is filtered on the client (filterMatches): one court can be stored
+  // as "1", "C1" or "Court 1", which a single equality filter would miss.
   const finished = useFinishedMatchViews(tournamentId, {
     discipline,
-    court: court || null,
     limit: mode === "results" ? RESULTS_ALL_LIMIT : COMPLETED_PAGE_SIZE,
   });
 
@@ -358,7 +362,7 @@ export function MatchCentre({
   return (
     <section aria-label={mode === "results" ? "Results" : "Match Centre"} className="space-y-4 mb-6">
       {mode === "live" && (
-        <div role="tablist" aria-label="Match Centre view" className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
+        <div role="tablist" aria-label="Match Centre view" className="grid grid-cols-3 gap-1 bg-card p-1 rounded-2xl">
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -367,7 +371,7 @@ export function MatchCentre({
               aria-selected={effectiveView === t.id}
               onClick={() => setView(t.id)}
               className={`min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl text-sm font-black transition-colors ${
-                effectiveView === t.id ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
+                effectiveView === t.id ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               <t.icon className="w-4 h-4" aria-hidden />

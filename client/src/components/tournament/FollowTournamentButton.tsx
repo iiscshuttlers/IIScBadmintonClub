@@ -88,7 +88,7 @@ export function FollowTournamentButton({
       className={`font-bold transition-all shadow-sm ${
         isFollowing
           ? "bg-primary text-primary-foreground hover:bg-primary/90"
-          : "hover:border-primary text-slate-700 dark:text-slate-200"
+          : "hover:border-primary text-soft"
       } ${className}`}
       title={isFollowing ? "Unfollow tournament" : "Follow tournament for match and result alerts"}
     >

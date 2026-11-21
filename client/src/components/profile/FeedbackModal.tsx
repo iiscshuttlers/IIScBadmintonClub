@@ -63,8 +63,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-xs font-semibold gap-1.5",
                 type === "bug" 
-                  ? "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900/50 dark:text-rose-400" 
-                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                  ? "bg-danger/10 border-danger/30 text-danger" 
+                  : "bg-card border-border text-muted-foreground hover:bg-muted"
               )}
             >
               <Bug className="w-5 h-5" />
@@ -76,8 +76,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-xs font-semibold gap-1.5",
                 type === "feature" 
-                  ? "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/50 dark:text-amber-400" 
-                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                  ? "bg-warning/10 border-warning/30 text-warning" 
+                  : "bg-card border-border text-muted-foreground hover:bg-muted"
               )}
             >
               <Lightbulb className="w-5 h-5" />
@@ -89,8 +89,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-xl border transition-all text-xs font-semibold gap-1.5",
                 type === "general" 
-                  ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-400" 
-                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                  ? "bg-info/10 border-info/30 text-info" 
+                  : "bg-card border-border text-muted-foreground hover:bg-muted"
               )}
             >
               <MessageSquare className="w-5 h-5" />
@@ -106,7 +106,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               type === "feature" ? "What feature would you like to see?" :
               "Tell us what you think..."
             }
-            className="w-full min-h-[120px] p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+            className="w-full min-h-[120px] p-3 rounded-xl border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
           />
 
           <Button 

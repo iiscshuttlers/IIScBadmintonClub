@@ -20,7 +20,7 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl }: VideoPlayerModal
     <AnimatePresence>
       {isOpen && videoUrl && (
         <motion.div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/95" 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-media/95" 
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -30,12 +30,12 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl }: VideoPlayerModal
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="w-full max-w-4xl bg-black rounded-2xl shadow-2xl overflow-hidden border border-slate-800 relative aspect-video flex flex-col"
+          className="w-full max-w-4xl bg-background rounded-2xl shadow-2xl overflow-hidden border border-border relative aspect-video flex flex-col"
         >
           <button
             onClick={onClose}
             aria-label="Close video"
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-10"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 rounded-full bg-media/50 text-on-media hover:bg-media/80 transition-colors z-10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -43,7 +43,7 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl }: VideoPlayerModal
           <iframe
             src={embedUrl}
             title="Video player"
-            className="w-full h-full border-0 bg-black"
+            className="w-full h-full border-0 bg-background"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />

@@ -13,18 +13,18 @@ import {
  */
 
 const TONE_CLASS: Record<ReturnType<typeof presenceTone>, string> = {
-  here: "bg-emerald-500/15 text-emerald-300",
-  court: "bg-cyan-500/15 text-cyan-300",
-  break: "bg-amber-500/15 text-amber-300",
-  rest: "bg-violet-500/15 text-violet-300",
-  none: "bg-slate-800 text-slate-300",
+  here: "bg-success/15 text-success",
+  court: "bg-live/15 text-live",
+  break: "bg-warning/15 text-warning",
+  rest: "bg-info/15 text-info",
+  none: "bg-muted text-soft",
 };
 
 const DOT_CLASS: Record<ReturnType<typeof presenceTone>, string> = {
-  here: "bg-emerald-400",
-  court: "bg-cyan-300",
-  break: "bg-amber-300",
-  rest: "bg-violet-300",
+  here: "bg-success",
+  court: "bg-live",
+  break: "bg-warning",
+  rest: "bg-info",
   none: "",
 };
 
@@ -41,7 +41,7 @@ export function PresenceChip({ presence, withTime = true, className = "" }: { pr
 export function MatchCodeChip({ code, className = "" }: { code: string | null | undefined; className?: string }) {
   if (!code) return null;
   return (
-    <span className={`inline-flex shrink-0 items-center rounded-lg border border-slate-700 bg-slate-800/80 px-2 py-0.5 font-mono text-[11px] font-black text-slate-100 ${className}`}>
+    <span className={`inline-flex shrink-0 items-center rounded-lg border border-border-strong bg-muted/80 px-2 py-0.5 font-mono text-[11px] font-black text-foreground ${className}`}>
       {code}
     </span>
   );
@@ -52,7 +52,7 @@ export function SpectatorChip({ ready, className = "" }: { ready: boolean; class
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-black ${
-        ready ? "bg-primary/15 text-primary" : "bg-slate-800 text-slate-300"
+        ready ? "bg-primary/15 text-primary" : "bg-muted text-soft"
       } ${className}`}
     >
       {ready && <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />}
@@ -82,8 +82,8 @@ export function SmallButton({
     tone === "primary"
       ? "bg-primary text-primary-foreground border-primary"
       : tone === "warning"
-        ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-        : "border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700";
+        ? "border-warning/40 bg-warning/10 text-warning hover:bg-warning/20"
+        : "border-border-strong bg-muted text-foreground hover:bg-muted-strong";
   return (
     <button
       type="button"
@@ -118,8 +118,8 @@ export function SectionTitle({ dot, title, count }: { dot: string; title: string
   return (
     <div className="flex items-center gap-2">
       <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
-      <h3 className="text-sm font-black text-slate-100">{title}</h3>
-      {count != null && <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-black text-slate-300">{count}</span>}
+      <h3 className="text-sm font-black text-foreground">{title}</h3>
+      {count != null && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-black text-soft">{count}</span>}
     </div>
   );
 }

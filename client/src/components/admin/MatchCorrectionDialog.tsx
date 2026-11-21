@@ -174,7 +174,7 @@ export function MatchCorrectionDialog({
   };
 
   const inputCls =
-    "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary";
+    "w-full rounded-xl border border-border-strong bg-card px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary";
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
@@ -193,7 +193,7 @@ export function MatchCorrectionDialog({
           </p>
         )}
         {current.isError && (
-          <p role="alert" className="text-sm text-[var(--danger)]">
+          <p role="alert" className="text-sm text-danger">
             {classifyCorrectionError(current.error as any) === "forbidden"
               ? "You are not an official for this match, so you can't correct it."
               : `Couldn't load the current result: ${(current.error as any)?.message ?? "unknown error"}`}
@@ -202,7 +202,7 @@ export function MatchCorrectionDialog({
 
         {current.data && (
           <div className="space-y-4 text-sm">
-            <section aria-label="Current result" className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3">
+            <section aria-label="Current result" className="rounded-xl bg-muted/60 p-3">
               <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Current server result</p>
               <p className="mt-1 font-bold">
                 Winner: {label(current.data.winnerSide)} · <span className="font-mono">{current.data.score ?? "no score"}</span>
@@ -211,7 +211,7 @@ export function MatchCorrectionDialog({
             </section>
 
             {notice && (
-              <p role="alert" className="flex gap-2 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 text-amber-900 dark:text-amber-200">
+              <p role="alert" className="flex gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3 text-warning">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden /> {notice}
               </p>
             )}
@@ -230,7 +230,7 @@ export function MatchCorrectionDialog({
                     aria-describedby="corr-games-help"
                     inputMode="text"
                   />
-                  <p id="corr-games-help" className={`mt-1 text-xs ${parsed.error ? "text-[var(--danger)]" : "text-muted-foreground"}`}>
+                  <p id="corr-games-help" className={`mt-1 text-xs ${parsed.error ? "text-danger" : "text-muted-foreground"}`}>
                     {parsed.error ?? `Scores are written ${team1Label} first.`}
                   </p>
                 </div>
@@ -241,7 +241,7 @@ export function MatchCorrectionDialog({
                     {([1, 2] as const).map((side) => (
                       <label
                         key={side}
-                        className={`flex items-center gap-2 rounded-xl border px-3 py-2 min-h-[44px] cursor-pointer ${proposedWinner === side ? "border-primary bg-primary/5" : "border-slate-200 dark:border-slate-700"}`}
+                        className={`flex items-center gap-2 rounded-xl border px-3 py-2 min-h-[44px] cursor-pointer ${proposedWinner === side ? "border-primary bg-primary/5" : "border-border-strong"}`}
                       >
                         <input
                           type="radio"
@@ -257,14 +257,14 @@ export function MatchCorrectionDialog({
                     ))}
                   </div>
                   {winnerMismatch && (
-                    <p className="mt-1 text-xs text-[var(--danger)]">The selected winner did not win more games.</p>
+                    <p className="mt-1 text-xs text-danger">The selected winner did not win more games.</p>
                   )}
                 </fieldset>
 
                 {blockers.length > 0 && (
                   <ul className="space-y-1.5">
                     {blockers.map((b) => (
-                      <li key={b} className="flex gap-2 text-xs text-[var(--danger)]">
+                      <li key={b} className="flex gap-2 text-xs text-danger">
                         <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden /> {blockerMessage(b)}
                       </li>
                     ))}
@@ -282,7 +282,7 @@ export function MatchCorrectionDialog({
               </>
             ) : (
               <section aria-label="Correction preview" className="space-y-3">
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                <div className="rounded-xl border border-border-strong p-3">
                   <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Preview (read-only)</p>
                   <p className="mt-1 flex flex-wrap items-center gap-1.5">
                     <span className="font-mono">{reviewed.score}</span>
@@ -319,14 +319,14 @@ export function MatchCorrectionDialog({
                 </div>
 
                 {blockersFor(reviewed, proposedWinner).map((b) => (
-                  <p key={b} className="flex gap-2 text-xs text-[var(--danger)]">
+                  <p key={b} className="flex gap-2 text-xs text-danger">
                     <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden /> {blockerMessage(b)}
                   </p>
                 ))}
 
                 <div>
                   <label htmlFor="corr-reason" className="block text-xs font-bold mb-1">
-                    Reason <span className="text-[var(--danger)]">*</span>
+                    Reason <span className="text-danger">*</span>
                   </label>
                   <textarea
                     id="corr-reason"
@@ -341,7 +341,7 @@ export function MatchCorrectionDialog({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setReviewed(null)} className="min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 font-bold">
+                  <button type="button" onClick={() => setReviewed(null)} className="min-h-[44px] rounded-xl border border-border-strong font-bold">
                     Back
                   </button>
                   <button
@@ -358,7 +358,7 @@ export function MatchCorrectionDialog({
             )}
 
             {current.data.undoableEventId != null && !reviewed && (
-              <section aria-label="Undo last correction" className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-3 space-y-2">
+              <section aria-label="Undo last correction" className="rounded-xl border border-dashed border-border-strong p-3 space-y-2">
                 <p className="text-xs font-bold">The current result came from a correction. You can undo it (recorded as a new action).</p>
                 <label htmlFor="undo-reason" className="sr-only">Reason for undo</label>
                 <input
@@ -372,7 +372,7 @@ export function MatchCorrectionDialog({
                   type="button"
                   onClick={undo}
                   disabled={submitting || !undoReason.trim()}
-                  className="w-full min-h-[44px] rounded-xl border border-[var(--danger)] text-[var(--danger)] font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  className="w-full min-h-[44px] rounded-xl border border-danger text-danger font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" aria-hidden /> Undo last correction
                 </button>

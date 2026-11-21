@@ -360,24 +360,24 @@ export function SendReminderSheet({
   if (!open) return null;
 
   const fieldCls =
-    "w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 text-slate-900 dark:text-slate-100";
+    "w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 text-foreground";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-media/60 backdrop-blur-sm">
+      <div className="bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl border border-border max-h-[92vh] flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2.5 shrink-0">
+        <div className="px-4 sm:px-5 py-3.5 border-b border-border flex items-center gap-2.5 shrink-0">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Bell className="w-5 h-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-black text-slate-800 dark:text-foreground truncate">Send a reminder</h3>
+            <h3 className="text-base font-black text-foreground truncate">Send a reminder</h3>
             <p className="text-xs text-muted-foreground truncate">{tournament.name ?? "This tournament"}</p>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
+            className="p-1.5 text-muted-foreground hover:text-soft rounded-lg hover:bg-muted transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -406,7 +406,7 @@ export function SendReminderSheet({
 
           {/* Audience */}
           <div className="space-y-2">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Audience</p>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Audience</p>
             <div className="grid grid-cols-2 gap-2">
               {AUDIENCES.map((a) => {
                 const Icon = a.icon;
@@ -420,12 +420,12 @@ export function SendReminderSheet({
                     className={`flex items-start gap-2 rounded-xl border p-2.5 text-left transition-colors ${
                       active
                         ? "border-primary bg-primary/10"
-                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                        : "border-border hover:border-border-strong"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? "text-primary" : "text-slate-400"}`} />
+                    <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
                     <div className="min-w-0">
-                      <div className={`text-sm font-black leading-tight ${active ? "text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                      <div className={`text-sm font-black leading-tight ${active ? "text-primary" : "text-soft"}`}>
                         {a.label}
                       </div>
                       <div className="text-[11px] text-muted-foreground leading-tight">
@@ -470,14 +470,14 @@ export function SendReminderSheet({
               <div className="space-y-3 pt-1">
                 {/* Time window pills */}
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Time window</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5">Time window</p>
                   <div className="flex flex-wrap gap-1.5">
                     {TIME_WINDOWS.map((tw) => (
                       <button key={tw.label} type="button" onClick={() => setMatchTimeWindow(tw.mins)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
                           matchTimeWindow === tw.mins
                             ? "bg-primary/15 border-primary text-primary"
-                            : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                            : "bg-muted border-border-strong text-soft hover:border-border-strong/90"
                         }`}>
                         {tw.label}
                       </button>
@@ -488,14 +488,14 @@ export function SendReminderSheet({
                 {/* Format pills */}
                 {availableCats.length > 1 && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Format</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5">Format</p>
                     <div className="flex flex-wrap gap-1.5">
                       {availableCats.map((cat) => (
                         <button key={cat} type="button" onClick={() => toggleCatFilter(cat)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
                             matchCatFilter.has(cat)
-                              ? "bg-indigo-500/15 border-indigo-500 text-indigo-600 dark:text-indigo-400"
-                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                              ? "bg-info/15 border-info text-info"
+                              : "bg-muted border-border-strong text-soft hover:border-border-strong/90"
                           }`}>
                           {CAT_LABELS_SHORT[cat] ?? cat}
                         </button>
@@ -507,14 +507,14 @@ export function SendReminderSheet({
                 {/* Court pills — multi-select */}
                 {availableCourts.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Courts</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5">Courts</p>
                     <div className="flex flex-wrap gap-1.5">
                       {availableCourts.map((c) => (
                         <button key={c} type="button" onClick={() => toggleCourtFilter(c)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
                             matchCourtFilter.has(c)
-                              ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                              : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400"
+                              ? "bg-success/15 border-success text-success"
+                              : "bg-muted border-border-strong text-soft hover:border-border-strong/90"
                           }`}>
                           <MapPin className="w-3 h-3 inline mr-1" />C{c}
                         </button>
@@ -526,7 +526,7 @@ export function SendReminderSheet({
                 {/* Match list */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                       {filteredMatches.length} match{filteredMatches.length !== 1 ? "es" : ""}
                     </p>
                     <div className="flex items-center gap-2">
@@ -538,13 +538,13 @@ export function SendReminderSheet({
                       )}
                       {selectedMatchIds.size > 0 && (
                         <button type="button" onClick={autoFillFromMatches}
-                          className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                          className="text-[10px] font-bold text-warning hover:underline">
                           Auto-fill message
                         </button>
                       )}
                     </div>
                   </div>
-                  <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-slate-200 dark:border-slate-700 p-1.5">
+                  <div className="max-h-48 overflow-y-auto space-y-1 rounded-xl border border-border-strong p-1.5">
                     {filteredMatches.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No matches found for these filters</p>
                     ) : (
@@ -553,25 +553,25 @@ export function SendReminderSheet({
                         return (
                           <button key={m.id} type="button" onClick={() => toggleMatchSelect(m.id)}
                             className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition ${
-                              sel ? "bg-primary/10 border border-primary/30" : "hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
+                              sel ? "bg-primary/10 border border-primary/30" : "hover:bg-muted border border-transparent"
                             }`}>
                             {sel
                               ? <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" />
-                              : <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                              : <Square className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">
                                   {CAT_LABELS_SHORT[m.category] ?? m.category}
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-500">{m.match_code}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground">{m.match_code}</span>
                                 {m.court_number && (
-                                  <span className="text-[10px] text-slate-400">C{m.court_number}</span>
+                                  <span className="text-[10px] text-muted-foreground">C{m.court_number}</span>
                                 )}
                                 {m.scheduled_at && (
-                                  <span className="text-[10px] text-slate-400">{formatMatchTime(m.scheduled_at)}</span>
+                                  <span className="text-[10px] text-muted-foreground">{formatMatchTime(m.scheduled_at)}</span>
                                 )}
                               </div>
-                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                              <p className="text-xs font-bold text-soft truncate">
                                 {m.team1_label ?? "TBD"} vs {m.team2_label ?? "TBD"}
                               </p>
                             </div>
@@ -587,7 +587,7 @@ export function SendReminderSheet({
 
           {/* Channels */}
           <div className="space-y-2">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Channels</p>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">Channels</p>
             <div className="grid grid-cols-3 gap-2">
               {CHANNELS.map((c) => {
                 const Icon = c.icon;
@@ -600,7 +600,7 @@ export function SendReminderSheet({
                     className={`flex flex-col items-center gap-1 rounded-xl border p-2.5 transition-colors ${
                       active
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700"
+                        : "border-border text-muted-foreground hover:border-border-strong"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -614,7 +614,7 @@ export function SendReminderSheet({
 
           {/* Timing */}
           <div className="space-y-2">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">When</p>
+            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">When</p>
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((p) => {
                 const active = presetMins === p.mins;
@@ -626,7 +626,7 @@ export function SendReminderSheet({
                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${
                       active
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300"
+                        : "border-border text-soft hover:border-border-strong"
                     }`}
                   >
                     {p.mins === 0 ? <Send className="w-3.5 h-3.5" /> : p.mins === -1 ? <CalendarClock className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
@@ -642,8 +642,8 @@ export function SendReminderSheet({
         </div>
 
         {/* Footer */}
-        <div className="px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
-          <span className={`text-xs min-w-0 truncate ${recipients.length === 0 && !loading ? "text-amber-600 font-bold" : "text-muted-foreground"}`}>
+        <div className="px-4 sm:px-5 py-3 border-t border-border flex items-center justify-between gap-2 shrink-0">
+          <span className={`text-xs min-w-0 truncate ${recipients.length === 0 && !loading ? "text-warning font-bold" : "text-muted-foreground"}`}>
             {loading
               ? "Loading recipients…"
               : recipients.length === 0

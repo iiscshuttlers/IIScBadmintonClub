@@ -1,4 +1,5 @@
 import { loadImg } from "./matchShareCard";
+import { themeColor, themeFont, withAlpha } from "./themeColors";
 
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
@@ -65,16 +66,29 @@ export async function renderWrappedShareCard(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
-  // Background Gradient (Spotify Wrapped Style)
+  // Theme colours and fonts, resolved now so the image matches the user's theme.
+  const ON = themeColor("on-accent"); // text on the gradient
+  const DISPLAY = themeFont("display");
+  const BODY = themeFont("body");
+  const STAT = themeFont("stat");
+  try {
+    await Promise.all([
+      document.fonts?.load(`900 110px ${DISPLAY}`),
+      document.fonts?.load(`900 40px ${STAT}`),
+      document.fonts?.load(`bold 36px ${BODY}`),
+    ]);
+  } catch { /* draw with whatever is available */ }
+
+  // Background Gradient (Spotify Wrapped Style) — theme gradient into its warm accent
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#8b5cf6"); // Violet
-  bg.addColorStop(0.5, "#d946ef"); // Fuchsia
-  bg.addColorStop(1, "#f97316"); // Orange
+  bg.addColorStop(0, themeColor("grad-from"));
+  bg.addColorStop(0.5, themeColor("grad-to"));
+  bg.addColorStop(1, themeColor("grad-warm-from"));
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Decorative blobs
-  ctx.fillStyle = "rgba(255,255,255,0.1)";
+  ctx.fillStyle = withAlpha(ON, 0.1);
   ctx.beginPath();
   ctx.arc(W * 0.8, H * 0.1, 400, 0, Math.PI * 2);
   ctx.fill();
@@ -83,13 +97,13 @@ export async function renderWrappedShareCard(
   ctx.fill();
 
   // Top header
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = "bold 40px sans-serif";
+  ctx.fillStyle = withAlpha(ON, 0.9);
+  ctx.font = `bold 40px ${DISPLAY}`;
   ctx.textAlign = "center";
   ctx.fillText("IISc Badminton Club", W / 2, 100);
   
-  ctx.font = "900 110px sans-serif";
-  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 110px ${DISPLAY}`;
+  ctx.fillStyle = ON;
   ctx.fillText(`${year} IN`, W / 2, 250);
   ctx.fillText("REVIEW", W / 2, 360);
 
@@ -102,24 +116,24 @@ export async function renderWrappedShareCard(
   ctx.beginPath();
   ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
   ctx.lineWidth = 15;
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.strokeStyle = withAlpha(ON, 0.5);
   ctx.stroke();
   ctx.clip();
   if (playerImg) {
     ctx.drawImage(playerImg, avatarX, avatarY, avatarSize, avatarSize);
   } else {
-    ctx.fillStyle = "#1e293b";
+    ctx.fillStyle = themeColor("muted");
     ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 100px sans-serif";
+    ctx.fillStyle = themeColor("foreground");
+    ctx.font = `bold 100px ${DISPLAY}`;
     ctx.textBaseline = "middle";
     ctx.fillText(playerName[0] || "?", W / 2, avatarY + avatarSize / 2);
   }
   ctx.restore();
 
   // Player Name
-  ctx.font = "bold 60px sans-serif";
-  ctx.fillStyle = "#ffffff";
+  ctx.font = `bold 60px ${BODY}`;
+  ctx.fillStyle = ON;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.fillText(playerName, W / 2, avatarY + avatarSize + 40);
@@ -131,19 +145,19 @@ export async function renderWrappedShareCard(
   const renderStat = (y: number, label: string, val: string) => {
     ctx.save();
     drawRoundedRect(ctx, 100, y, W - 200, 140, 40);
-    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillStyle = withAlpha(ON, 0.14);
     ctx.fill();
     ctx.restore();
 
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.font = "bold 36px sans-serif";
+    ctx.fillStyle = withAlpha(ON, 0.8);
+    ctx.font = `bold 36px ${BODY}`;
     ctx.fillText(label, 150, y + 70);
 
     ctx.textAlign = "right";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "900 54px sans-serif";
+    ctx.fillStyle = ON;
+    ctx.font = `900 54px ${BODY}`;
     ctx.fillText(val, W - 150, y + 70);
   };
 
@@ -156,19 +170,19 @@ export async function renderWrappedShareCard(
   const rankY = startY + gapY * 4;
   ctx.save();
   drawRoundedRect(ctx, 100, rankY, W - 200, 240, 40);
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillStyle = withAlpha(ON, 0.14);
   ctx.fill();
   ctx.restore();
 
   const drawRankItem = (x: number, y: number, label: string, val?: number) => {
     ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.font = "bold 26px sans-serif";
+    ctx.fillStyle = withAlpha(ON, 0.8);
+    ctx.font = `bold 26px ${BODY}`;
     ctx.fillText(label, x, y);
     
     ctx.textAlign = "right";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "900 40px sans-serif";
+    ctx.fillStyle = ON;
+    ctx.font = `900 40px ${STAT}`;
     ctx.fillText(val ? `#${val}` : "N/A", x + 350, y);
   };
 

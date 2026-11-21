@@ -4,7 +4,7 @@ import { fetchFeederMatches, fetchTournamentRefereeRows } from "@/services/tourn
 import { playerService } from "@/services/playerService";
 import { DISCIPLINE_LABELS, courtLabel, type MatchView } from "@/lib/matchView";
 import { matchPath, tournamentPath } from "@/lib/tournamentRoutes";
-import { MatchTimes } from "@/components/match/MatchPrimitives";
+import { matchTimesText } from "@/components/match/MatchPrimitives";
 
 /**
  * Match facts (cricinfo "Match info"): event, round, code, court, times,
@@ -77,7 +77,7 @@ export function MatchInfoTab({
   const info = useMatchInfo(view, officials);
   const event = view.discipline ? `${view.discipline} · ${DISCIPLINE_LABELS[view.discipline]}` : view.categoryLabel;
   return (
-    <dl className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
+    <dl className="mt-4 divide-y divide-border">
       <Row label="Tournament">
         <Link href={tournamentPath(tournament.id)} className="font-semibold text-primary underline underline-offset-2">
           {tournament.name}
@@ -88,9 +88,7 @@ export function MatchInfoTab({
       {view.rubberLabel && <Row label="Rubber">{view.rubberLabel}</Row>}
       {view.matchCode && <Row label="Match code"><span className="font-mono">{view.matchCode}</span></Row>}
       <Row label="Court">{view.court ? courtLabel(view.court) : "Not assigned"}</Row>
-      <Row label="Times">
-        <MatchTimes view={view} />
-      </Row>
+      <Row label="Times">{matchTimesText(view) ?? "Not recorded"}</Row>
       {info.data && info.data.feeds.length > 0 && (
         <Row label="Feeds from">
           <ul className="space-y-1">

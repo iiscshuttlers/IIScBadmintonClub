@@ -16,12 +16,12 @@ export function ParticipantContactsModal({
   onClose,
 }: ParticipantContactsModalProps) {
   return (
-    <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 mb-3">
+    <div className="rounded-xl border border-success/40 bg-success/10 p-3 mb-3">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+        <h4 className="text-xs font-black uppercase tracking-wider text-success">
           {category} Contacts ({parts.length})
         </h4>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition">
+        <button onClick={onClose} className="text-muted-foreground hover:text-faint transition">
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -31,13 +31,13 @@ export function ParticipantContactsModal({
           const name = p.display_name ?? pl?.full_name ?? "Unknown";
           const phone = pl?.contact_number;
           return (
-            <div key={p.id} className="flex items-center gap-2 text-xs py-1 px-2 rounded-lg hover:bg-white/60 dark:hover:bg-slate-800/40">
+            <div key={p.id} className="flex items-center gap-2 text-xs py-1 px-2 rounded-lg hover:bg-muted/40">
               <span className="w-5 text-right text-muted-foreground font-bold shrink-0">{i + 1}.</span>
-              <span className="flex-1 font-bold text-slate-700 dark:text-slate-200 truncate">{name}</span>
+              <span className="flex-1 font-bold text-soft truncate">{name}</span>
               {phone ? (
-                <a href={`tel:${phone}`} className="font-mono text-emerald-600 dark:text-emerald-400 shrink-0">{phone}</a>
+                <a href={`tel:${phone}`} className="font-mono text-success shrink-0">{phone}</a>
               ) : (
-                <span className="text-slate-400 italic shrink-0">no phone</span>
+                <span className="text-muted-foreground italic shrink-0">no phone</span>
               )}
             </div>
           );

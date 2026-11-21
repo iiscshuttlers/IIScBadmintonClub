@@ -137,7 +137,12 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
       const updatedPhotos = [...remotePhotos, ...newItems];
       await saveRemoteGalleryImages(updatedPhotos);
 
-      toast.success(`Successfully uploaded ${files.length} image(s)!`);
+      toast.success(`Successfully uploaded ${files.length} image(s)!`, {
+        // The site_data trigger queues the alert; see migration 20261121150000.
+        description: finalSubfolder.trim()
+          ? `Members with alerts on for ${finalSubfolder.trim()} are notified in a few minutes.`
+          : "Photos outside an album don't send alerts.",
+      });
       setFiles([]);
       setIsOpen(false);
       // Invalidate the query so gallery refreshes immediately
@@ -155,7 +160,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-blue-600 hover:bg-blue-700 text-on-accent p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
+        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-info hover:bg-info/90 text-on-accent p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
       >
         <Upload className="w-6 h-6" />
         <span className="font-bold hidden sm:block w-0 overflow-hidden group-hover:w-32 transition-all duration-300 whitespace-nowrap">Upload Photos</span>
@@ -164,14 +169,14 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-          <h3 className="font-black text-lg text-slate-800 dark:text-foreground flex items-center gap-2">
-            <FolderPlus className="w-5 h-5 text-blue-600" />
+    <div className="fixed inset-0 bg-media/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-card w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-border animate-in zoom-in-95 duration-200">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/50">
+          <h3 className="font-black text-lg text-foreground flex items-center gap-2">
+            <FolderPlus className="w-5 h-5 text-info" />
             Upload to Gallery
           </h3>
-          <button onClick={() => !uploading && setIsOpen(false)} className="text-muted-foreground hover:text-red-500 transition">
+          <button onClick={() => !uploading && setIsOpen(false)} className="text-muted-foreground hover:text-danger transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -179,17 +184,17 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Category Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Category (Folder)</label>
+            <label className="text-sm font-bold text-soft">Category (Folder)</label>
             <div className="flex gap-2">
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "select" ? "bg-info/10 border-info/30 text-info" : "bg-muted border-border-strong text-muted-foreground"}`}
                 onClick={() => setCategoryMode("select")}
                 disabled={existingCategories.length === 0}
               >
                 Existing
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "new" ? "bg-info/10 border-info/30 text-info" : "bg-muted border-border-strong text-muted-foreground"}`}
                 onClick={() => setCategoryMode("new")}
               >
                 Create New
@@ -197,7 +202,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
             </div>
             {categoryMode === "select" ? (
               <select
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className="w-full bg-muted border border-border-strong rounded-xl p-3 outline-none focus:ring-2 focus:ring-info font-medium"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -210,7 +215,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
               <input
                 type="text"
                 placeholder="e.g. BPL-2024"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder:font-normal"
+                className="w-full bg-muted border border-border-strong rounded-xl p-3 outline-none focus:ring-2 focus:ring-info font-medium placeholder:font-normal"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
               />
@@ -219,23 +224,23 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
           {/* Subfolder Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Subfolder (Optional)</label>
+            <label className="text-sm font-bold text-soft">Subfolder (Optional)</label>
             <div className="flex gap-2">
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "none" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "none" ? "bg-info/10 border-info/30 text-info" : "bg-muted border-border-strong text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("none")}
               >
                 None
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "select" ? "bg-info/10 border-info/30 text-info" : "bg-muted border-border-strong text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("select")}
                 disabled={existingSubfolders.length === 0}
               >
                 Existing
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "new" ? "bg-info/10 border-info/30 text-info" : "bg-muted border-border-strong text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("new")}
               >
                 Create New
@@ -243,7 +248,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
             </div>
             {subfolderMode === "select" ? (
               <select
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className="w-full bg-muted border border-border-strong rounded-xl p-3 outline-none focus:ring-2 focus:ring-info font-medium"
                 value={subfolder}
                 onChange={(e) => setSubfolder(e.target.value)}
               >
@@ -256,7 +261,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
               <input
                 type="text"
                 placeholder="e.g. Finals (use / for nested folders like Finals/Day1)"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder:font-normal"
+                className="w-full bg-muted border border-border-strong rounded-xl p-3 outline-none focus:ring-2 focus:ring-info font-medium placeholder:font-normal"
                 value={newSubfolder}
                 onChange={(e) => setNewSubfolder(e.target.value)}
               />
@@ -265,8 +270,8 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
           {/* File Picker */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Photos</label>
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer relative overflow-hidden group">
+            <label className="text-sm font-bold text-soft">Photos</label>
+            <div className="border-2 border-dashed border-border-strong rounded-2xl p-6 text-center hover:bg-muted/50 transition cursor-pointer relative overflow-hidden group">
               <input
                 type="file"
                 multiple
@@ -276,10 +281,10 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                 id="gallery-upload"
               />
               <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-info/10 text-info rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Upload className="w-6 h-6" />
                 </div>
-                <span className="font-bold text-muted-foreground dark:text-slate-300">
+                <span className="font-bold text-soft">
                   Tap to select photos
                 </span>
                 <span className="text-xs text-muted-foreground">
@@ -289,20 +294,20 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
             </div>
 
             {files.length > 0 && (
-              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex justify-between text-sm font-bold mb-3 text-muted-foreground dark:text-slate-300">
+              <div className="bg-muted/50 border border-border rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex justify-between text-sm font-bold mb-3 text-soft">
                   <span>Selected ({files.length})</span>
-                  <button onClick={() => setFiles([])} className="text-red-500 hover:text-red-600">Clear all</button>
+                  <button onClick={() => setFiles([])} className="text-danger hover:text-danger/80">Clear all</button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {files.slice(0, 9).map(({ file, caption }, i) => (
                     <div key={i} className="flex flex-col gap-2">
-                      <div className="relative aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden group shadow-sm flex flex-col items-center justify-center">
+                      <div className="relative aspect-square rounded-lg bg-muted-strong overflow-hidden group shadow-sm flex flex-col items-center justify-center">
                         <ImageIcon className="text-muted-foreground w-6 h-6 mb-1" />
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">{file.name.split('.').pop()}</span>
                         <button 
                           onClick={() => removeFile(i)}
-                          className="absolute top-1 right-1 bg-black/60 text-on-accent rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
+                          className="absolute top-1 right-1 bg-media/60 text-on-media rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-danger"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -317,12 +322,12 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                         placeholder="Caption (Optional)"
                         value={caption}
                         onChange={(e) => updateCaption(i, e.target.value)}
-                        className="w-full text-xs p-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full text-xs p-2 rounded-md bg-card border border-border-strong outline-none focus:ring-1 focus:ring-info"
                       />
                     </div>
                   ))}
                   {files.length > 9 && (
-                    <div className="aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-muted-foreground text-sm shadow-sm border border-slate-300 dark:border-slate-600">
+                    <div className="aspect-square rounded-lg bg-muted-strong flex items-center justify-center font-bold text-muted-foreground text-sm shadow-sm border border-border-strong">
                       +{files.length - 9}
                     </div>
                   )}
@@ -333,22 +338,22 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+        <div className="p-4 border-t border-border bg-muted/50">
           {uploading ? (
             <div className="w-full">
-              <div className="flex justify-between text-xs font-bold text-muted-foreground dark:text-muted-foreground mb-2">
+              <div className="flex justify-between text-xs font-bold text-muted-foreground mb-2">
                 <span>Uploading to Cloudinary...</span>
                 <span>{progress}%</span>
               </div>
-              <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shadow-inner">
-                <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="h-3 bg-muted-strong rounded-full overflow-hidden shadow-inner">
+                <div className="h-full bg-info transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
             </div>
           ) : (
             <button
               onClick={handleUpload}
               disabled={files.length === 0 || !finalCategory.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:dark:bg-slate-700 disabled:text-muted-foreground disabled:cursor-not-allowed text-on-accent font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+              className="w-full bg-info hover:bg-info/90 disabled:bg-muted-strong disabled:text-muted-foreground disabled:cursor-not-allowed text-on-accent font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-info/25"
             >
               <Upload className="w-5 h-5" />
               Upload {files.length > 0 && `${files.length} photos`}

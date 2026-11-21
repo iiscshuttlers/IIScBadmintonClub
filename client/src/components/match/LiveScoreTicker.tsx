@@ -30,20 +30,20 @@ function TickerChip({ v }: { v: MatchView }) {
     <Link
       href={matchPath(v.tournamentId, v.id)}
       aria-label={`Live: ${label}`}
-      className="snap-start shrink-0 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 hover:border-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+      className="snap-start shrink-0 w-56 rounded-2xl bg-card border border-border px-3 py-2 hover:border-live focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
     >
       <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-        <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-600 motion-safe:animate-pulse" aria-hidden /> Live
+        <span className="inline-flex items-center gap-1 text-live">
+          <span className="w-1.5 h-1.5 rounded-full bg-danger motion-safe:animate-pulse" aria-hidden /> Live
         </span>
         <span className="truncate">{meta}</span>
       </div>
       {([0, 1] as const).map((s) => (
         <div key={s} className="flex items-center justify-between gap-2 mt-0.5" aria-hidden>
-          <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{v.sides[s].label}</span>
+          <span className="truncate text-sm font-semibold text-foreground">{v.sides[s].label}</span>
           <span className="flex items-center gap-1.5 shrink-0 font-mono tabular-nums text-sm">
             {v.games.length > 1 && <span className="text-[10px] text-muted-foreground">({gamesWon(v, s)})</span>}
-            <span className="font-black text-slate-900 dark:text-white w-5 text-right">{sideScore(v, s)}</span>
+            <span className="font-black text-foreground w-5 text-right">{sideScore(v, s)}</span>
           </span>
         </div>
       ))}
