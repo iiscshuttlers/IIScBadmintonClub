@@ -1,13 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCircle, CheckCircle2, MapPin } from "lucide-react";
+import { Calendar, Bell, Pin, CalendarDays } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
-import { SocialCTA } from "@/components/SocialCTA";
-import { fetchLatestActiveTournament, subscribeToTournaments } from "@/services/tournamentService";
 import DOMPurify from "dompurify";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
+import { buildAutoAnnouncements, type AutoAnnouncement } from "@/lib/autoAnnouncements";
+import { useAutoFeedTournaments } from "@/hooks/queries/useAutoFeedTournaments";
+import { AutoPostBody } from "@/components/feed/AutoPostBody";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 function sanitize(html: string) {
@@ -43,29 +44,48 @@ type Announcement = {
   category: string;
   content: string;
   url?: string;
+  /** Set on posts built from tournament data (see lib/autoAnnouncements). */
+  auto?: AutoAnnouncement;
 };
 
-type LiveTournament = {
-  id: string;
-  name: string;
-  status: string;
-  form_status: string;
-  form_url: string | null;
-  form_close_date: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  venue: string | null;
-  eligibility: string | null;
-};
+type AnnouncementsValue = { recent?: Announcement[]; hiddenAuto?: string[] };
+
+function sortByNewest(items: Announcement[]) {
+  return [...items].sort(
+    (a, b) =>
+      new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
+  );
+}
+
+function getStatus(item: Announcement) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (item.startDate && item.endDate) {
+    const start = new Date(item.startDate);
+    const end = new Date(item.endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (today < start) return "upcoming";
+    if (today >= start && today <= end) return "ongoing";
+    return "past";
+  }
+
+  if (item.date) {
+    const date = new Date(item.date);
+    date.setHours(0, 0, 0, 0);
+
+    if (today < date) return "upcoming";
+    if (today.getTime() === date.getTime()) return "ongoing";
+    return "past";
+  }
+
+  return "unknown";
+}
 
 export function AnnouncementsSection() {
-  const [pinnedAnnouncements, setPinnedAnnouncements] = useState<
-    Announcement[]
-  >([]);
-  const [recentAnnouncements, setRecentAnnouncements] = useState<
-    Announcement[]
-  >([]);
-  const [liveTournament, setLiveTournament] = useState<LiveTournament | null>(null);
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("cat") || "all";
@@ -82,9 +102,64 @@ export function AnnouncementsSection() {
     const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${hash}`;
     safeReplaceState(newUrl);
   }, [selectedCategory]);
-  const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
   const observerRef = useRef<HTMLDivElement>(null);
+
+  const { data: queryData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => fetchSiteData<AnnouncementsValue>("announcements", "announcements.json"),
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
+  });
+  const { data: autoRows } = useAutoFeedTournaments();
+  const loading = isQueryLoading && !queryData;
+
+  // Tournament posts are worked out from live data and merged with the
+  // hand-written ones; admins can hide one through `hiddenAuto`.
+  const hiddenAuto = queryData?.hiddenAuto;
+  const autoItems = useMemo<Announcement[]>(
+    () =>
+      buildAutoAnnouncements(autoRows, Array.isArray(hiddenAuto) ? hiddenAuto : []).map((post) => ({
+        title: post.title,
+        date: post.date,
+        startDate: post.startDate,
+        endDate: post.endDate,
+        category: post.category,
+        content: "",
+        auto: post,
+      })),
+    [autoRows, hiddenAuto],
+  );
+  const recentAnnouncements = useMemo(
+    () => sortByNewest([...(Array.isArray(queryData?.recent) ? queryData.recent : []), ...autoItems]),
+    [queryData, autoItems],
+  );
+  const pinnedAnnouncements = useMemo(
+    () =>
+      recentAnnouncements.filter((item) => {
+        const status = getStatus(item);
+        return status === "ongoing" || status === "upcoming";
+      }),
+    [recentAnnouncements],
+  );
+
+  // Scroll to a shared #feed-… post once it has rendered.
+  const scrolledHash = useRef<string | null>(null);
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#feed-") || scrolledHash.current === hash) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(hash.substring(1));
+      if (!el) return;
+      scrolledHash.current = hash;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Add a brief highlight effect
+      el.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      setTimeout(() => {
+        el.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      }, 2000);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [recentAnnouncements]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -98,77 +173,6 @@ export function AnnouncementsSection() {
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
   }, [loading, selectedCategory]);
-
-  function sortByNewest(items: Announcement[]) {
-    return [...items].sort(
-      (a, b) =>
-        new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
-    );
-  }
-
-  const loadLiveTournament = useCallback(() => {
-    fetchLatestActiveTournament().then((data) => {
-      if (data) {
-        const t = data as LiveTournament;
-        // Override form_status if deadline has passed
-        if (t.form_close_date && t.form_status !== "disabled") {
-          const closeTime = new Date(t.form_close_date).getTime();
-          if (!isNaN(closeTime) && Date.now() >= closeTime) {
-            t.form_status = "closed";
-          }
-        }
-        setLiveTournament(t);
-      } else {
-        setLiveTournament(null);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    loadLiveTournament();
-    const unsubscribe = subscribeToTournaments(() => {
-      loadLiveTournament();
-    });
-    return () => { unsubscribe(); };
-  }, [loadLiveTournament]);
-
-  const { data: queryData, isLoading: isQueryLoading } = useQuery({
-    queryKey: ["announcements"],
-    queryFn: () => fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json"),
-    refetchInterval: (query) => (query.state.error ? false : 60_000),
-  });
-
-  useEffect(() => {
-    if (queryData) {
-      const allAnnouncements = queryData.recent || [];
-      const pinned = allAnnouncements.filter((item: Announcement) => {
-        const status = getStatus(item);
-        return status === "ongoing" || status === "upcoming";
-      });
-
-      setPinnedAnnouncements(sortByNewest(pinned));
-      setRecentAnnouncements(sortByNewest(allAnnouncements));
-      setLoading(false);
-      
-      // Auto-scroll to specific announcement if hash is present
-      setTimeout(() => {
-        const hash = window.location.hash;
-        if (hash && hash.startsWith('#feed-')) {
-          const el = document.getElementById(hash.substring(1));
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Add a brief highlight effect
-            el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
-            setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
-            }, 2000);
-          }
-        }
-      }, 100);
-    } else if (!isQueryLoading) {
-      setLoading(false);
-    }
-  }, [queryData, isQueryLoading]);
 
   const categories = [
     { id: "all", label: "All", color: "bg-muted/50 text-muted-foreground border border-border-strong/50", icon: "📋" },
@@ -218,34 +222,6 @@ export function AnnouncementsSection() {
 
   const visibleRecent = filteredRecent.slice(0, visibleCount);
 
-  function getStatus(item: Announcement) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (item.startDate && item.endDate) {
-      const start = new Date(item.startDate);
-      const end = new Date(item.endDate);
-
-      start.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
-
-      if (today < start) return "upcoming";
-      if (today >= start && today <= end) return "ongoing";
-      return "past";
-    }
-
-    if (item.date) {
-      const date = new Date(item.date);
-      date.setHours(0, 0, 0, 0);
-
-      if (today < date) return "upcoming";
-      if (today.getTime() === date.getTime()) return "ongoing";
-      return "past";
-    }
-
-    return "unknown";
-  }
-
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
     if (status === "ongoing") return "bg-info/10 text-info";
@@ -256,92 +232,6 @@ export function AnnouncementsSection() {
   return (
     <div className="bg-background" id="announcements">
       <div className="container mx-auto px-4 max-w-6xl">
-
-        {/* Live Tournament Notice — dynamically from Supabase */}
-        {liveTournament && (
-          <div className="pt-8">
-            <div className={`rounded-2xl border p-5 ${
-              liveTournament.form_status === "open"
-                ? "bg-primary/10 border-primary/30"
-                : liveTournament.form_status === "closing_soon"
-                ? "bg-warning/10 border-warning/30"
-                : "bg-muted/60 border-border-strong"
-            }`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                  <div className={`p-2.5 rounded-xl flex-shrink-0 ${
-                    liveTournament.form_status === "open"
-                      ? "bg-primary/15"
-                      : liveTournament.form_status === "closing_soon"
-                      ? "bg-gold/15"
-                      : "bg-muted-strong"
-                  }`}>
-                    <Trophy className={`w-5 h-5 ${
-                      liveTournament.form_status === "open"
-                        ? "text-primary"
-                        : liveTournament.form_status === "closing_soon"
-                        ? "text-gold"
-                        : "text-muted-foreground"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-black text-sm md:text-base text-foreground">{liveTournament.name}</span>
-                      {liveTournament.status === "active" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-success/15 text-success">🏸 Active</Badge>
-                      )}
-                      {liveTournament.status === "upcoming" && (
-                        <Badge className="text-[10px] font-bold border-0 bg-info/15 text-info">📅 Upcoming</Badge>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mt-1">
-                      {liveTournament.start_date && (
-                        <span className="flex items-center gap-1.5">
-                          <CalendarDays className="w-3.5 h-3.5 opacity-70" />
-                          {liveTournament.start_date}{liveTournament.end_date && liveTournament.end_date !== liveTournament.start_date ? ` – ${liveTournament.end_date}` : ""}
-                        </span>
-                      )}
-                      {liveTournament.venue && (
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 opacity-70 text-danger" /> 
-                          {liveTournament.venue}
-                        </span>
-                      )}
-                      {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
-                        <span className="flex items-center gap-1.5 text-warning font-medium">
-                          <Clock className="w-3.5 h-3.5" />
-                          Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex-shrink-0 flex sm:block mt-2 sm:mt-0">
-                  {liveTournament.form_url && liveTournament.form_status !== "closed" && liveTournament.form_status !== "disabled" && (
-                    <a
-                      href={liveTournament.form_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all ${
-                        liveTournament.form_status === "open"
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-warning text-warning-foreground hover:bg-warning/90"
-                      }`}
-                    >
-                      Register Now <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                  {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
-                    <span className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-muted text-muted-foreground cursor-not-allowed border border-border-strong">
-                      <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Loading */}
         {loading && (
@@ -454,12 +344,16 @@ export function AnnouncementsSection() {
                             </div>
                           </CardHeader>
                           <CardContent>
-                            <p
-                              className="text-soft leading-relaxed"
-                              dangerouslySetInnerHTML={{
-                                __html: sanitize(item.content),
-                              }}
-                            />
+                            {item.auto ? (
+                              <AutoPostBody post={item.auto} />
+                            ) : (
+                              <p
+                                className="text-soft leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitize(item.content),
+                                }}
+                              />
+                            )}
                           </CardContent>
                         </Card>
                       );
@@ -605,12 +499,16 @@ export function AnnouncementsSection() {
                           </CardHeader>
 
                           <CardContent>
-                            <p
-                              className="text-muted-foreground text-sm leading-relaxed"
-                              dangerouslySetInnerHTML={{
-                                __html: sanitize(item.content),
-                              }}
-                            />
+                            {item.auto ? (
+                              <AutoPostBody post={item.auto} compact />
+                            ) : (
+                              <p
+                                className="text-muted-foreground text-sm leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitize(item.content),
+                                }}
+                              />
+                            )}
                           </CardContent>
                         </Card>
                       );

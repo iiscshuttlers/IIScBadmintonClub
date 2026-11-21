@@ -68,11 +68,15 @@ export function NoticeboardManager({
           EditorComponent={(props: any) => (
             <AnnouncementEditor
               data={props.data.recent || []}
-              onChange={(d) => props.onChange({ recent: d })}
+              onChange={(d) => props.onChange({ ...props.data, recent: d })}
+              hiddenAuto={Array.isArray(props.data.hiddenAuto) ? props.data.hiddenAuto : []}
+              onHiddenAutoChange={(keys) => props.onChange({ ...props.data, hiddenAuto: keys })}
             />
           )}
           writeTransformer={(data: any) => ({
             recent: data.recent.filter((a: any) => a.title),
+            // Automatic tournament posts an admin chose to keep off the Feed.
+            hiddenAuto: Array.isArray(data.hiddenAuto) ? data.hiddenAuto : [],
           })}
           setTabCount={(c) =>
             setTabCounts((prev) => prev.announcements === c ? prev : { ...prev, announcements: c })

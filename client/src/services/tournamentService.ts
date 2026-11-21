@@ -1535,19 +1535,6 @@ export async function fetchMyTournamentMatchesForTab(profileId: string): Promise
   return data ?? [];
 }
 
-export async function fetchLatestActiveTournament(): Promise<any | null> {
-  const { data, error } = await supabase
-    .from("tournaments")
-    .select("id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility")
-    .neq("status", "deleted")
-    .neq("status", "draft")
-    .neq("status", "archived")
-    .order("created_at", { ascending: false })
-    .limit(1);
-  if (error) throw error;
-  return data?.[0] ?? null;
-}
-
 /** At most one `active` tournament (id, name, status, format_family). Returns null on error. */
 export async function fetchActiveTournamentRows() {
   const { data } = await supabase
@@ -1694,19 +1681,6 @@ export function subscribeToUmpireTournamentMatches(onChange: () => void): () => 
       { event: "*", schema: "public", table: "tournament_matches" },
       () => { onChange(); },
     )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}
-
-export function subscribeToTournaments(callback: () => void): () => void {
-  const channel = supabase
-    .channel("announcements_tournament_watch")
-    .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => {
-      callback();
-    })
     .subscribe();
 
   return () => {
