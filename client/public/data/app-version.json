@@ -1,6 +1,6 @@
 {
-  "versionCode": 434,
-  "versionName": "4.34",
+  "versionCode": 435,
+  "versionName": "4.35",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "Five colour themes: pick yours in Settings\nTournament check-in: tap \"I'm here\" so organisers and umpires know who's ready\nMatch page: new Stats tab and a sticky score bar\nGallery: photo alerts for every album, with a setting to turn them off\nFeed: automatic posts for each tournament stage\nNew club YouTube videos appear on their own\nWin/loss records, head-to-head and diversity score fixed\nArchived tournaments show as completed"
+  "changelog": "Simpler layout: Home, Tournaments, Players and Club\nYour matches and form are now on your profile\nBack works the same everywhere, including the Android back key\nShared links open straight in the app\nOrganisers choose who sees contact numbers; finished events hide them\nHead-to-head pairs: pick a pair and the event follows\nUmpires can reschedule matches\nFollowers get every court or time change\nFaster start-up"
 }

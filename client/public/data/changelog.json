@@ -1,5 +1,21 @@
 [
   {
+    "versionCode": 435,
+    "versionName": "4.35",
+    "date": "2026-11-22T17:55:42.313Z",
+    "changes": [
+      "Simpler layout: Home, Tournaments, Players and Club",
+      "Your matches and form are now on your profile",
+      "Back works the same everywhere, including the Android back key",
+      "Shared links open straight in the app",
+      "Organisers choose who sees contact numbers; finished events hide them",
+      "Head-to-head pairs: pick a pair and the event follows",
+      "Umpires can reschedule matches",
+      "Followers get every court or time change",
+      "Faster start-up"
+    ]
+  },
+  {
     "versionCode": 434,
     "versionName": "4.34",
     "date": "2026-11-21T03:47:00.653Z",
