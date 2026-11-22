@@ -6,7 +6,8 @@ export type PreferenceColumn =
   | "pref_notify_serve"
   | "pref_notify_whistle"
   | "pref_notify_victory"
-  | "pref_notify_gallery";
+  | "pref_notify_gallery"
+  | "pref_notify_buddy_status";
 
 /** PostgREST puts `.in()` lists in the URL; keep each request well under its length limit. */
 const IN_CHUNK = 100;

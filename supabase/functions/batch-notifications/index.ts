@@ -136,7 +136,8 @@ serve(async () => {
       title,
       message: body,
       type: "notification",
-      link: "/personal/me"
+      // The digest points Home (the old /personal/me account page now redirects to Settings).
+      link: "/"
     });
 
     // player_id in notification_queue is now the auth UUID directly

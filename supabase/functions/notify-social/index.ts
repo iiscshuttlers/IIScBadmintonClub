@@ -1,9 +1,13 @@
 /**
- * Push notification for social events: buddy requests and follows.
+ * Push notification for social events: follows, buddy requests and a player's
+ * "looking to play" status going out to their buddies.
  * Called client-side via supabase.functions.invoke("notify-social", { body: {...} }).
  *
+ * Gated by the player's "Followers" setting (players.pref_notify_buddy_status)
+ * and the master push switch. Sent on the Android "Achievements" channel.
+ *
  * Body:
- *   type          "buddy_request" | "follow"
+ *   type          "follow" (or "new_follower", which the app sends) | "buddy_request" | "status_update"
  *   to_player_id  players.id of the recipient (not required for status_update)
  *   from_name     display name of the sender
  *   from_player_id players.id of the sender (for deep-link navigation)
@@ -75,7 +79,7 @@ async function sendFcm(
           notification: { title, body },
           android: {
             priority: "high",
-            notification: { channel_id: "notify_serve" },
+            notification: { channel_id: "notify_victory" },
           },
           data,
         },
@@ -90,17 +94,27 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { type, to_player_id, from_name, from_player_id, new_status } = await req.json() as {
-      type: "buddy_request" | "follow" | "status_update";
+    const { type: rawType, to_player_id, from_name, from_player_id, new_status } = await req.json() as {
+      type: "buddy_request" | "follow" | "new_follower" | "status_update";
       to_player_id?: string;
       from_name: string;
       from_player_id: string;
       new_status?: string;
     };
 
+    // The app's follow button sends "new_follower"; older callers sent "follow".
+    const type = rawType === "new_follower" ? "follow" : rawType;
+
     if (!type || !from_name || !from_player_id) {
       return new Response(
         JSON.stringify({ error: "type, from_player_id, and from_name are required" }),
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+    if (type !== "follow" && type !== "buddy_request" && type !== "status_update") {
+      return new Response(
+        JSON.stringify({ error: `unknown type: ${rawType}` }),
         { status: 400, headers: corsHeaders },
       );
     }
@@ -129,17 +143,17 @@ serve(async (req) => {
         return new Response(JSON.stringify({ sent: 0, reason: "no_buddies" }), { headers: corsHeaders });
       }
 
-      // Filter buddies who have pref_notify_serve = true (repurposing for social requests)
+      // Only buddies who kept the "Followers" setting on.
       let buddyPlayers = null;
       const { data, error } = await supabase
         .from("players")
-        .select("id, pref_notify_serve")
+        .select("id, pref_notify_buddy_status")
         .in("id", buddies);
-        
+
       if (!error && data) {
-        buddyPlayers = data.filter(p => p.pref_notify_serve !== false);
+        buddyPlayers = data.filter(p => p.pref_notify_buddy_status !== false);
       } else {
-        console.warn("[notify-social] Could not filter by pref_notify_serve:", error);
+        console.warn("[notify-social] Could not filter by pref_notify_buddy_status:", error);
       }
         
       targetUserIds = buddyPlayers ? buddyPlayers.map(p => p.id) : buddies;
@@ -170,8 +184,9 @@ serve(async (req) => {
       notifType = "status_update";
     }
 
-    // Create in-app notifications for all target users
-    if (targetUserIds.length > 0) {
+    // In-app notifications. For follows the app already writes this row itself
+    // (socialService.toggleFollow), so a second one here would be a duplicate.
+    if (targetUserIds.length > 0 && type !== "follow") {
       await supabase.from("notifications").insert(
         targetUserIds.map(userId => ({
           user_id: userId,
@@ -183,8 +198,8 @@ serve(async (req) => {
       );
     }
 
-    // Fetch push tokens via getNotificationTargets
-    const { pushTokens } = await getNotificationTargets(supabase, targetUserIds, "pref_notify_serve");
+    // Push only to players with push on and the "Followers" setting on.
+    const { pushTokens } = await getNotificationTargets(supabase, targetUserIds, "pref_notify_buddy_status");
 
     if (!pushTokens || pushTokens.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });
