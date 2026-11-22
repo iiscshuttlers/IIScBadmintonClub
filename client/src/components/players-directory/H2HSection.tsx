@@ -406,7 +406,8 @@ export function H2HSection() {
                 </div>
               )}
 
-              {/* Win Probability Predictor */}
+              {/* Win Probability Predictor, once both sides are chosen */}
+              {ready && (
               <div className="w-full bg-muted/50 p-2.5 rounded-xl border border-border-strong/50">
                 <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center mb-1.5 flex items-center justify-center gap-1">
                   <Activity className="w-3 h-3 text-info" /> Win Prob{formatLabel && ` · ${formatLabel}`}
@@ -420,6 +421,7 @@ export function H2HSection() {
                   <div className="h-full bg-info transition-all duration-1000 ease-out" style={{ width: `${p2WinProb}%` }} />
                 </div>
               </div>
+              )}
             </div>
 
             <SidePicker

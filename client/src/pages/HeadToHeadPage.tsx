@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftRight, Info, Loader2, Users, User } from "lucide-react";
@@ -15,12 +15,22 @@ import {
   type ComparisonSide,
 } from "@/lib/comparison";
 import { fetchComparisonRows } from "@/services/comparisonService";
+import {
+  PAIR_KIND_LABELS,
+  PAIR_KIND_NEEDS,
+  genderOf,
+  misfitOnSecondSide,
+  possibleKinds,
+  settledKind,
+  type Gender,
+} from "@/lib/pairRules";
 
 /**
  * Compare any two players or any two pairs (WP8):
  *   /h2h?a=<id>&b=<id>             players
  *   /h2h?a=<id>,<id>&b=<id>,<id>   pairs (order inside a pair does not matter)
- *   &cat=MS|WS|MD|WD|XD            discipline filter
+ *   &cat=MS|WS|MD|WD|XD            discipline filter (players only: two pairs
+ *                                  make one event, set by pair A's genders)
  */
 
 type PublicPlayer = { id: string; full_name: string | null; gender: string | null };
@@ -39,7 +49,7 @@ export default function HeadToHeadPage() {
   const aIds = parseIds(params.get("a"));
   const bIds = parseIds(params.get("b"));
   const mode: "players" | "pairs" = params.get("mode") === "pairs" || aIds.length === 2 || bIds.length === 2 ? "pairs" : "players";
-  const discipline = parseDiscipline(params.get("cat") ?? "");
+  const discipline = mode === "pairs" ? null : parseDiscipline(params.get("cat") ?? "");
   const period = params.get("period") === "12m" || params.get("period") === "36m" ? params.get("period")! : "all";
   const dateFrom = useMemo(() => {
     if (period === "all") return null;
@@ -66,6 +76,24 @@ export default function HeadToHeadPage() {
     staleTime: 10 * 60 * 1000,
   });
 
+  // Pairs: pair A's genders set the event (two men, two women, or one of
+  // each) and pair B's pickers only offer players who fit (lib/pairRules).
+  const genderById = useMemo(
+    () => new Map((players.data ?? []).map((p) => [p.id, genderOf(p)] as const)),
+    [players.data],
+  );
+  const g = (id: string): Gender => genderById.get(id) ?? null;
+  const pairEvent = mode === "pairs" ? settledKind(aIds.map(g), bIds.map(g)) : null;
+
+  // When pair A changes, drop pair B's picks that no longer fit.
+  useEffect(() => {
+    if (mode !== "pairs" || !players.data) return;
+    const misfit = misfitOnSecondSide(aIds.map(g), bIds[0] ? g(bIds[0]) : undefined, bIds[1] ? g(bIds[1]) : undefined);
+    if (misfit === "player") set({ b: null });
+    else if (misfit === "partner") set({ b: bIds[0] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, players.data, aIds.join(), bIds.join()]);
+
   const need = mode === "pairs" ? 2 : 1;
   const ready = aIds.length === need && bIds.length === need && !aIds.some((x) => bIds.includes(x));
   const a: ComparisonSide = { ids: aIds };
@@ -91,10 +119,17 @@ export default function HeadToHeadPage() {
   const picker = (which: "a" | "b", idx: number) => {
     const ids = which === "a" ? aIds : bIds;
     const value = ids[idx] ?? "";
+    const all = players.data ?? [];
+    const mates = idx === 1 && bIds[0] ? [g(bIds[0])] : [];
+    const options =
+      mode === "pairs" && which === "b"
+        ? all.filter((p) => !ids.includes(p.id) || p.id === value)
+            .filter((p) => possibleKinds(aIds.map(g), [...mates, genderOf(p)]).length > 0)
+        : all;
     return (
       <PlayerSelect
         value={value}
-        players={players.data ?? []}
+        players={options}
         placeholder={mode === "pairs" ? (idx === 0 ? "Player" : "Partner") : "Choose a player"}
         onChange={(v) => {
           const next = [...ids];
@@ -148,6 +183,14 @@ export default function HeadToHeadPage() {
           </fieldset>
         </div>
 
+        {mode === "pairs" ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            <span className="font-bold text-foreground">{pairEvent ? PAIR_KIND_LABELS[pairEvent] : "Doubles & mixed"}</span>
+            {pairEvent
+              ? ` · Pair B must be ${PAIR_KIND_NEEDS[pairEvent]}.`
+              : " · Pair B must match pair A: two men, two women, or a man and a woman."}
+          </p>
+        ) : (
         <div className="flex flex-wrap gap-2" role="group" aria-label="Discipline">
           {[null, ...DISCIPLINES].map((d) => (
             <button
@@ -161,6 +204,7 @@ export default function HeadToHeadPage() {
             </button>
           ))}
         </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Comparison period">
           <span className="text-xs font-bold text-muted-foreground">Period</span>
