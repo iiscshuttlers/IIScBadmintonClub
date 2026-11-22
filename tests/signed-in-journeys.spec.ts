@@ -585,23 +585,30 @@ test("member controls new-photo alerts per album and for the whole gallery", asy
   await expect(page.getByRole("button", { name: "Turn on alerts for Open Tournament August 2026" })).toHaveAttribute("aria-pressed", "false");
   await expect.poll(() => gallery.overrides).toContainEqual({ album: "Open Tournament August 2026", subscribed: false });
 
-  // Notification settings show the same choices and the gallery-wide switch.
+  // Notification settings show the same choices under one collapsible
+  // "Gallery photos" row, with "Turn all on / off" as the gallery-wide switch.
   await page.goto("/settings");
   await page.getByRole("button", { name: /Notification Settings/ }).click();
   const dialog = page.getByRole("dialog");
-  const master = dialog.getByRole("switch", { name: "New gallery photos" });
-  await expect(master).toBeChecked();
+  const section = dialog.getByRole("button", { name: /Gallery photos/ });
+  await expect(section).toContainText("0 of 2 albums");
+  await expect(section).toHaveAttribute("aria-expanded", "false");
+  await section.click();
+  await expect(section).toHaveAttribute("aria-expanded", "true");
   await expect(dialog.getByRole("switch", { name: "Alerts for Open Tournament August 2026" })).not.toBeChecked();
   const bpl = dialog.getByRole("switch", { name: "Alerts for BPL 2024" });
   await expect(bpl).not.toBeChecked();
   await bpl.click();
   await expect(bpl).toBeChecked();
   await expect.poll(() => gallery.overrides).toContainEqual({ album: "BPL-2024", subscribed: true });
+  await expect(section).toContainText("1 of 2 albums");
 
-  await master.click();
-  await expect(master).not.toBeChecked();
+  await dialog.getByRole("button", { name: "Turn all on" }).click();
+  await expect(dialog.getByRole("switch", { name: "Alerts for Open Tournament August 2026" })).toBeChecked();
+  await dialog.getByRole("button", { name: "Turn all off" }).click();
   await expect.poll(() => gallery.enabled).toBe(false);
-  await expect(dialog.getByRole("switch", { name: /^Alerts for/ })).toHaveCount(0);
+  await expect(section).toContainText("Off");
+  await expect(dialog.getByText("Off for every album, including new ones")).toBeVisible();
 });
 
 test("admin mutes an album's photo alerts for everyone", async ({ page }) => {

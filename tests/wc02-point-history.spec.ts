@@ -92,14 +92,15 @@ for (const fixture of ["complete", "partial", "corrected"] as const) {
     await page.goto(`/tournaments/${TOURNAMENT_ID}/matches/${MATCH_ID}/points`, { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("heading", { name: "Asha Rao versus Bala Singh" })).toBeAttached();
-    await expect(page.getByRole("heading", { name: "Points progression" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Score progression" })).toBeVisible();
 
+    // Coverage wording from the plain-copy pass (10644132).
     if (fixture === "complete") {
-      await expect(page.getByRole("status").filter({ hasText: "Complete point history" })).toContainText("21 scoring rallies");
+      await expect(page.getByRole("status").filter({ hasText: "All 21 points recorded" })).toBeVisible();
     } else if (fixture === "partial") {
-      await expect(page.getByRole("note")).toContainText("Partial point history");
+      await expect(page.getByRole("note")).toContainText("Some points weren't recorded");
     } else {
-      await expect(page.getByRole("note")).toContainText("Corrected result");
+      await expect(page.getByRole("note")).toContainText("The score was corrected after the match");
     }
 
     const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
