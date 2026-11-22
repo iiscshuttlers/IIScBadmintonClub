@@ -16,7 +16,6 @@ import { supabase } from "@/lib/supabase";
 import { appPathFromUrl } from "@/lib/deepLink";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GuestGate } from "@/components/GuestGate";
-import { UmpireEngine } from "@/components/umpire/UmpireEngine";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
@@ -38,10 +37,16 @@ import { useEngagementReminders } from "./hooks/useEngagementReminders";
 import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
 import { OnboardingTour } from "./components/OnboardingTour";
 
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { FileOpener } from "@capacitor-community/file-opener";
+// Native plugins registered at startup. UpdateDialog and the dev-only umpire
+// route used to pull these in eagerly; both load lazily now, so the
+// registrations stay here as bare imports (the TS transform drops unused
+// named imports, which never registered anything on their own).
+import "@capacitor/filesystem";
+import "@capacitor-community/file-opener";
+import "@capacitor/preferences";
+import "@/lib/widgetManager";
+import "@/lib/playerMotion";
 
-import { UpdateDialog } from "./components/layout/UpdateDialog";
 import { PageSkeleton } from "./components/layout/PageSkeleton";
 import { PageErrorFallback } from "./components/layout/PageErrorFallback";
 import { BackToTop } from "./components/layout/BackToTop";
@@ -105,6 +110,16 @@ const VerifyCertificate = lazy(() => import("@/pages/VerifyCertificate"));
 const RateTournamentPage = lazy(() => import("@/pages/RateTournamentPage"));
 const ObsOverlayScoreboard = lazy(() => import("./pages/ObsOverlayScoreboard"));
 const CameraBroadcast = lazy(() => import("./pages/CameraBroadcast"));
+
+// Shown only when an app update is offered, so it loads on demand.
+const UpdateDialog = lazy(() =>
+  import("./components/layout/UpdateDialog").then((m) => ({ default: m.UpdateDialog })),
+);
+// Dev-only harness route: the branch is dropped from production builds, so the
+// umpire engine and its store never reach the entry chunk.
+const UmpireEngine = import.meta.env.DEV
+  ? lazy(() => import("@/components/umpire/UmpireEngine").then((m) => ({ default: m.UmpireEngine })))
+  : null;
 
 /** Redirect targets for retired personal-mode URLs (stable for SectionRedirect). */
 const toSettings = () => "/settings";
@@ -279,7 +294,7 @@ function AppRoutes() {
           }} />
 
           {/* Test route is excluded from production builds. */}
-          {import.meta.env.DEV && <Route path="/test-umpire-engine" component={() => (
+          {import.meta.env.DEV && UmpireEngine && <Route path="/test-umpire-engine" component={() => (
              <UmpireEngine 
                initialMatchState={{
                  id: "test-match-123",
@@ -506,11 +521,17 @@ function AppContent() {
             </Router>
             <Toaster />
             {isDialogOpen && updateInfo && (
-              <UpdateDialog 
-                info={updateInfo} 
-                onDismiss={dismissUpdate} 
-                onSkip={() => skipUpdate(updateInfo.promptToken)} 
-              />
+              // Empty-fragment fallback: ErrorBoundary treats null as "show the
+              // full-page error"; a failed chunk fetch gets its reload-once path.
+              <ErrorBoundary fallback={<></>}>
+                <Suspense fallback={null}>
+                  <UpdateDialog
+                    info={updateInfo}
+                    onDismiss={dismissUpdate}
+                    onSkip={() => skipUpdate(updateInfo.promptToken)}
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
           </TooltipProvider>
   );

@@ -135,6 +135,74 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
+/* ===================== VENDOR CHUNKS ===================== */
+
+/**
+ * Stable third-party code the app needs at startup, split by package so a
+ * release that only changes app code leaves these files cached.
+ *
+ * Matched by package directory rather than listed as entry points: the
+ * object form of manualChunks resolved `react` to its CommonJS proxy, so the
+ * real React ended up in the Sentry chunk, react-dom in the UI chunk and
+ * react-dom/client (the renderer) inside the app's entry chunk.
+ *
+ * Only packages the entry already loads statically belong here; a package
+ * used only by lazy pages must stay out, or it would be downloaded up front.
+ */
+const VENDOR_CHUNKS: Record<string, string[]> = {
+  vendor: [
+    "react",
+    "react-dom",
+    "scheduler",
+    "wouter",
+    "regexparam",
+    "use-sync-external-store",
+    "@capacitor/core",
+    "tslib",
+  ],
+  motion: ["framer-motion", "motion-dom", "motion-utils"],
+  icons: ["lucide-react"],
+  ui: [
+    "@radix-ui",
+    "@floating-ui",
+    "sonner",
+    "tailwind-merge",
+    "clsx",
+    "class-variance-authority",
+  ],
+  query: [
+    "@tanstack/query-core",
+    "@tanstack/react-query",
+    "@tanstack/query-persist-client-core",
+    "@tanstack/react-query-persist-client",
+    "@tanstack/query-sync-storage-persister",
+  ],
+  sentry: ["@sentry", "@sentry-internal"],
+  supabase: ["@supabase"],
+  firebase: ["firebase", "@firebase"],
+};
+
+const CHUNK_BY_PACKAGE = new Map<string, string>(
+  Object.entries(VENDOR_CHUNKS).flatMap(([chunk, pkgs]) => pkgs.map((p) => [p, chunk] as [string, string])),
+);
+
+/** Package name of a module id inside node_modules (pnpm layout included), else null. */
+function packageOf(id: string): string | null {
+  const normalised = id.split("\\").join("/");
+  const marker = "/node_modules/";
+  const at = normalised.lastIndexOf(marker);
+  if (at === -1) return null;
+  const [first, second] = normalised.slice(at + marker.length).split("/");
+  return first.startsWith("@") ? `${first}/${second}` : first;
+}
+
+function vendorChunk(id: string): string | undefined {
+  const pkg = packageOf(id);
+  if (!pkg) return undefined;
+  // Whole scopes (e.g. every @radix-ui/* package) or an exact package name.
+  return CHUNK_BY_PACKAGE.get(pkg) ?? CHUNK_BY_PACKAGE.get(pkg.split("/")[0]);
+}
+
 /* ===================== MAIN CONFIG ===================== */
 const pkgPath = path.resolve(PROJECT_ROOT, "package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
@@ -242,25 +310,7 @@ export default defineConfig(({ command }) => {
         // allowed to resolve and chunk it — marking it external would emit a
         // bare import the browser cannot resolve and break the web build.
         output: {
-          manualChunks: {
-            vendor: ["react", "react-dom", "wouter"],
-            motion: ["framer-motion"],
-            icons: ["lucide-react"],
-            ui: [
-              "@radix-ui/react-dialog",
-              "@radix-ui/react-dropdown-menu",
-              "@radix-ui/react-tooltip",
-              "@radix-ui/react-slot",
-            ],
-            query: [
-              "@tanstack/react-query",
-              "@tanstack/react-query-persist-client",
-              "@tanstack/query-sync-storage-persister",
-            ],
-            sentry: ["@sentry/react", "@sentry/capacitor"],
-            supabase: ["@supabase/supabase-js"],
-            firebase: ["firebase/app", "firebase/messaging"],
-          },
+          manualChunks: vendorChunk,
         },
       },
     },

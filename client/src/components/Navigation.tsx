@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence } from "framer-motion";
 import { liveHref, useAnyTournamentLive } from "@/hooks/queries/useAnyTournamentLive";
@@ -50,12 +50,50 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
-import { PreferencesModal } from "@/components/QuickSettings";
-import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
-import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
-import { HolidayCalendarModal } from "@/components/HolidayCalendarModal";
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Overlays that open on demand load their code the first time they open
+// (keeps them out of the entry chunk). See useOpenedOnce and LazyOverlay below.
+const GlobalSearch = lazy(() =>
+  import("@/components/GlobalSearch").then((m) => ({ default: m.GlobalSearch })),
+);
+const PreferencesModal = lazy(() =>
+  import("@/components/QuickSettings").then((m) => ({ default: m.PreferencesModal })),
+);
+const NotificationSettingsModal = lazy(() =>
+  import("@/components/profile/NotificationSettingsModal").then((m) => ({ default: m.NotificationSettingsModal })),
+);
+const HolidayCalendarModal = lazy(() =>
+  import("@/components/HolidayCalendarModal").then((m) => ({ default: m.HolidayCalendarModal })),
+);
+
+/**
+ * True from the first time `open` is true onwards. A lazy overlay mounts on
+ * its first open and then stays mounted, so later opens and closes (state,
+ * exit animations) behave exactly as when it was always mounted.
+ */
+function useOpenedOnce(open: boolean): boolean {
+  const [opened, setOpened] = useState(open);
+  if (open && !opened) setOpened(true);
+  return opened || open;
+}
+
+/**
+ * Boundary for a lazy overlay. Nothing shows while its code loads; if the
+ * chunk cannot be fetched (e.g. a stale tab after a deploy) ErrorBoundary
+ * does its reload-once recovery instead of the app-wide crash screen. The
+ * fallback is an empty fragment because ErrorBoundary treats a null fallback
+ * as "show the full-page error".
+ */
+function LazyOverlay({ children }: { children: ReactNode }) {
+  return (
+    <ErrorBoundary fallback={<></>}>
+      <Suspense fallback={null}>{children}</Suspense>
+    </ErrorBoundary>
+  );
+}
 
 /**
  * Four destinations (nav regroup, 21 Nov 2026): Home · Tournaments · Players ·
@@ -97,6 +135,9 @@ export default function Navigation() {
   const { theme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin, profile } = useAuth();
   const { updateInfo, openUpdateDialog } = useAppUpdate();
+  const searchMounted = useOpenedOnce(searchOpen);
+  const preferencesMounted = useOpenedOnce(isPreferencesOpen);
+  const notificationSettingsMounted = useOpenedOnce(isNotificationSettingsOpen);
 
   const currentLinks = CLUB_LINKS;
 
@@ -626,17 +667,29 @@ export default function Navigation() {
 
 
       {/* Global Search Modal */}
-      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {searchMounted && (
+        <LazyOverlay>
+          <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+        </LazyOverlay>
+      )}
 
-      <PreferencesModal
-        isOpen={isPreferencesOpen}
-        onClose={() => setIsPreferencesOpen(false)}
-      />
+      {preferencesMounted && (
+        <LazyOverlay>
+          <PreferencesModal
+            isOpen={isPreferencesOpen}
+            onClose={() => setIsPreferencesOpen(false)}
+          />
+        </LazyOverlay>
+      )}
 
-      <NotificationSettingsModal
-        open={isNotificationSettingsOpen}
-        onOpenChange={setIsNotificationSettingsOpen}
-      />
+      {notificationSettingsMounted && (
+        <LazyOverlay>
+          <NotificationSettingsModal
+            open={isNotificationSettingsOpen}
+            onOpenChange={setIsNotificationSettingsOpen}
+          />
+        </LazyOverlay>
+      )}
 
       <ConfirmDialog
         open={signOutDialog.open}
@@ -648,7 +701,11 @@ export default function Navigation() {
         onCancel={() => setSignOutDialog(d => ({ ...d, open: false }))}
       />
       <AnimatePresence>
-        {showHolidays && <HolidayCalendarModal onClose={() => setShowHolidays(false)} />}
+        {showHolidays && (
+          <LazyOverlay>
+            <HolidayCalendarModal onClose={() => setShowHolidays(false)} />
+          </LazyOverlay>
+        )}
       </AnimatePresence>
     </>
   );
