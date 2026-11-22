@@ -39,16 +39,33 @@ import { StatusChip } from '@/components/tournament/StatusChip';
 import { toMatchView, type MatchRow, type MatchView } from '@/lib/matchView';
 import { MatchSideRow, MatchStatusBadge, MatchTimes, scoreSummary } from '@/components/match/MatchPrimitives';
 import { matchPath } from '@/lib/tournamentRoutes';
+import type { Tournament } from '@/types/tournament';
+import type {
+  PlayerNameEmbed,
+  TeamMemberWithPlayer,
+  TieLineupAuditWithNames,
+  TieRubberRow,
+  TieWithTeamsAndMatches,
+} from '@/types/teamTie';
+
+/** What rubberView reads: the match columns (any subset) plus the player embeds. */
+export type RubberViewInput = Partial<Omit<MatchRow, 'court_number'>> & {
+  court_number?: string | number | null;
+  player1?: PlayerNameEmbed | null;
+  player2?: PlayerNameEmbed | null;
+  player3?: PlayerNameEmbed | null;
+  player4?: PlayerNameEmbed | null;
+};
 
 /**
  * Rubber-level match view (WP6): status from the `status` column, winners only
  * for completed/walkover, games via parseGames. Sides are the revealed lineup;
  * an unrevealed lineup stays hidden.
  */
-export function rubberView(rubber: any, isRevealed: boolean, tournamentId: string): MatchView {
+export function rubberView(rubber: RubberViewInput, isRevealed: boolean, tournamentId: string): MatchView {
   const isDoubles = rubber.category?.includes('D') || rubber.category?.includes('Doubles');
-  const nameOf = (p: any): string | null => p?.full_name || p?.display_name || null;
-  const sideLabel = (a: any, b: any) =>
+  const nameOf = (p: PlayerNameEmbed | null | undefined): string | null => p?.full_name || null;
+  const sideLabel = (a: PlayerNameEmbed | null | undefined, b: PlayerNameEmbed | null | undefined) =>
     [nameOf(a), isDoubles ? nameOf(b) : null].filter(Boolean).join(' / ') || null;
   const view = toMatchView({
     ...rubber,
@@ -66,29 +83,45 @@ export function rubberView(rubber: any, isRevealed: boolean, tournamentId: strin
 
 interface Props {
   tournamentId: string;
-  tournament?: any;
+  tournament?: Tournament | null;
+}
+
+/** The team a lineup is entered for, with its tournament (TeamLineupBuilder reads the tie format there). */
+interface LineupTeam {
+  id: string;
+  name?: string | null;
+  tournaments?: Pick<Tournament, 'id'> | null;
+}
+
+type StatusFilter = 'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED';
+
+interface StatusPill {
+  id: StatusFilter;
+  label: string;
+  count: number;
+  isLivePill?: boolean;
 }
 
 export function TeamTiesSection({ tournamentId, tournament }: Props) {
   const { session, isUmpire, isAdmin } = useAuth();
   const { openTeamModal } = useTeamModal();
-  const [activeConsoleTie, setActiveConsoleTie] = useState<any | null>(null);
-  const [activeVisualTie, setActiveVisualTie] = useState<any | null>(null);
+  const [activeConsoleTie, setActiveConsoleTie] = useState<TieWithTeamsAndMatches | null>(null);
+  const [activeVisualTie, setActiveVisualTie] = useState<TieWithTeamsAndMatches | null>(null);
   const [activeCaptainLineupTie, setActiveCaptainLineupTie] = useState<{
-    tie: any;
-    team: any;
+    tie: TieWithTeamsAndMatches;
+    team: LineupTeam;
     side: 'A' | 'B';
-    members: any[];
+    members: TeamMemberWithPlayer[];
     onBehalf?: boolean;
   } | null>(null);
   const [expandedTieId, setExpandedTieId] = useState<string | null>(null);
-  const [scoreDetailTie, setScoreDetailTie] = useState<any | null>(null);
+  const [scoreDetailTie, setScoreDetailTie] = useState<TieWithTeamsAndMatches | null>(null);
   const [overrideLoading, setOverrideLoading] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
   // Fetch current user's team membership and captain status
   const { data: userTeamData } = useQuery({
-    queryKey: ['pulse_user_captain_team', tournamentId, session?.user?.id],
+    queryKey: ['user_captain_team', tournamentId, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id || !tournamentId) return null;
       return await teamService.getUserCaptainTeam(tournamentId, session.user.id);
@@ -98,38 +131,40 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
   // 1. Fetch ties
   const { data: ties = [], isLoading: tiesLoading } = useQuery({
-    queryKey: ['pulse_team_ties', tournamentId],
+    queryKey: ['team_ties', tournamentId],
     queryFn: async () => {
-      const list = await teamService.getTournamentTies(tournamentId);
+      // teamService types these rows as TournamentTie, which does not match the
+      // columns the query selects (no state, lineup or score columns).
+      const list = (await teamService.getTournamentTies(tournamentId)) as unknown as TieWithTeamsAndMatches[];
       const priority = (state: string) => {
         if (state === 'IN_PROGRESS') return 0;
         if (state === 'COMPLETED') return 2;
         return 1;
       };
-      return [...list].sort((a: any, b: any) => {
-        const pA = priority(a.state || a.status);
-        const pB = priority(b.state || b.status);
+      return [...list].sort((a, b) => {
+        const pA = priority(a.state);
+        const pB = priority(b.state);
         if (pA !== pB) return pA - pB;
         return (a.round_number || 1) - (b.round_number || 1) || a.tie_code.localeCompare(b.tie_code);
       });
     },
     enabled: !!tournamentId,
-    refetchInterval: 5000 // Live polling for pulse
+    refetchInterval: 5000 // Live polling while ties are in play
   });
 
   // 2. Fetch matches for all ties in this tournament
   const { data: allRubberMatches = [], isLoading: matchesLoading } = useQuery({
-    queryKey: ['pulse_rubber_matches', tournamentId],
+    queryKey: ['rubber_matches', tournamentId],
     queryFn: async () => {
-      return await teamService.getTournamentRubbers(tournamentId);
+      return (await teamService.getTournamentRubbers(tournamentId)) as TieRubberRow[];
     },
     enabled: !!tournamentId,
     refetchInterval: 5000
   });
 
   // 3. Fetch audit logs for substitution notices
-  const { data: allAudits = [] } = useQuery({
-    queryKey: ['pulse_tie_audits', tournamentId],
+  const { data: allAudits = [] } = useQuery<TieLineupAuditWithNames[]>({
+    queryKey: ['tie_audits', tournamentId],
     queryFn: async () => {
       return await teamService.getTieLineupAudits(tournamentId);
     },
@@ -172,7 +207,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
   const isUserOfficial = isAdmin || isUmpire || isAssignedOfficial || (tournament?.created_by === session?.user?.id);
 
   // Official override: enter & lock a team's lineup on behalf of an absent captain.
-  const openOverrideLineup = async (tie: any, side: 'A' | 'B') => {
+  const openOverrideLineup = async (tie: TieWithTeamsAndMatches, side: 'A' | 'B') => {
     const teamId = side === 'A' ? tie.team_a_id : tie.team_b_id;
     const baseTeam = side === 'A' ? tie.team_a : tie.team_b;
     if (!teamId) { toast.error('No team assigned to this side yet.'); return; }
@@ -180,18 +215,19 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
     const loadingKey = `${tie.id}-${side}`;
     setOverrideLoading(loadingKey);
     try {
-      const members = await teamService.getTeamRoster(teamId);
+      const members: TeamMemberWithPlayer[] = await teamService.getTeamRoster(teamId);
 
       // Ensure team object has tournaments relationship populated for tie format
+      // (the tie's team embed never selects it, so this is always the section's tournament)
       const fullTeam = {
         ...baseTeam,
         id: teamId,
-        tournaments: baseTeam?.tournaments || tournament
+        tournaments: tournament
       };
 
       setActiveCaptainLineupTie({ tie, team: fullTeam, side, members: members || [], onBehalf: true });
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to load team roster');
+    } catch (err: unknown) {
+      toast.error((err instanceof Error && err.message) || 'Failed to load team roster');
     } finally {
       setOverrideLoading(null);
     }
@@ -199,23 +235,23 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
   // Helper to check if a tie is truly scheduled:
   // Requires both court assignment AND date/time (scheduled_at)
-  const isTieScheduled = (t: any) => {
-    const court = allRubberMatches.find((m: any) => m.tie_id === t.id && m.court_number)?.court_number || t.court_number || t.court || null;
+  const isTieScheduled = (t: TieWithTeamsAndMatches) => {
+    const court = allRubberMatches.find((m) => m.tie_id === t.id && m.court_number)?.court_number || null;
     const hasCourt = !!court && court.toString().trim() !== '';
     const hasDateTime = !!t.scheduled_at;
     return hasCourt && hasDateTime;
   };
 
   // Helper to determine if tie is currently live
-  const isTieLive = (t: any) => {
-    const tieMatches = allRubberMatches.filter((m: any) => m.tie_id === t.id);
-    const hasLiveMatch = tieMatches.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+  const isTieLive = (t: TieWithTeamsAndMatches) => {
+    const tieMatches = allRubberMatches.filter((m) => m.tie_id === t.id);
+    const hasLiveMatch = tieMatches.some((m) => m.status === 'in_progress' || m.status === 'live');
     const hasScores = (t.score_team_a > 0 || t.score_team_b > 0);
     return t.state === 'IN_PROGRESS' && (hasLiveMatch || hasScores);
   };
 
   const filteredTies = (() => {
-    const list = ties.filter((t: any) => {
+    const list = ties.filter((t) => {
       const live = isTieLive(t);
       const scheduled = isTieScheduled(t);
 
@@ -226,14 +262,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
       return true;
     });
 
-    const getTiePriority = (t: any) => {
+    const getTiePriority = (t: TieWithTeamsAndMatches) => {
       if (isTieLive(t)) return 0;
       if (t.state === 'COMPLETED') return 3;
       if (isTieScheduled(t)) return 1;
       return 2; // Unscheduled
     };
 
-    return list.sort((a: any, b: any) => {
+    return list.sort((a, b) => {
       const pA = getTiePriority(a);
       const pB = getTiePriority(b);
       if (pA !== pB) return pA - pB;
@@ -311,10 +347,10 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
               [
                 { id: 'ALL', label: 'All', count: ties.length },
                 { id: 'LIVE', label: 'Live', count: ties.filter(isTieLive).length, isLivePill: true },
-                { id: 'SCHEDULED', label: 'Scheduled', count: ties.filter((t: any) => isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
-                { id: 'UNSCHEDULED', label: 'Unscheduled', count: ties.filter((t: any) => !isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
+                { id: 'SCHEDULED', label: 'Scheduled', count: ties.filter((t) => isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
+                { id: 'UNSCHEDULED', label: 'Unscheduled', count: ties.filter((t) => !isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
               ] as const
-            ).map(({ id, label, count, isLivePill }: any) => {
+            ).map(({ id, label, count, isLivePill }: StatusPill) => {
               const isActive = statusFilter === id;
               return (
                 <Button
@@ -360,16 +396,16 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
             </p>
           </div>
         ) : (
-          filteredTies.map((tie: any) => {
+          filteredTies.map((tie) => {
             const tieMatches = allRubberMatches
-              .filter((m: any) => m.tie_id === tie.id)
-              .sort((a: any, b: any) => {
+              .filter((m) => m.tie_id === tie.id)
+              .sort((a, b) => {
                 const orderA = a.playing_order ?? a.rubber_order ?? 99;
                 const orderB = b.playing_order ?? b.rubber_order ?? 99;
                 return orderA - orderB;
               });
 
-            const tieAudits = allAudits.filter((a: any) => a.tie_id === tie.id);
+            const tieAudits = allAudits.filter((a) => a.tie_id === tie.id);
             const isExpanded = expandedTieId === tie.id || ties.length === 1 || tie.state === 'IN_PROGRESS';
             const isBothLocked = tie.lineup_locked_a && tie.lineup_locked_b;
 
@@ -404,7 +440,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                         {tie.round_name || tie.stage || 'FIXTURE'}
                       </span>
                       {(() => {
-                        const court = tieMatches.find((m: any) => m.court_number)?.court_number || tie.court_number;
+                        const court = tieMatches.find((m) => m.court_number)?.court_number;
                         if (!court) return null;
                         return (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
@@ -467,7 +503,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-success bg-success/15 px-2.5 py-1 rounded-full border border-success/35 shadow-2xs">
                           <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Tie Completed
                         </span>
-                      ) : tieMatches.length > 0 && tieMatches.some((m: any) => m.revealed_at || (m.player1_id && m.player2_id)) ? (
+                      ) : tieMatches.length > 0 && tieMatches.some((m) => m.revealed_at || (m.player1_id && m.player2_id)) ? (
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-success bg-success/15 px-2.5 py-1 rounded-full border border-success/35 shadow-2xs">
                           <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Official Lineup Revealed
                         </span>
@@ -654,7 +690,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                     )}
 
                     {(() => {
-                      const court = tieMatches.find((m: any) => m.court_number)?.court_number || tie.court_number;
+                      const court = tieMatches.find((m) => m.court_number)?.court_number;
                       if (court) {
                         return (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-xl border border-primary/20">
@@ -687,14 +723,14 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                   </div>
 
                   <div className="space-y-3">
-                    {tieMatches.map((rubber: any, index: number) => {
+                    {tieMatches.map((rubber, index: number) => {
                       const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
                       const playingSeq = rubber.playing_order || index + 1;
                       const view = rubberView(rubber, isRevealed, tournamentId);
                       const summary = scoreSummary(view);
 
                       // Check for emergency substitution audits for this rubber
-                      const rubberSubAudits = tieAudits.filter((a: any) => 
+                      const rubberSubAudits = tieAudits.filter((a) => 
                         a.action_type === 'PLAYER_SUBSTITUTED' && a.rubber_order === rubber.rubber_order
                       );
 
@@ -774,7 +810,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                           )}
 
                           {/* Emergency Substitution Notices */}
-                          {rubberSubAudits.map((sub: any) => (
+                          {rubberSubAudits.map((sub) => (
                             <div 
                               key={sub.id} 
                               className="mt-2 p-2 rounded-xl bg-warning/10 border border-warning/25 text-[11px] text-warning flex items-start gap-2"
@@ -804,8 +840,8 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
       {scoreDetailTie && (() => {
         const tie = scoreDetailTie;
         const rubbers = allRubberMatches
-          .filter((m: any) => m.tie_id === tie.id)
-          .sort((a: any, b: any) => {
+          .filter((m) => m.tie_id === tie.id)
+          .sort((a, b) => {
             const orderA = a.playing_order ?? a.rubber_order ?? 99;
             const orderB = b.playing_order ?? b.rubber_order ?? 99;
             return orderA - orderB;
@@ -853,7 +889,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
                 {rubbers.length === 0 ? (
                   <div className="text-center py-8 text-xs text-muted-foreground font-medium">No rubbers scheduled yet.</div>
                 ) : (
-                  rubbers.map((rubber: any, index: number) => {
+                  rubbers.map((rubber, index: number) => {
                     const isRevealed = !!rubber.revealed_at || (!!rubber.player1_id && !!rubber.player2_id);
                     const playingSeq = rubber.playing_order || index + 1;
                     const view = rubberView(rubber, isRevealed, tournamentId);

@@ -4,6 +4,7 @@ import { deleteAccount } from "@/services/playerService";
 import { disableBiometricLogin } from "@/lib/biometricAuth";
 import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useGoBack } from "@/hooks/useGoBack";
 import { toast } from "sonner";
 import { Trash2, AlertTriangle, ShieldCheck, Loader2, LogOut } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -21,6 +22,7 @@ export default function DeleteAccount() {
   usePageMeta({ title: "Delete Account", description: "Permanently delete your IISc Badminton Club account" });
   const { session, profile, signOut } = useAuth();
   const [, navigate] = useLocation();
+  const goBack = useGoBack("/settings");
   const [step, setStep] = useState<"confirm" | "final" | "done">("confirm");
   const [confirmText, setConfirmText] = useState("");
   const [reason, setReason] = useState("");
@@ -114,7 +116,6 @@ export default function DeleteAccount() {
           <PageHeader
             variant="card"
             backTo="/settings"
-            backLabel="Back to Settings"
             badge="Irreversible"
             badgeIcon={<Trash2 className="w-3.5 h-3.5 text-danger" />}
             title="Delete My Account"
@@ -158,7 +159,7 @@ export default function DeleteAccount() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => window.history.back()}
+                    onClick={goBack}
                     className="flex-1 py-3"
                   >
                     Cancel

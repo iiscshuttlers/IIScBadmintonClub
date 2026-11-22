@@ -495,7 +495,7 @@ export default function ScheduleCalendar() {
         </div>
 
         {/* Bottom Row: Coming Up & Selected Date Details */}
-        <div className="grid lg:grid-cols-[1fr_1.5fr] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6 items-start">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}

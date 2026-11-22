@@ -18,6 +18,8 @@ import { useMyTournamentCheckin } from "@/components/checkin/PlayerCheckin";
  * last 48 hours. Signed-in users only; tournament matches only.
  */
 
+const RAIL_LIMIT = 4;
+
 interface RailData {
   rows: MatchRow[];
   tournamentNames: Record<string, string>;
@@ -86,7 +88,10 @@ export function HomeMatchRail() {
       followedPlayers: q.data.followedPlayers,
       followedTournaments: q.data.followedTournaments,
       now: Date.now(),
-    }).filter((item) => item.reason !== "my-live" && item.reason !== "my-next");
+    })
+      .filter((item) => item.reason !== "my-live" && item.reason !== "my-next")
+      // Home keeps this short; "See all" opens the full list.
+      .slice(0, RAIL_LIMIT);
   }, [q.data, views, myPlayerId]);
 
   if (!userId || q.isPending) return null;
@@ -106,7 +111,7 @@ export function HomeMatchRail() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border-strong px-4 py-3">
         <p className="text-sm text-soft">Follow players to see their tournament matches here first.</p>
         <Link
-          href="/pulse#directory"
+          href="/players"
           className="inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full bg-primary text-primary-foreground text-xs font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <UserPlus className="w-4 h-4" aria-hidden /> Find players
@@ -126,7 +131,7 @@ export function HomeMatchRail() {
           Following & recent
         </h2>
         {myPlayerId && (
-          <Link href={`/player/${myPlayerId}/personal`} className="min-h-[44px] inline-flex items-center text-xs font-black text-primary underline underline-offset-2">
+          <Link href={`/player/${myPlayerId}#MATCHES`} className="min-h-[44px] inline-flex items-center text-xs font-black text-primary underline underline-offset-2">
             See all
           </Link>
         )}
@@ -134,7 +139,7 @@ export function HomeMatchRail() {
       {q.data.partial && (
         <p className="text-xs text-warning mb-2">Some follows couldn't be loaded; showing what we have.</p>
       )}
-      <ul className="grid gap-2 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {rail.map((item) => (
           <li key={item.view.id}>
             <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground mb-1 px-1">{item.label}</p>

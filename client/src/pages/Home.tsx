@@ -1,89 +1,33 @@
-import { Sparkles, ShieldCheck, Activity, Award, Target, Handshake, Sprout } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "wouter";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { registerPlugin, Capacitor } from "@capacitor/core";
-import * as Sentry from "@sentry/react";
-
-import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  Bell,
-  CalendarDays,
-  Calendar,
-  Medal,
-  Trophy,
-  Users,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  Star,
-  Zap,
-  MapPin,
-  Map,
-} from "lucide-react";
-import iiscTeam from "@/assets/iisc-team.jpg";
-import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion, type Variants } from "framer-motion";
-import { useState, useEffect } from "react";
-import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
-import { ArchivedTournament } from "@/data/tournamentArchive";
-import { fetchSiteData } from "@/lib/siteData";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { InfoModal } from "@/components/InfoModal";
+import { ChevronRight, Info, Trophy } from "lucide-react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { cssVar } from "@/lib/themeColors";
-import type { ConvenerData } from "@/components/admin/ConvenerEditor";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
-import { HostTournamentCta } from "@/components/home/HostTournamentCta";
 import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
-import { HomePersonalDashboard } from "@/components/home/HomePersonalDashboard";
-import { HomeLiveStrip } from "@/components/home/HomeLiveStrip";
 import { HomeMatchRail } from "@/components/home/HomeMatchRail";
-import { useAuth } from "@/contexts/AuthContext";
-// ── Animation variants ────────────────────────────────────────────────────────
+
+/**
+ * Home answers "what's on now?" in at most three blocks:
+ *   1. your matches (signed in): next/live match + check-in, then follows
+ *   2. happening now: the active tournament with live scores
+ *   3. notices: the pinned banner and the club noticeboard
+ * The club's about/leadership content lives in Club → About & Contact.
+ */
+
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-};
-const stagger: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-const cardVariant: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-const VALUES = [
-  { title: "Excellence", desc: "Striving for the highest standards in play and conduct.", Icon: Award },
-  { title: "Inclusivity", desc: "Welcoming players of all backgrounds and skill levels.", Icon: Handshake },
-  { title: "Integrity", desc: "Maintaining fair play and ethical conduct on and off court.", Icon: Target },
-  { title: "Community", desc: "Building lasting friendships across departments and batches.", Icon: Sprout },
-];
-
-function getLatestHighlight(archivedTournaments: ArchivedTournament[]) {
-  const completed = archivedTournaments.filter((t) => t.status === "completed" || t.status === "archived");
-  if (!completed.length) return null;
-  return [...completed].sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
-}
-
 export default function Home() {
-  const { archivedTournaments } = useArchivedTournaments();
   const { isAdmin, session } = useAuth();
-  const [config, setConfig] = useState<Record<string, any> | null>(null);
-  const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
-
-  useEffect(() => {
-    fetchSiteData("club_settings", "settings.json")
-      .then((data) => {
-        if (data) setConfig(data);
-      })
-      .catch(console.error);
-
-    fetchSiteData<ConvenerData>("convener_photos", "convener_photos.json")
-      .then((data) => { if (data) setConvenerData(data); })
-      .catch(() => {}); // silent – static files may not exist yet
-  }, []);
+  const { userName } = useNavigationAuth();
+  const firstName = session ? (userName || "").trim().split(/\s+/)[0] : "";
 
   usePageMeta({
     title: "Home",
@@ -91,326 +35,84 @@ export default function Home() {
       "IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.",
   });
 
-  const [showAbout, setShowAbout] = useState(false);
-
-  const [isImageOpen, setIsImageOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
-  const teamMembers = [
-    {
-      role: "Convener",
-      name: convenerData?.convener?.name || "Raja Janmejay",
-      description: convenerData?.convener?.description || "Leading the club with vision and passion for the sport",
-      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.webp`,
-    },
-    {
-      role: "Co-Convener",
-      name: convenerData?.coConvener?.name || "Aneesh Varla",
-      description: convenerData?.coConvener?.description || "Helping members connect, compete, and grow through badminton",
-      image: convenerData?.coConvener?.imageUrl || `${import.meta.env.BASE_URL}co_convener.png`,
-    },
-  ];
-
-  const highlight = getLatestHighlight(archivedTournaments);
-
   return (
-    <>
-      <div className="min-h-screen flex flex-col pb-0 bg-background">
+    <div className="min-h-screen flex flex-col pb-8 bg-background">
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
+      <section aria-label="Hero" className="relative overflow-hidden text-foreground py-2 lg:py-4 flex items-center bg-background">
+        <div className="absolute inset-0 z-0" aria-hidden>
+          <div className="absolute inset-0 bg-gradient-to-tr from-background via-card to-background" />
+          <div className="absolute inset-0 hero-pattern opacity-30" />
+          <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
+          <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-team/10 rounded-full blur-[80px]" />
+          <div className="absolute inset-0 dot-pattern opacity-30" />
+        </div>
 
-        {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-foreground py-2 lg:py-4 flex items-center bg-background">
-          {/* Universal bg */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-tr from-background via-card to-background" />
-            <div className="absolute inset-0 hero-pattern opacity-30" />
-            {/* decorative glow orbs */}
-            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-team/10 rounded-full blur-[80px]" />
-            <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-primary/5 rounded-full blur-[60px]" />
-            {/* dot grid */}
-            <div className="absolute inset-0 dot-pattern opacity-30" />
-          </div>
-
-          <div className="container mx-auto px-4 pt-6 sm:pt-12 pb-1 lg:pt-2 lg:pb-2 relative z-10 w-full max-w-5xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-
-              {/* Left Content */}
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
-                {/* Heading */}
-                <div className="space-y-4">
-                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-foreground drop-shadow-[0_2px_6px_color-mix(in_srgb,var(--background)_60%,transparent)] font-display">
+        <div className="container mx-auto px-4 pt-6 sm:pt-10 pb-2 lg:pt-2 lg:pb-2 relative z-10 w-full max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-foreground font-display">
+                {firstName ? (
+                  <>
+                    Welcome back, <span className="text-primary">{firstName}</span>
+                  </>
+                ) : (
+                  <>
                     Welcome to the <br className="hidden sm:block" />
-                    <span className="text-primary drop-shadow-[0_2px_6px_color-mix(in_srgb,var(--background)_60%,transparent)]">IISc</span> Badminton Club
-                  </h1>
-                </div>
-
-              </motion.div>
-
-              {/* Right: Animated Logo */}
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.15 }}
-                className="hidden lg:flex justify-center items-center scale-50 lg:scale-75 transform origin-center"
-              >
-                <AnimatedLogo />
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-foreground/30 animate-bounce">
-            <div className="w-5 h-8 rounded-full border-2 border-foreground/20 flex items-start justify-center pt-1.5">
-              <div className="w-1 h-2 bg-foreground/40 rounded-full" />
-            </div>
-          </div>
-        </section>
-        
-
-
-        {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
-        <section aria-label="Quick Links" className="bg-transparent">
-          <div className="container mx-auto px-4 max-w-5xl">
-            
-            <HomeAnnouncementBar isAdmin={isAdmin} />
-
-            <HomeLiveStrip />
-
-            <HomeMatchRail />
-
-            <HomePersonalDashboard />
-
-            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-              <ActiveTournamentWidget />
-            </motion.div>
-
-            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-              <NoticeBoard />
-            </motion.div>
-
-            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-              <HostTournamentCta />
-            </motion.div>
-
-
-
-          </div>
-        </section>
-
-
-        {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section aria-label="About & Mission" className="py-2 bg-background">
-          <div className="container mx-auto px-4 max-w-5xl">
-            <motion.div
-              className="mb-2"
-              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-            >
-              <div className="inline-flex items-center justify-between w-full cursor-pointer group" onClick={() => setShowAbout(!showAbout)}>
-                <div>
-                  <h2 className="text-xl lg:text-2xl font-black text-foreground mb-1 leading-tight font-display">
-                    About IISc
-                    <span className="text-primary"> Badminton Club</span>
-                  </h2>
-                </div>
-                <div className="ml-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors bg-muted p-2 sm:p-3 rounded-full">
-                  {showAbout ? <ChevronUp className="w-6 h-6 sm:w-8 sm:h-8" /> : <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8" />}
-                </div>
-              </div>
-            </motion.div>
-
-            {showAbout && (
-              <motion.div
-                className="flex flex-col gap-5 items-start mt-2"
-              variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-            >
-              {/* Mission */}
-              <motion.div variants={fadeUp} className="space-y-4">
-                <div>
-                  <h3 className="text-2xl font-black text-foreground mb-1 flex items-center gap-3 font-display">
-                    <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-team rounded-full inline-block" />
-                    Our Mission
-                  </h3>
-                </div>
-                <p className="text-soft leading-relaxed text-base whitespace-pre-wrap">
-                  {config?.about?.mission ||
-                    "To foster excellence in badminton through competitive play and community engagement at IISc. We aim to develop skilled players while promoting discipline, teamwork, and sportsmanship."}
-                </p>
-                {config?.about?.history && (
-                  <div className="pt-2 space-y-2">
-                    <h3 className="text-2xl font-black text-foreground flex items-center gap-3 font-display">
-                      <span className="w-1.5 h-7 bg-gradient-to-b from-info to-info rounded-full inline-block" />
-                      Our History
-                    </h3>
-                    <p className="text-soft leading-relaxed whitespace-pre-wrap">{config.about.history}</p>
-                  </div>
+                    <span className="text-primary">IISc</span> Badminton Club
+                  </>
                 )}
-              </motion.div>
+              </h1>
+            </motion.div>
 
-              {/* Values */}
-              <motion.div variants={fadeUp}>
-                <h3 className="text-2xl font-black text-foreground mb-4 flex items-center gap-3 font-display">
-                  <span className="w-1.5 h-7 bg-gradient-to-b from-secondary to-warning rounded-full inline-block" />
-                  Our Values
-                </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-                  {VALUES.map(({ title, desc, Icon }) => (
-                    <div
-                      key={title}
-                      className="group relative rounded-2xl p-3 bg-muted/60 border border-border-strong/50 hover:bg-muted hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-primary/40 flex items-center justify-center mb-2">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <h4 className="font-black text-foreground text-sm mb-1">{title}</h4>
-                      <p className="text-muted-foreground text-xs leading-relaxed">{desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-              </motion.div>
-            )}
-            {/* Team Photo */}
             <motion.div
-              className="mt-8 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-border-strong max-w-5xl mx-auto"
               variants={fadeUp}
               initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              onClick={() => setIsImageOpen(true)}
+              animate="visible"
+              transition={{ delay: 0.15 }}
+              className="hidden lg:flex justify-center items-center scale-50 lg:scale-75 transform origin-center"
             >
-              <img
-                src={iiscTeam}
-                alt="IISc Badminton Team"
-                loading="lazy"
-                width={800}
-                height={600}
-                className="w-full aspect-[4/3] object-cover group-hover:scale-[1.03] transition-transform duration-700"
-              />
+              <AnimatedLogo />
             </motion.div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
-        <section aria-label="Leadership Team" className="flex-1 py-2 bg-background">
-          <div className="container mx-auto px-4 max-w-5xl">
-            <motion.div
-              className="text-center mb-3"
-              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-            >
-              <p className="text-[9px] font-bold text-secondary uppercase tracking-widest mb-1">Leadership</p>
-              <h2 className="text-xl font-black text-foreground font-display">
-                Club Leadership
-              </h2>
-              <p className="text-muted-foreground text-[10px] mt-0.5">The people keeping the shuttles flying</p>
-            </motion.div>
+      <div className="container mx-auto px-4 max-w-5xl">
+        {/* Pinned notice: the admin's top "show on home" banner */}
+        <HomeAnnouncementBar isAdmin={isAdmin} />
 
-            <motion.div
-              className="grid grid-cols-2 gap-3 md:gap-4 max-w-5xl mx-auto"
-              variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
-            >
-              {teamMembers.map((member, idx) => {
-                const gradients = ["from-primary to-team", "from-info to-info"];
-                const initials = member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-                return (
-                  <motion.div
-                    key={idx}
-                    variants={cardVariant}
-                    className="flex flex-col items-center text-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl bg-muted/80 border border-border-strong/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group backdrop-blur-sm"
-                    onClick={() => member.image && !imageErrors[member.name] ? setSelectedImage(member.image) : undefined}
-                  >
-                    <div className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${gradients[idx % 2]} flex items-center justify-center shadow-lg overflow-hidden ring-4 ring-border-strong group-hover:scale-105 transition-transform duration-300`}>
-                      {member.image && !imageErrors[member.name] ? (
-                        <img
-                          loading="lazy"
-                          src={member.image}
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                          onError={() => setImageErrors((prev) => ({ ...prev, [member.name]: true }))}
-                        />
-                      ) : (
-                        <span className="text-foreground text-xl font-black">{initials}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0 w-full">
-                      <span className="inline-block text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-widest mb-1 px-2 py-0.5 bg-primary/20 rounded-full border border-primary/20">
-                        {member.role}
-                      </span>
-                      <h3 className="text-sm sm:text-xl font-black text-foreground leading-tight truncate px-1">{member.name}</h3>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </div>
-        </section>
+        {/* 1. Your matches (signed in only) */}
+        <HomeMatchRail />
 
+        {/* 2. Happening now */}
+        <ActiveTournamentWidget />
 
+        {/* 3. Club noticeboard */}
+        <NoticeBoard />
 
-
-
-        {/* ── MODALS ────────────────────────────────────────────────────── */}
-        {selectedImage && (
-          <ImageModal src={selectedImage} alt="Leadership" onClose={() => setSelectedImage(null)} />
-        )}
-        {isImageOpen && (
-          <ImageModal src={iiscTeam} alt="IISc Badminton Team" onClose={() => setIsImageOpen(false)} />
-        )}
-
-
+        {/* Quiet links: the club story and hosting live one tap away */}
+        <nav aria-label="More from the club" className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          <QuietLink href="/club?tab=about" icon={<Info className="w-4 h-4 text-primary" aria-hidden />} title="About the club" subtitle="Mission, values and leadership" />
+          <QuietLink href="/host-tournament" icon={<Trophy className="w-4 h-4 text-primary" aria-hidden />} title="Host a tournament" subtitle="Run your own event on the app" />
+        </nav>
       </div>
-    </>
+    </div>
   );
 }
 
-/* ── Image modal helper ─────────────────────────────────────────────────────── */
-function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    
-    window.history.pushState({ imageModalOpen: true }, "");
-    const handlePopState = () => onClose();
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("popstate", handlePopState);
-      if (window.history.state?.imageModalOpen) {
-        window.history.back();
-      }
-    };
-  }, [onClose]);
-
+function QuietLink({ href, icon, title, subtitle }: { href: string; icon: ReactNode; title: string; subtitle: string }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-media/95 p-4 backdrop-blur-sm"
-      onClick={onClose}
+    <Link
+      href={href}
+      className="flex items-center gap-3 min-h-[56px] px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
-      <button
-        className="absolute top-5 right-5 z-[60] text-foreground/60 hover:text-foreground bg-foreground/10 hover:bg-foreground/20 rounded-full p-2.5 transition-all cursor-pointer"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        aria-label="Close"
-      >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
-          <TransformComponent
-            wrapperStyle={{ width: "100%", height: "100%" }}
-            contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <img loading="lazy" src={src} alt={alt} className="w-full h-full max-w-[90vw] max-h-[90vh] rounded-2xl object-contain shadow-2xl" />
-          </TransformComponent>
-        </TransformWrapper>
-      </div>
-    </div>
+      <span className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-black text-foreground leading-tight">{title}</span>
+        <span className="block text-xs text-muted-foreground truncate">{subtitle}</span>
+      </span>
+      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0" aria-hidden />
+    </Link>
   );
 }
 
@@ -458,9 +160,9 @@ function AnimatedLogo() {
 
           {/* Top text */}
           <div className="absolute top-10 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h1 className="text-7xl font-black text-foreground tracking-wider drop-shadow-md flex items-baseline">
+            <p className="text-7xl font-black text-foreground tracking-wider drop-shadow-md flex items-baseline" aria-hidden>
               IIS<span className="text-6xl text-warning ml-0.5">c</span>
-            </h1>
+            </p>
           </div>
 
           {/* Central animations */}
@@ -500,11 +202,11 @@ function AnimatedLogo() {
           </div>
 
           {/* Bottom text */}
-          <div className="absolute bottom-14 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-warning tracking-[0.25em] uppercase drop-shadow-sm">Badminton</h2>
+          <div className="absolute bottom-14 left-0 right-0 text-center z-10 flex flex-col items-center" aria-hidden>
+            <p className="text-2xl font-bold text-warning tracking-[0.25em] uppercase drop-shadow-sm">Badminton</p>
             <div className="flex items-center gap-4 mt-2">
               <div className="w-8 h-[2px] bg-foreground/40" />
-              <h3 className="text-lg font-semibold text-foreground tracking-[0.4em] uppercase">Club</h3>
+              <p className="text-lg font-semibold text-foreground tracking-[0.4em] uppercase">Club</p>
               <div className="w-8 h-[2px] bg-foreground/40" />
             </div>
           </div>

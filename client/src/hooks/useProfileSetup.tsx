@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { optimizeImage } from "@/lib/imageUtils";
 import { withTimeout } from "@/lib/authUtils";
-import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
 import { useProfileBasicState } from "./profile/useProfileBasicState";
 import { useProfileBadmintonState } from "./profile/useProfileBadmintonState";
 import { useProfileEquipmentState } from "./profile/useProfileEquipmentState";
@@ -17,15 +16,25 @@ import { safeReplaceState, safeGetHash } from "@/lib/navUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchMyPrivate, playerEmailInUse, withAdminPrivate } from "@/services/playerPrivateService";
 import { PLAYER_PUBLIC_COLUMNS } from "@/lib/playerColumns";
-import type { PlayerRow, PlayerStats, ShoeItem } from "@/types";
+import type { PlayerRow, PlayerStats } from "@/types";
+import {
+  buildProfilePayload,
+  isIiscEmail,
+  mediaFromStats,
+  missingProfileFields,
+  racketsFromProfile,
+  shoesFromProfile,
+  splitDepartment,
+} from "./profile/profilePayload";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
 /**
  * The profile being edited (public columns, plus private ones the viewer may
- * read). `status` is set by the availability picker on the personal page; this
- * form only reads it to derive is_looking_to_play and never writes it, so a
- * stale draft can't overwrite a newer picker choice.
+ * read). `status` (looking | playing | resting | injured, NULL = not set) has
+ * no picker in the app right now; this form only reads it to derive
+ * is_looking_to_play and never writes it, so a stale draft can't overwrite a
+ * newer choice.
  */
 type LoadedProfile = PlayerRow;
 
@@ -153,16 +162,12 @@ export function useProfileSetup() {
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
           setNickname(profile.nickname || "");
-          setStatus(profile.status || "looking");
+          setStatus(profile.status ?? null);
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
-          if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {
-            setDepartment("OTHER - Other");
-            setCustomDepartment(profile.department);
-          } else {
-            setDepartment(profile.department || "");
-            setCustomDepartment("");
-          }
+          const dep = splitDepartment(profile.department);
+          setDepartment(dep.department);
+          setCustomDepartment(dep.customDepartment);
           setJoinedYear(profile.joined_year?.toString() || "");
           setPlayingLevel(profile.playing_level || "Intermediate");
           setPlayingStyle(profile.playing_style || "");
@@ -176,44 +181,19 @@ export function useProfileSetup() {
           setOriginalStats(profile.stats || {});
           setCareerHighlights((profile.career_highlights || []) as Array<{ year: string; title: string; description: string }>);
 
-          if (profile.stats?.media) {
-            const imgs = profile.stats.media.filter((m) => m.type === "image");
-            const vids = profile.stats.media.filter((m) => m.type === "video");
-            setMediaImages(imgs.map((i) => ({ url: i.url || "", caption: i.caption || "" })));
-            setMediaVideos(vids.map((v) => ({ url: v.url || "", caption: v.caption || "" })));
+          const media = mediaFromStats(profile.stats);
+          if (media) {
+            setMediaImages(media.images);
+            setMediaVideos(media.videos);
           }
 
-          if (profile.racket_details?.length > 0) {
-            setRackets(profile.racket_details.map((r) => ({ name: r.name || "", string: r.string || "", tension: (r.tension || "").replace(/[^0-9]/g, "") })));
-            const primIdx = profile.racket_details.findIndex((r) => r.primary === true || r.name === profile.current_racket);
-            setPrimaryRacketIndex(primIdx >= 0 ? primIdx : 0);
-          } else if (profile.current_racket) {
-            setRackets([{ name: profile.current_racket, string: "", tension: "" }]);
-            setPrimaryRacketIndex(0);
-          } else {
-            setRackets([{ name: "", string: "", tension: "" }]);
-            setPrimaryRacketIndex(0);
-          }
+          const racketState = racketsFromProfile(profile.racket_details, profile.current_racket);
+          setRackets(racketState.rackets);
+          setPrimaryRacketIndex(racketState.primaryIndex);
 
-          if (profile.shoes) {
-            try {
-              if (profile.shoes.startsWith("[")) {
-                const parsedShoes = JSON.parse(profile.shoes) as ShoeItem[];
-                setShoesList(parsedShoes.map((s) => ({ name: s.name || "" })));
-                const primShoeIdx = parsedShoes.findIndex((s) => s.primary === true);
-                setPrimaryShoeIndex(primShoeIdx >= 0 ? primShoeIdx : 0);
-              } else {
-                setShoesList([{ name: profile.shoes }]);
-                setPrimaryShoeIndex(0);
-              }
-            } catch {
-              setShoesList([{ name: profile.shoes }]);
-              setPrimaryShoeIndex(0);
-            }
-          } else {
-            setShoesList([{ name: "" }]);
-            setPrimaryShoeIndex(0);
-          }
+          const shoeState = shoesFromProfile(profile.shoes);
+          setShoesList(shoeState.shoes);
+          setPrimaryShoeIndex(shoeState.primaryIndex);
 
           setNationality(profile.nationality || "");
           setHomeState(profile.home_state || "");
@@ -280,62 +260,14 @@ export function useProfileSetup() {
     }
   };
 
-  const buildPayload = useCallback(() => {
-    const validRackets = rackets.filter((r) => r.name.trim() !== "");
-    const validShoes = shoesList.filter((s) => s.name.trim() !== "");
-    const validImages = mediaImages.filter((img) => img.url.trim() !== "");
-    const validVideos = mediaVideos.filter((vid) => vid.url.trim() !== "");
-    const finalPrimaryRacketIdx = primaryRacketIndex < validRackets.length ? primaryRacketIndex : 0;
-    const finalPrimaryShoeIdx = primaryShoeIndex < validShoes.length ? primaryShoeIndex : 0;
-    const packedStats = {
-      ...originalStats,
-      media: [
-        ...validImages.map((img) => ({ type: "image" as const, url: img.url, caption: img.caption })),
-        ...validVideos.map((vid) => ({ type: "video" as const, url: vid.url, caption: vid.caption })),
-      ],
-    };
-    return {
-      full_name: fullName,
-      nickname: nickname || null,
-      is_looking_to_play: status === 'looking',
-      is_guest: isGuest,
-      is_retired: isRetired,
-      iisc_email: iiscEmail || null,
-      contact_number: contactNumber || null,
-      department: department === "OTHER - Other" ? customDepartment : department,
-      joined_year: joinedYear ? parseInt(joinedYear) : null,
-      playing_level: playingLevel,
-      playing_style: playingStyle,
-      dominant_hand: dominantHand || null,
-      favorite_shot: favoriteShot || null,
-      favorite_idol: favoriteIdol || null,
-      gender: gender || null,
-      favorite_format: favoriteFormat || null,
-      quote: quote || null,
-      avatar_url: avatarUrl || `https://ui-avatars.com/api/?name=${fullName}&background=random`,
-      current_racket: validRackets[finalPrimaryRacketIdx]?.name || validRackets[0]?.name || "",
-      racket_details: validRackets.map((r, idx) => ({
-        name: r.name,
-        string: r.string || "Yonex BG65",
-        tension: r.tension ? r.tension.includes("lbs") ? r.tension : `${r.tension} lbs` : "24 lbs",
-        primary: idx === finalPrimaryRacketIdx,
-      })),
-      shoes: JSON.stringify(validShoes.map((s, idx) => ({ name: s.name, primary: idx === finalPrimaryShoeIdx }))),
-      stats: packedStats,
-      nationality: nationality || null,
-      home_state: homeState || null,
-      height: height || null,
-      started_playing_year: startedPlayingYear ? parseInt(startedPlayingYear) : null,
-      coach: coach || null,
-      bio: bio || null,
-      apparel: apparel || null,
-      instagram: instagram || null,
-      achievements: achievementsRaw ? achievementsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      tournament_history: tournamentsRaw ? tournamentsRaw.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      career_highlights: careerHighlights.filter((h) => h.year && h.title),
-      deleted_at: null,
-    };
-  }, [
+  const buildPayload = useCallback(() => buildProfilePayload({
+    fullName, nickname, status, isGuest, isRetired, iiscEmail, contactNumber,
+    department, customDepartment, joinedYear, playingLevel, playingStyle, dominantHand,
+    favoriteShot, favoriteIdol, gender, favoriteFormat, quote, avatarUrl,
+    rackets, primaryRacketIndex, shoesList, primaryShoeIndex, originalStats,
+    mediaImages, mediaVideos, nationality, homeState, height, startedPlayingYear,
+    coach, bio, apparel, instagram, achievementsRaw, tournamentsRaw, careerHighlights,
+  }), [
     rackets, shoesList, mediaImages, mediaVideos, primaryRacketIndex, primaryShoeIndex,
     originalStats, fullName, nickname, status, isGuest, isRetired, iiscEmail, contactNumber,
     department, customDepartment, joinedYear, playingLevel, playingStyle, dominantHand,
@@ -351,13 +283,7 @@ export function useProfileSetup() {
   const saveNow = useCallback(async (silent = false, nextTab?: string) => {
     if (!session) return;
 
-    const missing: string[] = [];
-    if (!fullName.trim()) missing.push("Full Name");
-    if (!isGuest && !iiscEmail.trim()) missing.push("IISc Email");
-    if (!contactNumber.trim()) missing.push("Contact Number");
-    if (!gender) missing.push("Gender");
-    if (!joinedYear.trim()) missing.push("Joined Year");
-    if (!department) missing.push("Department");
+    const missing = missingProfileFields({ fullName, isGuest, iiscEmail, contactNumber, gender, joinedYear, department });
     if (missing.length > 0) {
       if (!silent) {
         toast.error("Required fields missing", { description: `Please fill: ${missing.join(", ")}` });
@@ -367,8 +293,7 @@ export function useProfileSetup() {
     }
 
     if (iiscEmail) {
-      const e = iiscEmail.toLowerCase();
-      if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
+      if (!isIiscEmail(iiscEmail)) {
         if (!silent) toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
         return;
       }

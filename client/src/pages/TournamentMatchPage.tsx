@@ -13,6 +13,7 @@ import { RouteStatusCard } from "@/pages/TournamentPage";
 import { isUuid, matchPath, parseMatchTab, type MatchTab } from "@/lib/tournamentRoutes";
 import { fetchVisibleTournamentIdForMatch } from "@/lib/matchRouteVisibility";
 import { tournamentReturnRoute } from "@/lib/routeContinuity";
+import { BackButton } from "@/components/ui/BackButton";
 
 import { DISCIPLINE_LABELS, buildSeedIndex, toMatchView, type MatchRow, type MatchView } from "@/lib/matchView";
 import { MatchSideRow, MatchStatusBadge, scoreSummary } from "@/components/match/MatchPrimitives";
@@ -125,12 +126,23 @@ export default function TournamentMatchPage() {
   return (
     <div className="min-h-screen bg-background pb-10">
       <div className="container mx-auto px-4 max-w-2xl pt-5 space-y-4">
-        <Link
-          href={tournamentReturnRoute(t.id)}
-          className="inline-flex items-center gap-1.5 text-sm font-black text-soft hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" aria-hidden /> {t.name}
-        </Link>
+        {/* Back = the screen you came from (another match, a profile, the
+            feed); the name is the way up to the tournament view you left. */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 min-w-0 text-sm font-black">
+          <BackButton
+            parent={tournamentReturnRoute(t.id)}
+            className="inline-flex items-center gap-1.5 shrink-0 text-soft hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" aria-hidden /> Back
+          </BackButton>
+          <span aria-hidden className="text-muted-foreground">·</span>
+          <Link
+            href={tournamentReturnRoute(t.id)}
+            className="truncate text-muted-foreground hover:text-primary transition-colors"
+          >
+            {t.name}
+          </Link>
+        </nav>
 
         <article ref={scoreCardRef} className="bg-card rounded-3xl border border-border shadow-sm p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wider text-muted-foreground">

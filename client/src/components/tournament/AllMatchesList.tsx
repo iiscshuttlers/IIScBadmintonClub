@@ -251,7 +251,7 @@ export function AllMatchesList({
     }
 
     return (
-      <li key={m.id} className="grid gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto] sm:items-center">
+      <li key={m.id} className="grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto] sm:items-center">
         <div className="flex items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
           <MatchCodeChip code={m.match_code ?? "—"} />
           <span className="text-[11px] text-muted-foreground">

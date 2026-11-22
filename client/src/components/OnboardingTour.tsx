@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Trophy, Activity, Flame, CheckCircle, Smartphone } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Trophy, Users, Globe, CheckCircle, Smartphone } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useLocation } from "wouter";
 
@@ -17,42 +17,34 @@ const STEPS = [
   },
   {
     emoji: null,
-    title: "The Pulse",
-    body: "Stay up to date with the latest from the club! View the social feed, check out live updates, and see what others are up to.",
-    cta: null,
-    accent: "from-info to-info",
-    icon: <Activity className="w-12 h-12 text-info opacity-80" />,
-  },
-  {
-    emoji: null,
     title: "Tournaments & Live Scores",
-    body: "Track ongoing tournaments in real-time. View live scores from active matches and follow tournament brackets directly from your phone.",
+    body: "Every club tournament in one place: register, follow the draw and the schedule, and watch live scores from the courts. When a match is on, the Tournaments tab shows LIVE.",
     cta: null,
     accent: "from-warning to-secondary",
     icon: <Trophy className="w-12 h-12 text-gold opacity-80" />,
   },
   {
     emoji: null,
-    title: "The Hub",
-    body: "The central place for all club utilities. Did you lose a racket? Want to buy or sell gear? The Hub's Lost & Found and Exchange got you covered.",
+    title: "Players",
+    body: "Find members in the directory and see who's on top of the Elo rankings. Champions and Records show who cemented their name in club history.",
     cta: null,
-    accent: "from-individual to-individual",
-    icon: <CheckCircle className="w-12 h-12 text-individual opacity-80" />,
+    accent: "from-info to-info",
+    icon: <Users className="w-12 h-12 text-info opacity-80" />,
   },
   {
     emoji: null,
-    title: "Legacy & Hall of Fame",
-    body: "View past champions, tournament archives, and our club's history. See who cemented their name in the IISc Badminton Hall of Fame!",
+    title: "The Club",
+    body: "News and polls, the court calendar, our photo and video gallery, courts, the market (Lost & Found, Buy & Sell), and who we are.",
     cta: null,
-    accent: "from-danger to-secondary",
-    icon: <Flame className="w-12 h-12 text-danger opacity-80" />,
+    accent: "from-individual to-individual",
+    icon: <Globe className="w-12 h-12 text-individual opacity-80" />,
   },
   {
     emoji: "🎉",
     title: "You're all set!",
-    body: "Head to the Pulse to see what's happening right now, or explore Tournaments. See you on the courts!",
-    cta: "Go to Pulse",
-    ctaHref: "/pulse",
+    body: "Check Home for what's on right now, or jump into Tournaments. See you on the courts!",
+    cta: "Go to Tournaments",
+    ctaHref: "/tournaments",
     accent: "from-primary to-accent",
     icon: <CheckCircle className="w-12 h-12 text-primary opacity-80" />,
   },

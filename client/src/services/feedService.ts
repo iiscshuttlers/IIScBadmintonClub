@@ -232,26 +232,6 @@ export const feedService = {
     );
   },
 
-  async getTournamentContacts(tournamentId: string) {
-    const { data } = await supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", `tournament_contacts_${tournamentId}`)
-      .maybeSingle();
-    return data?.value ?? null;
-  },
-
-  async setTournamentContacts(tournamentId: string, value: unknown): Promise<void> {
-    await supabase.from("site_data").upsert(
-      { key: `tournament_contacts_${tournamentId}`, value: value as unknown as Json },
-      { onConflict: "key" }
-    );
-  },
-
-  async deleteTournamentContacts(tournamentId: string): Promise<void> {
-    await supabase.from("site_data").delete().eq("key", `tournament_contacts_${tournamentId}`);
-  },
-
   async sendAnnouncement(payload: { title: string; body: string; targetGroup?: string; [key: string]: unknown }): Promise<void> {
     const { error } = await supabase.functions.invoke("send-announcement", { body: payload });
     if (error) throw error;

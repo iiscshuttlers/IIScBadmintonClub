@@ -19,6 +19,15 @@ import {
   undoTournamentMatch as undoTournamentMatchRpc,
   notifyTournamentMatch,
 } from "@/services/tournamentService";
+import {
+  autoWinnerFromSets,
+  csvRowsToBulkLines,
+  parseBulkSchedule as parseBulkScheduleRows,
+  roundListPriority,
+  scheduleTemplateRows,
+  statusAfterScheduleEdit,
+  validateEditScore,
+} from "./tournamentMatchesLogic";
 
 const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
@@ -192,61 +201,11 @@ export function TournamentMatchesTab({
     }
   };
 
-  const autoWinnerFromSets = (setsStr: string, bestOfSets: number): 1 | 2 | null => {
-    const sets = setsStr.split(",").map((s) => s.trim()).filter(Boolean);
-    let t1 = 0, t2 = 0;
-    for (const s of sets) {
-      const [a, b] = s.split("-").map(Number);
-      if (!isNaN(a) && !isNaN(b)) { if (a > b) t1++; else if (b > a) t2++; }
-    }
-    const needed = Math.ceil(bestOfSets / 2);
-    if (t1 >= needed) return 1;
-    if (t2 >= needed) return 2;
-    return null;
-  };
-
   const submitEditScore = async () => {
     if (!editScore) return;
-    const ptw = editScore.pointsToWin;
-    const gp = editScore.goldenPoint;
-    let t1Wins = 0;
-    let t2Wins = 0;
-    const needed = Math.ceil(editScore.bestOfSets / 2);
-
-    for (let i = 0; i < editScore.setsData.length; i++) {
-      const s = editScore.setsData[i];
-      if (s.t1 === "" || s.t2 === "") continue;
-
-      if (t1Wins >= needed || t2Wins >= needed) {
-        toast.error(`Invalid score: The match was already won in earlier sets. You cannot enter a score for set ${i + 1}.`);
-        return;
-      }
-
-      const t1 = parseInt(s.t1, 10) || 0;
-      const t2 = parseInt(s.t2, 10) || 0;
-      const win = Math.max(t1, t2);
-      const lose = Math.min(t1, t2);
-      
-      let valid = false;
-      if (win === ptw && (win - lose) >= 2) valid = true;
-      else if (win > ptw && win < gp && (win - lose) === 2) valid = true;
-      else if (win === gp && (win - lose) >= 1 && (win - lose) <= 2) valid = true;
-      if (win === 0 && lose === 0) continue;
-
-      if (!valid) {
-        toast.error(`Invalid score in set ${i + 1}: ${t1}-${t2}. Enter a mathematically valid badminton score.`);
-        return;
-      }
-
-      if (t1 > t2) t1Wins++;
-      else if (t2 > t1) t2Wins++;
-    }
-
-    const setsArr = editScore.setsData
-      .filter((s) => s.t1 !== "" && s.t2 !== "")
-      .map((s) => `${s.t1}-${s.t2}`);
-    if (!setsArr.length) { toast.error("Enter at least one set score"); return; }
-    const scoreStr = setsArr.join(", ");
+    const checked = validateEditScore(editScore.setsData, editScore);
+    if (checked.ok === false) { toast.error(checked.error); return; }
+    const { sets: setsArr, score: scoreStr } = checked;
     try {
       await submitTournamentMatch({
         p_match_id: editScore.matchId,
@@ -274,12 +233,7 @@ export function TournamentMatchesTab({
 
     const match = matches.find((m) => m.id === editSchedule.matchId);
 
-    let newStatus = match?.status;
-    if (match?.status === "pending" && (isoAt || editSchedule.court)) {
-      newStatus = "scheduled";
-    } else if (match?.status === "scheduled" && !isoAt && !editSchedule.court) {
-      newStatus = "pending";
-    }
+    const newStatus = statusAfterScheduleEdit(match?.status, isoAt, editSchedule.court);
 
     try {
       await adminUpdateTournamentMatch(editSchedule.matchId, {
@@ -315,95 +269,19 @@ export function TournamentMatchesTab({
 
   const downloadScheduleTemplate = () => {
     const header = ["MatchCode", "Court", "Date (YYYY-MM-DD)", "Time (HH:MM)"];
-    const rows = matches
-      .filter((m) => m.category === activeCategory && m.team1_label !== "BYE" && m.team2_label !== "BYE")
-      .sort((a, b) => a.round - b.round || a.match_number - b.match_number)
-      .map((m) => [
-        m.match_code,
-        m.court_number ?? "",
-        m.scheduled_at ? m.scheduled_at.slice(0, 10) : "",
-        m.scheduled_at ? m.scheduled_at.slice(11, 16) : "",
-      ]);
+    const rows = scheduleTemplateRows(matches, activeCategory);
     downloadCSV(`${activeCategory}_schedule_template.csv`, [header, ...rows]);
   };
 
   const handleScheduleCSV = async (file: File) => {
     const rows = await readCSVFile(file);
-    const dataRows = rows[0]?.[0]?.match(/^[A-Z]+_/) ? rows : rows.slice(1);
-    const lines = dataRows
-      .filter((r) => r[0])
-      .map((r) => {
-        const code = r[0].toUpperCase();
-        const court = r[1] ?? "";
-        const date = r[2] ?? "";
-        const time = r[3] ?? "";
-        const parts = [code];
-        if (court) parts.push(`court=${court}`);
-        if (date && time) parts.push(`date=${date} time=${time}`);
-        else if (date) parts.push(`date=${date}`);
-        return parts.join(" ");
-      });
+    const lines = csvRowsToBulkLines(rows);
     setBulkText(lines.join("\n"));
     parseBulkSchedule(lines.join("\n"));
   };
 
   const parseBulkSchedule = (text: string) => {
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    const results: { matchCode: string; court: string; at: string; found: boolean; wrongCategory?: boolean }[] = [];
-    for (const line of lines) {
-      if (line.startsWith("#") || line.startsWith("//")) continue;
-      const matchCode = line.split(/[\s,:,\t]+/)[0].toUpperCase();
-      if (!matchCode) continue;
-
-      let court = "";
-      let at = "";
-
-      const kvCourt = line.match(/court\s*=\s*([^\s,]+)/i);
-      const kvDate = line.match(/date\s*=\s*(\d{4}[-\/]\d{2}[-\/]\d{2}|\d{2}[-\/]\d{2}[-\/]\d{4})/i);
-      const kvTime = line.match(/time\s*=\s*(\d{1,2})(:\d{2})?(:\d{2})?/i);
-      if (kvCourt) court = kvCourt[1];
-      if (kvDate && kvTime) {
-        let d = kvDate[1];
-        if (d.match(/^\d{2}[-\/]\d{2}[-\/]\d{4}$/)) {
-          const dParts = d.split(/[-\/]/);
-          d = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
-        }
-        let t = kvTime[1].padStart(2, "0");
-        t += kvTime[2] ? kvTime[2] : ":00";
-        try {
-          at = new Date(`${d}T${t}`).toISOString();
-        } catch {
-          /* intentional — fallback to local datetime string */
-          at = `${d}T${t}`;
-        }
-      }
-
-      if (!court || !at) {
-        const courtMatch = line.match(/court\s*(\w+)/i);
-        if (courtMatch) court = courtMatch[1];
-
-        const isoDate = line.match(/(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/i);
-        const dmy = line.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})\s+(\d{2}:\d{2})/i);
-        if (isoDate) {
-          try { at = new Date(`${isoDate[1]}T${isoDate[2]}`).toISOString(); } catch { /* intentional */ at = `${isoDate[1]}T${isoDate[2]}`; }
-        } else if (dmy) {
-          try { at = new Date(`${dmy[3]}-${dmy[2]}-${dmy[1]}T${dmy[4]}`).toISOString(); } catch { /* intentional */ at = `${dmy[3]}-${dmy[2]}-${dmy[1]}T${dmy[4]}`; }
-        }
-      }
-
-      const match = matches.find((m) => m.match_code === matchCode);
-      const found = !!match;
-      const wrongCategory = match ? match.category !== activeCategory : false;
-      const existing = results.find(r => r.matchCode === matchCode);
-      
-      if (existing) {
-        if (court) existing.court = court;
-        if (at) existing.at = at;
-      } else {
-        results.push({ matchCode, court, at, found, wrongCategory });
-      }
-    }
-    setBulkPreview(results);
+    setBulkPreview(parseBulkScheduleRows(text, matches, activeCategory));
   };
 
   const saveBulkSchedule = async () => {
@@ -414,12 +292,7 @@ export function TournamentMatchesTab({
       const match = matches.find((m) => m.match_code === row.matchCode);
       if (!match) continue;
       
-      let newStatus = match.status;
-      if (match.status === "pending" && (row.at || row.court)) {
-        newStatus = "scheduled";
-      } else if (match.status === "scheduled" && !row.at && !row.court) {
-        newStatus = "pending";
-      }
+      const newStatus = statusAfterScheduleEdit(match.status, row.at, row.court);
 
       await adminUpdateTournamentMatch(match.id, {
         court_number: row.court || null,
@@ -454,14 +327,7 @@ export function TournamentMatchesTab({
       {[...rounds].reverse().map((round) => {
         const roundMatches = categoryMatches
           .filter((m) => m.round === round)
-          .sort((a, b) => {
-            const p = (s: string) => {
-              if (s === "in_progress" || s === "IN_PROGRESS") return 0;
-              if (s === "completed" || s === "COMPLETED" || s === "walkover") return 2;
-              return 1;
-            };
-            return p(a.status) - p(b.status);
-          });
+          .sort((a, b) => roundListPriority(a.status) - roundListPriority(b.status));
         const roundName = roundMatches[0]?.round_name ?? `Round ${round}`;
         return (
           <details key={round} className="group mb-6">

@@ -17,7 +17,7 @@ import {
 import { Link } from "wouter";
 import { teamService } from "@/services/teamService";
 import { playerService } from "@/services/playerService";
-import { resolveMemberGender } from "@/components/events/TeamRosterModal";
+import { resolveMemberGender } from "@/components/events/TeamRosterModalHelper";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
 import { TeamLogo } from "@/components/events/TeamLogo";
 

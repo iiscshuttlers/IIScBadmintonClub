@@ -17,6 +17,7 @@
  */
 
 import { parseDiscipline, type Discipline } from "@/lib/tournamentRoutes";
+import { publishedSeedCount } from "@/lib/seeding";
 
 /** Columns every match surface needs; keep queries on this list. */
 export const MATCH_VIEW_COLUMNS =
@@ -176,12 +177,19 @@ export function parseGames(setsHistory: string[] | null | undefined, score: stri
 /** Seed lookup: `${discipline or category}::${playerId}` → seed. */
 export type SeedIndex = Map<string, number>;
 
+/**
+ * Pass every entry of the tournament, seeded or not: each category's entry
+ * count decides how many seeds are published (lib/seeding), and only those
+ * go in the index, so match cards never reveal the private draw order.
+ */
 export function buildSeedIndex(
   participants: Array<{ category: string | null; player_id: string | null; partner_id: string | null; seed: number | null }>,
 ): SeedIndex {
+  const entries = new Map<string, number>();
+  for (const p of participants) entries.set(p.category ?? "", (entries.get(p.category ?? "") ?? 0) + 1);
   const idx: SeedIndex = new Map();
   for (const p of participants) {
-    if (p.seed == null) continue;
+    if (p.seed == null || p.seed < 1 || p.seed > publishedSeedCount(entries.get(p.category ?? "") ?? 0)) continue;
     const key = disciplineOf(p.category) ?? (p.category ?? "");
     for (const id of [p.player_id, p.partner_id]) if (id) idx.set(`${key}::${id}`, p.seed);
   }

@@ -1,5 +1,5 @@
 /**
- * Feed posts worked out from tournament data, so the Pulse Feed covers every
+ * Feed posts worked out from tournament data, so Club News covers every
  * tournament without anyone typing an announcement.
  *
  * Each public tournament gets at most one post, for the stage it is in now:

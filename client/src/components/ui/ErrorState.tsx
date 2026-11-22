@@ -1,6 +1,7 @@
 import React from "react";
 import { AlertTriangle, RefreshCw, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { canGoBackInApp } from "@/lib/navHistory";
 
 interface ErrorStateProps {
   title?: string;
@@ -64,7 +65,11 @@ export function ErrorState({
 
         {backLink && (
           <Button
-            onClick={() => window.history.back()}
+            onClick={() => {
+              // May render outside the router, so no wouter navigation here.
+              if (canGoBackInApp()) window.history.back();
+              else window.location.href = import.meta.env.BASE_URL;
+            }}
             variant="outline"
             size="sm"
             className="flex items-center gap-1.5 text-xs font-bold"

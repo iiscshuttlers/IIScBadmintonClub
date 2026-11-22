@@ -11,7 +11,9 @@ export function ScrollProgress() {
           const el = document.documentElement;
           const scrolled = el.scrollTop || document.body.scrollTop;
           const total = el.scrollHeight - el.clientHeight;
-          setPct(total > 0 ? (scrolled / total) * 100 : 0);
+          // Clamp: after navigating to a shorter page the old scrollTop can
+          // exceed the new scroll range and push the bar past the screen edge.
+          setPct(total > 0 ? Math.min(100, (scrolled / total) * 100) : 0);
           ticking = false;
         });
         ticking = true;

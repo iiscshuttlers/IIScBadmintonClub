@@ -13,7 +13,6 @@ export default function PrivacyPolicy() {
           <PageHeader
             variant="card"
             backTo="/"
-            backLabel="Back to Home"
             badge="Legal & Trust"
             badgeIcon={<Shield className="w-3.5 h-3.5" />}
             title="Privacy Policy"

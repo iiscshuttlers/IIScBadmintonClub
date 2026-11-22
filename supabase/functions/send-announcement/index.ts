@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
           title: `📢 ${title}`,
           message: body,
           type: data_type || "announcement",
-          link: data_type === "app_update" ? "https://play.google.com/store/apps/details?id=shuttlers.iisc.com" : "/pulse#announcements"
+          link: data_type === "app_update" ? "https://play.google.com/store/apps/details?id=shuttlers.iisc.com" : "/club?tab=news"
         }))
       );
       console.log(`Notifications insert result: ${notifErr?.message || "success"}`);
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       console.log("No players found!");
     }
 
-    // Fetch push tokens via getNotificationTargets for users that enabled 'pref_notify_whistle'
+    // Push only to players with push on and the "Announcements" switch on (pref_notify_whistle).
     const allUserIds = allUsers ? allUsers.map(u => u.id) : [];
     const { pushTokens } = await getNotificationTargets(supabase, allUserIds, "pref_notify_whistle");
 

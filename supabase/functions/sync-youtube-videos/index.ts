@@ -11,7 +11,7 @@ import {
 
 /**
  * Adds new uploads from youtube.com/@iiscbadmintonclub to site_data "videos"
- * (the /legacy Videos tab). Runs hourly via pg_cron (migration
+ * (Club → Gallery → Videos; was the /legacy Videos tab). Runs hourly via pg_cron (migration
  * 20261121100000_youtube_video_sync.sql); admins can also run it from
  * Site Admin → Content → Videos → "Check now".
  *

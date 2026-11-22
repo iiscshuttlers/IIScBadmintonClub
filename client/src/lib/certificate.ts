@@ -2,6 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { FileOpener } from "@capacitor-community/file-opener";
+import { loadConveners } from "./conveners";
 
 /**
  * Fixed print palette. The certificate (and its companion result card) is
@@ -245,6 +246,16 @@ function displaySignature(ctx: CanvasRenderingContext2D, img: HTMLImageElement |
   fittedText(ctx, "IISc Badminton Club", cx, 935, { family: SANS, weight: 500, color: INK, size: 16, min: 13, width: 235 });
 }
 
+/**
+ * Co-Convener signs on the left, Convener on the right. Names and signature
+ * scans come from Site Admin → Content → Conveners, so a change of convener
+ * needs no code change.
+ */
+async function clubSignatories(): Promise<CertificateSignatory[]> {
+  const { convener, coConvener } = await loadConveners();
+  return [coConvener, convener].map((p) => ({ name: p.name, title: p.title, imageUrl: p.signatureUrl || undefined }));
+}
+
 /** Generates an A4 landscape 3508×2480px certificate with vector-source artwork. */
 export async function drawCertificate(input: CertificateInput): Promise<HTMLCanvasElement> {
   await fontsReady();
@@ -253,10 +264,7 @@ export async function drawCertificate(input: CertificateInput): Promise<HTMLCanv
     loadImage(path("IISc_Master_Seal_Transparent.png")),
   ]);
   if (!artwork) throw new Error("Missing /public/cert-artwork.svg — copy the supplied artwork into public/");
-  const signatories = input.signatories ?? [
-    { name: "Aneesh Varla", title: "Co-Convener", imageUrl: path("sign-co-convener.png") },
-    { name: "Raja Janmejay", title: "Convener", imageUrl: path("sign-convener.png") },
-  ];
+  const signatories = input.signatories ?? await clubSignatories();
   const signatureImages = await Promise.all(signatories.slice(0,2).map(s => loadImage(s.imageUrl || "")));
   const c = document.createElement("canvas");
   c.width = OUT_W; c.height = OUT_H;
@@ -372,19 +380,25 @@ export async function saveCertificatePdf(input:CertificateInput,canvas?:HTMLCanv
     await FileOpener.open({filePath:uri,contentType:"application/pdf",openWithDefault:true});
   } else downloadBlob(pdf.output("blob"),fileName);
 }
-export async function shareResultCard(input:CertificateInput,canvas?:HTMLCanvasElement) {
+/**
+ * The square 1080×1080 image for WhatsApp / Instagram. Opens the share sheet
+ * where the device can share files (phones); otherwise saves the PNG, and
+ * says which happened so the caller can tell the user.
+ */
+export async function shareResultCard(input:CertificateInput,canvas?:HTMLCanvasElement):Promise<"shared"|"downloaded"> {
   const c=canvas??await drawResultCard(input);
   const fileName=`${certificateFileBase(input)}.png`;
   const text=`${PLACEMENT_META[input.placement].medal} ${input.recipient} — ${certificateWording(input).highlight}, ${expandCategory(input.category)} at ${input.tournamentName}`;
   if(Capacitor.isNativePlatform()) {
-    await shareNative(c.toDataURL("image/png").split(",")[1],fileName,"Share result");return;
+    await shareNative(c.toDataURL("image/png").split(",")[1],fileName,"Share result");return "shared";
   }
   const blob=await new Promise<Blob|null>(resolve=>c.toBlob(resolve,"image/png"));
   if(!blob)throw new Error("Could not render result card");
   const file=new File([blob],fileName,{type:"image/png"});
   if(navigator.canShare?.({files:[file]})) {
-    try{await navigator.share({title:"IISc Badminton Club",text,files:[file]});return;}
-    catch(error:unknown){if((error as {name?:string})?.name==="AbortError")return;}
+    try{await navigator.share({title:"IISc Badminton Club",text,files:[file]});return "shared";}
+    catch(error:unknown){if((error as {name?:string})?.name==="AbortError")return "shared";}
   }
   downloadBlob(blob,fileName);
+  return "downloaded";
 }

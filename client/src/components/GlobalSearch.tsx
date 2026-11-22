@@ -19,10 +19,10 @@ interface SearchResult {
 // Quick navigation commands — always available, filtered by the query. (#20)
 const ACTIONS: { id: string; title: string; subtitle: string; href: string; keywords: string }[] = [
   { id: "a-home", title: "Home", subtitle: "Go to the home page", href: "/", keywords: "home start" },
-  { id: "a-live", title: "Live Scores", subtitle: "Pulse — live matches & feed", href: "/pulse#live", keywords: "live scores pulse feed now" },
+  { id: "a-live", title: "Live Scores", subtitle: "Tournaments — live matches", href: "/tournaments", keywords: "live scores now tournaments" },
   { id: "a-tournaments", title: "Tournaments", subtitle: "Browse & register for events", href: "/tournaments", keywords: "tournaments events draws compete" },
   { id: "a-matches", title: "My Matches", subtitle: "Your match history & pending", href: "/my-matches", keywords: "my matches history pending results" },
-  { id: "a-directory", title: "Players Directory", subtitle: "Find club members", href: "/pulse#directory", keywords: "directory players members find partner" },
+  { id: "a-directory", title: "Players Directory", subtitle: "Find club members", href: "/players", keywords: "directory players members find partner rankings" },
   { id: "a-stats", title: "My Stats", subtitle: "Your personal stats", href: "/__my_stats__", keywords: "stats personal profile rating elo" },
   { id: "a-host", title: "Host a Tournament", subtitle: "Create a new event", href: "/host-tournament", keywords: "host create tournament organize new" },
   { id: "a-settings", title: "Settings", subtitle: "Appearance, notifications, account", href: "/settings", keywords: "settings preferences theme accent notifications account" },
@@ -211,7 +211,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               id: typeof ann.title === "string" ? ann.title : crypto.randomUUID(),
               title: typeof ann.title === "string" ? ann.title : "Announcement",
               subtitle: typeof ann.category === "string" ? ann.category : undefined,
-              href: "/pulse",
+              href: "/club?tab=news",
             });
             if (annList.length >= 3) break;
           }
@@ -273,11 +273,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
   const handleSelect = (href: string) => {
     track("command_palette_select", { href });
-    // "My Stats" resolves to the signed-in user's own personal page.
+    // "My Stats" resolves to the Stats tab of the signed-in user's profile.
     const resolved =
       href === "/__my_stats__"
         ? myPlayerId
-          ? `/player/${myPlayerId}/personal`
+          ? `/player/${myPlayerId}#STATS`
           : "/my-matches"
         : href;
     setLocation(resolved);

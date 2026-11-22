@@ -51,7 +51,7 @@ export function UpNextPanel({ tournamentId }: { tournamentId: string }) {
         <h2 className="text-2xl font-black text-foreground">Up Next</h2>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {cards.map((c) => (
           <section
             key={c.key}

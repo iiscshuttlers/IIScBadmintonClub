@@ -25,7 +25,7 @@ import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 import { NotificationModal } from "./NotificationModal";
 import { useConfirm } from "@/contexts/ConfirmContext";
-import { MatchSection } from "../pulse/MatchSection";
+import { MatchSection } from "@/components/tournament/MatchSection";
 
 function MatchBroadcastCard({
   match,

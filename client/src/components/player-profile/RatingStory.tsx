@@ -19,7 +19,7 @@ export function RatingStory({
   return (
     <section aria-labelledby="rating-story-heading" className="rounded-2xl border border-border-strong/50 bg-muted/50 p-4 space-y-4">
       <h3 id="rating-story-heading" className="text-sm font-black">Rating history</h3>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {stories.map((s) => (
           <div key={s.bucket} className="rounded-xl bg-card/60 p-3 text-sm">
             <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">{BUCKET_LABEL[s.bucket]}</p>

@@ -96,7 +96,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
       <AnimatePresence>
         {lightboxIndex !== null && (() => {
           const photo = photos[lightboxIndex];
-          const galleryUrl = `/legacy?filter=${encodeURIComponent(photo.subfolder || photo.category)}&photo=${encodeURIComponent(photo.path)}`;
+          const galleryUrl = `/club?tab=gallery&filter=${encodeURIComponent(photo.subfolder || photo.category)}&photo=${encodeURIComponent(photo.path)}#albums`;
           
           return (
             <motion.div

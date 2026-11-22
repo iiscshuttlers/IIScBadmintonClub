@@ -12,6 +12,7 @@ import { useBlockedPlayers } from "@/hooks/useBlockedPlayers";
 import { Zap } from "lucide-react";
 import { useRankingMovement } from "@/hooks/queries/useRankingMovement";
 import type { RankList } from "@/lib/rankMovement";
+import { recommendOpponents } from "@/lib/recommendOpponents";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -137,18 +138,19 @@ export function DirectoryTab({
     } catch { /* ignore */ }
   }, [viewMode]);
 
-  const recommended = (() => {
-    if (loading || !ownProfile) return [];
-    return players
-      .filter(
-        (p) =>
-          p.id !== ownProfile.id &&
-          !blockedIds.has(p.id) &&
-          p.is_looking_to_play === true &&
-          Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 150
-      )
-      .slice(0, 4);
-  })();
+  const { opponents: recommended, widened: recommendWidened } =
+    loading || !ownProfile
+      ? { opponents: [] as typeof players, widened: false }
+      : recommendOpponents(players, ownProfile, { blockedIds, availableNowIds: availableMap });
+  const anyRecommendedFreeNow = recommended.some((p) => availableMap.has(p.id));
+  // Nobody was near your rating, so the search widened: don't call them close.
+  const recommendSubtitle = recommendWidened
+    ? anyRecommendedFreeNow
+      ? "Nearest players at your level, players free right now first"
+      : "Nearest players at your level"
+    : anyRecommendedFreeNow
+      ? "Closest to your rating, players free right now first"
+      : "Players closest to your rating";
 
   return (
     <>
@@ -252,9 +254,7 @@ export function DirectoryTab({
                   <h3 className="text-lg font-black text-foreground">
                     Recommended Opponents
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Players with similar skill looking to play right now
-                  </p>
+                  <p className="text-sm text-muted-foreground">{recommendSubtitle}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -316,7 +316,7 @@ export function AdminSettings() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-muted/50 rounded-xl border border-border">
             <div>
               <p className="font-bold text-foreground text-sm">Show Player Directory</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Show the searchable player directory in Pulse to all users. (Admins can always see it)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Show the searchable player directory on the Players page to all users. (Admins can always see it)</p>
             </div>
             <button
               onClick={() => update("showPlayerDirectory", !settings.showPlayerDirectory)}

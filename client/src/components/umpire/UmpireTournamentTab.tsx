@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
   ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X, ClipboardEdit, Megaphone, Trash2, CheckCircle2
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHistoryStep } from "@/hooks/useHistoryStep";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
@@ -34,6 +35,20 @@ import {
   startWarning,
   walkoverHint,
 } from "@/components/checkin/OfficialBoard";
+import {
+  UMPIRE_ROOT,
+  categoryProgress,
+  compareUmpireQueue,
+  directScorePreview,
+  enrichUmpireMatches,
+  filterUpcomingMatches,
+  orderRoundNames,
+  parentNav,
+  queueCourts,
+  resolveUmpireStep,
+  validateDirectScore,
+  type UmpireNav,
+} from "./umpireTournamentLogic";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -105,9 +120,10 @@ const CAT_BOX_COLORS_DARK: Record<string, string> = {
 export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: Props) {
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<"format" | "match" | "confirm">("format");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedMatch, setSelectedMatch] = useState<TournamentMatchForUmpire | null>(null);
+  // Format → category → match is a drill-down with history entries, so Back
+  // (on screen, phone or browser) climbs one level instead of leaving the page.
+  const { value: nav, go: goTo, back: stepBack } = useHistoryStep<UmpireNav>("umpireStep", UMPIRE_ROOT, parentNav);
+  const lastSelectedRef = useRef<TournamentMatchForUmpire | null>(null);
 
   // Filters for upcoming scheduled matches
   const [upcomingSearch, setUpcomingSearch] = useState("");
@@ -162,37 +178,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const submitDirectScore = async () => {
     if (!directScoreFor || !session?.user?.id) return;
 
-    const filledSets = directSets.filter(s => s.t1.trim() !== "" || s.t2.trim() !== "");
-    const minSets = (directScoreFor.best_of_sets ?? 3) === 1 ? 1 : 2;
-    if (filledSets.length < minSets) {
-      toast.error(`Enter at least ${minSets} set${minSets > 1 ? "s" : ""}`);
+    const checked = validateDirectScore(directSets, directScoreFor.best_of_sets);
+    if (checked.ok === false) {
+      toast.error(checked.error);
       return;
     }
-
-    const parsed = filledSets.map(s => ({
-      t1: parseInt(s.t1, 10),
-      t2: parseInt(s.t2, 10),
-    }));
-
-    if (parsed.some(s => isNaN(s.t1) || isNaN(s.t2) || s.t1 < 0 || s.t2 < 0)) {
-      toast.error("All scores must be valid non-negative numbers");
-      return;
-    }
-
-    const t1Wins = parsed.filter(s => s.t1 > s.t2).length;
-    const t2Wins = parsed.filter(s => s.t2 > s.t1).length;
-    if (t1Wins === t2Wins) {
-      toast.error("Scores must produce a winner — tied set count");
-      return;
-    }
-    if (parsed.some(s => s.t1 === s.t2)) {
-      toast.error("A set cannot be tied");
-      return;
-    }
-
-    const winnerSide: 1 | 2 = t1Wins > t2Wins ? 1 : 2;
-    const setsArr = parsed.map(s => `${s.t1}-${s.t2}`);
-    const scoreStr = setsArr.join(", ");
+    const { winnerSide, sets: setsArr, score: scoreStr } = checked;
 
     setSavingDirectScore(true);
     try {
@@ -209,8 +200,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         description: `${directScoreFor.team1_label ?? "Team 1"} vs ${directScoreFor.team2_label ?? "Team 2"}: ${scoreStr}`,
       });
       setDirectScoreFor(null);
-      setSelectedMatch(null);
-      setStep("format");
+      goTo(UMPIRE_ROOT, { replace: true });
       load({ silent: true });
     } catch (e: any) {
       toast.error(e?.message || "Failed to submit score");
@@ -282,8 +272,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
           : `Walkover recorded — ${(winnerSide === 1 ? m.team1_label : m.team2_label) ?? "winner"} advances`,
       );
       setWalkoverFor(null);
-      setSelectedMatch(null);
-      setStep("format");
+      goTo(UMPIRE_ROOT, { replace: true });
       load({ silent: true });
     } catch (e: any) {
       toast.error(e?.message || "Failed to record walkover");
@@ -355,34 +344,11 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
     const rules = await fetchRoundRulesForTournaments(tournamentIds);
 
-    const enriched: TournamentMatchForUmpire[] = (matchData ?? []).map((m: any) => {
-      const tournament = allTournaments.find((t) => t.id === m.tournament_id);
-      const rule = rules?.find(
-        (r) => r.tournament_id === m.tournament_id && r.category === m.category && r.round === m.round
-      );
-      return {
-        ...m,
-        tournament_name: tournament?.name ?? "Tournament",
-        points_to_win: rule?.points_to_win ?? m.points_to_win ?? 21,
-        best_of_sets: rule?.best_of_sets ?? m.best_of_sets ?? 3,
-        golden_point: rule?.golden_point ?? m.golden_point ?? 30,
-      };
-    });
+    const enriched: TournamentMatchForUmpire[] = enrichUmpireMatches(matchData ?? [], allTournaments, rules);
 
-    enriched.sort((a, b) => {
-      const priority = (s: string) => {
-        if (s === "in_progress") return 0;
-        if (s === "completed" || s === "walkover") return 2;
-        return 1;
-      };
-      const pA = priority(a.status);
-      const pB = priority(b.status);
-      if (pA !== pB) return pA - pB;
-      return (a.round || 1) - (b.round || 1) || (a.match_number || 1) - (b.match_number || 1);
-    });
+    enriched.sort(compareUmpireQueue);
 
     setAllMatches(enriched);
-    setSelectedMatch((prev) => (prev ? enriched.find((m) => m.id === prev.id) ?? prev : prev));
 
     // Fetch team ties needing official attention (unrevealed or pending lineups)
     try {
@@ -403,9 +369,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   // umpire with the panel already open — they had to restart the app. Refresh
   // on realtime bracket changes and whenever the tab regains focus.
   //
-  // This only refreshes the *selection* list. `selectedMatch` is separate state
-  // and an in-progress scoring session lives in UmpireEngine, so neither is
-  // disturbed by a refetch.
+  // This only refreshes the *selection* list. `selectedMatch` follows the
+  // refreshed row (keeping the last one if it drops out), and an in-progress
+  // scoring session lives in UmpireEngine, so neither is disturbed.
   useEffect(() => {
     const unsubscribe = subscribeToUmpireTournamentMatches(() => { load({ silent: true }); });
 
@@ -421,6 +387,15 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       window.removeEventListener("focus", onFocus);
     };
   }, [load]);
+
+  const selectedCategory = nav.category;
+  const foundMatch = nav.matchId
+    ? allMatches.find((m) => m.id === nav.matchId) ?? (lastSelectedRef.current?.id === nav.matchId ? lastSelectedRef.current : null)
+    : null;
+  if (foundMatch) lastSelectedRef.current = foundMatch;
+  const selectedMatch = foundMatch;
+  // A step restored from history whose match is gone shows its parent view.
+  const step: UmpireNav["step"] = resolveUmpireStep(nav, !!selectedMatch);
 
   const categories = [...new Set(allMatches.map((m) => m.category))];
   const matchesForCategory = allMatches.filter((m) => m.category === selectedCategory);
@@ -443,45 +418,14 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
   // ── Step 1: Format selection ─────────────────────────────────────────────────
   if (step === "format") {
-    const isBye = (m: TournamentMatchForUmpire) => {
-      const t1 = m.team1_label;
-      const t2 = m.team2_label;
-      return t1 === "BYE" || t2 === "BYE" || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
-    };
+    const availableCourts = queueCourts(allMatches);
 
-    const availableCourts = [...new Set(allMatches.filter(m => m.court_number && !isBye(m)).map(m => m.court_number!))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
-    let upcomingScheduled = allMatches
-      .filter(m => !isBye(m))
-      .filter(m => {
-        if (upcomingStatus === "upcoming") return m.status === "scheduled" || m.status === "pending";
-        if (upcomingStatus === "live") return m.status === "in_progress";
-        if (upcomingStatus === "completed") return m.status === "completed" || m.status === "walkover";
-        return true;
-      })
-      .sort((a, b) => {
-        const priority = (s: string) => s === "scheduled" ? 0 : s === "in_progress" ? 1 : 2;
-        const pDiff = priority(a.status) - priority(b.status);
-        if (pDiff !== 0) return pDiff;
-        if (a.scheduled_at && b.scheduled_at) return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
-        return (a.round || 0) - (b.round || 0) || (a.match_number || 0) - (b.match_number || 0);
-      });
-
-    if (upcomingSearch.trim()) {
-      const lowerQ = upcomingSearch.toLowerCase();
-      upcomingScheduled = upcomingScheduled.filter(m =>
-        (m.team1_label?.toLowerCase() || "").includes(lowerQ) ||
-        (m.team2_label?.toLowerCase() || "").includes(lowerQ) ||
-        (m.match_code?.toLowerCase() || "").includes(lowerQ) ||
-        (m.court_number?.toLowerCase() || "").includes(lowerQ)
-      );
-    }
-    if (upcomingFormat !== "ALL") {
-      upcomingScheduled = upcomingScheduled.filter(m => m.category === upcomingFormat);
-    }
-    if (upcomingCourt !== "ALL") {
-      upcomingScheduled = upcomingScheduled.filter(m => m.court_number === upcomingCourt);
-    }
+    const upcomingScheduled = filterUpcomingMatches(allMatches, {
+      status: upcomingStatus,
+      search: upcomingSearch,
+      format: upcomingFormat,
+      court: upcomingCourt,
+    });
 
     const currentTournament = availableTournaments.find(t => t.id === selectedTournamentId) ?? availableTournaments[0];
 
@@ -692,7 +636,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     key={m.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { if (!noPlayers && !isDone) { setSelectedMatch(m); setStep("confirm"); } }}
+                    onClick={() => { if (!noPlayers && !isDone) { lastSelectedRef.current = m; goTo({ step: "confirm", category: nav.category, matchId: m.id }); } }}
                     className={cn(
                       "relative w-full p-3 rounded-xl border text-left transition-all duration-200 group",
                       isDone
@@ -778,15 +722,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         <div className="grid grid-cols-1 gap-3">
           {categories.map((cat) => {
             const colors = CAT_COLORS[cat] ?? DEFAULT_COLORS;
-            const catMatches = allMatches.filter((m) => m.category === cat);
-            const upcoming = catMatches.filter((m) => m.status === "scheduled" || m.status === "pending").length;
-            const inProgress = catMatches.filter((m) => m.status === "in_progress").length;
-            const done = catMatches.filter((m) => m.status === "completed" || m.status === "walkover").length;
+            const { upcoming, inProgress, done, allDone } = categoryProgress(allMatches, cat);
 
             return (
               <button
                 key={cat}
-                onClick={() => { setSelectedCategory(cat); setStep("match"); }}
+                onClick={() => goTo({ step: "match", category: cat, matchId: null })}
                 className="flex items-center gap-4 p-4 rounded-2xl bg-muted border border-border-strong hover:border-primary hover:bg-muted-strong transition-all group text-left"
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${colors.active} shrink-0`}>
@@ -796,7 +737,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                   <p className="font-black text-foreground">{CAT_LABELS[cat] ?? cat}</p>
                   <p className="text-sm text-muted-foreground">
                     {(() => {
-                      if (catMatches.length > 0 && upcoming === 0 && inProgress === 0) {
+                      if (allDone) {
                         return <span className="text-success font-bold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 inline" /> All {done} matches completed</span>;
                       }
                       const parts: React.ReactNode[] = [];
@@ -822,24 +763,13 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     const colors = CAT_COLORS[selectedCategory] ?? DEFAULT_COLORS;
 
     // Group by round, sorted descending (Final first, then SF, QF, etc.)
-    const roundEntries = [...new Set(matchesForCategory.map((m) => m.round_name))].map(name => {
-      const maxRound = Math.max(...matchesForCategory.filter(m => m.round_name === name).map(m => m.round ?? 0));
-      const is3rd = name.toLowerCase().includes('3rd');
-      return { name, maxRound, is3rd };
-    });
-    roundEntries.sort((a, b) => {
-      // 3rd place goes right after Final (highest round)
-      if (a.is3rd && !b.is3rd) return b.maxRound === Math.max(...roundEntries.map(r => r.maxRound)) ? 1 : -1;
-      if (b.is3rd && !a.is3rd) return a.maxRound === Math.max(...roundEntries.map(r => r.maxRound)) ? -1 : 1;
-      return b.maxRound - a.maxRound;
-    });
-    const rounds = roundEntries.map(r => r.name);
+    const rounds = orderRoundNames(matchesForCategory);
 
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setStep("format"); setSelectedCategory(null); }}
+            onClick={() => stepBack()}
             className="p-2 rounded-xl bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -923,7 +853,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         <button
                           key={m.id}
                           disabled={noPlayers}
-                          onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
+                          onClick={() => { lastSelectedRef.current = m; goTo({ step: "confirm", category: nav.category, matchId: m.id }); }}
                           className={cn(
                             "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                             isLive
@@ -1036,19 +966,6 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     })}
                   </div>
                 )}
-
-                <div className="space-y-1.5">
-                  <label htmlFor="reschedule-reason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                    Reason
-                  </label>
-                  <textarea
-                    id="reschedule-reason"
-                    value={rescheduleReason}
-                    onChange={(e) => setRescheduleReason(e.target.value)}
-                    placeholder="e.g. Court overrun moved this match to the next available slot"
-                    className="w-full min-h-[72px] bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-info transition"
-                  />
-                </div>
               </div>
             );
           })}
@@ -1065,7 +982,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       <div className="space-y-2.5">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
+            onClick={() => stepBack()}
             className="p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -1252,6 +1169,19 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 </datalist>
               </div>
 
+              <div className="space-y-1.5">
+                <label htmlFor="reschedule-reason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Reason
+                </label>
+                <textarea
+                  id="reschedule-reason"
+                  value={rescheduleReason}
+                  onChange={(e) => setRescheduleReason(e.target.value)}
+                  placeholder="e.g. Court overrun moved this match to the next available slot"
+                  className="w-full min-h-[72px] bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-info transition"
+                />
+              </div>
+
               <p className="text-[10px] text-muted-foreground leading-relaxed">
                 Players are reminded again for the new slot.
               </p>
@@ -1369,13 +1299,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               </div>
 
               {(() => {
-                const filled = directSets.filter(s => s.t1.trim() !== "" && s.t2.trim() !== "");
-                const parsed = filled.map(s => ({ t1: parseInt(s.t1, 10), t2: parseInt(s.t2, 10) }));
-                const valid = parsed.filter(s => !isNaN(s.t1) && !isNaN(s.t2) && s.t1 !== s.t2);
-                const t1Wins = valid.filter(s => s.t1 > s.t2).length;
-                const t2Wins = valid.filter(s => s.t2 > s.t1).length;
-                const winner = t1Wins > t2Wins ? directScoreFor.team1_label : t2Wins > t1Wins ? directScoreFor.team2_label : null;
-                if (!winner || valid.length < 2) return null;
+                const { leader, t1Wins, t2Wins, show } = directScorePreview(directSets);
+                const winner = leader === 1 ? directScoreFor.team1_label : leader === 2 ? directScoreFor.team2_label : null;
+                if (!winner || !show) return null;
                 return (
                   <div className="text-center text-xs text-success font-bold bg-success/10 border border-success/30 rounded-xl py-2">
                     Winner: {winner} ({t1Wins}-{t2Wins} sets)

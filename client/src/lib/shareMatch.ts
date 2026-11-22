@@ -4,6 +4,7 @@ import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { toast } from "sonner";
 import { getBaseShareUrl } from "@/lib/utils";
+import { matchPath, matchShortPath } from "@/lib/tournamentRoutes";
 import { renderMatchShareCard } from "@/lib/matchShareCard";
 import { matchViewToShareInput } from "@/lib/matchViewShare";
 import type { MatchView } from "@/lib/matchView";
@@ -59,13 +60,12 @@ export async function shareMatch(match: any) {
     ? { w: sets.filter((s) => s.w > s.l).length, l: sets.filter((s) => s.l > s.w).length }
     : undefined;
 
-  const webUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
-  const isAndroid = /android/i.test(navigator.userAgent);
-  
-  // Use Android Intent to force opening in app if installed, otherwise fallback to web
-  const shareUrl = isAndroid 
-    ? `intent://iiscbadmintonclub.github.io/iiscshuttlers/feed?match=${match.id}#Intent;scheme=https;package=shuttlers.iisc.com;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`
-    : webUrl;
+  // Plain https link to the match page: Android opens it in the app when it is
+  // installed (verified App Link) and in the browser otherwise.
+  const webUrl = `${getBaseShareUrl()}${
+    match.tournament_id ? matchPath(match.tournament_id, match.id) : matchShortPath(match.id)
+  }`;
+  const shareUrl = webUrl;
 
   const text = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})! Check it out on IISc Badminton Club.`;
 
@@ -112,7 +112,8 @@ export async function shareMatch(match: any) {
       return;
     }
 
-    await shareCanvas(canvas, { text, shareUrl, fallback: fallbackShare });
+    // The native sheet shares only text + image, so the link must be in the text.
+    await shareCanvas(canvas, { text: `${text}\n${shareUrl}`, shareUrl, fallback: fallbackShare });
   } catch (err: any) {
     if (!err?.message?.includes("cancel")) fallbackShare();
   }

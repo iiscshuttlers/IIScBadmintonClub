@@ -338,7 +338,7 @@ export function TournamentSettingsTab({
             { key: "draft", label: "Draft", hint: "Only admins can see it" },
             { key: "active", label: "Live", hint: "Visible to players" },
             { key: "completed", label: "Completed", hint: "Results final" },
-            { key: "archived", label: "Archived", hint: "Saved to Legacy" },
+            { key: "archived", label: "Archived", hint: "Listed under Past tournaments" },
           ];
           const idx = Math.max(0, STEPS.findIndex((s) => s.key === form.status));
           const next = STEPS[idx + 1];
@@ -366,7 +366,7 @@ export function TournamentSettingsTab({
                     <button onClick={goNext} disabled={transitioning}
                       className="px-4 py-2 text-sm font-black rounded-xl bg-primary text-primary-foreground disabled:opacity-50 inline-flex items-center gap-1.5 transition">
                       {transitioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                      {next.key === "active" ? "Go live" : next.key === "completed" ? "Mark completed" : "Archive to Legacy"}
+                      {next.key === "active" ? "Go live" : next.key === "completed" ? "Mark completed" : "Archive"}
                     </button>
                   )}
                   {prev && (

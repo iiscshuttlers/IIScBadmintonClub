@@ -228,7 +228,7 @@ export function canonicalFromHubQuery(search: string, tournamentStatus?: string 
  * Pulse deep links that really point at one tournament or match:
  *   `/pulse?id=X…`                → `/tournaments/X/live` (subtab/m_status honoured)
  *   `/pulse?…#match-card-<matchId>` → `/matches/<matchId>`
- * Returns null for club-wide Pulse URLs, which stay on Pulse.
+ * Returns null for club-wide Pulse URLs; lib/sectionRedirects sends those on.
  */
 export function canonicalFromPulse(search: string, hash: string): string | null {
   const h = hash.startsWith("#") ? hash.slice(1) : hash;

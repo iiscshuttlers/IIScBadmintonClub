@@ -11,6 +11,10 @@ export interface MatchRef {
   id: string;
   tournamentId: string;
   title: string; // "Asha vs Bala"
+  /** Side labels in title order, so the winner can be styled apart. */
+  sides: [string, string];
+  /** Index into `sides` of the winner, or null when undecided. */
+  winner: 0 | 1 | null;
   detail: string; // "MS · Final · 21–19, 22–20"
   value: number;
 }
@@ -44,12 +48,26 @@ export interface TournamentStats {
 const MIN_MATCHES_FOR_PCT = 3;
 const TOP = 3;
 
+/**
+ * Only a loss by one of the top seeds is news. Draws can seed far deeper
+ * (35+), and seed 34 losing to seed 35 is not an upset anyone talks about.
+ */
+export const UPSET_MAX_LOSER_SEED = 20;
+
+/** A top-20 seed lost to an unseeded or lower-seeded opponent. */
+export function isSeedUpset(winnerSeed: number | null | undefined, loserSeed: number | null | undefined): boolean {
+  if (loserSeed == null || loserSeed > UPSET_MAX_LOSER_SEED) return false;
+  return winnerSeed == null || winnerSeed > loserSeed;
+}
+
 function ref(v: MatchView, value: number): MatchRef {
   const score = v.games.map((g) => `${g.side1}–${g.side2}`).join(", ");
   return {
     id: v.id,
     tournamentId: v.tournamentId,
     title: `${v.sides[0].label} vs ${v.sides[1].label}`,
+    sides: [v.sides[0].label, v.sides[1].label],
+    winner: v.sides[0].isWinner ? 0 : v.sides[1].isWinner ? 1 : null,
     detail: [v.discipline ?? v.categoryLabel, v.roundName, score].filter(Boolean).join(" · "),
     value,
   };
@@ -146,9 +164,7 @@ export function computeTournamentStats(views: MatchView[]): TournamentStats {
     .filter((v) => {
       const w = f(v).winner;
       if (w == null) return false;
-      const ws = v.sides[w].seed;
-      const ls = v.sides[w === 0 ? 1 : 0].seed;
-      return ls != null && (ws == null || ws > ls);
+      return isSeedUpset(v.sides[w].seed, v.sides[w === 0 ? 1 : 0].seed);
     })
     .map((v) => {
       const w = f(v).winner!;

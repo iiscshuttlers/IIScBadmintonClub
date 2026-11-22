@@ -23,7 +23,7 @@ CREATE POLICY players_read ON public.players FOR SELECT USING (true);
 CREATE POLICY players_update_own ON public.players FOR UPDATE USING (id = auth.uid()) WITH CHECK (id = auth.uid());
 GRANT SELECT, UPDATE ON public.players TO anon, authenticated;
 
-CREATE TABLE public.tournaments (id uuid PRIMARY KEY, created_by uuid);
+CREATE TABLE public.tournaments (id uuid PRIMARY KEY, created_by uuid, status text DEFAULT 'in_progress');
 CREATE TABLE public.tournament_officials (tournament_id uuid, user_id uuid, role text);
 CREATE TABLE public.tournament_matches (id uuid PRIMARY KEY, tournament_id uuid, player1_id uuid, player2_id uuid, player3_id uuid, player4_id uuid);
 CREATE TABLE public.site_data (key text PRIMARY KEY, value jsonb);

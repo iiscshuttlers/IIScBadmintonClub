@@ -70,10 +70,10 @@ export default function Join() {
           {/* Mode tabs (only for signin/signup) */}
           {(auth.mode === "signin" || auth.mode === "signup") && (
             <div className="flex rounded-xl border border-border-strong overflow-hidden mb-6">
-              <button onClick={() => { auth.setMode("signin"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signin" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+              <button onClick={() => { auth.setMode("signin", { replace: true }); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signin" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                 <LogIn className="w-4 h-4" /> Sign In
               </button>
-              <button onClick={() => { auth.setMode("signup"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signup" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+              <button onClick={() => { auth.setMode("signup", { replace: true }); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signup" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                 <UserPlus className="w-4 h-4" /> Create Account
               </button>
             </div>

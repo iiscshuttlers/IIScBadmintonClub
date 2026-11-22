@@ -8,7 +8,7 @@ vi.mock("@/services/tournamentService", () => ({ deleteTournamentMatch: vi.fn() 
 vi.mock("./EditVideoModal", () => ({ EditVideoModal: () => null }));
 vi.mock("./VideoPlayerModal", () => ({ VideoPlayerModal: () => null }));
 vi.mock("./MatchScorecardModal", () => ({ MatchScorecardModal: () => null }));
-vi.mock("../pulse/MatchReminderModal", () => ({ MatchReminderModal: () => null }));
+vi.mock("@/components/tournament/MatchReminderModal", () => ({ MatchReminderModal: () => null }));
 
 import { MatchCard } from "./MatchCard";
 

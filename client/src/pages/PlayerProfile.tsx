@@ -1,6 +1,10 @@
 import { useParams, useLocation, Link } from "wouter";
+import { BackButton } from "@/components/ui/BackButton";
 import { useEffect, useState, useMemo } from "react";
 import { useHashTab } from "@/hooks/useHashTab";
+import { TrainingSection } from "@/components/personal/PersonalTrainingSection";
+import { ProfileMatchesTab } from "@/components/player-profile/tabs/ProfileMatchesTab";
+import { ProfileStatsForm, OwnMovementPanels } from "@/components/player-profile/tabs/ProfileStatsExtras";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Capacitor } from "@capacitor/core";
@@ -44,7 +48,6 @@ import { DoublesSynergyWidget } from "@/components/player-profile/PlayerProfileW
 import { Badges } from "@/components/player-profile/PlayerProfileWidgets";
 import { PlayerPhotosSection } from "@/components/player-profile/PlayerPhotosSection";
 
-import { useTheme } from "@/contexts/ThemeContext";
 import {
 
   DropdownMenu,
@@ -91,10 +94,11 @@ export default function PlayerProfile() {
   const { session: authSession, signOut } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const { confirm } = useConfirm();
-  const { theme } = useTheme();
 
   // Load active tab from hash
-  const [activeTab, setActiveTab] = useHashTab(["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"] as const, "OVERVIEW");
+  // TRAINING (own profile only) is ACE training; the old Personal Space's
+  // matches and stats now live in the Matches and Stats tabs.
+  const [activeTab, setActiveTab] = useHashTab(["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS", "TRAINING"] as const, "OVERVIEW");
 
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
 
@@ -279,17 +283,12 @@ export default function PlayerProfile() {
           dialogTitle: 'Share Profile'
         });
       } else {
-        // For web on Android: use an intent:// URL so the app opens if installed
-        const isAndroid = /android/i.test(navigator.userAgent);
-        const playerPath = `/player/${player.id}`;
-        // intent:// URL triggers the app; fallback goes to the web URL
-        const intentUrl = `intent://${playerPath}#Intent;scheme=iiscshuttlers;package=shuttlers.iisc.com;S.browser_fallback_url=${encodeURIComponent(shareUrl)};end`;
-        const deepLinkUrl = isAndroid ? intentUrl : shareUrl;
-
+        // Plain https link: the recipient's Android opens it in the app when
+        // installed (verified App Link) and in the browser otherwise.
         const shareData: any = {
           title: `${player.full_name} - Player Profile`,
           text: shareText,
-          url: deepLinkUrl,
+          url: shareUrl,
         };
 
         if (navigator.share) {
@@ -415,15 +414,17 @@ export default function PlayerProfile() {
       </div>
 
       <div className="relative z-10 w-full bg-background">
+        {/* Navigation bar + hero share one box, which the hero's banner fills. */}
+        <div className="relative">
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-          <button
-            onClick={() => window.history.length > 2 ? window.history.back() : setLocation("/pulse#h2h")}
+          <BackButton
+            parent="/players"
             className="w-10 h-10 md:w-12 md:h-12 bg-media/40 hover:bg-media/60 text-on-media backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-foreground/10"
-            aria-label="Go back"
+            aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
+          </BackButton>
 
           <div className="flex items-center gap-2 md:gap-3">
             {/* Subscribe & Report — shown to others only */}
@@ -543,14 +544,13 @@ export default function PlayerProfile() {
             )}
             {currentUser && currentUser.id === player.id && (
               <>
-                <Link href={`/player/${player.id}/personal`}>
+                <Link href={`/player/${player.id}#TRAINING`} onClick={(e) => { e.preventDefault(); setActiveTab("TRAINING"); }}>
                   <button
                     className="px-3 md:px-4 py-2 md:py-2.5 h-10 md:h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
-                    title="Switch to Personal Training & Analytics Dashboard"
+                    title="Your ACE training"
                   >
                     <ActivitySquare className="w-4 h-4" />
-                    <span className="hidden sm:inline">Personal Space</span>
-                    <span className="sm:hidden">Space</span>
+                    <span>Training</span>
                   </button>
                 </Link>
                 <Link href="/profile/setup">
@@ -572,7 +572,8 @@ export default function PlayerProfile() {
         </div>
 
         {/* Hero Section */}
-        <PlayerHeroBanner player={augmentedPlayer || player} eloRank={eloRank?.overall || null} theme={theme} />
+        <PlayerHeroBanner player={augmentedPlayer || player} eloRank={eloRank?.overall || null} />
+        </div>
 
         {/* Below the hero: its background layer would otherwise cover the card. */}
         {player.is_guest && currentUser && ownPlayerProfile && !ownPlayerProfile.is_guest && ownPlayerProfile.id !== player.id && (
@@ -607,13 +608,7 @@ export default function PlayerProfile() {
               ].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => {
-                    if (tab === "TRAINING") {
-                      setLocation(`/player/${player.id}/personal`);
-                    } else {
-                      setActiveTab(tab as any);
-                    }
-                  }}
+                  onClick={() => setActiveTab(tab as any)}
                   className={`flex-auto md:flex-none min-w-[100px] py-3 md:py-4 text-[11px] md:text-sm font-black tracking-widest uppercase transition-colors relative text-center ${
                     activeTab === tab
                       ? "text-warning"
@@ -641,6 +636,20 @@ export default function PlayerProfile() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 pt-2 pb-24 space-y-6"
       >
         <TeaserOverlay isLocked={!authSession}>
+          {activeTab === "TRAINING" ? (
+            currentUser && currentUser.id === player.id ? (
+              <div className="mt-6">
+                <TrainingSection />
+              </div>
+            ) : (
+              <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-center">
+                <p className="text-sm text-soft">Training is only shown on your own profile.</p>
+                <button type="button" onClick={() => setActiveTab("OVERVIEW")} className="mt-3 min-h-[44px] px-4 text-xs font-black text-primary underline underline-offset-2">
+                  Open overview
+                </button>
+              </div>
+            )
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
             {/* ── LEFT COLUMN ── */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-6">
@@ -672,6 +681,7 @@ export default function PlayerProfile() {
                 />
               )}
 
+              {activeTab === "STATS" && <ProfileStatsForm playerId={id!} />}
               {activeTab === "STATS" && (
                 <ProfileStatsTabLeft
                   player={augmentedPlayer || player}
@@ -686,14 +696,12 @@ export default function PlayerProfile() {
                   ActivityHeatmap={ActivityHeatmap}
                 />
               )}
-
-              {activeTab === "MATCHES" && (
-                <MatchHistorySection
-                  id={id!}
-                  liveMatches={liveMatches}
-                  ownPlayerProfile={ownPlayerProfile}
-                />
+              {activeTab === "STATS" && currentUser && currentUser.id === player.id && (
+                <OwnMovementPanels playerId={player.id} />
               )}
+
+              {/* Cards with live/upcoming first; the results table is on Overview. */}
+              {activeTab === "MATCHES" && <ProfileMatchesTab playerId={id!} />}
 
               {activeTab === "PHOTOS" && (
                 <PlayerPhotosSection playerId={id!} />
@@ -721,6 +729,7 @@ export default function PlayerProfile() {
               )}
             </div>
           </div>
+          )}
         </TeaserOverlay>
       </motion.div>
 

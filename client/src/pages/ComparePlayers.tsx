@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
+import { BackButton } from "@/components/ui/BackButton";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
@@ -183,10 +184,10 @@ export default function ComparePlayers() {
 
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
-      <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
+      <BackButton parent="/players?tab=directory&dir_view=h2h" className="flex w-fit items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
-          Back to H2H
-        </button>
+          Back
+        </BackButton>
 
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-danger/10 text-danger px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-danger/30">

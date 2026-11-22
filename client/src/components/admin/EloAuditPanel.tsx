@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   RefreshCw, Loader2, RotateCcw, TrendingUp, TrendingDown, ChevronDown, ChevronUp, ArrowLeft, Play,
   Download, Filter, Search, FileSpreadsheet, FileImage, FileText, X, AlertTriangle
@@ -6,6 +6,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { adminService } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHistoryStep } from "@/hooks/useHistoryStep";
 import { InfoModal } from "@/components/InfoModal";
 import { exportToExcel, exportToPDF, exportToImage } from "@/utils/exportUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -73,7 +74,15 @@ export function EloAuditPanel() {
   const { session } = useAuth();
 
   // Player drill-down
+  // The player's ELO history is a step with its own history entry, so Back
+  // (on screen, phone or browser) returns to the list instead of leaving.
+  const { value: selectedPlayerId, go: goToPlayer, back: playerBack } = useHistoryStep<string | null>(
+    "eloPlayer",
+    null,
+    (id) => (id === null ? undefined : null),
+  );
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerSnapshot | null>(null);
+  const requestedPlayerRef = useRef<string | null>(null);
   const [eloHistory, setEloHistory] = useState<EloLogEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
@@ -216,7 +225,7 @@ export function EloAuditPanel() {
     }
   };
 
-  const loadPlayerHistory = useCallback(async (player: PlayerSnapshot) => {
+  const fetchPlayerHistory = useCallback(async (player: PlayerSnapshot) => {
     setSelectedPlayer(player);
     setHistoryLoading(true);
     setEloHistory([]);
@@ -267,13 +276,31 @@ export function EloAuditPanel() {
       };
     });
 
-      setEloHistory(enriched);
+      // A slower request for a player you've already left must not land.
+      if (requestedPlayerRef.current === player.id) setEloHistory(enriched);
     } catch (err: any) {
       toast.error("Failed to load player ELO history");
     } finally {
       setHistoryLoading(false);
     }
   }, []);
+
+  const loadPlayerHistory = useCallback((player: PlayerSnapshot) => {
+    goToPlayer(player.id);
+  }, [goToPlayer]);
+
+  // Follow the step: load the chosen player's history, or clear it on Back.
+  useEffect(() => {
+    requestedPlayerRef.current = selectedPlayerId;
+    if (!selectedPlayerId) {
+      setSelectedPlayer(null);
+      setEloHistory([]);
+      return;
+    }
+    if (selectedPlayer?.id === selectedPlayerId) return;
+    const player = players.find((p) => p.id === selectedPlayerId);
+    if (player) void fetchPlayerHistory(player);
+  }, [selectedPlayerId, players, fetchPlayerHistory, selectedPlayer?.id]);
 
   const renderExpandedTable = (entry: EloLogEntry, highlightPlayerId?: string) => (
     <div className="mt-3 pt-3 border-t border-border">
@@ -326,8 +353,9 @@ export function EloAuditPanel() {
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setSelectedPlayer(null); setEloHistory([]); }}
+            onClick={() => playerBack()}
             className="p-2 rounded-xl border border-border-strong hover:bg-muted transition"
+            aria-label="Back"
           >
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>

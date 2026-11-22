@@ -33,11 +33,30 @@ function fromName(name: string): TeamMember {
 }
 
 /**
+ * The label name belonging to the missing teammate of `known`, who sits at
+ * `knownAt` in the label ("player & partner": the player is 0, the partner 1).
+ *
+ * A label with a single name has no teammate in it: it is the known player's
+ * own entry name, which can differ from the profile name (a singles entry
+ * "Piyush Tiwary Lalit Kumar" for player "Piyush Tiwary", or a team name).
+ * Treating it as a partner showed singles players as a pair.
+ */
+function missingTeammate(known: any, parts: string[], knownAt: 0 | 1): string | null {
+  if (parts.length < 2) return null;
+  const knownName = String(known.full_name ?? "").trim().toLowerCase();
+  const mine = parts.findIndex((p) => p.toLowerCase() === knownName);
+  if (mine >= 0) return parts.find((_, i) => i !== mine) ?? null;
+  // The known player's name is spelled differently in the label: go by position.
+  return parts[knownAt === 0 ? 1 : 0] ?? null;
+}
+
+/**
  * The members of one team, preferring real player records and falling back to
  * the label for anyone missing.
  *
  * - both linked                  -> [primary, partner]
- * - primary linked, partner not  -> [primary, <the other name in the label>]
+ * - primary linked, partner not  -> [primary, <the other name in the label>],
+ *                                   or [primary] when the label has one name
  * - neither linked               -> each name in the label, split apart
  */
 export function resolveTeamMembers(
@@ -50,15 +69,12 @@ export function resolveTeamMembers(
   if (primary && partner) return [primary, partner];
 
   if (primary) {
-    // Pick the label part that isn't the primary player, so nobody is repeated.
-    const primaryName = String(primary.full_name ?? "").trim().toLowerCase();
-    const other = parts.find((p) => p.toLowerCase() !== primaryName);
+    const other = missingTeammate(primary, parts, 0);
     return other ? [primary, fromName(other)] : [primary];
   }
 
   if (partner) {
-    const partnerName = String(partner.full_name ?? "").trim().toLowerCase();
-    const other = parts.find((p) => p.toLowerCase() !== partnerName);
+    const other = missingTeammate(partner, parts, 1);
     return other ? [fromName(other), partner] : [partner];
   }
 

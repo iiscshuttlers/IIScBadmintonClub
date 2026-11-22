@@ -43,11 +43,20 @@ interface SendReminderSheetProps {
   defaultAudience?: Audience;
 }
 
+// In-app only lands in the bell list; the phone pop-up comes from Push, which
+// dispatch-scheduled-notifications sends on its 2-minute cron.
 const CHANNELS: { key: Channel; label: string; icon: typeof Mail; note: string }[] = [
-  { key: "in_app", label: "In-app", icon: MonitorSmartphone, note: "Delivered instantly" },
-  { key: "email", label: "Email", icon: Mail, note: "Queued for dispatch" },
-  { key: "push", label: "Push", icon: Smartphone, note: "Queued for dispatch" },
+  { key: "in_app", label: "In-app", icon: MonitorSmartphone, note: "Bell list, no pop-up" },
+  { key: "push", label: "Push", icon: Smartphone, note: "Phone pop-up, within 2 min" },
+  { key: "email", label: "Email", icon: Mail, note: "Within 2 min" },
 ];
+
+const DEFAULT_CHANNELS: Channel[] = ["in_app", "push"];
+
+/** scheduled_notifications.audience only allows all / tournament / team / custom. */
+function storedAudience(a: Audience): "tournament" | "custom" {
+  return a === "tournament" ? "tournament" : "custom";
+}
 
 const AUDIENCES: { key: Audience; label: string; desc: string; icon: typeof Users }[] = [
   { key: "tournament", label: "All participants", desc: "Everyone entered in this event", icon: Users },
@@ -100,7 +109,7 @@ export function SendReminderSheet({
 
   const [title, setTitle] = useState(defaultTitle);
   const [body, setBody] = useState(defaultBody);
-  const [channels, setChannels] = useState<Channel[]>(["in_app"]);
+  const [channels, setChannels] = useState<Channel[]>(DEFAULT_CHANNELS);
   const [audience, setAudience] = useState<Audience>(
     prefillPlayerIds?.length ? "custom" : defaultAudience,
   );
@@ -127,7 +136,7 @@ export function SendReminderSheet({
     if (!open) return;
     setTitle(defaultTitle);
     setBody(defaultBody);
-    setChannels(["in_app"]);
+    setChannels(DEFAULT_CHANNELS);
     setAudience(prefillPlayerIds?.length ? "custom" : defaultAudience);
     setCustomIds(prefillPlayerIds ?? []);
     setPicker("");
@@ -315,7 +324,7 @@ export function SendReminderSheet({
         title: title.trim(),
         body: body.trim(),
         channels: queuedChannels.length ? queuedChannels : (["in_app"] as Channel[]),
-        audience,
+        audience: storedAudience(audience),
         recipient_ids: recipients,
         scheduled_at: scheduledAt.toISOString(),
         status: queuedChannels.length === 0 ? "sent" : "pending",
@@ -325,7 +334,7 @@ export function SendReminderSheet({
 
       // 2. Immediate in-app fan-out (works today without the dispatcher).
       if (deliverInAppNow) {
-        const link = tournament.id ? tournamentLink(tournament) : "/pulse";
+        const link = tournament.id ? tournamentLink(tournament) : "/tournaments";
         const rows = recipients.map((uid) => ({
           user_id: uid,
           title: title.trim(),
@@ -338,13 +347,17 @@ export function SendReminderSheet({
         window.dispatchEvent(new Event("notifications_changed"));
       }
 
-      const queuedExtra = queuedChannels.filter((c) => c !== "in_app" || !deliverInAppNow);
       if (isImmediate) {
+        const who = `${recipients.length} ${recipients.length === 1 ? "person" : "people"}`;
+        const later = queuedChannels.includes("push")
+          ? "phone pop-up within 2 min"
+          : queuedChannels.includes("email")
+            ? "email within 2 min"
+            : "";
         toast.success(
           deliverInAppNow
-            ? `Sent to ${recipients.length} ${recipients.length === 1 ? "person" : "people"}` +
-                (queuedExtra.length ? " · email/push queued" : "")
-            : `Queued for ${recipients.length} ${recipients.length === 1 ? "person" : "people"}`,
+            ? `In-app sent to ${who}` + (later ? ` · ${later}` : " · no pop-up (Push was off)")
+            : `Sending to ${who} · ${later || "within 2 min"}`,
         );
       } else {
         toast.success(`Scheduled for ${scheduledAt.toLocaleString()}`);

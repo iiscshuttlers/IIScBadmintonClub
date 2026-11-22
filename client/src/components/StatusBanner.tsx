@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { themeClasses } from "@/lib/legacyColorClasses";
 import { fetchSiteData } from "@/lib/siteData";
+import { activeTickerFlyers } from "@/lib/homeBanners";
 import { feedService } from "@/services/feedService";
 import { Link, useLocation } from "wouter";
 import { X } from "lucide-react";
@@ -79,29 +80,8 @@ export default function StatusBanner() {
           : [];
         const baseFlyers: DynamicFlyer[] = Array.isArray(flyersData) ? flyersData : [];
         
-        const todayDate = new Date();
-        todayDate.setHours(0, 0, 0, 0);
-
-        // Filter valid flyers based on start/end dates
-        const isValidFlyer = (f: DynamicFlyer) => {
-          if (!f.enabled) return false;
-          
-          if (f.startDate) {
-            const start = new Date(`${f.startDate}T00:00:00`);
-            if (todayDate < start) return false;
-          }
-          if (f.endDate) {
-            const end = new Date(`${f.endDate}T23:59:59`);
-            if (todayDate > end) return false;
-          }
-          return true;
-        };
-
-        const announcementFlyers = announcements
-          .filter(a => a.flyer && isValidFlyer(a.flyer))
-          .map(a => a.flyer as DynamicFlyer);
-        
-        setDynamicFlyers([...baseFlyers.filter(isValidFlyer), ...announcementFlyers]);
+        // Same rules the admin Content hub previews with (lib/homeBanners).
+        setDynamicFlyers(activeTickerFlyers(baseFlyers, announcements) as DynamicFlyer[]);
 
         const today = new Date().toLocaleDateString("en-CA", {
           timeZone: "Asia/Kolkata",
@@ -204,7 +184,7 @@ export default function StatusBanner() {
 
       {location === "/" && !isClosed && messages.length > 0 && (
     <div className="relative bg-primary text-primary-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
-      <Link href="/pulse" className="flex-1 overflow-hidden min-w-0 pr-10 group">
+      <Link href="/club?tab=news" className="flex-1 overflow-hidden min-w-0 pr-10 group">
         <div 
           className="w-[max-content] group-hover:[animation-play-state:paused] flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap cursor-pointer"
           style={{ animation: 'marquee 90s linear infinite' }}

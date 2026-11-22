@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>IISc Badminton Club</title>
+    <meta name="robots" content="noindex" />
+    <script>
+      // A link that lost the /IIScBadmintonClub prefix still lands on the right page.
+      if (!/^\/IIScBadmintonClub(\/|$)/i.test(location.pathname)) {
+        location.replace("/IIScBadmintonClub" + location.pathname + location.search + location.hash);
+      }
+    </script>
+  </head>
+  <body>
+    <p><a href="/IIScBadmintonClub/">IISc Badminton Club</a></p>
+  </body>
+</html>

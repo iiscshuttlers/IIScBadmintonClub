@@ -40,7 +40,7 @@ export function notificationTarget(data: Record<string, unknown> | null | undefi
     };
   }
   if (["player_profile", "buddy_request", "follow", "status_update", "elo_milestone"].includes(type)) {
-    return { kind: "internal", path: playerId ? `/player/${encodeURIComponent(playerId)}` : "/pulse" };
+    return { kind: "internal", path: playerId ? `/player/${encodeURIComponent(playerId)}` : "/players" };
   }
   if (["challenge_expiry", "new_challenge"].includes(type) || action === "view_challenges" || data.tab === "challenges") {
     return { kind: "internal", path: "/my-matches" };
@@ -49,10 +49,10 @@ export function notificationTarget(data: Record<string, unknown> | null | undefi
     return { kind: "internal", path: "/club?tab=lost-found" };
   }
   if (["announcement", "weekly_digest"].includes(type) || action === "view_announcements") {
-    return { kind: "internal", path: "/pulse#announcements" };
+    return { kind: "internal", path: "/club?tab=news" };
   }
   if (type === "live_score" || action === "view_live_score") {
-    return { kind: "internal", path: "/pulse" };
+    return { kind: "internal", path: "/tournaments" };
   }
   if (matchId) {
     return { kind: "internal", path: `/my-matches?highlight=${encodeURIComponent(matchId)}` };
@@ -60,6 +60,6 @@ export function notificationTarget(data: Record<string, unknown> | null | undefi
   if (["match_confirmation", "match_logged", "kudos", "match_reminder", "court_queue"].includes(type) || action === "view_match") {
     return { kind: "internal", path: "/my-matches" };
   }
-  return { kind: "internal", path: "/pulse" };
+  return { kind: "internal", path: "/" };
 }
 

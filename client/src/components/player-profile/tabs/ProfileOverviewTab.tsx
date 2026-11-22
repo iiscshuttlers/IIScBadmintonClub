@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Crosshair,
@@ -11,6 +12,8 @@ import {
 } from "lucide-react";
 import type { PlayerRow } from "@/types";
 import { InfoModal } from "@/components/InfoModal";
+import { usePlayerMatches } from "@/hooks/usePlayerMatches";
+import { computeProfileForm, type FormRow } from "@/lib/profileForm";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -23,7 +26,7 @@ function FormPill({ result, index }: { result: "W" | "L"; index: number }) {
   return (
     <div
       className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black
-        ${isWin ? "bg-primary text-primary-foreground" : "bg-foreground/10 text-primary-foreground/40"}
+        ${isWin ? "bg-primary text-primary-foreground" : "bg-danger/20 text-danger"}
       `}
       style={{ opacity }}
     >
@@ -146,12 +149,21 @@ export function ProfileOverviewTab({
   liveMatches,
   ownPlayerProfile,
 }: ProfileOverviewTabProps) {
-  const streak = splitStats?.all?.streak;
-  const isWinStreak = streak?.startsWith("W");
+  // Form and streaks come from tournament matches (club friendlies were
+  // retired, and tournament records only carry win/loss totals).
+  const { matches: tournamentMatches } = usePlayerMatches(id);
+  const form = useMemo(
+    () => computeProfileForm(tournamentMatches as unknown as FormRow[], id),
+    [tournamentMatches, id],
+  );
+  const streak = form.streak && form.streak.count >= 2 ? `${form.streak.result}${form.streak.count}` : "";
+  const isWinStreak = streak.startsWith("W");
+  const bestWinStreak = Math.max(streakStats.max, form.bestWinStreak);
+  const recentForm = form.recent.slice(-5); // oldest first, as on the Stats tab
 
   return (
     <div className="space-y-6">
-      {/* Split Stats (Friendly / Tournament / Overall) */}
+      {/* Record: Overall, By format (Friendly / Tournament only when they add something) */}
       {splitStats && splitStats.all.total > 0 && (
         <motion.div variants={itemVariants}>
           <div className="flex flex-wrap gap-4">
@@ -196,12 +208,12 @@ export function ProfileOverviewTab({
                     <Flame className="w-3 h-3" /> {streak} streak
                   </div>
                 )}
-                {streakStats.max > 0 && (
+                {bestWinStreak > 1 && (
                   <div
-                    className="mt-3 ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-secondary/15 text-secondary"
+                    className={`mt-3 ${streak ? "ml-2 " : ""}inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-secondary/15 text-secondary`}
                     title="All-Time Best Win Streak"
                   >
-                    <Trophy className="w-3 h-3" /> Max {streakStats.max}W
+                    <Trophy className="w-3 h-3" /> Best {bestWinStreak}W
                   </div>
                 )}
                 {bestOpponent && (
@@ -210,10 +222,22 @@ export function ProfileOverviewTab({
                     {bestOpponent.full_name} ({bestOpponent.elo_rating})
                   </div>
                 )}
+                {recentForm.length > 0 && (
+                  <div className="mt-3 flex items-center gap-1.5" title="Last 5 results, latest on the right">
+                    <span className="text-[8px] uppercase tracking-[0.15em] font-black text-foreground/60 mr-0.5">
+                      Form
+                    </span>
+                    {recentForm.map((r, i) => (
+                      // Older results fade: the latest (rightmost) is fully opaque.
+                      <FormPill key={i} result={r} index={recentForm.length - 1 - i} />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Friendly */}
+            {/* Friendly: only when there are any (club friendlies were retired). */}
+            {splitStats.friendly.total > 0 && (
             <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 to-primary" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-primary/[0.04] rounded-full blur-2xl" />
@@ -254,8 +278,10 @@ export function ProfileOverviewTab({
                 )}
               </div>
             </div>
+            )}
 
-            {/* Tournament */}
+            {/* Tournament: only when it differs from Overall. */}
+            {splitStats.tournament.total !== splitStats.all.total && (
             <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-success to-success" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-warning/[0.04] rounded-full blur-2xl" />
@@ -305,126 +331,24 @@ export function ProfileOverviewTab({
                 )}
               </div>
             </div>
+            )}
 
-            {/* Singles */}
-            <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-info to-info" />
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-info/[0.04] rounded-full blur-2xl" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-info/[0.12] flex items-center justify-center text-base shrink-0">
-                    👤
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-info">
-                    Singles
-                  </span>
-                </div>
-                {splitStats.singles.total > 0 ? (
-                  <>
-                    <div className="text-3xl font-black text-foreground tabular-nums mb-1">
-                      {splitStats.singles.wins}W
-                      <span className="text-foreground/50 font-light mx-1">–</span>
-                      {splitStats.singles.losses}L
-                    </div>
-                    <div className="text-xs text-foreground/60 font-medium mb-2">
-                      {splitStats.singles.total} matches · {splitStats.singles.winPct}% win
-                    </div>
-                    <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden mb-3">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-info to-info"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${splitStats.singles.winPct}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-foreground/60 italic">
-                    No singles matches
-                  </div>
+            {/* By format: one card for singles, doubles and mixed. */}
+            {(splitStats.singles?.total > 0 || splitStats.doubles?.total > 0 || splitStats.mixed?.total > 0) && (
+              <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden space-y-5">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-warning via-info to-info" />
+                <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-foreground/60">By format</span>
+                {splitStats.singles?.total > 0 && (
+                  <CategoryBar label="Singles" wins={splitStats.singles.wins} losses={splitStats.singles.losses} color="bg-primary" />
+                )}
+                {splitStats.doubles?.total > 0 && (
+                  <CategoryBar label="Doubles" wins={splitStats.doubles.wins} losses={splitStats.doubles.losses} color="bg-info" />
+                )}
+                {splitStats.mixed?.total > 0 && (
+                  <CategoryBar label="Mixed" wins={splitStats.mixed.wins} losses={splitStats.mixed.losses} color="bg-individual" />
                 )}
               </div>
-            </div>
-
-            {/* Doubles */}
-            <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-individual to-individual" />
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-individual/[0.04] rounded-full blur-2xl" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-individual/[0.12] flex items-center justify-center text-base shrink-0">
-                    👥
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-individual">
-                    Doubles
-                  </span>
-                </div>
-                {splitStats.doubles.total > 0 ? (
-                  <>
-                    <div className="text-3xl font-black text-foreground tabular-nums mb-1">
-                      {splitStats.doubles.wins}W
-                      <span className="text-foreground/50 font-light mx-1">–</span>
-                      {splitStats.doubles.losses}L
-                    </div>
-                    <div className="text-xs text-foreground/60 font-medium mb-2">
-                      {splitStats.doubles.total} matches · {splitStats.doubles.winPct}% win
-                    </div>
-                    <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden mb-3">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-individual to-individual"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${splitStats.doubles.winPct}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-foreground/60 italic">
-                    No doubles matches
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Mixed */}
-            <div className="flex-1 min-w-[280px] bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-danger to-danger" />
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-danger/[0.04] rounded-full blur-2xl" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-danger/[0.12] flex items-center justify-center text-base shrink-0">
-                    👫
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-danger">
-                    Mixed
-                  </span>
-                </div>
-                {splitStats.mixed.total > 0 ? (
-                  <>
-                    <div className="text-3xl font-black text-foreground tabular-nums mb-1">
-                      {splitStats.mixed.wins}W
-                      <span className="text-foreground/50 font-light mx-1">–</span>
-                      {splitStats.mixed.losses}L
-                    </div>
-                    <div className="text-xs text-foreground/60 font-medium mb-2">
-                      {splitStats.mixed.total} matches · {splitStats.mixed.winPct}% win
-                    </div>
-                    <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden mb-3">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-danger to-individual"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${splitStats.mixed.winPct}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-foreground/60 italic">
-                    No mixed matches
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -507,46 +431,6 @@ export function ProfileOverviewTab({
           ))}
         </div>
       </motion.section>
-
-      {/* Performance Breakdown */}
-      {(splitStats?.singles?.total > 0 || splitStats?.doubles?.total > 0 || splitStats?.mixed?.total > 0) && (
-        <motion.section variants={itemVariants}>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1 bg-foreground/8" />
-            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-foreground/60 shrink-0">
-              Performance Breakdown
-            </span>
-            <div className="h-px flex-1 bg-foreground/8" />
-          </div>
-          <div className="bg-foreground/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-foreground/8 space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-warning via-info to-info" />
-            {splitStats.singles && splitStats.singles.total > 0 && (
-              <CategoryBar
-                label="Singles"
-                wins={splitStats.singles.wins}
-                losses={splitStats.singles.losses}
-                color="bg-primary"
-              />
-            )}
-            {splitStats.doubles && splitStats.doubles.total > 0 && (
-              <CategoryBar
-                label="Doubles"
-                wins={splitStats.doubles.wins}
-                losses={splitStats.doubles.losses}
-                color="bg-info"
-              />
-            )}
-            {splitStats.mixed && splitStats.mixed.total > 0 && (
-              <CategoryBar
-                label="Mixed"
-                wins={splitStats.mixed.wins}
-                losses={splitStats.mixed.losses}
-                color="bg-individual"
-              />
-            )}
-          </div>
-        </motion.section>
-      )}
 
       {/* Match History */}
       {liveMatches.some((m) => m.status === "confirmed" || m.status === "pending") && (

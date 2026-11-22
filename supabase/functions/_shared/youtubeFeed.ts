@@ -4,7 +4,7 @@
  *
  * The channel's public RSS feed needs no API key but lists only the latest 15
  * uploads. Any upload the site has never seen is added to site_data "videos"
- * (the /legacy Videos tab), newest first. A video already in that list — hidden
+ * (Club → Gallery → Videos), newest first. A video already in that list — hidden
  * ones included — is never added again, so hiding it in the admin editor keeps
  * it off the site for good.
  */

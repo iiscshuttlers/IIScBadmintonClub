@@ -1,6 +1,7 @@
 import { playerWon } from "@/lib/matchResult";
 import { useParams, Link } from "wouter";
-import { useEffect, useState, useMemo } from "react";
+import { BackButton } from "@/components/ui/BackButton";
+import { Fragment, useEffect, useState, useMemo } from "react";
 import { fetchDoublesPairData } from "@/services/playerService";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
@@ -122,7 +123,7 @@ export default function DoublesPairProfile() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Pair not found</h1>
         <p className="text-muted-foreground">Players not found</p>
-        <Link href="/pulse#h2h" className="text-primary font-bold">Browse H2H</Link>
+        <Link href="/players?tab=directory&dir_view=h2h" className="text-primary font-bold">Browse H2H</Link>
       </div>
   );
 
@@ -152,9 +153,9 @@ export default function DoublesPairProfile() {
       <div className="bg-gradient-to-br from-team/20 via-success to-team/20 text-on-accent py-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--success)_50%,transparent),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
-          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
-            <ArrowLeft className="w-4 h-4" /> Back to H2H
-          </button>
+          <BackButton parent="/players?tab=directory&dir_view=h2h" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </BackButton>
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
               <Link href={`/player/${p1}`}><Avatar player={player1} size="lg" /></Link>
@@ -220,6 +221,16 @@ export default function DoublesPairProfile() {
                     opponents = "TBD";
                   }
 
+                  // Each opponent links to their profile. Names come from the
+                  // player rows (tied to the id); the team label is only a fallback.
+                  const oppIds = p1TeamNum === 1 ? [m.player2_id, m.team2_partner_id] : [m.player1_id, m.team1_partner_id];
+                  const oppNames = p1TeamNum === 1 ? [m.p2_name, m.p4_name] : [m.p1_name, m.p3_name];
+                  const labelNames = (p1TeamNum === 1 ? m.team2_label : m.team1_label)?.split(/\s+(?:&|\/)\s+/) ?? [];
+                  const oppPeople = oppIds.flatMap((id, i) => {
+                    const name = oppNames[i] || (labelNames.length === oppIds.filter(Boolean).length ? labelNames[i] : undefined);
+                    return id && name ? [{ id, name }] : [];
+                  });
+
                   let scoreDisplay = m.score || "";
                   if (!scoreDisplay && m.status === "walkover") scoreDisplay = "Walkover (W/O)";
                   if (!scoreDisplay) scoreDisplay = "No score recorded";
@@ -232,7 +243,23 @@ export default function DoublesPairProfile() {
                         </span>
                         <div className="flex-1 flex flex-col">
                           <span className="text-sm font-bold text-foreground leading-tight">
-                            {opponents === "BYE" ? "BYE" : `vs ${opponents || "Unknown Opponents"}`}
+                            {opponents === "BYE" ? (
+                              "BYE"
+                            ) : oppPeople.length > 0 ? (
+                              <>
+                                vs{" "}
+                                {oppPeople.map((o, i) => (
+                                  <Fragment key={o.id}>
+                                    {i > 0 && " & "}
+                                    <Link href={`/player/${o.id}`} className="hover:text-primary hover:underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+                                      {o.name}
+                                    </Link>
+                                  </Fragment>
+                                ))}
+                              </>
+                            ) : (
+                              `vs ${opponents || "Unknown Opponents"}`
+                            )}
                           </span>
                           <span className="text-xs text-soft font-mono mt-1">
                             {scoreDisplay}

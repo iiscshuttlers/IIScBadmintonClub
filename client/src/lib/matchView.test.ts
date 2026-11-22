@@ -114,16 +114,44 @@ describe("toMatchView status", () => {
 });
 
 describe("seeds", () => {
+  /** `n` filler entries, seeded after `from`, so a category has a real draw size. */
+  const filler = (category: string, n: number, from: number) =>
+    Array.from({ length: n }, (_, i) => ({ category, player_id: `${category}-${i}`, partner_id: null, seed: from + i + 1 }));
+
   it("finds a doubles pair seed through either partner, scoped to the discipline", () => {
     const seeds = buildSeedIndex([
       { category: "XD", player_id: "a", partner_id: "b", seed: 1 },
+      ...filler("XD", 3, 1),
       { category: "MD", player_id: "a", partner_id: "c", seed: 4 },
+      ...filler("MD", 15, 4),
     ]);
     const xd = toMatchView(row({ category: "XD", player1_id: "x", player3_id: "b" }), seeds);
     expect(xd.sides[0].seed).toBe(1);
     const md = toMatchView(row({ category: "MD", player1_id: "a" }), seeds);
     expect(md.sides[0].seed).toBe(4);
     expect(md.sides[1].seed).toBeNull();
+  });
+
+  it("shows only the published top seeds, never the rest of the draw order", () => {
+    // 16 entries publish 4 seeds: seed 5 and deeper stay hidden.
+    const seeds = buildSeedIndex([
+      { category: "MS", player_id: "top", partner_id: null, seed: 4 },
+      { category: "MS", player_id: "deep", partner_id: null, seed: 57 },
+      { category: "MS", player_id: "fifth", partner_id: null, seed: 5 },
+      ...filler("MS", 13, 5),
+    ]);
+    const v = toMatchView(row({ category: "MS", player1_id: "top", player2_id: "fifth" }), seeds);
+    expect(v.sides[0].seed).toBe(4);
+    expect(v.sides[1].seed).toBeNull();
+    expect(toMatchView(row({ category: "MS", player1_id: "deep" }), seeds).sides[0].seed).toBeNull();
+  });
+
+  it("publishes no seeds in a draw of fewer than 4 entries", () => {
+    const seeds = buildSeedIndex([
+      { category: "WS", player_id: "a", partner_id: null, seed: 1 },
+      { category: "WS", player_id: "b", partner_id: null, seed: 2 },
+    ]);
+    expect(seeds.size).toBe(0);
   });
 });
 

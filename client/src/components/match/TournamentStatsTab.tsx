@@ -7,6 +7,7 @@ import { filterMatches } from "@/lib/matchView";
 import { computeTournamentStats, type LeaderRow, type MatchRef } from "@/lib/tournamentStats";
 import { DISCIPLINES, matchPath, parseDiscipline } from "@/lib/tournamentRoutes";
 import { ChipStrip } from "@/components/match/ChipStrip";
+import { SidesVs } from "@/components/match/MatchPrimitives";
 import { usePlayerNames } from "@/hooks/queries/usePlayerNames";
 
 /**
@@ -38,7 +39,9 @@ function MatchList({ title, unit, items }: { title: string; unit: (v: number) =>
               className="flex items-start justify-between gap-3 rounded-xl px-3 py-2 min-h-[44px] bg-card border border-border hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-semibold break-words">{m.title}</span>
+                <span className="block text-sm break-words">
+                  <SidesVs sides={m.sides} winner={m.winner} />
+                </span>
                 <span className="block text-xs text-muted-foreground">{m.detail}</span>
               </span>
               <span className="shrink-0 text-sm font-black tabular-nums">{unit(m.value)}</span>

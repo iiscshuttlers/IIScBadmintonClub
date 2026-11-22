@@ -186,7 +186,7 @@ export default function SubscriptionsPage() {
         align="left"
         title="My Subscriptions &amp; Alerts"
         subtitle="Manage followed tournaments, players, match calls, and quiet hours"
-        onBack={() => window.history.back()}
+        backTo="/settings"
       />
       <div className="max-w-2xl mx-auto space-y-8 px-4 lg:px-8 pb-16 pt-4">
 
@@ -369,7 +369,7 @@ export default function SubscriptionsPage() {
                   <User className="w-4 h-4 text-primary" />
                   Player Subscriptions ({playerSubs.length})
                 </h2>
-                <Link href="/pulse#directory" className="text-xs font-bold text-primary hover:underline">
+                <Link href="/players" className="text-xs font-bold text-primary hover:underline">
                   Player Directory
                 </Link>
               </div>

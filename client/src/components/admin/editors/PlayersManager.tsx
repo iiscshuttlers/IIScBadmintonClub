@@ -8,7 +8,7 @@ import { adminService } from "@/services/adminService";
 import { playerService } from "@/services/playerService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
-  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
+  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, FlyerItem, DynamicFlyer, AuthUser,
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';
@@ -16,6 +16,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { AdminLoading, AdminEmptyState } from "../AdminPanel";
+
+/** Message of a caught error (the services throw Error / PostgrestError). */
+const errorMessage = (err: unknown): string => (err instanceof Error ? err.message : String(err));
+
+type SortField = "name" | "created_at" | "elo" | "singles" | "doubles" | "mixed";
+type GenderFilter = "all" | "male" | "female";
+
+/** A player row with its rank labels ("#3" or "-") per rating. */
+type RankedPlayer = Player & {
+  ranks: { overall: string; singles: string; doubles: string; mixed: string };
+};
 
 export function PlayersManager() {
   const { confirm } = useConfirm();
@@ -26,7 +37,7 @@ export function PlayersManager() {
   const [filter, setFilter] = useState<
     "profile" | "no-profile" | "pending" | "approved"
   >("profile");
-  const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
   const [actionId, setActionId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
@@ -86,8 +97,8 @@ export function PlayersManager() {
         after_state: { is_approved: true },
         label: `Approved player: ${player?.full_name ?? id}`,
       });
-    } catch (error: any) {
-      toast("Approve failed: " + error.message, { icon: "❌" });
+    } catch (error: unknown) {
+      toast("Approve failed: " + errorMessage(error), { icon: "❌" });
     }
     setActionId(null);
   };
@@ -109,8 +120,8 @@ export function PlayersManager() {
         after_state: { is_approved: false },
         label: `Revoked approval: ${player?.full_name ?? id}`,
       });
-    } catch (error: any) {
-      toast("Revoke failed: " + error.message, { icon: "❌" });
+    } catch (error: unknown) {
+      toast("Revoke failed: " + errorMessage(error), { icon: "❌" });
     }
     setActionId(null);
   };
@@ -130,8 +141,8 @@ export function PlayersManager() {
           await adminService.approvePlayers(ids, true);
           toast.success(`Approved ${pendingPlayers.length} players!`);
           setPlayers(p => p.map(pl => ids.includes(pl.id) ? { ...pl, is_approved: true } : pl));
-        } catch (error: any) {
-          toast.error("Bulk approve failed: " + error.message);
+        } catch (error: unknown) {
+          toast.error("Bulk approve failed: " + errorMessage(error));
         }
       }
     });
@@ -183,7 +194,9 @@ export function PlayersManager() {
           await softDelete("players", id, data, `Player Profile: ${name}`);
           toast("Profile moved to recycle bin.", { icon: "🗑️" });
           setPlayers((p) => p.filter((pl) => pl.id !== id));
-        } catch (error: any) {
+        } catch (caught: unknown) {
+          // softDelete throws the PostgrestError (code + message) of its insert or delete.
+          const error = caught as { code?: string; message?: string };
           if (error.code === "23503" || error.message?.includes("foreign key constraint")) {
             toast("Cannot Delete Player", {
               icon: "❌",
@@ -211,8 +224,8 @@ export function PlayersManager() {
           toast("Account permanently deleted.", { icon: "🗑️" });
           setAuthUsers((u) => u.filter((user) => user.id !== id));
           setPlayers((p) => p.filter((pl) => pl.id !== id));
-        } catch (error: any) {
-          toast("Delete failed: " + error.message, { icon: "❌" });
+        } catch (error: unknown) {
+          toast("Delete failed: " + errorMessage(error), { icon: "❌" });
         }
         setActionId(null);
       }
@@ -231,8 +244,8 @@ export function PlayersManager() {
           await adminService.verifyAuthUser(id);
           toast("Email verified successfully.", { icon: "✅" });
           setAuthUsers((u) => u.map((user) => user.id === id ? { ...user, email_confirmed_at: new Date().toISOString() } : user));
-        } catch (error: any) {
-          toast("Verify failed: " + error.message, { icon: "❌" });
+        } catch (error: unknown) {
+          toast("Verify failed: " + errorMessage(error), { icon: "❌" });
         }
         setActionId(null);
       }
@@ -244,8 +257,8 @@ export function PlayersManager() {
     try {
       await adminService.resendAuthVerification(email);
       toast("Verification email resent.", { icon: "✉️" });
-    } catch (error: any) {
-      toast("Resend failed: " + error.message, { icon: "❌" });
+    } catch (error: unknown) {
+      toast("Resend failed: " + errorMessage(error), { icon: "❌" });
     }
     setActionId(null);
   };
@@ -273,8 +286,8 @@ export function PlayersManager() {
             after_state: { role: newRole },
             label: `Updated role for ${name} to ${newRole}`,
           });
-        } catch (err: any) {
-          toast.error(err.message || 'Failed to update role');
+        } catch (err: unknown) {
+          toast.error((err instanceof Error && err.message) || 'Failed to update role');
         } finally {
           setActionId(null);
         }
@@ -296,8 +309,8 @@ export function PlayersManager() {
         after_state: { is_retired: !currentlyRetired },
         label: `${currentlyRetired ? "Unretired" : "Retired"} player: ${name}`,
       });
-    } catch (error: any) {
-      toast.error("Failed to update retirement status: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Failed to update retirement status: " + errorMessage(error));
     }
     setActionId(null);
   };
@@ -320,7 +333,7 @@ export function PlayersManager() {
     (u) => !players.some((p) => p.id === u.id || (u.email && (p.email === u.email || p.iisc_email === u.email))),
   );
 
-  const [sortField, setSortField] = useState<"name" | "created_at" | "elo" | "singles" | "doubles" | "mixed">("elo");
+  const [sortField, setSortField] = useState<SortField>("elo");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
@@ -345,8 +358,8 @@ export function PlayersManager() {
           label: `Bulk ${approved ? 'Approved' : 'Revoked'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
         });
       }
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error));
     }
     await load();
     setSelectedPlayers([]);
@@ -370,8 +383,8 @@ export function PlayersManager() {
           label: `Bulk ${retired ? 'Retired' : 'Restored'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
         });
       }
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error));
     }
     await load();
     setSelectedPlayers([]);
@@ -391,7 +404,7 @@ export function PlayersManager() {
          if (!data) { failed++; continue; }
          await softDelete("players", id, data, `Player Profile: ${player.full_name}`);
          success++;
-       } catch (err: any) {
+       } catch {
          failed++;
        }
     }
@@ -402,7 +415,7 @@ export function PlayersManager() {
   };
 
   // Determine which list to show based on filter
-  let displayList: any[] = [];
+  let displayList: (Player | AuthUser)[] = [];
   if (filter === "no-profile") {
     displayList = noProfileUsers;
   } else {
@@ -473,11 +486,11 @@ export function PlayersManager() {
     if (filter === "no-profile") return list;
 
     return list.sort((a, b) => {
-      const pa = a as Player & { ranks: any };
-      const pb = b as Player & { ranks: any };
+      const pa = a as RankedPlayer;
+      const pb = b as RankedPlayer;
       
-      let valA: any = 0;
-      let valB: any = 0;
+      let valA: string | number = 0;
+      let valB: string | number = 0;
 
       if (sortField === "name") {
         valA = pa.full_name?.toLowerCase() || "";
@@ -505,7 +518,7 @@ export function PlayersManager() {
     });
   }, [displayList, playersWithRanks, filter, genderFilter, search, sortField, sortDirection]);
 
-  const handleSort = (field: any) => {
+  const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -668,7 +681,7 @@ export function PlayersManager() {
           <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0 min-w-0">
             <select
               value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value as any)}
+              onChange={(e) => setGenderFilter(e.target.value as GenderFilter)}
               className="flex-1 sm:flex-none min-w-0 px-3 py-2 rounded-xl border border-border-strong bg-card text-soft font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
             >
               <option value="all">All Genders</option>
@@ -679,7 +692,7 @@ export function PlayersManager() {
               value={`${sortField}-${sortDirection}`}
               onChange={(e) => {
                 const [field, dir] = e.target.value.split("-");
-                setSortField(field as any);
+                setSortField(field as SortField);
                 setSortDirection(dir as "asc" | "desc");
               }}
               className="flex-1 sm:flex-none min-w-0 lg:hidden px-3 py-2 rounded-xl border border-border-strong bg-card text-soft font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
@@ -793,7 +806,7 @@ export function PlayersManager() {
               </thead>
               <tbody className="divide-y divide-border/50">
                 {sortedAndFiltered.map((item) => {
-                  const p = item as Player & { ranks: any };
+                  const p = item as RankedPlayer;
                   const busy = actionId === p.id;
                   
                   return (
@@ -904,7 +917,7 @@ export function PlayersManager() {
         {sortedAndFiltered.length > 0 && filter !== "no-profile" && (
           <div className="lg:hidden space-y-3 pb-8">
             {sortedAndFiltered.map((item) => {
-               const p = item as Player & { ranks: any };
+               const p = item as RankedPlayer;
                const busy = actionId === p.id;
                
                return (

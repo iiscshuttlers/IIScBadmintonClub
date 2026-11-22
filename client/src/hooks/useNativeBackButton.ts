@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { canGoBackInApp, runParentFallback, runStepHandlers } from "@/lib/navHistory";
 
 function showExitToast(onDone: () => void) {
   const toast = document.createElement("div");
@@ -78,14 +80,25 @@ function hasOpenOverlay(): boolean {
   return false;
 }
 
+/**
+ * Android's Back key. Follows the same rule as the on-screen Back controls
+ * (see lib/navHistory): close an overlay, undo an in-page step, return to the
+ * previous in-app screen, else go to the screen's parent; on home, press twice
+ * to exit.
+ */
 export function useNativeBackButton() {
   const backPressedRef = useRef(false);
   const lastPressTime = useRef(0);
+  const [, navigate] = useLocation();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const listener = CapApp.addListener("backButton", (event) => {
+    const goHome = () => navigateRef.current("/", { replace: true });
+
+    const listener = CapApp.addListener("backButton", () => {
       const now = Date.now();
       // Debounce: ignore duplicate events within 300 ms
       if (now - lastPressTime.current < 300) return;
@@ -113,24 +126,34 @@ export function useNativeBackButton() {
         path === "/iiscshuttlers" ||
         path === "/iiscshuttlers/";
 
-      // 2. Double-tap-to-exit when on home or nothing in history
-      if (isHome || !event.canGoBack) {
-        if (backPressedRef.current) {
-          CapApp.exitApp();
-          return;
-        }
-        backPressedRef.current = true;
-        showExitToast(() => {
-          backPressedRef.current = false;
-        });
+      // 2. Undo an in-page step (wizard step, opened match, drill-down) —
+      //    the same thing the screen's own Back control does.
+      if (runStepHandlers()) return;
+
+      // 3. Previous in-app screen. Covers route changes, useHashTab /
+      //    useQueryState tabs and useHistoryStep steps, which all push entries.
+      if (!isHome && canGoBackInApp()) {
+        window.history.back();
         return;
       }
 
-      // 3. Standard back navigation — works for both:
-      //    • wouter route changes (URL-based)
-      //    • useHashTab tab states (state-object-based pushState)
-      //    • useQueryState subtab changes (query-string pushState)
-      window.history.back();
+      // 4. No earlier screen (deep link, notification, cold start): go to the
+      //    screen's parent, as its on-screen Back control would; with no
+      //    registered parent, go home.
+      if (!isHome) {
+        if (!runParentFallback()) goHome();
+        return;
+      }
+
+      // 5. Double-tap-to-exit on home.
+      if (backPressedRef.current) {
+        CapApp.exitApp();
+        return;
+      }
+      backPressedRef.current = true;
+      showExitToast(() => {
+        backPressedRef.current = false;
+      });
     });
 
     return () => {

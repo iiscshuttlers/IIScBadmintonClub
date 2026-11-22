@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { AUTO_FEED_TOURNAMENT_COLUMNS, type AutoFeedTournament } from "@/lib/autoAnnouncements";
 
 /**
- * Tournaments the Pulse Feed turns into automatic posts, with their Final
+ * Tournaments the Club News feed turns into automatic posts, with their Final
  * matches. Drafts and trashed tournaments are excluded here as well as by
  * RLS, because admins can read drafts.
  *

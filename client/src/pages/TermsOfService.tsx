@@ -13,7 +13,6 @@ export default function TermsOfService() {
           <PageHeader
             variant="card"
             backTo="/"
-            backLabel="Back to Home"
             badge="Club Agreement"
             badgeIcon={<FileText className="w-3.5 h-3.5" />}
             title="Terms of Service"

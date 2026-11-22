@@ -1,43 +1,28 @@
 import { winningSide } from "@/lib/matchResult";
-import { matchShortPath } from "@/lib/tournamentRoutes";
+import { matchShortPath, tournamentPath } from "@/lib/tournamentRoutes";
 import { useEffect, useState } from "react";
-import { fetchLiveMatchesRow, subscribeToHomeLiveMatches } from "@/services/matchService";
 import { fetchActiveTournamentRows, fetchTournamentMatchesScheduledBetween } from "@/services/tournamentService";
 import { Card } from "@/components/ui/card";
-import {
-  Calendar, CalendarRange, Trophy, Loader2, ChevronRight, Activity, Clock, Users, Flame, ChevronDown, ChevronUp, MapPin, ArrowRight, CheckCircle2
-} from "lucide-react";
+import { Calendar, Trophy, ChevronDown, ChevronUp, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { BarChart2, Plus, Minus } from "lucide-react";
+import { useAnyTournamentLive } from "@/hooks/queries/useAnyTournamentLive";
+import { HomeLiveStrip } from "@/components/home/HomeLiveStrip";
+
+/**
+ * Home "Happening now": the active tournament, live score tickers for every
+ * tournament with a match on court (tournament_matches only), and the
+ * day's matches and polls behind two collapsed toggles.
+ */
 
 interface Tournament {
   id: string;
   name: string;
   status: string;
   format_family?: string | null;
-}
-
-interface LiveMatch {
-  id: string;
-  category: string;
-  team1_label: string;
-  team2_label: string;
-  t1_p1_name: string;
-  t1_p2_name: string;
-  t2_p1_name: string;
-  t2_p2_name: string;
-  court_number: string;
-  match_code: string;
-  round_name: string;
-  t1_score: number;
-  t2_score: number;
-  sets_history: string[];
-  server_team: number; // 1 or 2
-  server_player_index: number; // 0 = p1, 1 = p2 (doubles)
-  is_doubles: boolean;
 }
 
 interface TodayMatch {
@@ -58,7 +43,7 @@ interface TodayMatch {
 export function ActiveTournamentWidget() {
   const { isAdmin } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
+  const { tournamentIds: liveTournamentIds } = useAnyTournamentLive();
   const [todayMatches, setTodayMatches] = useState<TodayMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTodayMatches, setShowTodayMatches] = useState(false);
@@ -67,63 +52,12 @@ export function ActiveTournamentWidget() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   useEffect(() => {
-    async function fetchActiveData(isInitial = false) {
-      if (isInitial) setLoading(true);
-      try {
-        // Fetch active tournament
-        const tourneys = await fetchActiveTournamentRows();
-
-        if (tourneys && tourneys.length > 0) {
-          setTournament(tourneys[0]);
-        } else {
-          setTournament(null);
-        }
-
-        // Fetch ALL live broadcasted matches from site_data
-        const siteData = await fetchLiveMatchesRow();
-
-        if (siteData?.value) {
-          const liveState = siteData.value as Record<string, any>;
-          const matchesList = Object.values(liveState)
-            .filter((m: any) => m && m.status === "playing")
-            .map((m: any) => {
-              const isDoubles = !!(m.t1?.p2Name || m.t2?.p2Name);
-              return {
-                id: m.id,
-                category: m.inferredCategory || m.category || "Singles",
-                team1_label: m.t1?.p1Name + (m.t1?.p2Name ? ` & ${m.t1.p2Name}` : ""),
-                team2_label: m.t2?.p1Name + (m.t2?.p2Name ? ` & ${m.t2.p2Name}` : ""),
-                t1_p1_name: m.t1?.p1Name || "",
-                t1_p2_name: m.t1?.p2Name || "",
-                t2_p1_name: m.t2?.p1Name || "",
-                t2_p2_name: m.t2?.p2Name || "",
-                court_number: m.court || "",
-                match_code: m.matchNumber || "",
-                round_name: m.isFriendly ? "Friendly" : (m.matchNumber || ""),
-                t1_score: m.t1?.score ?? 0,
-                t2_score: m.t2?.score ?? 0,
-                sets_history: m.setsHistory || [],
-                server_team: m.serverTeam ?? 0,
-                server_player_index: m.serverPlayerIndex ?? 0,
-                is_doubles: isDoubles,
-              };
-            });
-          setLiveMatches(matchesList);
-        } else {
-          setLiveMatches([]);
-        }
-      } catch (err) {
-        console.error("Error fetching active tournament data:", err);
-      } finally {
-        if (isInitial) setLoading(false);
-      }
-    }
-
-    fetchActiveData(true);
-
-    return subscribeToHomeLiveMatches(() => {
-      fetchActiveData(false);
-    });
+    let cancelled = false;
+    fetchActiveTournamentRows()
+      .then((tourneys) => { if (!cancelled) setTournament(tourneys?.[0] ?? null); })
+      .catch((err) => console.error("Error fetching active tournament:", err))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   async function fetchTodayMatches(dateToFetch: Date = selectedDate) {
@@ -227,7 +161,7 @@ export function ActiveTournamentWidget() {
 
   if (loading) return null;
 
-  if (!tournament && liveMatches.length === 0) return null;
+  if (!tournament && liveTournamentIds.length === 0) return null;
 
   return (
     <Card className="border-0 bg-[color-mix(in_srgb,var(--success)_10%,var(--card))] backdrop-blur-md shadow-lg overflow-hidden mb-3 mt-1 ring-1 ring-success/40">
@@ -245,7 +179,7 @@ export function ActiveTournamentWidget() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-success">Active Tournament</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-success">Happening now</span>
               </div>
               <h3 className="text-base sm:text-lg font-black text-foreground leading-tight">
                 {tournament.name}
@@ -261,162 +195,26 @@ export function ActiveTournamentWidget() {
                 </span>
               </Link>
             )}
-            <Link href={`/tournaments`}>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground rounded-lg text-xs font-bold shadow-md shadow-success/20 hover:shadow-lg hover:shadow-success/30 transition-all active:scale-95 shrink-0 border border-success/50">
-                View
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            <Link
+              href={tournamentPath(tournament.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-success-foreground rounded-lg text-xs font-bold shadow-md shadow-success/20 hover:shadow-lg hover:shadow-success/30 transition-all active:scale-95 shrink-0 border border-success/50"
+            >
+              View
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden />
             </Link>
           </div>
         </div>
       )}
 
-      {/* Live Broadcasts */}
-      <AnimatePresence>
-        {liveMatches.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 sm:p-5">
-            <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
-              Live Broadcasted Matches
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {liveMatches.map((m) => {
-                const isT1Leading = m.t1_score > m.t2_score;
-                const isT2Leading = m.t2_score > m.t1_score;
-                return (
-                  <div key={m.id} className="bg-card rounded-2xl p-4 border border-danger/25 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-danger to-secondary" />
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                        {m.category}{m.round_name ? ` · ${m.round_name}` : ""}
-                      </span>
-                      {m.court_number && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-info">
-                          <MapPin className="w-3 h-3" /> Court {m.court_number}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      {/* Team 1 */}
-                      <div className="flex-1 min-w-0">
-                        {m.is_doubles ? (
-                          <div className="space-y-0.5">
-                            {/* T1 P1 */}
-                            <div className="flex justify-start">
-                              <div className="flex items-center gap-1.5 max-w-full">
-                                <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 1 && m.server_player_index === 0 ? "text-success" :
-                                  isT1Leading ? "text-warning" : "text-soft"
-                                }`}>{m.t1_p1_name || "TBD"}</p>
-                                <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
-                                  {m.server_team === 1 && m.server_player_index === 0 && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            {/* T1 P2 */}
-                            {m.t1_p2_name && (
-                              <div className="flex justify-start mt-0.5">
-                                <div className="flex items-center gap-1.5 max-w-full">
-                                  <p className={`text-xs font-black truncate leading-tight ${
-                                    m.server_team === 1 && m.server_player_index === 1 ? "text-success" :
-                                    isT1Leading ? "text-warning" : "text-soft"
-                                  }`}>{m.t1_p2_name}</p>
-                                  <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
-                                    {m.server_team === 1 && m.server_player_index === 1 && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex justify-start">
-                            <div className="flex items-center gap-1.5 max-w-full">
-                              <p className={`text-sm font-black truncate ${
-                                m.server_team === 1 ? "text-success" :
-                                isT1Leading ? "text-warning" : "text-soft"
-                              }`}>{m.team1_label || "TBD"}</p>
-                              <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
-                                {m.server_team === 1 && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      {/* Score */}
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-xl border border-border-strong shrink-0">
-                        <span className={`text-xl font-black tabular-nums ${isT1Leading ? "text-warning" : "text-foreground"}`}>{m.t1_score}</span>
-                        <span className="text-muted-foreground text-xs">-</span>
-                        <span className={`text-xl font-black tabular-nums ${isT2Leading ? "text-warning" : "text-foreground"}`}>{m.t2_score}</span>
-                      </div>
-                      {/* Team 2 */}
-                      <div className="flex-1 min-w-0 text-right">
-                        {m.is_doubles ? (
-                          <div className="space-y-0.5">
-                            {/* T2 P1 */}
-                            <div className="flex justify-end">
-                              <div className="flex items-center gap-1.5 max-w-full">
-                                <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
-                                  {m.server_team === 2 && m.server_player_index === 0 && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                                  )}
-                                </div>
-                                <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 2 && m.server_player_index === 0 ? "text-success" :
-                                  isT2Leading ? "text-warning" : "text-soft"
-                                }`}>{m.t2_p1_name || "TBD"}</p>
-                              </div>
-                            </div>
-                            {/* T2 P2 */}
-                            {m.t2_p2_name && (
-                              <div className="flex justify-end mt-0.5">
-                                <div className="flex items-center gap-1.5 max-w-full">
-                                  <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
-                                    {m.server_team === 2 && m.server_player_index === 1 && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                                    )}
-                                  </div>
-                                  <p className={`text-xs font-black truncate leading-tight ${
-                                    m.server_team === 2 && m.server_player_index === 1 ? "text-success" :
-                                    isT2Leading ? "text-warning" : "text-soft"
-                                  }`}>{m.t2_p2_name}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex justify-end">
-                            <div className="relative flex items-center max-w-full">
-                              {m.server_team === 2 && (
-                                <span className="absolute right-full mr-1.5 w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" title="Serving" />
-                              )}
-                              <p className={`text-sm font-black truncate ${
-                                m.server_team === 2 ? "text-success" :
-                                isT2Leading ? "text-warning" : "text-soft"
-                              }`}>{m.team2_label || "TBD"}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {m.sets_history.length > 0 && (
-                      <p className="mt-1.5 text-center text-[10px] text-muted-foreground font-semibold">{m.sets_history.join(", ")}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Live now: one score ticker per tournament with a match on court */}
+      {liveTournamentIds.length > 0 && (
+        <div className="px-4 sm:px-5 pb-1">
+          <HomeLiveStrip />
+        </div>
+      )}
 
       {/* Today's Matches & Polls */}
-      <div className={`px-3 sm:px-5 pb-2.5 sm:pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-2.5 sm:pt-4" : "pt-0"}`}>
+      <div className={`px-3 sm:px-5 pb-2.5 sm:pb-4 grid grid-cols-2 gap-2 sm:gap-3 pt-2.5 sm:pt-4`}>
         <button
           onClick={handleToggleTodayMatches}
           className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${

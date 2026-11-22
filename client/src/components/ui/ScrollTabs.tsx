@@ -5,7 +5,7 @@ import { Link } from "wouter";
  * Cricbuzz/FotMob-style section tabs: one horizontally scrolling row of
  * link pills (≥44 px), `aria-current="page"` on the active one, and the
  * active pill kept in view horizontally only (never scrolls the page).
- * Same behaviour as the tournament tab row in Pulse `LiveTab`.
+ * (The tournament page's own tab row in `LiveTab` wraps onto extra rows instead.)
  */
 
 export interface ScrollTab {

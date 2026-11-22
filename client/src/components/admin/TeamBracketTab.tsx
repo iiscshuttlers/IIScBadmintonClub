@@ -12,20 +12,46 @@ import { BracketVisual, type BracketMatch } from '@/components/tournament/Bracke
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { teamService } from '@/services/teamService';
 import { updateTournament } from '@/services/tournamentService';
+import type { GeneratedTie } from '@/lib/teamBracketGenerator';
+import type { Tables, TablesInsert, TablesUpdate } from '@/lib/supabase-types-auto';
+import type { Tournament } from '@/types/tournament';
+import type { TieFormatConfig, TieFormatConfigObject, TieFormatRubber, TieWithTeamsAndMatches } from '@/types/teamTie';
 
-export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any; isMasterAdmin: boolean }) {
+type BracketTeam = Awaited<ReturnType<typeof teamService.getTournamentTeams>>[number];
+
+/**
+ * A tie as this tab loads it. tournament_ties has no team_a_label /
+ * team_b_label columns (the generator's placeholder labels are never stored),
+ * so the bracket fallbacks that read them are always undefined and an
+ * undecided side shows "TBD".
+ */
+type BracketTie = TieWithTeamsAndMatches & {
+  team_a_label?: undefined;
+  team_b_label?: undefined;
+};
+
+type StatusFilter = 'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED';
+
+interface StatusPill {
+  id: StatusFilter;
+  label: string;
+  count: number;
+  isLivePill?: boolean;
+}
+
+export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isMasterAdmin: boolean }) {
   const { confirm } = useConfirm();
   const { openTeamModal } = useTeamModal();
-  const [teams, setTeams] = useState<any[]>([]);
-  const [ties, setTies] = useState<any[]>([]);
+  const [teams, setTeams] = useState<BracketTeam[]>([]);
+  const [ties, setTies] = useState<BracketTie[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editSettingsModalOpen, setEditSettingsModalOpen] = useState(false);
-  const [selectedTieForConsole, setSelectedTieForConsole] = useState<any | null>(null);
-  const [selectedTieForVisual, setSelectedTieForVisual] = useState<any | null>(null);
+  const [selectedTieForConsole, setSelectedTieForConsole] = useState<BracketTie | null>(null);
+  const [selectedTieForVisual, setSelectedTieForVisual] = useState<BracketTie | null>(null);
   const [stageFilter, setStageFilter] = useState<'ALL' | 'POOL' | 'KNOCKOUT'>('ALL');
   const [poolFilter, setPoolFilter] = useState<string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [viewMode, setViewMode] = useState<'list' | 'visual'>('list');
 
   // Tie Scheduling state
@@ -40,8 +66,10 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
         teamService.getTournamentTies(tournament.id)
       ]);
       setTeams(tData ?? []);
-      setTies(tieData ?? []);
-    } catch (e: any) {
+      // teamService types these rows as TournamentTie, which does not match the
+      // columns the query selects (no state, lineup or score columns).
+      setTies((tieData ?? []) as unknown as BracketTie[]);
+    } catch {
       toast.error("Failed to load bracket data");
     } finally {
       setLoading(false);
@@ -68,8 +96,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       toast.success("Tie schedule saved!");
       setEditingScheduleTie(null);
       await load();
-    } catch (tieErr: any) {
-      toast.error(tieErr.message);
+    } catch (tieErr: unknown) {
+      toast.error(tieErr instanceof Error ? tieErr.message : String(tieErr));
     } finally {
       setSavingSchedule(false);
     }
@@ -82,9 +110,9 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
     tieDeciderConfig
   }: {
     format: 'DIRECT_KNOCKOUT' | 'POOLS_AND_PLAYOFFS' | 'PURE_LEAGUE';
-    ties: any[];
+    ties: GeneratedTie[];
     poolAssignments: Record<string, string>;
-    tieDeciderConfig: any;
+    tieDeciderConfig: TieFormatConfigObject;
   }) => {
     if (ties.length > 0) {
       const ok = await confirm({
@@ -105,8 +133,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
     }
 
     // 2. Update tournament tie format config and points
-    const currentConfig = tournament.tie_format_config || {};
-    const updatedConfig = {
+    const currentConfig: TieFormatConfig = tournament.tie_format_config || {};
+    const updatedConfig: TieFormatConfigObject = {
       ...(typeof currentConfig === 'object' && !Array.isArray(currentConfig) ? currentConfig : { rubbers: currentConfig }),
       ...tieDeciderConfig
     };
@@ -133,25 +161,26 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       _temp_loser_advances_to: t.loser_advances_to_tie_code || null
     }));
 
-    let insertedTies: any[] = [];
+    let insertedTies: Tables<'tournament_ties'>[] = [];
     try {
-      insertedTies = await teamService.insertTournamentTies(
+      // insert(...).select() returns the full inserted rows.
+      insertedTies = (await teamService.insertTournamentTies(
         tieInserts.map(({ _temp_advances_to, _temp_loser_advances_to, ...rest }) => rest)
-      );
-    } catch (error: any) {
-      toast.error(`Error creating ties: ${error.message}`);
+      )) as Tables<'tournament_ties'>[];
+    } catch (error: unknown) {
+      toast.error(`Error creating ties: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
 
     // 4. Link advances_to_tie & loser_advances_to_tie
     if (insertedTies && insertedTies.length > 0) {
-      const codeToId = new Map(insertedTies.map((t: any) => [t.tie_code, t.id]));
+      const codeToId = new Map(insertedTies.map((t) => [t.tie_code, t.id]));
       
       for (const tie of tieInserts) {
         const currentId = codeToId.get(tie.tie_code);
         if (!currentId) continue;
 
-        const updatePayload: any = {};
+        const updatePayload: TablesUpdate<'tournament_ties'> = {};
         if (tie._temp_advances_to) {
           const nextId = codeToId.get(tie._temp_advances_to);
           if (nextId) updatePayload.advances_to_tie = nextId;
@@ -167,10 +196,12 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
       }
 
       // 5. Generate empty rubbers for each tie
-      const matchInserts: any[] = [];
+      // tournament_matches.round and round_name are NOT NULL with no default,
+      // so every rubber carries its tie's round number.
+      const matchInserts: TablesInsert<'tournament_matches'>[] = [];
       const teamMap = new Map(teams.map(t => [t.id, t]));
       
-      let rubbers = [];
+      let rubbers: TieFormatRubber[] = [];
       if (Array.isArray(updatedConfig.rubbers)) rubbers = updatedConfig.rubbers;
       else if (Array.isArray(updatedConfig)) rubbers = updatedConfig;
 
@@ -184,6 +215,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
             category: rubber.category,
             match_code: `${tie.tie_code}-${rubber.label}`,
             match_number: rubber.order,
+            round: tie.round_number ?? 1,
             round_name: tie.round_name || tie.tie_code,
             team1_label: teamA?.short_name || 'TBD',
             team2_label: teamB?.short_name || 'TBD',
@@ -199,12 +231,13 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
 
         if (tieDeciderConfig?.extra_decider_rubber?.enabled) {
           const extra = tieDeciderConfig.extra_decider_rubber;
-          const maxOrder = rubbers.reduce((max: number, r: any) => Math.max(max, r.order || 0), 0) + 1;
+          const maxOrder = rubbers.reduce((max: number, r) => Math.max(max, r.order || 0), 0) + 1;
           matchInserts.push({
             tournament_id: tournament.id,
             category: extra.category || 'XD',
             match_code: `${tie.tie_code}-${extra.label || 'DECIDER'}`,
             match_number: maxOrder,
+            round: tie.round_number ?? 1,
             round_name: `${tie.round_name || tie.tie_code} (Decider)`,
             team1_label: teamA?.short_name || 'TBD',
             team2_label: teamB?.short_name || 'TBD',
@@ -255,16 +288,16 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
 
   // Helper to check if a tie is truly scheduled:
   // Requires both court assignment AND date/time (scheduled_at)
-  const isTieScheduled = (t: any) => {
-    const court = t.matches?.find((m: any) => m.court_number)?.court_number || t.court_number || t.court || null;
+  const isTieScheduled = (t: BracketTie) => {
+    const court = t.matches?.find((m) => m.court_number)?.court_number || null;
     const hasCourt = !!court && court.toString().trim() !== '';
     const hasDateTime = !!t.scheduled_at;
     return hasCourt && hasDateTime;
   };
 
   // Helper to determine if tie is currently live
-  const isTieLive = (t: any) => {
-    const hasLiveMatch = t.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+  const isTieLive = (t: BracketTie) => {
+    const hasLiveMatch = t.matches?.some((m) => m.status === 'in_progress' || m.status === 'live');
     const hasScores = (t.score_team_a > 0 || t.score_team_b > 0);
     return t.state === 'IN_PROGRESS' && (hasLiveMatch || hasScores);
   };
@@ -290,7 +323,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
     // 1: Scheduled matches (assigned court + time + date)
     // 2: Not scheduled / pending matches
     // 3: Completed matches
-    const getTiePriority = (t: any) => {
+    const getTiePriority = (t: BracketTie) => {
       if (isTieLive(t)) return 0;
       if (t.state === 'COMPLETED') return 3;
       if (isTieScheduled(t)) return 1;
@@ -324,7 +357,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
     const minKnockoutRound = Math.min(...knockoutTies.map(t => t.round_number || 1));
 
     // Group ties by normalized round to assign sequential match_numbers
-    const roundGroups = new Map<number, any[]>();
+    const roundGroups = new Map<number, BracketTie[]>();
     knockoutTies.forEach(t => {
       const normalizedRound = Math.max(1, (t.round_number || 1) - minKnockoutRound + 1);
       if (!roundGroups.has(normalizedRound)) roundGroups.set(normalizedRound, []);
@@ -360,8 +393,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
           ? `${tie.score_team_a} - ${tie.score_team_b}`
           : null;
 
-        const tieCourtNumber = tie.matches?.find((m: any) => m.court_number)?.court_number || null;
-        const hasLiveMatch = tie.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+        const tieCourtNumber = tie.matches?.find((m) => m.court_number)?.court_number || null;
+        const hasLiveMatch = tie.matches?.some((m) => m.status === 'in_progress' || m.status === 'live');
         const hasScoresOrLineups = (tie.score_team_a > 0 || tie.score_team_b > 0) || (tie.lineup_locked_a && tie.lineup_locked_b);
         const isTieTrulyLive = tie.state === 'IN_PROGRESS' && (hasLiveMatch || hasScoresOrLineups);
 
@@ -409,8 +442,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                   await teamService.populatePlayoffQualifiers(tournament.id);
                   toast.success("Pool qualifiers advanced into playoff bracket successfully!");
                   await load();
-                } catch (error: any) {
-                  toast.error(`Failed to advance qualifiers: ${error.message}`);
+                } catch (error: unknown) {
+                  toast.error(`Failed to advance qualifiers: ${error instanceof Error ? error.message : String(error)}`);
                 }
               }}
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-success/30 text-success hover:bg-success/10 rounded-xl font-bold transition-colors text-xs"
@@ -466,7 +499,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
                   { id: 'SCHEDULED', label: 'Scheduled', count: ties.filter(t => isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
                   { id: 'UNSCHEDULED', label: 'Unscheduled', count: ties.filter(t => !isTieScheduled(t) && !isTieLive(t) && t.state !== 'COMPLETED').length },
                 ] as const
-              ).map(({ id, label, count, isLivePill }: any) => {
+              ).map(({ id, label, count, isLivePill }: StatusPill) => {
                 const isActive = statusFilter === id;
                 return (
                   <Button
@@ -635,12 +668,12 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: any;
         <div className="grid grid-cols-1 gap-3.5">
           {filteredTies.map((tie) => {
             // Find assigned court number from tie or its rubbers
-            const courtNumber = tie.matches?.find((m: any) => m.court_number)?.court_number || tie.court_number || null;
+            const courtNumber = tie.matches?.find((m) => m.court_number)?.court_number || null;
             
             // A tie is ONLY truly live on court if:
             // 1. Matches have been started (status is in_progress / live), OR
             // 2. Tie state is IN_PROGRESS AND teams are actually active (scores entered, or lineups locked/revealed)
-            const hasLiveMatch = tie.matches?.some((m: any) => m.status === 'in_progress' || m.status === 'live');
+            const hasLiveMatch = tie.matches?.some((m) => m.status === 'in_progress' || m.status === 'live');
             const hasScores = (tie.score_team_a > 0 || tie.score_team_b > 0);
             const isBothLocked = tie.lineup_locked_a && tie.lineup_locked_b;
             const isCompleted = tie.state === 'COMPLETED';

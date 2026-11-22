@@ -65,12 +65,16 @@ export function MatchPredictionCard({
   compact?: boolean;
 }) {
   const [tally, setTally] = useState<VoteTally>({ t1: 0, t2: 0 });
+  // Until the first tally arrives a 0–0 count means "unknown", not "nobody voted".
+  const [tallyLoaded, setTallyLoaded] = useState(false);
 
   // Load vote tally + realtime (always, so after voting bars update live)
   useEffect(() => {
+    setTallyLoaded(false);
     const loadTally = async () => {
       const t = await feedService.fetchVoteTally(matchId);
       setTally(t);
+      setTallyLoaded(true);
     };
     loadTally();
 
@@ -100,6 +104,14 @@ export function MatchPredictionCard({
   const voteT2Pct = totalVotes === 0 ? 50 : 100 - voteT1Pct;
 
   const shouldShowResults = isResultsRevealed;
+  const canToggleReveal = isAdmin && !!onToggleRevealResults;
+
+  // Once voting has closed (match started or finished), a poll nobody voted in
+  // has nothing to show, so it disappears instead of saying "No votes yet".
+  // Admins who still have the reveal toggle keep the row so the control stays reachable.
+  if (hasStarted && !myPick && !canToggleReveal && (!tallyLoaded || totalVotes === 0)) {
+    return null;
+  }
 
   return (
     <div className={compact ? "mt-1" : "pt-2 border-t border-border-strong/50 mt-2"}>
@@ -131,8 +143,8 @@ export function MatchPredictionCard({
 
           {shouldShowResults ? (
             <>
-              {totalVotes === 0 ? (
-                <p className={`${compact ? "text-[10px] mt-1" : "text-xs mt-2"} text-center text-muted-foreground font-medium`}>No votes yet</p>
+              {!tallyLoaded ? null : totalVotes === 0 ? (
+                <p className={`${compact ? "text-[10px] mt-1" : "text-xs mt-2"} text-center text-muted-foreground font-medium`}>No predictions were made</p>
               ) : (
               <ProbBar
                 t1Pct={voteT1Pct}

@@ -1,4 +1,5 @@
 import type { MatchView } from "@/lib/matchView";
+import { isSeedUpset } from "@/lib/tournamentStats";
 
 export type StoryType = "champions" | "upset" | "thriller" | "day_summary";
 
@@ -93,12 +94,8 @@ export function buildTournamentStoryDraft(
     const loser = m.sides.find((s) => !s.isWinner && !s.isBye);
     if (!winner || !loser) continue;
 
-    // Upset condition: winner is unseeded beating seed <= 4, or winner seed > loser seed
-    const isUpset =
-      (winner.seed === null && loser.seed !== null && loser.seed <= 4) ||
-      (winner.seed !== null && loser.seed !== null && winner.seed > loser.seed);
-
-    if (isUpset) {
+    // Same rule as the Stats tab: a top-20 seed lost to an unseeded or lower seed.
+    if (isSeedUpset(winner.seed, loser.seed)) {
       const disc = m.discipline ?? m.categoryLabel ?? "Event";
       const scoreStr = m.scoreText || m.games.map((g) => `${g.side1}-${g.side2}`).join(", ");
       const loserSeedStr = loser.seed ? `[Seed ${loser.seed}]` : "";

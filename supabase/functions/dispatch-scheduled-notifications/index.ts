@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     try {
       const recipients: string[] = Array.from(new Set((row.recipient_ids ?? []).filter(Boolean)));
       const channels: string[] = row.channels ?? [];
-      const link = row.link ?? (row.tournament_id ? "/pulse" : "/pulse#announcements");
+      const link = row.link ?? (row.tournament_id ? `/tournaments/${encodeURIComponent(row.tournament_id)}` : "/club?tab=news");
       const rule = (row.event_type && EVENT_RULES[row.event_type]) || DEFAULT_RULE;
       const image = httpsImage(row.payload);
 

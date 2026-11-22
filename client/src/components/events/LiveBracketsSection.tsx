@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Trophy } from "lucide-react";
-import { fetchTournamentCategories, fetchTournamentMatchesResult } from "@/services/tournamentService";
+import { fetchParticipantsWithDepartments, fetchTournamentCategories, fetchTournamentMatchesResult } from "@/services/tournamentService";
+import { publishedSeeds, type SeedEntry } from "@/lib/seeding";
 import { BracketVisual, type BracketMatch } from "@/components/tournament/BracketVisual";
 
 const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD", "BS", "GS", "BD", "GD"];
@@ -15,6 +16,8 @@ export function LiveBracketsSection({
   const [activeFormat, setActiveFormat] = useState("MS");
   const [formats, setFormats] = useState<string[]>([]);
   const [matchesByFormat, setMatchesByFormat] = useState<Record<string, BracketMatch[]>>({});
+  // Entries per category, for the published seed marks ([1]…) in the draw.
+  const [entriesByFormat, setEntriesByFormat] = useState<Record<string, SeedEntry[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,7 +43,11 @@ export function LiveBracketsSection({
         return;
       }
 
-      const { data: rows, error: matchError } = await fetchTournamentMatchesResult(tournament.id);
+      const [{ data: rows, error: matchError }, entries] = await Promise.all([
+        fetchTournamentMatchesResult(tournament.id),
+        // Seeds are a nice-to-have: the draw still shows if this fails.
+        fetchParticipantsWithDepartments(tournament.id).catch(() => null),
+      ]);
 
       if (matchError || !rows?.length) {
         setError("Tournament brackets are not available yet.");
@@ -58,8 +65,14 @@ export function LiveBracketsSection({
         .filter((c) => byFormat[c])
         .sort((a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b));
 
+      const entriesBy: Record<string, SeedEntry[]> = {};
+      for (const e of ((entries ?? []) as unknown as Array<SeedEntry & { category: string }>)) {
+        (entriesBy[e.category] ??= []).push(e);
+      }
+
       setFormats(fmts);
       setMatchesByFormat(byFormat);
+      setEntriesByFormat(entriesBy);
       if (fmts.length) setActiveFormat(fmts[0]);
       setLoading(false);
     };
@@ -93,6 +106,8 @@ export function LiveBracketsSection({
   }
 
   const currentMatches = matchesByFormat[activeFormat] ?? [];
+  // Cheap (one pass over ≤ a few hundred entries) and after the early returns, so no hook.
+  const seeds = publishedSeeds(entriesByFormat[activeFormat] ?? []);
   const rounds = [...new Set(currentMatches.map((m) => m.round))].sort((a, b) => a - b);
 
   return (
@@ -119,7 +134,7 @@ export function LiveBracketsSection({
             No matches scheduled for {activeFormat} yet.
           </div>
         ) : (
-          <BracketVisual matches={currentMatches} rounds={rounds} category={activeFormat} enablePathHighlight />
+          <BracketVisual matches={currentMatches} rounds={rounds} category={activeFormat} seeds={seeds} enablePathHighlight />
         )}
       </div>
     </div>

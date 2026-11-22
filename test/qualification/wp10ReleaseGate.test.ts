@@ -90,6 +90,10 @@ describe("WP10 integrated release gate", () => {
   it("has no first-party caller for legacy unrevisioned result edits", () => {
     const files = [
       "client/src/services/tournamentService.ts",
+      // tournamentService.ts is a barrel over these modules.
+      ...readdirSync(join(root, "client", "src", "services", "tournament"))
+        .filter((name) => name.endsWith(".ts"))
+        .map((name) => `client/src/services/tournament/${name}`),
       "client/src/components/admin/TournamentMatchesTab.tsx",
       "client/src/components/admin/TournamentBracketTab.tsx",
     ];
@@ -102,7 +106,10 @@ describe("WP10 integrated release gate", () => {
 
   it("excludes the Playwright fixture route from production", () => {
     const app = read("client/src/App.tsx");
-    expect(app).toMatch(/import\.meta\.env\.DEV\s*&&\s*<Route path="\/test-umpire-engine"/);
+    // The engine itself is a lazy import behind the same DEV check, so the
+    // route may also be guarded by `UmpireEngine &&`.
+    expect(app).toMatch(/import\.meta\.env\.DEV\s*&&\s*(?:UmpireEngine\s*&&\s*)?<Route path="\/test-umpire-engine"/);
+    expect(app).toMatch(/const UmpireEngine = import\.meta\.env\.DEV/);
   });
 
   it("quarantines ownerless legacy score operations instead of adopting them", () => {
@@ -137,7 +144,7 @@ describe("WP10 integrated release gate", () => {
 
   it("routes tournament schedule and status edits through a reasoned RPC", () => {
     const sql = read("supabase/migrations/20261114120000_reasoned_tournament_match_admin_updates.sql");
-    const service = read("client/src/services/tournamentService.ts");
+    const service = read("client/src/services/tournament/matchWrites.ts");
     const admin = read("client/src/components/admin/TournamentMatchesTab.tsx");
 
     expect(sql).toContain("admin_update_tournament_match");

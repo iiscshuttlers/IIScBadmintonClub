@@ -36,6 +36,56 @@ export function albumAlertOn(album: string, state: AlbumAlertState): boolean {
   return !state.muted.includes(album);
 }
 
+/** Writes one settings change needs: the gallery switch, album choices to save, album choices to drop. */
+export interface AlertPlan {
+  /** New value for players.pref_notify_gallery, when it changes. */
+  enable?: boolean;
+  set: AlbumOverride[];
+  /** Albums to put back to the default (delete their row). */
+  clear: string[];
+}
+
+/** "All albums" / "3 of 5 albums" / "Off": what the gallery row shows. */
+export function albumAlertSummary(albums: readonly string[], state: AlbumAlertState): string {
+  if (!state.enabled) return "Off";
+  if (albums.length === 0) return "On";
+  const on = albums.filter((a) => albumAlertOn(a, state)).length;
+  return on === albums.length ? "All albums" : `${on} of ${albums.length} albums`;
+}
+
+/**
+ * Every album that isn't muted for everyone is on. Albums an admin muted stay
+ * off (the member can still turn one back on by hand).
+ */
+export function allAlbumsOn(albums: readonly string[], state: AlbumAlertState): boolean {
+  return state.enabled && albums.every((a) => albumAlertOn(a, state) || albumMutedByAdmin(a, state));
+}
+
+/** "Turn all on": gallery switch on, and every album the member turned off back to the default (on). */
+export function planAllOn(state: AlbumAlertState): AlertPlan {
+  const clear = Object.keys(state.overrides).filter((a) => state.overrides[a] === false);
+  return { enable: state.enabled ? undefined : true, set: [], clear };
+}
+
+/** "Turn all off": the gallery switch, which also covers albums added later. */
+export function planAllOff(state: AlbumAlertState): AlertPlan {
+  return { enable: state.enabled ? false : undefined, set: [], clear: [] };
+}
+
+/**
+ * One album's switch. With the gallery switch off, turning an album on turns
+ * the gallery switch back on with only that album on: every other album that
+ * would come back on gets an explicit "off".
+ */
+export function planAlbumToggle(album: string, albums: readonly string[], state: AlbumAlertState): AlertPlan {
+  if (state.enabled) return { set: [{ album, subscribed: !albumAlertOn(album, state) }], clear: [] };
+  const reopened: AlbumAlertState = { ...state, enabled: true };
+  const others = albums
+    .filter((a) => a !== album && albumAlertOn(a, reopened))
+    .map((a) => ({ album: a, subscribed: false }));
+  return { enable: true, set: [{ album, subscribed: true }, ...others], clear: [] };
+}
+
 /** Muted for everyone and the member hasn't turned it back on. */
 export function albumMutedByAdmin(album: string, state: AlbumAlertState): boolean {
   return state.muted.includes(album) && state.overrides[album] !== true;

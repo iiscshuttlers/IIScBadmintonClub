@@ -277,7 +277,6 @@ export default function TournamentSetupChecklist() {
     <div className="min-h-screen bg-background text-foreground pb-20">
       <PageHeader
         backTo={`/tournament-admin?id=${tournamentId}`}
-        backLabel="Tournament Manager"
         badge="Launch checklist"
         badgeIcon={<Sparkles className="w-3.5 h-3.5 text-primary" />}
         title={tournament?.name || 'Tournament Launch Checklist'}
@@ -496,7 +495,7 @@ export default function TournamentSetupChecklist() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
           <Link href={tournamentPath(tournamentId, "live")}>
             <Button variant="outline" className="w-full sm:w-auto text-xs font-bold">
-              View on Pulse Live
+              View live page
             </Button>
           </Link>
           <Link href={`/tournament-admin?id=${tournamentId}&tab=setup`}>

@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   albumAlertOn,
+  albumAlertSummary,
   albumLabel,
   albumMutedByAdmin,
   alertableAlbums,
+  allAlbumsOn,
   overridesByAlbum,
   parseAlbumList,
+  planAlbumToggle,
+  planAllOff,
+  planAllOn,
   readLegacyAlbumChoices,
   type AlbumAlertState,
 } from "./galleryAlerts";
@@ -106,5 +111,58 @@ describe("readLegacyAlbumChoices", () => {
   it("survives empty or corrupt storage", () => {
     expect(readLegacyAlbumChoices(storage({}))).toEqual([]);
     expect(readLegacyAlbumChoices(storage({ gallery_subscriptions: "{not json" }))).toEqual([]);
+  });
+});
+
+describe("gallery row: summary and turn all on/off", () => {
+  const albums = ["A", "B", "C"];
+
+  it("summarises how many albums are on", () => {
+    expect(albumAlertSummary(albums, state())).toBe("All albums");
+    expect(albumAlertSummary(albums, state({ overrides: { B: false } }))).toBe("2 of 3 albums");
+    expect(albumAlertSummary(albums, state({ enabled: false }))).toBe("Off");
+    expect(albumAlertSummary([], state())).toBe("On");
+  });
+
+  it("counts everything as on when only admin-muted albums are off", () => {
+    expect(allAlbumsOn(albums, state({ muted: ["C"] }))).toBe(true);
+    expect(allAlbumsOn(albums, state({ overrides: { A: false } }))).toBe(false);
+    expect(allAlbumsOn(albums, state({ enabled: false }))).toBe(false);
+  });
+
+  it("turn all on: gallery switch back on, and only the member's opt-outs dropped", () => {
+    expect(planAllOn(state({ enabled: false, overrides: { A: false, B: true } }))).toEqual({
+      enable: true,
+      set: [],
+      clear: ["A"],
+    });
+    expect(planAllOn(state({ overrides: { C: false } }))).toEqual({ enable: undefined, set: [], clear: ["C"] });
+  });
+
+  it("turn all off: only the gallery switch, which also covers new albums", () => {
+    expect(planAllOff(state({ overrides: { A: false } }))).toEqual({ enable: false, set: [], clear: [] });
+    expect(planAllOff(state({ enabled: false }))).toEqual({ enable: undefined, set: [], clear: [] });
+  });
+
+  it("flips one album while the gallery switch is on", () => {
+    expect(planAlbumToggle("B", albums, state())).toEqual({ set: [{ album: "B", subscribed: false }], clear: [] });
+    expect(planAlbumToggle("B", albums, state({ overrides: { B: false } }))).toEqual({
+      set: [{ album: "B", subscribed: true }],
+      clear: [],
+    });
+  });
+
+  it("turning one album on while everything is off leaves the others off", () => {
+    // A is admin-muted and C is already opted out, so neither needs a new row.
+    expect(planAlbumToggle("B", albums, state({ enabled: false, overrides: { C: false }, muted: ["A"] }))).toEqual({
+      enable: true,
+      set: [{ album: "B", subscribed: true }],
+      clear: [],
+    });
+    expect(planAlbumToggle("A", albums, state({ enabled: false })).set).toEqual([
+      { album: "A", subscribed: true },
+      { album: "B", subscribed: false },
+      { album: "C", subscribed: false },
+    ]);
   });
 });

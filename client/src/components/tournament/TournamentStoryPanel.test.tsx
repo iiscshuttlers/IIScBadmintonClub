@@ -82,7 +82,11 @@ describe("TournamentStoryPanel", () => {
     renderPanel();
     expect(screen.getByText("From the organisers")).toBeInTheDocument();
     expect(screen.getByText("Thanks to every volunteer.")).toBeInTheDocument();
-    expect(screen.getByText("Asha / Ravi crowned XD Champion")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, el) => el?.tagName === "P" && el.textContent === "Asha / Ravi crowned XD Champion"),
+    ).toBeInTheDocument();
+    // The champion's name is picked out from the rest of the line.
+    expect(screen.getAllByText("Asha / Ravi")[0]).toHaveClass("font-black", "text-foreground");
     expect(screen.getByRole("link", { name: "View match" })).toHaveAttribute("href", expect.stringContaining("m-final"));
     expect(screen.queryByText(/Review story/)).not.toBeInTheDocument();
   });

@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
 import { fetchLiveMatchesRow, subscribeToCameraBroadcast } from "@/services/matchService";
 import { fetchTournamentMatchRow, fetchUncompletedTournamentMatches } from "@/services/tournamentService";
 import { useAuth } from "@/contexts/AuthContext";
+import { BackButton } from "@/components/ui/BackButton";
 import { DEFAULT_YOUTUBE_STREAM_KEY } from "@/const";
 import {
   Camera, SwitchCamera, Video, StopCircle, Download,
@@ -72,7 +73,6 @@ interface MatchData {
 export default function CameraBroadcast() {
   const params = useParams<{ matchId?: string }>();
   const matchId = params?.matchId;
-  const [, setLocation] = useLocation();
   const { profile, isAdmin, isMasterAdmin, isUmpire, isInitializing } = useAuth();
 
   // Role authorization check (Only Admins, Master Admins, and Umpires can stream)
@@ -750,12 +750,12 @@ export default function CameraBroadcast() {
         <p className="text-sm text-muted-foreground max-w-sm">
           Phone Camera Broadcast & YouTube Live streaming controls are reserved for Tournament Admins and Umpires only.
         </p>
-        <button
-          onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/")}
+        <BackButton
+          parent="/"
           className="px-6 py-2.5 bg-info hover:bg-info/90 text-info-foreground font-bold rounded-xl transition shadow-lg text-sm"
         >
-          Back to Home
-        </button>
+          Back
+        </BackButton>
       </div>
     );
   }
@@ -928,12 +928,13 @@ export default function CameraBroadcast() {
       >
         <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
           {/* Back button */}
-          <button
-            onClick={() => setLocation("/hub")}
+          <BackButton
+            parent="/hub"
+            aria-label="Back"
             className="p-2.5 rounded-full bg-card/80 border border-border-strong/80 text-foreground hover:bg-muted transition shadow"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
+          </BackButton>
 
           {/* Match selector dropdown */}
           <div className="flex-1 max-w-xs">

@@ -1,6 +1,7 @@
 \set ON_ERROR_STOP on
--- Player contact privacy assertions. Run after contact_privacy_bootstrap.sql and
--- 20261113180000_restrict_player_contact_columns.sql. Executes as the real
+-- Player contact privacy assertions. Run after contact_privacy_bootstrap.sql,
+-- 20261113180000_restrict_player_contact_columns.sql and
+-- 20261122120000_tournament_contacts_visibility.sql. Executes as the real
 -- anon / authenticated roles so column privileges and RLS both apply.
 
 CREATE OR REPLACE FUNCTION pg_temp.as_user(p_role text, p_sub text, p_email text) RETURNS void LANGUAGE plpgsql AS $$
@@ -113,6 +114,51 @@ BEGIN
   IF n <> 1 THEN RAISE EXCEPTION 'admin email search failed'; END IF;
 END $$;
 RESET ROLE;
+
+-- 4b. "Hidden" mode and finished tournaments release nothing, to anyone
+--     (20261122120000_tournament_contacts_visibility.sql).
+INSERT INTO public.site_data VALUES ('tournament_contacts_10000000-0000-0000-0000-000000000001', '{"mode": "hidden"}')
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+SELECT pg_temp.as_user('authenticated', '00000000-0000-0000-0000-0000000000c1', 'ump@x.test');
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM public.get_tournament_contacts('10000000-0000-0000-0000-000000000001',
+    ARRAY['00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000b2']::uuid[]);
+  IF n <> 0 THEN RAISE EXCEPTION 'official saw % contacts while hidden', n; END IF;
+END $$;
+RESET ROLE;
+SELECT pg_temp.as_user('authenticated', '00000000-0000-0000-0000-0000000000a1', 'admin@x.test');
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM public.get_tournament_contacts('10000000-0000-0000-0000-000000000001',
+    ARRAY['00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000b2']::uuid[]);
+  IF n <> 0 THEN RAISE EXCEPTION 'admin saw % contacts while hidden', n; END IF;
+END $$;
+RESET ROLE;
+UPDATE public.site_data SET value = '{"mode": "everyone"}'
+  WHERE key = 'tournament_contacts_10000000-0000-0000-0000-000000000001';
+UPDATE public.tournaments SET status = 'completed' WHERE id = '10000000-0000-0000-0000-000000000001';
+SELECT pg_temp.as_user('authenticated', '00000000-0000-0000-0000-0000000000a1', 'admin@x.test');
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM public.get_tournament_contacts('10000000-0000-0000-0000-000000000001',
+    ARRAY['00000000-0000-0000-0000-0000000000b1','00000000-0000-0000-0000-0000000000b2']::uuid[]);
+  IF n <> 0 THEN RAISE EXCEPTION 'admin saw % contacts after completion', n; END IF;
+END $$;
+RESET ROLE;
+SELECT pg_temp.as_user('authenticated', '00000000-0000-0000-0000-0000000000b1', 'asha@x.test');
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM public.get_tournament_contacts('10000000-0000-0000-0000-000000000001',
+    ARRAY['00000000-0000-0000-0000-0000000000b2','00000000-0000-0000-0000-0000000000c1']::uuid[]);
+  IF n <> 0 THEN RAISE EXCEPTION 'player saw % contacts after completion', n; END IF;
+END $$;
+RESET ROLE;
+UPDATE public.tournaments SET status = 'in_progress' WHERE id = '10000000-0000-0000-0000-000000000001';
 
 -- 5. Account linked by email (auth id ≠ player id) resolves to its record.
 SELECT pg_temp.as_user('authenticated', '99999999-0000-0000-0000-000000000099', 'dev@x.test');

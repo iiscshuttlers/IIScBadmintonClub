@@ -48,7 +48,7 @@ export function MyCertificatesCard({ tournament }: { tournament: { id: string; n
       <h3 className="flex items-center gap-2 text-sm font-black mb-3">
         <Award className="w-4 h-4 text-gold" /> My certificates
       </h3>
-      <ul className="grid sm:grid-cols-2 gap-2">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {certs.map((c, i) => (
           <li key={i}>
             <button

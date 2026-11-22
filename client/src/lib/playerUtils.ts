@@ -10,13 +10,25 @@ export interface ShoeItem {
   primary?: boolean;
 }
 
-export function parseShoesList(shoes: string | null): ShoeItem[] {
-  if (!shoes) return [];
+/**
+ * players.shoes holds a JSON list (`[{"name": "...", "primary": true}]`) written by
+ * profile setup; older rows hold a plain shoe name. Entries without a name are dropped.
+ */
+export function parseShoesList(shoes: string | null | undefined): ShoeItem[] {
+  const raw = (shoes ?? "").trim();
+  if (!raw) return [];
+  if (!raw.startsWith("[")) return [{ name: raw, primary: true }];
   try {
-    if (shoes.startsWith("[")) return JSON.parse(shoes);
-    return [{ name: shoes, primary: true }];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((s): ShoeItem[] => {
+      const name = typeof s === "string" ? s : (s as { name?: unknown } | null)?.name;
+      if (typeof name !== "string" || !name.trim()) return [];
+      return [{ name: name.trim(), primary: (s as { primary?: unknown })?.primary === true }];
+    });
   } catch {
-    return [{ name: shoes, primary: true }];
+    // Not valid JSON after all: show it as a plain name rather than nothing.
+    return [{ name: raw, primary: true }];
   }
 }
 

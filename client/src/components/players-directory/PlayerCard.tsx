@@ -133,6 +133,8 @@ export function PlayerCard({
   })();
   const isUnranked = false;
   const [isPinged, setIsPinged] = useState(false);
+  // Google / storage photo that fails to load → the gradient initial below.
+  const [photoFailed, setPhotoFailed] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
   const currentStreak = player.recent_form?.[0];
@@ -247,11 +249,13 @@ export function PlayerCard({
               <div
                 className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
               >
-                {player.avatar_url ? (
+                {player.avatar_url && !photoFailed ? (
                   <img
                     loading="lazy"
                     src={player.avatar_url}
                     alt={player.full_name}
+                    referrerPolicy="no-referrer"
+                    onError={() => setPhotoFailed(true)}
                     className="w-full h-full object-cover"
                   />
                 ) : (

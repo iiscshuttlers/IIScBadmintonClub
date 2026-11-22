@@ -58,7 +58,7 @@ export function CourtsAndQueue({ data, tournamentId }: { data: TournamentReadine
   const waiting = waitingWorthShowing(data).slice(0, 4);
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       <div className="space-y-2 rounded-2xl border border-border bg-card p-3 sm:p-4">
         <h3 className="text-sm font-black text-foreground">Courts</h3>
         <CourtsStrip courts={data.courts} readyByCourt={readyByCourt} columns={2} />

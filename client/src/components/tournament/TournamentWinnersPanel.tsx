@@ -56,7 +56,7 @@ export function TournamentWinnersPanel({ tournament }: TournamentWinnersPanelPro
                   <h3 className="text-lg font-black text-foreground">{group}</h3>
                 </div>
               )}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {results.map((result) => {
                   const open = (recipient: string, placement: Placement) =>
                     setCertificate({
@@ -106,7 +106,7 @@ export function TournamentWinnersPanel({ tournament }: TournamentWinnersPanelPro
             <div className="w-1.5 h-6 bg-gradient-to-b from-warning to-secondary rounded-full" />
             <h3 className="text-lg font-black text-foreground">Final Standings</h3>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {podium.map((team, index) => {
               const cfg = PODIUM_CONFIGS[index] ?? PODIUM_CONFIGS[3];
               return (

@@ -49,12 +49,12 @@ export function SocialCTA({
     <div className="bg-gradient-to-br from-success to-primary text-on-accent p-4 md:p-6 rounded-3xl shadow-xl relative overflow-hidden isolate">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
-        <h2
-          className="text-2xl font-black mb-2 text-foreground font-display"
-        >
+        {/* Text sits on the success→primary gradient, so it uses on-accent
+            (the per-theme ink for accent surfaces), not foreground/success. */}
+        <h2 className="text-2xl font-black mb-2 text-on-accent font-display">
           Follow Our Journey
         </h2>
-        <p className="text-success text-sm mb-4 max-w-lg">
+        <p className="text-on-accent text-sm font-medium mb-4 max-w-lg">
           Catch the latest match highlights, event photos, and community moments
           on our social channels.
         </p>

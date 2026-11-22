@@ -45,7 +45,6 @@ export default function HostTournament() {
     <div className="min-h-screen bg-background text-foreground pb-24 lg:pb-8">
       <PageHeader
         backTo="/tournaments"
-        backLabel="Tournaments"
         badge="Organiser"
         badgeIcon={<Trophy className="w-3.5 h-3.5" />}
         title="My Tournaments"

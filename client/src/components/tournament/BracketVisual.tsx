@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 import { matchOutcome } from "@/lib/matchView";
+import { seedForSide, type PublishedSeeds } from "@/lib/seeding";
 import { cssVar, themeColor, themeColorFor } from "@/lib/themeColors";
 import {
   DropdownMenu,
@@ -9,6 +10,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  COL_W,
+  LABEL_H,
+  MATCH_H,
+  MATCH_W,
+  PADDING,
+  PLAYER_ROW_H_DESKTOP,
+  PLAYER_ROW_H_MOBILE,
+  bracketConnectors,
+  bracketPathIds,
+  computeBracketLayout,
+  findInBracket,
+  fitScale,
+  initialHiddenRounds,
+  isEliminatedAt,
+  isPlayoffMatch,
+  playerRoadmap,
+  roadmapCardSides,
+  shortRoundName,
+} from "./bracketLayout";
 
 export interface BracketMatch {
   id: string;
@@ -23,6 +44,11 @@ export interface BracketMatch {
   sets_history: string[] | null;
   status: string;
   court_number?: string | null;
+  /** Side 1 = player1 (+ player3 partner), side 2 = player2 (+ player4). Used for seed marks. */
+  player1_id?: string | null;
+  player2_id?: string | null;
+  player3_id?: string | null;
+  player4_id?: string | null;
 }
 
 interface BracketVisualProps {
@@ -32,23 +58,24 @@ interface BracketVisualProps {
   onExportExcel?: () => void;
   tournamentName?: string;
   category?: string;
+  /** Published seeds of this category (lib/seeding); shown as [n] after the name. */
+  seeds?: PublishedSeeds | null;
 }
 
-const MATCH_W = 180;
-// A match box holds a header plus two player rows. MATCH_H was hardcoded to 90
-// with no relationship to the row height it has to contain, so on mobile
-// (20 + 44 + 44 = 108) the second player's name was sliced in half by the
-// box's overflow-hidden. Derived from the same numbers so they cannot drift.
-const HEADER_H = 20;
-const PLAYER_ROW_H_MOBILE = 44; // >=44 keeps the mobile touch target usable
-const PLAYER_ROW_H_DESKTOP = 36;
-// Sized for the taller (mobile) case; the box is vertically centred, so desktop
-// simply gets a little extra breathing room rather than clipping.
-const MATCH_H = HEADER_H + PLAYER_ROW_H_MOBILE * 2;
-const COL_GAP = 40;
-const COL_W = MATCH_W + COL_GAP;
-const PADDING = 16;
-const LABEL_H = 26;
+const sideSeeds = (m: BracketMatch, seeds: PublishedSeeds | null | undefined): [number | null, number | null] => [
+  seedForSide(seeds, [m.player1_id, m.player3_id], m.team1_label),
+  seedForSide(seeds, [m.player2_id, m.player4_id], m.team2_label),
+];
+
+/** Published seed after a name: stays visible when the name truncates. */
+function SeedTag({ seed }: { seed: number | null }) {
+  if (seed == null) return null;
+  return (
+    <span className="shrink-0 text-[10px] font-black text-primary tabular-nums" title={`Seed ${seed}`}>
+      [{seed}]<span className="sr-only"> seed {seed}</span>
+    </span>
+  );
+}
 
 const CAT_BOX_COLORS_DARK: Record<string, string> = {
   MS: "bg-cat-ms/10 border-cat-ms/25 hover:border-cat-ms/50 hover:shadow-cat-ms/20",
@@ -72,31 +99,6 @@ function useIsMobile() {
   return isMobile;
 }
 
-// ── Fuzzy Match Helper ────────────────────────────────────────────────────────
-function fuzzyMatch(term: string, target: string | null | undefined): boolean {
-  if (!target) return false;
-  const t = term.toLowerCase();
-  const tgt = target.toLowerCase();
-  if (tgt.includes(t)) return true;
-  
-  if (t.length < 4) return false; // Require at least 4 chars for fuzzy matching
-  
-  const maxDiff = t.length >= 6 ? 2 : 1; 
-  
-  for (let i = 0; i <= tgt.length - t.length; i++) {
-    const sub = tgt.substring(i, i + t.length);
-    let diff = 0;
-    for (let j = 0; j < t.length; j++) {
-      if (t[j] !== sub[j]) {
-        diff++;
-        if (diff > maxDiff) break;
-      }
-    }
-    if (diff <= maxDiff) return true;
-  }
-  return false;
-}
-
 // ── Player Roadmap Modal ──────────────────────────────────────────────────────
 
 interface RoadmapPanelProps {
@@ -107,43 +109,8 @@ interface RoadmapPanelProps {
 }
 
 function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps) {
-  const byCode = new Map<string, BracketMatch>();
-  matches.forEach((m) => byCode.set(m.match_code, m));
-
-  // Seed path with matches where player appears directly
-  const lowerPlayer = player.toLowerCase();
-  const pathMatchIds = new Set<string>(
-    matches
-      .filter((m) => 
-        (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) || 
-        (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
-        (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
-      )
-      .map((m) => m.id)
-  );
-
-  // Trace forward via "Winner of <code>" references
-  let changed = true;
-  while (changed) {
-    changed = false;
-    matches.forEach((m) => {
-      if (pathMatchIds.has(m.id)) return;
-      const refs = (label: string) => {
-        const ref = label.match(/Winner of (\S+)/i);
-        if (!ref) return false;
-        const refM = byCode.get(ref[1]);
-        return !!refM && pathMatchIds.has(refM.id);
-      };
-      if (refs(m.team1_label ?? "") || refs(m.team2_label ?? "")) {
-        pathMatchIds.add(m.id);
-        changed = true;
-      }
-    });
-  }
-
-  const roadmap = matches
-    .filter((m) => pathMatchIds.has(m.id))
-    .sort((a, b) => a.round - b.round);
+  const road = playerRoadmap(matches, player);
+  const { roadmap } = road;
 
   const cardW = isMobile ? 155 : 200;
 
@@ -211,26 +178,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
               const isCompleted = outcome.decided;
               const isLive = outcome.state === "live";
 
-              const t1 = m.team1_label ?? "TBD";
-              const t2 = m.team2_label ?? "TBD";
-              const playerIsT1 = t1.includes(player);
-              const playerIsT2 = t2.includes(player);
-
-              const slotRefersToPath = (label: string) => {
-                const ref = label.match(/Winner of (\S+)/i);
-                if (!ref) return false;
-                const refM = byCode.get(ref[1]);
-                return !!refM && pathMatchIds.has(refM.id);
-              };
-              const pathIsT1 = !playerIsT1 && !playerIsT2 && slotRefersToPath(t1);
-              const pathIsT2 = !playerIsT1 && !playerIsT2 && slotRefersToPath(t2);
-
-              const playerName = playerIsT1 ? t1 : playerIsT2 ? t2 : pathIsT1 ? t1 : pathIsT2 ? t2 : player;
-              const opponentName = playerIsT1 ? t2 : playerIsT2 ? t1 : pathIsT1 ? t2 : pathIsT2 ? t1 : "TBD";
-              const effectivePlayerIsT1 = playerIsT1 || pathIsT1;
-
-              const playerWon = isCompleted && ((effectivePlayerIsT1 && m.winner_side === 1) || (!effectivePlayerIsT1 && m.winner_side === 2));
-              const playerLost = isCompleted && !playerWon;
+              const { playerName, opponentName, effectivePlayerIsT1, playerWon, playerLost } = roadmapCardSides(m, player, road);
 
               const sets = outcome.games.length
                 ? outcome.games.map((g) => (effectivePlayerIsT1 ? { me: g.side1, opp: g.side2 } : { me: g.side2, opp: g.side1 }))
@@ -341,12 +289,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
             {roadmap.length > 0 && (() => {
               const last = roadmap[roadmap.length - 1];
               if (last.round_name?.toLowerCase() === "final") return null;
-              const isEliminated = matchOutcome(last).decided && (() => {
-                const t1 = last.team1_label ?? "";
-                const t2 = last.team2_label ?? "";
-                const playerIsT1 = t1.includes(player);
-                return !((playerIsT1 && last.winner_side === 1) || (!playerIsT1 && last.winner_side === 2 && t2.includes(player)));
-              })();
+              const isEliminated = isEliminatedAt(last, player);
 
               return (
                 <>
@@ -421,25 +364,11 @@ export function BracketVisual(props: BracketVisualProps) {
   );
 }
 
-function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All" }: BracketVisualProps) {
+function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All", seeds }: BracketVisualProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [bracketSegment, setBracketSegment] = useState<string>("full");
-  const [hiddenRounds, setHiddenRounds] = useState<number[]>(() => {
-    const toHide: number[] = [];
-    for (const r of rounds) {
-      const matchesInRound = matches.filter((m) => m.round === r);
-      if (
-        matchesInRound.length >= 16 && 
-        matchesInRound.every((m) => matchOutcome(m).decided)
-      ) {
-        toHide.push(r);
-      } else {
-        break;
-      }
-    }
-    return toHide;
-  });
+  const [hiddenRounds, setHiddenRounds] = useState<number[]>(() => initialHiddenRounds(matches, rounds));
   const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
   const [scale, setScale] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -490,150 +419,39 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     };
   }, [isFullscreen]);
 
-  // Auto-scale to fit screen width on mount / resize
+  // Fit the VISIBLE rounds to the width (hidden early rounds used to count,
+  // which shrank a 4-round view to ~40%). Never below a readable 70% — past
+  // that the draw scrolls sideways — and up to 125% when there is room.
+  const visibleCount = Math.max(1, rounds.length - hiddenRounds.length);
   const computeScale = useCallback(() => {
-    const el = normalContainerRef.current || fsContainerRef.current;
+    const el = isFullscreen ? fsContainerRef.current : normalContainerRef.current;
     if (!el) return;
-    const containerW = el.offsetWidth;
-    const totalW = rounds.length * COL_W + PADDING * 2;
-    if (totalW > containerW) {
-      const auto = Math.min(1, Math.max(0.4, (containerW * 0.95) / totalW));
-      setScale(auto);
-    } else {
-      setScale(1);
-    }
-  }, [rounds.length]);
+    setScale(fitScale(el.clientWidth, visibleCount));
+  }, [visibleCount, isFullscreen]);
 
   useEffect(() => {
     computeScale();
     window.addEventListener("resize", computeScale);
     return () => window.removeEventListener("resize", computeScale);
-  }, [computeScale]);
+  }, [computeScale, viewMode]);
 
-  const SLOT_H = Math.max(MATCH_H + 20, 90);
 
   const getExportFilename = () => {
     const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
     return `${safeName}_Bracket_${category}_Visual`;
   };
   const visibleRounds = rounds.filter((r) => !hiddenRounds.includes(r));
-  const totalW = visibleRounds.length * COL_W;
-
-  type Pos = { match: BracketMatch; y: number; cy: number };
-
-  // The 3rd place playoff shares a round number with the semifinal but sits
-  // outside the knockout tree, so it must not take part in the slot layout.
-  const isPlayoff = (m: BracketMatch) =>
-    m.match_number >= 99 || (m.round_name ?? "").toLowerCase().includes("3rd");
-
-  // Matches are placed by their structural slot (match_number), never by array
-  // index: a player with more than one bye leaves a match out of the draw
-  // entirely, and indexing would then shift everything below the gap upwards.
-  const roundShapes = visibleRounds.map((round, ri) => {
-    const originalRi = rounds.indexOf(round);
-    const inRound = matches.filter((m) => m.round === round);
-    const tree = inRound.filter((m) => !isPlayoff(m)).sort((a, b) => a.match_number - b.match_number);
-    const slots = Math.max(
-      Math.pow(2, rounds.length - 1 - originalRi),
-      ...tree.map((m) => m.match_number),
-      1
-    );
-    return { round, ri, tree, playoffs: inRound.filter(isPlayoff), slots };
-  });
-
-  const currentBaseSlots = roundShapes[0]?.slots ?? 1;
-  let viewStartSlot = 0;
-  let viewEndSlot = currentBaseSlots - 1;
-
-  if (bracketSegment === "top-half") { viewEndSlot = Math.floor(currentBaseSlots / 2) - 1; }
-  else if (bracketSegment === "bottom-half") { viewStartSlot = Math.floor(currentBaseSlots / 2); }
-  else if (bracketSegment === "q1") { viewEndSlot = Math.floor(currentBaseSlots / 4) - 1; }
-  else if (bracketSegment === "q2") { viewStartSlot = Math.floor(currentBaseSlots / 4); viewEndSlot = Math.floor(currentBaseSlots / 2) - 1; }
-  else if (bracketSegment === "q3") { viewStartSlot = Math.floor(currentBaseSlots / 2); viewEndSlot = Math.floor((currentBaseSlots * 3) / 4) - 1; }
-  else if (bracketSegment === "q4") { viewStartSlot = Math.floor((currentBaseSlots * 3) / 4); }
-
-  viewEndSlot = Math.max(viewStartSlot, viewEndSlot);
-
-  const pixelStart = viewStartSlot * SLOT_H;
-  const pixelEnd = (viewEndSlot + 1) * SLOT_H;
-  const viewH = pixelEnd - pixelStart;
-
-  const treeH = currentBaseSlots * SLOT_H;
-  const playoffRows = Math.max(0, ...roundShapes.map((r) => r.playoffs.length));
-  
-  const isBottomSegment = bracketSegment === "full" || bracketSegment === "bottom-half" || bracketSegment === "q4";
-  const totalH = viewH + (isBottomSegment ? playoffRows * SLOT_H : 0);
-
-  const roundData = roundShapes.map(({ round, ri, tree, playoffs, slots }) => {
-    const slotH = treeH / slots;
-    const bySlot = new Map<number, Pos>();
-    const positions: Pos[] = [];
-    for (const m of tree) {
-      const slot = Math.min(Math.max(m.match_number - 1, 0), slots - 1);
-      const cy = slot * slotH + slotH / 2 - pixelStart;
-      const pos = { match: m, y: cy - MATCH_H / 2, cy };
-      bySlot.set(slot, pos);
-      if (cy >= -MATCH_H && cy <= totalH + MATCH_H) {
-        positions.push(pos);
-      }
-    }
-    // Playoffs hang below the tree so they can't disturb its spacing.
-    playoffs.forEach((m, i) => {
-      const cy = treeH + SLOT_H / 2 + i * SLOT_H - pixelStart;
-      const pos = { match: m, y: cy - MATCH_H / 2, cy };
-      bySlot.set(9999 + i, pos);
-      if (cy >= -MATCH_H && cy <= totalH + MATCH_H) {
-        positions.push(pos);
-      }
-    });
-    const label = tree[0]?.round_name ?? playoffs[0]?.round_name ?? `R${round}`;
-    return { round, ri, positions, bySlot, label };
-  });
+  // Slot layout, segment window and playoff rows: see bracketLayout.ts.
+  const { roundData, baseSlots: currentBaseSlots, totalW, totalH } = computeBracketLayout(matches, rounds, visibleRounds, bracketSegment);
 
   // SVG connector lines — driven by the next round's slots, so a missing feeder
   // simply draws no stub instead of pulling the whole column out of alignment.
-  const lines: React.ReactNode[] = [];
-  for (let ri = 0; ri < roundData.length - 1; ri++) {
-    const cur = roundData[ri];
-    const next = roundData[ri + 1];
-    const x1 = ri * COL_W + MATCH_W;
-    const xMid = x1 + COL_GAP / 2;
-    const x2 = ri + 1 < roundData.length - 1 ? (ri + 1) * COL_W : xMid + COL_GAP / 2;
-    for (const [slot, nm] of next.bySlot) {
-      const c1 = cur.bySlot.get(slot * 2);
-      const c2 = cur.bySlot.get(slot * 2 + 1);
-      if (!c1 && !c2) continue;
-      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
-      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
-      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
-      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke={cssVar("border-strong")} strokeWidth={1.5} />);
-    }
-  }
+  const lines: React.ReactNode[] = bracketConnectors(roundData).map((l) => (
+    <line key={l.key} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={cssVar("border-strong")} strokeWidth={1.5} />
+  ));
 
   // Player path highlight
-  const pathSet = (() => {
-    if (!enablePathHighlight || !selectedPlayer) return new Set<string>();
-    const lowerPlayer = selectedPlayer.toLowerCase();
-    const path = new Set<string>();
-    matches.forEach((m) => {
-      if (
-        (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) || 
-        (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
-        (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
-      )
-        path.add(m.id);
-    });
-    let changed = true;
-    while (changed) {
-      changed = false;
-      matches.forEach((m) => {
-        if (path.has(m.id)) return;
-        const winner = m.winner_side === 1 ? m.team1_label : m.winner_side === 2 ? m.team2_label : null;
-        if (winner?.toLowerCase().includes(lowerPlayer) || (m.match_code ?? "").toLowerCase().includes(lowerPlayer)) { path.add(m.id); changed = true; }
-      });
-    }
-    return path;
-  })();
+  const pathSet = !enablePathHighlight || !selectedPlayer ? new Set<string>() : bracketPathIds(matches, selectedPlayer);
 
   const scaledH = (totalH + PADDING * 2 + LABEL_H) * scale;
   const scaledW = (totalW + PADDING * 2) * scale;
@@ -647,49 +465,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       return;
     }
 
-    const lowerVal = val.toLowerCase();
-    let foundPos = null;
-    let foundRi = 0;
-    let exactPlayerName: string | null = null;
-    
-    let fuzzyFoundPos = null;
-    let fuzzyFoundRi = 0;
-    let fuzzyExactPlayerName: string | null = null;
+    const hit = findInBracket(roundData, val);
 
-    for (let ri = 0; ri < roundData.length; ri++) {
-      for (const pos of roundData[ri].positions) {
-        const t1Match = pos.match.team1_label?.toLowerCase().includes(lowerVal);
-        const t2Match = pos.match.team2_label?.toLowerCase().includes(lowerVal);
-        const codeMatch = pos.match.match_code?.toLowerCase().includes(lowerVal);
-        
-        if (t1Match || t2Match || codeMatch) {
-          foundPos = pos;
-          foundRi = ri;
-          if (t1Match) exactPlayerName = pos.match.team1_label;
-          else if (t2Match) exactPlayerName = pos.match.team2_label;
-          break;
-        }
-
-        if (!fuzzyFoundPos) {
-          const f1 = fuzzyMatch(lowerVal, pos.match.team1_label);
-          const f2 = fuzzyMatch(lowerVal, pos.match.team2_label);
-          if (f1 || f2) {
-            fuzzyFoundPos = pos;
-            fuzzyFoundRi = ri;
-            fuzzyExactPlayerName = f1 ? pos.match.team1_label : pos.match.team2_label;
-          }
-        }
-      }
-      if (foundPos) break;
-    }
-
-    if (!foundPos && fuzzyFoundPos) {
-      foundPos = fuzzyFoundPos;
-      foundRi = fuzzyFoundRi;
-      exactPlayerName = fuzzyExactPlayerName;
-    }
-
-    if (foundPos) {
+    if (hit) {
+      const { pos: foundPos, ri: foundRi, playerName: exactPlayerName } = hit;
       if (exactPlayerName) {
         setSelectedPlayer(exactPlayerName);
         if (enablePathHighlight) setShowRoadmap(true);
@@ -911,15 +690,29 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           )}
         </div>
 
-        {/* 4. Quick Actions (Unhide) */}
-        {hiddenRounds.length > 0 && (
-          <button
-            onClick={() => setHiddenRounds([])}
-            className="px-2.5 py-1.5 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-warning bg-warning/10 hover:bg-warning/20 active:bg-warning/30 transition-colors border border-warning/30 shadow-sm shrink-0"
-            title="Show hidden rounds"
-          >
-            Unhide ({hiddenRounds.length})
-          </button>
+        {/* 4. Start the draw at a round (early, finished rounds start hidden) */}
+        {rounds.length > 2 && (
+          <label className="flex items-center gap-1.5 bg-card/80 px-2 py-1 rounded-md border border-border-strong/60 shadow-sm shrink-0 text-[10px] font-bold uppercase text-muted-foreground">
+            From
+            <select
+              value={visibleRounds[0] ?? rounds[0]}
+              onChange={(e) => {
+                const from = Number(e.target.value);
+                setHiddenRounds(rounds.filter((r) => r < from));
+              }}
+              className="bg-transparent text-foreground text-[11px] font-black normal-case outline-none cursor-pointer"
+              aria-label="Show the draw from round"
+            >
+              {rounds.map((r) => {
+                const name = matches.find((m) => m.round === r && !isPlayoffMatch(m))?.round_name;
+                return (
+                  <option key={r} value={r} className="bg-card">
+                    {shortRoundName(name, r)}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         )}
       </div>
     </div>
@@ -973,13 +766,6 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
                     className="text-[10px] font-black uppercase tracking-widest text-info flex items-center gap-1"
                   >
-                    <button
-                      onClick={() => setHiddenRounds((h) => h.includes(round) ? h.filter((r) => r !== round) : [...h, round])}
-                      className="opacity-40 hover:opacity-100 transition-opacity"
-                      title="Hide/show round"
-                    >
-                      <X size={10} />
-                    </button>
                     {label}
                   </div>
                 ))}
@@ -1018,6 +804,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     } : undefined}
                     playerRowH={playerRowH}
                     category={category}
+                    seeds={seeds}
                   />
                 ))
               )}
@@ -1048,6 +835,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   const isLive = outcome.state === "live";
                   const t1 = m.team1_label ?? "TBD";
                   const t2 = m.team2_label ?? "TBD";
+                  const [s1, s2] = sideSeeds(m, seeds);
                   const t1Won = outcome.t1Won;
                   const t2Won = outcome.t2Won;
 
@@ -1062,12 +850,14 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       </div>
                       <div className="flex flex-col p-3 gap-2 flex-1 justify-center">
                         <div className={`flex justify-between items-center ${t1Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
-                          <span className="truncate pr-2 text-xs">{t1}</span>
-                          {t1Won && <Trophy size={12} className="text-gold shrink-0" />}
+                          <span className="truncate pr-2 text-xs flex-1">{t1}</span>
+                          <SeedTag seed={s1} />
+                          {t1Won && <Trophy size={12} className="text-gold shrink-0 ml-1" />}
                         </div>
                         <div className={`flex justify-between items-center ${t2Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
-                          <span className="truncate pr-2 text-xs">{t2}</span>
-                          {t2Won && <Trophy size={12} className="text-gold shrink-0" />}
+                          <span className="truncate pr-2 text-xs flex-1">{t2}</span>
+                          <SeedTag seed={s2} />
+                          {t2Won && <Trophy size={12} className="text-gold shrink-0 ml-1" />}
                         </div>
                       </div>
                       {(m.score || isLive || isCompleted || outcome.state === "cancelled") && (
@@ -1117,13 +907,6 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                 <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
                   className="text-[10px] font-black uppercase tracking-widest text-center text-info flex items-center justify-center gap-1 group">
                   {label}
-                  <button
-                    onClick={() => setHiddenRounds(prev => [...prev, round])}
-                    className="opacity-50 hover:opacity-100 p-0.5 rounded hover:bg-muted text-info hover:text-foreground transition-all"
-                    title="Hide this round"
-                  >
-                    <X size={12} />
-                  </button>
                 </div>
               ))}
             </div>
@@ -1143,6 +926,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                 const isLive = outcome.state === "live";
                 const t1 = m.team1_label ?? "TBD";
                 const t2 = m.team2_label ?? "TBD";
+                const [s1, s2] = sideSeeds(m, seeds);
                 const t1Won = outcome.t1Won;
                 const t2Won = outcome.t2Won;
                 
@@ -1210,6 +994,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                             className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${t1Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
                             <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-gold" : "text-soft"}`}>{t1}</span>
+                            <SeedTag seed={s1} />
                             {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                           <div
@@ -1218,6 +1003,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                             className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
                             <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-gold" : "text-soft"}`}>{t2}</span>
+                            <SeedTag seed={s2} />
                             {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                         </div>
@@ -1270,15 +1056,17 @@ interface MatchCardProps {
   onPlayerClick?: (name: string) => void;
   playerRowH: number;
   category?: string;
+  seeds?: PublishedSeeds | null;
 }
 
-function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category }: MatchCardProps) {
+function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category, seeds }: MatchCardProps) {
   // Shared status rules (WP6): walkovers are decided, live never shows a winner.
   const outcome = matchOutcome(m);
   const isCompleted = outcome.decided;
   const isLive = outcome.state === "live";
   const t1 = m.team1_label ?? "TBD";
   const t2 = m.team2_label ?? "TBD";
+  const [s1, s2] = sideSeeds(m, seeds);
   const t1Won = outcome.t1Won;
   const t2Won = outcome.t2Won;
   
@@ -1358,6 +1146,7 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
                 isT1Selected ? "text-foreground drop-shadow-md" : t1Won ? "text-gold" : "text-soft"
               }`}>{t1}</span>
+              <SeedTag seed={s1} />
               {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
             <div
@@ -1372,6 +1161,7 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
                 isT2Selected ? "text-foreground drop-shadow-md" : t2Won ? "text-gold" : "text-soft"
               }`}>{t2}</span>
+              <SeedTag seed={s2} />
               {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
           </div>

@@ -7,6 +7,7 @@ type AuthErrorLike = { message?: string; status?: number; name?: string } | null
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useHistoryStep } from "@/hooks/useHistoryStep";
 import { toAppPath } from "@/lib/returnUrl";
 import { toast } from "sonner";
 import {
@@ -18,6 +19,21 @@ import {
 } from "@/lib/biometricAuth";
 
 export type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
+
+/** The step each sign-in step's Back returns to. */
+function parentMode(mode: Mode): Mode | undefined {
+  switch (mode) {
+    case "signin":
+    case "signup":
+      return "welcome";
+    case "otp-email":
+      return "signin";
+    case "otp-verify":
+      return "otp-email";
+    default:
+      return undefined;
+  }
+}
 
 export function getPasswordStrength(pwd: string) {
   let score = 0;
@@ -32,7 +48,14 @@ export function getPasswordStrength(pwd: string) {
 export function useJoinAuth() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useFormDraft<Mode>("join-auth-mode", "welcome");
+  // Each sign-in step is a history entry, so the phone's Back key, the
+  // browser's Back and the "← Back" links all return to the previous step.
+  // The draft only seeds a fresh visit (e.g. coming back for an OTP).
+  const [draftMode, setDraftMode] = useFormDraft<Mode>("join-auth-mode", "welcome");
+  const { value: mode, go: setMode, back: modeBack } = useHistoryStep<Mode>("joinMode", draftMode, parentMode);
+  useEffect(() => {
+    setDraftMode(mode);
+  }, [mode, setDraftMode]);
   const [email, setEmail] = useFormDraft("join-auth-email", "");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -277,7 +300,8 @@ export function useJoinAuth() {
       if (error) throw error;
       if (!data?.session) {
         setInfoMsg("Verification link sent! Check Junk/Spam for IISc emails. If it never arrives, please try signing up with a personal Gmail account.");
-        setMode("signin");
+        // Sign-up is done; Back from sign-in shouldn't reopen the form.
+        setMode("signin", { replace: true });
         setLoading(false);
       } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
         setLocation("/");
@@ -353,7 +377,7 @@ export function useJoinAuth() {
   };
 
   return {
-    mode, setMode, loading, email, setEmail, password, setPassword,
+    mode, setMode, modeBack, loading, email, setEmail, password, setPassword,
     confirm, setConfirm, showPwd, setShowPwd, otp, setOtp,
     infoMsg, setInfoMsg, errorMsg, setErrorMsg, agreedToTerms, setAgreedToTerms,
     inactivityLogout, setInactivityLogout, reset,

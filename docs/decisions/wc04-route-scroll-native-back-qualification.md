@@ -9,7 +9,8 @@ State: locally verified; physical Android qualification remains open
 - Opening a match and going Back returns to the exact tournament URL rather than rebuilding a default view.
 - The tournament breadcrumb on a match page returns to the most recent valid route for that tournament, never another tournament or a match route.
 - Scroll position is keyed by the complete route, including query and hash state, and is restored after asynchronous tournament content grows.
-- Android Back continues to delegate to browser history after overlays, home-exit behavior and duplicate-event protection are considered.
+- Android Back continues to delegate to browser history after overlays, home-exit behavior and duplicate-event protection are considered. Since 21 November 2026 it follows the shared Back rule in [back-navigation.md](back-navigation.md): it undoes in-page steps first, and when there is no earlier in-app screen it goes to the screen's parent.
+- The match page shows "Back" (previous screen) beside the tournament-name breadcrumb (most recent tournament view).
 
 ## Implementation evidence
 
