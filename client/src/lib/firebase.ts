@@ -1,9 +1,9 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getMessaging, type Messaging } from "firebase/messaging";
-import { getStorage } from "firebase/storage";
 
+// Firebase is used only for web push (Cloud Messaging). Data, auth and
+// storage all live in Supabase, so Firestore/Auth/Storage are not set up
+// here: initialising them pulled ~165 kB of unused code into startup.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -13,12 +13,9 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-let app, db, auth, storage;
+let app: FirebaseApp | undefined;
 try {
   app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-  storage = getStorage(app);
 } catch (e) {
   console.warn("Firebase blocked or failed to initialize", e);
 }
@@ -34,6 +31,3 @@ export function getFirebaseMessaging(): Messaging | null {
     return null;
   }
 }
-
-export { db, auth, storage };
-
