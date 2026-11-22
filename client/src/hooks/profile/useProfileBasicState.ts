@@ -18,7 +18,9 @@ function useStickyState<T>(defaultValue: T, key: string): [T, (value: T) => void
 export function useProfileBasicState() {
   const [fullName, setFullName] = useStickyState("", "profile_draft_fullName");
   const [nickname, setNickname] = useStickyState("", "profile_draft_nickname");
-  const [status, setStatus] = useStickyState("looking", "profile_draft_status");
+  // null = not set (not looking). _v2 drops old drafts that held the former
+  // "looking" default.
+  const [status, setStatus] = useStickyState<string | null>(null, "profile_draft_status_v2");
   const [iiscEmail, setIiscEmail] = useStickyState("", "profile_draft_iiscEmail");
   const [contactNumber, setContactNumber] = useStickyState("", "profile_draft_contactNumber");
   const [department, setDepartment] = useStickyState("", "profile_draft_department");

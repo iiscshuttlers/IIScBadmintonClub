@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
   ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag, Eye, X, ClipboardEdit, Megaphone, Trash2, CheckCircle2
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHistoryStep } from "@/hooks/useHistoryStep";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
 import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
@@ -72,6 +73,22 @@ interface Props {
   tournament?: any;
 }
 
+/** Where the umpire is in the format → category → match drill-down. */
+interface UmpireNav {
+  step: "format" | "match" | "confirm";
+  category: string | null;
+  matchId: string | null;
+}
+
+const UMPIRE_ROOT: UmpireNav = { step: "format", category: null, matchId: null };
+
+/** One level up: match → its category (or formats, if opened from there) → formats. */
+function parentNav(nav: UmpireNav): UmpireNav | undefined {
+  if (nav.step === "confirm") return nav.category ? { step: "match", category: nav.category, matchId: null } : UMPIRE_ROOT;
+  if (nav.step === "match") return UMPIRE_ROOT;
+  return undefined;
+}
+
 const CAT_LABELS: Record<string, string> = {
   MS: "Men's Singles",
   WS: "Women's Singles",
@@ -105,9 +122,10 @@ const CAT_BOX_COLORS_DARK: Record<string, string> = {
 export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: Props) {
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<"format" | "match" | "confirm">("format");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedMatch, setSelectedMatch] = useState<TournamentMatchForUmpire | null>(null);
+  // Format → category → match is a drill-down with history entries, so Back
+  // (on screen, phone or browser) climbs one level instead of leaving the page.
+  const { value: nav, go: goTo, back: stepBack } = useHistoryStep<UmpireNav>("umpireStep", UMPIRE_ROOT, parentNav);
+  const lastSelectedRef = useRef<TournamentMatchForUmpire | null>(null);
 
   // Filters for upcoming scheduled matches
   const [upcomingSearch, setUpcomingSearch] = useState("");
@@ -209,8 +227,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
         description: `${directScoreFor.team1_label ?? "Team 1"} vs ${directScoreFor.team2_label ?? "Team 2"}: ${scoreStr}`,
       });
       setDirectScoreFor(null);
-      setSelectedMatch(null);
-      setStep("format");
+      goTo(UMPIRE_ROOT, { replace: true });
       load({ silent: true });
     } catch (e: any) {
       toast.error(e?.message || "Failed to submit score");
@@ -282,8 +299,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
           : `Walkover recorded — ${(winnerSide === 1 ? m.team1_label : m.team2_label) ?? "winner"} advances`,
       );
       setWalkoverFor(null);
-      setSelectedMatch(null);
-      setStep("format");
+      goTo(UMPIRE_ROOT, { replace: true });
       load({ silent: true });
     } catch (e: any) {
       toast.error(e?.message || "Failed to record walkover");
@@ -382,7 +398,6 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
     });
 
     setAllMatches(enriched);
-    setSelectedMatch((prev) => (prev ? enriched.find((m) => m.id === prev.id) ?? prev : prev));
 
     // Fetch team ties needing official attention (unrevealed or pending lineups)
     try {
@@ -403,9 +418,9 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   // umpire with the panel already open — they had to restart the app. Refresh
   // on realtime bracket changes and whenever the tab regains focus.
   //
-  // This only refreshes the *selection* list. `selectedMatch` is separate state
-  // and an in-progress scoring session lives in UmpireEngine, so neither is
-  // disturbed by a refetch.
+  // This only refreshes the *selection* list. `selectedMatch` follows the
+  // refreshed row (keeping the last one if it drops out), and an in-progress
+  // scoring session lives in UmpireEngine, so neither is disturbed.
   useEffect(() => {
     const unsubscribe = subscribeToUmpireTournamentMatches(() => { load({ silent: true }); });
 
@@ -421,6 +436,18 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       window.removeEventListener("focus", onFocus);
     };
   }, [load]);
+
+  const selectedCategory = nav.category;
+  const foundMatch = nav.matchId
+    ? allMatches.find((m) => m.id === nav.matchId) ?? (lastSelectedRef.current?.id === nav.matchId ? lastSelectedRef.current : null)
+    : null;
+  if (foundMatch) lastSelectedRef.current = foundMatch;
+  const selectedMatch = foundMatch;
+  // A step restored from history whose match is gone shows its parent view.
+  const step: UmpireNav["step"] =
+    nav.step === "confirm" && !selectedMatch ? (selectedCategory ? "match" : "format")
+    : nav.step === "match" && !selectedCategory ? "format"
+    : nav.step;
 
   const categories = [...new Set(allMatches.map((m) => m.category))];
   const matchesForCategory = allMatches.filter((m) => m.category === selectedCategory);
@@ -692,7 +719,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     key={m.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { if (!noPlayers && !isDone) { setSelectedMatch(m); setStep("confirm"); } }}
+                    onClick={() => { if (!noPlayers && !isDone) { lastSelectedRef.current = m; goTo({ step: "confirm", category: nav.category, matchId: m.id }); } }}
                     className={cn(
                       "relative w-full p-3 rounded-xl border text-left transition-all duration-200 group",
                       isDone
@@ -786,7 +813,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             return (
               <button
                 key={cat}
-                onClick={() => { setSelectedCategory(cat); setStep("match"); }}
+                onClick={() => goTo({ step: "match", category: cat, matchId: null })}
                 className="flex items-center gap-4 p-4 rounded-2xl bg-muted border border-border-strong hover:border-primary hover:bg-muted-strong transition-all group text-left"
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${colors.active} shrink-0`}>
@@ -839,7 +866,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setStep("format"); setSelectedCategory(null); }}
+            onClick={() => stepBack()}
             className="p-2 rounded-xl bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -923,7 +950,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                         <button
                           key={m.id}
                           disabled={noPlayers}
-                          onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
+                          onClick={() => { lastSelectedRef.current = m; goTo({ step: "confirm", category: nav.category, matchId: m.id }); }}
                           className={cn(
                             "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                             isLive
@@ -1065,7 +1092,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
       <div className="space-y-2.5">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
+            onClick={() => stepBack()}
             className="p-1.5 rounded-lg bg-muted border border-border-strong hover:border-border-strong/90 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-3.5 h-3.5" />

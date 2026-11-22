@@ -141,7 +141,7 @@ export function PersonalHomeSection({
 
   return (
     <div className="space-y-5">
-      {/* This-week pulse */}
+      {/* This week at a glance */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -389,7 +389,7 @@ export function PersonalHomeSection({
               <h2 className="text-base font-bold text-foreground">Recent Matches</h2>
             </div>
             <button
-              onClick={() => setLocation(`/player/${player.id}/personal/matches`)}
+              onClick={() => setLocation(`/player/${player.id}?space=matches#TRAINING`)}
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-all hover:gap-1.5"
             >
               View all matches <ArrowUpRight className="h-3.5 w-3.5" />

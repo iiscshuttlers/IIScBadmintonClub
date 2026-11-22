@@ -20,9 +20,11 @@
 - SocialCTA
 - StatusBanner
 - TeaserOverlay
+- ThemePicker
 - VideoPlayerModal
 
 ### `@/components/about/`
+- ClubAbout
 - ContactSection
 - FacilitiesSection
 - GlossarySection
@@ -51,7 +53,10 @@
 - RoleManagerPanel
 - TeamFormatConfigPanel
 - TeamLineupBuilder
+- TournamentHeader
 - TournamentManager
+- TournamentParticipantsTab
+- TournamentRegistrationsPanel
 - UndoHistory
 
 ### `@/components/admin/editors/`
@@ -61,6 +66,13 @@
 
 ### `@/components/auth/`
 - JoinViews
+
+### `@/components/checkin/`
+- CheckinBits
+- MatchWhosHere
+- OfficialBoard
+- OrganiserCheckin
+- PlayerCheckin
 
 ### `@/components/events/`
 - LiveBracketsSection
@@ -86,6 +98,7 @@
 
 ### `@/components/feed/`
 - AnnouncementsSection
+- AutoPostBody
 - BeautifulScoreDisplay
 - MatchCard
 - MatchPredictions
@@ -101,12 +114,12 @@
 - HomeAnnouncementBar
 - HomeLiveStrip
 - HomeMatchRail
-- HomePersonalDashboard
-- HostTournamentCta
 - MyTournamentCard
 - NoticeBoard
 
 ### `@/components/hub/`
+- AnnouncementsTab
+- EventsTab
 - ExchangeTab
 
 ### `@/components/layout/`
@@ -126,6 +139,9 @@
 - MatchInfoTab
 - MatchPointsTab
 - MatchPrimitives
+- MatchScoreStats
+- MatchStatsPanel
+- MatchStickyHeader
 - MatchSummaryTab
 - ResultsByRound
 - ShareResultButton
@@ -134,6 +150,7 @@
 ### `@/components/personal/`
 - PersonalHomeSection
 - PersonalMatchesSection
+- PersonalSpacePanel
 - PersonalStatsSection
 - PersonalTrainingSection
 - StatCard
@@ -181,19 +198,11 @@
 - NotificationSettingsModal
 - StatusTab
 
-### `@/components/pulse/`
-- AnnouncementsTab
-- EventsTab
-- LiveTab
-- MatchReminderModal
-- MatchSection
-- PulseMatchItem
-- TournamentDetailsTab
-
 ### `@/components/settings/`
 - BlockedPlayersSection
 
 ### `@/components/tournament/`
+- AllMatchesList
 - AnimatedScoreNumber
 - AvatarStack
 - BracketVisual
@@ -202,8 +211,11 @@
 - EventTypeBadge
 - FeaturedTournamentHero
 - FollowTournamentButton
-- LifecycleStepper
+- LiveTab
+- MatchListItem
+- MatchReminderModal
 - MatchScoreDisplay
+- MatchSection
 - MyCertificatesCard
 - MyMatchesStrip
 - OrderOfPlayPanel
@@ -218,17 +230,22 @@
 - ThemeScope
 - TournamentCard
 - TournamentCardSkeleton
+- TournamentDetailsTab
+- TournamentNextMatch
 - TournamentStoryPanel
 - TournamentWinnersPanel
 - UpNextPanel
 
 ### `@/components/ui/`
 - Avatar
+- BackButton
+- CollapsibleSection
 - ConfirmDialog
 - ErrorState
 - PageHeader
 - PlayerSelect
 - ScrollTabs
+- SectionTabs
 - badge
 - breadcrumb
 - button
@@ -250,7 +267,6 @@
 
 ### `@/contexts/`
 - AdminHistoryContext
-- AppModeContext
 - AuthContext
 - ConfirmContext
 - PlayerModalContext
@@ -274,7 +290,10 @@
 - useFeedMatches
 - useFocusTrap
 - useFormDraft
+- useGalleryAlerts
+- useGoBack
 - useHashTab
+- useHistoryStep
 - useJoinAuth
 - useLiveMatches
 - useLiveScoresFor
@@ -292,6 +311,7 @@
 - usePullToRefresh
 - usePushNotifications
 - useQueryState
+- useSectionParams
 - useSiteDataEditor
 - useSupabaseSession
 - useTeamStandings
@@ -306,9 +326,12 @@
 ### `@/hooks/queries/`
 - useAdminActionItems
 - useAnyTournamentLive
+- useAutoFeedTournaments
+- useCheckins
 - useMatchPointLog
 - useMatchViews
 - usePersonalStats
+- usePlayerAvatars
 - usePlayerNames
 - usePlayerProfileQuery
 - useRankingMovement
@@ -323,6 +346,7 @@
 - aiPredictor
 - analytics
 - authUtils
+- autoAnnouncements
 - biometricAuth
 - bracketGenerator
 - bracketPredict
@@ -333,18 +357,24 @@
 - cloneTournament
 - clubRecords
 - comparison
+- conveners
 - correctionPreview
 - courtConflicts
+- deepLink
 - drawReveal
 - eloStakes
 - exportProfilePdf
 - firebase
 - floatingScore
+- galleryAlerts
 - galleryStorage
 - headToHead
 - homeRail
 - imageUtils
+- legacyColorClasses
 - matchGrouping
+- matchReadiness
+- matchResult
 - matchRouteVisibility
 - matchShareCard
 - matchStats
@@ -352,9 +382,11 @@
 - matchViewShare
 - motion
 - myCertificates
+- navHistory
 - navMemory
 - navUtils
 - notificationDeepLinks
+- pageViews
 - pathToFinal
 - pip
 - playerColumns
@@ -365,8 +397,10 @@
 - rankingUtils
 - ratingStory
 - restConflicts
+- returnUrl
 - roundOrder
 - routeContinuity
+- scoreStats
 - shareMatch
 - siteData
 - sounds
@@ -374,6 +408,8 @@
 - teamBracketGenerator
 - teamLineupRules
 - teamNames
+- themeColors
+- themes
 - tiers
 - tournamentFeedback
 - tournamentReadiness
@@ -386,6 +422,7 @@
 - umpireRecord
 - utils
 - venueDisplay
+- videoTitle
 - widgetManager
 - wrappedShareCard
 
@@ -400,6 +437,7 @@
 ### `@/pages/`
 - BracketPredictPage
 - FindLost
+- Legacy
 - RateTournamentPage
 - ScheduleCalendar
 - ScheduleView
@@ -456,6 +494,7 @@
 - InfoModal.tsx
 - Navigation.tsx
 - NotificationsMenu.tsx
+- OnboardingTour.test.tsx
 - OnboardingTour.tsx
 - ProtectedRoute.tsx
 - QuickSettings.tsx
@@ -463,10 +502,13 @@
 - SocialCTA.tsx
 - StatusBanner.tsx
 - TeaserOverlay.tsx
+- ThemePicker.tsx
 - VideoPlayerModal.tsx
 - YoutubePlayer.tsx
 
 ### `client/src/components/about/`
+- ClubAbout.test.tsx
+- ClubAbout.tsx
 - ContactSection.tsx
 - CourtBookingModal.tsx
 - CourtDetailsModal.tsx
@@ -545,6 +587,7 @@
 
 ### `client/src/components/admin/editors/`
 - AnnouncementEditor.tsx
+- AutoPostsPanel.tsx
 - ChangelogViewer.tsx
 - ConfigEditor.tsx
 - EventEditor.tsx
@@ -556,13 +599,23 @@
 - PlayersManager.tsx
 - PollEditor.tsx
 - PushBroadcastPanel.tsx
+- VideoEditor.test.tsx
 - VideoEditor.tsx
 - shared.ts
 
 ### `client/src/components/auth/`
 - JoinViews.tsx
 
+### `client/src/components/checkin/`
+- CheckinBits.tsx
+- MatchWhosHere.tsx
+- OfficialBoard.tsx
+- OrganiserCheckin.tsx
+- PlayerCheckin.tsx
+- checkin.test.tsx
+
 ### `client/src/components/events/`
+- HostSetupSections.tsx
 - LiveBracketsSection.tsx
 - LiveMatchSchedule.tsx
 - LivePlayersSection.tsx
@@ -587,7 +640,9 @@
 - WinnersWallSection.tsx
 
 ### `client/src/components/feed/`
+- AnnouncementsSection.test.tsx
 - AnnouncementsSection.tsx
+- AutoPostBody.tsx
 - BeautifulScoreDisplay.tsx
 - EditVideoModal.tsx
 - MatchCard.tournament.test.tsx
@@ -607,19 +662,21 @@
 - HomeAnnouncementBar.tsx
 - HomeLiveStrip.tsx
 - HomeMatchRail.tsx
-- HomePersonalDashboard.tsx
-- HostTournamentCta.tsx
 - MyTournamentCard.test.tsx
 - MyTournamentCard.tsx
 - NoticeBoard.tsx
 
 ### `client/src/components/hub/`
+- AnnouncementsTab.tsx
+- EventsTab.tsx
 - ExchangeTab.tsx
 
 ### `client/src/components/layout/`
 - BackToTop.tsx
 - PageErrorFallback.tsx
 - PageSkeleton.tsx
+- PageViewTracker.test.tsx
+- PageViewTracker.tsx
 - RoutePersistence.tsx
 - ScrollProgress.tsx
 - ScrollToTop.tsx
@@ -639,6 +696,10 @@
 - MatchInfoTab.tsx
 - MatchPointsTab.tsx
 - MatchPrimitives.tsx
+- MatchScoreStats.tsx
+- MatchStatsPanel.test.tsx
+- MatchStatsPanel.tsx
+- MatchStickyHeader.tsx
 - MatchSummaryTab.tsx
 - ResultsByRound.tsx
 - ShareResultButton.tsx
@@ -648,6 +709,7 @@
 ### `client/src/components/personal/`
 - PersonalHomeSection.tsx
 - PersonalMatchesSection.tsx
+- PersonalSpacePanel.tsx
 - PersonalStatsSection.tsx
 - PersonalTrainingSection.tsx
 - StatCard.tsx
@@ -697,26 +759,19 @@
 - NotificationSettingsModal.tsx
 - StatusTab.tsx
 
-### `client/src/components/pulse/`
-- AnnouncementsTab.tsx
-- EventsTab.tsx
-- LiveTab.tsx
-- MatchReminderModal.tsx
-- MatchSection.tsx
-- PulseMatchItem.tsx
-- TournamentDetailsTab.tsx
-
 ### `client/src/components/pwa/`
 - PwaInstallPrompt.tsx
 - PwaUpdatePrompt.tsx
 
 ### `client/src/components/routing/`
 - LegacyPulseRedirect.tsx
+- SectionRedirect.tsx
 
 ### `client/src/components/settings/`
 - BlockedPlayersSection.tsx
 
 ### `client/src/components/tournament/`
+- AllMatchesList.tsx
 - AnimatedScoreNumber.tsx
 - AvatarStack.tsx
 - BracketVisual.tsx
@@ -725,8 +780,11 @@
 - EventTypeBadge.tsx
 - FeaturedTournamentHero.tsx
 - FollowTournamentButton.tsx
-- LifecycleStepper.tsx
+- LiveTab.tsx
+- MatchListItem.tsx
+- MatchReminderModal.tsx
 - MatchScoreDisplay.tsx
+- MatchSection.tsx
 - MyCertificatesCard.tsx
 - MyMatchesStrip.tsx
 - OrderOfPlayPanel.tsx
@@ -741,6 +799,8 @@
 - ThemeScope.tsx
 - TournamentCard.tsx
 - TournamentCardSkeleton.tsx
+- TournamentDetailsTab.tsx
+- TournamentNextMatch.tsx
 - TournamentStoryPanel.test.tsx
 - TournamentStoryPanel.tsx
 - TournamentWinnersPanel.tsx
@@ -749,11 +809,15 @@
 
 ### `client/src/components/ui/`
 - Avatar.tsx
+- BackButton.test.tsx
+- BackButton.tsx
+- CollapsibleSection.tsx
 - ConfirmDialog.tsx
 - ErrorState.tsx
 - PageHeader.tsx
 - PlayerSelect.tsx
 - ScrollTabs.tsx
+- SectionTabs.tsx
 - badge.tsx
 - breadcrumb.tsx
 - button.tsx
@@ -790,7 +854,6 @@
 
 ### `client/src/contexts/`
 - AdminHistoryContext.tsx
-- AppModeContext.tsx
 - AuthContext.test.tsx
 - AuthContext.tsx
 - ConfirmContext.tsx
@@ -815,8 +878,12 @@
 - useFeedMatches.ts
 - useFocusTrap.ts
 - useFormDraft.ts
+- useGalleryAlerts.ts
 - useGlobalNotifications.ts
+- useGoBack.ts
 - useHashTab.ts
+- useHistoryStep.test.tsx
+- useHistoryStep.ts
 - useInactivityLogout.ts
 - useJoinAuth.tsx
 - useLiveMatches.ts
@@ -841,6 +908,7 @@
 - usePullToRefresh.ts
 - usePushNotifications.ts
 - useQueryState.ts
+- useSectionParams.ts
 - useSiteDataEditor.ts
 - useSupabaseSession.ts
 - useTeamStandings.test.ts
@@ -865,9 +933,12 @@
 - useAdminActionItems.ts
 - useAnyTournamentLive.test.ts
 - useAnyTournamentLive.ts
+- useAutoFeedTournaments.ts
+- useCheckins.ts
 - useMatchPointLog.ts
 - useMatchViews.ts
 - usePersonalStats.ts
+- usePlayerAvatars.ts
 - usePlayerNames.ts
 - usePlayerProfileQuery.test.ts
 - usePlayerProfileQuery.ts
@@ -888,6 +959,8 @@
 - aiPredictor.ts
 - analytics.ts
 - authUtils.ts
+- autoAnnouncements.test.ts
+- autoAnnouncements.ts
 - biometricAuth.ts
 - bracketGenerator.ts
 - bracketPredict.test.ts
@@ -903,10 +976,14 @@
 - clubRecords.ts
 - comparison.test.ts
 - comparison.ts
+- conveners.test.ts
+- conveners.ts
 - correctionPreview.test.ts
 - correctionPreview.ts
 - courtConflicts.test.ts
 - courtConflicts.ts
+- deepLink.test.ts
+- deepLink.ts
 - drawReveal.test.ts
 - drawReveal.ts
 - eloStakes.test.ts
@@ -914,6 +991,8 @@
 - exportProfilePdf.ts
 - firebase.ts
 - floatingScore.ts
+- galleryAlerts.test.ts
+- galleryAlerts.ts
 - galleryStorage.ts
 - headToHead.test.ts
 - headToHead.ts
@@ -921,8 +1000,13 @@
 - homeRail.test.ts
 - homeRail.ts
 - imageUtils.ts
+- legacyColorClasses.ts
 - matchGrouping.test.ts
 - matchGrouping.ts
+- matchReadiness.test.ts
+- matchReadiness.ts
+- matchResult.test.ts
+- matchResult.ts
 - matchRouteVisibility.ts
 - matchShareCard.ts
 - matchStats.ts
@@ -933,10 +1017,14 @@
 - motion.ts
 - myCertificates.test.ts
 - myCertificates.ts
+- navHistory.test.ts
+- navHistory.ts
 - navMemory.ts
 - navUtils.ts
 - notificationDeepLinks.test.ts
 - notificationDeepLinks.ts
+- pageViews.test.ts
+- pageViews.ts
 - pathToFinal.test.ts
 - pathToFinal.ts
 - pip.ts
@@ -953,10 +1041,16 @@
 - ratingStory.ts
 - restConflicts.test.ts
 - restConflicts.ts
+- returnUrl.test.ts
+- returnUrl.ts
 - roundOrder.test.ts
 - roundOrder.ts
 - routeContinuity.test.ts
 - routeContinuity.ts
+- scoreStats.test.ts
+- scoreStats.ts
+- sectionRedirects.test.ts
+- sectionRedirects.ts
 - shareMatch.ts
 - siteData.ts
 - sounds.ts
@@ -965,6 +1059,8 @@
 - teamBracketGenerator.ts
 - teamLineupRules.ts
 - teamNames.ts
+- themeColors.ts
+- themes.ts
 - tiers.ts
 - tournamentFeedback.test.ts
 - tournamentFeedback.ts
@@ -985,6 +1081,8 @@
 - utils.ts
 - venueDisplay.test.ts
 - venueDisplay.ts
+- videoTitle.test.ts
+- videoTitle.ts
 - widgetManager.ts
 - wrappedShareCard.ts
 
@@ -1025,11 +1123,10 @@
 - NotFound.tsx
 - ObsOverlayScoreboard.tsx
 - OfficiatePage.tsx
-- PlayerPersonalPage.tsx
 - PlayerProfile.tsx
+- Players.tsx
 - PrivacyPolicy.tsx
 - ProfileSetup.tsx
-- Pulse.tsx
 - RateTournamentPage.tsx
 - ScheduleCalendar.tsx
 - ScheduleView.tsx
@@ -1053,9 +1150,6 @@
 - TvScoreboardIndex.tsx
 - VenueScoreboardPage.tsx
 - VerifyCertificate.tsx
-
-### `client/src/pages/personal/`
-- PersonalProfilePage.tsx
 
 ### `client/src/providers/`
 - RealtimeProvider.tsx

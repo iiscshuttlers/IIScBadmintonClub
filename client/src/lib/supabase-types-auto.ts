@@ -1207,7 +1207,7 @@ export type Database = {
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
-          status: string
+          status: string | null
           total_friendly_matches: number | null
           tournament_doubles_elo: number | null
           tournament_elo: number | null
@@ -1288,7 +1288,7 @@ export type Database = {
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
-          status?: string
+          status?: string | null
           total_friendly_matches?: number | null
           tournament_doubles_elo?: number | null
           tournament_elo?: number | null
@@ -1369,7 +1369,7 @@ export type Database = {
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
-          status?: string
+          status?: string | null
           total_friendly_matches?: number | null
           tournament_doubles_elo?: number | null
           tournament_elo?: number | null

@@ -228,7 +228,7 @@ export default function TournamentsHub() {
     <ThemeScope family={featuredFamily} className="min-h-screen bg-background">
       {/* Page header — same component as every other section page */}
       <PageHeader
-        badge="Tournaments & Events"
+        badge="Draws & live scores"
         badgeIcon={<Sparkles className="w-3.5 h-3.5" />}
         title="Tournaments"
         subtitle="Follow live events, register for upcoming draws and look back at past results."
@@ -465,7 +465,7 @@ export default function TournamentsHub() {
 
         {/* Results Area */}
         {loading ? (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TournamentCardSkeleton count={4} />
           </div>
         ) : loadError ? (
@@ -505,7 +505,7 @@ export default function TournamentsHub() {
                   variants={staggerContainer}
                   initial="initial"
                   animate="animate"
-                  className="grid sm:grid-cols-2 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 >
                   {grouped.active.map((t) => (
                     <TournamentCard
@@ -536,7 +536,7 @@ export default function TournamentsHub() {
                   variants={staggerContainer}
                   initial="initial"
                   animate="animate"
-                  className="grid sm:grid-cols-2 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 >
                   {grouped.upcoming.map((t) => (
                     <TournamentCard
@@ -566,7 +566,7 @@ export default function TournamentsHub() {
                   variants={staggerContainer}
                   initial="initial"
                   animate="animate"
-                  className="grid sm:grid-cols-2 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 >
                   {grouped.completed.map((t) => (
                     <TournamentCard
@@ -588,7 +588,7 @@ export default function TournamentsHub() {
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-            className="grid sm:grid-cols-2 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             {filtered.map((t) => (
               <TournamentCard

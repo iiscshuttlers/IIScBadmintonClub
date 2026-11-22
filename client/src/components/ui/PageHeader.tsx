@@ -1,7 +1,7 @@
 import React from "react";
-import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BackButton } from "./BackButton";
 
 interface PageHeaderProps {
   badge?: React.ReactNode;
@@ -13,11 +13,14 @@ interface PageHeaderProps {
   align?: "left" | "center";
   /** Icon rendered beside the title. */
   icon?: React.ReactNode;
-  /** wouter href for a back link (rendered above the title). */
+  /**
+   * Shows a Back control above the title. Back returns to the previous
+   * in-app screen; `backTo` is the parent used when there isn't one.
+   */
   backTo?: string;
   /** Custom back handler (takes precedence over backTo). */
   onBack?: () => void;
-  /** Back link label. */
+  /** Back label. Keep "Back" unless Back always lands on one named place. */
   backLabel?: string;
   /** Tighter, borderless header for account/utility pages. */
   compact?: boolean;
@@ -60,11 +63,7 @@ export function PageHeader({
         <ArrowLeft className="w-4 h-4" /> {backLabel}
       </button>
     ) : (
-      <Link href={backTo!}>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition mb-3 cursor-pointer">
-          <ArrowLeft className="w-4 h-4" /> {backLabel}
-        </span>
-      </Link>
+      <BackButton parent={backTo!} label={backLabel} className="mb-3" />
     )
   ) : null;
 

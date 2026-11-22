@@ -6,15 +6,18 @@ import { FormChips } from "@/components/match/MatchPrimitives";
 import { useRecentForm } from "@/hooks/queries/useRecentForm";
 import { useRankingMovement } from "@/hooks/queries/useRankingMovement";
 import { movementLabel } from "@/lib/rankMovement";
-import { cssVarAlpha } from "@/lib/themeColors";
+import { cssVar } from "@/lib/themeColors";
 
 interface PlayerHeroBannerProps {
   player: PlayerRow;
   eloRank: number | null;
-  theme: "light" | "dark" | "system";
 }
 
-export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerProps) {
+// The banner photo is dark in every theme, so hero text uses the fixed on-media
+// colours (like the action buttons above it) with a dark halo, not theme text colours.
+const HERO_TEXT_SHADOW = `0 2px 14px ${cssVar("scrim")}, 0 1px 3px ${cssVar("scrim")}`;
+
+export function PlayerHeroBanner({ player, eloRank }: PlayerHeroBannerProps) {
   const nameParts = (player.full_name || "").trim().split(/\s+/);
   const heroLastWord = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
   const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
@@ -26,20 +29,21 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
 
   return (
     <>
-      {/* Profile Banner */}
-      <div className="absolute top-0 left-0 w-full h-[380px] md:h-[460px] overflow-hidden">
-        {/* The app is dark-only (ThemeContext), so only the dark banner ships. */}
+      {/* Profile Banner: fills the page's hero wrapper (navigation bar + hero), so the
+          text never runs past the photo on phones. One dark banner serves every theme. */}
+      <div className="absolute inset-0 overflow-hidden">
         <img
           src={`${import.meta.env.BASE_URL}profile_banner_dark.webp`}
           alt="Profile Banner"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-media/65 via-media/35 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background to-transparent" />
+        {/* Blends into the page, inside the hero's bottom padding (below the text). */}
+        <div className="absolute bottom-0 left-0 right-0 h-10 md:h-14 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 pb-6 md:pb-12 pointer-events-none">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 pb-12 md:pb-16 pointer-events-none">
         <div className="flex flex-col md:flex-row gap-6 items-end relative pointer-events-auto">
           {/* Avatar */}
           <div className="relative mt-8 md:mt-12 shrink-0 z-20">
@@ -86,17 +90,13 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
           </div>
 
           {/* Info */}
-          <div className="flex-1 pb-2 md:pb-4 text-foreground mt-4 md:mt-0">
+          <div className="flex-1 pb-2 md:pb-4 text-on-media mt-4 md:mt-0">
             <div className="flex flex-col">
               {heroRestName && (
                 <div className="flex items-center gap-3">
                   <span
-                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-foreground"
-                    style={
-                      theme === "light"
-                        ? { textShadow: `0 2px 12px ${cssVarAlpha("background", 0.8)}, 0 1px 4px ${cssVarAlpha("background", 0.6)}` }
-                        : undefined
-                    }
+                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-on-media"
+                    style={{ textShadow: HERO_TEXT_SHADOW }}
                   >
                     {heroRestName}
                   </span>
@@ -117,12 +117,8 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
 
               <div className="flex items-center flex-wrap gap-4">
                 <h1
-                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-foreground"
-                  style={
-                    theme === "light"
-                      ? { textShadow: `0 2px 16px ${cssVarAlpha("background", 0.8)}, 0 1px 4px ${cssVarAlpha("background", 0.6)}` }
-                      : undefined
-                  }
+                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-on-media"
+                  style={{ textShadow: HERO_TEXT_SHADOW }}
                 >
                   {heroLastWord}
                 </h1>
@@ -130,14 +126,15 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               
               {player.joined_year && (
                 <div className="mt-3 md:mt-4 flex flex-wrap items-center gap-2">
-                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-foreground/10 border border-foreground/20 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm backdrop-blur-md text-soft">
+                  {/* Same treatment as the action buttons over the banner. */}
+                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-media/45 border border-on-media/20 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm backdrop-blur-md text-on-media">
                     Member Since {player.joined_year}
                   </span>
                 </div>
               )}
 
               {eloRank && (moveLabel || (myMove?.peakRank && myMove.peakRank < eloRank)) ? (
-                <p className="mt-3 text-xs md:text-sm font-bold text-soft">
+                <p className="mt-3 text-xs md:text-sm font-bold text-on-media/85" style={{ textShadow: HERO_TEXT_SHADOW }}>
                   Rank #{eloRank}
                   {moveLabel && <span title={moveLabel.long}> ({moveLabel.text}<span className="sr-only">: {moveLabel.long}</span>)</span>}
                   {myMove?.peakRank && myMove.peakRank < eloRank ? <> · peak #{myMove.peakRank}</> : null}
@@ -147,7 +144,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               {/* Last-5 tournament form; hidden for players with no tournament results. */}
               {(form.isPending && form.fetchStatus !== "idle") || (formEntries && formEntries.length > 0) ? (
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-soft">
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-on-media/85" style={{ textShadow: HERO_TEXT_SHADOW }}>
                     Tournament form
                   </span>
                   <FormChips entries={formEntries} loading={form.isPending} size="md" />

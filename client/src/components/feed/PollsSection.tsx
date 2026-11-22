@@ -105,7 +105,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               Delete
             </button>
           )}
-          <Link href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-individual transition-colors flex items-center gap-1 border-l border-border-strong pl-3">
+          <Link href="/admin?tab=posts#content" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-individual transition-colors flex items-center gap-1 border-l border-border-strong pl-3">
             Manage
           </Link>
         </div>

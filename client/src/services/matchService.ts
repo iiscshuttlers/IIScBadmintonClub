@@ -17,78 +17,37 @@ type FeedSortDates = {
   created_at?: string | null;
 };
 
+/**
+ * A player's tournament matches, newest-created first.
+ *
+ * Reads tournament_matches directly. It used to read player_matches_unified,
+ * but since friendly matches were dropped (18 Nov) that view is only a narrow
+ * copy of tournament_matches without match_number, match_code, tournament_id,
+ * round, court or team labels, so cards showed "Match #undefined" and had no
+ * match link. Same rows as the view: these statuses, deleted tournaments out,
+ * byes kept (they count in W/L records). RLS is the same, as the view is
+ * security_invoker.
+ */
 export async function fetchPlayerMatches(playerId: string, limit = 200): Promise<MatchWithPlayers[]> {
-  try {
-    const filter = `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`;
-    const { data: unifiedData, error: unifiedError } = await supabase
-      .from("player_matches_unified")
-      .select("*")
-      .or(filter)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (!unifiedError && unifiedData) {
-      const pIds = new Set<string>();
-      for (const m of unifiedData) {
-        if (m.player1_id) pIds.add(m.player1_id);
-        if (m.player2_id) pIds.add(m.player2_id);
-        if (m.player3_id) pIds.add(m.player3_id);
-        if (m.player4_id) pIds.add(m.player4_id);
-      }
-      const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
-      const { data: playerRows } = await supabase
-        .from("players")
-        .select(playerSelect)
-        .in("id", Array.from(pIds));
-
-      const pMap = new Map((playerRows ?? []).map((p) => [p.id, p] as const));
-      return unifiedData.map((m) => ({
-        ...m,
-        team1_partner_id: m.player3_id,
-        team2_partner_id: m.player4_id,
-        player1: m.player1_id ? pMap.get(m.player1_id) ?? null : null,
-        player2: m.player2_id ? pMap.get(m.player2_id) ?? null : null,
-        partner1: m.player3_id ? pMap.get(m.player3_id) ?? null : null,
-        partner2: m.player4_id ? pMap.get(m.player4_id) ?? null : null,
-      })) as unknown as MatchWithPlayers[];
-    }
-  } catch {
-    /* intentional — fall back to tournament_matches if the view is unavailable on the remote database */
-  }
-
-  const tFilter = `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`;
+  const filter = `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`;
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
-  const { data: tournamentData, error: tourneyError } = await supabase
+  const { data, error } = await supabase
     .from("tournament_matches")
     .select(`*, tournaments!inner(status, counts_for_elo), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
     .in("status", ["completed", "scheduled", "in_progress", "walkover"])
     .neq("tournaments.status", "deleted")
-    .or(tFilter)
+    .or(filter)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (tourneyError) throw tourneyError;
+  if (error) throw error;
 
-  const mappedTourney = (tournamentData ?? [])
-    .filter((m) => {
-      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
-      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
-      return hasTeam1 && hasTeam2;
-    })
-    .map((m) => ({
-      ...m,
-      is_friendly: false,
-      counts_for_elo: m.tournaments?.counts_for_elo,
-      team1_partner_id: m.player3_id,
-      team2_partner_id: m.player4_id,
-    }));
-
-  const allMatches = [...mappedTourney].sort((a: FeedSortDates, b: FeedSortDates) => {
-    const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
-    const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
-    return new Date(dateB).getTime() - new Date(dateA).getTime();
-  });
-
-  return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
+  return (data ?? []).map((m) => ({
+    ...m,
+    is_friendly: false,
+    counts_for_elo: m.tournaments?.counts_for_elo,
+    team1_partner_id: m.player3_id,
+    team2_partner_id: m.player4_id,
+  })) as unknown as MatchWithPlayers[];
 }
 
 export async function fetchFeedMatches(
@@ -563,17 +522,6 @@ export function subscribeToCameraBroadcast(selectedMatchId: string, handlers: Ca
     supabase.removeChannel(siteDataChannel);
     supabase.removeChannel(tmChannel);
   };
-}
-
-/** Home widget: calls `onChange` on any change to site_data `live_matches`. Returns the cleanup. */
-export function subscribeToHomeLiveMatches(onChange: () => void): () => void {
-  const channel = supabase.channel('live_matches_home')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.live_matches" }, () => {
-      onChange();
-    })
-    .subscribe();
-
-  return () => { supabase.removeChannel(channel); };
 }
 
 /**

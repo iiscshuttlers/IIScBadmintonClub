@@ -28,6 +28,10 @@ export interface MatchRecordRow {
   matchId: string;
   tournamentId: string;
   title: string;
+  /** Side labels in title order, so the winner can be styled apart. */
+  sides: [string, string];
+  /** Index into `sides` of the winner, or null when undecided. */
+  winner: 0 | 1 | null;
   detail: string;
   value: number;
 }
@@ -122,6 +126,10 @@ export function computeClubRecords(
 
   const played = decided.filter((v) => v.state === "completed" && v.games.length > 0);
   const label = (v: MatchView) => `${v.sides[0].label} vs ${v.sides[1].label}`;
+  const sidesOf = (v: MatchView) => ({
+    sides: [v.sides[0].label, v.sides[1].label] as [string, string],
+    winner: v.sides[0].isWinner ? (0 as const) : v.sides[1].isWinner ? (1 as const) : null,
+  });
   const detail = (v: MatchView) =>
     [tournaments[v.tournamentId]?.name, v.discipline ?? v.categoryLabel, v.roundName, v.games.map((g) => `${g.side1}–${g.side2}`).join(", ")]
       .filter(Boolean)
@@ -148,6 +156,7 @@ export function computeClubRecords(
       matchId: v.id,
       tournamentId: v.tournamentId,
       title: label(v),
+      ...sidesOf(v),
       detail: detail(v),
       value: matchFacts(v).longestGamePoints,
     })),
@@ -155,6 +164,7 @@ export function computeClubRecords(
       matchId: v.id,
       tournamentId: v.tournamentId,
       title: label(v),
+      ...sidesOf(v),
       detail: detail(v),
       value: matchFacts(v).pointMargin,
     })),

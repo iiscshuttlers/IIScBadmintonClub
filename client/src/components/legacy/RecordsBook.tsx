@@ -7,6 +7,7 @@ import { toMatchView, type MatchRow } from "@/lib/matchView";
 import { computeClubRecords, type MatchRecordRow, type PlayerRecordRow, type RecordTournament } from "@/lib/clubRecords";
 import { DISCIPLINES, matchPath, parseDiscipline } from "@/lib/tournamentRoutes";
 import { ChipStrip } from "@/components/match/ChipStrip";
+import { SidesVs } from "@/components/match/MatchPrimitives";
 import { usePlayerNames } from "@/hooks/queries/usePlayerNames";
 
 /**
@@ -84,7 +85,9 @@ function MatchTable({ title, unit, rows }: { title: string; unit: (v: number) =>
                 className="flex items-start justify-between gap-3 rounded-xl px-2 py-2 min-h-[44px] hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold break-words">{r.title}</span>
+                  <span className="block text-sm break-words">
+                    <SidesVs sides={r.sides} winner={r.winner} />
+                  </span>
                   <span className="block text-xs text-muted-foreground">{r.detail}</span>
                 </span>
                 <span className="shrink-0 text-sm font-black tabular-nums">{unit(r.value)}</span>
@@ -152,7 +155,7 @@ export function RecordsBook() {
             From {records.matchCount.toLocaleString("en-IN")} decided matches in {records.tournamentCount} tournaments recorded on this site
             {rankedOnly ? " that counted for ratings" : ""}. Friendly and cancelled matches aren't included.
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <PlayerTable title="Most titles" unit="" rows={records.mostTitles} />
             <PlayerTable title="Most finals" unit="" rows={records.mostFinals} />
             <PlayerTable title="Most tournament match wins" unit="" rows={records.mostWins} />

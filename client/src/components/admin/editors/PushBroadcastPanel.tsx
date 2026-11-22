@@ -3,8 +3,8 @@ import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { Bell, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useContentStore } from "../content/contentStore";
 
-const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls = "block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5";
 
@@ -13,6 +13,10 @@ export function PushBroadcastPanel() {
   const [customPush, setCustomPush] = useState({ title: "", body: "", url: "" });
   const [pushing, setPushing] = useState(false);
   const [showOnHome, setShowOnHome] = useState(false);
+  const { dirtyKeys, reloadDoc } = useContentStore();
+  // "Show on Home" writes a banner straight to home_banners; with unsaved
+  // banner edits open, reloading them afterwards would throw those edits away.
+  const bannersDirty = dirtyKeys.includes("home_banners");
 
   const sendCustomPush = async () => {
     if (!customPush.title.trim()) { toast.error("Title is required"); return; }
@@ -23,7 +27,7 @@ export function PushBroadcastPanel() {
         body: customPush.body.trim(),
         url: customPush.url.trim() || undefined,
         admin_email: session?.user?.email ?? "admin",
-        showOnHome,
+        showOnHome: showOnHome && !bannersDirty,
       });
 
       const sent = fnData?.sent ?? 0;
@@ -31,6 +35,10 @@ export function PushBroadcastPanel() {
 
       toast.success(`Sent to ${sent} device${sent !== 1 ? "s" : ""}${failed > 0 ? ` (${failed} failed)` : ""}!`);
       setCustomPush({ title: "", body: "", url: "" });
+      if (showOnHome && !bannersDirty) {
+        setShowOnHome(false);
+        await reloadDoc("home_banners");
+      }
     } catch (err: any) {
       toast.error(err?.message || "Failed to send push");
     } finally {
@@ -39,12 +47,11 @@ export function PushBroadcastPanel() {
   };
 
   return (
-    <div className={cardCls}>
-      <div className="flex items-center gap-2 mb-4">
-        <Bell className="w-5 h-5 text-info" />
-        <h3 className="font-black text-foreground">Send Custom Push Notification</h3>
-      </div>
-      <p className="text-xs text-muted-foreground mb-4">Send a direct push notification to all users immediately. This uses the local websocket channel for active users and native push for mobile users.</p>
+    <div>
+      <p className="text-xs text-muted-foreground mb-4">
+        Goes out immediately to everyone with notifications on (in-app for people on the site, native push on phones).
+        To notify about an announcement or poll, use “Send push” on it instead.
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <label className={labelCls}>Notification Title *</label>
@@ -79,15 +86,19 @@ export function PushBroadcastPanel() {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-soft">
+          <label className={`flex items-center gap-2 text-sm font-bold text-soft ${bannersDirty ? "opacity-60" : "cursor-pointer"}`}>
             <input
               type="checkbox"
-              checked={showOnHome}
+              checked={showOnHome && !bannersDirty}
+              disabled={bannersDirty}
               onChange={(e) => setShowOnHome(e.target.checked)}
               className="w-4 h-4 text-primary rounded focus:ring-primary"
             />
-            Show on Home Page
+            Also add it as a Home banner
           </label>
+          {bannersDirty && (
+            <p className="mt-1 text-xs text-muted-foreground">Save or undo your Home banner edits first.</p>
+          )}
         </div>
       </div>
       <div className="flex justify-end">

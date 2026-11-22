@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 import { matchOutcome } from "@/lib/matchView";
+import { seedForSide, type PublishedSeeds } from "@/lib/seeding";
 import { cssVar, themeColor, themeColorFor } from "@/lib/themeColors";
 import {
   DropdownMenu,
@@ -23,6 +24,11 @@ export interface BracketMatch {
   sets_history: string[] | null;
   status: string;
   court_number?: string | null;
+  /** Side 1 = player1 (+ player3 partner), side 2 = player2 (+ player4). Used for seed marks. */
+  player1_id?: string | null;
+  player2_id?: string | null;
+  player3_id?: string | null;
+  player4_id?: string | null;
 }
 
 interface BracketVisualProps {
@@ -32,6 +38,34 @@ interface BracketVisualProps {
   onExportExcel?: () => void;
   tournamentName?: string;
   category?: string;
+  /** Published seeds of this category (lib/seeding); shown as [n] after the name. */
+  seeds?: PublishedSeeds | null;
+}
+
+const sideSeeds = (m: BracketMatch, seeds: PublishedSeeds | null | undefined): [number | null, number | null] => [
+  seedForSide(seeds, [m.player1_id, m.player3_id], m.team1_label),
+  seedForSide(seeds, [m.player2_id, m.player4_id], m.team2_label),
+];
+
+/** Published seed after a name: stays visible when the name truncates. */
+function SeedTag({ seed }: { seed: number | null }) {
+  if (seed == null) return null;
+  return (
+    <span className="shrink-0 text-[10px] font-black text-primary tabular-nums" title={`Seed ${seed}`}>
+      [{seed}]<span className="sr-only"> seed {seed}</span>
+    </span>
+  );
+}
+
+/** Short round name for the "From" picker: Round of 16 → R16, Quarterfinal → QF. */
+function shortRoundName(name: string | null | undefined, round: number): string {
+  const n = (name ?? "").toLowerCase();
+  const of = n.match(/round of (\d+)/);
+  if (of) return `R${of[1]}`;
+  if (n.includes("quarter")) return "QF";
+  if (n.includes("semi")) return "SF";
+  if (n.includes("final")) return "Final";
+  return name?.trim() || `Round ${round}`;
 }
 
 const MATCH_W = 180;
@@ -421,7 +455,7 @@ export function BracketVisual(props: BracketVisualProps) {
   );
 }
 
-function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All" }: BracketVisualProps) {
+function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All", seeds }: BracketVisualProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [bracketSegment, setBracketSegment] = useState<string>("full");
@@ -490,25 +524,23 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     };
   }, [isFullscreen]);
 
-  // Auto-scale to fit screen width on mount / resize
+  // Fit the VISIBLE rounds to the width (hidden early rounds used to count,
+  // which shrank a 4-round view to ~40%). Never below a readable 70% — past
+  // that the draw scrolls sideways — and up to 125% when there is room.
+  const visibleCount = Math.max(1, rounds.length - hiddenRounds.length);
   const computeScale = useCallback(() => {
-    const el = normalContainerRef.current || fsContainerRef.current;
+    const el = isFullscreen ? fsContainerRef.current : normalContainerRef.current;
     if (!el) return;
-    const containerW = el.offsetWidth;
-    const totalW = rounds.length * COL_W + PADDING * 2;
-    if (totalW > containerW) {
-      const auto = Math.min(1, Math.max(0.4, (containerW * 0.95) / totalW));
-      setScale(auto);
-    } else {
-      setScale(1);
-    }
-  }, [rounds.length]);
+    const contentW = visibleCount * COL_W + PADDING * 2;
+    const fit = (el.clientWidth * 0.97) / contentW;
+    setScale(+Math.min(1.25, Math.max(0.7, fit)).toFixed(2));
+  }, [visibleCount, isFullscreen]);
 
   useEffect(() => {
     computeScale();
     window.addEventListener("resize", computeScale);
     return () => window.removeEventListener("resize", computeScale);
-  }, [computeScale]);
+  }, [computeScale, viewMode]);
 
   const SLOT_H = Math.max(MATCH_H + 20, 90);
 
@@ -911,15 +943,29 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           )}
         </div>
 
-        {/* 4. Quick Actions (Unhide) */}
-        {hiddenRounds.length > 0 && (
-          <button
-            onClick={() => setHiddenRounds([])}
-            className="px-2.5 py-1.5 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-warning bg-warning/10 hover:bg-warning/20 active:bg-warning/30 transition-colors border border-warning/30 shadow-sm shrink-0"
-            title="Show hidden rounds"
-          >
-            Unhide ({hiddenRounds.length})
-          </button>
+        {/* 4. Start the draw at a round (early, finished rounds start hidden) */}
+        {rounds.length > 2 && (
+          <label className="flex items-center gap-1.5 bg-card/80 px-2 py-1 rounded-md border border-border-strong/60 shadow-sm shrink-0 text-[10px] font-bold uppercase text-muted-foreground">
+            From
+            <select
+              value={visibleRounds[0] ?? rounds[0]}
+              onChange={(e) => {
+                const from = Number(e.target.value);
+                setHiddenRounds(rounds.filter((r) => r < from));
+              }}
+              className="bg-transparent text-foreground text-[11px] font-black normal-case outline-none cursor-pointer"
+              aria-label="Show the draw from round"
+            >
+              {rounds.map((r) => {
+                const name = matches.find((m) => m.round === r && !isPlayoff(m))?.round_name;
+                return (
+                  <option key={r} value={r} className="bg-card">
+                    {shortRoundName(name, r)}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         )}
       </div>
     </div>
@@ -973,13 +1019,6 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
                     className="text-[10px] font-black uppercase tracking-widest text-info flex items-center gap-1"
                   >
-                    <button
-                      onClick={() => setHiddenRounds((h) => h.includes(round) ? h.filter((r) => r !== round) : [...h, round])}
-                      className="opacity-40 hover:opacity-100 transition-opacity"
-                      title="Hide/show round"
-                    >
-                      <X size={10} />
-                    </button>
                     {label}
                   </div>
                 ))}
@@ -1018,6 +1057,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     } : undefined}
                     playerRowH={playerRowH}
                     category={category}
+                    seeds={seeds}
                   />
                 ))
               )}
@@ -1048,6 +1088,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   const isLive = outcome.state === "live";
                   const t1 = m.team1_label ?? "TBD";
                   const t2 = m.team2_label ?? "TBD";
+                  const [s1, s2] = sideSeeds(m, seeds);
                   const t1Won = outcome.t1Won;
                   const t2Won = outcome.t2Won;
 
@@ -1062,12 +1103,14 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       </div>
                       <div className="flex flex-col p-3 gap-2 flex-1 justify-center">
                         <div className={`flex justify-between items-center ${t1Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
-                          <span className="truncate pr-2 text-xs">{t1}</span>
-                          {t1Won && <Trophy size={12} className="text-gold shrink-0" />}
+                          <span className="truncate pr-2 text-xs flex-1">{t1}</span>
+                          <SeedTag seed={s1} />
+                          {t1Won && <Trophy size={12} className="text-gold shrink-0 ml-1" />}
                         </div>
                         <div className={`flex justify-between items-center ${t2Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-soft"}`}>
-                          <span className="truncate pr-2 text-xs">{t2}</span>
-                          {t2Won && <Trophy size={12} className="text-gold shrink-0" />}
+                          <span className="truncate pr-2 text-xs flex-1">{t2}</span>
+                          <SeedTag seed={s2} />
+                          {t2Won && <Trophy size={12} className="text-gold shrink-0 ml-1" />}
                         </div>
                       </div>
                       {(m.score || isLive || isCompleted || outcome.state === "cancelled") && (
@@ -1117,13 +1160,6 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                 <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
                   className="text-[10px] font-black uppercase tracking-widest text-center text-info flex items-center justify-center gap-1 group">
                   {label}
-                  <button
-                    onClick={() => setHiddenRounds(prev => [...prev, round])}
-                    className="opacity-50 hover:opacity-100 p-0.5 rounded hover:bg-muted text-info hover:text-foreground transition-all"
-                    title="Hide this round"
-                  >
-                    <X size={12} />
-                  </button>
                 </div>
               ))}
             </div>
@@ -1143,6 +1179,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                 const isLive = outcome.state === "live";
                 const t1 = m.team1_label ?? "TBD";
                 const t2 = m.team2_label ?? "TBD";
+                const [s1, s2] = sideSeeds(m, seeds);
                 const t1Won = outcome.t1Won;
                 const t2Won = outcome.t2Won;
                 
@@ -1210,6 +1247,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                             className={`flex-1 flex items-center gap-1 px-2 border-b border-border-strong/50 ${t1Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
                             <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-gold" : "text-soft"}`}>{t1}</span>
+                            <SeedTag seed={s1} />
                             {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                           <div
@@ -1218,6 +1256,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                             className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-gold/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-muted-strong/50" : ""}`}
                           >
                             <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-gold" : "text-soft"}`}>{t2}</span>
+                            <SeedTag seed={s2} />
                             {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
                           </div>
                         </div>
@@ -1270,15 +1309,17 @@ interface MatchCardProps {
   onPlayerClick?: (name: string) => void;
   playerRowH: number;
   category?: string;
+  seeds?: PublishedSeeds | null;
 }
 
-function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category }: MatchCardProps) {
+function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category, seeds }: MatchCardProps) {
   // Shared status rules (WP6): walkovers are decided, live never shows a winner.
   const outcome = matchOutcome(m);
   const isCompleted = outcome.decided;
   const isLive = outcome.state === "live";
   const t1 = m.team1_label ?? "TBD";
   const t2 = m.team2_label ?? "TBD";
+  const [s1, s2] = sideSeeds(m, seeds);
   const t1Won = outcome.t1Won;
   const t2Won = outcome.t2Won;
   
@@ -1358,6 +1399,7 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
                 isT1Selected ? "text-foreground drop-shadow-md" : t1Won ? "text-gold" : "text-soft"
               }`}>{t1}</span>
+              <SeedTag seed={s1} />
               {t1Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
             <div
@@ -1372,6 +1414,7 @@ tracking-widest ${isCompleted ? 'bg-muted/80 text-muted-foreground' : isLive ? '
               <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
                 isT2Selected ? "text-foreground drop-shadow-md" : t2Won ? "text-gold" : "text-soft"
               }`}>{t2}</span>
+              <SeedTag seed={s2} />
               {t2Won && <Trophy size={11} className="text-gold shrink-0" />}
             </div>
           </div>

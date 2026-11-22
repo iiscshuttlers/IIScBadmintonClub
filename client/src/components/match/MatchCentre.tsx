@@ -195,7 +195,7 @@ function CourtQueues({ views, presence }: { views: MatchView[]; presence: Record
   return (
     <div className="space-y-6">
       {queues.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {queues.map((q) => (
             <section
               key={q.court}

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { cloneTournament } from '@/lib/cloneTournament';
+import { parseContactsMode, type ContactsMode } from '@/lib/tournamentContacts';
 import type { Json, Tables, TablesInsert, TablesUpdate } from '@/lib/supabase-types-auto';
 import type {
   Tournament,
@@ -215,16 +216,6 @@ export async function fetchTournamentMatchByCode(tournamentId: string, matchCode
   return data;
 }
 
-/** The 15 most recently created matches (any tournament) with their tournament name. Returns null on error. */
-export async function fetchRecentTournamentMatchesWithNames() {
-  const { data } = await supabase
-    .from("tournament_matches")
-    .select("*, tournaments(name)")
-    .order("created_at", { ascending: false }) // tournament_matches has no updated_at; that 400ed on every home load
-    .limit(15);
-  return data;
-}
-
 /** Every completed match (any tournament) with its tournament name. Returns null on error. */
 export async function fetchCompletedTournamentMatchesWithNames() {
   const { data } = await supabase
@@ -392,8 +383,8 @@ export async function fetchTournamentSeedRows(tournamentId: string) {
   const { data } = await supabase
     .from("tournament_participants")
     .select("category, player_id, partner_id, seed")
-    .eq("tournament_id", tournamentId)
-    .not("seed", "is", null);
+    // Every entry, seeded or not: entry counts decide which seeds are published.
+    .eq("tournament_id", tournamentId);
   return data;
 }
 
@@ -1399,20 +1390,21 @@ export async function updateTournamentAndReturn(id: string, patch: Partial<Tourn
   return data as Tournament;
 }
 
-export async function getTournamentContacts(tournamentId: string): Promise<boolean> {
+/** The organiser's contacts setting (see lib/tournamentContacts). */
+export async function getTournamentContactsMode(tournamentId: string): Promise<ContactsMode> {
   const { data, error } = await supabase
     .from("site_data")
     .select("value")
     .eq("key", `tournament_contacts_${tournamentId}`)
     .maybeSingle();
   if (error) throw error;
-  return data?.value === true || (data?.value as { enabled?: unknown } | null)?.enabled === true;
+  return parseContactsMode(data?.value);
 }
 
-export async function setTournamentContacts(tournamentId: string, enabled: boolean): Promise<void> {
+export async function setTournamentContactsMode(tournamentId: string, mode: ContactsMode): Promise<void> {
   const { error } = await supabase
     .from("site_data")
-    .upsert({ key: `tournament_contacts_${tournamentId}`, value: enabled }, { onConflict: "key" });
+    .upsert({ key: `tournament_contacts_${tournamentId}`, value: { mode } }, { onConflict: "key" });
   if (error) throw error;
 }
 
@@ -1479,8 +1471,8 @@ export const tournamentService = {
   fetchPathToFinalData,
   fetchMyTournamentMatches,
   fetchEloStakesContext,
-  getTournamentContacts,
-  setTournamentContacts,
+  getTournamentContactsMode,
+  setTournamentContactsMode,
   fetchTvNextUpOverview,
   fetchTvH2hHistory,
 };
@@ -1491,7 +1483,7 @@ export async function fetchMyTournamentMatches(playerId: string) {
   const { data, error } = await supabase
     .from("tournament_matches")
     .select(
-      "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, player1_id, player2_id, player3_id, player4_id, tournaments(name, counts_for_elo)",
+      "id, tournament_id, category, round_name, team1_label, team2_label, court_number, scheduled_at, status, score, winner_side, player1_id, player2_id, player3_id, player4_id, tournaments(name, counts_for_elo)",
     )
     .or(
       `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`,
@@ -1563,17 +1555,6 @@ export async function fetchTournamentsCreatedBy(userId: string) {
     .eq("created_by", userId)
     .neq("status", "deleted")
     .order("created_at", { ascending: false });
-  return data;
-}
-
-/** The five newest tournaments that are not deleted (notice board). Returns null on error. */
-export async function fetchLatestTournamentsForNotices() {
-  const { data } = await supabase
-    .from("tournaments")
-    .select("*")
-    .neq("status", "deleted")
-    .order("created_at", { ascending: false })
-    .limit(5);
   return data;
 }
 

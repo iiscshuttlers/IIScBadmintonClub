@@ -6,6 +6,8 @@ import { fetchMyTournamentMatches, fetchEloStakesContext } from "@/services/tour
 import { matchesToEvents, shareIcs } from "@/lib/calendarExport";
 import { PathToFinalDialog } from "@/components/tournament/PathToFinalDialog";
 import { computeStakes, formatRange, DEFAULT_ELO_CONFIG, type Stakes } from "@/lib/eloStakes";
+import { matchOutcome } from "@/lib/matchView";
+import { SidesVs } from "@/components/match/MatchPrimitives";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
 
@@ -22,6 +24,12 @@ const CATEGORY_COLOR: Record<string, string> = {
   GD: "text-individual",
 };
 const catColor = (c?: string) => CATEGORY_COLOR[(c || "").toUpperCase()] || "text-soft";
+
+/** Winning side as an index into [team1, team2]; null until completed or walkover. */
+function winnerIndex(m: { status: string; winner_side?: number | null }): 0 | 1 | null {
+  const o = matchOutcome(m);
+  return o.t1Won ? 0 : o.t2Won ? 1 : null;
+}
 
 /**
  * Compact "My Matches" strip — the current player's tournament matches ordered
@@ -168,8 +176,8 @@ export function MyMatchesStrip({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-foreground truncate">
-                    {m.team1_label || "TBD"} <span className="text-muted-foreground">vs</span> {m.team2_label || "TBD"}
+                  <p className="text-xs text-foreground truncate">
+                    <SidesVs sides={[m.team1_label || "TBD", m.team2_label || "TBD"]} winner={winnerIndex(m)} />
                   </p>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[10px] truncate">

@@ -7,9 +7,11 @@
 - `bracket_predictions`
 - `broadcast_history`
 - `club_courts`
+- `court_calls`
 - `elo_calculation_logs`
 - `find-lost`
 - `find_lost_posts`
+- `gallery_album_subscriptions`
 - `live_match_votes`
 - `live_matches`
 - `marketplace_listings`
@@ -32,8 +34,10 @@
 - `search_players_view`
 - `site_data`
 - `tie_lineup_audits`
+- `tie_lineup_watchers`
 - `tie_lineups`
 - `tournament_audit_events`
+- `tournament_checkins`
 - `tournament_feedback`
 - `tournament_match_point_logs`
 - `tournament_matches`

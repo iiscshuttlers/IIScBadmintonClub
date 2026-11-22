@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
-  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
+  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, FlyerItem, DynamicFlyer, AuthUser,
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 import { FileUploader } from './FileUploader';

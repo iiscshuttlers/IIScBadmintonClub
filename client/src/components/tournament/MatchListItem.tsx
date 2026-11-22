@@ -4,13 +4,13 @@ import { toMatchView, type MatchRow } from "@/lib/matchView";
 import { MatchScorecard } from "@/components/match/MatchPrimitives";
 
 /**
- * Pulse match list item (sports-site plan item 12): the shared
+ * Tournament match list item (sports-site plan item 12): the shared
  * `MatchScorecard` (same names, seeds, scores, status and link as the Match
- * Centre) plus Pulse's prediction poll in the footer, outside the card link so
+ * Centre) plus the prediction poll in the footer, outside the card link so
  * no control is nested inside another.
  * Keeps the `match-card-<id>` anchor so old shared links still land here.
  */
-export function PulseMatchItem({
+export function MatchListItem({
   match,
   isMatchOfTheDay = false,
   upsetDiff = 0,

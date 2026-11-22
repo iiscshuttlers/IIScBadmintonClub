@@ -5,7 +5,7 @@ import { courtLabel, type MatchView } from "@/lib/matchView";
 import { matchPath } from "@/lib/tournamentRoutes";
 import { matchTimesText } from "@/components/match/MatchPrimitives";
 import { ShareResultButton } from "@/components/match/ShareResultButton";
-import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
+import { MatchReminderModal } from "@/components/tournament/MatchReminderModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 /** Game-by-game table (BWF scorecard style); the game winner's score is bold. */

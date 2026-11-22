@@ -127,32 +127,50 @@ export function WinnersWallSection() {
       });
   }, []);
 
-  const renderName = (raw: string) => {
-    if (!raw) return null;
-    const parts = raw.split(/(\s*&\s*|\s*\/\s*)/);
-    return parts.map((part, i) => {
-      if (part.includes("&") || part.includes("/")) return <span key={i}>{part}</span>;
-      
-      const clean = part.replace(/\(.*?\)/g, "").trim();
-      let lookup = clean.toLowerCase();
-      if (lookup === "radhika") lookup = "radhika dutt";
-      if (lookup === "kaling") lookup = "kaling danggen";
-      if (lookup === "raja") lookup = "raja janmejay";
-      if (lookup === "shaili") lookup = "shailli";
-      if (lookup === "abhisek") lookup = "abhishek";
-      if (lookup === "renu") lookup = "renu tewari";
-      
-      let foundId = playerMap[lookup] || playerMap[clean.split(" ")[0].toLowerCase()];
+  // One player: the name (linked to their profile when we can match it) and a
+  // muted affiliation such as "(CES)" after it.
+  const renderPlayer = (raw: string) => {
+    const affiliation = raw.match(/\(([^)]*)\)/)?.[1]?.trim();
+    const name = raw.replace(/\(.*?\)/g, "").trim();
+    let lookup = name.toLowerCase();
+    if (lookup === "radhika") lookup = "radhika dutt";
+    if (lookup === "kaling") lookup = "kaling danggen";
+    if (lookup === "raja") lookup = "raja janmejay";
+    if (lookup === "shaili") lookup = "shailli";
+    if (lookup === "abhisek") lookup = "abhishek";
+    if (lookup === "renu") lookup = "renu tewari";
+    const foundId = playerMap[lookup] || playerMap[name.split(" ")[0].toLowerCase()];
 
-      if (foundId) {
-        return (
-          <Link key={i} href={`/player/${foundId}`}>
-            <span className="hover:underline cursor-pointer hover:text-primary transition-colors">{part}</span>
+    return (
+      <>
+        {foundId ? (
+          <Link href={`/player/${foundId}`}>
+            <span className="hover:underline cursor-pointer hover:text-primary transition-colors">{name}</span>
           </Link>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
+        ) : (
+          name
+        )}
+        {affiliation && (
+          <span className="ml-1 text-[0.85em] font-medium text-muted-foreground">({affiliation})</span>
+        )}
+      </>
+    );
+  };
+
+  // A winner or runner-up side. Pairs stack one partner per line, so a long
+  // name never squeezes its partner and the "&" into narrow side-by-side columns.
+  const renderSide = (raw: string) => {
+    const partners = raw.split(/\s*[&/]\s*/).map((p) => p.trim()).filter(Boolean);
+    return (
+      <span className="min-w-0 flex flex-col">
+        {partners.map((partner, i) => (
+          <span key={i}>
+            {i > 0 && <span className="font-medium text-muted-foreground">&amp; </span>}
+            {renderPlayer(partner)}
+          </span>
+        ))}
+      </span>
+    );
   };
 
   const tournamentsWithResults = archivedTournaments.filter(
@@ -234,7 +252,7 @@ export function WinnersWallSection() {
               </h2>
             </div>
             <div className="p-6">
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {leaderboard.slice(0, 8).map((player, idx) => (
                   <div
                     key={player.name}
@@ -246,7 +264,7 @@ export function WinnersWallSection() {
                           #{idx + 1}
                         </div>
                         <div className="font-bold text-foreground truncate text-base">
-                          {renderName(player.name)}
+                          {renderPlayer(player.name)}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold/15 text-gold font-bold shrink-0 text-xs shadow-sm">
@@ -407,7 +425,7 @@ export function WinnersWallSection() {
 
                       <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
                         <a
-                          href={event.galleryFolder ? `/legacy?filter=${encodeURIComponent(event.galleryFolder)}#albums` : `/legacy#albums`}
+                          href={event.galleryFolder ? `/club?tab=gallery&filter=${encodeURIComponent(event.galleryFolder)}#albums` : `/club?tab=gallery#albums`}
                           className="flex-1 sm:flex-none"
                         >
                           <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-muted-strong hover:bg-faint text-soft font-bold text-xs sm:text-sm transition-colors">
@@ -465,13 +483,15 @@ export function WinnersWallSection() {
                                     <Medal className="w-3 h-3" />
                                     {result.category}
                                   </div>
-                                  <p className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1">
-                                    <Trophy className="w-3 h-3 text-gold shrink-0" /> {renderName(result.winner)}
-                                  </p>
+                                  <div className="font-bold text-foreground text-xs sm:text-sm leading-snug flex items-start gap-1.5">
+                                    <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5 mt-[0.2em] text-gold shrink-0" />
+                                    {renderSide(result.winner)}
+                                  </div>
                                   {result.runnerUp && (
-                                    <p className="mt-1 text-[10px] sm:text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                                      <Medal className="w-2.5 h-2.5 text-muted-foreground shrink-0" /> {renderName(result.runnerUp)}
-                                    </p>
+                                    <div className="mt-1.5 text-[10px] sm:text-xs font-semibold text-muted-foreground leading-snug flex items-start gap-1.5">
+                                      <Medal className="w-3 h-3 mt-[0.1em] text-muted-foreground shrink-0" />
+                                      {renderSide(result.runnerUp)}
+                                    </div>
                                   )}
                                 </div>
                               ))}

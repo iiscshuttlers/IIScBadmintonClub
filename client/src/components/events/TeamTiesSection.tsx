@@ -88,7 +88,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
   // Fetch current user's team membership and captain status
   const { data: userTeamData } = useQuery({
-    queryKey: ['pulse_user_captain_team', tournamentId, session?.user?.id],
+    queryKey: ['user_captain_team', tournamentId, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id || !tournamentId) return null;
       return await teamService.getUserCaptainTeam(tournamentId, session.user.id);
@@ -98,7 +98,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
   // 1. Fetch ties
   const { data: ties = [], isLoading: tiesLoading } = useQuery({
-    queryKey: ['pulse_team_ties', tournamentId],
+    queryKey: ['team_ties', tournamentId],
     queryFn: async () => {
       const list = await teamService.getTournamentTies(tournamentId);
       const priority = (state: string) => {
@@ -114,12 +114,12 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
       });
     },
     enabled: !!tournamentId,
-    refetchInterval: 5000 // Live polling for pulse
+    refetchInterval: 5000 // Live polling while ties are in play
   });
 
   // 2. Fetch matches for all ties in this tournament
   const { data: allRubberMatches = [], isLoading: matchesLoading } = useQuery({
-    queryKey: ['pulse_rubber_matches', tournamentId],
+    queryKey: ['rubber_matches', tournamentId],
     queryFn: async () => {
       return await teamService.getTournamentRubbers(tournamentId);
     },
@@ -129,7 +129,7 @@ export function TeamTiesSection({ tournamentId, tournament }: Props) {
 
   // 3. Fetch audit logs for substitution notices
   const { data: allAudits = [] } = useQuery({
-    queryKey: ['pulse_tie_audits', tournamentId],
+    queryKey: ['tie_audits', tournamentId],
     queryFn: async () => {
       return await teamService.getTieLineupAudits(tournamentId);
     },

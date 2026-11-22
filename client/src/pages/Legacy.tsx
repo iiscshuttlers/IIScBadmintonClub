@@ -17,15 +17,12 @@ import {
   Bell,
   BellOff,
   BellRing,
-  Trophy,
   Download,
   Megaphone,
   MegaphoneOff,
 } from "lucide-react";
 import { useGalleryAlerts } from "@/hooks/useGalleryAlerts";
-import { usePageMeta } from "@/hooks/usePageMeta";
 import { Button } from "@/components/ui/button";
-import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { galleryService } from "@/services/galleryService";
@@ -41,11 +38,9 @@ import { useLocation } from "wouter";
 import { fetchRemoteGalleryImages, saveRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
 import { GalleryUploader } from "@/components/admin/GalleryUploader";
 import { useQueryClient } from "@tanstack/react-query";
-import { Trash2, ListOrdered } from "lucide-react";
-import { RecordsBook } from "@/components/legacy/RecordsBook";
+import { Trash2 } from "lucide-react";
 import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
 import { TeaserOverlay } from "@/components/TeaserOverlay";
-import { PageHeader } from "@/components/ui/PageHeader";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -100,12 +95,13 @@ function LazyImage({
 
 
 
+/**
+ * The club gallery: albums, photos and videos. Rendered inside Club →
+ * Gallery (the /legacy page was retired in the nav regroup, 21 Nov 2026;
+ * Champions and Records moved to Players). Sub-tabs live in the #hash and a
+ * folder filter in ?filter=, alongside Club's own ?tab=gallery.
+ */
 export default function Legacy() {
-  usePageMeta({
-    title: "Legacy",
-    description:
-      "Honoring the history, champions, and memories of IISc Badminton Club.",
-  });
 
   const queryClient = useQueryClient();
   const { session, isAdmin, profile } = useAuth();
@@ -115,8 +111,8 @@ export default function Legacy() {
   const initialFilter = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("filter") : null;
 
   const [activeTab, setActiveTab] = useHashTab(
-    ["champions", "records", "albums", "photos", "videos"] as const,
-    initialFilter ? "albums" : "champions"
+    ["albums", "photos", "videos"] as const,
+    "albums"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
@@ -589,70 +585,7 @@ export default function Legacy() {
 
   return (
     <div className="min-h-screen font-sans">
-      {/* Standardized Hero Section (S1) */}
-      <PageHeader
-        badge="Club Legends"
-        badgeIcon={<Trophy className="w-3.5 h-3.5 text-gold" />}
-        title="Legacy"
-        subtitle="Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories."
-      >
-        <div className="flex justify-center w-full px-2">
-          <div className="grid grid-cols-3 sm:flex bg-muted/80 backdrop-blur-md p-1 rounded-2xl border border-border sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
-              <Button
-                asChild
-                variant="tab"
-                size="tab"
-                className={`w-full sm:w-auto ${
-                  activeTab === "champions"
-                    ? "bg-card text-gold shadow-md scale-100"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
-                }`}
-              >
-                <a href="#champions" onClick={() => setActiveTab("champions")}>
-                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
-                </a>
-              </Button>
-              <Button
-                asChild
-                variant="tab"
-                size="tab"
-                className={`w-full sm:w-auto ${
-                  activeTab === "records"
-                    ? "bg-card text-success shadow-md scale-100"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
-                }`}
-              >
-                <a href="#records" onClick={() => setActiveTab("records")}>
-                  <ListOrdered className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Records
-                </a>
-              </Button>
-              <Button
-                asChild
-                variant="tab"
-                size="tab"
-                className={`w-full sm:w-auto ${
-                  activeTab !== "champions" && activeTab !== "records"
-                    ? "bg-card text-info shadow-md scale-100"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 scale-95"
-                }`}
-              >
-                <a
-                  href={`#${activeTab === "champions" || activeTab === "records" ? "albums" : activeTab}`}
-                  onClick={() => {
-                    if (activeTab === "champions" || activeTab === "records") setActiveTab("albums");
-                  }}
-                >
-                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
-                </a>
-              </Button>
-            </div>
-          </div>
-      </PageHeader>
-
-      {activeTab === "champions" && <WinnersWallSection />}
-      {activeTab === "records" && <RecordsBook />}
-
-      {activeTab !== "champions" && activeTab !== "records" && (
+      {/* Albums · Photos · Videos */}
         <section className="pt-6 pb-2 bg-background/50 relative border-b border-border">
           <div className="container mx-auto px-4 flex justify-center">
             <div className="bg-card p-1.5 rounded-2xl flex gap-1 border border-border w-full sm:w-auto shadow-inner">
@@ -689,7 +622,6 @@ export default function Legacy() {
             </div>
           </div>
         </section>
-      )}
 
       {(activeTab === "albums" || activeTab === "photos") && (
       <section className="py-8 bg-background relative">

@@ -5,14 +5,23 @@ import { Switch } from "@/components/ui/switch";
 import { playerService } from "@/services/playerService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords, Images } from "lucide-react";
+import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords, ChevronDown } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { useQuery } from "@tanstack/react-query";
 import { enableWebPush } from "@/hooks/usePushNotifications";
 import { useGalleryAlerts } from "@/hooks/useGalleryAlerts";
 import { fetchRemoteGalleryImages } from "@/lib/galleryStorage";
-import { albumLabel, alertableAlbums } from "@/lib/galleryAlerts";
+import {
+  albumAlertSummary,
+  albumLabel,
+  alertableAlbums,
+  allAlbumsOn,
+  planAlbumToggle,
+  planAllOff,
+  planAllOn,
+  type AlertPlan,
+} from "@/lib/galleryAlerts";
 
 interface NotificationSettingsModalProps {
   open: boolean;
@@ -51,6 +60,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     pref_notify_serve:   profile?.pref_notify_serve   ?? true,
     pref_notify_whistle: profile?.pref_notify_whistle ?? true,
     pref_notify_victory: profile?.pref_notify_victory ?? true,
+    pref_notify_buddy_status: profile?.pref_notify_buddy_status ?? true,
   });
 
   // localStorage-backed category preferences (instant, no DB needed)
@@ -216,9 +226,12 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             )}
           </div>
 
-          {/* ── Live Alert Categories ── */}
+          {/* ── In-app pop-ups (this device only, while the app is open) ── */}
           <div className="space-y-1">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Live Alerts</h4>
+            <div className="px-1 mb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">In-app pop-ups</h4>
+              <p className="text-[11px] text-muted-foreground">Shown on this device while the app is open</p>
+            </div>
             <CategoryItem
               icon={<Trophy className="w-4 h-4 text-gold" />}
               iconBg="bg-gold/10"
@@ -253,18 +266,23 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             />
           </div>
 
-          <GalleryAlertSettings open={open} />
-
-          {/* ── Activity Preferences ── */}
+          {/* ── Push categories (saved to the account; the server checks them before sending) ── */}
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Push alerts</h4>
               {Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android' && (
                 <span className="text-[10px] text-muted-foreground italic">
                   * Customize sounds in Android Settings
                 </span>
               )}
             </div>
+            <PreferenceItem
+              title="Announcements"
+              description="Club announcements, organiser notices and live match updates"
+              checked={prefs.pref_notify_whistle}
+              onCheckedChange={() => handleTogglePref("pref_notify_whistle")}
+            />
+            <GalleryAlertRow open={open} />
             <PreferenceItem
               title="Match Confirmations"
               description="When someone confirms a match you logged"
@@ -282,6 +300,12 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
               description="Pings and requests to play"
               checked={prefs.pref_notify_serve}
               onCheckedChange={() => handleTogglePref("pref_notify_serve")}
+            />
+            <PreferenceItem
+              title="Followers"
+              description="New followers, and buddies who are looking to play"
+              checked={prefs.pref_notify_buddy_status}
+              onCheckedChange={() => handleTogglePref("pref_notify_buddy_status")}
             />
             <PreferenceItem
               title="Achievements"
@@ -323,39 +347,67 @@ function CategoryItem({
 }
 
 /**
- * New-photo alerts: one switch for the whole gallery (on by default) and a
- * switch per album. The album bells in the gallery change the same settings.
+ * New-photo alerts as one row in Push alerts: it shows how many albums are on
+ * and opens the album list, with "Turn all on/off" at the top. The album bells
+ * in the gallery change the same settings.
  */
-function GalleryAlertSettings({ open }: { open: boolean }) {
+function GalleryAlertRow({ open }: { open: boolean }) {
   const alerts = useGalleryAlerts();
+  const [expanded, setExpanded] = useState(false);
   const { data: photos = [] } = useQuery({
     queryKey: ["gallery-remote-photos"],
     queryFn: fetchRemoteGalleryImages,
     enabled: open,
   });
   const albums = alertableAlbums(photos);
+  const names = albums.map((a) => a.album);
+  const allOn = allAlbumsOn(names, alerts.state);
 
-  const run = (write: Promise<void>, failure: string) => {
-    write.catch((err) => {
+  const run = (plan: AlertPlan, failure: string) => {
+    alerts.applyPlan(plan).catch((err) => {
       console.error(err);
       toast(failure, { icon: "❌" });
     });
   };
 
   return (
-    <div className="space-y-1">
-      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Gallery</h4>
-      <CategoryItem
-        icon={<Images className="w-4 h-4 text-info" />}
-        iconBg="bg-info/10"
-        title="New gallery photos"
-        description="When photos are added to an album, including new albums"
-        checked={alerts.enabled}
-        onCheckedChange={() => run(alerts.setEnabled(!alerts.enabled), "Failed to update preference")}
-      />
-      {alerts.enabled && albums.length > 0 && (
-        <div className="ml-12 mr-1 mt-1 space-y-2 border-l border-border pl-3">
-          <p className="text-[11px] text-muted-foreground">Albums</p>
+    <div>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-controls="gallery-album-alerts"
+        className="flex w-full items-center justify-between gap-4 rounded-lg p-1 text-left hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <div className="min-w-0">
+          <h5 className="text-sm font-semibold text-foreground">Gallery photos</h5>
+          <p className="text-xs text-muted-foreground">When photos are added to an album</p>
+        </div>
+        <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted-foreground">
+          {albumAlertSummary(names, alerts.state)}
+          <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden />
+        </span>
+      </button>
+
+      {expanded && (
+        <div id="gallery-album-alerts" className="ml-1 mt-2 space-y-2 border-l border-border pl-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] text-muted-foreground">
+              {alerts.enabled ? "New albums are included" : "Off for every album, including new ones"}
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 text-xs font-bold"
+              onClick={() =>
+                run(allOn ? planAllOff(alerts.state) : planAllOn(alerts.state), "Couldn't update photo alerts")
+              }
+            >
+              {allOn ? "Turn all off" : "Turn all on"}
+            </Button>
+          </div>
+          {albums.length === 0 && <p className="text-xs text-muted-foreground">No albums yet.</p>}
           {albums.map(({ album, category }) => {
             const on = alerts.isOn(album);
             const mutedForMe = alerts.isMutedForMe(album);
@@ -369,7 +421,9 @@ function GalleryAlertSettings({ open }: { open: boolean }) {
                 </div>
                 <Switch
                   checked={on}
-                  onCheckedChange={() => run(alerts.setAlbum(album, !on), `Couldn't update ${albumLabel(album)}`)}
+                  onCheckedChange={() =>
+                    run(planAlbumToggle(album, names, alerts.state), `Couldn't update ${albumLabel(album)}`)
+                  }
                   aria-label={`Alerts for ${albumLabel(album)}`}
                   className="shrink-0"
                 />
@@ -389,7 +443,7 @@ function PreferenceItem({ title, description, checked, onCheckedChange }: { titl
         <h5 className="text-sm font-semibold text-foreground">{title}</h5>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={title} className="shrink-0" />
     </div>
   );
 }

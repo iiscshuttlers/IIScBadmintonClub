@@ -184,7 +184,7 @@ export function useGlobalNotifications() {
                 description: data.message,
                 action: {
                   label: "View",
-                  onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`
+                  onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}tournaments`
                 },
                 className: "bg-muted border-info text-info shadow-lg",
               });
@@ -201,7 +201,7 @@ export function useGlobalNotifications() {
                 }).catch(console.warn);
               } else {
                 showWebNotification(matchTitle, data.message, () => {
-                  window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`;
+                  window.location.href = `${import.meta.env.BASE_URL || "/"}tournaments`;
                 });
               }
             }

@@ -13,6 +13,7 @@ import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { appPathFromUrl } from "@/lib/deepLink";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GuestGate } from "@/components/GuestGate";
 import { UmpireEngine } from "@/components/umpire/UmpireEngine";
@@ -23,6 +24,8 @@ import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import { LegacyPulseRedirect } from "./components/routing/LegacyPulseRedirect";
+import { SectionRedirect } from "./components/routing/SectionRedirect";
+import { legacyRedirectTarget, personalRedirectTarget, pulseRedirectTarget } from "./lib/sectionRedirects";
 import { useAppUpdate, AppUpdateProvider, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
@@ -45,7 +48,7 @@ import { BackToTop } from "./components/layout/BackToTop";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { RoutePersistence } from "./components/layout/RoutePersistence";
-import { useAppMode } from "./contexts/AppModeContext";
+import { PageViewTracker } from "./components/layout/PageViewTracker";
 import { AppProviders } from "./AppProviders";
 
 // NotFound is eagerly loaded (tiny, always needed as fallback)
@@ -54,20 +57,18 @@ import NotFound from "./pages/NotFound";
 // All pages lazy-loaded for optimal bundle splitting
 const Home = lazy(() => import("./pages/Home"));
 const Hub = lazy(() => import("./pages/Hub"));
-const Legacy = lazy(() => import("./pages/Legacy"));
+const Players = lazy(() => import("./pages/Players"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
 const TournamentsHub = lazy(() => import("./pages/TournamentsHub"));
 const TournamentPage = lazy(() => import("./pages/TournamentPage"));
 const VenueScoreboardPage = lazy(() => import("./pages/VenueScoreboardPage"));
 const TournamentMatchPage = lazy(() => import("./pages/TournamentMatchPage"));
 const MatchShortRedirect = lazy(() => import("./pages/TournamentMatchPage").then((m) => ({ default: m.MatchShortRedirect })));
-const Pulse = lazy(() => import("./pages/Pulse"));
 
 
 // TournamentAdmin is the dedicated fullscreen Tournament Manager
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
-const PlayerPersonalPage = lazy(() => import("./pages/PlayerPersonalPage"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage"));
@@ -91,7 +92,6 @@ const TournamentTeamHub = lazy(() => import("./pages/TournamentTeamHub"));
 const JoinTeamByLink = lazy(() => import("./pages/JoinTeamByLink"));
 const TournamentSetupChecklist = lazy(() => import("./pages/TournamentSetupChecklist"));
 
-const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const OfficiatePage = lazy(() => import("./pages/OfficiatePage"));
 
@@ -106,20 +106,11 @@ const RateTournamentPage = lazy(() => import("@/pages/RateTournamentPage"));
 const ObsOverlayScoreboard = lazy(() => import("./pages/ObsOverlayScoreboard"));
 const CameraBroadcast = lazy(() => import("./pages/CameraBroadcast"));
 
-function PersonalModeRoute({ children }: { children: React.ReactNode }) {
-  const { session, isInitializing } = useAuth();
-  const [, setLocation] = useLocation();
+/** Redirect targets for retired personal-mode URLs (stable for SectionRedirect). */
+const toSettings = () => "/settings";
+const toTrainingTab = () =>
+  personalRedirectTarget(window.location.pathname.replace(/^.*?(?=\/player\/)/, "")) ?? "/";
 
-  if (isInitializing) return <PageSkeleton />;
-
-  if (!session) {
-    // Redirect to login
-    setLocation("/join");
-    return null;
-  }
-
-  return <>{children}</>;
-}
 
 function AppRoutes() {
   const [location] = useLocation();
@@ -138,13 +129,17 @@ function AppRoutes() {
           >
             <Switch>
               <Route path="/" component={Home} />
+          {/* Pulse and Legacy were retired in the nav regroup (Home · Tournaments · Players · Club).
+              Old links still land: see lib/sectionRedirects. Tournament-scoped Pulse links first. */}
           <Route path="/pulse">
             <LegacyPulseRedirect>
-              <GuestGate feature="Pulse">
-                <Pulse />
-              </GuestGate>
+              <SectionRedirect to={pulseRedirectTarget} />
             </LegacyPulseRedirect>
           </Route>
+          <Route path="/legacy">
+            <SectionRedirect to={legacyRedirectTarget} />
+          </Route>
+          <Route path="/players" component={Players} />
           
           <Route path="/tv" component={TvScoreboardIndex} />
           <Route path="/tv/draw/:tournamentId?" component={TvDrawReveal} />
@@ -159,16 +154,12 @@ function AppRoutes() {
           </Route>
           <Route path="/tv/:matchId" component={TvScoreboard} />
 
-          <Route path="/club">
-            <GuestGate feature="Club">
-              <Hub />
-            </GuestGate>
-          </Route>
+          {/* Club gates its own tabs: About and Gallery are public, the rest members-only. */}
+          <Route path="/club" component={Hub} />
           {/* Back-compat: old /hub links (push notifications, bookmarks) → /club, preserving tab/hash */}
           <Route path="/hub" component={() => { window.location.replace(`${import.meta.env.BASE_URL}club${window.location.search}${window.location.hash}`); return null; }} />
-          <Route path="/legacy" component={Legacy} />
-          <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#champions`; return null; }} />
-          <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
+          <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}players?tab=champions`; return null; }} />
+          <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=gallery#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/tournaments" component={TournamentsHub} />
           {/* WP5 canonical routes — docs/decisions/wp5-canonical-routes.md */}
@@ -208,12 +199,9 @@ function AppRoutes() {
               </ErrorBoundary>
             </GuestGate>
           </Route>
+          {/* Personal Space folded into the profile's Training tab (lib/sectionRedirects). */}
           <Route path="/player/:id/personal/*?">
-            <Suspense fallback={<PageSkeleton />}>
-              <ProtectedRoute>
-                <PlayerPersonalPage />
-              </ProtectedRoute>
-            </Suspense>
+            <SectionRedirect to={toTrainingTab} />
           </Route>
           <Route path="/h2h">
             <GuestGate feature="Head-to-head">
@@ -237,12 +225,12 @@ function AppRoutes() {
             </GuestGate>
           </Route>
           {/* Keep legacy exchange/marketplace for redirects if needed */}
-          <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
-          <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange`; return null; }} />
-          <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=exchange&sub=lost-found`; return null; }} />
+          <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=market&sub=buy-sell`; return null; }} />
+          <Route path="/exchange" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=market&sub=buy-sell`; return null; }} />
+          <Route path="/find-lost" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=market&sub=lost-found`; return null; }} />
           <Route path="/umpire" component={OfficiatePage} />
           <Route path="/officiate" component={OfficiatePage} />
-          <Route path="/feed/announcements" component={() => { window.location.href=`${import.meta.env.BASE_URL}pulse#announcements`; return null; }} />
+          <Route path="/feed/announcements" component={() => { window.location.href=`${import.meta.env.BASE_URL}club?tab=news`; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/glossary" component={Glossary} />
@@ -282,10 +270,9 @@ function AppRoutes() {
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
-          {/* Personal Mode (kept as a distinct product). `/personal` is the account page. */}
-          <Route path="/personal"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
-          {/* Deduped aliases — canonical: /personal (account) and /player/:id (profile). */}
-          <Route path="/personal/me" component={() => { window.location.replace(`${import.meta.env.BASE_URL}personal`); return null; }} />
+          {/* The old /personal account page duplicated Settings; its links land there. */}
+          <Route path="/personal"><SectionRedirect to={toSettings} /></Route>
+          <Route path="/personal/me"><SectionRedirect to={toSettings} /></Route>
           <Route path="/personal/player/:id" component={({ params }: { params: { id: string } }) => {
             window.location.replace(`${import.meta.env.BASE_URL}player/${encodeURIComponent(params.id)}`);
             return null;
@@ -442,7 +429,6 @@ function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate, skipUpdate } = useAppUpdate();
   const { session } = useAuth();
   const [location, setLocation] = useLocation();
-  const { mode } = useAppMode();
 
   useInactivityLogout();
   useNativeBackButton();
@@ -451,73 +437,25 @@ function AppContent() {
   useOverflowGuard();
   useTopTenAlert();
 
-  // Handle deep links from QR codes and NFC scans
+  // Open the exact page behind a shared link (Android App Links), QR code,
+  // NFC tag or the Quick Settings tile. Capacitor also re-delivers the launch
+  // URL through appUrlOpen on a cold start, so one listener covers both.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const handleDeepLink = (event: any) => {
-      const url = event.url;
-      if (url) {
-        try {
-          // Handle iiscshuttlers:// scheme
-          if (url.startsWith("iiscshuttlers://")) {
-            const path = url.slice("iiscshuttlers://".length);
-            
-            // CRITICAL: Feed auth tokens to Supabase before routing
-            if (url.includes('#access_token=') || url.includes('?code=')) {
-              if (url.includes('#')) {
-                const hashPart = url.substring(url.indexOf('#'));
-                // Sanitize: Allow only valid URI characters for Supabase OAuth hash
-                if (/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/.test(hashPart)) {
-                  window.location.hash = hashPart;
-                  // Supabase is statically imported, just call getSession to process the hash synchronously
-                  supabase.auth.getSession();
-                }
-              }
-            }
-            
-            // Preserve the full path including query params and hash, strictly sanitized
-            const safePath = path.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
-            
-            // If the redirect was specifically to our login-callback, 
-            // redirect to the home page instead since the router doesn't have a /login-callback route
-            if (safePath.startsWith("login-callback")) {
-              setLocation("/");
-            } else {
-              setLocation("/" + safePath);
-            }
-            return;
-          }
-          // Handle https URLs
-          if (url.includes("iiscbadmintonclub.github.io")) {
-            // CRITICAL: Feed auth tokens to Supabase before routing
-            if (url.includes('#access_token=') || url.includes('?code=')) {
-              if (url.includes('#')) {
-                const hashPart = url.substring(url.indexOf('#'));
-                if (/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/.test(hashPart)) {
-                  window.location.hash = hashPart;
-                  supabase.auth.getSession();
-                }
-              }
-            }
+    const handleDeepLink = (event: { url?: string }) => {
+      const url = event?.url;
+      if (!url) return;
+      const path = appPathFromUrl(url);
+      if (!path) return;
 
-            const parsed = new URL(url);
-            // Extract everything after /iiscshuttlers, preserving query + hash
-            const pathAfterBase = parsed.pathname.replace(/^\/iiscshuttlers\/?/, "") || "/";
-            const fullPath = pathAfterBase + parsed.search + parsed.hash;
-            const safeFullPath = fullPath.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
-            
-            if (safeFullPath.startsWith("login-callback") || safeFullPath.startsWith("/login-callback")) {
-              setLocation("/");
-            } else {
-              setLocation(safeFullPath.startsWith("/") ? safeFullPath : "/" + safeFullPath);
-            }
-          }
-        } catch {
-          // Fallback for malformed URLs
-          setLocation("/");
-        }
+      // CRITICAL: Feed OAuth tokens to Supabase before routing
+      if (url.includes("#access_token=") && /^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/.test(url.slice(url.indexOf("#")))) {
+        window.location.hash = url.slice(url.indexOf("#"));
+        supabase.auth.getSession();
       }
+
+      setLocation(path);
     };
 
     let listenerHandle: { remove: () => void } | null = null;
@@ -543,10 +481,11 @@ function AppContent() {
             >
               <ScrollToTop />
               <RoutePersistence />
+              <PageViewTracker />
               <GlobalAuthGuard />
               {!location.startsWith("/tv") && <OnboardingTour />}
               <ScrollProgress />
-              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${location.startsWith("/tv") ? "" : "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0"} ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
+              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${location.startsWith("/tv") ? "" : "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0"}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
@@ -558,7 +497,7 @@ function AppContent() {
                 {!location.startsWith("/tv") && <PwaInstallPrompt />}
                 {!location.startsWith("/tv") && <Navigation />}
                 {!location.startsWith("/tv") && <StatusBanner />}
-                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : /^\/player\/[^/]+\/personal/.test(location) ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
+                <main id="main-content" className="flex-1 flex flex-col">
                   <AppRoutes />
                 </main>
                 {!location.startsWith("/tv") && <Footer />}

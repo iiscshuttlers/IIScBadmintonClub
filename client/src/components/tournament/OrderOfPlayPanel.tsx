@@ -692,7 +692,7 @@ export function OrderOfPlayPanel({ tournament }: { tournament: OrderOfPlayProps 
                 <p className="text-xs text-muted-foreground">No matches assigned to a court yet.</p>
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {byCourt.map(([court, list]) => (
                   <div key={court} className="space-y-2">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-black">

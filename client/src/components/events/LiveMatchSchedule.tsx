@@ -15,8 +15,10 @@ import { fetchTournamentContacts, fetchTournamentOfficialsWithContacts } from "@
 import {
   fetchTournamentById,
   fetchTournamentMatches,
+  getTournamentContactsMode,
   getUserTournamentRoles,
 } from "@/services/tournamentService";
+import { isTournamentFinished, type ContactsMode } from "@/lib/tournamentContacts";
 
 interface ScheduledMatch {
   id: string;
@@ -65,7 +67,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const { profile, isAdmin } = useAuth();
   const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
   const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
-  const [contactsEnabled, setContactsEnabled] = useState(false);
+  const [contactsMode, setContactsMode] = useState<ContactsMode>("officials");
   const [contactMap, setContactMap] = useState<Record<string, ContactInfo>>({});
   const [officials, setOfficials] = useState<ContactInfo[]>([]);
   const [expandedContacts, setExpandedContacts] = useState<Record<string, boolean>>({});
@@ -73,6 +75,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   const [showAllContacts, setShowAllContacts] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
   const [tournamentOver, setTournamentOver] = useState(false);
+  // No contact buttons or panels once the tournament ends or contacts are hidden.
+  const contactsOff = tournamentOver || contactsMode === "hidden";
   const [myRoles, setMyRoles] = useState<Set<string>>(new Set());
   const [seeds, setSeeds] = useState<SeedIndex>(() => new Map());
 
@@ -150,10 +154,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
   useEffect(() => {
     if (!tournamentId) return;
     fetchTournamentById(tournamentId).then((data) => {
-      if (data?.status === "COMPLETED" || data?.status === "ARCHIVED") {
-        setTournamentOver(true);
-        feedService.deleteTournamentContacts(tournamentId).catch(() => {});
-      }
+      // The server also refuses contacts for finished tournaments.
+      if (isTournamentFinished(data?.status)) setTournamentOver(true);
     }).catch((err) => {
       console.error("Failed to fetch tournament status:", err);
     });
@@ -164,10 +166,8 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
     if (!tournamentId || !profile?.id) return;
     (async () => {
       try {
-        // Check if contacts are enabled for this tournament
-        const sd = await feedService.getTournamentContacts(tournamentId);
-        const enabled = sd === true || (sd as any)?.enabled === true;
-        setContactsEnabled(enabled);
+        // Who may see contacts in this tournament (the server enforces it too)
+        setContactsMode(await getTournamentContactsMode(tournamentId));
 
         // Load my roles for this tournament
         const roles = await getUserTournamentRoles(tournamentId, profile.id);
@@ -418,7 +418,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                           {/* Contact buttons */}
                           {(() => {
                             const isOfficial = myRoles.size > 0;
-                            const canSeeContacts = isAdmin || isOfficial || (contactsEnabled && isMyMatch);
+                            const canSeeContacts = !contactsOff && (isAdmin || isOfficial || (contactsMode === "everyone" && isMyMatch));
                             if (!canSeeContacts || isCompleted) return null;
                             const matchPlayerIds = [m.player1_id, m.player2_id, m.player3_id, m.player4_id].filter(Boolean) as string[];
                             const opponentIds = isMyMatch && !isOfficial
@@ -498,9 +498,11 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
                                 myPick={picks[m.id]}
                                 profileId={profile?.id}
                                 onPick={(team) => handlePick(m.id, team)}
-                                isResultsRevealed={isLive || !!revealedMatchIds[m.id]}
+                                // Revealed once play starts, and stays revealed after the match ends.
+                                isResultsRevealed={isLive || isCompleted || !!revealedMatchIds[m.id]}
                                 isAdmin={isAdmin}
-                                onToggleRevealResults={() => handleToggleReveal(m.id)}
+                                // Finished matches always show results, so there is nothing to toggle.
+                                onToggleRevealResults={isCompleted ? undefined : () => handleToggleReveal(m.id)}
                               />
                             </div>
                           )}
@@ -555,7 +557,7 @@ export function LiveMatchSchedule({ tournamentId, playerName }: { tournamentId: 
         </div>
       </div>
 
-      {(isAdmin || myRoles.size > 0) && !tournamentOver && (() => {
+      {(isAdmin || myRoles.size > 0) && !contactsOff && (() => {
         const q = contactSearch.toLowerCase();
         const filteredOfficials = q ? officials.filter(o => o.name.toLowerCase().includes(q) || o.contact_number?.includes(q)) : officials;
         const allPlayers = Object.values(contactMap);

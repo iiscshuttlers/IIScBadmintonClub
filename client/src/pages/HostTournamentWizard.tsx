@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useLocation, Link } from 'wouter';
+import { useLocation } from 'wouter';
 import { UploadCloud, CheckCircle2, ChevronRight, ChevronLeft, Download, Eye, ArrowLeft, Loader2, Star, Circle, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { tournamentService, playerService } from '@/services';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useHistoryStep } from '@/hooks/useHistoryStep';
+import { BackButton } from '@/components/ui/BackButton';
 import { tournamentManagePath } from '@/lib/tournamentRoutes';
 import { toast } from 'sonner';
 import { TeamFormatConfigPanel, RubberConfig } from '@/components/admin/TeamFormatConfigPanel';
@@ -91,7 +93,13 @@ export default function HostTournamentWizard() {
     return saved ? JSON.parse(saved) : defaultValue;
   };
 
-  const [step, setStep] = useState(() => loadState('step', 1));
+  // Each step is a history entry, so the phone's Back key, the browser's Back
+  // and both on-screen Back controls all return to the previous step.
+  const { value: step, go: goToStep, back: stepBack } = useHistoryStep<number>(
+    'hostWizardStep',
+    () => loadState('step', 1),
+    (s) => (s > 1 ? s - 1 : undefined),
+  );
   const [name, setName] = useState(() => loadState('name', ''));
   const [location, setLocation] = useState(() => loadState('location', ''));
   const [startDate, setStartDate] = useState(() => loadState('startDate', ''));
@@ -254,7 +262,7 @@ export default function HostTournamentWizard() {
     if (step === 4) {
       handlePublish();
     } else {
-      setStep(Math.min(4, step + 1));
+      goToStep(Math.min(4, step + 1));
     }
   };
 
@@ -441,11 +449,14 @@ export default function HostTournamentWizard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card shrink-0 sticky top-0 z-10 shadow-sm">
-        <Link href="/host-tournament">
-          <button className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors" aria-label="Back">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </Link>
+        <BackButton
+          parent="/host-tournament"
+          onBeforeLeave={stepBack}
+          aria-label="Back"
+          className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </BackButton>
         <div className="min-w-0">
           <h1 className="text-sm font-black text-foreground truncate">Host a tournament</h1>
           <p className="text-xs text-muted-foreground truncate">Native Wizard</p>
@@ -658,7 +669,7 @@ export default function HostTournamentWizard() {
                       onClick={() => {
                         setFile(null);
                         setParsedTeams(0);
-                        setStep(4);
+                        goToStep(4);
                       }}
                       className="px-5 py-3 rounded-xl font-bold text-muted-foreground hover:text-soft transition-colors text-sm"
                     >
@@ -764,7 +775,7 @@ export default function HostTournamentWizard() {
               <Button 
                 type="button"
                 variant="ghost"
-                onClick={() => setStep(step - 1)}
+                onClick={() => stepBack()}
                 className="gap-2 px-5 py-2.5 font-bold"
               >
                 <ChevronLeft className="w-5 h-5" /> Back

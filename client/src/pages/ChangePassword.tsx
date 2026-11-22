@@ -60,7 +60,6 @@ export default function ChangePassword() {
           <PageHeader
             variant="card"
             backTo="/settings"
-            backLabel="Back to settings"
             badge="Security"
             badgeIcon={<Lock className="w-3.5 h-3.5" />}
             title="Change Password"

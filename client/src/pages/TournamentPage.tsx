@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from "react";
 import { Link, useLocation, useRoute, useSearch } from "wouter";
 import { ArrowLeft, Loader2, RefreshCw, SearchX, WifiOff } from "lucide-react";
-import { LiveTab } from "@/components/pulse/LiveTab";
+import { LiveTab } from "@/components/tournament/LiveTab";
 import { TournamentWinnersPanel } from "@/components/tournament/TournamentWinnersPanel";
 import { TournamentStoryPanel } from "@/components/tournament/TournamentStoryPanel";
 import { FollowTournamentButton } from "@/components/tournament/FollowTournamentButton";
+import { BackButton } from "@/components/ui/BackButton";
 import { useTournamentRoute } from "@/hooks/queries/useTournamentRoute";
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -131,12 +132,18 @@ export default function TournamentPage() {
   return (
     <div className="min-h-screen bg-background pb-10">
       <div className="container mx-auto px-4 max-w-3xl pt-5 flex items-center justify-between gap-4">
-        <Link
-          href="/tournaments"
-          className="inline-flex items-center gap-1.5 text-sm font-black text-soft hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" aria-hidden /> All tournaments
-        </Link>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 min-w-0 text-sm font-black">
+          <BackButton
+            parent="/tournaments"
+            className="inline-flex items-center gap-1.5 shrink-0 text-soft hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" aria-hidden /> Back
+          </BackButton>
+          <span aria-hidden className="text-muted-foreground">·</span>
+          <Link href="/tournaments" className="truncate text-muted-foreground hover:text-primary transition-colors">
+            All tournaments
+          </Link>
+        </nav>
         <FollowTournamentButton tournamentId={id} tournamentName={tournament.name} />
       </div>
       <LiveTab

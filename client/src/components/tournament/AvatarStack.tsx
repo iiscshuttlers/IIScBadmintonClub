@@ -33,6 +33,8 @@ export function AvatarStack({
   if (totalCount <= 0) return null;
 
   const sizeCls = size === "xs" ? "w-5 h-5 text-[10px]" : "w-6 h-6 text-xs";
+  // The "+N" badge grows into a pill so three-digit counts stay inside it.
+  const pillCls = size === "xs" ? "h-5 min-w-5 px-1 text-[10px]" : "h-6 min-w-6 px-1.5 text-xs";
   const visibleAvatars = avatars.slice(0, maxVisible);
   const remainder = Math.max(0, totalCount - visibleAvatars.length);
 
@@ -64,7 +66,7 @@ export function AvatarStack({
         {/* Remainder badge when participants exceed visible avatars */}
         {remainder > 0 && (
           <div
-            className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-muted-strong text-soft font-black shadow-xs shrink-0 select-none ${sizeCls}`}
+            className={`relative inline-flex items-center justify-center rounded-full ring-1.5 ring-card bg-muted-strong text-soft font-black shadow-xs shrink-0 select-none tabular-nums ${pillCls}`}
             title={`+${remainder} more entered`}
             aria-label={`Plus ${remainder} more participants`}
           >

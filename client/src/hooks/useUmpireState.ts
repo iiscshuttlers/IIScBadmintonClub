@@ -808,7 +808,7 @@ export function useUmpireState({
                     title: "🏆 Tournament Match Result",
                     message: notifMsg,
                     type: "match_result",
-                    link: "/pulse",
+                    link: "/tournaments",
                     is_read: false,
                   }));
                   const { error: notifErr } = await supabase.from("notifications").insert(rows);

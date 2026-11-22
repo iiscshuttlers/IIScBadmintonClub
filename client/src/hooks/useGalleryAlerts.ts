@@ -11,6 +11,7 @@ import {
   readLegacyAlbumChoices,
   type AlbumAlertState,
   type AlbumOverride,
+  type AlertPlan,
 } from "@/lib/galleryAlerts";
 
 type Settings = { enabled: boolean; overrides: AlbumOverride[] };
@@ -106,6 +107,36 @@ export function useGalleryAlerts() {
     [patchSettings, userId],
   );
 
+  /**
+   * Several changes at once (lib/galleryAlerts plan*). Album choices are written
+   * before the gallery switch turns on, so no upload in between alerts albums
+   * the member meant to leave off. A failed write re-reads the saved settings,
+   * since earlier writes in the plan may have landed.
+   */
+  const applyPlan = useCallback(
+    async (plan: AlertPlan) => {
+      if (!userId) throw new Error("Sign in to change photo alerts");
+      const key = settingsKey(userId);
+      const prev = queryClient.getQueryData<Settings>(key) ?? { enabled: true, overrides: [] };
+      const touched = new Set([...plan.clear, ...plan.set.map((c) => c.album)]);
+      queryClient.setQueryData<Settings>(key, {
+        enabled: plan.enable ?? prev.enabled,
+        overrides: [...prev.overrides.filter((o) => !touched.has(o.album)), ...plan.set],
+      });
+      try {
+        if (plan.enable === false) await galleryService.setAlertsEnabled(userId, false);
+        await galleryService.clearAlbumAlerts(userId, plan.clear);
+        await galleryService.setAlbumAlerts(userId, plan.set);
+        if (plan.enable === true) await galleryService.setAlertsEnabled(userId, true);
+      } catch (err) {
+        queryClient.setQueryData<Settings>(key, prev);
+        void queryClient.invalidateQueries({ queryKey: key });
+        throw err;
+      }
+    },
+    [queryClient, userId],
+  );
+
   /** Admin: mute (or unmute) an album for everyone. */
   const setMutedForEveryone = useCallback(
     async (album: string, mute: boolean) => {
@@ -126,11 +157,13 @@ export function useGalleryAlerts() {
     signedIn: !!userId,
     loading: mutedQuery.isLoading || (!!userId && settingsQuery.isLoading),
     enabled,
+    state,
     isOn: (album: string) => albumAlertOn(album, state),
     isMutedForEveryone: (album: string) => muted.includes(album),
     isMutedForMe: (album: string) => albumMutedByAdmin(album, state),
     setEnabled,
     setAlbum,
+    applyPlan,
     setMutedForEveryone,
   };
 }

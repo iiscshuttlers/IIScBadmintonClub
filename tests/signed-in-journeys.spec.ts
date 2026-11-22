@@ -406,6 +406,76 @@ test("tournament match back preserves filters and scroll context", async ({ page
   expectNoPrivatePlayerReads(seen);
 });
 
+test("match Back control returns to the previous screen, or up when opened directly", async ({ page }) => {
+  const filteredRoute = `/tournaments/${TOURNAMENT}/schedule?cat=XD&court=2&date=2026-11-15&status=upcoming`;
+  const match = {
+    id: "00000000-0000-4000-8000-000000000501",
+    tournament_id: TOURNAMENT,
+    category: "XD",
+    match_code: "XD_R1_01",
+    round: 1,
+    round_name: "Round 1",
+    match_number: 1,
+    team1_label: "Asha Rao & Partner",
+    team2_label: "Bina Iyer & Rival",
+    player1_id: MEMBER,
+    player2_id: RIVAL,
+    player3_id: null,
+    player4_id: null,
+    court_number: "2",
+    status: "scheduled",
+    score: null,
+    sets_history: null,
+    scheduled_at: "2026-11-15T08:00:00Z",
+    started_at: null,
+    ended_at: null,
+    winner_side: null,
+    advances_to_match: null,
+    rubber_label: null,
+    tie_id: null,
+    points_to_win: 21,
+  };
+  await installApi(page, MEMBER, {
+    tournaments: () => [{
+      id: TOURNAMENT,
+      name: "Spectrum Open",
+      status: "active",
+      format_family: "INDIVIDUAL",
+      categories: ["XD"],
+      start_date: "2026-11-14",
+      end_date: "2026-11-16",
+      show_participants: true,
+    }],
+    tournament_matches: (url) => (url.searchParams.get("id") ? match : [match]),
+    tournament_participants: () => [],
+  });
+  const matchRoute = `/tournaments/${TOURNAMENT}/matches/${match.id}`;
+  const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb" });
+  const backControl = breadcrumb.getByRole("link", { name: "Back" });
+  const atFilteredRoute = new RegExp(`${filteredRoute.replace(/[?]/g, "\\?")}$`);
+
+  // From the filtered schedule into a match and Back again: history, not a push.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(filteredRoute);
+  await page.locator("summary").filter({ hasText: "Sunday, 15 November" }).click();
+  await page.locator(`a[href="${matchRoute}"]`).first().click();
+  await expect(page).toHaveURL(new RegExp(`${matchRoute}$`));
+  const lengthOnMatch = await page.evaluate(() => history.length);
+  await backControl.click();
+  await expect(page).toHaveURL(atFilteredRoute);
+  expect(await page.evaluate(() => history.length)).toBe(lengthOnMatch);
+  await expect(breadcrumb.getByRole("link", { name: "All tournaments" })).toBeVisible();
+
+  // Opened straight on the match (a shared link): Back goes up to the last
+  // tournament view, replacing the entry instead of leaving the site.
+  await page.goto(matchRoute);
+  await expect(backControl).toHaveAttribute("href", filteredRoute);
+  const lengthOnDirect = await page.evaluate(() => history.length);
+  await backControl.click();
+  await expect(page).toHaveURL(atFilteredRoute);
+  expect(await page.evaluate(() => history.length)).toBe(lengthOnDirect);
+});
+
 // ── Gallery photo alerts (migration 20261121150000_gallery_album_alerts) ──
 
 const GALLERY_PHOTOS = [

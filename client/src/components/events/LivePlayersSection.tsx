@@ -5,6 +5,7 @@ import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 import { toPng } from "html-to-image";
 import { themeColor } from "@/lib/themeColors";
 import { getDepartmentAcronym } from "@/data/departments";
+import { publishedSeedCount } from "@/lib/seeding";
 
 interface Participant {
   id: string;
@@ -14,6 +15,24 @@ interface Participant {
   custom_team_name?: string | null;
   player: { full_name: string | null; department: string | null } | null;
   partner: { full_name: string | null; department: string | null } | null;
+}
+
+/** The name shown on the card: a doubles pair sorts by its first player. */
+function sortName(p: Pick<Participant, "display_name" | "player">): string {
+  return (p.display_name || p.player?.full_name || "").trim();
+}
+
+/**
+ * A–Z by the shown name, ignoring case and accents ("anurag" next to
+ * "Anurag"); unnamed entries go last. Returns a new array.
+ */
+export function sortParticipantsAlphabetically<T extends Pick<Participant, "display_name" | "player">>(list: T[]): T[] {
+  return [...list].sort((a, b) => {
+    const na = sortName(a);
+    const nb = sortName(b);
+    if (!na || !nb) return na ? -1 : nb ? 1 : 0;
+    return na.localeCompare(nb, "en", { sensitivity: "base", numeric: true });
+  });
 }
 
 export function LivePlayersSection({
@@ -63,6 +82,9 @@ export function LivePlayersSection({
     try {
       const parts = participants[activeCat];
       const isDoubles = ["MD", "WD", "XD"].includes(activeCat);
+      const pdfSeeds = publishedSeedCount(parts.length);
+      // Published seeds print as "Name [1]"; the rest of the draw order stays private.
+      const seedTag = (p: Participant) => (p.seed != null && p.seed <= pdfSeeds ? ` [${p.seed}]` : "");
 
       const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({
@@ -121,7 +143,7 @@ export function LivePlayersSection({
           let p2Dept = p.partner?.department || p.custom_team_name || "EXT";
 
           pdf.text(rowStr, 40, y);
-          pdf.text(p1Name.substring(0, 25), 70, y);
+          pdf.text(`${p1Name.substring(0, 25)}${seedTag(p)}`, 70, y);
           pdf.text(p1Dept.substring(0, 15), 230, y);
           pdf.text(p2Name.substring(0, 25), 330, y);
           pdf.text(p2Dept.substring(0, 15), 490, y);
@@ -130,7 +152,7 @@ export function LivePlayersSection({
           let dept = p.player?.department || p.custom_team_name || "EXT";
 
           pdf.text(rowStr, 40, y);
-          pdf.text(name.substring(0, 45), 80, y);
+          pdf.text(`${name.substring(0, 45)}${seedTag(p)}`, 80, y);
           pdf.text(dept.substring(0, 40), 320, y);
         }
 
@@ -160,9 +182,9 @@ export function LivePlayersSection({
           grouped[p.category].push(p);
         }
 
-        // Randomize the order to hide seedings
+        // Alphabetical, so the list never reveals seedings and is easy to scan.
         for (const cat in grouped) {
-          grouped[cat].sort(() => Math.random() - 0.5);
+          grouped[cat] = sortParticipantsAlphabetically(grouped[cat]);
         }
 
         setParticipants(grouped);
@@ -217,6 +239,7 @@ export function LivePlayersSection({
   }
 
   const currentParticipants = participants[activeCat] || [];
+  const seedCount = publishedSeedCount(currentParticipants.length);
 
   return (
     <div className="space-y-6">
@@ -240,7 +263,9 @@ export function LivePlayersSection({
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-primary" />
           <p className="text-xs font-semibold text-muted-foreground">
-            Players are not listed in seeding order.
+            {seedCount > 0
+              ? `Listed A–Z. The top ${seedCount} seeds are marked.`
+              : "Listed A–Z."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -302,11 +327,13 @@ export function LivePlayersSection({
               })()}
             </div>
 
-            <div className="flex-shrink-0 relative z-10 flex flex-col items-end justify-center self-stretch ml-2">
-              <span className="text-[32px] font-black leading-none text-muted-foreground group-hover:text-primary transition-colors duration-300">
-                #{i + 1}
-              </span>
-            </div>
+            {/* Only published seeds are shown; the rest of the draw order stays private. */}
+            {p.seed != null && p.seed <= seedCount && (
+              <div className="flex-shrink-0 relative z-10 flex flex-col items-end justify-center self-stretch ml-2" title={`Seed ${p.seed}`}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Seed</span>
+                <span className="text-[28px] font-black leading-none text-primary tabular-nums">{p.seed}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "wouter";
-import { Lock, LogIn, UserPlus, Activity, Users, Swords, BarChart3, type LucideIcon } from "lucide-react";
+import { Lock, LogIn, UserPlus, Activity, Users, Swords, BarChart3, CalendarDays, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageSkeleton } from "@/components/layout/PageSkeleton";
 import { currentReturnUrl } from "@/lib/returnUrl";
+import { BackButton } from "@/components/ui/BackButton";
 
 interface GuestGateProps {
   children: ReactNode;
@@ -17,13 +18,13 @@ interface GuestGateProps {
 }
 
 const FEATURE_META: Record<string, { description: string; icon: LucideIcon }> = {
-  Pulse: {
-    description: "Live match scores, club announcements, schedule calendar, and the latest activity feed.",
+  News: {
+    description: "Club announcements, tournament updates and results as they are posted.",
     icon: Activity,
   },
-  Hub: {
-    description: "Equipment exchange, weekly challenges, lost & found, and the full player directory.",
-    icon: Users,
+  Calendar: {
+    description: "Court bookings, club sessions and tournament schedules in one calendar.",
+    icon: CalendarDays,
   },
   "Player Profile": {
     description: "Detailed player stats, match history, Elo rating progression, and head-to-head records.",
@@ -108,9 +109,9 @@ export function GuestGate({ children, feature, description, icon }: GuestGatePro
 
             {/* Back link */}
             <p className="mt-5 text-xs text-muted-foreground">
-                <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="hover:text-soft transition-colors font-semibold">
-                  ← Back to Home
-                </button>
+                <BackButton parent="/" className="hover:text-soft transition-colors font-semibold">
+                  ← Back
+                </BackButton>
             </p>
           </div>
         </div>

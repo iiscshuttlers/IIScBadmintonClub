@@ -8,7 +8,7 @@ import { adminService } from "@/services/adminService";
 import { playerService } from "@/services/playerService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
-  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, SiteConfig, FlyerItem, DynamicFlyer, AuthUser,
+  Holiday, Announcement, EventItem, Chapter, VideoItem, Player, FlyerItem, DynamicFlyer, AuthUser,
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';

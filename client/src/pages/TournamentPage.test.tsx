@@ -19,7 +19,7 @@ vi.mock("@/hooks/useArchivedTournaments", () => ({ useArchivedTournaments: () =>
 vi.mock("@/hooks/usePageMeta", () => ({ usePageMeta: () => undefined }));
 vi.mock("@/components/tournament/FollowTournamentButton", () => ({ FollowTournamentButton: () => null }));
 vi.mock("@/components/tournament/TournamentStoryPanel", () => ({ TournamentStoryPanel: () => null }));
-vi.mock("@/components/pulse/LiveTab", () => ({
+vi.mock("@/components/tournament/LiveTab", () => ({
   LiveTab: ({ route }: any) => (
     <div>
       <output data-testid="route-state">{`${route.tab}|${route.panel ?? ""}`}</output>

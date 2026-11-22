@@ -7,7 +7,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AppUpdateProvider } from "./hooks/useAppUpdate";
-import { AppModeProvider } from "./contexts/AppModeContext";
 import { RealtimeProvider } from "./providers/RealtimeProvider";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { TeamModalProvider } from "./contexts/TeamModalContext";
@@ -51,17 +50,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         <AuthProvider>
           <AppUpdateProvider>
-            <AppModeProvider>
-              <ConfirmProvider>
-                <TeamModalProvider>
-                  <PlayerModalProvider>
-                    <RealtimeProvider>
-                      {children}
-                    </RealtimeProvider>
-                  </PlayerModalProvider>
-                </TeamModalProvider>
-              </ConfirmProvider>
-            </AppModeProvider>
+            <ConfirmProvider>
+              <TeamModalProvider>
+                <PlayerModalProvider>
+                  <RealtimeProvider>
+                    {children}
+                  </RealtimeProvider>
+                </PlayerModalProvider>
+              </TeamModalProvider>
+            </ConfirmProvider>
           </AppUpdateProvider>
         </AuthProvider>
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

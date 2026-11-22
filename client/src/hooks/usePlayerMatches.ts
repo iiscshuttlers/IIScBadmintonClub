@@ -1,34 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchPlayerMatches } from '@/services/matchService';
 import type { MatchWithPlayers } from '@/types';
 
+const EMPTY: MatchWithPlayers[] = [];
+
+/**
+ * A player's tournament matches (up to 200). Cached per player, so the
+ * profile's Overview, Stats and Matches tabs share one fetch.
+ */
 export function usePlayerMatches(playerId: string | undefined) {
-  const [matches, setMatches] = useState<MatchWithPlayers[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const query = useQuery({
+    queryKey: ['player-matches', playerId],
+    queryFn: () => fetchPlayerMatches(playerId!, 200),
+    enabled: !!playerId,
+    staleTime: 30_000,
+  });
 
-  const refetch = useCallback(async () => {
-    if (!playerId) {
-      setMatches([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const allMatches = await fetchPlayerMatches(playerId, 200);
-      setMatches(allMatches);
-    } catch (err) {
-      setError(err as Error);
-      console.error('usePlayerMatches error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return { matches, loading, error, refetch };
+  return {
+    matches: query.data ?? EMPTY,
+    loading: !!playerId && query.isPending,
+    error: (query.error as Error | null) ?? null,
+    refetch: query.refetch,
+  };
 }

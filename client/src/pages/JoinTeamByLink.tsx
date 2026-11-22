@@ -54,7 +54,7 @@ export default function JoinTeamByLink() {
       if (teamInfo?.team_id) {
         navigate(`/team-hub/${teamInfo.team_id}`);
       } else {
-        navigate('/pulse');
+        navigate('/tournaments');
       }
     },
     onError: (err: any) => {
@@ -85,8 +85,8 @@ export default function JoinTeamByLink() {
           <p className="text-sm text-muted-foreground mb-6">
             {(error as any)?.message || "This invitation link is invalid, expired, or has been disabled by the team captain."}
           </p>
-          <Button onClick={() => navigate('/pulse')} className="w-full">
-            Explore Tournaments on Pulse
+          <Button onClick={() => navigate('/tournaments')} className="w-full">
+            Explore Tournaments
           </Button>
         </div>
       </div>

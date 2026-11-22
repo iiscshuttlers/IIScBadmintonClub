@@ -6,6 +6,8 @@ Uses `wouter` for routing.
 |---|---|
 | `/` | `Home` |
 | `/pulse` | `Children` |
+| `/legacy` | `Children` |
+| `/players` | `Players` |
 | `/tv` | `TvScoreboardIndex` |
 | `/tv/draw/:tournamentId?` | `TvDrawReveal` |
 | `/tv/next/:tournamentId` | `TvNextUp` |
@@ -14,9 +16,8 @@ Uses `wouter` for routing.
 | `/tv/overlay/:matchId?` | `ObsOverlayScoreboard` |
 | `/tv/camera/:matchId?` | `Children` |
 | `/tv/:matchId` | `TvScoreboard` |
-| `/club` | `Children` |
+| `/club` | `Hub` |
 | `/hub` | `() => { window.location.replace(`${import.meta.env.BASE_URL` |
-| `/legacy` | `Legacy` |
 | `/hall-of-fame` | `() => { window.location.href=`${import.meta.env.BASE_URL` |
 | `/gallery` | `() => { window.location.href=`${import.meta.env.BASE_URL` |
 | `/events/:slug` | `TournamentDetail` |
@@ -63,7 +64,7 @@ Uses `wouter` for routing.
 | `/profile/password` | `Children` |
 | `/delete-account` | `Children` |
 | `/personal` | `Children` |
-| `/personal/me` | `() => { window.location.replace(`${import.meta.env.BASE_URL` |
+| `/personal/me` | `Children` |
 | `/personal/player/:id` | `({ params ` |
 | `/test-umpire-engine` | `() => (
              <UmpireEngine 

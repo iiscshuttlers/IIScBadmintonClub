@@ -10,6 +10,12 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
+/** The rating behind a rank, under the rank number. */
+function RatingLine({ value, className = "text-muted-foreground" }: { value: number | null | undefined; className?: string }) {
+  if (value == null) return null;
+  return <span className={`mt-1 text-xs font-bold tabular-nums ${className}`}>Rating {Math.round(value)}</span>;
+}
+
 interface ProfileRankingTabProps {
   player: PlayerRow;
   authSession: any;
@@ -60,21 +66,25 @@ export function ProfileRankingTab({
           </div>
           <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80 mb-1 relative z-10">Overall Rank</span>
           <span className="text-3xl font-black relative z-10">{eloRank?.overall ? `#${eloRank.overall}` : "N/A"}</span>
+          <RatingLine value={player.elo_rating} className="text-foreground/80 relative z-10" />
         </div>
 
         <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{singlesLabel}</span>
           <span className="text-2xl font-black text-foreground">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
+          <RatingLine value={player.singles_elo} />
         </div>
 
         <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{doublesLabel}</span>
           <span className="text-2xl font-black text-foreground">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
+          <RatingLine value={player.doubles_elo} />
         </div>
 
         <div className="flex-1 min-w-[140px] bg-muted/50 rounded-2xl p-4 flex flex-col border border-border-strong/50">
           <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Mixed Rank</span>
           <span className="text-2xl font-black text-foreground">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
+          <RatingLine value={player.mixed_elo} />
         </div>
       </div>
 

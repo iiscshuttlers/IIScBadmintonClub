@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeTournamentStats } from "@/lib/tournamentStats";
+import { computeTournamentStats, isSeedUpset } from "@/lib/tournamentStats";
 import { matchFacts, trustedDurationMin } from "@/lib/matchStats";
 import type { MatchView } from "@/lib/matchView";
 
@@ -80,6 +80,23 @@ describe("computeTournamentStats", () => {
     expect(s.mostWins[0]).toMatchObject({ label: "Asha", value: 3, note: "3 of 4" });
     expect(s.seedUpsets).toHaveLength(1);
     expect(s.seedUpsets[0].title).toBe("Chitra vs Asha");
+    expect(s.seedUpsets[0]).toMatchObject({ sides: ["Chitra", "Asha"], winner: 0 });
+  });
+
+  it("only counts a loss by a top-20 seed as an upset", () => {
+    expect(isSeedUpset(null, 1)).toBe(true);
+    expect(isSeedUpset(25, 20)).toBe(true);
+    expect(isSeedUpset(3, 2)).toBe(true);
+    expect(isSeedUpset(null, 21)).toBe(false);
+    expect(isSeedUpset(35, 34)).toBe(false);
+    expect(isSeedUpset(1, 8)).toBe(false); // higher seed won
+    expect(isSeedUpset(null, null)).toBe(false);
+
+    const s = computeTournamentStats([
+      m({ a: ["Chitra", ["c"], 35], b: ["Asha", ["a"], 34] }), // deep seeds: ignored
+      m({ a: ["Divya", ["d"], null], b: ["Bala", ["b"], 18] }), // top-20 seed loses: counted
+    ]);
+    expect(s.seedUpsets.map((r) => r.title)).toEqual(["Divya vs Bala"]);
   });
 
   it("hides time records when most matches have untrustworthy timing", () => {

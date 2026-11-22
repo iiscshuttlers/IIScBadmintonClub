@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence } from "framer-motion";
 import { liveHref, useAnyTournamentLive } from "@/hooks/queries/useAnyTournamentLive";
@@ -21,7 +21,6 @@ import {
   Lock,
   Search,
   Home,
-  Activity,
   Users,
   Shield,
   Download,
@@ -33,8 +32,8 @@ import {
   BellRing,
   Calendar,
   AlertTriangle,
-  Award,
   Palette,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,28 +50,21 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
-import { useAppMode } from "@/contexts/AppModeContext";
 import { PreferencesModal } from "@/components/QuickSettings";
 import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
 import { HolidayCalendarModal } from "@/components/HolidayCalendarModal";
-import { navGet } from "@/lib/navMemory";
 
-/** Returns the best href to navigate to when tapping Pulse — restores last tab */
-const getPulseHref = () => {
-  const saved = navGet("pulse_tab");
-  if (saved && ["live", "feed", "events", "directory"].includes(saved)) {
-    return `/pulse#${saved}`;
-  }
-  return "/pulse";
-};
-
+/**
+ * Four destinations (nav regroup, 21 Nov 2026): Home · Tournaments · Players ·
+ * Club. Pulse and Legacy were folded in; their old URLs redirect
+ * (lib/sectionRedirects). The unread-news dot sits on Club (News tab).
+ */
 const CLUB_LINKS = [
-  { href: "/pulse", label: "Pulse" },
   { href: "/tournaments", label: "Tournaments" },
-  { href: "/legacy", label: "Legacy" },
+  { href: "/players", label: "Players" },
   { href: "/club", label: "Club" },
 ];
 
@@ -105,7 +97,6 @@ export default function Navigation() {
   const { theme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin, profile } = useAuth();
   const { updateInfo, openUpdateDialog } = useAppUpdate();
-  const { mode, setMode } = useAppMode();
 
   const currentLinks = CLUB_LINKS;
 
@@ -157,13 +148,10 @@ export default function Navigation() {
   const eventsLiveLabel = liveCount > 0 ? `, ${liveCount} ${liveCount === 1 ? "match" : "matches"} live` : "";
 
 
+  // Close the menu sheet on navigation. (Club → News marks announcements read
+  // and fires "announcements-read", which re-runs the unread check below.)
   useEffect(() => {
     setIsOpen(false);
-    // Mark announcements as read when user visits the pulse page
-    if (location.startsWith("/pulse")) {
-      localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
-      setHasUnreadAnnouncements(false);
-    }
   }, [location]);
 
   // Show unread dot if there are new announcements since last visit
@@ -193,6 +181,9 @@ export default function Navigation() {
     window.addEventListener("announcements-read", check);
     return () => window.removeEventListener("announcements-read", check);
   }, []);
+
+  // News is members-only, so only members get (and can clear) the unread dot.
+  const showNewsDot = hasUnreadAnnouncements && isLoggedIn;
 
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
@@ -280,31 +271,110 @@ export default function Navigation() {
               {currentLinks.map((link) => (
                 <NavLink
                   key={link.href}
-                  href={link.href === "/pulse" ? getPulseHref() : link.href === "/tournaments" ? eventsHref : link.href}
+                  href={link.href === "/tournaments" ? eventsHref : link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
                   live={link.href === "/tournaments" && liveCount > 0}
-                  ariaLabel={link.href === "/tournaments" && liveCount > 0 ? `${link.label}${eventsLiveLabel}` : undefined}
-                  badge={
-                    link.href === "/pulse"
-                      ? hasUnreadAnnouncements
-                        ? -1
+                  ariaLabel={
+                    link.href === "/tournaments" && liveCount > 0
+                      ? `${link.label}${eventsLiveLabel}`
+                      : link.href === "/club" && showNewsDot
+                        ? "Club, new announcements"
                         : undefined
-                      : undefined
                   }
+                  badge={link.href === "/club" && showNewsDot ? -1 : undefined}
                 />
               ))}
             </div>
 
+            {/* Desktop actions: search, theme (visitors), admin, alerts, account */}
+            <div className="hidden lg:flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
+                aria-label="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              {!authLoading && !isLoggedIn && (
+                <button
+                  onClick={() => setIsPreferencesOpen(true)}
+                  className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
+                  aria-label="App theme"
+                  title="App theme"
+                >
+                  <Palette className="w-4 h-4" />
+                </button>
+              )}
+              {!authLoading && (
+                isLoggedIn ? (
+                  <div className="flex items-center gap-3 ml-1 border-l border-border pl-3">
+                    {isAdmin && (
+                      <button
+                        onClick={() => setLocation("/admin")}
+                        className="p-1.5 rounded-xl text-individual hover:bg-individual/10 transition-colors"
+                        title="Site Admin"
+                        aria-label="Site Admin"
+                      >
+                        <Shield className="w-5 h-5" />
+                      </button>
+                    )}
+                    {profile && <NotificationsMenu currentUser={profile} />}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button aria-label="Account menu" className="hover:opacity-80 transition-opacity outline-none">
+                          <Avatar src={userAvatar} name={userName} size="sm" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 mt-2">
+                        {myPlayerId ? (
+                          <>
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-warning">
+                              <UserCircle className="mr-2 h-4 w-4" />
+                              <span>Public Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}#TRAINING`)} className="cursor-pointer font-bold text-primary">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>Personal Space</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-soft">
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Settings</span>
+                            </DropdownMenuItem>
+                          </>
+                        ) : null}
+                        <DropdownMenuItem onClick={() => setLocation("/host-tournament")} className="cursor-pointer font-bold text-soft">
+                          <Plus className="mr-2 h-4 w-4" />
+                          <span>Host a tournament</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsPreferencesOpen(true)} className="cursor-pointer font-bold text-soft">
+                          <Palette className="mr-2 h-4 w-4" />
+                          <span>App theme</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-danger focus:bg-danger/10">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sign Out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ) : (
+                  <div className="cursor-pointer ml-1" onClick={() => {
+                    sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
+                    setLocation("/join");
+                  }}>
+                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
+                      <LogIn className="w-3.5 h-3.5" /> Sign In
+                    </Button>
+                  </div>
+                )
+              )}
+            </div>
+
             {/* Mobile action buttons (search + profile) — always visible on mobile */}
             <div className="flex lg:hidden items-center gap-0.5 ml-auto flex-shrink-0">
-              <button
-                onClick={() => setShowHolidays(true)}
-                className="p-1.5 rounded-xl text-success bg-success/15 hover:bg-success/25 transition-colors shadow-sm border border-success/30"
-                aria-label="Holiday Calendar"
-              >
-                <Calendar className="w-4 h-4" />
-              </button>
               <button
                 onClick={() => setSearchOpen(true)}
                 className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
@@ -330,9 +400,9 @@ export default function Navigation() {
                       <button
                         onClick={() => {
                           if (myPlayerId) {
-                            setLocation(`/player/${myPlayerId}/personal`);
+                            setLocation(`/player/${myPlayerId}#TRAINING`);
                           } else {
-                            toast.info("Please set up your profile to access your Personal Space.", {
+                            toast.info("Please set up your profile to open your Training space.", {
                               action: {
                                 label: "Set Up Profile",
                                 onClick: () => setLocation("/profile/setup"),
@@ -389,100 +459,6 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
-          <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-border/60 pt-1.5">
-
-            <Link href="/host-tournament">
-              <button
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-primary bg-primary/20 hover:bg-primary/30 transition-colors shadow-sm border border-primary/20"
-                aria-label="Host Tournament"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Host
-              </button>
-            </Link>
-            <button
-              onClick={() => setShowHolidays(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-success bg-success/15 hover:bg-success/25 transition-colors shadow-sm border border-success/30"
-              aria-label="Holiday Calendar"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              Holidays
-            </button>
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsPreferencesOpen(true)}
-              className="p-1.5 rounded-xl text-soft hover:bg-muted transition-colors"
-              aria-label="App theme"
-              title="App theme"
-            >
-              <Palette className="w-4 h-4" />
-            </button>
-            {!authLoading && (
-              isLoggedIn ? (
-                <div className="flex items-center gap-3 ml-2 border-l border-border pl-3">
-                  {isAdmin && (
-                    <button
-                      onClick={() => setLocation("/admin")}
-                      className="p-1.5 rounded-xl text-individual hover:bg-individual/10 transition-colors"
-                      title="Site Admin"
-                    >
-                      <Shield className="w-5 h-5" />
-                    </button>
-                  )}
-                  {profile && <NotificationsMenu currentUser={profile} />}
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button aria-label="Account menu" className="hover:opacity-80 transition-opacity outline-none">
-                          <Avatar src={userAvatar} name={userName} size="sm" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 mt-2">
-                        {myPlayerId ? (
-                          <>
-                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-warning">
-                              <UserCircle className="mr-2 h-4 w-4" />
-                              <span>Public Profile</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
-                              <User className="mr-2 h-4 w-4" />
-                              <span>Personal Space</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer font-bold text-soft">
-                              <Settings className="mr-2 h-4 w-4" />
-                              <span>Settings</span>
-                            </DropdownMenuItem>
-                          </>
-                        ) : null}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-danger focus:bg-danger/10">
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Sign Out</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-              ) : (
-
-                <div className="cursor-pointer" onClick={() => {
-                  sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
-                  setLocation("/join");
-                }}>
-                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
-                    <LogIn className="w-3.5 h-3.5" /> Sign In
-                  </Button>
-                </div>
-              )
-            )}
-          </div>
-
         </div>
 
         </nav>
@@ -523,6 +499,16 @@ export default function Navigation() {
                   <Palette className="h-4 w-4 text-primary" /> App theme
                 </button>
 
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-3 mb-1 rounded-xl hover:bg-muted text-soft font-bold text-sm transition-colors cursor-pointer"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setShowHolidays(true);
+                  }}
+                >
+                  <Calendar className="h-4 w-4 text-success" /> Holiday calendar
+                </button>
+
                 {authLoading ? (
                   <div className="h-10 bg-muted rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
@@ -552,7 +538,7 @@ export default function Navigation() {
                           className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-muted text-primary font-bold text-sm transition-colors cursor-pointer"
                           onClick={() => {
                             setIsOpen(false);
-                            setLocation(`/player/${myPlayerId}/personal`);
+                            setLocation(`/player/${myPlayerId}#TRAINING`);
                           }}
                         >
                           <User className="h-4 w-4" /> Personal Space
@@ -596,73 +582,47 @@ export default function Navigation() {
         )}
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
-      {!new RegExp('^/player/[^/]+/personal').test(location) && (
       <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-background/95 backdrop-blur-lg border-t border-border flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_10%,transparent)] dark:shadow-[0_-4px_20px_color-mix(in_srgb,var(--scrim)_60%,transparent)]"
       >
-                <Link href="/" className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                    <LayoutDashboard strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                    <span className="text-[11px] font-semibold">Home</span>
-                  </button>
-                </Link>
-                <a href={getPulseHref()} className="flex-1 min-w-0">
-                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                    <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                    <span className="text-[11px] font-semibold">Pulse</span>
-                    {hasUnreadAnnouncements ? (
-                      <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
-                        <span className="w-2 h-2 bg-danger rounded-full border border-border" />
-                      </span>
-                    ) : null}
-                  </button>
-                </a>
-
-
-
-
-
-              <Link href={eventsHref} className="flex-1 min-w-0">
-                <button
-                  aria-label={liveCount > 0 ? `Events${eventsLiveLabel}` : undefined}
-                  className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/tournaments") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                  <span className="text-[11px] font-semibold">Events</span>
-                  {liveCount > 0 && (
-                    <span className="absolute top-0.5 left-1/2 ml-1 pointer-events-none">
-                      <LivePill />
-                    </span>
-                  )}
-                </button>
-              </Link>
-
-              <Link href="/club" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/club") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                  <span className="text-[11px] font-semibold">Club</span>
-                </button>
-              </Link>
-              
-              <Link href="/legacy" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                  <Award strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                  <span className="text-[11px] font-semibold">Legacy</span>
-                </button>
-              </Link>
+              <BottomTab href="/" label="Home" icon={LayoutDashboard} active={isActive("/")} />
+              <BottomTab
+                href={eventsHref}
+                label="Tournaments"
+                icon={Trophy}
+                active={isActive("/tournaments")}
+                ariaLabel={liveCount > 0 ? `Tournaments${eventsLiveLabel}` : undefined}
+                marker={liveCount > 0 ? (
+                  <span className="absolute top-0.5 left-1/2 ml-1 pointer-events-none">
+                    <LivePill />
+                  </span>
+                ) : null}
+              />
+              <BottomTab href="/players" label="Players" icon={Users} active={isActive("/players")} />
+              <BottomTab
+                href="/club"
+                label="Club"
+                icon={Globe}
+                active={isActive("/club")}
+                ariaLabel={showNewsDot ? "Club, new announcements" : undefined}
+                marker={showNewsDot ? (
+                  <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
+                    <span className="w-2 h-2 bg-danger rounded-full border border-border" />
+                  </span>
+                ) : null}
+              />
 
             <button
               onClick={() => setIsOpen(!isOpen)}
               aria-expanded={isOpen}
               aria-label={isOpen ? "Close menu" : "Open menu"}
-              className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary" : "text-info") : "text-muted-foreground hover:text-foreground"}`}
+              className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
               {isOpen ? <X className="w-5 h-5 mb-0.5" /> : <Menu className="w-5 h-5 mb-0.5" />}
-              <span className="text-[11px] font-semibold">Menu</span>
+              <span className="text-[10px] tracking-tight min-[390px]:text-[11px] min-[390px]:tracking-normal font-semibold whitespace-nowrap">Menu</span>
             </button>
           </div>
-      )}
 
 
       {/* Global Search Modal */}
@@ -706,6 +666,36 @@ function LivePill() {
       <span className="w-1 h-1 rounded-full bg-foreground motion-safe:animate-pulse" />
       LIVE
     </span>
+  );
+}
+
+/** One bottom-bar destination (phones). A link, not a button inside a link. */
+function BottomTab({
+  href,
+  label,
+  icon: Icon,
+  active,
+  ariaLabel,
+  marker,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+  ariaLabel?: string;
+  marker?: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={ariaLabel}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+    >
+      <Icon strokeWidth={1.5} className="w-5 h-5 mb-0.5" aria-hidden />
+      <span className="text-[10px] tracking-tight min-[390px]:text-[11px] min-[390px]:tracking-normal font-semibold whitespace-nowrap">{label}</span>
+      {marker}
+    </Link>
   );
 }
 

@@ -257,7 +257,7 @@ export function TournamentReportPanel({
         {report.categories.length === 0 ? (
           <p className="text-sm text-muted-foreground">No matches yet.</p>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {report.categories.map((c) => (
               <div key={c.category} className="rounded-xl border border-border p-3">
                 <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-gold">
@@ -289,7 +289,7 @@ export function TournamentReportPanel({
               No ratings yet. Players get a "How was it?" push two hours after you mark the tournament completed.
             </p>
           ) : (
-            <div className="grid sm:grid-cols-[auto_1fr] gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-5">
               <div className="text-center">
                 <div className="text-4xl font-black tabular-nums">{feedback.average!.toFixed(1)}</div>
                 <div className="text-xs text-muted-foreground">{feedback.count} rating{feedback.count === 1 ? "" : "s"}</div>
@@ -331,7 +331,7 @@ export function TournamentReportPanel({
       )}
 
       {(report.highlights.length > 0 || report.umpires.length > 0) && (
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {report.highlights.length > 0 && (
             <div className={cardCls}>
               <h4 className="flex items-center gap-2 text-sm font-black text-foreground mb-3">

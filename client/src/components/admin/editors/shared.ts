@@ -72,20 +72,6 @@ export type AuthUser = {
   last_sign_in_at: string;
   email_confirmed_at?: string;
 };
-export type SiteConfig = {
-  stats: {
-    members: string;
-    tournaments: string;
-    courts: string;
-    trophies: string;
-  };
-  about: { history: string; mission: string };
-  elo?: {
-    kNewbie: number;
-    kExperienced: number;
-    tournamentMultiplier: number;
-  };
-};
 export type FlyerItem = { text: string; colorClass: string; };
 export type DynamicFlyer = {
   id: string;

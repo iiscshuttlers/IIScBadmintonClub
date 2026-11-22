@@ -1,6 +1,6 @@
 import { winningSide } from "@/lib/matchResult";
 import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
@@ -38,7 +38,7 @@ import { MatchCentre } from "@/components/match/MatchCentre";
 import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
 import { TournamentStatsTab } from "@/components/match/TournamentStatsTab";
 import { ChipStrip } from "@/components/match/ChipStrip";
-import { PulseMatchItem } from "@/components/pulse/PulseMatchItem";
+import { MatchListItem } from "@/components/tournament/MatchListItem";
 import {
   canonicalForLiveSubTab,
   isLiveTabOffered,
@@ -51,12 +51,12 @@ import { PollsSection } from "@/components/feed/PollsSection";
 import { LiveMatchSchedule } from "@/components/events/LiveMatchSchedule";
 import { TeamStandingsTable } from "@/components/events/TeamStandingsTable";
 import { TeamTiesSection } from "@/components/events/TeamTiesSection";
-import { TournamentDetailsTab } from "@/components/pulse/TournamentDetailsTab";
-import { MatchSection } from "@/components/pulse/MatchSection";
+import { TournamentDetailsTab } from "@/components/tournament/TournamentDetailsTab";
+import { MatchSection } from "@/components/tournament/MatchSection";
 import { LIVE_STATUSES, disciplineOf } from "@/lib/matchView";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
-import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
+import { MatchReminderModal } from "@/components/tournament/MatchReminderModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { OrganizerDashboard } from "@/components/events/OrganizerDashboard";
 import { LayoutDashboard, BarChart3 } from "lucide-react";
@@ -92,17 +92,6 @@ export interface LiveTabRoute {
 export interface LiveTabProps {
   embedded?: boolean;
   route?: LiveTabRoute;
-}
-
-/** Horizontal row that keeps the current item (aria-current="page") scrolled into view. */
-function ScrollRow({ activeKey, className, children, ...rest }: { activeKey: string; className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const row = ref.current;
-    const el = row?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (row && el) row.scrollTo({ left: el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
-  }, [activeKey]);
-  return <div ref={ref} className={`relative ${className ?? ""}`} {...rest}>{children}</div>;
 }
 
 /** "12–14 Dec · Gymkhana Courts · Team event · Ranked" — one muted line instead of badges. */
@@ -206,7 +195,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
     if (route) route.navigate({ tab: status === "completed" ? "results" : "live", panel: null });
     else setQueryMatchStatus(status);
   };
-  // Canonical URLs use `cat` (shared with the Players view); Pulse keeps `m_cat`.
+  // Canonical URLs use `cat` (shared with the Players view); the query-string mode (no route) keeps `m_cat`.
   const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">(route ? "cat" : "m_cat", "ALL", true);
 
   const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
@@ -475,7 +464,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
       {/* Score strip on every tab except Live, which already leads with live cards. */}
       {route && activeTournamentId && route.tab !== "live" && <LiveScoreTicker tournamentId={activeTournamentId} />}
 
-      {/* One scrollable row: sections first, then personal views, then staff tools in one menu. */}
+      {/* Wrapping pill rows: sections first, then personal views, then staff tools in one menu. */}
       {(() => {
         const canUmpire = isUmpire || isAdmin || isLiveUmpire;
         const canOrganize = isAdmin || isUmpire || isLiveOrganizer || isLiveUmpire || activeTournament?.created_by === session?.user?.id;
@@ -526,17 +515,14 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
           staff = all.filter((t) => ["umpire", "referee", "organizer"].includes(t.key));
         }
         const pill = (active: boolean) =>
-          `shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${active
+          `inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[13px] sm:text-sm font-bold whitespace-nowrap transition-all duration-200 ${active
             ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/25"
             : "bg-muted/80 text-soft hover:bg-muted-strong hover:text-foreground"}`;
         const activeStaff = staff.find((t) => t.isActive);
-        const activeKey = [...sections, ...staff].find((t) => t.isActive)?.key ?? "";
         return (
-          <ScrollRow
-            activeKey={activeKey}
-            role="navigation"
+          <nav
             aria-label="Tournament sections"
-            className="-mx-4 px-4 flex items-center gap-2 overflow-x-auto flex-nowrap pt-1 pb-2 mb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-1 pb-2 mb-6"
           >
             {sections.map((tab) => (
               <button key={tab.key} onClick={tab.onSelect} aria-current={tab.isActive ? "page" : undefined} className={pill(tab.isActive)}>
@@ -568,7 +554,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </ScrollRow>
+          </nav>
         );
       })()}
 
@@ -824,7 +810,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
                   return (
                     <ErrorBoundary key={`eb-${match.id}`}>
-                      <PulseMatchItem
+                      <MatchListItem
                         key={match.id}
                         match={match}
                         isMatchOfTheDay={isMatchOfTheDay}

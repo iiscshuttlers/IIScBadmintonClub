@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
+import { BackButton } from "@/components/ui/BackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Ghost,
@@ -70,8 +71,8 @@ const UndoHistory = lazyNamed(() => import("@/components/admin/UndoHistory"), "U
 const RoleManagerPanel = lazyNamed(() => import("@/components/admin/RoleManagerPanel"), "RoleManagerPanel");
 const DatabaseSchemaDashboard = lazyNamed(() => import("@/components/admin/DatabaseSchemaDashboard"), "DatabaseSchemaDashboard");
 const DeliveryAuditPanel = lazyNamed(() => import("@/components/admin/DeliveryAuditPanel"), "DeliveryAuditPanel");
-// HomeBannerManager, NoticeboardManager and the content editors are now composed
-// inside ContentHub; FeatureMapDashboard + AdminAllFeaturesPanel inside FeaturesPanel.
+// The content editors (banners, posts, polls, calendar, club page) are composed
+// inside ContentHub around one shared draft; FeatureMapDashboard + AdminAllFeaturesPanel inside FeaturesPanel.
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type TabId =
@@ -108,80 +109,121 @@ interface TabMeta {
 interface TabGroup {
   title: string;
   color: string;
-  tabs: TabMeta[];
+  tabs: SectionMeta[];
 }
 
-const PINNED_STORAGE_KEY = "admin-pinned-tabs";
+/**
+ * Every panel the console can show. Panel ids are the URL hash (#elo_audit),
+ * so bookmarks and deep links from before the regroup still open the same
+ * panel. The sidebar lists SECTIONS (below), each holding one or more panels.
+ */
+const TABS: TabMeta[] = [
+  { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
+  { id: "analytics", label: "Analytics", icon: TrendingUp, description: "Engagement, retention, usage trends and top pages" },
+  { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
+  { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue" },
+  { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
+  { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
+  { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players" },
+  { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
+  { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
+  { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials" },
+  { id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" },
+  { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
+  { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
+  { id: "undo_history", label: "Undo History", icon: Undo2, description: "Browse and undo recent admin changes" },
+  { id: "recycle_bin", label: "Recycle Bin", icon: Trash2, description: "Restore recently soft-deleted records" },
+  { id: "features", label: "Live Ops", icon: Zap, description: "Live scores, notifications, public API and DB health" },
+  { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
+  { id: "delivery", label: "Delivery Audit", icon: Radio, description: "Cron-job health and notification delivery" },
+  { id: "changelog", label: "System Logs", icon: FileCode2, description: "System change logs and deploy history" },
+  { id: "database_schema", label: "Database Schema", icon: Database, master: true, description: "Inspect the live database schema" },
+];
+const PANEL_META = new Map<TabId, TabMeta>(TABS.map((t) => [t.id, t]));
 
-function loadPinnedTabs(): TabId[] {
-  try {
-    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+/** One sidebar entry: a single panel, or several behind a sub-switch. */
+type SectionId =
+  | "insights" | "inbox"
+  | "players" | "role_manager" | "guests"
+  | "tournament" | "matches" | "umpire"
+  | "content"
+  | "settings" | "history" | "developer";
+interface SectionMeta {
+  id: SectionId;
+  label: string;
+  icon: any;
+  description: string;
+  panels: TabId[];
+  /** Only master admins see this section (every panel in it is master-only). */
+  master?: boolean;
 }
 
-function savePinnedTabs(pins: TabId[]) {
-  try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch { /* intentional — localStorage quota or restricted private mode, pinned tabs are non-critical */ }
-}
-
+/** 12 sections in 5 groups (was 19 tabs in 6 groups until the 22 Nov 2026 regroup). */
 const TAB_GROUPS: TabGroup[] = [
   {
     title: "Dashboard",
     color: "text-info",
     tabs: [
-      { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
-      { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
-      { id: "analytics", label: "Analytics", icon: TrendingUp, description: "Engagement, retention and usage trends" },
-      { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue" },
+      { id: "insights", label: "Insights", icon: Activity, description: "Statistics, analytics and the ELO audit", panels: ["overview", "analytics", "elo_audit"] },
+      { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue", panels: ["inbox"] },
     ],
   },
   {
     title: "People",
     color: "text-individual",
     tabs: [
-      { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
-      { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
-      { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players" },
+      { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players", panels: ["players"] },
+      { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles", panels: ["role_manager"] },
+      { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players", panels: ["guests"] },
     ],
   },
   {
     title: "Competition",
     color: "text-warning",
     tabs: [
-      { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
-      { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
-      { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials" },
+      { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets", panels: ["tournament"] },
+      { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records", panels: ["matches"] },
+      { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials", panels: ["umpire"] },
     ],
   },
   {
     title: "Content",
     color: "text-individual",
-    tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" }],
+    tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media", panels: ["content"] }],
   },
   {
     title: "System",
     color: "text-success",
     tabs: [
-      { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
-      { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
-      { id: "undo_history", label: "Undo History", icon: Undo2, description: "Browse and undo recent admin changes" },
-      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2, description: "Restore recently soft-deleted records" },
-      { id: "changelog", label: "System Logs", icon: FileCode2, description: "System change logs and deploy history" },
-    ],
-  },
-  {
-    title: "Developer",
-    color: "text-secondary",
-    tabs: [
-      { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
-      { id: "features", label: "Live Ops", icon: Zap, description: "Toggle live feature flags in real time" },
-      { id: "delivery", label: "Delivery Audit", icon: Radio, description: "Cron-job health and notification delivery" },
-      { id: "database_schema", label: "Database Schema", icon: Database, master: true, description: "Inspect the live database schema" },
+      { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags", panels: ["settings"] },
+      { id: "history", label: "History", icon: ClipboardList, description: "Activity log, undo history and the recycle bin", panels: ["activity_log", "undo_history", "recycle_bin"] },
+      { id: "developer", label: "Developer", icon: Zap, description: "Live ops, feature flags, delivery, logs and schema", panels: ["features", "features_catalog", "delivery", "changelog", "database_schema"] },
     ],
   },
 ];
 
-const TABS: TabMeta[] = TAB_GROUPS.flatMap((group) => group.tabs);
+const SECTIONS: SectionMeta[] = TAB_GROUPS.flatMap((group) => group.tabs);
+const SECTION_OF = new Map<TabId, SectionId>(SECTIONS.flatMap((s) => s.panels.map((p) => [p, s.id] as const)));
+
+const PINNED_STORAGE_KEY = "admin-pinned-tabs";
+
+/** Pins hold section ids; pins saved before the regroup (panel ids) map to their section. */
+function loadPinnedTabs(): SectionId[] {
+  try {
+    const raw = localStorage.getItem(PINNED_STORAGE_KEY);
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    const out: SectionId[] = [];
+    for (const id of ids) {
+      const section = SECTIONS.some((s) => s.id === id) ? (id as SectionId) : SECTION_OF.get(id as TabId);
+      if (section && !out.includes(section)) out.push(section);
+    }
+    return out;
+  } catch { return []; }
+}
+
+function savePinnedTabs(pins: SectionId[]) {
+  try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch { /* intentional — localStorage quota or restricted private mode, pinned tabs are non-critical */ }
+}
 
 /** Old hash routes that no longer map 1:1 after the tab merges. Keeps
  *  existing bookmarks / deep-links working by redirecting to the new home. */
@@ -226,15 +268,22 @@ function AdminNav({
   getTabCount,
 }: {
   activeTab: TabId;
-  onSelect: (id: TabId) => void;
-  canSee: (t: TabMeta) => boolean;
-  getTabCount: (id: string) => number | null;
+  onSelect: (id: SectionId) => void;
+  canSee: (s: SectionMeta) => boolean;
+  getTabCount: (id: SectionId) => number | null;
 }) {
   const [query, setQuery] = useState("");
-  const [pinnedIds, setPinnedIds] = useState<TabId[]>(loadPinnedTabs);
+  const [pinnedIds, setPinnedIds] = useState<SectionId[]>(loadPinnedTabs);
   const q = query.trim().toLowerCase();
+  const activeSection = SECTION_OF.get(activeTab);
+  // Search matches a section by its own name, its group, or any panel inside it.
+  const matches = (s: SectionMeta, groupTitle: string) =>
+    !q ||
+    s.label.toLowerCase().includes(q) ||
+    groupTitle.toLowerCase().includes(q) ||
+    s.panels.some((p) => PANEL_META.get(p)?.label.toLowerCase().includes(q));
 
-  const togglePin = useCallback((id: TabId) => {
+  const togglePin = useCallback((id: SectionId) => {
     setPinnedIds((prev) => {
       const next = prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id];
       savePinnedTabs(next);
@@ -245,28 +294,21 @@ function AdminNav({
   const groups = useMemo(() => {
     return TAB_GROUPS.map((group) => ({
       ...group,
-      tabs: group.tabs.filter(
-        (t) => canSee(t) && (!q || t.label.toLowerCase().includes(q) || group.title.toLowerCase().includes(q)),
-      ),
+      tabs: group.tabs.filter((t) => canSee(t) && matches(t, group.title)),
     })).filter((g) => g.tabs.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, canSee]);
 
   const pinnedTabs = useMemo(() => {
     if (q) return [];
     return pinnedIds
-      .map((id) => TABS.find((t) => t.id === id))
-      .filter((t): t is TabMeta => !!t && canSee(t));
+      .map((id) => SECTIONS.find((s) => s.id === id))
+      .filter((s): s is SectionMeta => !!s && canSee(s));
   }, [pinnedIds, q, canSee]);
 
-  const tabGroupColor = useMemo(() => {
-    const map = new Map<TabId, string>();
-    for (const g of TAB_GROUPS) for (const t of g.tabs) map.set(t.id, g.color);
-    return map;
-  }, []);
-
-  const renderTab = (tab: TabMeta, pinned: boolean) => {
+  const renderTab = (tab: SectionMeta, pinned: boolean) => {
     const Icon = tab.icon;
-    const active = activeTab === tab.id;
+    const active = activeSection === tab.id;
     const count = getTabCount(tab.id);
     const isPinned = pinnedIds.includes(tab.id);
     return (
@@ -463,36 +505,51 @@ function SiteAdminInner() {
               Sign In
             </button>
           ) : (
-            <button
-              onClick={() => (window.history.length > 1 ? window.history.back() : setLocation("/"))}
+            <BackButton
+              parent="/"
               className="rounded-xl bg-muted px-6 py-3 font-bold text-foreground transition hover:bg-muted/80"
             >
-              Back to Home
-            </button>
+              Back
+            </BackButton>
           )}
         </div>
       </div>
     );
 
-  const getTabCount = (tabId: string) => {
-    if (tabId === "recycle_bin") return recycleBinCount > 0 ? recycleBinCount : null;
+  const getTabCount = (sectionId: SectionId) => {
+    if (sectionId === "history") return recycleBinCount > 0 ? recycleBinCount : null;
     return null;
   };
 
-  const canSee = (t: TabMeta) => {
+  const canSeePanel = (t: TabMeta | undefined) => {
+    if (!t) return false;
     if (t.master) return isMasterAdmin;
     return isAdmin || t.id === "umpire";
   };
+  const canSee = (s: SectionMeta) => s.panels.some((p) => canSeePanel(PANEL_META.get(p)));
 
-  const activeGroup = TAB_GROUPS.find((g) => g.tabs.some((t) => t.id === activeTab));
+  /** Sidebar click: stay put if already in that section, else open its first panel you can see. */
+  const handleSectionSelect = (sectionId: SectionId) => {
+    const section = SECTIONS.find((s) => s.id === sectionId);
+    if (!section) return;
+    if (section.panels.includes(activeTab)) { setDrawerOpen(false); return; }
+    const first = section.panels.find((p) => canSeePanel(PANEL_META.get(p)));
+    if (first) handleTabChange(first);
+  };
+
+  const activeSection = SECTIONS.find((s) => s.panels.includes(activeTab));
+  const activeGroup = TAB_GROUPS.find((g) => g.tabs.some((t) => t.id === activeSection?.id));
   const activeMeta = TABS.find((t) => t.id === activeTab);
+  const sectionPanels = (activeSection?.panels ?? [])
+    .map((p) => PANEL_META.get(p))
+    .filter((t): t is TabMeta => canSeePanel(t));
   const roleLabel = isMasterAdmin ? "Master Admin" : isAdmin ? "Admin" : isUmpire ? "Umpire" : "";
 
   return (
     <div className="min-h-screen bg-background">
       <div className="lg:flex">
         {/* ── Desktop sidebar ─────────────────────────────── */}
-        <aside className="sticky top-[48px] hidden h-[calc(100vh-48px)] w-72 shrink-0 border-r border-border bg-card lg:top-[88px] lg:block lg:h-[calc(100vh-88px)]">
+        <aside className="sticky top-[48px] hidden h-[calc(100vh-48px)] w-72 shrink-0 border-r border-border bg-card lg:top-[72px] lg:block lg:h-[calc(100vh-72px)]">
           <div className="flex items-center gap-2.5 border-b border-border px-5 py-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
               <Shield className="h-5 w-5" />
@@ -503,14 +560,14 @@ function SiteAdminInner() {
             </div>
           </div>
           <div className="h-[calc(100%-65px)]">
-            <AdminNav activeTab={activeTab} onSelect={handleTabChange} canSee={canSee} getTabCount={getTabCount} />
+            <AdminNav activeTab={activeTab} onSelect={handleSectionSelect} canSee={canSee} getTabCount={getTabCount} />
           </div>
         </aside>
 
         {/* ── Main column ─────────────────────────────────── */}
         <main className="min-w-0 flex-1">
           {/* Slim top bar */}
-          <header className="sticky top-[48px] z-30 border-b border-border bg-card/80 backdrop-blur-md lg:top-[88px]">
+          <header className="sticky top-[48px] z-30 border-b border-border bg-card/80 backdrop-blur-md lg:top-[72px]">
             <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
               <button
                 onClick={() => setDrawerOpen(true)}
@@ -526,7 +583,7 @@ function SiteAdminInner() {
                   {activeGroup?.title ?? "Admin"}
                 </p>
                 <h1 className="truncate text-lg font-black leading-tight text-foreground sm:text-xl">
-                  {activeMeta?.label ?? "Admin"}
+                  {sectionPanels.length > 1 ? activeSection?.label : activeMeta?.label ?? "Admin"}
                 </h1>
                 {activeMeta?.description && (
                   <p className="truncate text-[11px] text-muted-foreground">{activeMeta.description}</p>
@@ -552,6 +609,35 @@ function SiteAdminInner() {
                 </button>
               </div>
             </div>
+            {/* Panels inside a merged section (Insights, History, Developer) */}
+            {sectionPanels.length > 1 && (
+              <div role="group" aria-label={`${activeSection?.label ?? "Section"} panels`} className="flex gap-1.5 overflow-x-auto px-4 pb-3 sm:px-6">
+                {sectionPanels.map((panel) => {
+                  const Icon = panel.icon;
+                  const active = panel.id === activeTab;
+                  return (
+                    <button
+                      key={panel.id}
+                      type="button"
+                      onClick={() => handleTabChange(panel.id)}
+                      aria-pressed={active}
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden />
+                      {panel.label}
+                      {panel.id === "recycle_bin" && recycleBinCount > 0 && (
+                        <span className="rounded-full bg-background/30 px-1.5 text-[10px] font-black leading-4">{recycleBinCount}</span>
+                      )}
+                      {panel.master && <ShieldAlert className="h-3 w-3 opacity-70" aria-label="Master admin only" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </header>
 
           {/* Content */}
@@ -670,7 +756,7 @@ function SiteAdminInner() {
                 </button>
               </div>
               <div className="flex-1 overflow-hidden">
-                <AdminNav activeTab={activeTab} onSelect={handleTabChange} canSee={canSee} getTabCount={getTabCount} />
+                <AdminNav activeTab={activeTab} onSelect={handleSectionSelect} canSee={canSee} getTabCount={getTabCount} />
               </div>
             </motion.aside>
           </>

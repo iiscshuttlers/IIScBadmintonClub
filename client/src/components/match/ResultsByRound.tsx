@@ -132,7 +132,7 @@ export function ResultsByRound({
       {sections.length > 1 && (
         <nav
           aria-label="Jump to round"
-          className="sticky top-[48px] lg:top-[88px] z-20 -mx-1 px-1 py-2 bg-background/90 backdrop-blur-md"
+          className="sticky top-[48px] lg:top-[72px] z-20 -mx-1 px-1 py-2 bg-background/90 backdrop-blur-md"
         >
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {sections.map((s) => (
@@ -159,7 +159,7 @@ export function ResultsByRound({
           const id = sectionId(s);
           const multiEvent = s.events.length > 1;
           return (
-            <section key={s.stage.key} id={id} aria-labelledby={`${id}-h`} className="scroll-mt-[110px] lg:scroll-mt-[150px]">
+            <section key={s.stage.key} id={id} aria-labelledby={`${id}-h`} className="scroll-mt-[110px] lg:scroll-mt-[134px]">
               <h3 id={`${id}-h`}>
                 <button
                   type="button"
@@ -180,7 +180,7 @@ export function ResultsByRound({
                 <div id={`${id}-body`} className="mt-1 space-y-4">
                   {/* One grid per round so single-match events (Finals) sit side
                       by side; an event heading only when it has a run of cards. */}
-                  <ul className="grid gap-2.5 sm:grid-cols-2">
+                  <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {s.events.flatMap((ev) => [
                       ...(multiEvent && ev.items.length > 1
                         ? [

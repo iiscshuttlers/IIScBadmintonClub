@@ -31,8 +31,8 @@ async function fetchSeeds(tournamentId: string): Promise<SeedRow[]> {
   const { data, error } = await supabase
     .from("tournament_participants")
     .select("category, player_id, partner_id, seed")
-    .eq("tournament_id", tournamentId)
-    .not("seed", "is", null);
+    .eq("tournament_id", tournamentId);
+  // Every entry, seeded or not: entry counts decide which seeds are published.
   // Seeds are decoration: a failure must not hide matches.
   if (error) return [];
   return (data ?? []) as SeedRow[];

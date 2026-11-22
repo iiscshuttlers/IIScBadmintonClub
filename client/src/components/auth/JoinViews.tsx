@@ -237,7 +237,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
         </div>
       )}
       <div className="text-center pt-1 flex items-center justify-between">
-        <button type="button" onClick={() => { auth.setMode("welcome"); auth.reset(); }} className="text-xs text-muted-foreground hover:text-soft transition font-semibold">← Back</button>
+        <button type="button" onClick={() => { auth.modeBack(); auth.reset(); }} className="text-xs text-muted-foreground hover:text-soft transition font-semibold">← Back</button>
         <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-muted-foreground hover:text-primary transition font-semibold">Forgot password? OTP →</button>
       </div>
     </motion.form>
@@ -361,7 +361,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
         Sign up with Google
       </button>
       <div className="text-center">
-        <button type="button" onClick={() => { auth.setMode("welcome"); auth.reset(); }} className="text-xs text-muted-foreground hover:text-soft transition font-semibold">← Back</button>
+        <button type="button" onClick={() => { auth.modeBack(); auth.reset(); }} className="text-xs text-muted-foreground hover:text-soft transition font-semibold">← Back</button>
       </div>
     </motion.form>
   );
@@ -385,7 +385,7 @@ export function OtpEmailView({ auth }: { auth: JoinAuthContext }) {
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-border/20 border-t-border/80 animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
       </Button>
       <div className="text-center">
-        <button type="button" onClick={() => { auth.setMode("signin"); auth.reset(); }} className="text-xs text-muted-foreground hover:text-primary transition font-semibold">← Back to Sign In</button>
+        <button type="button" onClick={() => { auth.modeBack(); auth.reset(); }} className="text-xs text-muted-foreground hover:text-primary transition font-semibold">← Back to Sign In</button>
       </div>
     </motion.form>
   );
@@ -406,7 +406,7 @@ export function OtpVerifyView({ auth }: { auth: JoinAuthContext }) {
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-border/20 border-t-border/80 animate-spin" /> : "Verify & Log In"}
       </Button>
       <div className="text-center">
-        <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-muted-foreground hover:text-primary transition font-semibold">← Change email / resend code</button>
+        <button type="button" onClick={() => { auth.modeBack(); auth.reset(); }} className="text-xs text-muted-foreground hover:text-primary transition font-semibold">← Change email / resend code</button>
       </div>
     </motion.form>
   );

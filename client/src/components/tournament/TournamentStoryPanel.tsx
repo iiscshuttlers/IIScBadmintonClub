@@ -21,6 +21,34 @@ const TYPE_LABEL: Record<FactualStoryItem["type"], string> = {
   day_summary: "Day summary",
 };
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Story text with the names picked out, as on the scorecard: the winner bold
+ * and full colour, the runner-up softer. Works on published items too, since
+ * they keep their facts.
+ */
+function NamedText({ text, item }: { text: string; item: FactualStoryItem }) {
+  const won = item.facts.winnerLabel?.trim();
+  const lost = item.facts.runnerUpLabel?.trim();
+  const names = [won, lost].filter((n): n is string => !!n).sort((a, b) => b.length - a.length);
+  if (names.length === 0) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${names.map(escapeRe).join("|")})`, "g"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part === won ? (
+          <span key={i} className="font-black text-foreground">{part}</span>
+        ) : part === lost ? (
+          <span key={i} className="font-medium text-soft">{part}</span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 /**
  * Factual tournament story (WC-08). Public visitors see only the published
  * story, with every item re-checked against current results; admins also get
@@ -122,8 +150,8 @@ function StoryItem({ item, tournamentId }: { item: FactualStoryItem; tournamentI
         {TYPE_LABEL[item.type]}
         {item.discipline ? ` · ${item.discipline}` : ""}
       </p>
-      <p className="mt-1 font-black text-foreground break-words">{item.headline}</p>
-      <p className="mt-1 text-sm text-soft break-words">{item.body}</p>
+      <p className="mt-1 font-black text-foreground break-words"><NamedText text={item.headline} item={item} /></p>
+      <p className="mt-1 text-sm text-soft break-words"><NamedText text={item.body} item={item} /></p>
       <div className="mt-2 flex flex-wrap gap-3">
         {item.supportingMatchIds.map((matchId) => (
           <Link key={matchId} href={matchPath(tournamentId, matchId)} className="text-sm font-bold text-primary hover:underline">
@@ -230,7 +258,7 @@ function StoryEditor({
                 <label key={item.id} className="flex items-start gap-3 rounded-xl border border-border p-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4"
+                    className="mt-1 h-4 w-4 shrink-0"
                     checked={selected.has(item.id)}
                     onChange={() => toggle(item.id)}
                   />
@@ -239,8 +267,8 @@ function StoryEditor({
                       {TYPE_LABEL[item.type]}
                       {item.discipline ? ` · ${item.discipline}` : ""}
                     </span>
-                    <span className="block font-bold text-foreground break-words">{item.headline}</span>
-                    <span className="block text-sm text-soft break-words">{item.body}</span>
+                    <span className="block font-bold text-foreground break-words"><NamedText text={item.headline} item={item} /></span>
+                    <span className="block text-sm text-soft break-words"><NamedText text={item.body} item={item} /></span>
                   </span>
                 </label>
               ))}

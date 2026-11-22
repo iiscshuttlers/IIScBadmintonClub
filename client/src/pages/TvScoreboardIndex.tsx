@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { BackButton } from "@/components/ui/BackButton";
 import { useLiveSiteData } from "@/hooks/useMatches";
 import { Tv2, Activity, ShieldCheck, MonitorPlay, ArrowLeft, Camera, Shuffle } from "lucide-react";
 import type { BwfMatchState } from "@/types/umpire";
@@ -11,10 +12,10 @@ export default function TvScoreboardIndex() {
 
   return (
     <div className="min-h-screen bg-background p-6 text-soft relative">
-      <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = import.meta.env.BASE_URL} className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 bg-card hover:bg-muted text-muted-foreground hover:text-soft rounded-full transition border border-border shadow-md flex items-center gap-2 pr-4">
+      <BackButton parent="/" className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 bg-card hover:bg-muted text-muted-foreground hover:text-soft rounded-full transition border border-border shadow-md flex items-center gap-2 pr-4">
           <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-bold">Back to App</span>
-        </button>
+          <span className="text-sm font-bold">Back</span>
+        </BackButton>
       <div className="max-w-4xl mx-auto space-y-8 mt-12 sm:mt-16">
         <div className="text-center space-y-4">
           <div className="mx-auto w-20 h-20 bg-info/10 rounded-3xl flex items-center justify-center mb-6 ring-1 ring-info/20 shadow-[0_0_40px_-10px_color-mix(in_srgb,var(--info)_30%,transparent)]">
@@ -52,7 +53,7 @@ export default function TvScoreboardIndex() {
             <p className="text-muted-foreground text-lg">There are currently no matches being umpired. Once an umpire starts a match, it will appear here.</p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {activeMatches.map(([umpireId, match]) => (
               <Link key={umpireId} href={`/tv/${umpireId}`}>
                 <div className="group cursor-pointer bg-card rounded-[2rem] p-6 border border-border hover:border-info/50 transition-all duration-300 hover:shadow-[0_0_30px_-5px_color-mix(in_srgb,var(--info)_20%,transparent)] hover:-translate-y-1 overflow-hidden relative">

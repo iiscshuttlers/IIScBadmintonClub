@@ -65,6 +65,29 @@ export const galleryService = {
     if (error) throw error;
   },
 
+  /** Saves several album choices in one request. */
+  async setAlbumAlerts(userId: string, choices: AlbumOverride[]): Promise<void> {
+    if (choices.length === 0) return;
+    const updated_at = new Date().toISOString();
+    const { error } = await supabase
+      .from("gallery_album_subscriptions")
+      .upsert(choices.map((c) => ({ user_id: userId, album: c.album, subscribed: c.subscribed, updated_at })), {
+        onConflict: "user_id,album",
+      });
+    if (error) throw error;
+  },
+
+  /** Puts albums back to the default (alerts on unless muted for everyone). */
+  async clearAlbumAlerts(userId: string, albums: string[]): Promise<void> {
+    if (albums.length === 0) return;
+    const { error } = await supabase
+      .from("gallery_album_subscriptions")
+      .delete()
+      .eq("user_id", userId)
+      .in("album", albums);
+    if (error) throw error;
+  },
+
   /** Carries over choices from the old browser-only bell without overwriting newer ones. */
   async importAlbumChoices(userId: string, choices: AlbumOverride[]): Promise<void> {
     if (choices.length === 0) return;

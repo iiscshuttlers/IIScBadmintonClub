@@ -13,7 +13,7 @@ import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { EditVideoModal } from "./EditVideoModal";
 import { VideoPlayerModal } from "./VideoPlayerModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
-import { MatchReminderModal } from "../pulse/MatchReminderModal";
+import { MatchReminderModal } from "@/components/tournament/MatchReminderModal";
 import { courtLabel, matchOutcome } from "@/lib/matchView";
 import { MatchStatusBadge, MatchTimes } from "@/components/match/MatchPrimitives";
 import { matchPath } from "@/lib/tournamentRoutes";
@@ -306,8 +306,12 @@ export function MatchCard({
                 <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-muted-foreground" : "text-primary"}`}>
                   {match.status === "finished" || hasWinner ? <Trophy className="w-3 h-3 shrink-0" /> : <Swords className="w-3 h-3 shrink-0" />}
                   <span className="truncate">Tournament</span>
-                  <span className="text-muted-foreground shrink-0">•</span>
-                  <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
+                  {(match.match_code || match.match_number != null) && (
+                    <>
+                      <span className="text-muted-foreground shrink-0">•</span>
+                      <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
+                    </>
+                  )}
                 </div>
                 <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold shrink-0 ml-2 flex items-center gap-2">
                   {highlightUrl && (

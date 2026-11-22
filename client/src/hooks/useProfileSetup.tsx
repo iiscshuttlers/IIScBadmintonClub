@@ -23,9 +23,10 @@ const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
 /**
  * The profile being edited (public columns, plus private ones the viewer may
- * read). `status` is set by the availability picker on the personal page; this
- * form only reads it to derive is_looking_to_play and never writes it, so a
- * stale draft can't overwrite a newer picker choice.
+ * read). `status` (looking | playing | resting | injured, NULL = not set) has
+ * no picker in the app right now; this form only reads it to derive
+ * is_looking_to_play and never writes it, so a stale draft can't overwrite a
+ * newer choice.
  */
 type LoadedProfile = PlayerRow;
 
@@ -153,7 +154,7 @@ export function useProfileSetup() {
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
           setNickname(profile.nickname || "");
-          setStatus(profile.status || "looking");
+          setStatus(profile.status ?? null);
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
           if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {

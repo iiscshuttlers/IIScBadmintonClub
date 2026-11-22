@@ -19,6 +19,8 @@ try {
   const output = execSync(`npx depcruise client/src server --exclude "^(node_modules|dist|build)" --no-config --output-type json`, {
     encoding: 'utf-8',
     shell: true,
+    // The JSON passed Node's 1 MiB default in Nov 2026; a truncated buffer fails JSON.parse.
+    maxBuffer: 64 * 1024 * 1024,
     stdio: ['pipe', 'pipe', 'ignore'] // ignore stderr so warnings don't leak into json
   });
   fs.writeFileSync(GRAPH_JSON_PATH, output);

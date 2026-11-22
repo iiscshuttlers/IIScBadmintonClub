@@ -236,7 +236,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
         <AlertCircle className="w-12 h-12 text-danger mb-3" />
         <h2 className="text-2xl font-black text-foreground mb-2">Team Not Found</h2>
         <p className="text-muted-foreground mb-6">This team does not exist or may have been deleted.</p>
-        <Button onClick={() => navigate('/pulse')}>Back to Tournaments</Button>
+        <Button onClick={() => navigate('/tournaments')}>Back to Tournaments</Button>
       </div>
     );
   }
@@ -245,8 +245,7 @@ export default function TournamentTeamHub({ params }: { params?: { id: string } 
     <div className="min-h-screen bg-background text-foreground pb-28">
       {/* Header Banner */}
       <PageHeader
-        backTo="/pulse"
-        backLabel="Back to Tournaments"
+        backTo="/tournaments"
         badge={isCaptain ? "Captain Hub" : "Team Hub"}
         badgeIcon={<Shield className="w-3.5 h-3.5 text-primary" />}
         title={team.name}

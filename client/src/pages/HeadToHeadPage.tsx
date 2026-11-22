@@ -127,7 +127,7 @@ export default function HeadToHeadPage() {
           ))}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] items-start">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] items-start">
           <fieldset className="space-y-2">
             <legend className="text-xs font-black uppercase tracking-wider text-muted-foreground mb-1">{mode === "pairs" ? "Pair A" : "Player A"}</legend>
             {picker("a", 0)}

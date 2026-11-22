@@ -2,10 +2,12 @@ import { playerWon } from "@/lib/matchResult";
 import { useMemo } from "react";
 import { MatchCard as FeedMatchCard } from "@/components/feed/MatchCard";
 import { shareMatch } from "@/lib/shareMatch";
+import { orderProfileMatches } from "@/lib/profileMatchOrder";
 import type { PersonalMatch } from "@/hooks/usePlayerPersonal";
 import { Sigma, Swords, Users, Trophy } from "lucide-react";
 
 export type FormatTab = "All" | "Singles" | "Doubles" | "Mixed Doubles";
+const FORMAT_ORDER = ["Singles", "Doubles", "Mixed Doubles"] as const;
 
 export function PersonalMatchCardItem({ match, currentUser }: { match: any; currentUser: any }) {
   return (
@@ -17,7 +19,12 @@ export function PersonalMatchCardItem({ match, currentUser }: { match: any; curr
   );
 }
 
-export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, currentUser }: { matches: PersonalMatch[]; fullMatches: any[]; formatTab: FormatTab; setFormatTab: (tab: FormatTab) => void; currentUser: any }) {
+/**
+ * A player's matches as feed cards, with format filters and win rates.
+ * `playerId` is whose profile it is (defaults to the viewer); win rates count
+ * only decided matches, so upcoming and live ones do not drag them down.
+ */
+export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, currentUser, playerId }: { matches: PersonalMatch[]; fullMatches: any[]; formatTab: FormatTab; setFormatTab: (tab: FormatTab) => void; currentUser: any; playerId?: string }) {
 
   const getGroup = (c?: string) => {
     const cat = (c || "").toUpperCase();
@@ -27,10 +34,9 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
     return "Singles";
   };
 
-  const isWinner = (m: any) => {
-    if (typeof m.won === "boolean") return m.won;
-    return playerWon(m, currentUser?.id) === true;
-  };
+  const ownerId = playerId ?? currentUser?.id;
+  const resultOf = (m: any): boolean | null => (typeof m.won === "boolean" ? m.won : playerWon(m, ownerId));
+  const isWinner = (m: any) => resultOf(m) === true;
 
   const stats = useMemo(() => {
     const all = fullMatches;
@@ -39,9 +45,10 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
     const mixedDoubles = fullMatches.filter((m) => getGroup(m.category) === "Mixed Doubles");
 
     const calcWinRate = (arr: any[]) => {
-      if (arr.length === 0) return 0;
-      const wins = arr.filter(isWinner).length;
-      return ((wins / arr.length) * 100).toFixed(0);
+      const decided = arr.filter((m) => resultOf(m) !== null);
+      if (decided.length === 0) return 0;
+      const wins = decided.filter(isWinner).length;
+      return ((wins / decided.length) * 100).toFixed(0);
     };
 
     return {
@@ -50,15 +57,12 @@ export function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, 
       "Doubles": { count: doubles.length, winRate: calcWinRate(doubles), icon: Users, color: "green", label: "Doubles" },
       "Mixed Doubles": { count: mixedDoubles.length, winRate: calcWinRate(mixedDoubles), icon: Trophy, color: "amber", label: "Mixed" },
     };
-  }, [fullMatches, currentUser]);
+  }, [fullMatches, ownerId]);
 
+  // Grouped by format; within a format live, upcoming, then finished (latest first).
   const filtered = useMemo(() => {
-    return fullMatches.filter((m) => {
-      // Format filter
-      if (formatTab !== "All" && getGroup(m.category) !== formatTab) return false;
-
-      return true;
-    });
+    const inTab = fullMatches.filter((m) => formatTab === "All" || getGroup(m.category) === formatTab);
+    return orderProfileMatches(inTab, (m) => getGroup(m.category), FORMAT_ORDER);
   }, [fullMatches, formatTab]);
 
   return (

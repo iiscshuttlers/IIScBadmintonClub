@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { BackButton } from "@/components/ui/BackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCircle, Trophy, Save, Sparkles, Activity, Swords,
@@ -14,7 +14,6 @@ import { StatusTab } from "@/components/profile/StatusTab";
 import { useProfileSetup } from "@/hooks/useProfileSetup";
 
 export default function ProfileSetup() {
-  const [, setLocation] = useLocation();
   const setup = useProfileSetup();
 
   if (setup.isInitializing) {
@@ -95,12 +94,12 @@ export default function ProfileSetup() {
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6 sm:mb-8">
             <div className="text-center sm:text-left min-w-0">
               {setup.isEditing && (setup.playerSlug || setup.paramId) && (
-                  <button
-                    onClick={() => window.history.length > 1 ? window.history.back() : setLocation(`/player/${setup.playerSlug || setup.paramId}`)}
+                  <BackButton
+                    parent={`/player/${setup.playerSlug || setup.paramId}`}
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary mb-3 transition"
                   >
-                    <ArrowLeft className="w-4 h-4" /> Back to Profile
-                  </button>
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </BackButton>
               )}
               <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground flex items-center justify-center sm:justify-start gap-2 leading-tight">
                 <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-pulse shrink-0" />

@@ -20,7 +20,7 @@ describe("notificationTarget", () => {
   it("rejects protocol-relative and backslash paths", () => {
     expect(notificationTarget({ link: "//evil.example/path", type: "announcement" })).toEqual({
       kind: "internal",
-      path: "/pulse#announcements",
+      path: "/club?tab=news",
     });
     expect(notificationTarget({ link: "/safe\\evil", action: "view_match" })).toEqual({
       kind: "internal",

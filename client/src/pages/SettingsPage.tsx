@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
-import { useAppMode } from "@/contexts/AppModeContext";
+import { FeedbackModal } from "@/components/profile/FeedbackModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ import {
   Volume2,
   Vibrate,
   ShieldBan,
+  MessageSquare,
 } from "lucide-react";
 import {
   getUmpireHaptics,
@@ -43,9 +44,9 @@ export default function SettingsPage() {
   const [, setLocation] = useLocation();
   const { profile, isMasterAdmin, viewAsRole, setViewAsRole, signOut } = useAuth();
   const { savedAccounts, switchAccount } = useNavigationAuth();
-  const { setMode } = useAppMode();
   const [signOutDialog, setSignOutDialog] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -122,16 +123,6 @@ export default function SettingsPage() {
 
   const appItems = [
     {
-      icon: ArrowLeft,
-      label: "Switch to Club Mode",
-      description: "Return to the main club dashboard",
-      onClick: () => {
-        setMode("club");
-        setLocation("/");
-      },
-      primaryIcon: true,
-    },
-    {
       icon: UserPlus,
       label: "Add Account",
       description: "Log in to an additional account",
@@ -143,6 +134,13 @@ export default function SettingsPage() {
       description: "Share the app with others",
       onClick: handleInvite,
       primaryIcon: true,
+    },
+    {
+      // Was only on the old /personal account page.
+      icon: MessageSquare,
+      label: "Give Feedback",
+      description: "Report a bug or suggest a feature",
+      onClick: () => setIsFeedbackModalOpen(true),
     },
     {
       icon: Shield,
@@ -343,6 +341,7 @@ export default function SettingsPage() {
         open={isNotificationModalOpen}
         onOpenChange={setIsNotificationModalOpen}
       />
+      <FeedbackModal open={isFeedbackModalOpen} onOpenChange={setIsFeedbackModalOpen} />
     </div>
   );
 }

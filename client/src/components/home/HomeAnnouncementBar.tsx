@@ -1,23 +1,11 @@
 import { useEffect, useState } from "react";
 import { feedService } from "@/services/feedService";
+import { buildHomeBanners, type HomeBanner } from "@/lib/homeBanners";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Bell, ExternalLink, Calendar, ChevronLeft, ChevronRight,
   Megaphone, AlertTriangle, Info, PartyPopper, ClipboardList
 } from "lucide-react";
-
-interface HomeBanner {
-  id: string;
-  type: "announcement" | "notice" | "registration" | "custom";
-  title: string;
-  message: string;
-  color: "blue" | "green" | "amber" | "red" | "purple";
-  link_url?: string;
-  link_label?: string;
-  active: boolean;
-  pinned?: boolean;
-  dismiss_key?: string; // if set, user can dismiss permanently
-}
 
 const BANNER_ICONS: Record<string, any> = {
   announcement: Megaphone,
@@ -79,6 +67,7 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
   const [banners, setBanners] = useState<HomeBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     // Load dismissed keys from localStorage
@@ -91,84 +80,15 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
       }
     }
 
-    // Helper to process all data into banners
+    // Same rules the admin Content hub previews with (lib/homeBanners).
     const processData = (dataList: any[]) => {
-      let combined: HomeBanner[] = [];
       const getVal = (k: string) => dataList.find(d => d.key === k)?.value;
-
-      // 1. Explicit Home Banners
-      const hb = getVal("home_banners");
-      if (hb) {
-        const list = Array.isArray(hb) ? hb : (hb.banners || []);
-        combined.push(...list.filter((b: any) => b.active));
-      }
-
-      // 2. Announcements
-      const ann = getVal("announcements");
-      if (ann?.recent) {
-        ann.recent.forEach((a: any, i: number) => {
-          if (a.showOnHome || a.flyer?.showOnHome) {
-            const uniqueId = `ann_${a.title?.replace(/[^a-zA-Z0-9]/g, '_') || i}`;
-            combined.push({
-              id: uniqueId,
-              type: "announcement",
-              title: a.title,
-              message: a.content,
-              color: "blue",
-              link_url: a.url || `/pulse#feed-${a.title?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`,
-              link_label: "View",
-              active: true,
-              pinned: a.priority === "high",
-              dismiss_key: uniqueId,
-            });
-          }
-        });
-      }
-
-      // 3. Events
-      const evs = getVal("events");
-      if (Array.isArray(evs)) {
-        evs.forEach((e: any, i: number) => {
-          if (e.showOnHome) {
-            const uniqueId = `ev_${e.title?.replace(/[^a-zA-Z0-9]/g, '_') || i}`;
-            combined.push({
-              id: uniqueId,
-              type: "registration",
-              title: e.title,
-              message: e.date ? `Event Date: ${new Date(e.date).toLocaleDateString()}` : "",
-              color: "green",
-              link_url: e.link || e.url || undefined,
-              link_label: e.link || e.url ? "View Details" : undefined,
-              active: true,
-              dismiss_key: uniqueId,
-            });
-          }
-        });
-      }
-
-      // 4. Flyers
-      const flyers = getVal("flyers");
-      if (Array.isArray(flyers)) {
-        flyers.forEach((f: any) => {
-          if (f.showOnHome && f.enabled) {
-            const text = f.items?.map((i: any) => i.text).join(" • ");
-            if (text) {
-              combined.push({
-                id: f.id,
-                type: "notice",
-                title: text,
-                message: "",
-                color: "purple",
-                link_url: f.url || undefined,
-                link_label: f.url ? "View" : undefined,
-                active: true,
-              });
-            }
-          }
-        });
-      }
-      
-      setBanners(combined);
+      setBanners(buildHomeBanners({
+        home_banners: getVal("home_banners"),
+        announcements: getVal("announcements"),
+        events: getVal("events"),
+        flyers: getVal("flyers"),
+      }));
     };
 
     // Fetch active banners and noticeboard items
@@ -191,10 +111,14 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
     localStorage.setItem("home_banner_dismissed", JSON.stringify([...next]));
   };
 
-  const visibleBanners = banners.filter(b => {
+  // buildHomeBanners already puts pinned banners first.
+  const openBanners = banners.filter(b => {
     const key = b.dismiss_key || b.id;
     return b.pinned || !dismissed.has(key);
   });
+  // Home shows one banner; the rest wait behind "Show N more".
+  const visibleBanners = showAll ? openBanners : openBanners.slice(0, 1);
+  const hiddenCount = openBanners.length - visibleBanners.length;
 
   return (
     <>
@@ -257,6 +181,16 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
           );
         })}
       </AnimatePresence>
+      {(hiddenCount > 0 || (showAll && openBanners.length > 1)) && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="-mt-1 mb-2 min-h-[44px] px-1 text-xs font-black text-primary underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+        >
+          {showAll ? "Show fewer notices" : `Show ${hiddenCount} more notice${hiddenCount === 1 ? "" : "s"}`}
+        </button>
+      )}
     </>
   );
 }

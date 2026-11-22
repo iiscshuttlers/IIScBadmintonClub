@@ -36,8 +36,8 @@ export function GlossarySection() {
       color: "bg-accent/10 border-accent/30",
       items: [
         {
-          title: "Tiered Events Megahub",
-          desc: "Centralized tournament calendar, live broadcasts, and brackets all neatly nested within the unified Events directory.",
+          title: "Tournaments Hub",
+          desc: "Centralized tournament calendar, live broadcasts, and brackets all neatly nested within the Tournaments section.",
         },
         {
           title: "Unified Media Gallery",

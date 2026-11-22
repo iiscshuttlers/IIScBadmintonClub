@@ -22,6 +22,7 @@ import { getArchivedTournament, ArchivedTournament } from "@/data/tournamentArch
 import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
+import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import { getTournaments } from "@/lib/tournaments";
 import { Loader2 } from "lucide-react";
@@ -110,10 +111,10 @@ export default function TournamentDetail() {
           <p className="text-muted-foreground">
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
-          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = `${import.meta.env.BASE_URL}pulse`} className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+          <BackButton parent="/tournaments" className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
-              Back to Pulse
-            </button>
+              Back
+            </BackButton>
         </div>
       </div>
     );
@@ -167,7 +168,7 @@ export default function TournamentDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href={`${import.meta.env.BASE_URL}pulse#events`}>Pulse</BreadcrumbLink>
+              <BreadcrumbLink href={`${import.meta.env.BASE_URL}tournaments`}>Tournaments</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -176,7 +177,7 @@ export default function TournamentDetail() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.7fr] gap-6 items-start">
           {/* Main results card */}
           <motion.div
             custom={0}
@@ -350,14 +351,14 @@ export default function TournamentDetail() {
 
                 <div className="space-y-2 mt-4 pt-4 border-t border-border-strong">
                   <Link
-                    href={tournament.galleryFolder ? `/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}#albums` : `/legacy#albums`}
+                    href={tournament.galleryFolder ? `/club?tab=gallery&filter=${encodeURIComponent(tournament.galleryFolder)}#albums` : `/club?tab=gallery#albums`}
                   >
                     <button className="w-full flex items-center justify-center gap-2 bg-primary/40 hover:bg-primary/60 text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <ImageIcon className="w-4 h-4" />
                       View Gallery
                     </button>
                   </Link>
-                  <Link href="/legacy#champions">
+                  <Link href="/players?tab=champions">
                     <button className="w-full flex items-center justify-center gap-2 bg-info/20 hover:bg-info text-info hover:text-info-foreground font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
                       Hall of Fame

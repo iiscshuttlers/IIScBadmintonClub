@@ -26,7 +26,7 @@ export function useEngagementReminders() {
             notifications: [
               {
                 title: "Time for Badminton! 🏸",
-                body: "See what's happening at the courts! Check today's live scores and player pulses.",
+                body: "See what's happening at the courts! Check today's live scores and tournament updates.",
                 id: NOTIFICATION_IDS[0],
                 schedule: { on: { hour: 9, minute: 0 }, repeats: true }, // 9 AM
                 channelId: "notify_whistle",

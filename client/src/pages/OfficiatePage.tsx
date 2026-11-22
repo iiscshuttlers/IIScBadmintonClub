@@ -7,11 +7,33 @@ import { UmpireTournamentTab, type TournamentMatchForUmpire } from "@/components
 import { UmpireEngine } from "@/components/umpire/UmpireEngine";
 import { Shield, Swords, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useHistoryStep } from "@/hooks/useHistoryStep";
 
 export default function OfficiatePage() {
   const [, setLocation] = useLocation();
   const { session, profile, isUmpire, isAdmin } = useAuth();
-  const [activeMatch, setActiveMatch] = useState<TournamentMatchForUmpire | null>(null);
+  // The opened match is a step with its own history entry, so Back (on screen,
+  // phone or browser) returns to the match list instead of leaving the page.
+  // History keeps only the id; the loaded match stays in memory.
+  const [openedMatches] = useState(() => new Map<string, TournamentMatchForUmpire>());
+  const { value: openId, go: goToMatch, back: matchBack } = useHistoryStep<string | null>(
+    "officiateMatch",
+    null,
+    (id) => (id === null ? undefined : null),
+  );
+  const activeMatch = openId ? openedMatches.get(openId) ?? null : null;
+  const openMatch = (m: TournamentMatchForUmpire) => {
+    openedMatches.set(m.id, m);
+    goToMatch(m.id);
+  };
+  const closeMatch = () => {
+    matchBack();
+  };
+
+  // After a reload the id survives but the loaded match doesn't: show the list.
+  useEffect(() => {
+    if (openId && !openedMatches.has(openId)) goToMatch(null, { replace: true });
+  }, [openId, openedMatches, goToMatch]);
 
   const hasAccess = !!session && (isUmpire || isAdmin || profile?.role === "master_admin" || profile?.role === "admin" || profile?.role === "umpire");
 
@@ -84,7 +106,7 @@ export default function OfficiatePage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setActiveMatch(null)}
+              onClick={closeMatch}
               className="gap-1.5 text-xs font-black"
             >
               <ArrowLeft className="w-4 h-4" /> Back to matches list
@@ -96,14 +118,14 @@ export default function OfficiatePage() {
                 userName={profile?.full_name || session.user.email || "Official"}
                 isTournamentUmpire={true}
                 tournamentMatch={activeMatch}
-                onClose={() => setActiveMatch(null)}
+                onClose={closeMatch}
               />
             </div>
           </div>
         ) : (
           <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
             <UmpireTournamentTab
-              onStartMatch={(m) => setActiveMatch(m)}
+              onStartMatch={openMatch}
             />
           </div>
         )}

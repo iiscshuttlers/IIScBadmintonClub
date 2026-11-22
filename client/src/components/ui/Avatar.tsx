@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface AvatarProps {
@@ -26,6 +27,10 @@ const sizes = {
 
 export function Avatar({ src, name, size = "md", className }: AvatarProps) {
   const initials = getInitials(name);
+  // A photo that fails to load (Google throttling, blocked domain, deleted
+  // file) falls back to the initials instead of a broken-image icon.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = !!src && failedSrc !== src;
   return (
     <div
       className={cn(
@@ -35,8 +40,16 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
         className
       )}
     >
-      {src ? (
-        <img src={src} alt={name ?? "avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+      {showImage ? (
+        <img
+          src={src!}
+          alt={name ?? "avatar"}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setFailedSrc(src!)}
+          className="w-full h-full object-cover"
+        />
       ) : (
         <span>{initials}</span>
       )}

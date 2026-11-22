@@ -4,7 +4,7 @@ import type { MatchView } from "@/lib/matchView";
 
 /**
  * Render tests for the sports-site plan surfaces that need a signed-in user or
- * a live match to appear in the app: live ticker, form chips, Pulse items,
+ * a live match to appear in the app: live ticker, form chips, match list items,
  * Points tab and rank movement badges.
  */
 
@@ -24,7 +24,7 @@ vi.mock("@/hooks/queries/useCheckins", () => ({ useMatchPresence: () => presence
 
 import { LiveScoreTicker } from "@/components/match/LiveScoreTicker";
 import { FormChips } from "@/components/match/MatchPrimitives";
-import { PulseMatchItem } from "@/components/pulse/PulseMatchItem";
+import { MatchListItem } from "@/components/tournament/MatchListItem";
 import { MatchPointsTab } from "@/components/match/MatchPointsTab";
 import { RankMovementBadge } from "@/components/players-directory/RankMovementBadge";
 import { MatchCentre } from "@/components/match/MatchCentre";
@@ -103,7 +103,7 @@ describe("FormChips", () => {
   });
 });
 
-describe("PulseMatchItem", () => {
+describe("MatchListItem", () => {
   const row = {
     id: "m9",
     tournament_id: "t1",
@@ -133,7 +133,7 @@ describe("PulseMatchItem", () => {
 
   it("uses the shared scorecard with badges, the poll outside the link, and the old anchor id", () => {
     const { container } = render(
-      <PulseMatchItem match={row} isMatchOfTheDay upsetDiff={180} prediction={<p>poll</p>} />,
+      <MatchListItem match={row} isMatchOfTheDay upsetDiff={180} prediction={<p>poll</p>} />,
     );
     expect(container.querySelector("#match-card-m9")).not.toBeNull();
     expect(screen.getByText("Match of the day")).toBeInTheDocument();

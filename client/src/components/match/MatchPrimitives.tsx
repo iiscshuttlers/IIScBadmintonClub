@@ -64,6 +64,31 @@ export function SeedMark({ seed }: { seed: number | null }) {
   );
 }
 
+/**
+ * A side's name inside a one-line "A vs B" title (stats lists, records book).
+ * Same treatment as MatchSideRow: winner bold and full colour, the other side softer.
+ */
+export function SideName({ label, won, decided }: { label: string; won: boolean; decided: boolean }) {
+  if (!decided) return <span className="font-semibold">{label}</span>;
+  return (
+    <span className={won ? "font-black text-foreground" : "font-medium text-soft"}>
+      {label}
+      {won && <span className="sr-only"> (winner)</span>}
+    </span>
+  );
+}
+
+/** "A vs B" with the winner styled apart; `winner` indexes `sides`, null when undecided. */
+export function SidesVs({ sides, winner }: { sides: readonly [string, string]; winner: 0 | 1 | null }) {
+  return (
+    <>
+      <SideName label={sides[0]} won={winner === 0} decided={winner != null} />
+      <span className="text-muted-foreground font-medium"> vs </span>
+      <SideName label={sides[1]} won={winner === 1} decided={winner != null} />
+    </>
+  );
+}
+
 /** One side: names (wrapping, not truncated), seed, winner text, per-game scores aligned. */
 export function MatchSideRow({
   side,

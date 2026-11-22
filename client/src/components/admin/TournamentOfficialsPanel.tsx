@@ -6,6 +6,13 @@ import { useConfirm } from "@/contexts/ConfirmContext";
 import { toast } from "sonner";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
 import { Loader2, Plus, Trash2, Gavel, Flag, UserCog, ShieldCheck, X, Phone } from "lucide-react";
+import { isTournamentFinished, type ContactsMode } from "@/lib/tournamentContacts";
+
+const CONTACT_OPTIONS: { mode: ContactsMode; label: string; desc: string }[] = [
+  { mode: "hidden", label: "Hidden", desc: "No one sees phone numbers, including officials and admins." },
+  { mode: "officials", label: "Officials only", desc: "Officials, the organiser and admins see everyone's numbers." },
+  { mode: "everyone", label: "Officials & players", desc: "Players also see their opponents' and the officials' numbers on match cards." },
+];
 
 type OfficialRole = "ORGANIZER" | "UMPIRE" | "REFEREE";
 
@@ -22,7 +29,7 @@ interface OfficialRow {
   user?: { id: string; full_name: string; avatar_url: string | null } | null;
 }
 
-export function TournamentOfficialsPanel({ tournament }: { tournament: { id: string; created_by?: string | null } }) {
+export function TournamentOfficialsPanel({ tournament }: { tournament: { id: string; created_by?: string | null; status?: string | null } }) {
   const { profile, isAdmin } = useAuth();
   const { confirm } = useConfirm();
 
@@ -33,8 +40,9 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   const [roles, setRoles] = useState<OfficialRole[]>(["UMPIRE"]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [contactsEnabled, setContactsEnabled] = useState(false);
+  const [contactsMode, setContactsMode] = useState<ContactsMode>("officials");
   const [contactsLoading, setContactsLoading] = useState(true);
+  const contactsClosed = isTournamentFinished(tournament.status);
 
   const canManage = isAdmin || tournament.created_by === profile?.id;
 
@@ -62,17 +70,30 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
   }, [load]);
 
   useEffect(() => {
-    tournamentService.getTournamentContacts(tournament.id).then((enabled) => {
-      setContactsEnabled(enabled);
-      setContactsLoading(false);
-    });
+    tournamentService
+      .getTournamentContactsMode(tournament.id)
+      .then(setContactsMode)
+      .catch(() => {})
+      .finally(() => setContactsLoading(false));
   }, [tournament.id]);
 
-  const toggleContacts = async () => {
-    const next = !contactsEnabled;
-    setContactsEnabled(next);
-    await tournamentService.setTournamentContacts(tournament.id, next);
-    toast.success(next ? "Player contacts visible on match cards" : "Player contacts hidden");
+  const changeContactsMode = async (next: ContactsMode) => {
+    if (next === contactsMode) return;
+    const prev = contactsMode;
+    setContactsMode(next);
+    try {
+      await tournamentService.setTournamentContactsMode(tournament.id, next);
+      toast.success(
+        next === "hidden"
+          ? "Contacts hidden from everyone"
+          : next === "officials"
+            ? "Contacts visible to officials only"
+            : "Contacts visible to officials and players",
+      );
+    } catch {
+      setContactsMode(prev);
+      toast.error("Couldn't change contact sharing. Only site admins can change it.");
+    }
   };
 
   const toggleRole = (r: OfficialRole) => {
@@ -298,20 +319,42 @@ export function TournamentOfficialsPanel({ tournament }: { tournament: { id: str
               <Phone className="w-5 h-5 text-success" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-black text-foreground">Share Contacts with Players</h4>
+              <h4 className="text-sm font-black text-foreground">Phone Contacts</h4>
               <p className="text-[11px] text-muted-foreground leading-tight">
-                When enabled, players can see their opponent's phone number and officials' contacts on match cards.
-                Officials and admins can always see contacts.
+                {contactsClosed
+                  ? "This tournament is finished, so phone numbers are hidden from everyone."
+                  : "Who can see phone numbers during this tournament. They are hidden from everyone once it is completed."}
               </p>
             </div>
-            <button
-              onClick={toggleContacts}
-              disabled={contactsLoading}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${contactsEnabled ? "bg-success" : "bg-muted-strong"}`}
-            >
-              <span className={`inline-block h-4 w-4 rounded-full bg-foreground shadow-sm transition-transform ${contactsEnabled ? "translate-x-6" : "translate-x-1"}`} />
-            </button>
           </div>
+          {!contactsClosed && (
+            <div className="mt-3 space-y-2" role="radiogroup" aria-label="Who can see phone contacts">
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+                {CONTACT_OPTIONS.map((o) => (
+                  <button
+                    key={o.mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={contactsMode === o.mode}
+                    disabled={contactsLoading}
+                    onClick={() => changeContactsMode(o.mode)}
+                    className={`rounded-lg px-2 py-1.5 text-[11px] font-black transition disabled:opacity-50 ${
+                      contactsMode === o.mode
+                        ? o.mode === "hidden"
+                          ? "bg-danger text-on-accent shadow-sm"
+                          : "bg-success text-on-accent shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                {CONTACT_OPTIONS.find((o) => o.mode === contactsMode)?.desc}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

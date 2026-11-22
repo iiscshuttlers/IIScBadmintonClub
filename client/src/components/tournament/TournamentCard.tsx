@@ -13,6 +13,9 @@ import { cardIn } from "@/lib/motion";
 import type { MyRole } from "@/hooks/useMyTournamentRoles";
 import type { LiveScorePeek } from "@/hooks/useLiveScoresFor";
 
+/** Champion rows shown on a card before collapsing the rest into "+N more". */
+const MAX_CHAMPION_ROWS = 3;
+
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : null;
 
@@ -195,18 +198,34 @@ export function TournamentCard({
           </div>
         )}
 
-        {/* Winner Chips on Completed Tournaments */}
+        {/* Champions on finished tournaments: one row per category so long
+            names wrap inside the card instead of running off the screen. */}
         {winnersList.length > 0 && (
-          <div className="mb-3 p-2 rounded-xl bg-success/10 border border-success/25 flex items-center gap-2">
-            <Trophy className="w-3.5 h-3.5 text-success shrink-0" />
-            <div className="text-[11px] font-bold text-success truncate">
-              {winnersList.length > 1 ? "Champions" : "Champion"}:{" "}
-              <span className="font-black">
-                {winnersList
-                  .map((w: any) => (typeof w === "string" ? w : [w.category, w.winner].filter(Boolean).join(" ")))
-                  .join(" · ")}
-              </span>
+          <div className="mb-3 p-2 rounded-xl bg-success/10 border border-success/25 text-[11px] text-success">
+            <div className="flex items-center gap-1.5 font-bold mb-1">
+              <Trophy className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              {winnersList.length > 1 ? "Champions" : "Champion"}
             </div>
+            <ul className="space-y-0.5">
+              {winnersList.slice(0, MAX_CHAMPION_ROWS).map((w: any, i: number) => {
+                const category = typeof w === "string" ? null : w.category;
+                const name = typeof w === "string" ? w : w.winner;
+                return (
+                  <li key={`${category ?? ""}-${i}`} className="flex items-baseline gap-1.5">
+                    {category && (
+                      <span className="shrink-0 max-w-[40%] truncate font-black text-soft">{category}</span>
+                    )}
+                    <span className="font-bold wrap-anywhere">{name}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            {winnersList.length > MAX_CHAMPION_ROWS && (
+              <p className="mt-0.5 font-semibold text-muted-foreground">
+                +{winnersList.length - MAX_CHAMPION_ROWS} more{" "}
+                {winnersList.length - MAX_CHAMPION_ROWS === 1 ? "category" : "categories"}
+              </p>
+            )}
           </div>
         )}
 

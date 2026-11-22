@@ -5,7 +5,7 @@ import { InfoModal } from "@/components/InfoModal";
 const TABLE_TO_FEATURES: Record<string, string[]> = {
   "admin_history": ["Activity Logs", "Site Admin Control Center"],
   "club_courts": ["Live Courts Dashboard", "Venue & Presence Tracking"],
-  "live_match_votes": ["Pulse (Social Feed)", "Live Matches"],
+  "live_match_votes": ["Match Predictions", "Live Matches"],
   "marketplace_listings": ["Club Marketplace", "Equipment Exchange"],
   "match_health_data": ["Player Health & Biometrics", "Danger Zone Heart Rate Haptics"],
   "match_motion_stats": ["Pocket Mode Motion Tracking", "Hardware Motion Tracking"],

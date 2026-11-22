@@ -309,10 +309,22 @@ export const adminService = {
   },
 
   async saveClubSettings(settings: Record<string, unknown>, adminEmail = "admin"): Promise<void> {
+    // `about` and `stats` are edited in Content → Club page. Keep whatever is
+    // stored for them now, so a Settings tab opened earlier can't revert them.
+    const { data: current } = await supabase
+      .from("site_data")
+      .select("value")
+      .eq("key", "club_settings")
+      .maybeSingle();
+    const stored = (current?.value ?? {}) as Record<string, unknown>;
+    const value: Record<string, unknown> = { ...settings };
+    for (const key of ["about", "stats"]) {
+      if (key in stored) value[key] = stored[key];
+    }
     const { error } = await supabase
       .from("site_data")
       .upsert(
-        { key: "club_settings", value: settings as Json, updated_at: new Date().toISOString() },
+        { key: "club_settings", value: value as Json, updated_at: new Date().toISOString() },
         { onConflict: "key" },
       );
     if (error) throw error;

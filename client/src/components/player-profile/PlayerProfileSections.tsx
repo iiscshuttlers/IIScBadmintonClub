@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import { Target, Dna, Activity, Footprints, Shirt, Star, Zap } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { cssVar, cssVarAlpha } from "@/lib/themeColors";
+import { parseShoesList } from "@/lib/playerUtils";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -52,12 +53,12 @@ export function EquipmentArsenalSection({
 
   const racketDetails = player.racket_details || player.racketDetails;
   const currentRacket = player.current_racket || player.currentRacket;
-  const shoesList = player.shoesList;
+  // players.shoes is a JSON list string; parse it rather than printing it.
+  const shoesList = parseShoesList(player.shoes);
 
   if (
     !racketDetails?.length &&
-    !shoesList?.length &&
-    !player.shoes &&
+    !shoesList.length &&
     !player.apparel
   ) {
     return null;
@@ -72,11 +73,7 @@ export function EquipmentArsenalSection({
     });
   }
   
-  if (shoesList && shoesList.length > 0) {
-    shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
-  } else if (player.shoes) {
-    items.push({ type: 'shoe', data: { name: player.shoes, primary: true } });
-  }
+  shoesList.forEach((s) => items.push({ type: 'shoe', data: s }));
 
   if (player.apparel) {
     items.push({ type: 'apparel', data: { name: player.apparel } });

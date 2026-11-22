@@ -6,6 +6,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { TournamentManager } from "@/components/admin/TournamentManager";
 import { AdminHistoryProvider } from "@/contexts/AdminHistoryContext";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default function TournamentAdmin() {
   const { session, isInitializing, isMainAdmin, isAdmin } = useAuth();
@@ -48,14 +49,10 @@ export default function TournamentAdmin() {
         <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-xs">
           <div className="max-w-5xl mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/admin")}
-                className="-ml-1 rounded-xl shrink-0"
-                aria-label="Back to Admin Dashboard"
-              >
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="-ml-1 rounded-xl shrink-0" asChild>
+                <BackButton parent="/admin" aria-label="Back">
+                  <ArrowLeft className="w-5 h-5" />
+                </BackButton>
               </Button>
               <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
                 <Trophy className="w-5 h-5 text-gold" />
@@ -76,9 +73,9 @@ export default function TournamentAdmin() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/pulse")}
+                onClick={() => navigate("/tournaments")}
               >
-                Pulse Hub
+                Tournaments
               </Button>
               <Button
                 variant="secondary"

@@ -61,7 +61,10 @@ export function CertificateDialog({
     try {
       const certInput = certCode ? { ...input, certificateId: certCode } : input;
       if (kind === "pdf") await saveCertificatePdf(certInput, canvasRef.current ?? undefined);
-      else await shareResultCard(certInput);
+      else if ((await shareResultCard(certInput)) === "downloaded") {
+        // Desktop browsers can't share files, so the square image is saved instead.
+        toast.success("Share image saved", { description: "A square 1080×1080 picture for WhatsApp or Instagram." });
+      }
     } catch (e: any) {
       if (!/cancel/i.test(e?.message ?? "")) toast.error("Couldn't create the file. Please try again.");
     } finally {
@@ -122,7 +125,7 @@ export function CertificateDialog({
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-border font-bold py-2.5 hover:bg-muted disabled:opacity-60"
           >
             {busy === "card" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-            Share result card
+            Share as image
           </button>
         </div>
       </DialogContent>
