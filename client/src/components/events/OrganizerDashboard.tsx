@@ -19,12 +19,39 @@ import { calculateMinRosterRequirements, normalizeGender } from '@/lib/teamLineu
 import { useTournamentReadiness } from '@/hooks/queries/useCheckins';
 import { AllMatchesList } from '@/components/tournament/AllMatchesList';
 import { CheckinStatCards, CourtsAndQueue, WhosHereRoster } from '@/components/checkin/OrganiserCheckin';
+import type { Tables } from '@/lib/supabase-types-auto';
+import type { Tournament } from '@/types/tournament';
+import type { TieFormatConfig, TieFormatConfigObject, TieFormatRubber, TieWithTeams } from '@/types/teamTie';
 
 
 interface OrganizerDashboardProps {
   tournamentId: string;
-  tournament: any;
+  tournament: Tournament | null | undefined;
 }
+
+/**
+ * A tie as the organizer view loads it. tournament_ties has no court or
+ * reveal columns, yet the bottleneck filters below read these three, so they
+ * are always undefined at runtime: every unfinished tie counts as "no court"
+ * and a revealed tie still counts as "ready to reveal". Courts live on the
+ * rubbers; reveal state on tie_lineups.is_revealed / tournament_matches.revealed_at.
+ */
+type OrganizerTie = TieWithTeams & {
+  court?: undefined;
+  court_number?: undefined;
+  lineup_revealed?: undefined;
+};
+
+/** An ACTIVE team member with the player's name and gender (no player when every join failed). */
+type OrganizerMember = Pick<Tables<'tournament_team_members'>, 'id' | 'team_id' | 'player_id' | 'role' | 'status'> & {
+  player?: Pick<Tables<'players'>, 'id' | 'full_name' | 'gender'> | null;
+  /** Not a tournament_team_members column (members carry player_id only): always undefined. */
+  user_id?: undefined;
+  /** Not a column either (captains are tournament_teams.captain_id or role CAPTAIN): always undefined. */
+  is_captain?: undefined;
+};
+
+type OrganizerTeam = Tables<'tournament_teams'> & { members: OrganizerMember[] };
 
 export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const isTeamEvent = tournament?.format_family === 'TEAM';
@@ -47,7 +74,7 @@ export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashbo
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** "3" → "Court 3"; a named court ("Centre") is shown as is. */
-const courtLabel = (court: any) => (/^\d+$/.test(String(court)) ? `Court ${court}` : String(court));
+const courtLabel = (court: string | number) => (/^\d+$/.test(String(court)) ? `Court ${court}` : String(court));
 
 /** Plain label for a match status or tie state: in_progress / IN_PROGRESS → "Live". */
 function statusLabel(status?: string | null): string {
@@ -296,7 +323,7 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
     queryKey: ['organizer_ind_matches', tournamentId],
     queryFn: async () => {
       const data = await fetchTournamentMatchesByNumber(tournamentId);
-      return (data || []) as any[];
+      return data || [];
     },
     enabled: !!tournamentId,
     refetchInterval: 15000
@@ -311,18 +338,18 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
     refetchInterval: 30000
   });
 
-  const completedMatches = matches.filter((m: any) => m.status === 'completed');
-  const inProgressMatches = matches.filter((m: any) => m.status === 'in_progress');
-  const matchesMissingCourt = matches.filter((m: any) => {
-    const court = m.court ?? m.court_number;
+  const completedMatches = matches.filter((m) => m.status === 'completed');
+  const inProgressMatches = matches.filter((m) => m.status === 'in_progress');
+  const matchesMissingCourt = matches.filter((m) => {
+    const court = m.court_number;
     return !court && m.status !== 'completed';
   });
-  const scheduledMatches = matches.filter((m: any) => m.status === 'scheduled' || !m.status);
+  const scheduledMatches = matches.filter((m) => m.status === 'scheduled' || !m.status);
   const completionRate = matches.length > 0 ? Math.round((completedMatches.length / matches.length) * 100) : 0;
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    matches.forEach((m: any) => { if (m.category) cats.add(m.category); });
+    matches.forEach((m) => { if (m.category) cats.add(m.category); });
     return Array.from(cats).sort();
   }, [matches]);
 
@@ -398,7 +425,7 @@ const BOTTLENECK_LABEL: Record<Bottleneck, string> = {
 function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const { openTeamModal } = useTeamModal();
   const { user, profile } = useAuth();
-  const [selectedTieForConsole, setSelectedTieForConsole] = useState<any | null>(null);
+  const [selectedTieForConsole, setSelectedTieForConsole] = useState<OrganizerTie | null>(null);
   // null = follow the default (open only while some team isn't ready); true/false = organizer's choice.
   const [rosterOpenChoice, setRosterOpenChoice] = useState<boolean | null>(null);
 
@@ -407,11 +434,11 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const currentPlayerId = profile?.id;
 
   // 1. Fetch ties
-  const { data: ties = [], isLoading: tiesLoading, refetch: refetchTies } = useQuery({
+  const { data: ties = [], isLoading: tiesLoading, refetch: refetchTies } = useQuery<OrganizerTie[]>({
     queryKey: ['organizer_ties', tournamentId],
     queryFn: async () => {
       const data = await teamService.getOrganizerTies(tournamentId);
-      return (data || []) as any[];
+      return data || [];
     },
     enabled: !!tournamentId,
     refetchInterval: 15000
@@ -422,14 +449,14 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
     queryKey: ['organizer_matches', tournamentId],
     queryFn: async () => {
       const data = await fetchAllTournamentMatchRows(tournamentId);
-      return (data || []) as any[];
+      return data || [];
     },
     enabled: !!tournamentId,
     refetchInterval: 15000
   });
 
   // 3. Fetch teams and member counts
-  const { data: rawTeams = [], refetch: refetchTeams } = useQuery({
+  const { data: rawTeams = [], refetch: refetchTeams } = useQuery<OrganizerTeam[]>({
     queryKey: ['organizer_teams', tournamentId],
     queryFn: async () => {
       // 1. Fetch valid teams
@@ -440,33 +467,33 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
         throw teamsError;
       }
 
-      const teamList = (teamsData || []) as any[];
+      const teamList = teamsData || [];
       if (teamList.length === 0) return [];
 
       // 2. Fetch members with joined player info
       const { data: rawMembers, error: membersError } = await teamService.getActiveMembersWithPlayer(tournamentId);
 
-      let memberList: any[] = [];
+      let memberList: OrganizerMember[] = [];
       if (membersError) {
         // Fallback with explicit FK constraint name
         const fallback = await teamService.getActiveMembersWithPlayerFk(tournamentId);
 
         if (!fallback.error && fallback.data) {
-          memberList = fallback.data.map((m: any) => ({
+          memberList = fallback.data.map((m) => ({
             ...m,
-            player: m.players || m.player
+            player: m.players
           }));
         } else {
           // If relationship join completely fails, fetch members without join
           const bareMembers = await teamService.getActiveMembersBare(tournamentId);
-          memberList = (bareMembers.data || []) as any[];
+          memberList = bareMembers.data || [];
         }
       } else {
-        memberList = (rawMembers || []) as any[];
+        memberList = rawMembers || [];
       }
 
       // Group members by team_id
-      const membersByTeam: Record<string, any[]> = {};
+      const membersByTeam: Record<string, OrganizerMember[]> = {};
       for (const t of teamList) {
         membersByTeam[t.id] = [];
       }
@@ -488,18 +515,18 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
   // Sort teams: Captain's team first, then incomplete rosters, then alphabetical
   const teams = useMemo(() => {
-    return [...rawTeams].sort((a: any, b: any) => {
+    return [...rawTeams].sort((a, b) => {
       const isCaptainA = (a.captain_id && (a.captain_id === currentUserId || a.captain_id === currentPlayerId)) ||
-        a.members?.some((m: any) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
+        a.members?.some((m) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
       const isCaptainB = (b.captain_id && (b.captain_id === currentUserId || b.captain_id === currentPlayerId)) ||
-        b.members?.some((m: any) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
+        b.members?.some((m) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
 
       if (isCaptainA && !isCaptainB) return -1;
       if (!isCaptainA && isCaptainB) return 1;
 
       // Also prioritize any team user is a member of
-      const isMemberA = a.members?.some((m: any) => m.user_id === currentUserId || m.player_id === currentPlayerId);
-      const isMemberB = b.members?.some((m: any) => m.user_id === currentUserId || m.player_id === currentPlayerId);
+      const isMemberA = a.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId);
+      const isMemberB = b.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId);
       if (isMemberA && !isMemberB) return -1;
       if (!isMemberA && isMemberB) return 1;
 
@@ -524,44 +551,44 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const [courtSubTab, setCourtSubTab] = useState<'ties' | 'rubbers'>('rubbers');
 
   const tiesWithMissingLineups = useMemo(() => {
-    return ties.filter((t: any) => {
+    return ties.filter((t) => {
       return (!t.lineup_locked_a || !t.lineup_locked_b) && t.state !== 'COMPLETED';
     });
   }, [ties]);
 
   const tiesAwaitingReveal = useMemo(() => {
-    return ties.filter((t: any) => {
+    return ties.filter((t) => {
       return t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed && t.state !== 'COMPLETED';
     });
   }, [ties]);
 
   const liveTiesInProgress = useMemo(() => {
-    return ties.filter((t: any) => {
+    return ties.filter((t) => {
       return t.state === 'IN_PROGRESS';
     });
   }, [ties]);
 
   const matchesMissingCourt = useMemo(() => {
-    return matches.filter((m: any) => {
-      const courtVal = m.court ?? m.court_number;
+    return matches.filter((m) => {
+      const courtVal = m.court_number;
       return !courtVal && m.status !== 'completed';
     });
   }, [matches]);
 
   const tiesMissingCourt = useMemo(() => {
-    return ties.filter((t: any) => {
+    return ties.filter((t) => {
       const courtVal = t.court ?? t.court_number;
       return !courtVal && t.state !== 'COMPLETED';
     });
   }, [ties]);
 
-  const completedMatchesCount = matches.filter((m: any) => m.status === 'completed').length;
+  const completedMatchesCount = matches.filter((m) => m.status === 'completed').length;
 
   // Dynamic fallback for total teams in case team records are not yet linked or still loading
   const effectiveTotalTeams = useMemo(() => {
     if (teams.length > 0) return teams.length;
     const distinctTeamIds = new Set<string>();
-    ties.forEach((t: any) => {
+    ties.forEach((t) => {
       if (t.team_a_id) distinctTeamIds.add(t.team_a_id);
       if (t.team_b_id) distinctTeamIds.add(t.team_b_id);
     });
@@ -569,7 +596,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   }, [teams.length, ties]);
 
   // Rubbers count or expected rubbers from ties
-  const rawFormat = tournament?.tie_format_config;
+  const rawFormat = tournament?.tie_format_config as TieFormatConfig | null | undefined;
   const rubbersPerTie = useMemo(() => {
     if (Array.isArray(rawFormat)) return rawFormat.length;
     if (rawFormat?.rubbers && Array.isArray(rawFormat.rubbers)) return rawFormat.rubbers.length;
@@ -589,7 +616,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
     let bothMissingCount = 0;
     let oneMissingCount = 0;
 
-    tiesWithMissingLineups.forEach((t: any) => {
+    tiesWithMissingLineups.forEach((t) => {
       const aMissing = !t.lineup_locked_a;
       const bMissing = !t.lineup_locked_b;
       if (aMissing && bMissing) {
@@ -644,11 +671,11 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
   // Minimum roster is the same for every team: it comes from the tie format and the repeat rules.
   const rosterRequirement = useMemo(() => {
-    let currentRubbers: any[] = [];
+    let currentRubbers: TieFormatRubber[] = [];
     if (Array.isArray(rawFormat)) currentRubbers = rawFormat;
     else if (rawFormat?.rubbers && Array.isArray(rawFormat.rubbers)) currentRubbers = rawFormat.rubbers;
 
-    const rulesObj = typeof rawFormat === 'object' && !Array.isArray(rawFormat) ? rawFormat : {};
+    const rulesObj: TieFormatConfigObject = typeof rawFormat === 'object' && !Array.isArray(rawFormat) ? rawFormat : {};
     const dynReq = currentRubbers.length > 0
       ? calculateMinRosterRequirements(currentRubbers, {
           max_rubbers_per_male: rulesObj.max_rubbers_per_male ?? tournament?.max_rubbers_per_player ?? 2,
@@ -659,23 +686,23 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
         })
       : null;
 
-    const minRequired = dynReq?.minTotalPlayers || tournament?.team_roster_min || tournament?.min_team_size || 4;
+    const minRequired = dynReq?.minTotalPlayers || tournament?.team_roster_min || 4;
     return { dynReq, minRequired };
   }, [rawFormat, tournament]);
 
   const rosterRows = useMemo(() => {
     const { dynReq, minRequired } = rosterRequirement;
-    return teams.map((t: any) => {
-      const activeCount = t.members?.filter((m: any) => m.status === 'ACTIVE').length || 0;
+    return teams.map((t) => {
+      const activeCount = t.members?.filter((m) => m.status === 'ACTIVE').length || 0;
       const isReady = activeCount >= minRequired;
       const pct = Math.min(100, Math.round((activeCount / minRequired) * 100));
 
       // Check gender balance against dynamic requirements
       let activeMales = 0;
       let activeFemales = 0;
-      (t.members || []).forEach((m: any) => {
+      (t.members || []).forEach((m) => {
         if (m.status !== 'ACTIVE') return;
-        const g = normalizeGender(m.player?.gender || m.gender);
+        const g = normalizeGender(m.player?.gender);
         if (g === 'Female') activeFemales++;
         else activeMales++;
       });
@@ -687,7 +714,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
       // Check if current logged-in user belongs to this team
       const isMyTeam = !!((t.captain_id && (t.captain_id === currentUserId || t.captain_id === currentPlayerId)) ||
-        t.members?.some((m: any) => m.user_id === currentUserId || m.player_id === currentPlayerId));
+        t.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId));
 
       const note = femaleDeficit > 0
         ? { text: `Needs ${plural(femaleDeficit, 'woman', 'women')}`, className: 'text-warning' }
@@ -704,7 +731,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const readyTeamCount = rosterRows.filter((r) => r.isFullyReady).length;
   const rosterOpen = rosterOpenChoice ?? readyTeamCount < rosterRows.length;
 
-  const openRoster = (t: any) => openTeamModal({
+  const openRoster = (t: OrganizerTeam) => openTeamModal({
     id: t.id,
     name: t.name,
     short_name: t.short_name,
@@ -809,7 +836,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {displayedTies.map((tie: any) => {
+            {displayedTies.map((tie) => {
               const pending = [
                 !tie.lineup_locked_a && (tie.team_a?.short_name || 'Team A'),
                 !tie.lineup_locked_b && (tie.team_b?.short_name || 'Team B'),
@@ -963,16 +990,16 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                   <p className="py-10 text-center text-sm text-muted-foreground">All rubbers have a court.</p>
                 ) : (
                   <ul className="divide-y divide-border">
-                    {matchesMissingCourt.map((match: any) => {
-                      const parentTie = ties.find((t: any) => t.id === match.tie_id);
+                    {matchesMissingCourt.map((match) => {
+                      const parentTie = ties.find((t) => t.id === match.tie_id);
                       return (
                         <li key={match.id} className="flex items-center gap-3 py-2.5">
                           <span className={codeClass}>
-                            {match.match_code || match.rubber_code || `R${match.rubber_number || match.match_number || '?'}`}
+                            {match.match_code || `R${match.match_number || '?'}`}
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-foreground">
-                              {match.category || match.discipline || 'Rubber'}
+                              {match.category || 'Rubber'}
                             </p>
                             {parentTie && (
                               <p className="truncate text-xs text-muted-foreground">
@@ -990,7 +1017,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                 <p className="py-10 text-center text-sm text-muted-foreground">Nothing here right now.</p>
               ) : (
                 <ul className="divide-y divide-border">
-                  {displayedTies.map((tie: any) => {
+                  {displayedTies.map((tie) => {
                     const lockedA = !!tie.lineup_locked_a;
                     const lockedB = !!tie.lineup_locked_b;
                     const courtVal = tie.court || tie.court_number;

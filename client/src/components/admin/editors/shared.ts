@@ -50,6 +50,18 @@ export type VideoItem = {
   youtubeTitle?: string;
   publishedAt?: string;
 };
+/**
+ * Rating keys PlayersManager reads from players.stats (jsonb). Nothing in the
+ * app writes these keys today; the ratings themselves are the elo_rating /
+ * singles_elo / doubles_elo / mixed_elo columns.
+ */
+export type AdminPlayerStats = {
+  elo?: number;
+  eloRating?: number;
+  singles?: number;
+  doubles?: number;
+  mixed?: number;
+};
 export type Player = {
   id: string;
   full_name: string;
@@ -57,7 +69,7 @@ export type Player = {
   department?: string;
   is_approved: boolean;
   created_at: string;
-  stats?: any;
+  stats?: AdminPlayerStats | null;
   iisc_email?: string;
   contact_number?: string;
   sr_number?: string;

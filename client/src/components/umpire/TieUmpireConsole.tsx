@@ -26,11 +26,33 @@ import { format } from 'date-fns';
 import { ClickableTeamName } from '@/contexts/TeamModalContext';
 import { validateLineupAssignments } from '@/lib/teamLineupRules';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import type { Tournament } from '@/types/tournament';
+import type {
+  AddDeciderRubberResult,
+  TeamMemberWithPlayer,
+  TieFormatConfig,
+  TieFormatConfigObject,
+  TieFormatRubber,
+  TieLineupAuditWithNames,
+  TieLineupWithPlayers,
+  TieRubberRow,
+  TieWithTeams,
+} from '@/types/teamTie';
 
+/** The tie fields the console reads; callers pass ties from several queries. */
+type ConsoleTie = Pick<TieWithTeams, 'id'> &
+  Partial<Pick<TieWithTeams,
+    'tie_code' | 'stage' | 'state' | 'team_a_id' | 'team_b_id' | 'lineup_locked_a' | 'lineup_locked_b' | 'team_a' | 'team_b'
+  >>;
+
+/** The tournament fields the console reads (tie format and lineup repeat rules). */
+type ConsoleTournament = Partial<Pick<Tournament, 'id' | 'max_rubbers_per_player' | 'ignore_gender_rules'>> & {
+  tie_format_config?: unknown;
+};
 
 interface Props {
-  tie: any;
-  tournament: any;
+  tie: ConsoleTie;
+  tournament: ConsoleTournament | null | undefined;
   onClose?: () => void;
 }
 
@@ -61,7 +83,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   const queryClient = useQueryClient();
 
   const [modifyingRubber, setModifyingRubber] = useState<{
-    rubber: any;
+    rubber: TieFormatRubber;
     side: 'A' | 'B';
     pos: 1 | 2;
   } | null>(null);
@@ -80,34 +102,34 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   // Fetch lineups for both sides
-  const { data: lineups = [], isLoading: lineupsLoading } = useQuery({
+  const { data: lineups = [], isLoading: lineupsLoading } = useQuery<TieLineupWithPlayers[]>({
     queryKey: ['tie_lineups_both', tie.id],
     queryFn: () => umpireService.fetchTieLineupsBoth(tie.id),
     enabled: !!tie.id
   });
 
   // Fetch matches for this tie to see confirmed playing orders and match statuses
-  const { data: tieMatches = [] } = useQuery({
+  const { data: tieMatches = [] } = useQuery<TieRubberRow[]>({
     queryKey: ['tie_matches', tie.id],
     queryFn: () => umpireService.fetchTieMatches(tie.id),
     enabled: !!tie.id
   });
 
   // Fetch team rosters for emergency substitutions
-  const { data: teamAMembers = [] } = useQuery({
+  const { data: teamAMembers = [] } = useQuery<TeamMemberWithPlayer[]>({
     queryKey: ['team_members_a', tie.team_a_id],
     queryFn: () => umpireService.fetchTeamMembers(tie.team_a_id),
     enabled: !!tie.team_a_id
   });
 
-  const { data: teamBMembers = [] } = useQuery({
+  const { data: teamBMembers = [] } = useQuery<TeamMemberWithPlayer[]>({
     queryKey: ['team_members_b', tie.team_b_id],
     queryFn: () => umpireService.fetchTeamMembers(tie.team_b_id),
     enabled: !!tie.team_b_id
   });
 
   // Fetch audit trail
-  const { data: audits = [] } = useQuery({
+  const { data: audits = [] } = useQuery<TieLineupAuditWithNames[]>({
     queryKey: ['tie_lineup_audits', tie.id],
     queryFn: () => umpireService.fetchTieLineupAudits(tie.id),
     enabled: !!tie.id
@@ -119,8 +141,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
       const teamAName = tie.team_a?.name || "Team A";
       const teamBName = tie.team_b?.name || "Team B";
 
-      const hasAnyLineupA = lineups.some((l: any) => l.side === 'A' && l.player1_id);
-      const hasAnyLineupB = lineups.some((l: any) => l.side === 'B' && l.player1_id);
+      const hasAnyLineupA = lineups.some((l) => l.side === 'A' && l.player1_id);
+      const hasAnyLineupB = lineups.some((l) => l.side === 'B' && l.player1_id);
 
       // Check if both or either team has not submitted / locked
       if (!tie.lineup_locked_a && !tie.lineup_locked_b && !hasAnyLineupA && !hasAnyLineupB) {
@@ -154,8 +176,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
       // Check individual rubber if specified
       if (rubberOrder !== null) {
-        const rubberLineupA = lineups.find((l: any) => l.side === 'A' && l.rubber_order === rubberOrder);
-        const rubberLineupB = lineups.find((l: any) => l.side === 'B' && l.rubber_order === rubberOrder);
+        const rubberLineupA = lineups.find((l) => l.side === 'A' && l.rubber_order === rubberOrder);
+        const rubberLineupB = lineups.find((l) => l.side === 'B' && l.rubber_order === rubberOrder);
         const hasPlayerA = Boolean(rubberLineupA?.player1_id);
         const hasPlayerB = Boolean(rubberLineupB?.player1_id);
         if (!hasPlayerA && !hasPlayerB) {
@@ -181,7 +203,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['tie_lineup_audits', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tournament_ties'] });
     },
-    onError: (err: any) => toast.error(err.message)
+    onError: (err) => toast.error(err.message)
   });
 
   // Client-side validated reveal handler with clear user feedback
@@ -189,8 +211,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
     const teamAName = tie.team_a?.name || "Team A";
     const teamBName = tie.team_b?.name || "Team B";
 
-    const hasAnyLineupA = lineups.some((l: any) => l.side === 'A' && l.player1_id);
-    const hasAnyLineupB = lineups.some((l: any) => l.side === 'B' && l.player1_id);
+    const hasAnyLineupA = lineups.some((l) => l.side === 'A' && l.player1_id);
+    const hasAnyLineupB = lineups.some((l) => l.side === 'B' && l.player1_id);
 
     if (!tie.lineup_locked_a && !tie.lineup_locked_b && !hasAnyLineupA && !hasAnyLineupB) {
       toast.error(`Cannot reveal: Neither ${teamAName} nor ${teamBName} has submitted a lineup yet.`);
@@ -231,8 +253,8 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
     }
 
     if (rubberOrder !== null) {
-      const rubberLineupA = lineups.find((l: any) => l.side === 'A' && l.rubber_order === rubberOrder);
-      const rubberLineupB = lineups.find((l: any) => l.side === 'B' && l.rubber_order === rubberOrder);
+      const rubberLineupA = lineups.find((l) => l.side === 'A' && l.rubber_order === rubberOrder);
+      const rubberLineupB = lineups.find((l) => l.side === 'B' && l.rubber_order === rubberOrder);
       const hasPlayerA = Boolean(rubberLineupA?.player1_id);
       const hasPlayerB = Boolean(rubberLineupB?.player1_id);
       if (!hasPlayerA && !hasPlayerB) {
@@ -281,7 +303,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['tie_matches', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tie_lineup_audits', tie.id] });
     },
-    onError: (err: any) => toast.error(err.message)
+    onError: (err) => toast.error(err.message)
   });
 
   // Emergency substitution submit (Enforces dual-captain agreement)
@@ -319,22 +341,22 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['tie_lineups_both', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tie_matches', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tie_lineup_audits', tie.id] });
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : String(err));
     } finally {
       setIsModifying(false);
     }
   };
 
-  const rawConfig = tournament?.tie_format_config;
-  let baseRubbers: any[] = [];
+  const rawConfig = tournament?.tie_format_config as TieFormatConfig | null | undefined;
+  let baseRubbers: TieFormatRubber[] = [];
   if (Array.isArray(rawConfig)) baseRubbers = rawConfig;
   else if (rawConfig?.rubbers && Array.isArray(rawConfig.rubbers)) baseRubbers = rawConfig.rubbers;
 
   // Combine format rubbers and tieMatches rubbers (including dynamic tiebreaker deciders)
   const rubbers = [...baseRubbers];
-  tieMatches.forEach((m: any) => {
-    if (!rubbers.some((r: any) => r.order === m.rubber_order)) {
+  tieMatches.forEach((m) => {
+    if (!rubbers.some((r) => r.order === m.rubber_order)) {
       rubbers.push({
         order: m.rubber_order,
         label: m.rubber_label || `Rubber ${m.rubber_order}`,
@@ -363,14 +385,14 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
         pointsToWin: newDeciderPoints,
       });
     },
-    onSuccess: (data: any) => {
-      toast.success(`Added ${data.label} to the tie! Captains can now submit their decider lineup.`);
+    onSuccess: (data) => {
+      toast.success(`Added ${(data as AddDeciderRubberResult).label} to the tie! Captains can now submit their decider lineup.`);
       setShowAddDeciderModal(false);
       queryClient.invalidateQueries({ queryKey: ['tie_matches', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tie_lineups_both', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tournament_ties'] });
     },
-    onError: (err: any) => toast.error(`Failed to add decider: ${err.message}`)
+    onError: (err) => toast.error(`Failed to add decider: ${err.message}`)
   });
 
   const revealDeciderMutation = useMutation({
@@ -383,23 +405,23 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['tie_lineups_both', tie.id] });
       queryClient.invalidateQueries({ queryKey: ['tournament_ties'] });
     },
-    onError: (err: any) => toast.error(`Failed to reveal decider: ${err.message}`)
+    onError: (err) => toast.error(`Failed to reveal decider: ${err.message}`)
   });
 
   // Sync customPlayingOrders and dragOrderList on first load
   useEffect(() => {
     if (rubbers.length > 0) {
       const initial: Record<number, number> = {};
-      rubbers.forEach((r: any) => {
-        const match = tieMatches.find((m: any) => m.rubber_order === r.order);
-        const lineupA = lineups.find((l: any) => l.side === 'A' && l.rubber_order === r.order);
-        const lineupB = lineups.find((l: any) => l.side === 'B' && l.rubber_order === r.order);
+      rubbers.forEach((r) => {
+        const match = tieMatches.find((m) => m.rubber_order === r.order);
+        const lineupA = lineups.find((l) => l.side === 'A' && l.rubber_order === r.order);
+        const lineupB = lineups.find((l) => l.side === 'B' && l.rubber_order === r.order);
         initial[r.order] = match?.playing_order || lineupA?.proposed_playing_order || lineupB?.proposed_playing_order || r.order;
       });
       setCustomPlayingOrders(initial);
       // Build initial drag list sorted by current playing order
-      const sorted = [...rubbers].sort((a: any, b: any) => (initial[a.order] ?? a.order) - (initial[b.order] ?? b.order));
-      setDragOrderList(sorted.map((r: any) => r.order));
+      const sorted = [...rubbers].sort((a, b) => (initial[a.order] ?? a.order) - (initial[b.order] ?? b.order));
+      setDragOrderList(sorted.map((r) => r.order));
     }
   }, [rubbers.length, tieMatches.length, lineups.length]);
 
@@ -443,10 +465,10 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   // Playing Order Discrepancy Analysis
   let hasOrderDiscrepancy = false;
   let isBothCaptainsLocked = tie.lineup_locked_a && tie.lineup_locked_b;
-  const rubberComparison = rubbers.map((rubber: any) => {
-    const lineupA = lineups.find((l: any) => l.side === 'A' && l.rubber_order === rubber.order);
-    const lineupB = lineups.find((l: any) => l.side === 'B' && l.rubber_order === rubber.order);
-    const match = tieMatches.find((m: any) => m.rubber_order === rubber.order);
+  const rubberComparison = rubbers.map((rubber) => {
+    const lineupA = lineups.find((l) => l.side === 'A' && l.rubber_order === rubber.order);
+    const lineupB = lineups.find((l) => l.side === 'B' && l.rubber_order === rubber.order);
+    const match = tieMatches.find((m) => m.rubber_order === rubber.order);
 
     const orderA = lineupA?.proposed_playing_order ?? rubber.order;
     const orderB = lineupB?.proposed_playing_order ?? rubber.order;
@@ -468,7 +490,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
   });
 
   // Real-time Lineup Rule Checks for both sides
-  const rulesObj = typeof rawConfig === 'object' && !Array.isArray(rawConfig) ? rawConfig : {};
+  const rulesObj: TieFormatConfigObject = typeof rawConfig === 'object' && !Array.isArray(rawConfig) ? rawConfig : {};
   const rulesConfig = {
     max_rubbers_per_male: rulesObj.max_rubbers_per_male ?? tournament?.max_rubbers_per_player ?? 2,
     max_rubbers_per_female: rulesObj.max_rubbers_per_female ?? tournament?.max_rubbers_per_player ?? 2,
@@ -481,7 +503,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
 
   const assignmentsA: Record<number, { player1_id: string; player2_id?: string }> = {};
   const assignmentsB: Record<number, { player1_id: string; player2_id?: string }> = {};
-  lineups.forEach((l: any) => {
+  lineups.forEach((l) => {
     if (l.side === 'A') {
       assignmentsA[l.rubber_order] = { player1_id: l.player1_id, player2_id: l.player2_id };
     } else if (l.side === 'B') {
@@ -489,11 +511,11 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
     }
   });
 
-  const deciderMatch = tieMatches.find((m: any) => m.is_decider_tiebreaker);
+  const deciderMatch = tieMatches.find((m) => m.is_decider_tiebreaker);
   const deciderMatchParam = deciderMatch ? { rubber_order: deciderMatch.rubber_order, category: deciderMatch.category } : undefined;
 
-  const validationA = validateLineupAssignments(assignmentsA, rubbers, teamAMembers as any, rulesConfig, deciderMatchParam);
-  const validationB = validateLineupAssignments(assignmentsB, rubbers, teamBMembers as any, rulesConfig, deciderMatchParam);
+  const validationA = validateLineupAssignments(assignmentsA, rubbers, teamAMembers, rulesConfig, deciderMatchParam);
+  const validationB = validateLineupAssignments(assignmentsB, rubbers, teamBMembers, rulesConfig, deciderMatchParam);
   const totalRuleViolations = validationA.errors.length + validationB.errors.length;
 
   // Sort rubbers for display by their current match playing order
@@ -738,9 +760,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
           {/* Drag-to-reorder list */}
           <div className="flex flex-col gap-2">
             {dragOrderList.map((rubberOrder, idx) => {
-              const rubber = rubbers.find((r: any) => r.order === rubberOrder);
+              const rubber = rubbers.find((r) => r.order === rubberOrder);
               if (!rubber) return null;
-              const item = rubberComparison.find((c: any) => c.rubber.order === rubberOrder);
+              const item = rubberComparison.find((c) => c.rubber.order === rubberOrder);
               const playingPos = idx + 1;
               const isDraggingOver = dragOverIdx === idx;
 
@@ -842,7 +864,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                     {rubber.category}
                   </span>
 
-                  {(rubber.is_decider_tiebreaker || (match as any)?.is_decider_tiebreaker) && (
+                  {(rubber.is_decider_tiebreaker || match?.is_decider_tiebreaker) && (
                     <span className="text-[10px] uppercase font-black text-gold bg-gold/20 px-2 py-0.5 rounded-full border border-gold/40">
                       Golden Decider
                     </span>
@@ -874,7 +896,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                     <span className="text-xs font-black text-success bg-success/20 px-2.5 py-1 rounded-full flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Revealed
                     </span>
-                  ) : (rubber.is_decider_tiebreaker || (match as any)?.is_decider_tiebreaker) ? (
+                  ) : (rubber.is_decider_tiebreaker || match?.is_decider_tiebreaker) ? (
                     (lineupA && lineupB) ? (
                       <Button
                         size="sm"
@@ -1035,9 +1057,9 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
                   className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2 text-sm font-bold"
                 >
                   <option value="">Choose an active roster member</option>
-                  {(modifyingRubber.side === 'A' ? teamAMembers : teamBMembers).map((m: any) => (
+                  {(modifyingRubber.side === 'A' ? teamAMembers : teamBMembers).map((m) => (
                     <option key={m.player_id} value={m.player_id}>
-                      {m.players?.full_name || m.players?.display_name}
+                      {m.players?.full_name}
                     </option>
                   ))}
                 </select>
@@ -1105,7 +1127,7 @@ export function TieUmpireConsole({ tie, tournament, onClose }: Props) {
           </h4>
 
           <div className="space-y-2">
-            {audits.map((a: any) => (
+            {audits.map((a) => (
               <div key={a.id} className="p-2.5 rounded-xl bg-card border border-border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${
