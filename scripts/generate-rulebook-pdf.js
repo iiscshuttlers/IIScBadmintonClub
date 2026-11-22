@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   
-  const htmlPath = `file:///${path.join(__dirname, 'docs', 'rulebook.html').replace(/\\/g, '/')}`;
+  const htmlPath = `file:///${path.join(__dirname, '..', 'docs', 'rulebook.html').replace(/\\/g, '/')}`;
   console.log("Loading HTML:", htmlPath);
   
   await page.goto(htmlPath, { waitUntil: 'load' });

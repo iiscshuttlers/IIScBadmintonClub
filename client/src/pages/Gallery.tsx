@@ -101,7 +101,7 @@ function LazyImage({
  * Champions and Records moved to Players). Sub-tabs live in the #hash and a
  * folder filter in ?filter=, alongside Club's own ?tab=gallery.
  */
-export default function Legacy() {
+export default function Gallery() {
 
   const queryClient = useQueryClient();
   const { session, isAdmin, profile } = useAuth();

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { teamService, tournamentService, playerService } from "@/services";
-import { resolveMemberGender } from "@/components/events/TeamRosterModal";
+import { resolveMemberGender } from "@/components/events/TeamRosterModalHelper";
 import { useTeamModal } from "@/contexts/TeamModalContext";
 import { usePlayerModal } from "@/contexts/PlayerModalContext";
 import { calculateMinRosterRequirements, RosterRequirementResult } from "@/lib/teamLineupRules";

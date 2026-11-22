@@ -30,7 +30,7 @@ import { staggerContainer } from "@/lib/motion";
 
 type StatusFilter = "all" | "upcoming" | "active" | "completed";
 
-/** Finished tournaments: completed, or completed and then archived to Legacy. */
+/** Finished tournaments: completed, or completed and then archived. */
 const isPast = (s: string | null | undefined) => s === "completed" || s === "archived";
 type TypeFilter = "all" | "open" | "team";
 type RankedFilter = "all" | "ranked" | "casual";

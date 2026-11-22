@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 /** The gallery is big; load it only when its tab opens. */
-const Gallery = lazy(() => import("@/pages/Legacy"));
+const Gallery = lazy(() => import("@/pages/Gallery"));
 
 /**
  * Club: everything about the club itself. News (was Pulse → Feed),

@@ -46,3 +46,6 @@ client/.env.local
 # Stale Claude Code artifacts
 .claude/worktrees/
 .claude/scheduled_tasks.lock
+
+# Built app bundles live in OneDrive / Play Console, not in git
+releases/
