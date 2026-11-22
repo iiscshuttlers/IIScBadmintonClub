@@ -106,7 +106,10 @@ describe("WP10 integrated release gate", () => {
 
   it("excludes the Playwright fixture route from production", () => {
     const app = read("client/src/App.tsx");
-    expect(app).toMatch(/import\.meta\.env\.DEV\s*&&\s*<Route path="\/test-umpire-engine"/);
+    // The engine itself is a lazy import behind the same DEV check, so the
+    // route may also be guarded by `UmpireEngine &&`.
+    expect(app).toMatch(/import\.meta\.env\.DEV\s*&&\s*(?:UmpireEngine\s*&&\s*)?<Route path="\/test-umpire-engine"/);
+    expect(app).toMatch(/const UmpireEngine = import\.meta\.env\.DEV/);
   });
 
   it("quarantines ownerless legacy score operations instead of adopting them", () => {
