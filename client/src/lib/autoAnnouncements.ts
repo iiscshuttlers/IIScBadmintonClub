@@ -21,7 +21,7 @@ import { DISCIPLINE_LABELS, disciplineOf } from "@/lib/matchView";
 
 /** Columns the Feed reads per tournament (plain JSON, safe to persist). */
 export const AUTO_FEED_TOURNAMENT_COLUMNS =
-  "id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility, created_at, archived_at, require_app_registration";
+  "id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility, created_at, archived_at, require_app_registration, format_family, registration_opens_at";
 
 export interface AutoFeedFinal {
   category?: string | null;

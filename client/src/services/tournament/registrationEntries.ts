@@ -47,6 +47,9 @@ async function call<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
+// Untyped on purpose: participants embed players twice (player_id, partner_id),
+// which the generated types report as an ambiguous relationship. Resolved at
+// call time so tests that mock the client after import still work.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const from = (table: string) => (supabase.from as any)(table);
 

@@ -196,8 +196,7 @@ export async function bulkImportParticipants(params: {
       display_name: entry.displayName || null,
       seed: entry.seed ?? autoSeed++,
       email: entry.email,
-      // `source` isn't in the generated types until they're regenerated after the registration migration.
-      ...(params.source ? ({ source: params.source } as unknown as Record<string, never>) : {}),
+      ...(params.source ? { source: params.source } : {}),
     });
     if (error) {
       failed.push(`${entry.displayName || `row ${i + 1}`} (${error.message})`);
