@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { bulkImportParticipants } from "@/services/tournamentService";
+import { fetchRegistrationEntries, isRegistrationFlagOn } from "@/services/tournament/registrationEntries";
+import { dedupeImport } from "@/lib/registration/importDedupe";
 import { Download, Upload, Clipboard, X, Loader2 } from "lucide-react";
 import { downloadCSV, readCSVFile } from "@/utils/csvUtils";
 import type { Tournament } from "@/types/tournament";
@@ -145,13 +147,28 @@ export function ParticipantImportModal({
         };
       });
 
-      await bulkImportParticipants({
-        tournamentId: tournament.id,
-        category: activeCategory,
-        entries: preparedEntries,
-      });
+      // In-app registration: the form is only a fallback, so anyone already
+      // entered in this category (same player, e-mail or phone) is skipped.
+      let toImport = preparedEntries;
+      let skippedCount = 0;
+      const flagOn = isRegistrationFlagOn(tournament as any);
+      if (flagOn) {
+        const existing = (await fetchRegistrationEntries(tournament as any)).filter((r) => r.category === activeCategory);
+        const { keep, skipped } = dedupeImport(preparedEntries, existing, adminPlayers);
+        toImport = keep;
+        skippedCount = skipped.length;
+      }
 
-      toast.success(`${entries.length} participant(s) imported`);
+      if (toImport.length) {
+        await bulkImportParticipants({
+          tournamentId: tournament.id,
+          category: activeCategory,
+          entries: toImport,
+          ...(flagOn ? { source: "form" as const } : {}),
+        });
+      }
+
+      toast.success(`${toImport.length} participant(s) imported${skippedCount ? `, ${skippedCount} already entered (skipped)` : ""}`);
       await onImportComplete();
       onClose();
     } catch (err: any) {

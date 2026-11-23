@@ -83,6 +83,34 @@ export function winChancePct(ratingA: number, ratingB: number): number {
   return Math.round((1 / (1 + Math.pow(10, (ratingB - ratingA) / 400))) * 100);
 }
 
+/**
+ * Game scores of a "21-19, 18-21" score line, turned to side A's point of
+ * view (scores are stored side 1 first). Notes in brackets and anything that
+ * isn't a number pair are skipped.
+ */
+export function gamesFromA(score: string | null | undefined, aSide: 1 | 2): { a: number; b: number }[] {
+  const games: { a: number; b: number }[] = [];
+  for (const part of (score ?? "").replace(/\[.*\]/g, "").split(",")) {
+    const [x, y] = part.split("-").map((n) => parseInt(n.trim(), 10));
+    if (Number.isNaN(x) || Number.isNaN(y)) continue;
+    games.push(aSide === 1 ? { a: x, b: y } : { a: y, b: x });
+  }
+  return games;
+}
+
+/** The side on the current winning run over the counted meetings, and its length. */
+export function currentRun(result: ComparisonResult): { aWon: boolean; length: number } | null {
+  const counted = result.meetings.filter((m) => m.eligibility === "counted");
+  if (!counted.length) return null;
+  const aWon = !!counted[0].aWon;
+  let length = 0;
+  for (const m of counted) {
+    if (!!m.aWon !== aWon) break;
+    length++;
+  }
+  return { aWon, length };
+}
+
 /** Points scored and longest winning runs over the counted meetings. */
 export function pointsAndStreaks(result: ComparisonResult): { aPoints: number; bPoints: number; aBestRun: number; bBestRun: number } {
   let aPoints = 0;
@@ -102,16 +130,9 @@ export function pointsAndStreaks(result: ComparisonResult): { aPoints: number; b
       aRun = 0;
       bBestRun = Math.max(bBestRun, bRun);
     }
-    for (const game of (m.row.score ?? "").split(",")) {
-      const [x, y] = game.split("-").map((n) => parseInt(n.trim(), 10));
-      if (Number.isNaN(x) || Number.isNaN(y)) continue;
-      if (m.aSide === 1) {
-        aPoints += x;
-        bPoints += y;
-      } else {
-        aPoints += y;
-        bPoints += x;
-      }
+    for (const g of gamesFromA(m.row.score, m.aSide)) {
+      aPoints += g.a;
+      bPoints += g.b;
     }
   }
   return { aPoints, bPoints, aBestRun, bBestRun };

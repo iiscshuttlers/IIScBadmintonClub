@@ -33,7 +33,7 @@ export function ClubAbout() {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetchSiteData("club_settings", "settings.json")
+    fetchSiteData("club_settings", null)
       .then((data) => { if (data) setConfig(data); })
       .catch(console.error);
     let cancelled = false;
@@ -212,7 +212,7 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
       onClick={onClose}
     >
       <button
-        className="absolute top-5 right-5 z-[60] text-foreground/60 hover:text-foreground bg-foreground/10 hover:bg-foreground/20 rounded-full p-2.5 transition-all cursor-pointer"
+        className="absolute top-5 right-5 z-[60] text-on-media/80 hover:text-on-media bg-on-media/10 hover:bg-on-media/20 rounded-full p-2.5 transition-all cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         aria-label="Close"
       >

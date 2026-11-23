@@ -15,7 +15,7 @@ export const TOURNAMENT_TABS = ["overview", "players", "draw", "schedule", "resu
 export type TournamentTab = (typeof TOURNAMENT_TABS)[number];
 
 /** Role- or viewer-specific sub-views, addressed with `?panel=`. */
-export const TOURNAMENT_PANELS = ["my-matches", "polls", "umpire", "referee", "organizer"] as const;
+export const TOURNAMENT_PANELS = ["my-matches", "my-entry", "polls", "umpire", "referee", "organizer"] as const;
 export type TournamentPanel = (typeof TOURNAMENT_PANELS)[number];
 
 /** Match page sub-tabs (`/tournaments/:id/matches/:matchId/:mtab`). No tab = Summary. */
@@ -60,6 +60,25 @@ export function parseDiscipline(raw: string | null | undefined): Discipline | nu
   if (!raw) return null;
   const v = raw.toUpperCase();
   return (DISCIPLINES as readonly string[]).includes(v) ? (v as Discipline) : null;
+}
+
+/**
+ * `?cat=` for registration views: any of the tournament's own categories
+ * (case-insensitive, returned as the tournament spells it). Match filters keep
+ * using parseDiscipline / DISCIPLINES.
+ */
+export function parseCategory(search: string | URLSearchParams, categories: readonly string[] | null | undefined): string | null {
+  const params = typeof search === "string" ? new URLSearchParams(search.startsWith("?") ? search.slice(1) : search) : search;
+  const raw = params.get("cat")?.trim();
+  if (!raw) return null;
+  return (categories ?? []).find((c) => c.toLowerCase() === raw.toLowerCase()) ?? null;
+}
+
+/** "My entry" for a tournament, optionally opened at one category. */
+export function myEntryPath(tournamentId: string, category?: string | null): string {
+  const q = new URLSearchParams({ panel: "my-entry" });
+  if (category) q.set("cat", category);
+  return `/tournaments/${encodeURIComponent(tournamentId)}?${q.toString()}`;
 }
 
 export function parseMatchListStatus(raw: string | null | undefined): MatchListStatus | null {
@@ -246,7 +265,7 @@ export function canonicalFromPulse(search: string, hash: string): string | null 
 
 // ── Old LiveTab sub-tab ⇄ canonical tab (used by the embedded LiveTab) ─────
 
-export type LiveSubTab = LegacySubTab | "players" | "stats";
+export type LiveSubTab = LegacySubTab | "players" | "stats" | "my-entry";
 
 export function liveSubTabFor(
   tab: TournamentTab,

@@ -313,31 +313,22 @@ function DbHealthPanel() {
 }
 
 /* ── Cron Jobs Status ─────────────────────────────────────────────── */
-function CronJobsPanel() {
-  const jobs = [
-    { name: "batch-notifications", schedule: "Every 15 min", desc: "Sends queued push notifications" },
-    { name: "send-match-reminders", schedule: "Every 5 min", desc: "Reminds players and subscribers before their matches" },
-    { name: "dispatch-scheduled-notifications", schedule: "Every 2 min", desc: "Delivers scheduled announcements and alerts" },
-    { name: "notify-up-next", schedule: "Every minute", desc: "Tells players their match is next on court" },
-    { name: "lineup-deadline-reminders", schedule: "Every 5 min", desc: "Reminds team captains before lineup deadlines" },
-    { name: "take_ranking_snapshot", schedule: "Mondays 12:05am IST", desc: "Saves the weekly ranking snapshot" },
-  ];
-
+/** Scheduled jobs live in Delivery & jobs, which reads the real cron history
+ *  (this tab used to show a hand-written list that went stale). */
+function CronJobsLink() {
+  const open = () => {
+    window.history.pushState(null, "", `${window.location.pathname}#delivery`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  };
   return (
     <div className={cardCls}>
-      {sectionTitle(<Zap className="w-4 h-4" />, "Scheduled Cron Jobs")}
-      <div className="space-y-2">
-        {jobs.map((job) => (
-          <div key={job.name} className="bg-muted rounded-xl px-3 py-2.5">
-            <div className="flex items-center justify-between mb-0.5">
-              <p className="text-sm font-black text-foreground">{job.name}</p>
-              <span className="text-[10px] font-black bg-primary/40 text-primary px-2 py-0.5 rounded-full">Active</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{job.schedule} · {job.desc}</p>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground mt-3">Manage schedules in Supabase Dashboard → Database → Cron Jobs.</p>
+      {sectionTitle(<Zap className="w-4 h-4" />, "Scheduled jobs")}
+      <p className="text-sm text-muted-foreground">
+        Every cron job, when it last ran and whether it worked, is in System → Delivery &amp; jobs.
+      </p>
+      <Button type="button" variant="outline" className="mt-3" onClick={open}>
+        Open Delivery &amp; jobs
+      </Button>
     </div>
   );
 }
@@ -399,7 +390,7 @@ export function AdminFeaturesPanel() {
       {section === "notifications" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />
-          <CronJobsPanel />
+          <CronJobsLink />
         </div>
       )}
       {section === "api" && <PublicApiPanel />}

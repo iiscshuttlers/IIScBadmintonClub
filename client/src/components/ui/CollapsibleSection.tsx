@@ -41,12 +41,15 @@ export function CollapsibleSection({ title, summary, icon, defaultOpen = false, 
         setOpen((o) => !o);
         setMounted(true);
       }}
-      className="w-full flex items-center gap-3 px-5 py-4 text-left"
+      className="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 text-left"
     >
       {icon && <span className="shrink-0 text-primary [&_svg]:w-4 [&_svg]:h-4">{icon}</span>}
-      <span className="shrink-0 font-black text-foreground">{title}</span>
-      {summary && !open && <span className="min-w-0 truncate text-xs text-muted-foreground">{summary}</span>}
-      <ChevronDown className={`ml-auto w-4 h-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      {/* Summary sits under the title, so a phone shows all of it instead of "Approve players who sig…". */}
+      <span className="min-w-0 flex-1">
+        <span className="block font-black text-foreground">{title}</span>
+        {summary && !open && <span className="block text-xs text-muted-foreground">{summary}</span>}
+      </span>
+      <ChevronDown className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
   );
 

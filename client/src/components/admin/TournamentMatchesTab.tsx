@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import {
   Trophy, Lock, Bell, CalendarDays, ArrowLeftRight, X, Play, SkipForward,
-  Unlock, Undo2, RotateCcw, Camera, Users, MapPin, Download, Upload, Loader2,
+  Undo2, RotateCcw, Camera, Users, MapPin, Download, Upload, Loader2,
   AlertCircle, Check, Trash2, ChevronDown, ShieldCheck
 } from "lucide-react";
 import { MatchCorrectionDialog } from "@/components/admin/MatchCorrectionDialog";
@@ -19,15 +19,20 @@ import {
   undoTournamentMatch as undoTournamentMatchRpc,
   notifyTournamentMatch,
 } from "@/services/tournamentService";
+import { matchRules, type MatchRules } from "@/lib/badmintonScore";
 import {
-  autoWinnerFromSets,
+  bulkSchedulePatch,
+  cleanCourt,
   csvRowsToBulkLines,
   parseBulkSchedule as parseBulkScheduleRows,
   roundListPriority,
   scheduleTemplateRows,
   statusAfterScheduleEdit,
   validateEditScore,
+  type SetInput,
 } from "./tournamentMatchesLogic";
+
+const COURT_PRESETS = ["C1", "C2", "C3"];
 
 const cardCls = "bg-card rounded-2xl border border-border p-5 shadow-sm";
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border-strong bg-muted text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
@@ -82,12 +87,15 @@ export function TournamentMatchesTab({
   setShowBulkSchedule,
 }: TournamentMatchesTabProps) {
   const [actingOn, setActingOn] = useState<string | null>(null);
+  const [savingScore, setSavingScore] = useState(false);
   const [correcting, setCorrecting] = useState<{ id: string; t1: string; t2: string } | null>(null);
+  // `side` is only the hand-picked winner for an incomplete score (retirement or
+  // concession); when the games decide the match, their winner is used instead.
   const [editScore, setEditScore] = useState<{
-    matchId: string; side: 1 | 2; sets: string; bestOfSets: number; goldenPoint: number; pointsToWin: number;
-    setsData: { t1: string; t2: string }[];
+    matchId: string; side: 1 | 2 | null; rules: MatchRules; setsData: SetInput[];
   } | null>(null);
-  const [editSchedule, setEditSchedule] = useState<{ matchId: string; court: string; at: string } | null>(null);
+  // `otherCourt`: the "Other" option is chosen and the court is typed by hand.
+  const [editSchedule, setEditSchedule] = useState<{ matchId: string; court: string; at: string; otherCourt: boolean } | null>(null);
   const [assignUmpire, setAssignUmpire] = useState<{ matchId: string; umpireId: string } | null>(null);
   const [bulkText, setBulkText] = useState("");
   const [bulkPreview, setBulkPreview] = useState<{ matchCode: string; court: string; at: string; found: boolean; wrongCategory?: boolean }[]>([]);
@@ -203,24 +211,36 @@ export function TournamentMatchesTab({
 
   const submitEditScore = async () => {
     if (!editScore) return;
-    const checked = validateEditScore(editScore.setsData, editScore);
+    const checked = validateEditScore(editScore.setsData, editScore.rules);
     if (checked.ok === false) { toast.error(checked.error); return; }
     const { sets: setsArr, score: scoreStr } = checked;
+    // Decided games always name the winner; a hand-picked side only counts for an
+    // incomplete score (retirement or concession).
+    const winnerSide = checked.winnerSide ?? editScore.side;
+    if (!winnerSide) {
+      toast.error("Score is incomplete. Choose the side that won by retirement or concession.");
+      return;
+    }
+    if (savingScore) return;
+    setSavingScore(true);
     try {
       await submitTournamentMatch({
         p_match_id: editScore.matchId,
-        p_winner_side: editScore.side,
+        p_winner_side: winnerSide,
         p_score: scoreStr,
         p_sets: setsArr,
         p_umpire_id: null,
         p_expected_revision: matches.find((match) => match.id === editScore.matchId)?.result_revision ?? 0,
       });
       toast.success("Score saved");
+      setEditScore(null);
       await load();
     } catch (error: any) {
+      // Keep the editor open so the typed score isn't lost.
       toast.error(error.message);
+    } finally {
+      setSavingScore(false);
     }
-    setEditScore(null);
   };
 
   const saveSchedule = async () => {
@@ -232,15 +252,21 @@ export function TournamentMatchesTab({
     }
 
     const match = matches.find((m) => m.id === editSchedule.matchId);
+    const court = cleanCourt(editSchedule.court);
 
-    const newStatus = statusAfterScheduleEdit(match?.status, isoAt, editSchedule.court);
+    const newStatus = statusAfterScheduleEdit(match?.status, isoAt, court);
+    // Only a real move re-arms the reminder; saving the same slot again must
+    // not remind players a second time.
+    const sameTime = (match?.scheduled_at ? new Date(match.scheduled_at).getTime() : null) ===
+      (isoAt ? new Date(isoAt).getTime() : null);
+    const slotChanged = !sameTime || cleanCourt(match?.court_number ?? "") !== court;
 
     try {
       await adminUpdateTournamentMatch(editSchedule.matchId, {
-        court_number: editSchedule.court || null,
+        court_number: court || null,
         scheduled_at: isoAt,
         status: newStatus,
-        reminder_sent: false,
+        ...(slotChanged ? { reminder_sent: false } : {}),
       }, "Edit the match court and scheduled time");
       await load();
       setEditSchedule(null);
@@ -286,27 +312,47 @@ export function TournamentMatchesTab({
 
   const saveBulkSchedule = async () => {
     setBulkSaving(true);
-    let saved = 0;
-    for (const row of bulkPreview) {
-      if (!row.found || row.wrongCategory) continue;
-      const match = matches.find((m) => m.match_code === row.matchCode);
-      if (!match) continue;
-      
-      const newStatus = statusAfterScheduleEdit(match.status, row.at, row.court);
-
-      await adminUpdateTournamentMatch(match.id, {
-        court_number: row.court || null,
-        scheduled_at: row.at || null,
-        status: newStatus,
-      }, "Bulk order-of-play schedule update");
-      saved++;
+    let attempted = 0;
+    let unchanged = 0;
+    const failed: { code: string; message: string }[] = [];
+    try {
+      // Every row is tried, so one failure doesn't leave the rest unsaved.
+      for (const row of bulkPreview) {
+        if (!row.found || row.wrongCategory) continue;
+        const match = matches.find((m) => m.match_code === row.matchCode);
+        if (!match) continue;
+        const patch = bulkSchedulePatch(match, row);
+        if (!patch) { unchanged++; continue; }
+        attempted++;
+        try {
+          await adminUpdateTournamentMatch(match.id, patch, "Bulk order-of-play schedule update");
+        } catch (error: any) {
+          failed.push({ code: row.matchCode, message: error?.message ?? "Could not save" });
+        }
+      }
+      try {
+        await load();
+      } catch {
+        /* intentional — the saves above stand; the list refreshes on the next load */
+      }
+    } finally {
+      setBulkSaving(false);
     }
-    await load();
-    setBulkSaving(false);
+
+    const saved = attempted - failed.length;
+    if (failed.length) {
+      // Keep the dialog open: saving again retries only the rows that still differ.
+      toast.error(
+        `Saved ${saved} of ${attempted}; ${failed.length} failed: ${failed.map((f) => f.code).join(", ")}`,
+        { description: failed[0].message },
+      );
+      return;
+    }
     setShowBulkSchedule(false);
     setBulkText("");
     setBulkPreview([]);
-    toast.success(`Bulk schedule saved for ${saved} match${saved !== 1 ? "es" : ""}`);
+    const noChange = unchanged ? `; ${unchanged} had no changes` : "";
+    toast.success(`Bulk schedule saved for ${saved} match${saved !== 1 ? "es" : ""}${noChange}`);
   };
 
   const categoryMatches = matches.filter((m) => m.category === activeCategory);
@@ -455,10 +501,8 @@ export function TournamentMatchesTab({
                         {m.status !== "completed" && canEdit && (
                           <>
                             <button onClick={() => {
-                              const bo = m.best_of_sets ?? 3;
-                              const gp = m.golden_point ?? 30;
-                              const ptw = m.points_to_win ?? 21;
-                              setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
+                              const rules = matchRules(m);
+                              setEditScore({ matchId: m.id, side: null, rules, setsData: Array.from({ length: rules.bestOfSets }, () => ({ t1: "", t2: "" })) });
                             }}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/40 text-primary hover:bg-primary/50 transition">
                               <Trophy className="w-3 h-3" /> Score
@@ -496,10 +540,6 @@ export function TournamentMatchesTab({
                         )}
                         {m.status === "completed" && isMasterAdmin && (
                           <>
-                            <button onClick={() => setCorrecting({ id: m.id, t1: m.team1_label ?? "Side 1", t2: m.team2_label ?? "Side 2" })}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-warning text-warning hover:bg-warning/30 transition">
-                              <Unlock className="w-3 h-3" /> Correct
-                            </button>
                             <button onClick={() => undoTournamentMatch(m.id)} disabled={busy}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-danger text-danger hover:bg-danger/30 transition">
                               <Undo2 className="w-3 h-3" /> Undo Match
@@ -556,7 +596,8 @@ export function TournamentMatchesTab({
                                 const pad = (n: number) => n.toString().padStart(2, '0');
                                 localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
                               }
-                              setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: localAt });
+                              const court = cleanCourt(m.court_number);
+                              setEditSchedule({ matchId: m.id, court, at: localAt, otherCourt: court !== "" && !COURT_PRESETS.includes(court) });
                             }}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-border-strong text-muted-foreground hover:bg-muted transition">
                               <CalendarDays className="w-3 h-3" /> Schedule
@@ -692,28 +733,23 @@ export function TournamentMatchesTab({
                     </div>
 
                     {isEditing && (function() {
-                      const sd = editScore!.setsData;
-                      const setsStr = sd.filter(s => s.t1 !== "" && s.t2 !== "").map(s => `${s.t1}-${s.t2}`).join(", ");
-                      const autoWinner = autoWinnerFromSets(setsStr, editScore!.bestOfSets);
+                      const { rules, setsData: sd } = editScore!;
+                      const checked = validateEditScore(sd, rules);
+                      const decidedWinner = checked.ok ? checked.winnerSide : null;
+                      const anyScoreTyped = sd.some((s) => s.t1 !== "" || s.t2 !== "");
                       const updateSet = (i: number, field: "t1" | "t2", val: string) => {
                         let numStr = val.replace(/\D/g, "");
-                        if (numStr) {
-                          const num = parseInt(numStr, 10);
-                          if (num > editScore!.goldenPoint) numStr = editScore!.goldenPoint.toString();
-                        }
-                        const next = sd.map((s, idx) => idx === i ? { ...s, [field]: numStr } : s);
-                        const nextStr = next.filter(s => s.t1 !== "" && s.t2 !== "").map(s => `${s.t1}-${s.t2}`).join(", ");
-                        const auto = autoWinnerFromSets(nextStr, editScore!.bestOfSets);
-                        setEditScore((p) => p && ({ ...p, setsData: next, sets: nextStr, ...(auto ? { side: auto } : {}) }));
+                        if (numStr && parseInt(numStr, 10) > rules.cap) numStr = String(rules.cap);
+                        setEditScore((p) => p && ({ ...p, setsData: p.setsData.map((s, idx) => idx === i ? { ...s, [field]: numStr } : s) }));
                       };
                       return (
                         <div className="mt-3 pt-3 border-t border-border space-y-3">
                           <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/50 py-1.5 rounded-lg border border-border-strong/50">
-                            <span title="Points required to win a set">Win at {editScore!.pointsToWin}</span>
+                            <span title="Points required to win a set">Win at {rules.pointsToWin}</span>
                             <span className="opacity-30">•</span>
-                            <span title="Best of X sets">Best of {editScore!.bestOfSets}</span>
+                            <span title="Best of X sets">Best of {rules.bestOfSets}</span>
                             <span className="opacity-30">•</span>
-                            <span title="Maximum points possible (Golden Point)">GP {editScore!.goldenPoint}</span>
+                            <span title="Maximum points possible (Golden Point)">GP {rules.cap}</span>
                           </div>
                           <div className="grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center">
                             <div />
@@ -748,10 +784,12 @@ export function TournamentMatchesTab({
                             </div>
                           </div>
                           {sd.map((s, i) => {
-                            const setsBeforeStr = sd.slice(0, i).filter(prev => prev.t1 !== "" && prev.t2 !== "").map(prev => `${prev.t1}-${prev.t2}`).join(",");
-                            const isAlreadyWon = autoWinnerFromSets(setsBeforeStr, editScore!.bestOfSets) !== null;
+                            const before = validateEditScore(sd.slice(0, i), rules);
+                            const isAlreadyWon = before.ok && before.winnerSide !== null;
                             const prevFilled = i === 0 || (sd[i - 1].t1 !== "" && sd[i - 1].t2 !== "");
-                            const isDisabled = !prevFilled || isAlreadyWon;
+                            // A game that still holds numbers stays editable, so one left over
+                            // after the match was decided can be cleared instead of blocking Save.
+                            const isDisabled = (!prevFilled || isAlreadyWon) && s.t1 === "" && s.t2 === "";
 
                             const t1n = parseInt(s.t1), t2n = parseInt(s.t2);
                             const t1Won = !isNaN(t1n) && !isNaN(t2n) && t1n > t2n;
@@ -785,23 +823,35 @@ export function TournamentMatchesTab({
                           })}
                           <div className="flex items-center gap-2 pt-1">
                             <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0">Winner</span>
-                            {autoWinner ? (
+                            {decidedWinner ? (
                               <span className="flex items-center gap-1.5 text-xs font-black text-primary">
                                 <Trophy className="w-3 h-3" />
-                                {editScore!.side === 1 ? (m.team1_label ?? "Team 1") : (m.team2_label ?? "Team 2")}
+                                {decidedWinner === 1 ? (m.team1_label ?? "Team 1") : (m.team2_label ?? "Team 2")}
                                 <span className="text-muted-foreground font-normal">(auto-detected)</span>
                               </span>
                             ) : (
-                              <select value={editScore!.side} onChange={(e) => setEditScore((p) => p && ({ ...p, side: parseInt(e.target.value) as 1 | 2 }))}
+                              <select
+                                aria-label="Winner"
+                                value={editScore!.side ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setEditScore((p) => p && ({ ...p, side: v === "1" ? 1 : v === "2" ? 2 : null }));
+                                }}
                                 className="text-sm px-3 py-1.5 rounded-xl border border-border-strong bg-muted outline-none focus:ring-1 focus:ring-primary">
-                                <option value={1}>{m.team1_label ?? "Team 1"}</option>
-                                <option value={2}>{m.team2_label ?? "Team 2"}</option>
+                                <option value="" disabled>Choose winner…</option>
+                                <option value="1">{m.team1_label ?? "Team 1"}</option>
+                                <option value="2">{m.team2_label ?? "Team 2"}</option>
                               </select>
                             )}
                           </div>
+                          {!decidedWinner && anyScoreTyped && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Score is incomplete — pick the side that won by retirement or concession
+                            </p>
+                          )}
                           <div className="flex gap-2 pt-1">
-                            <button onClick={submitEditScore}
-                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition">
+                            <button onClick={submitEditScore} disabled={savingScore}
+                              className="disabled:opacity-60 px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition">
                               Save
                             </button>
                             <button onClick={() => setEditScore(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
@@ -815,38 +865,31 @@ export function TournamentMatchesTab({
                         <div className="flex gap-2">
                           <div>
                             <label className={labelCls}><MapPin className="w-3 h-3 inline mr-1" />Court</label>
-                            {(function() {
-                              const PRESETS = ["C1","C2","C3"];
-                              const isPreset = PRESETS.includes(editSchedule!.court);
-                              const isEmpty = editSchedule!.court === "";
-                              const selectVal = isPreset ? editSchedule!.court : isEmpty ? "" : "other";
-                              return (
-                                <>
-                                  <select
-                                    value={selectVal}
-                                    onChange={(e) => {
-                                      if (e.target.value === "other") setEditSchedule((p) => p && ({ ...p, court: "​" }));
-                                      else setEditSchedule((p) => p && ({ ...p, court: e.target.value }));
-                                    }}
-                                    className="w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
-                                  >
-                                    <option value="">Select</option>
-                                    <option value="C1">Court 1 (C1)</option>
-                                    <option value="C2">Court 2 (C2)</option>
-                                    <option value="C3">Court 3 (C3)</option>
-                                    <option value="other">Other</option>
-                                  </select>
-                                  {!isPreset && !isEmpty && (
-                                    <input
-                                      value={editSchedule!.court === "​" ? "" : editSchedule!.court}
-                                      onChange={(e) => setEditSchedule((p) => p && ({ ...p, court: e.target.value || "​" }))}
-                                      placeholder="Enter court"
-                                      className="mt-1 w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
-                                    />
-                                  )}
-                                </>
-                              );
-                            })()}
+                            <select
+                              aria-label="Court"
+                              value={editSchedule!.otherCourt ? "other" : editSchedule!.court}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setEditSchedule((p) => p && (v === "other"
+                                  ? { ...p, otherCourt: true, court: p.otherCourt ? p.court : "" }
+                                  : { ...p, otherCourt: false, court: v }));
+                              }}
+                              className="w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
+                            >
+                              <option value="">Select</option>
+                              {COURT_PRESETS.map((c) => (
+                                <option key={c} value={c}>Court {c.slice(1)} ({c})</option>
+                              ))}
+                              <option value="other">Other</option>
+                            </select>
+                            {editSchedule!.otherCourt && (
+                              <input
+                                value={editSchedule!.court}
+                                onChange={(e) => setEditSchedule((p) => p && ({ ...p, court: e.target.value }))}
+                                placeholder="Enter court"
+                                className="mt-1 w-28 px-3 py-2 rounded-xl border border-border-strong bg-muted text-sm outline-none"
+                              />
+                            )}
                           </div>
                           <div className="flex-1">
                             <label className={labelCls}><CalendarDays className="w-3 h-3 inline mr-1" />Date & Time</label>
@@ -957,12 +1000,17 @@ export function TournamentMatchesTab({
             )}
 
             <div className="flex gap-3 pt-1">
-              <button
-                onClick={saveBulkSchedule}
-                disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-info hover:bg-info/90 text-info-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
-                {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
-              </button>
+              {(() => {
+                const saveable = bulkPreview.filter((r) => r.found && !r.wrongCategory).length;
+                return (
+                  <button
+                    onClick={saveBulkSchedule}
+                    disabled={bulkSaving || saveable === 0}
+                    className="px-5 py-2 rounded-xl bg-info hover:bg-info/90 text-info-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {bulkSaving ? "Saving…" : `Save ${saveable} Match${saveable !== 1 ? "es" : ""}`}
+                  </button>
+                );
+              })()}
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}
                 className="text-xs text-muted-foreground hover:text-muted-foreground transition">
                 Cancel

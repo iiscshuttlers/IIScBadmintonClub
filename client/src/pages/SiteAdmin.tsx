@@ -3,33 +3,16 @@ import { useLocation } from "wouter";
 import { BackButton } from "@/components/ui/BackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Ghost,
-  Trash2,
   Shield,
   ShieldAlert,
-  Users,
-  Activity,
   Trophy,
-  Paintbrush,
-  ClipboardList,
-  Settings,
-  BarChart2,
-  TrendingUp,
-  Zap,
-  Sparkles,
   Undo2,
   Redo2,
-  FileCode2,
   ExternalLink,
-  MessageSquare,
   Menu,
   X,
   Search,
-  Database,
-  Gavel,
-  Swords,
   Home,
-  Radio,
   Pin,
   PinOff,
 } from "lucide-react";
@@ -37,6 +20,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+import { useAdminActionItems } from "@/hooks/queries/useAdminActionItems";
+import { useNewFeedbackCount } from "@/hooks/queries/useAdminHome";
+import {
+  PANEL_META, SECTIONS, SECTION_OF, TABS, TAB_GROUPS, canSeePanel as canSeePanelFor, isMasterOnlySection, resolveTab,
+  type SectionId, type SectionMeta, type TabId, type TabMeta,
+} from "@/lib/adminNav";
 
 /* ── Lazy-loaded panels ─────────────────────────────────────────────
  * Each panel is code-split so visiting /admin no longer pulls the whole
@@ -57,7 +46,7 @@ const ContentHub = lazyNamed(() => import("@/components/admin/ContentHub"), "Con
 // Standalone panels
 const UmpireTab = lazyNamed(() => import("@/components/umpire/UmpireTab"), "UmpireTab");
 const AdminStatsOverview = lazyNamed(() => import("@/components/admin/AdminStatsOverview"), "AdminStatsOverview");
-const AdminActionCards = lazyNamed(() => import("@/components/admin/AdminActionCards"), "AdminActionCards");
+const AdminHome = lazyNamed(() => import("@/components/admin/AdminHome"), "AdminHome");
 const InboxPanel = lazyNamed(() => import("@/components/admin/InboxPanel"), "InboxPanel");
 const AdminSettings = lazyNamed(() => import("@/components/admin/AdminSettings"), "AdminSettings");
 const AdminActivityLog = lazyNamed(() => import("@/components/admin/AdminActivityLog"), "AdminActivityLog");
@@ -73,137 +62,6 @@ const DatabaseSchemaDashboard = lazyNamed(() => import("@/components/admin/Datab
 const DeliveryAuditPanel = lazyNamed(() => import("@/components/admin/DeliveryAuditPanel"), "DeliveryAuditPanel");
 // The content editors (banners, posts, polls, calendar, club page) are composed
 // inside ContentHub around one shared draft; FeatureMapDashboard + AdminAllFeaturesPanel inside FeaturesPanel.
-
-/* ── Types ──────────────────────────────────────────────────────── */
-type TabId =
-  | "overview"
-  | "content"
-  | "tournament"
-  | "players"
-  | "guests"
-  | "umpire"
-  | "registrations"
-  | "matches"
-  | "changelog"
-  | "inbox"
-  | "elo_audit"
-  | "settings"
-  | "activity_log"
-  | "features"
-  | "features_catalog"
-  | "recycle_bin"
-  | "undo_history"
-  | "database_schema"
-  | "analytics"
-  | "delivery"
-  | "role_manager";
-
-interface TabMeta {
-  id: TabId;
-  label: string;
-  icon: any;
-  description?: string;
-  /** Only master admins may see/open this tab. */
-  master?: boolean;
-}
-interface TabGroup {
-  title: string;
-  color: string;
-  tabs: SectionMeta[];
-}
-
-/**
- * Every panel the console can show. Panel ids are the URL hash (#elo_audit),
- * so bookmarks and deep links from before the regroup still open the same
- * panel. The sidebar lists SECTIONS (below), each holding one or more panels.
- */
-const TABS: TabMeta[] = [
-  { id: "overview", label: "Statistics", icon: Activity, description: "Key club metrics and ELO distribution" },
-  { id: "analytics", label: "Analytics", icon: TrendingUp, description: "Engagement, retention, usage trends and top pages" },
-  { id: "elo_audit", label: "ELO Audit", icon: BarChart2, description: "Audit ELO changes across match history" },
-  { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue" },
-  { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players" },
-  { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles" },
-  { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players" },
-  { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets" },
-  { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records" },
-  { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials" },
-  { id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media" },
-  { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags" },
-  { id: "activity_log", label: "Activity Log", icon: ClipboardList, description: "Audit trail of all admin actions" },
-  { id: "undo_history", label: "Undo History", icon: Undo2, description: "Browse and undo recent admin changes" },
-  { id: "recycle_bin", label: "Recycle Bin", icon: Trash2, description: "Restore recently soft-deleted records" },
-  { id: "features", label: "Live Ops", icon: Zap, description: "Live scores, notifications, public API and DB health" },
-  { id: "features_catalog", label: "Features", icon: Sparkles, description: "Browse and manage all feature flags" },
-  { id: "delivery", label: "Delivery Audit", icon: Radio, description: "Cron-job health and notification delivery" },
-  { id: "changelog", label: "System Logs", icon: FileCode2, description: "System change logs and deploy history" },
-  { id: "database_schema", label: "Database Schema", icon: Database, master: true, description: "Inspect the live database schema" },
-];
-const PANEL_META = new Map<TabId, TabMeta>(TABS.map((t) => [t.id, t]));
-
-/** One sidebar entry: a single panel, or several behind a sub-switch. */
-type SectionId =
-  | "insights" | "inbox"
-  | "players" | "role_manager" | "guests"
-  | "tournament" | "matches" | "umpire"
-  | "content"
-  | "settings" | "history" | "developer";
-interface SectionMeta {
-  id: SectionId;
-  label: string;
-  icon: any;
-  description: string;
-  panels: TabId[];
-  /** Only master admins see this section (every panel in it is master-only). */
-  master?: boolean;
-}
-
-/** 12 sections in 5 groups (was 19 tabs in 6 groups until the 22 Nov 2026 regroup). */
-const TAB_GROUPS: TabGroup[] = [
-  {
-    title: "Dashboard",
-    color: "text-info",
-    tabs: [
-      { id: "insights", label: "Insights", icon: Activity, description: "Statistics, analytics and the ELO audit", panels: ["overview", "analytics", "elo_audit"] },
-      { id: "inbox", label: "Inbox", icon: MessageSquare, description: "Feedback, disputes and moderation queue", panels: ["inbox"] },
-    ],
-  },
-  {
-    title: "People",
-    color: "text-individual",
-    tabs: [
-      { id: "players", label: "Players", icon: Users, description: "Approve, manage and profile all players", panels: ["players"] },
-      { id: "role_manager", label: "Role Manager", icon: ShieldAlert, master: true, description: "Grant and revoke admin or umpire roles", panels: ["role_manager"] },
-      { id: "guests", label: "Guests", icon: Ghost, description: "Manage unregistered guest players", panels: ["guests"] },
-    ],
-  },
-  {
-    title: "Competition",
-    color: "text-warning",
-    tabs: [
-      { id: "tournament", label: "Tournaments", icon: Trophy, description: "Create and manage tournament brackets", panels: ["tournament"] },
-      { id: "matches", label: "Matches", icon: Swords, description: "Review, edit and delete match records", panels: ["matches"] },
-      { id: "umpire", label: "Umpire Mode", icon: Gavel, description: "Live scoring mode for match officials", panels: ["umpire"] },
-    ],
-  },
-  {
-    title: "Content",
-    color: "text-individual",
-    tabs: [{ id: "content", label: "Content", icon: Paintbrush, description: "Banners, polls, notices and media", panels: ["content"] }],
-  },
-  {
-    title: "System",
-    color: "text-success",
-    tabs: [
-      { id: "settings", label: "Settings", icon: Settings, description: "Club configuration and feature flags", panels: ["settings"] },
-      { id: "history", label: "History", icon: ClipboardList, description: "Activity log, undo history and the recycle bin", panels: ["activity_log", "undo_history", "recycle_bin"] },
-      { id: "developer", label: "Developer", icon: Zap, description: "Live ops, feature flags, delivery, logs and schema", panels: ["features", "features_catalog", "delivery", "changelog", "database_schema"] },
-    ],
-  },
-];
-
-const SECTIONS: SectionMeta[] = TAB_GROUPS.flatMap((group) => group.tabs);
-const SECTION_OF = new Map<TabId, SectionId>(SECTIONS.flatMap((s) => s.panels.map((p) => [p, s.id] as const)));
 
 const PINNED_STORAGE_KEY = "admin-pinned-tabs";
 
@@ -223,39 +81,6 @@ function loadPinnedTabs(): SectionId[] {
 
 function savePinnedTabs(pins: SectionId[]) {
   try { localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pins)); } catch { /* intentional — localStorage quota or restricted private mode, pinned tabs are non-critical */ }
-}
-
-/** Old hash routes that no longer map 1:1 after the tab merges. Keeps
- *  existing bookmarks / deep-links working by redirecting to the new home. */
-const HASH_ALIASES: Record<string, TabId> = {
-  // Content hub
-  config: "content",
-  noticeboard: "content",
-  home_banners: "content",
-  polls: "content",
-  holidays: "content",
-  videos: "content",
-  convener_photos: "content",
-  // Inbox
-  feedback: "inbox",
-  moderation: "inbox",
-  disputes: "inbox",
-  // Features
-  all_features: "features_catalog",
-  feature_registry: "features_catalog",
-  // Deleted Developer Hub panels → nearest surviving home
-  architecture: "features_catalog",
-  neural_graph: "features_catalog",
-  features_guide: "features_catalog",
-  tooltips: "settings",
-};
-
-function resolveTab(rawHash: string): TabId | null {
-  const base = rawHash.replace("#", "").split("/")[0];
-  if (!base) return null;
-  if (TABS.some((t) => t.id === base)) return base as TabId;
-  if (HASH_ALIASES[base]) return HASH_ALIASES[base];
-  return null;
 }
 
 /* ================================================================ */
@@ -328,7 +153,7 @@ function AdminNav({
             {count}
           </span>
         )}
-        {tab.master && (
+        {isMasterOnlySection(tab) && (
           <span title="Master admin only" className="inline-flex shrink-0">
             <ShieldAlert className="h-3.5 w-3.5 text-warning opacity-70" aria-label="Master admin only" />
           </span>
@@ -430,6 +255,9 @@ function SiteAdminInner() {
   const [authState, setAuthState] = useState<"loading" | "denied" | "ok">("loading");
   const { session, isInitializing, isAdmin, isMasterAdmin, isUmpire } = useAuth();
   const { canUndo, canRedo, undo, redo, recycleBinCount, lastAction, nextRedoAction } = useAdminHistory();
+  // Sidebar badges: open "needs attention" items (same query as the Home cards) and unread feedback.
+  const attentionCount = useAdminActionItems(!!isAdmin).data?.length ?? 0;
+  const newFeedback = useNewFeedbackCount(!!isAdmin).data ?? 0;
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     return resolveTab(window.location.hash) ?? (isAdmin ? "overview" : "umpire");
@@ -518,14 +346,12 @@ function SiteAdminInner() {
 
   const getTabCount = (sectionId: SectionId) => {
     if (sectionId === "history") return recycleBinCount > 0 ? recycleBinCount : null;
+    if (sectionId === "home") return attentionCount > 0 ? attentionCount : null;
+    if (sectionId === "content") return newFeedback > 0 ? newFeedback : null;
     return null;
   };
 
-  const canSeePanel = (t: TabMeta | undefined) => {
-    if (!t) return false;
-    if (t.master) return isMasterAdmin;
-    return isAdmin || t.id === "umpire";
-  };
+  const canSeePanel = (t: TabMeta | undefined) => canSeePanelFor(t, { isAdmin, isMasterAdmin });
   const canSee = (s: SectionMeta) => s.panels.some((p) => canSeePanel(PANEL_META.get(p)));
 
   /** Sidebar click: stay put if already in that section, else open its first panel you can see. */
@@ -659,16 +485,14 @@ function SiteAdminInner() {
                   }
                 >
                   {activeTab === "overview" && isAdmin && (
-                    <>
-                      <AdminActionCards
-                        onOpenTab={(tab) => {
-                          const resolved = resolveTab(tab);
-                          if (resolved) handleTabChange(resolved);
-                        }}
-                      />
-                      <AdminStatsOverview />
-                    </>
+                    <AdminHome
+                      onOpenTab={(tab) => {
+                        const resolved = resolveTab(tab);
+                        if (resolved) handleTabChange(resolved);
+                      }}
+                    />
                   )}
+                  {activeTab === "stats" && <AdminStatsOverview />}
                   {activeTab === "content" && <ContentHub />}
                   {activeTab === "tournament" && (
                     <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-gold/10 to-card p-8 text-center shadow-sm">

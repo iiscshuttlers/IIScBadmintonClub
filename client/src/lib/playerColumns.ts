@@ -27,7 +27,10 @@ export function selectsPrivatePlayerColumns(select: string): boolean {
  * `find_lost_posts.claim_contact` come only from checked RPCs.
  */
 export const PARTICIPANT_PUBLIC_COLUMNS =
-  "id, tournament_id, category, player_id, partner_id, display_name, seed, created_at, entry_round";
+  "id, tournament_id, category, player_id, partner_id, display_name, seed, created_at, entry_round, registered_by, source, looking_for_partner, updated_at";
+
+/** The registration screens read the same public columns (folded in after migration 20261123150000 went live). */
+export const PARTICIPANT_REGISTRATION_COLUMNS = PARTICIPANT_PUBLIC_COLUMNS;
 
 export const FIND_LOST_PUBLIC_COLUMNS =
   "id, created_at, author_id, type, title, description, location, contact, image_urls, resolved, claimed_by_id, claimed_by_name, image_url, updated_at, claimed_at, claim_message, remarks, claim_msg, claim_contact_info";

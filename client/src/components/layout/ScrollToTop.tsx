@@ -1,8 +1,12 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { recalledScroll, rememberScroll, routeKey } from "@/lib/routeContinuity";
+import { takeScrollRestoreIntent } from "@/lib/scrollRestoreIntent";
 
 const scrollMap = new Map<string, number>();
+
+/** Input that means the user is scrolling themselves, so stop restoring. */
+const USER_SCROLL_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
 
 export function ScrollToTop() {
   const [location] = useLocation();
@@ -37,32 +41,48 @@ export function ScrollToTop() {
     // Browser restoration and app restoration otherwise compete on Android.
     if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
-    const saved = scrollMap.get(key) ?? recalledScroll(key);
-    let frame = 0;
-    let observer: ResizeObserver | undefined;
-    let timeout = 0;
+    // Only Back/Forward, a reload or useGoBack's fallback restore; a link tap
+    // starts at the top (lib/scrollRestoreIntent).
+    const saved = takeScrollRestoreIntent() ? scrollMap.get(key) ?? recalledScroll(key) : null;
+    previousKey.current = key;
 
-    const restore = () => window.scrollTo(0, saved ?? 0);
-
-    if (saved != null && saved > 0) {
-      // Tournament content is data-driven. Retry when its height changes so a
-      // Back navigation is not clamped before the match list renders.
-      frame = requestAnimationFrame(restore);
-      if (typeof ResizeObserver !== "undefined") {
-        observer = new ResizeObserver(restore);
-        observer.observe(document.body);
-      }
-      timeout = window.setTimeout(() => observer?.disconnect(), 3000);
-    } else {
-      restore();
+    if (saved == null || saved <= 0) {
+      window.scrollTo(0, 0);
+      return;
     }
 
-    previousKey.current = key;
-    return () => {
+    // Tournament content is data-driven. Retry when the page grows so a Back
+    // navigation is not clamped before the match list renders, but stop as
+    // soon as the offset is reached or the user scrolls: re-applying it on
+    // every resize yanked the page back while the user was reading.
+    let frame = 0;
+    let timeout = 0;
+    let observer: ResizeObserver | undefined;
+    let stopped = false;
+
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
       cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
       observer?.disconnect();
+      for (const type of USER_SCROLL_EVENTS) window.removeEventListener(type, stop);
     };
+    const restore = () => {
+      if (stopped) return;
+      window.scrollTo(0, saved);
+      if (Math.abs(window.scrollY - saved) < 2) stop();
+    };
+
+    for (const type of USER_SCROLL_EVENTS) window.addEventListener(type, stop, { passive: true });
+    frame = requestAnimationFrame(restore);
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(restore);
+      observer.observe(document.body);
+    }
+    timeout = window.setTimeout(stop, 3000);
+
+    return stop;
   }, [location, search]);
 
   return null;

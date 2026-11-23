@@ -22,6 +22,10 @@ export type MatchEditState = {
   partner2?: { full_name: string } | null;
   team1_label?: string | null;
   team2_label?: string | null;
+  /** The match's own scoring rules (round rules are copied onto the row). */
+  best_of_sets?: number | null;
+  points_to_win?: number | null;
+  golden_point?: number | null;
 };
 
 /** Serve/receive state captured immediately BEFORE a rally, so it can be

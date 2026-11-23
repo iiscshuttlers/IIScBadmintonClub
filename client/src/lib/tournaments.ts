@@ -22,54 +22,51 @@ export function winnersFromFinals(
   }));
 }
 
+/** Match statuses that count as played in a live tournament's progress. */
+const PLAYED_MATCH_STATUSES = ["completed", "walkover"];
+
+/** Reads a PostgREST embedded `(count)` result, e.g. `[{ count: 54 }]`. */
+const embeddedCount = (rel: unknown): number =>
+  Array.isArray(rel) && rel.length > 0 ? Number((rel[0] as { count?: number })?.count ?? 0) : 0;
+
 export async function getTournaments() {
+  // Keep the embeds small: only decided finals (for the champions list) and
+  // two match counts (for a live tournament's progress), not every match row.
+  // `\_` keeps LIKE from treating the underscores in "_F_" as wildcards.
   const { data, error } = await supabase
     .from("tournaments")
-    .select("*, tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label), tournament_participants(count)")
+    .select(
+      "*, finals:tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label), match_total:tournament_matches(count), match_played:tournament_matches(count), tournament_participants(count)",
+    )
     .neq("status", "deleted")
+    .or("round_name.eq.Final,match_code.like.*\\_F\\_*", { referencedTable: "finals" })
+    .not("finals.winner_side", "is", null)
+    .in("match_played.status", PLAYED_MATCH_STATUSES)
     .order("created_at", { ascending: false });
-  
+
   if (error) {
     console.error("Error fetching tournaments:", error);
-    return [];
+    // Throw so pages can offer Retry instead of claiming there are no tournaments.
+    throw error;
   }
-  
+
   // Transform snake_case columns to camelCase to match the expected LiveTournament type
   return data.map((t) => {
-    let winners: any[] | undefined = undefined;
-
-    // Only compute winners if the tournament is completed or archived
-    if (t.status === "completed" || t.status === "archived") {
-      winners = winnersFromFinals(t.tournament_matches || []);
-    }
-
     const tr = t as any;
-    const participantCount = Array.isArray(tr.tournament_participants) && tr.tournament_participants.length > 0
-      ? (tr.tournament_participants[0]?.count ?? 0)
-      : 0;
-
-    // Collect participant preview names from matches or winner labels if available
-    const previewAvatars: Array<{ name: string }> = [];
-    const seenNames = new Set<string>();
-    (tr.tournament_matches || []).forEach((m: any) => {
-      [m.team1_label, m.team2_label].filter(Boolean).forEach((name: string) => {
-        const clean = name.trim();
-        if (clean && !seenNames.has(clean) && previewAvatars.length < 5) {
-          seenNames.add(clean);
-          previewAvatars.push({ name: clean });
-        }
-      });
-    });
+    const status = computeTournamentStatus(tr);
+    // Champions only for finished tournaments (date-completed ones included).
+    const winners = status === "completed" || status === "archived"
+      ? winnersFromFinals(tr.finals || [])
+      : undefined;
 
     return {
       id: tr.id,
       slug: tr.slug || tr.id,
       name: tr.name,
-      subtitle: tr.tournament_type,
       description: tr.description,
       startDate: tr.start_date,
       endDate: tr.end_date,
-      status: computeTournamentStatus(tr),
+      status,
       venue: tr.venue,
       categories: tr.categories,
       created_at: tr.created_at,
@@ -84,8 +81,9 @@ export async function getTournaments() {
       archived_at: tr.archived_at,
       created_by: tr.created_by,
       require_app_registration: tr.require_app_registration,
-      participant_count: participantCount,
-      sample_participants: previewAvatars,
+      participant_count: embeddedCount(tr.tournament_participants),
+      match_total: embeddedCount(tr.match_total),
+      match_played: embeddedCount(tr.match_played),
       winners,
     };
   });

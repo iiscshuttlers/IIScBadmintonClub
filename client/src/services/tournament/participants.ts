@@ -105,11 +105,12 @@ export async function updateTournamentParticipant(
   if (error) throw error;
 }
 
+/** Apply several participant patches. Every update is attempted; throws if any failed. */
 export async function updateTournamentParticipants(
   updates: Array<{ id: string; patch: Partial<Participant> }>,
 ): Promise<void> {
   if (!updates.length) return;
-  await Promise.all(
+  const results = await Promise.all(
     updates.map((u) => {
       const { id: _id, ...patch } = u.patch;
       return supabase
@@ -118,6 +119,12 @@ export async function updateTournamentParticipants(
         .eq("id", u.id);
     }),
   );
+  const failed = results.filter((r) => r.error);
+  if (failed.length) {
+    throw new Error(
+      `${failed.length} of ${updates.length} participant update${updates.length === 1 ? "" : "s"} failed: ${failed[0].error!.message}`,
+    );
+  }
 }
 
 /**
@@ -163,19 +170,25 @@ export async function bulkImportParticipants(params: {
     phone1?: string;
     phone2?: string;
   }>;
+  /** 'form' for fallback-form imports on in-app-registration tournaments; omitted otherwise (column default). */
+  source?: "form";
 }): Promise<void> {
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("tournament_participants")
     .select("seed")
     .eq("tournament_id", params.tournamentId)
     .eq("category", params.category);
+  if (existingError) throw existingError;
 
   const existingCount = existing?.length ?? 0;
   const maxExplicit = Math.max(0, ...params.entries.map((e) => e.seed ?? 0));
   let autoSeed = Math.max(existingCount, maxExplicit) + 1;
 
-  for (const entry of params.entries) {
-    await supabase.from("tournament_participants").insert({
+  // Every entry is attempted; a failed row doesn't stop the rest, and the
+  // caller gets one error naming what didn't import.
+  const failed: string[] = [];
+  for (const [i, entry] of params.entries.entries()) {
+    const { error } = await supabase.from("tournament_participants").insert({
       tournament_id: params.tournamentId,
       category: params.category,
       player_id: entry.playerId,
@@ -183,13 +196,25 @@ export async function bulkImportParticipants(params: {
       display_name: entry.displayName || null,
       seed: entry.seed ?? autoSeed++,
       email: entry.email,
+      ...(params.source ? { source: params.source } : {}),
     });
+    if (error) {
+      failed.push(`${entry.displayName || `row ${i + 1}`} (${error.message})`);
+      continue;
+    }
 
+    // Contact numbers only fill empty fields; a failure here doesn't undo the entry.
     if (entry.phone1 && entry.playerId) {
-      await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.playerId, p_contact: entry.phone1 }); // fills only if empty
+      const { error: contactError } = await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.playerId, p_contact: entry.phone1 });
+      if (contactError) console.warn("Could not fill contact for", entry.playerId, contactError.message);
     }
     if (entry.phone2 && entry.partnerId) {
-      await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.partnerId, p_contact: entry.phone2 }); // fills only if empty
+      const { error: contactError } = await supabase.rpc("admin_fill_player_contact", { p_player_id: entry.partnerId, p_contact: entry.phone2 });
+      if (contactError) console.warn("Could not fill contact for", entry.partnerId, contactError.message);
     }
+  }
+  if (failed.length) {
+    const imported = params.entries.length - failed.length;
+    throw new Error(`Imported ${imported} of ${params.entries.length}. Not imported: ${failed.join("; ")}`);
   }
 }

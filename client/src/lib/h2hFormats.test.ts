@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ComparisonRow } from "@/lib/comparison";
-import { compareByFormat, formatOfDiscipline, latestPartners, pointsAndStreaks, sideRating, winChancePct } from "@/lib/h2hFormats";
+import { compareByFormat, currentRun, formatOfDiscipline, gamesFromA, latestPartners, pointsAndStreaks, sideRating, winChancePct } from "@/lib/h2hFormats";
 
 let n = 0;
 const row = (o: Partial<ComparisonRow>): ComparisonRow => ({
@@ -100,5 +100,27 @@ describe("pointsAndStreaks", () => {
     ];
     const r = compareByFormat(rows, { ids: ["a"] }, { ids: ["b"] }).All;
     expect(pointsAndStreaks(r)).toEqual({ aPoints: 21 + 21 + 19 + 10 + 10 + 15, bPoints: 15 + 18 + 21 + 21 + 21 + 21, aBestRun: 2, bBestRun: 1 });
+  });
+});
+
+describe("gamesFromA", () => {
+  it("turns games to side A and skips notes and junk", () => {
+    expect(gamesFromA("21-19, 18-21", 1)).toEqual([{ a: 21, b: 19 }, { a: 18, b: 21 }]);
+    expect(gamesFromA("21-19, 18-21 [Mixed Doubles: x-y]", 2)).toEqual([{ a: 19, b: 21 }, { a: 21, b: 18 }]);
+    expect(gamesFromA("W/O", 1)).toEqual([]);
+    expect(gamesFromA(null, 1)).toEqual([]);
+  });
+});
+
+describe("currentRun", () => {
+  it("counts the newest unbroken run of wins for one side", () => {
+    const rows = [
+      row({ date: "2026-08-01T00:00:00Z", winnerSide: 1 }),
+      row({ date: "2026-08-02T00:00:00Z", winnerSide: 2 }),
+      row({ date: "2026-08-03T00:00:00Z", winnerSide: 2 }),
+      row({ date: "2026-08-04T00:00:00Z", status: "walkover", winnerSide: 1 }),
+    ];
+    expect(currentRun(compareByFormat(rows, { ids: ["a"] }, { ids: ["b"] }).All)).toEqual({ aWon: false, length: 2 });
+    expect(currentRun(compareByFormat([], { ids: ["a"] }, { ids: ["b"] }).All)).toBeNull();
   });
 });

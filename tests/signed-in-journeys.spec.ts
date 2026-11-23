@@ -514,9 +514,11 @@ async function installGallery(page: Page) {
       if (body?.key === "gallery_muted_albums") state.muted = body.value;
       return route.fulfill({ status: 201, headers: CORS, body: "" });
     }
-    const key = new URL(req.url()).searchParams.get("key")?.replace(/^eq\./, "");
-    const value = key === "gallery_images" ? GALLERY_PHOTOS : key === "gallery_muted_albums" ? state.muted : null;
-    const rows = value == null ? [] : [{ value }];
+    // siteData batches same-tick reads into one `key=in.(a,b)` request; single reads use `key=eq.x`.
+    const raw = new URL(req.url()).searchParams.get("key") ?? "";
+    const keys = raw.startsWith("in.(") ? raw.slice(4, -1).split(",").map((k) => k.replace(/^"|"$/g, "")) : [raw.replace(/^eq\./, "")];
+    const valueOf = (key: string) => (key === "gallery_images" ? GALLERY_PHOTOS : key === "gallery_muted_albums" ? state.muted : null);
+    const rows = keys.flatMap((key) => (valueOf(key) == null ? [] : [{ key, value: valueOf(key) }]));
     return fulfill(route, wantsObject(route) ? rows[0] ?? null : rows);
   });
   await page.route("**/rest/v1/gallery_album_subscriptions**", async (route) => {
@@ -611,6 +613,54 @@ test("member controls new-photo alerts per album and for the whole gallery", asy
   await expect(dialog.getByText("Off for every album, including new ones")).toBeVisible();
 });
 
+test("admin Home: attention, quick actions, recent activity, and old links still open", async ({ page }) => {
+  const shots = process.env.ADMIN_SHOTS_DIR;
+  await installApi(page, ADMIN, {
+    tournaments: () => [],
+    tournament_officials: () => [],
+    tournament_matches: () => [],
+    admin_logs: () => [
+      { id: 2, admin_email: "admin@fixture.test", action: "PLAYER_APPROVED", details: null, created_at: "2026-11-23T09:00:00Z" },
+      { id: 1, admin_email: "admin@fixture.test", action: "announcement_saved", details: null, created_at: "2026-11-22T09:00:00Z" },
+    ],
+    user_feedback: () => 3,
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/#overview$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Quick actions" })).toBeVisible();
+  await expect(page.getByText("player approved")).toBeVisible();
+  // Two sidebar groups, eight sections at most.
+  const nav = page.locator("aside");
+  await expect(nav.getByText("Club", { exact: true })).toBeVisible();
+  await expect(nav.getByText("System", { exact: true }).first()).toBeVisible();
+  await expect(nav.getByRole("button", { name: /Content & inbox/ })).toBeVisible();
+  if (shots) await page.screenshot({ path: `${shots}/admin-home-desktop.png`, fullPage: true });
+
+  // Quick action → Insights → Statistics.
+  await page.getByRole("button", { name: /Club statistics/ }).click();
+  await expect(page).toHaveURL(/#stats$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Insights" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Statistics", pressed: true })).toBeVisible();
+
+  // Old bookmarks still land in the right place.
+  await page.goto("/admin#feedback");
+  await expect(page.getByRole("button", { name: "Inbox", pressed: true })).toBeVisible();
+  await page.goto("/admin#features");
+  await expect(page.getByRole("heading", { level: 1, name: "System" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Live Ops", pressed: true })).toBeVisible();
+
+  // Phone: no sideways scroll on Home.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/admin#overview");
+  await expect(page.getByRole("heading", { name: "Quick actions" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  if (shots) await page.screenshot({ path: `${shots}/admin-home-phone.png`, fullPage: true });
+});
+
 test("admin mutes an album's photo alerts for everyone", async ({ page }) => {
   await installApi(page, ADMIN);
   const gallery = await installGallery(page);
@@ -626,3 +676,92 @@ test("admin mutes an album's photo alerts for everyone", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Turn on alerts for BPL 2024" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Turn off alerts for Open Tournament August 2026" })).toBeVisible();
 });
+
+for (const theme of ["centre-court", "floodlight"] as const) {
+  test(`member enters a category from My entry on a phone (${theme})`, async ({ page }) => {
+    await page.addInitScript((t) => localStorage.setItem("app-theme", t as string), theme);
+    const seen = await installApi(page, MEMBER, {
+      tournaments: () => [{
+        id: TOURNAMENT, name: "Winter Open", status: "upcoming", format_family: "OPEN_EVENT",
+        categories: ["MS", "MD"], require_app_registration: true, show_participants: true,
+        form_close_date: "2099-12-01T12:30:00Z", start_date: "2099-12-05", end_date: "2099-12-06",
+      }],
+      tournament_category_settings: () => [],
+      tournament_matches: () => [],
+      tournament_participants: () => [],
+      "rpc:save_my_tournament_entries": () => ({ results: [{ category: "MS", status: "entered", participant_id: "p1" }] }),
+    });
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/tournaments/${TOURNAMENT}?panel=my-entry&cat=MD`);
+    const md = page.getByTestId("entry-card-MD");
+    await expect(md).toBeVisible();
+    await expect(md.getByText("Enter with a partner")).toBeVisible();
+    // Linked category first; every card fits the phone width.
+    const cards = page.locator("[data-testid^='entry-card-']");
+    await expect(cards.first()).toHaveAttribute("data-testid", "entry-card-MD");
+    for (const box of await cards.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()))) {
+      expect(box.right).toBeLessThanOrEqual(375);
+    }
+    await page.screenshot({ path: `test-results/my-entry-375-${theme}.png`, fullPage: true });
+    await page.getByTestId("entry-card-MS").getByRole("button", { name: "Enter" }).click();
+    await expect.poll(() => seen.rpcNames.includes("save_my_tournament_entries")).toBe(true);
+    expect(seen.rpcs.find((r) => r.fn === "save_my_tournament_entries")?.body).toMatchObject({
+      p_tournament_id: TOURNAMENT, p_entries: [{ category: "MS" }],
+    });
+    expectNoPrivatePlayerReads(seen);
+  });
+}
+
+test("viewer sees a category's entries, status line and waitlist count", async ({ page }) => {
+  await installApi(page, MEMBER, {
+    tournaments: () => [{
+      id: TOURNAMENT, name: "Winter Open", status: "upcoming", format_family: "OPEN_EVENT",
+      categories: ["MD"], require_app_registration: true, show_participants: false,
+      form_close_date: "2099-12-01T12:30:00Z", start_date: "2099-12-05", end_date: "2099-12-06",
+    }],
+    tournament_category_settings: () => [{ tournament_id: TOURNAMENT, category: "MD", entries_visibility: "as_entered", locked_at: null, opens_at: null, closes_at: null, max_entries: 8 }],
+    tournament_matches: () => [],
+    tournament_participants: () => [
+      { id: "e1", tournament_id: TOURNAMENT, category: "MD", player_id: MEMBER, partner_id: null, display_name: "Fixture Member", seed: 1, looking_for_partner: true,
+        player: { full_name: "Fixture Member", department: null, gender: "Male", is_guest: false }, partner: null },
+      { id: "e2", tournament_id: TOURNAMENT, category: "MD", player_id: "p2", partner_id: "p3", display_name: "Asha & Bala", seed: 2, looking_for_partner: false,
+        player: { full_name: "Asha", department: null }, partner: { full_name: "Bala", department: null } },
+    ],
+    "rpc:registration_waitlist_counts": () => [{ category: "MD", waiting: 1 }],
+  });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/tournaments/${TOURNAMENT}/players?cat=MD`);
+  await expect(page.getByTestId("category-status")).toHaveText("Open · closes Tue 1 Dec, 6 PM · 2 entered · 1 on the waitlist");
+  await expect(page.getByText("Your entry")).toBeVisible();
+  await expect(page.getByText("Looking for a partner")).toBeVisible();
+  await page.screenshot({ path: "test-results/players-tab-375.png", fullPage: true });
+});
+
+for (const [theme, width] of [["paper", 375], ["smash", 1280]] as const) {
+  test(`host opens the Registration view from a notice link (${theme}, ${width}px)`, async ({ page }) => {
+    await page.addInitScript((t) => localStorage.setItem("app-theme", t as string), theme);
+    await installApi(page, MEMBER, {
+      tournaments: () => [{
+        id: TOURNAMENT, name: "Winter Open", status: "upcoming", format_family: "OPEN_EVENT", created_by: MEMBER,
+        categories: ["MS", "MD"], require_app_registration: true, show_participants: true,
+        form_close_date: "2099-12-01T12:30:00Z", start_date: "2099-12-05", end_date: "2099-12-06",
+      }],
+      tournament_category_settings: () => [],
+      tournament_matches: () => [],
+      tournament_participants: () => [
+        { id: "e1", tournament_id: TOURNAMENT, category: "MD", player_id: "p1", partner_id: null, display_name: "Dev", seed: 1, source: "app", created_at: "2026-11-20T10:00:00Z",
+          player: { full_name: "Dev", gender: "Male", is_guest: false }, partner: null },
+      ],
+      "rpc:registration_attention": () => ({ noPartner: [{ row_id: "e1", category: "MD", player_id: "p1", looking: false }], sharedPartner: [], partnerNotOnApp: [], genderMismatch: [], genderUnknown: [] }),
+      "rpc:tournament_partner_conflicts": () => [],
+    });
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/tournaments/${TOURNAMENT}?panel=organizer&view=registration`);
+    const view = page.getByTestId("registration-view");
+    await expect(view).toBeVisible();
+    await expect(view.getByTestId("category-row-MD")).toContainText("1 no partner · 0 shared");
+    const box = await view.boundingBox();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    await page.screenshot({ path: `test-results/registration-view-${width}-${theme}.png`, fullPage: true });
+  });
+}

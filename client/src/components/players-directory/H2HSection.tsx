@@ -1,18 +1,20 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { playerService } from "@/services/playerService";
 import { fetchComparisonRows } from "@/services/comparisonService";
-import { Swords, Trophy, Activity, BarChart3, ChevronDown, User, Users } from "lucide-react";
+import { Swords, Trophy, Activity, BarChart3, ChevronDown, ChevronRight, User, Users, UserPlus } from "lucide-react";
 import { Link } from "wouter";
-import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { PlayerSelect } from "@/components/ui/PlayerSelect";
-import { winnerOf } from "@/lib/comparison";
+import { Avatar } from "@/components/ui/Avatar";
+import { sampleNote, winnerOf, type ComparisonMeeting } from "@/lib/comparison";
 import { matchPath } from "@/lib/tournamentRoutes";
 import {
   H2H_FORMATS,
   compareByFormat,
+  currentRun,
+  gamesFromA,
   latestPartners,
   pointsAndStreaks,
   sideRating,
@@ -31,10 +33,22 @@ import {
 type Mode = "players" | "pairs";
 type Ranks = { overall: number; singles: number; doubles: number; mixed: number };
 
-const SELECT_CLASS =
-  "text-sm sm:text-xl font-black text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-muted px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none/90 focus:ring-0 focus:border-0/90 border-0 outline-none pr-8";
-const PARTNER_SELECT_CLASS =
-  "text-xs sm:text-sm font-bold text-muted-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-muted px-2 py-1 rounded-xl w-full focus:outline-none/90 focus:ring-0 border-0 outline-none pr-7";
+/** Left side (A) and right side (B) wear the scoreboard team colours everywhere. */
+const SIDE = {
+  a: { text: "text-team-1", bg: "bg-team-1", ring: "ring-team-1" },
+  b: { text: "text-team-2", bg: "bg-team-2", ring: "ring-team-2" },
+} as const;
+type SideKey = keyof typeof SIDE;
+
+const SEARCH_CLASS =
+  "w-full rounded-lg border border-border-strong bg-muted px-3 py-2 text-center text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary";
+
+const RANK_ROWS: { key: keyof Ranks; label: string; format: H2HFormat }[] = [
+  { key: "overall", label: "Overall rank", format: "All" },
+  { key: "singles", label: "Singles rank", format: "Singles" },
+  { key: "doubles", label: "Doubles rank", format: "Doubles" },
+  { key: "mixed", label: "Mixed rank", format: "Mixed" },
+];
 
 /**
  * Players directory → H2H. Two players compared per format (All / Singles /
@@ -141,8 +155,6 @@ export function H2HSection() {
     setPartner2Id(last.bPartner);
   }, [mode, rows, p1Id, p2Id, partner1Id, partner2Id, byId]);
 
-  const chooseMode = (next: Mode) => setMode(next);
-  const chooseFormat = (next: H2HFormat) => setFormat(next);
   // A pair comparison has one event, so its format follows the pairs.
   const activeFormat: H2HFormat =
     mode === "pairs" ? (pairEvent === "XD" ? "Mixed" : pairEvent ? "Doubles" : "All") : format;
@@ -152,7 +164,8 @@ export function H2HSection() {
   const sideB = mode === "pairs" ? [p2Id, partner2Id] : [p2Id];
   const pairsIncomplete = mode === "pairs" && (!partner1Id || !partner2Id);
   const pairsClash = mode === "pairs" && !pairsIncomplete && new Set([...sideA, ...sideB]).size < 4;
-  const ready = !!p1Id && !!p2Id && p1Id !== p2Id && !pairsIncomplete && !pairsClash;
+  const samePlayer = !!p1Id && p1Id === p2Id;
+  const ready = !!p1Id && !!p2Id && !samePlayer && !pairsIncomplete && !pairsClash;
 
   const aKey = sideA.join(",");
   const bKey = sideB.join(",");
@@ -170,6 +183,8 @@ export function H2HSection() {
     () => (result ? pointsAndStreaks(result) : { aPoints: 0, bPoints: 0, aBestRun: 0, bBestRun: 0 }),
     [result],
   );
+  const run = useMemo(() => (result ? currentRun(result) : null), [result]);
+  const loadingMatches = ready && comparison.isLoading;
 
   const nameOf = (id: string | null | undefined) => (id ? byId.get(id)?.full_name ?? "" : "");
   const labelOf = (ids: string[]) => ids.map(nameOf).filter(Boolean).join(" & ");
@@ -177,58 +192,33 @@ export function H2HSection() {
   const labelB = labelOf(sideB);
   const inFormat = formatLabel ? ` in ${formatLabel.toLowerCase()}` : "";
 
-  const rivalryMilestone = useMemo(() => {
-    if (!p1Id || !p2Id) return null;
-    if (pairsIncomplete)
-      return { text: "Choose a partner for each player to compare the pairs.", color: "text-muted-foreground" };
-    if (pairsClash) return { text: "Pick four different players to compare two pairs.", color: "text-muted-foreground" };
+  // One plain sentence on where the rivalry stands (or what's missing).
+  const rivalryLine = useMemo(() => {
+    if (!p1Id || !p2Id) return "Choose two players to compare.";
+    if (samePlayer) return "Pick two different players.";
+    if (pairsIncomplete) return "Choose a partner for each player to compare the pairs.";
+    if (pairsClash) return "Pick four different players to compare two pairs.";
+    const plural = mode === "pairs";
     const total = p1Wins + p2Wins;
-    if (total === 0)
-      return {
-        text: `No matches yet between ${labelA} & ${labelB}${inFormat}. Who will draw first blood?`,
-        color: "text-muted-foreground",
-      };
-    if (total === 1)
-      return {
-        text: `This rivalry is just getting started! The gauntlet has been thrown.`,
-        color: "text-info",
-      };
-    if (p1Wins === p2Wins)
-      return {
-        text: `Dead even at ${p1Wins}-${p2Wins}! This rivalry is a toss-up — next match decides the bragging rights.`,
-        color: "text-warning",
-      };
+    if (total === 0) return `No counted matches yet${inFormat}. The odds below come from their ratings.`;
     const leader = p1Wins > p2Wins ? labelA : labelB;
-    const trailer = p1Wins > p2Wins ? labelB : labelA;
-    const leaderWins = Math.max(p1Wins, p2Wins);
-    const trailerWins = Math.min(p1Wins, p2Wins);
-    const gap = leaderWins - trailerWins;
-    if (gap === 1)
-      return {
-        text: `${trailer} ${mode === "pairs" ? "are" : "is"} 1 win away from tying the series! Can they even it up?`,
-        color: "text-danger",
-      };
-    if (gap === 2)
-      return {
-        text: `${leader} ${mode === "pairs" ? "lead" : "leads"} ${leaderWins}-${trailerWins}. ${trailer} ${mode === "pairs" ? "need" : "needs"} to win 2 straight to level the series.`,
-        color: "text-secondary",
-      };
-    if (leaderWins >= 5 && gap >= 3)
-      return {
-        text: `${leader} ${mode === "pairs" ? "dominate" : "dominates"} this rivalry ${leaderWins}-${trailerWins}. ${trailer} ${mode === "pairs" ? "are" : "is"} in desperate need of a comeback!`,
-        color: "text-danger",
-      };
-    return {
-      text: `${leader} ${mode === "pairs" ? "lead" : "leads"} ${leaderWins}-${trailerWins}. ${trailer} ${mode === "pairs" ? "have" : "has"} some ground to make up!`,
-      color: "text-muted-foreground",
-    };
-  }, [p1Id, p2Id, pairsIncomplete, pairsClash, p1Wins, p2Wins, labelA, labelB, inFormat, mode]);
+    const lw = Math.max(p1Wins, p2Wins);
+    const tw = Math.min(p1Wins, p2Wins);
+    let line: string;
+    if (total === 1) line = `${leader} won the only meeting so far${inFormat}.`;
+    else if (p1Wins === p2Wins) line = `Level at ${p1Wins}–${p2Wins}${inFormat}. The next match breaks the tie.`;
+    else if (lw >= 5 && lw - tw >= 3) line = `${leader} ${plural ? "dominate" : "dominates"} this rivalry ${lw}–${tw}${inFormat}.`;
+    else line = `${leader} ${plural ? "lead" : "leads"} ${lw}–${tw}${inFormat}.`;
+    if (total >= 2 && run && run.length >= 2) {
+      line += ` ${run.aWon ? labelA : labelB} ${plural ? "have" : "has"} won the last ${run.length}.`;
+    }
+    return line;
+  }, [p1Id, p2Id, samePlayer, pairsIncomplete, pairsClash, p1Wins, p2Wins, labelA, labelB, inFormat, mode, run]);
 
   // Rating for this format (a pair's is the mean of its two players).
-  const p1WinProb = winChancePct(
-    sideRating(sideA.map((id) => byId.get(id)), activeFormat),
-    sideRating(sideB.map((id) => byId.get(id)), activeFormat),
-  );
+  const ratingA = sideRating(sideA.map((id) => byId.get(id)), activeFormat);
+  const ratingB = sideRating(sideB.map((id) => byId.get(id)), activeFormat);
+  const p1WinProb = winChancePct(ratingA, ratingB);
   const p2WinProb = 100 - p1WinProb;
 
   if (loading)
@@ -239,6 +229,11 @@ export function H2HSection() {
     );
 
   const fullPageHref = `/h2h?a=${sideA.join(",")}&b=${sideB.join(",")}${mode === "pairs" ? "&mode=pairs" : ""}`;
+  const ranksA: Ranks | undefined = rankMap[p1Id];
+  const ranksB: Ranks | undefined = rankMap[p2Id];
+  const together = mode === "players" ? result?.together : null;
+  const note = sampleNote(totalMatchesPlayed);
+  const form = result ? [...result.formA].reverse() : []; // oldest → newest
 
   return (
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-4">
@@ -257,7 +252,7 @@ export function H2HSection() {
                 key={m}
                 type="button"
                 aria-pressed={mode === m}
-                onClick={() => chooseMode(m)}
+                onClick={() => setMode(m)}
                 className={`min-h-[44px] flex items-center gap-1.5 px-4 rounded-lg text-sm font-bold transition-all ${mode === m ? "bg-muted-strong text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {m === "players" ? <User className="w-4 h-4" /> : <Users className="w-4 h-4" />}
@@ -281,251 +276,223 @@ export function H2HSection() {
             </p>
           </div>
         ) : (
-        <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Format">
-          {H2H_FORMATS.map((f) => {
-            const r = byFormat?.[f];
-            const active = format === f;
-            return (
-              <button
-                key={f}
-                type="button"
-                aria-pressed={active}
-                onClick={() => chooseFormat(f)}
-                className={`min-h-[44px] px-3 rounded-xl text-sm font-bold border transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border-strong text-muted-foreground hover:text-foreground"}`}
-              >
-                {f}
-                <span className={`ml-1.5 text-xs font-black ${active ? "" : "text-soft"}`}>
-                  {r && r.sample > 0 ? `${r.aWins}–${r.bWins}` : "—"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        )}
-
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <SidePicker
-              playerId={p1Id}
-              onPlayer={setP1Id}
-              partnerId={partner1Id}
-              onPartner={setPartner1Id}
-              pairs={mode === "pairs"}
-              players={players}
-              partners={leftPartnerOptions}
-              byId={byId}
-              ranks={rankMap[p1Id]}
-              accent="text-primary"
-              placeholder="Player 1"
-            />
-
-            <div className="flex flex-col items-center w-full px-2">
-              {ready && comparison.isLoading ? (
-                <Activity className="w-7 h-7 animate-spin text-primary my-2" aria-label="Loading matches" />
-              ) : (
-                <div className="text-3xl sm:text-4xl font-black text-foreground mb-1">
-                  {p1Wins}{" "}
-                  <span className="text-muted-foreground">-</span>{" "}
-                  {p2Wins}
-                </div>
-              )}
-              <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-                {totalMatchesPlayed} {totalMatchesPlayed === 1 ? "Match" : "Matches"}
-                {formatLabel && ` · ${formatLabel}`}
-              </div>
-              {walkoverCount > 0 && (
-                <div className="text-[10px] font-bold text-muted-foreground mb-2">
-                  + {walkoverCount} walkover{walkoverCount === 1 ? "" : "s"}, not counted
-                </div>
-              )}
-              {comparison.isError && (
-                <div className="text-[10px] font-bold text-danger mb-2">Couldn't load matches. Try again later.</div>
-              )}
-
-              {/* Deeper analysis: charts for two players, the full page for pairs */}
-              {ready && (
-                <Link href={mode === "players" ? `/compare/${p1Id}/${p2Id}` : fullPageHref}>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-[10px] font-black uppercase tracking-wider my-3 hover:scale-105 transition-transform shadow-md">
-                    <BarChart3 className="w-3.5 h-3.5" /> {mode === "players" ? "Analytics" : "Full comparison"}
-                  </button>
-                </Link>
-              )}
-
-              {/* H2H wins visual bar */}
-              {totalMatchesPlayed > 0 && (
-                <div className="w-full mb-3" aria-label={`Head to head wins: ${labelA} ${p1Wins} vs ${labelB} ${p2Wins}`}>
-                  <div className="flex h-3 rounded-full overflow-hidden w-full shadow-inner bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-1000 ease-out"
-                      style={{ width: `${(p1Wins / totalMatchesPlayed) * 100}%` }}
-                    />
-                    <div
-                      className="h-full bg-info transition-all duration-1000 ease-out"
-                      style={{ width: `${(p2Wins / totalMatchesPlayed) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-bold mt-1 px-0.5">
-                    <span className="text-primary">{p1Wins} W</span>
-                    <span className="text-info">{p2Wins} W</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Points Scored & Streaks Breakdown */}
-              {(pointStats.aPoints > 0 || pointStats.bPoints > 0) && (
-                <div className="w-full mb-3 p-2 bg-muted/40 rounded-xl border border-border-strong/40 space-y-1.5">
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-                    <span>Pts</span>
-                    <span className="text-soft font-bold">{pointStats.aPoints} - {pointStats.bPoints}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full overflow-hidden flex bg-muted-strong">
-                    <div
-                      className="h-full bg-success transition-all duration-700"
-                      style={{ width: `${(pointStats.aPoints / (pointStats.aPoints + pointStats.bPoints || 1)) * 100}%` }}
-                    />
-                    <div
-                      className="h-full bg-individual transition-all duration-700"
-                      style={{ width: `${(pointStats.bPoints / (pointStats.aPoints + pointStats.bPoints || 1)) * 100}%` }}
-                    />
-                  </div>
-                  {(pointStats.aBestRun > 1 || pointStats.bBestRun > 1) && (
-                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground pt-1 border-t border-border-strong/50">
-                      <span className="text-success">Streak: {pointStats.aBestRun}</span>
-                      <span className="text-individual">Streak: {pointStats.bBestRun}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Rivalry Milestone */}
-              {rivalryMilestone && (
-                <div className="w-full mb-2 text-center px-1">
-                  <p className={`text-[10px] sm:text-xs font-bold italic leading-snug ${rivalryMilestone.color}`}>
-                    {rivalryMilestone.text}
-                  </p>
-                </div>
-              )}
-
-              {/* Win Probability Predictor, once both sides are chosen */}
-              {ready && (
-              <div className="w-full bg-muted/50 p-2.5 rounded-xl border border-border-strong/50">
-                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center mb-1.5 flex items-center justify-center gap-1">
-                  <Activity className="w-3 h-3 text-info" /> Win Prob{formatLabel && ` · ${formatLabel}`}
-                </div>
-                <div className="flex justify-between text-[10px] font-bold mb-1 px-1">
-                  <span className="text-primary">{p1WinProb}%</span>
-                  <span className="text-info">{p2WinProb}%</span>
-                </div>
-                <div className="h-2 w-full bg-info/20 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${p1WinProb}%` }} />
-                  <div className="h-full bg-info transition-all duration-1000 ease-out" style={{ width: `${p2WinProb}%` }} />
-                </div>
-              </div>
-              )}
-            </div>
-
-            <SidePicker
-              playerId={p2Id}
-              onPlayer={setP2Id}
-              partnerId={partner2Id}
-              onPartner={setPartner2Id}
-              pairs={mode === "pairs"}
-              players={rightPlayerOptions}
-              partners={rightPartnerOptions}
-              byId={byId}
-              ranks={rankMap[p2Id]}
-              accent="text-info"
-              placeholder="Player 2"
-            />
-          </div>
-        </div>
-
-        {history.length > 0 && (
-          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2 w-full">
-              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
-                Match History{formatLabel && ` · ${formatLabel}`}
-              </h3>
-            </div>
-
-            {history.map((m) => {
-              const { row } = m;
-              const team1Won = winnerOf(row) === 1;
-              const card = (
-                <div className="group relative overflow-hidden rounded-xl border border-warning/35 bg-warning/10 shadow-sm transition-all duration-200 mb-2 hover:border-warning/60">
-                  {/* Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 pt-2.5 pb-1 gap-1 sm:gap-2">
-                    <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                      <span className="flex items-center gap-1.5">
-                        {m.discipline && (
-                          <span className="text-[10px] bg-muted text-foreground px-1.5 py-0.5 rounded font-black">{m.discipline}</span>
-                        )}
-                        {row.round && (
-                          <span className="text-[10px] bg-warning/15 text-warning px-2 py-0.5 rounded font-bold">{row.round}</span>
-                        )}
-                        {m.eligibility === "walkover" && (
-                          <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">Walkover</span>
-                        )}
-                      </span>
-                      <span className="text-[10px] font-bold text-muted-foreground mt-0.5 mr-2 sm:hidden">{row.matchCode}</span>
-                    </div>
-                    <span className="text-[10px] sm:text-xs font-black text-warning uppercase tracking-widest line-clamp-1 mt-1 sm:mt-0 sm:flex-1 sm:text-center">
-                      {row.event ?? "Tournament"}
-                    </span>
-                    <span className="text-[10px] font-bold text-muted-foreground hidden sm:block whitespace-nowrap">{row.matchCode}</span>
-                  </div>
-
-                  {/* Teams */}
-                  <div className="px-3 pb-2.5 pt-1">
-                    <div className="relative flex flex-col">
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${team1Won ? "bg-primary/10" : ""}`}>
-                        {team1Won ? <Trophy className="w-3.5 h-3.5 text-gold shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${team1Won ? "text-primary" : "text-soft"}`}>
-                          {labelOf(row.side1)}
-                        </span>
-                        <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
-                      </div>
-
-                      <div className="flex items-center justify-center gap-3 py-1">
-                        <div className="flex-1 h-px bg-muted-strong/50" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-danger">vs</span>
-                        <div className="flex-1 h-px bg-muted-strong/50" />
-                      </div>
-
-                      <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 sm:justify-center ${!team1Won ? "bg-primary/10" : ""}`}>
-                        {!team1Won ? <Trophy className="w-3.5 h-3.5 text-gold shrink-0" /> : <div className="w-3.5 h-3.5 shrink-0" />}
-                        <span className={`flex-1 text-xs sm:text-sm font-bold leading-tight sm:flex-none sm:text-center ${!team1Won ? "text-primary" : "text-soft"}`}>
-                          {labelOf(row.side2)}
-                        </span>
-                        <div className="w-3.5 h-3.5 shrink-0 hidden sm:block opacity-0" />
-                      </div>
-                    </div>
-
-                    {row.score && (
-                      <div className="mt-1.5 flex flex-wrap gap-1 border-t border-warning/30 pt-2 pl-2 sm:justify-center sm:pl-0">
-                        <BeautifulScoreDisplay score={row.score} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-              return row.tournamentId ? (
-                <Link key={row.id} href={matchPath(row.tournamentId, row.id)} className="block">
-                  {card}
-                </Link>
-              ) : (
-                <div key={row.id}>{card}</div>
+          <div
+            className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-xl border border-border bg-muted/50 p-1"
+            role="group"
+            aria-label="Format"
+          >
+            {H2H_FORMATS.map((f) => {
+              const r = byFormat?.[f];
+              const active = format === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setFormat(f)}
+                  className={`min-h-[44px] flex flex-col items-center justify-center rounded-lg px-1 py-1 transition-colors ${active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+                >
+                  <span className="text-xs sm:text-sm font-bold leading-tight">{f}</span>
+                  <span className={`text-[11px] font-black tabular-nums leading-tight ${active ? "" : "text-soft"}`}>
+                    {r && r.sample > 0 ? `${r.aWins}–${r.bWins}` : "—"}
+                  </span>
+                </button>
               );
             })}
           </div>
+        )}
+
+        <section className="bg-card rounded-2xl shadow-sm border border-border" aria-label="Head-to-head summary">
+          {/* The matchup: each side, and the series score between them */}
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 sm:gap-6">
+              <SidePicker
+                side="a"
+                playerId={p1Id}
+                onPlayer={setP1Id}
+                partnerId={partner1Id}
+                onPartner={setPartner1Id}
+                pairs={mode === "pairs"}
+                players={players}
+                partners={leftPartnerOptions}
+                byId={byId}
+                placeholder="Player 1"
+              />
+
+              <div className="flex min-w-[5.5rem] flex-col items-center pt-4 sm:pt-7 text-center">
+                {loadingMatches ? (
+                  <Activity className="w-8 h-8 animate-spin text-primary my-2" aria-label="Loading matches" />
+                ) : (
+                  <div
+                    className="flex items-baseline gap-1.5 sm:gap-2 text-4xl sm:text-5xl font-black tabular-nums leading-none"
+                    aria-label={`Wins: ${labelA || "player 1"} ${p1Wins}, ${labelB || "player 2"} ${p2Wins}`}
+                  >
+                    <span className={p1Wins > p2Wins ? SIDE.a.text : "text-foreground"}>{p1Wins}</span>
+                    <span className="text-2xl sm:text-3xl text-faint" aria-hidden>–</span>
+                    <span className={p2Wins > p1Wins ? SIDE.b.text : "text-foreground"}>{p2Wins}</span>
+                  </div>
+                )}
+                <div className="mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  {totalMatchesPlayed} {totalMatchesPlayed === 1 ? "match" : "matches"}
+                  {formatLabel && (
+                    <>
+                      <span className="hidden sm:inline"> · </span>
+                      <span className="block sm:inline">{formatLabel}</span>
+                    </>
+                  )}
+                </div>
+                {walkoverCount > 0 && (
+                  <div className="mt-1 text-[10px] font-bold text-muted-foreground">
+                    + {walkoverCount} walkover{walkoverCount === 1 ? "" : "s"}, not counted
+                  </div>
+                )}
+                {form.length >= 2 && (
+                  <div className="mt-3 flex items-center gap-1" aria-label={`Last ${form.length} results, oldest first`}>
+                    {form.map((r, i) => (
+                      <span
+                        key={i}
+                        className={`h-2.5 w-2.5 rounded-full ${r === "W" ? SIDE.a.bg : SIDE.b.bg} ${i === form.length - 1 ? "ring-2 ring-offset-2 ring-offset-card ring-border-strong" : ""}`}
+                        title={r === "W" ? `${labelA} won` : `${labelB} won`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <SidePicker
+                side="b"
+                playerId={p2Id}
+                onPlayer={setP2Id}
+                partnerId={partner2Id}
+                onPartner={setPartner2Id}
+                pairs={mode === "pairs"}
+                players={rightPlayerOptions}
+                partners={rightPartnerOptions}
+                byId={byId}
+                placeholder="Player 2"
+              />
+            </div>
+
+            {!loadingMatches && (
+              <p className="mt-4 text-center text-sm font-semibold text-soft text-balance" aria-live="polite">
+                {rivalryLine}
+              </p>
+            )}
+            {comparison.isError && (
+              <p className="mt-2 text-center text-xs font-bold text-danger">Couldn't load matches. Try again later.</p>
+            )}
+          </div>
+
+          {/* Tale of the tape: this matchup, then ratings and ranks */}
+          {ready && !loadingMatches && (
+            <div
+              className={`grid grid-cols-1 gap-x-10 gap-y-6 border-t border-border px-4 py-5 sm:px-6 ${mode === "players" ? "md:grid-cols-2" : ""}`}
+            >
+              <TapeGroup
+                title={`This matchup${formatLabel ? ` · ${formatLabel}` : ""}`}
+                className={mode === "pairs" ? "mx-auto w-full max-w-xl" : ""}
+              >
+                {totalMatchesPlayed > 0 && (
+                  <>
+                    <TapeRow label="Wins" a={p1Wins} b={p2Wins} bar names={[labelA, labelB]} />
+                    {(pointStats.aPoints > 0 || pointStats.bPoints > 0) && (
+                      <TapeRow label="Points won" a={pointStats.aPoints} b={pointStats.bPoints} bar names={[labelA, labelB]} />
+                    )}
+                    {totalMatchesPlayed >= 2 && (
+                      <TapeRow label="Longest win streak" a={pointStats.aBestRun} b={pointStats.bBestRun} names={[labelA, labelB]} />
+                    )}
+                  </>
+                )}
+                <TapeRow
+                  label="Win chance"
+                  hint="next match, from ratings"
+                  a={p1WinProb}
+                  b={p2WinProb}
+                  display={(v) => `${v}%`}
+                  bar
+                  names={[labelA, labelB]}
+                />
+                {mode === "pairs" && (
+                  <TapeRow label="Pair rating" hint="average" a={Math.round(ratingA)} b={Math.round(ratingB)} names={[labelA, labelB]} />
+                )}
+                {together && together.played > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Also partnered in {together.played} {together.played === 1 ? "match" : "matches"}
+                    {inFormat}, winning {together.won}.
+                  </p>
+                )}
+              </TapeGroup>
+
+              {mode === "players" && (
+              <TapeGroup title="Ratings & ranks">
+                <TapeRow
+                  label="Rating"
+                  hint={activeFormat === "All" ? "overall" : activeFormat.toLowerCase()}
+                  a={Math.round(ratingA)}
+                  b={Math.round(ratingB)}
+                  names={[labelA, labelB]}
+                />
+                {RANK_ROWS.map((r) => (
+                    <TapeRow
+                      key={r.key}
+                      label={r.label}
+                      a={ranksA?.[r.key] || null}
+                      b={ranksB?.[r.key] || null}
+                      display={(v) => `#${v}`}
+                      better="low"
+                      active={r.format === activeFormat}
+                      names={[labelA, labelB]}
+                    />
+                  ))}
+              </TapeGroup>
+              )}
+            </div>
+          )}
+
+          {ready && !loadingMatches && (
+            <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <p className="text-xs text-muted-foreground">
+                {note && totalMatchesPlayed > 0 ? note : "Wins count completed tournament matches. Walkovers and byes don't count."}
+              </p>
+              <Link
+                href={mode === "players" ? `/compare/${p1Id}/${p2Id}` : fullPageHref}
+                className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-primary/50 px-4 text-xs font-black uppercase tracking-wider text-primary transition-colors hover:bg-primary/10"
+              >
+                <BarChart3 className="h-4 w-4" aria-hidden />
+                {mode === "players" ? "Full analytics" : "Full comparison"}
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {history.length > 0 && (
+          <section className="bg-card rounded-2xl p-4 sm:p-5 shadow-sm border border-border" aria-label="Meetings">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                Meetings{formatLabel && ` · ${formatLabel}`}
+              </h3>
+              <span className="text-xs font-bold text-muted-foreground">
+                {history.length} {history.length === 1 ? "match" : "matches"}
+              </span>
+            </div>
+            <ul className="space-y-2">
+              {history.map((m) => (
+                <li key={`${m.row.source}:${m.row.id}`}>
+                  <MeetingCard meeting={m} labelOf={labelOf} />
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </div>
     </div>
   );
 }
 
-/** One side: avatar(s), the player picker, a partner picker for pairs, and rank chips. */
+/** One side of the matchup: avatar(s), then the name, which opens a search to change it. */
 function SidePicker({
+  side,
   playerId,
   onPlayer,
   partnerId,
@@ -534,10 +501,9 @@ function SidePicker({
   players,
   partners,
   byId,
-  ranks,
-  accent,
   placeholder,
 }: {
+  side: SideKey;
   playerId: string;
   onPlayer: (id: string) => void;
   partnerId: string;
@@ -548,54 +514,246 @@ function SidePicker({
   /** Who this side's partner picker offers. */
   partners: any[];
   byId: Map<string, any>;
-  ranks: Ranks | undefined;
-  accent: "text-primary" | "text-info";
   placeholder: string;
 }) {
-  const player = byId.get(playerId);
+  const [editing, setEditing] = useState<"player" | "partner" | null>(null);
+  const player = playerId ? byId.get(playerId) : null;
   const partner = partnerId ? byId.get(partnerId) : null;
-  const avatarSize = pairs ? "w-16 h-16 sm:w-20 sm:h-20" : "w-20 h-20 sm:w-24 sm:h-24";
+  const tone = SIDE[side];
+  const avatarSize = pairs ? "w-12 h-12 sm:w-16 sm:h-16 text-base sm:text-xl" : "w-16 h-16 sm:w-24 sm:h-24 text-xl sm:text-3xl";
+  const avatarClass = `${avatarSize} ring-2 ${tone.ring} ring-offset-2 ring-offset-card`;
+  // The results list is wider than a phone column; open it towards the middle.
+  const menuClassName = `min-w-[14rem] ${side === "a" ? "left-0" : "right-0"}`;
+  const done = () => setEditing(null);
+
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className={`flex ${pairs ? "-space-x-4" : ""}`}>
-        <div className={`${avatarSize} rounded-full overflow-hidden border-4 border-border shadow-lg bg-muted`}>
-          {player?.avatar_url && <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />}
-        </div>
-        {pairs && (
-          <div className={`${avatarSize} rounded-full overflow-hidden border-4 border-border shadow-lg bg-muted`}>
-            {partner?.avatar_url && <img src={partner.avatar_url} alt="" className="w-full h-full object-cover" />}
-          </div>
+    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+      <div className={`flex ${pairs ? "-space-x-3" : ""}`}>
+        <SideAvatar person={player} className={avatarClass} />
+        {pairs && <SideAvatar person={partner} className={avatarClass} />}
+      </div>
+
+      <div className="relative w-full">
+        {editing === "player" ? (
+          // Opens empty so typing starts a fresh search; the current player
+          // stays chosen until another is picked (leaving changes nothing).
+          <PlayerSelect
+            value=""
+            onChange={(id) => id && onPlayer(id)}
+            onDone={done}
+            autoFocus
+            players={players}
+            placeholder={`Search ${placeholder.toLowerCase()}`}
+            className={SEARCH_CLASS}
+            menuClassName={menuClassName}
+          />
+        ) : (
+          <NameButton
+            name={player?.full_name}
+            placeholder={`Choose ${placeholder.toLowerCase()}`}
+            tone={tone.text}
+            onClick={() => setEditing("player")}
+          />
         )}
       </div>
-      <div className="relative group w-full px-1 mx-auto">
-        <PlayerSelect value={playerId} onChange={onPlayer} players={players} placeholder={placeholder} className={SELECT_CLASS} />
-        <div className={`absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none ${accent}`}>
-          <ChevronDown className="w-4 h-4 drop-shadow-sm" />
-        </div>
-      </div>
+
       {pairs && (
-        <div className="relative group w-full px-1 mx-auto -mt-2">
-          <span className="block text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground">& partner</span>
-          <PlayerSelect value={partnerId} onChange={onPartner} players={partners} placeholder="Choose partner" className={PARTNER_SELECT_CLASS} />
-          <div className={`absolute bottom-2 right-2 pointer-events-none ${accent}`}>
-            <ChevronDown className="w-3.5 h-3.5" />
-          </div>
+        <div className="relative -mt-1 w-full">
+          {editing === "partner" ? (
+            <PlayerSelect
+              value=""
+              onChange={(id) => id && onPartner(id)}
+              onDone={done}
+              autoFocus
+              players={partners}
+              placeholder="Search partner"
+              className={SEARCH_CLASS}
+              menuClassName={menuClassName}
+            />
+          ) : (
+            <NameButton
+              name={partner ? `& ${partner.full_name}` : undefined}
+              placeholder="Choose partner"
+              tone={tone.text}
+              small
+              onClick={() => setEditing("partner")}
+            />
+          )}
         </div>
       )}
-      <div className="flex gap-1.5 flex-row flex-wrap justify-center text-[10px] font-black mt-1 mx-auto min-h-[24px] w-full">
-        {!!ranks?.overall && (
-          <span className="px-2 py-1 bg-warning/10 text-warning rounded-md border border-warning/30">OVR: #{ranks.overall}</span>
-        )}
-        {!!ranks?.singles && (
-          <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">S: #{ranks.singles}</span>
-        )}
-        {!!ranks?.doubles && (
-          <span className="px-2 py-1 bg-info/10 text-info rounded-md border border-info/30">D: #{ranks.doubles}</span>
-        )}
-        {!!ranks?.mixed && (
-          <span className="px-2 py-1 bg-individual/10 text-individual rounded-md border border-individual/30">XD: #{ranks.mixed}</span>
-        )}
+    </div>
+  );
+}
+
+function SideAvatar({ person, className }: { person: any; className: string }) {
+  if (!person)
+    return (
+      <div className={`${className} flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground`}>
+        <UserPlus className="h-1/3 w-1/3" aria-hidden />
       </div>
+    );
+  return <Avatar src={person.avatar_url} name={person.full_name} className={className} />;
+}
+
+/** A side's name in full (up to two lines); tapping it opens the player search. */
+function NameButton({
+  name,
+  placeholder,
+  tone,
+  small = false,
+  onClick,
+}: {
+  name: string | undefined;
+  placeholder: string;
+  tone: string;
+  small?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={name ? "Change" : undefined}
+      aria-label={name ? `${name}, change` : placeholder}
+      className={`mx-auto flex max-w-full items-start justify-center gap-1 rounded-lg px-1.5 py-1 leading-tight transition-colors hover:bg-muted ${
+        small ? "text-xs sm:text-sm font-bold" : "text-sm sm:text-lg md:text-xl font-black"
+      } ${name ? (small ? "text-soft" : "text-foreground") : "text-muted-foreground"}`}
+    >
+      <span className="min-w-0 break-words line-clamp-2">{name || placeholder}</span>
+      <ChevronDown className={`mt-0.5 shrink-0 ${small ? "h-3.5 w-3.5" : "h-4 w-4"} ${tone}`} aria-hidden />
+    </button>
+  );
+}
+
+function TapeGroup({ title, className = "", children }: { title: string; className?: string; children: ReactNode }) {
+  return (
+    <div className={`space-y-3 ${className}`}>
+      <h3 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * One comparison line: side A's value, the label, side B's value, and an
+ * optional split bar. The better value is bold in its side's colour.
+ */
+function TapeRow({
+  label,
+  hint,
+  a,
+  b,
+  display = (v) => String(v),
+  better = "high",
+  bar = false,
+  active = false,
+  names,
+}: {
+  label: string;
+  hint?: string;
+  a: number | null;
+  b: number | null;
+  display?: (v: number) => string;
+  better?: "high" | "low";
+  bar?: boolean;
+  /** Highlight the row (the format being viewed). */
+  active?: boolean;
+  names: [string, string];
+}) {
+  const comparable = a != null && b != null && a !== b;
+  const aBetter = comparable && (better === "high" ? a! > b! : a! < b!);
+  const bBetter = comparable && !aBetter;
+  const total = (a ?? 0) + (b ?? 0);
+  const value = (v: number | null, best: boolean, tone: string, align: string) => (
+    <span className={`${align} tabular-nums text-sm sm:text-base ${v == null ? "text-faint font-bold" : best ? `${tone} font-black` : "text-soft font-bold"}`}>
+      {v == null ? "—" : display(v)}
+    </span>
+  );
+  return (
+    <div
+      role="group"
+      aria-label={`${label}: ${names[0]} ${a == null ? "none" : display(a)}, ${names[1]} ${b == null ? "none" : display(b)}`}
+      className={active ? "-mx-2 rounded-lg bg-muted/60 px-2 py-1" : ""}
+    >
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3" aria-hidden>
+        {value(a, aBetter, SIDE.a.text, "text-left")}
+        <span className="text-center text-xs font-bold text-muted-foreground leading-tight">
+          {label}
+          {hint && <span className="block text-[10px] font-medium text-faint">{hint}</span>}
+        </span>
+        {value(b, bBetter, SIDE.b.text, "text-right")}
+      </div>
+      {bar && total > 0 && (
+        <div className="mt-1.5 flex h-1.5 gap-0.5 overflow-hidden rounded-full" aria-hidden>
+          <div className={`h-full rounded-l-full ${SIDE.a.bg} transition-all duration-700`} style={{ width: `${((a ?? 0) / total) * 100}%` }} />
+          <div className={`h-full rounded-r-full ${SIDE.b.bg} transition-all duration-700`} style={{ width: `${((b ?? 0) / total) * 100}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+/** A past meeting as a small scoreboard: side A on top, game scores in columns. */
+function MeetingCard({ meeting: m, labelOf }: { meeting: ComparisonMeeting; labelOf: (ids: string[]) => string }) {
+  const { row } = m;
+  const aIds = m.aSide === 1 ? row.side1 : row.side2;
+  const bIds = m.aSide === 1 ? row.side2 : row.side1;
+  const w = winnerOf(row);
+  const aWon = w == null ? null : w === m.aSide;
+  const games = gamesFromA(row.score, m.aSide);
+  const date = row.date ? dateFormat.format(new Date(row.date)) : null;
+  const rawScore = !games.length && row.score ? row.score.replace(/\s*\[.*\]/, "") : null;
+
+  const card = (
+    <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 transition-colors group-hover:border-border-strong group-hover:bg-muted/60">
+      <div className="mb-2 flex min-w-0 items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+        {m.discipline && <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-black text-foreground">{m.discipline}</span>}
+        {row.round && <span className="shrink-0 rounded bg-muted px-1.5 py-0.5">{row.round}</span>}
+        <span className="min-w-0 truncate">{row.event ?? "Tournament"}</span>
+        {row.matchCode && <span className="hidden shrink-0 sm:inline text-faint">{row.matchCode}</span>}
+        {date && <span className="ml-auto shrink-0 pl-2">{date}</span>}
+        {row.tournamentId && <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${date ? "" : "ml-auto"}`} aria-hidden />}
+      </div>
+      <MeetingLine label={labelOf(aIds)} side="a" won={aWon === true} games={games.map((g) => [g.a, g.b])} />
+      <MeetingLine label={labelOf(bIds)} side="b" won={aWon === false} games={games.map((g) => [g.b, g.a])} />
+      {rawScore && <p className="mt-1 pl-3 text-xs text-muted-foreground">{rawScore}</p>}
+      {m.eligibility === "walkover" && (
+        <p className="mt-1 pl-3 text-[11px] font-bold text-muted-foreground">Walkover · not counted in the record</p>
+      )}
+    </div>
+  );
+
+  return row.tournamentId ? (
+    <Link href={matchPath(row.tournamentId, row.id)} className="group block">
+      {card}
+    </Link>
+  ) : (
+    card
+  );
+}
+
+function MeetingLine({ label, side, won, games }: { label: string; side: SideKey; won: boolean; games: [number, number][] }) {
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <span className={`h-4 w-1 shrink-0 rounded-full ${SIDE[side].bg}`} aria-hidden />
+      <span className={`min-w-0 flex-1 break-words text-sm leading-tight ${won ? "font-black text-foreground" : "font-semibold text-muted-foreground"}`}>
+        {label}
+      </span>
+      {won && <Trophy className="h-3.5 w-3.5 shrink-0 text-gold" aria-label="Winner" />}
+      {games.length > 0 && (
+        <span className="flex shrink-0 tabular-nums">
+          {games.map(([mine, theirs], i) => (
+            <span
+              key={i}
+              className={`w-7 text-center text-sm ${mine > theirs ? "font-black text-foreground" : "font-medium text-muted-foreground"}`}
+            >
+              {mine}
+            </span>
+          ))}
+        </span>
+      )}
     </div>
   );
 }

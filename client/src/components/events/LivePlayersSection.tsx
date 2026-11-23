@@ -1,4 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCategorySettings, useRegistrationEntries, useRegistrationWindows, useWaitlistCounts } from "@/hooks/useRegistration";
+import { isRegistrationFlagOn } from "@/services/tournament/registrationEntries";
+import { categoryEntriesVisible, hiddenReason } from "@/lib/registration/visibility";
+import { isDoublesCategory } from "@/lib/registration/partners";
+import { stateText } from "@/components/registration/registrationText";
+import type { RegistrationTournament } from "@/types/registration";
 import { fetchParticipantsWithDepartments } from "@/services/tournamentService";
 import { Loader2, Users, Info, Image as ImageIcon, FileText } from "lucide-react";
 import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
@@ -13,6 +20,8 @@ interface Participant {
   display_name: string | null;
   seed: number | null;
   custom_team_name?: string | null;
+  player_id?: string | null;
+  partner_id?: string | null;
   player: { full_name: string | null; department: string | null } | null;
   partner: { full_name: string | null; department: string | null } | null;
 }
@@ -38,13 +47,41 @@ export function sortParticipantsAlphabetically<T extends Pick<Participant, "disp
 export function LivePlayersSection({
   tournamentId,
   categories,
-  showParticipants
+  showParticipants,
+  tournament,
 }: {
   tournamentId: string;
   categories: string[];
   showParticipants?: boolean | null;
+  /** With in-app registration on: per-category visibility, status lines, waitlist counts. */
+  tournament?: RegistrationTournament | null;
 }) {
-  const [participants, setParticipants] = useState<Record<string, Participant[]>>({});
+  const [allParticipants, setParticipants] = useState<Record<string, Participant[]>>({});
+  const { profile } = useAuth();
+  const myId = profile?.id ?? null;
+  const flagOn = isRegistrationFlagOn(tournament);
+  const windows = useRegistrationWindows(tournament);
+  const { data: catSettings } = useCategorySettings(tournament);
+  const { data: regRows } = useRegistrationEntries(tournament);
+  const { data: waitCounts } = useWaitlistCounts(tournament);
+  const settingFor = (cat: string) => (Array.isArray(catSettings) ? catSettings : []).find((x) => x.category === cat);
+  const visibleCat = (cat: string) => categoryEntriesVisible({
+    flagOn, showParticipants, visibility: settingFor(cat)?.entries_visibility, window: windows[cat],
+    hasDraw: windows[cat]?.lockReason === "draw",
+  });
+  // Hidden categories still show the viewer's own entry.
+  const participants = useMemo(() => {
+    const out: Record<string, Participant[]> = {};
+    for (const [cat, list] of Object.entries(allParticipants)) {
+      out[cat] = visibleCat(cat) ? list : list.filter((p) => !!myId && (p.player_id === myId || p.partner_id === myId));
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allParticipants, myId, flagOn, showParticipants, catSettings, windows]);
+  const lookingIds = useMemo(
+    () => (Array.isArray(regRows) ? regRows : []).filter((r) => r.looking_for_partner).map((r) => r.id),
+    [regRows],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const searchParams = safeGetSearchParams();
@@ -168,7 +205,7 @@ export function LivePlayersSection({
   };
 
   useEffect(() => {
-    if (!showParticipants) {
+    if (!showParticipants && !flagOn) {
       setError("The participants list has not been published yet.");
       setLoading(false);
       return;
@@ -197,7 +234,7 @@ export function LivePlayersSection({
 
         setLoading(false);
       });
-  }, [tournamentId, categories, activeCat]);
+  }, [tournamentId, categories, activeCat, flagOn]);
 
   useEffect(() => {
     if (!activeCat) return;
@@ -226,7 +263,9 @@ export function LivePlayersSection({
     );
   }
 
-  const activeCategories = categories.filter((c) => participants[c]?.length > 0);
+  const activeCategories = flagOn
+    ? categories.filter((c) => (windows[c] && windows[c].state !== "hidden") || participants[c]?.length > 0)
+    : categories.filter((c) => participants[c]?.length > 0);
 
   if (activeCategories.length === 0) {
     return (
@@ -238,8 +277,12 @@ export function LivePlayersSection({
     );
   }
 
-  const currentParticipants = participants[activeCat] || [];
-  const seedCount = publishedSeedCount(currentParticipants.length);
+  const shownCat = activeCategories.includes(activeCat) ? activeCat : activeCategories[0];
+  const currentParticipants = participants[shownCat] || [];
+  // App entries get seeds in sign-up order: show seeds only once the draw exists.
+  const seedCount = flagOn && windows[shownCat]?.lockReason !== "draw" ? 0 : publishedSeedCount(currentParticipants.length);
+  const waiting = (Array.isArray(waitCounts) ? waitCounts : []).find((w) => w.category === shownCat)?.waiting ?? 0;
+  const catVisible = visibleCat(shownCat);
 
   return (
     <div className="space-y-6">
@@ -249,15 +292,29 @@ export function LivePlayersSection({
           <button
             key={cat}
             onClick={() => setActiveCat(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-black whitespace-nowrap transition-all duration-300 ${activeCat === cat
+            className={`px-4 py-2 rounded-full text-sm font-black whitespace-nowrap transition-all duration-300 ${shownCat === cat
                 ? "bg-primary text-primary-foreground shadow-md ring-1 ring-primary/50 scale-[1.02]"
                 : "bg-muted/60 text-muted-foreground hover:bg-muted-strong hover:text-foreground ring-1 ring-inset ring-border-strong/50"
               }`}
           >
-            {cat} <span className={`text-[11px] ml-1 font-bold ${activeCat === cat ? "opacity-90" : ""}`}>({participants[cat].length})</span>
+            {cat} {visibleCat(cat) && <span className={`text-[11px] ml-1 font-bold ${shownCat === cat ? "opacity-90" : ""}`}>({allParticipants[cat]?.length ?? 0})</span>}
           </button>
         ))}
       </div>
+
+      {flagOn && windows[shownCat] && (
+        <p className="px-1 text-sm font-semibold text-soft" data-testid="category-status">
+          {stateText(windows[shownCat])}
+          {catVisible && ` · ${allParticipants[shownCat]?.length ?? 0} entered`}
+          {waiting > 0 && ` · ${waiting} on the waitlist`}
+        </p>
+      )}
+      {flagOn && !catVisible && (
+        <p className="rounded-2xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground" data-testid="category-hidden">
+          {hiddenReason(settingFor(shownCat)?.entries_visibility)}
+          {currentParticipants.length > 0 && " Your own entry is shown below."}
+        </p>
+      )}
 
       <div className="flex items-center justify-between px-1 pb-2 border-b border-border">
         <div className="flex items-center gap-2">
@@ -290,6 +347,16 @@ export function LivePlayersSection({
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
             <div className="flex-1 flex flex-col min-w-0 pr-4 relative z-10">
+              {(!!myId && (p.player_id === myId || p.partner_id === myId)) || (lookingIds.includes(p.id) && !p.partner_id && isDoublesCategory(p.category)) ? (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {!!myId && (p.player_id === myId || p.partner_id === myId) && (
+                    <span className="rounded-full bg-you/15 px-2 py-0.5 text-[10px] font-black uppercase text-you">Your entry</span>
+                  )}
+                  {lookingIds.includes(p.id) && !p.partner_id && isDoublesCategory(p.category) && (
+                    <span className="rounded-full bg-info/15 px-2 py-0.5 text-[10px] font-black uppercase text-info">Looking for a partner</span>
+                  )}
+                </div>
+              ) : null}
               {(() => {
                 if (p.display_name && p.display_name.includes("&")) {
                   const names = p.display_name.split("&").map(s => s.trim());

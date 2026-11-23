@@ -24,23 +24,25 @@ import { CourtsStrip, hereCounts, sidesLabel, useOfficialActions, waitingWorthSh
 export function CheckinStatCards({ data }: { data: TournamentReadiness }) {
   const { here, expected } = hereCounts(data);
   const items = [
-    { label: "Players here", value: `${here}`, sub: `/ ${expected}`, tone: "text-success" },
-    { label: "Ready to play", value: `${data.board.ready.length}`, tone: "text-primary" },
-    { label: "Waiting for players", value: `${waitingWorthShowing(data).length}`, tone: "text-warning" },
-    { label: "Free courts", value: `${data.free.length}`, sub: `/ ${data.courts.length}`, tone: "text-foreground" },
+    { label: "Here", value: `${here}`, sub: `/${expected}`, tone: "text-success" },
+    { label: "Ready", value: `${data.board.ready.length}`, tone: "text-primary" },
+    { label: "Waiting", value: `${waitingWorthShowing(data).length}`, tone: "text-warning" },
+    { label: "Free courts", value: `${data.free.length}`, sub: `/${data.courts.length}`, tone: "text-foreground" },
   ];
+  // One row of four on every screen: the numbers, not the cards, are the point.
   return (
-    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Check-in at a glance">
+    <dl className="grid grid-cols-4 divide-x divide-border rounded-2xl border border-border bg-card py-2.5" aria-label="Check-in at a glance">
       {items.map((i) => (
-        <div key={i.label} className="rounded-2xl border border-border bg-card p-3">
-          <p className="text-[11px] font-bold text-muted-foreground">{i.label}</p>
-          <p className={`text-2xl font-black leading-tight ${i.tone}`}>
+        // Label first for screen readers (dt before dd); shown under the number.
+        <div key={i.label} className="flex min-w-0 flex-col-reverse px-2 text-center">
+          <dt className="truncate text-[11px] font-bold text-muted-foreground">{i.label}</dt>
+          <dd className={`text-lg font-black leading-tight ${i.tone}`}>
             {i.value}
-            {i.sub && <span className="text-sm font-bold text-muted-foreground"> {i.sub}</span>}
-          </p>
+            {i.sub && <span className="text-xs font-bold text-muted-foreground">{i.sub}</span>}
+          </dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }
 

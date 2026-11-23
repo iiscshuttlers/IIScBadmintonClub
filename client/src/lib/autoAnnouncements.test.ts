@@ -70,9 +70,16 @@ describe("buildAutoAnnouncement", () => {
     expect(post.actions.at(-1)).toEqual({ label: "View tournament", href: `/tournaments/${ID}`, external: false });
   });
 
-  it("sends in-app registration to the tournament page instead of the form", () => {
+  it("sends in-app registration to My entry instead of the form", () => {
     const post = buildAutoAnnouncement(t({ require_app_registration: true }), NOW)!;
-    expect(post.actions[0]).toEqual({ label: "Register", href: `/tournaments/${ID}`, external: false });
+    expect(post.actions[0]).toEqual({ label: "Register", href: `/tournaments/${ID}?panel=my-entry`, external: false });
+  });
+
+  it("follows the in-app registration window, not form_status, when the flag is on", () => {
+    const post = buildAutoAnnouncement(t({ require_app_registration: true, form_status: "disabled" }), NOW)!;
+    expect(post.title).toMatch(/^Registration open/);
+    const before = buildAutoAnnouncement(t({ require_app_registration: true, registration_opens_at: "2099-01-01T00:00:00Z" }), NOW)!;
+    expect(before.title).toMatch(/^Coming up/);
   });
 
   it("drops a form link that is not http(s)", () => {

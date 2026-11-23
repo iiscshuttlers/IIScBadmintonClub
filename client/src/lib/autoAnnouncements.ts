@@ -15,12 +15,13 @@
  */
 
 import { computeTournamentStatus, winnersFromFinals } from "@/lib/tournaments";
-import { tournamentPath } from "@/lib/tournamentRoutes";
+import { myEntryPath, tournamentPath } from "@/lib/tournamentRoutes";
+import { registrationWindow } from "@/lib/registration/window";
 import { DISCIPLINE_LABELS, disciplineOf } from "@/lib/matchView";
 
 /** Columns the Feed reads per tournament (plain JSON, safe to persist). */
 export const AUTO_FEED_TOURNAMENT_COLUMNS =
-  "id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility, created_at, archived_at, require_app_registration";
+  "id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility, created_at, archived_at, require_app_registration, format_family, registration_opens_at";
 
 export interface AutoFeedFinal {
   category?: string | null;
@@ -45,6 +46,9 @@ export interface AutoFeedTournament {
   created_at?: string | null;
   archived_at?: string | null;
   require_app_registration?: boolean | null;
+  format_family?: string | null;
+  /** In-app registration opening time (migration 20261123150000). */
+  registration_opens_at?: string | null;
   /** Final (and nearby) matches; only decided Finals are used. */
   tournament_matches?: AutoFeedFinal[] | null;
 }
@@ -103,6 +107,16 @@ function dayOf(value: string | null | undefined): string | null {
 
 /** Registration form state, with a passed deadline counting as closed (same rule as the old banner). */
 export function registrationState(t: AutoFeedTournament, now: Date = new Date()): RegistrationState {
+  // In-app registration: the same window rule as My entry (tournament-level
+  // dates; form_status then only controls the fallback form link).
+  if (t.require_app_registration && (t.format_family ?? "").toUpperCase() !== "TEAM") {
+    const w = registrationWindow({
+      flagOn: true, formatFamily: t.format_family, status: t.status,
+      tournamentOpensAt: t.registration_opens_at, tournamentClosesAt: t.form_close_date, now,
+    });
+    if (w.state === "open" || w.state === "closing_soon") return w.state;
+    return w.state === "locked" ? "closed" : "none";
+  }
   const status = t.form_status ?? "disabled";
   if (status === "disabled") return "none";
   if (t.form_close_date) {
@@ -182,7 +196,7 @@ export function buildAutoAnnouncement(t: AutoFeedTournament, now: Date = new Dat
   if (reg === "open" || reg === "closing_soon") {
     title = `Registration open: ${name}`;
     lines.push(reg === "closing_soon" ? "Registration closes soon." : "Registration is open.");
-    if (t.require_app_registration) actions.push({ label: "Register", href: page, external: false });
+    if (t.require_app_registration) actions.push({ label: "Register", href: myEntryPath(t.id), external: false });
     else if (t.form_url && /^https?:\/\//i.test(t.form_url.trim())) {
       actions.push({ label: "Register", href: t.form_url.trim(), external: true });
     }

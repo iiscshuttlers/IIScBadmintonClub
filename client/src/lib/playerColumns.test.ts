@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { PLAYER_PUBLIC_COLUMNS, PLAYER_PRIVATE_COLUMNS, selectsPrivatePlayerColumns } from "./playerColumns";
+import { PARTICIPANT_PUBLIC_COLUMNS, PARTICIPANT_REGISTRATION_COLUMNS, PLAYER_PUBLIC_COLUMNS, PLAYER_PRIVATE_COLUMNS, selectsPrivatePlayerColumns } from "./playerColumns";
 
 /**
  * Guard for the contact-privacy migration (20261113170000): client roles can
@@ -75,4 +75,15 @@ describe("player contact privacy", () => {
     const found = violations();
     expect(found).toEqual([]);
   }, 30_000);
+});
+
+describe("participant column lists", () => {
+  const cols = PARTICIPANT_REGISTRATION_COLUMNS.split(",").map((c) => c.trim());
+  it("never select the participant email", () => {
+    expect(PARTICIPANT_PUBLIC_COLUMNS.split(",").map((c) => c.trim())).not.toContain("email");
+    expect(cols).not.toContain("email");
+  });
+  it("includes the in-app registration columns", () => {
+    for (const c of ["registered_by", "source", "looking_for_partner", "updated_at"]) expect(cols).toContain(c);
+  });
 });

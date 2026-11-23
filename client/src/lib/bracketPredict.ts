@@ -28,7 +28,8 @@ export interface Candidate {
   label: string;
 }
 
-export const isByeLabel = (l: string | null) => !!l && /\bbye\b/i.test(l);
+/** A bye slot: the label is exactly "BYE" (players named "Bye Smith" or "Abbye" are not byes). */
+export const isByeLabel = (l: string | null) => (l ?? "").trim().toUpperCase() === "BYE";
 const isBye = (m: PMatch) => isByeLabel(m.team1_label) || isByeLabel(m.team2_label);
 const NOT_STARTED = new Set(["scheduled", "pending"]);
 

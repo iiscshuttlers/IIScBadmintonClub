@@ -1,4 +1,10 @@
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
+import { selectTargets, type TargetOptions } from "./dispatchRules.ts";
+/**
+ * The only client surface this helper needs. Typed structurally so callers on
+ * any supabase-js version (the functions pin different ones) type-check.
+ */
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = { from: (table: string) => any };
 
 export type PreferenceColumn =
   | "pref_notify_smash"
@@ -35,7 +41,9 @@ export interface NotificationTargets {
 export async function getNotificationTargets(
   supabase: SupabaseClient,
   userIds: string[],
-  prefColumn: PreferenceColumn
+  prefColumn: PreferenceColumn,
+  /** Default = today's behaviour. Registration notices pass { emailIgnoresPrefs: true }. */
+  opts: TargetOptions = {},
 ): Promise<NotificationTargets> {
   if (!userIds || userIds.length === 0) {
     return { pushTokens: [], emails: [] };
@@ -56,31 +64,10 @@ export async function getNotificationTargets(
     players.push(...data);
   }
 
-  // Filter users who opted in to this specific category
-  const pushEnabledUserIds = new Set<string>();
-  const emailEnabledUsers: NotificationTargets["emails"] = [];
-
-  for (const p of players) {
-    // If the category is explicitly disabled, skip both push and email
-    const categoryEnabled = p[prefColumn] !== false;
-    if (!categoryEnabled) continue;
-
-    // Push explicitly enabled (default is true if null/undefined due to migration)
-    if (p.pref_receive_push !== false) {
-      pushEnabledUserIds.add(p.id);
-    }
-
-    // Email explicitly enabled (default is true)
-    if (p.pref_receive_email !== false) {
-      if (p.email || p.iisc_email) {
-        emailEnabledUsers.push({
-          user_id: p.id,
-          email: p.email,
-          iisc_email: p.iisc_email,
-        });
-      }
-    }
-  }
+  // Who gets push / email: the pure rule in dispatchRules.ts (vitest-covered).
+  const selected = selectTargets(players, prefColumn, opts);
+  const pushEnabledUserIds = new Set<string>(selected.pushUserIds);
+  const emailEnabledUsers: NotificationTargets["emails"] = selected.emails.map((e) => ({ ...e, email: e.email ?? "" }));
 
   // 2. Fetch push tokens ONLY for users who have Push + Category enabled
   const pushTokens: { user_id: string; token: string }[] = [];

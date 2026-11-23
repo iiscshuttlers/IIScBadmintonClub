@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { isTieRevealed, tieCourts } from './organizerTieStatus';
 import { Link } from 'wouter';
 import {
   fetchAllTournamentMatchRows,
@@ -14,7 +15,9 @@ import { TieUmpireConsole } from '@/components/umpire/TieUmpireConsole';
 import { useTeamModal } from '@/contexts/TeamModalContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { tournamentManagePath } from '@/lib/tournamentRoutes';
-import { HostSetupSections } from './HostSetupSections';
+import { courtKey } from '@/lib/matchView';
+import { HostSetupSections, canHostSetup } from './HostSetupSections';
+import { isRegistrationFlagOn } from '@/services/tournament/registrationEntries';
 import { calculateMinRosterRequirements, normalizeGender } from '@/lib/teamLineupRules';
 import { useTournamentReadiness } from '@/hooks/queries/useCheckins';
 import { AllMatchesList } from '@/components/tournament/AllMatchesList';
@@ -31,40 +34,34 @@ interface OrganizerDashboardProps {
 
 /**
  * A tie as the organizer view loads it. tournament_ties has no court or
- * reveal columns, yet the bottleneck filters below read these three, so they
- * are always undefined at runtime: every unfinished tie counts as "no court"
- * and a revealed tie still counts as "ready to reveal". Courts live on the
- * rubbers; reveal state on tie_lineups.is_revealed / tournament_matches.revealed_at.
+ * reveal columns: courts and reveal state come from the tie's rubbers
+ * (see organizerTieStatus).
  */
-type OrganizerTie = TieWithTeams & {
-  court?: undefined;
-  court_number?: undefined;
-  lineup_revealed?: undefined;
-};
+type OrganizerTie = TieWithTeams;
 
 /** An ACTIVE team member with the player's name and gender (no player when every join failed). */
 type OrganizerMember = Pick<Tables<'tournament_team_members'>, 'id' | 'team_id' | 'player_id' | 'role' | 'status'> & {
   player?: Pick<Tables<'players'>, 'id' | 'full_name' | 'gender'> | null;
-  /** Not a tournament_team_members column (members carry player_id only): always undefined. */
-  user_id?: undefined;
-  /** Not a column either (captains are tournament_teams.captain_id or role CAPTAIN): always undefined. */
-  is_captain?: undefined;
 };
+
+/** Captains are tournament_teams.captain_id or a member with role CAPTAIN. */
+const isCaptainMember = (m: OrganizerMember, playerId: string | null | undefined) =>
+  !!playerId && m.player_id === playerId && m.role === 'CAPTAIN';
 
 type OrganizerTeam = Tables<'tournament_teams'> & { members: OrganizerMember[] };
 
+/**
+ * The organiser's console: one header, then a small switcher between views so
+ * the page stays short. It opens on the view that fits the event's stage
+ * (set-up before the draw, Now while matches are being played, the match list
+ * once it's over); every view stays one tap away.
+ */
 export function OrganizerDashboard({ tournamentId, tournament }: OrganizerDashboardProps) {
   const isTeamEvent = tournament?.format_family === 'TEAM';
 
-  return (
-    <div className="space-y-6">
-      {isTeamEvent
-        ? <TeamEventDashboard tournamentId={tournamentId} tournament={tournament} />
-        : <IndividualEventDashboard tournamentId={tournamentId} tournament={tournament} />}
-      {/* The host's set-up tools (entries, registrations, scoring rules). */}
-      <HostSetupSections tournament={tournament} />
-    </div>
-  );
+  return isTeamEvent
+    ? <TeamEventDashboard tournamentId={tournamentId} tournament={tournament} />
+    : <IndividualEventDashboard tournamentId={tournamentId} tournament={tournament} />;
 }
 
 /* ------------------------------------------------------------------ */
@@ -273,35 +270,56 @@ function AttentionCards<K extends string>({
   );
 }
 
-/** A section title that opens and closes its content: "Team rosters · 6/8 ready ▸". */
-function DisclosureRow({
-  open,
-  onToggle,
-  label,
-  meta,
-  action,
-}: {
-  open: boolean;
-  onToggle: () => void;
+interface ViewTab<K extends string> {
+  key: K;
   label: string;
-  meta?: string;
-  action?: React.ReactNode;
+  /** Small number after the label ("Matches 61"). */
+  count?: number;
+  /** Marks a view that has something waiting (live play, teams not ready). */
+  alert?: boolean;
+}
+
+/**
+ * Segmented switcher between the organiser's views. Hidden when there is only
+ * one view, so a finished event a non-host opens is just its match list.
+ */
+function ViewTabs<K extends string>({
+  tabs,
+  value,
+  onChange,
+  idBase,
+}: {
+  tabs: ViewTab<K>[];
+  value: K;
+  onChange: (key: K) => void;
+  idBase: string;
 }) {
+  if (tabs.length < 2) return null;
   return (
-    <div className="flex items-center gap-3">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="group flex min-w-0 flex-1 items-center gap-1.5 text-left"
-      >
-        <span className="shrink-0 text-sm font-bold text-foreground">{label}</span>
-        {meta && <span className="truncate text-xs text-muted-foreground">· {meta}</span>}
-        <ChevronRight
-          className={`ml-auto w-4 h-4 shrink-0 text-muted-foreground transition-transform group-hover:text-foreground ${open ? 'rotate-90' : ''}`}
-        />
-      </button>
-      {action}
+    <div role="tablist" aria-label="Organiser views" className="flex gap-1 rounded-2xl border border-border bg-card p-1">
+      {tabs.map((t) => {
+        const active = t.key === value;
+        return (
+          <button
+            key={t.key}
+            id={`${idBase}-tab-${t.key}`}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            aria-controls={`${idBase}-panel`}
+            onClick={() => onChange(t.key)}
+            className={`relative inline-flex min-h-[40px] min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-2 text-xs font-black transition ${
+              active ? 'bg-primary text-primary-foreground' : 'text-soft hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <span className="truncate">{t.label}</span>
+            {t.count !== undefined && (
+              <span className={`shrink-0 text-[10px] ${active ? 'opacity-80' : 'text-muted-foreground'}`}>{t.count}</span>
+            )}
+            {t.alert && !active && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" aria-hidden />}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -340,12 +358,11 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
 
   const completedMatches = matches.filter((m) => m.status === 'completed');
   const inProgressMatches = matches.filter((m) => m.status === 'in_progress');
-  const matchesMissingCourt = matches.filter((m) => {
-    const court = m.court_number;
-    return !court && m.status !== 'completed';
-  });
+  // "Court" / "TBD" placeholders count as no court (same rule as the match list's filter).
+  const matchesMissingCourt = matches.filter((m) => !courtKey(m.court_number) && m.status !== 'completed');
   const scheduledMatches = matches.filter((m) => m.status === 'scheduled' || !m.status);
   const completionRate = matches.length > 0 ? Math.round((completedMatches.length / matches.length) * 100) : 0;
+  const unfinished = matches.length - completedMatches.length;
 
   const categories = useMemo(() => {
     const cats = new Set<string>();
@@ -356,13 +373,33 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'IN_PROGRESS' | 'UNASSIGNED_COURTS' | 'SCHEDULED'>('ALL');
   // Check-in readiness, courts and names: shared with the Umpire and Referee panels.
   const readiness = useTournamentReadiness(tournamentId);
+  const { user } = useAuth();
+  // The organiser panel is only shown to organisers; ORGANIZER officials get
+  // the Registration view there too (in-app registration on).
+  const hasSetup = canHostSetup(tournament, user?.id) || isRegistrationFlagOn(tournament);
+  const checkinLive = unfinished > 0 && readiness.checkinsAvailable && readiness.matches.length > 0;
 
+  type View = 'now' | 'matches' | 'checkin' | 'setup';
+  const tabs: ViewTab<View>[] = [
+    ...(unfinished > 0 ? [{ key: 'now' as const, label: 'Now', alert: inProgressMatches.length > 0 || matchesMissingCourt.length > 0 }] : []),
+    { key: 'matches', label: 'Matches', count: matches.length },
+    ...(checkinLive ? [{ key: 'checkin' as const, label: 'Check-in' }] : []),
+    ...(hasSetup ? [{ key: 'setup' as const, label: 'Set-up' }] : []),
+  ];
+  // Registration notices link here with ?view=registration.
+  const [chosenView, setChosenView] = useState<View | null>(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'registration' ? 'setup' : null);
+  const defaultView: View = matches.length === 0 && hasSetup ? 'setup' : unfinished > 0 ? 'now' : 'matches';
+  const view: View = chosenView && tabs.some((t) => t.key === chosenView) ? chosenView : defaultView;
+
+  // A card on Now opens the match list already filtered to it.
   const handleCardClick = (filter: typeof selectedFilter) => {
-    setSelectedFilter(prev => prev === filter ? 'ALL' : filter);
+    setSelectedFilter(filter);
+    setChosenView('matches');
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <DashboardHeader
         title={tournament?.name || 'Organizer view'}
         tournamentId={tournamentId}
@@ -372,39 +409,67 @@ function IndividualEventDashboard({ tournamentId, tournament }: OrganizerDashboa
         percent={completionRate}
         unit="matches"
         stats={[
-          { value: entryCount, label: entryCount === 1 ? 'participant' : 'participants' },
-          { value: categories.length, label: categories.length === 1 ? 'category' : 'categories' },
+          { value: entryCount, label: entryCount === 1 ? 'entry' : 'entries' },
+          { value: categories.length, label: categories.length === 1 ? 'format' : 'formats' },
         ]}
       />
 
-      <AttentionCards
-        loading={isLoading}
-        selected={selectedFilter}
-        onSelect={handleCardClick}
-        items={[
-          { key: 'IN_PROGRESS', count: inProgressMatches.length, label: 'Live matches', tone: 'emerald' },
-          { key: 'UNASSIGNED_COURTS', count: matchesMissingCourt.length, label: 'Without a court', hint: 'Assign before play', tone: 'sky' },
-          { key: 'SCHEDULED', count: scheduledMatches.length, label: 'Still to play', tone: 'slate' },
-        ]}
-      />
-
-      {/* Player check-in: who's here, courts and the ready queue. */}
-      {readiness.matches.length > 0 && readiness.checkinsAvailable && (
+      {isLoading ? (
+        <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">Loading matches…</div>
+      ) : (
         <>
-          <CheckinStatCards data={readiness} />
-          <CourtsAndQueue data={readiness} tournamentId={tournamentId} />
-          <WhosHereRoster data={readiness} tournamentId={tournamentId} />
+          <ViewTabs<View>
+            tabs={tabs}
+            value={view}
+            onChange={(v) => {
+              // Opening a view directly starts it unfiltered.
+              setSelectedFilter('ALL');
+              setChosenView(v);
+            }}
+            idBase="org-ind"
+          />
+
+          <div id="org-ind-panel" role="tabpanel" aria-labelledby={`org-ind-tab-${view}`} className="space-y-3">
+            {view === 'now' && (
+              <>
+                <AttentionCards
+                  loading={false}
+                  selected={selectedFilter}
+                  onSelect={handleCardClick}
+                  items={[
+                    { key: 'IN_PROGRESS', count: inProgressMatches.length, label: 'Live matches', tone: 'emerald' },
+                    { key: 'UNASSIGNED_COURTS', count: matchesMissingCourt.length, label: 'Without a court', hint: 'Assign before play', tone: 'sky' },
+                    { key: 'SCHEDULED', count: scheduledMatches.length, label: 'Still to play', tone: 'slate' },
+                  ]}
+                />
+                {/* Player check-in: who's here at a glance, courts and the ready queue. */}
+                {checkinLive && (
+                  <>
+                    <CheckinStatCards data={readiness} />
+                    <CourtsAndQueue data={readiness} tournamentId={tournamentId} />
+                  </>
+                )}
+              </>
+            )}
+
+            {/* All matches: a card on Now picks its status or court filter. */}
+            {view === 'matches' && (
+              <AllMatchesList
+                key={selectedFilter}
+                tournamentId={tournamentId}
+                data={readiness}
+                initialStatus={selectedFilter === 'IN_PROGRESS' ? 'live' : selectedFilter === 'SCHEDULED' ? 'upcoming' : 'all'}
+                initialCourt={selectedFilter === 'UNASSIGNED_COURTS' ? 'none' : ''}
+              />
+            )}
+
+            {view === 'checkin' && <WhosHereRoster data={readiness} tournamentId={tournamentId} />}
+
+            {/* The host's set-up tools (registrations, entries, scoring rules). */}
+            {view === 'setup' && <HostSetupSections tournament={tournament} heading={false} organiser />}
+          </div>
         </>
       )}
-
-      {/* All matches: the cards above pick its status or court filter. */}
-      <AllMatchesList
-        key={selectedFilter}
-        tournamentId={tournamentId}
-        data={readiness}
-        initialStatus={selectedFilter === 'IN_PROGRESS' ? 'live' : selectedFilter === 'SCHEDULED' ? 'upcoming' : 'all'}
-        initialCourt={selectedFilter === 'UNASSIGNED_COURTS' ? 'none' : ''}
-      />
     </div>
   );
 }
@@ -426,8 +491,8 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const { openTeamModal } = useTeamModal();
   const { user, profile } = useAuth();
   const [selectedTieForConsole, setSelectedTieForConsole] = useState<OrganizerTie | null>(null);
-  // null = follow the default (open only while some team isn't ready); true/false = organizer's choice.
-  const [rosterOpenChoice, setRosterOpenChoice] = useState<boolean | null>(null);
+  // null = follow the event's stage (see defaultView below); otherwise the organiser's pick.
+  const [chosenView, setChosenView] = useState<'ties' | 'teams' | 'setup' | null>(null);
 
   // Current logged in user ID / player ID
   const currentUserId = user?.id;
@@ -517,16 +582,16 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   const teams = useMemo(() => {
     return [...rawTeams].sort((a, b) => {
       const isCaptainA = (a.captain_id && (a.captain_id === currentUserId || a.captain_id === currentPlayerId)) ||
-        a.members?.some((m) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
+        a.members?.some((m) => isCaptainMember(m, currentPlayerId));
       const isCaptainB = (b.captain_id && (b.captain_id === currentUserId || b.captain_id === currentPlayerId)) ||
-        b.members?.some((m) => (m.user_id === currentUserId || m.player_id === currentPlayerId) && m.is_captain);
+        b.members?.some((m) => isCaptainMember(m, currentPlayerId));
 
       if (isCaptainA && !isCaptainB) return -1;
       if (!isCaptainA && isCaptainB) return 1;
 
       // Also prioritize any team user is a member of
-      const isMemberA = a.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId);
-      const isMemberB = b.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId);
+      const isMemberA = !!currentPlayerId && a.members?.some((m) => m.player_id === currentPlayerId);
+      const isMemberB = !!currentPlayerId && b.members?.some((m) => m.player_id === currentPlayerId);
       if (isMemberA && !isMemberB) return -1;
       if (!isMemberA && isMemberB) return 1;
 
@@ -558,9 +623,9 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
   const tiesAwaitingReveal = useMemo(() => {
     return ties.filter((t) => {
-      return t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed && t.state !== 'COMPLETED';
+      return t.lineup_locked_a && t.lineup_locked_b && !isTieRevealed(t.id, matches) && t.state !== 'COMPLETED';
     });
-  }, [ties]);
+  }, [ties, matches]);
 
   const liveTiesInProgress = useMemo(() => {
     return ties.filter((t) => {
@@ -577,10 +642,9 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
   const tiesMissingCourt = useMemo(() => {
     return ties.filter((t) => {
-      const courtVal = t.court ?? t.court_number;
-      return !courtVal && t.state !== 'COMPLETED';
+      return tieCourts(t.id, matches).length === 0 && t.state !== 'COMPLETED';
     });
-  }, [ties]);
+  }, [ties, matches]);
 
   const completedMatchesCount = matches.filter((m) => m.status === 'completed').length;
 
@@ -714,7 +778,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
 
       // Check if current logged-in user belongs to this team
       const isMyTeam = !!((t.captain_id && (t.captain_id === currentUserId || t.captain_id === currentPlayerId)) ||
-        t.members?.some((m) => m.user_id === currentUserId || m.player_id === currentPlayerId));
+        (!!currentPlayerId && t.members?.some((m) => m.player_id === currentPlayerId)));
 
       const note = femaleDeficit > 0
         ? { text: `Needs ${plural(femaleDeficit, 'woman', 'women')}`, className: 'text-warning' }
@@ -729,7 +793,19 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
   }, [teams, rosterRequirement, currentUserId, currentPlayerId]);
 
   const readyTeamCount = rosterRows.filter((r) => r.isFullyReady).length;
-  const rosterOpen = rosterOpenChoice ?? readyTeamCount < rosterRows.length;
+
+  type View = 'ties' | 'teams' | 'setup';
+  const hasSetup = canHostSetup(tournament, currentUserId);
+  const teamsNotReady = readyTeamCount < rosterRows.length;
+  const tabs: ViewTab<View>[] = [
+    { key: 'ties', label: 'Ties', count: ties.length, alert: liveTiesInProgress.length > 0 || tiesAwaitingReveal.length > 0 },
+    { key: 'teams', label: 'Teams', count: rosterRows.length, alert: teamsNotReady },
+    ...(hasSetup ? [{ key: 'setup' as const, label: 'Set-up' }] : []),
+  ];
+  // Before any tie exists the host is still setting up; while teams are short
+  // of players their rosters come first; otherwise the ties.
+  const defaultView: View = ties.length === 0 && hasSetup ? 'setup' : ties.length === 0 && teamsNotReady ? 'teams' : 'ties';
+  const view: View = chosenView && tabs.some((t) => t.key === chosenView) ? chosenView : defaultView;
 
   const openRoster = (t: OrganizerTeam) => openTeamModal({
     id: t.id,
@@ -766,7 +842,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
     }`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <DashboardHeader
         title={tournament?.name || 'Organizer view'}
         tournamentId={tournamentId}
@@ -781,6 +857,11 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
         ]}
       />
 
+      <ViewTabs<View> tabs={tabs} value={view} onChange={(v) => setChosenView(v)} idBase="org-team" />
+
+      <div id="org-team-panel" role="tabpanel" aria-labelledby={`org-team-tab-${view}`} className="space-y-3">
+      {view === 'ties' && (
+      <>
       <AttentionCards
         loading={tiesLoading || matchesLoading}
         selected={selectedBottleneck}
@@ -841,12 +922,13 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                 !tie.lineup_locked_a && (tie.team_a?.short_name || 'Team A'),
                 !tie.lineup_locked_b && (tie.team_b?.short_name || 'Team B'),
               ].filter(Boolean) as string[];
+              const revealed = isTieRevealed(tie.id, matches);
               const lineup = pending.length > 0
                 ? {
-                    text: `${pending.length > 1 ? 'Lineups' : 'Lineup'} pending: ${pending.join(', ')}${tie.lineup_revealed ? ' · revealed' : ''}`,
+                    text: `${pending.length > 1 ? 'Lineups' : 'Lineup'} pending: ${pending.join(', ')}${revealed ? ' · revealed' : ''}`,
                     className: 'text-warning',
                   }
-                : tie.lineup_revealed
+                : revealed
                   ? { text: 'Lineups revealed', className: 'text-muted-foreground' }
                   : tie.state === 'COMPLETED'
                     ? { text: 'Lineups locked · not revealed', className: 'text-muted-foreground' }
@@ -876,16 +958,20 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
         )}
       </section>
 
-      {/* Team rosters (collapsed once every team is ready) */}
-      <section className={sectionClass}>
-        <DisclosureRow
-          open={rosterOpen}
-          onToggle={() => setRosterOpenChoice(!rosterOpen)}
-          label="Team rosters"
-          meta={rosterRows.length > 0 ? `${readyTeamCount}/${rosterRows.length} ready` : 'no teams yet'}
-        />
+      </>
+      )}
 
-        {rosterOpen && (
+      {/* Team rosters: who is short of players, your team first. */}
+      {view === 'teams' && (
+      <section className={sectionClass}>
+        <h3 className="text-sm font-bold text-foreground">
+          Team rosters
+          <span className="ml-1.5 text-xs font-medium text-muted-foreground">
+            · {rosterRows.length > 0 ? `${readyTeamCount}/${rosterRows.length} ready` : 'no teams yet'}
+          </span>
+        </h3>
+
+        {(
           rosterRows.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">No teams yet.</p>
           ) : (
@@ -937,6 +1023,11 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
           )
         )}
       </section>
+      )}
+
+      {/* The host's set-up tools (registrations, scoring rules). */}
+      {view === 'setup' && <HostSetupSections tournament={tournament} heading={false} organiser />}
+      </div>
 
       {/* Bottleneck drill-down */}
       {showBottleneckModal && selectedBottleneck !== 'ALL' && (
@@ -1020,7 +1111,7 @@ function TeamEventDashboard({ tournamentId, tournament }: OrganizerDashboardProp
                   {displayedTies.map((tie) => {
                     const lockedA = !!tie.lineup_locked_a;
                     const lockedB = !!tie.lineup_locked_b;
-                    const courtVal = tie.court || tie.court_number;
+                    const courtVal = tieCourts(tie.id, matches).join(', ');
                     const showCourt = (selectedBottleneck === 'LIVE_TIES' || selectedBottleneck === 'UNASSIGNED_COURTS') && courtVal;
 
                     return (

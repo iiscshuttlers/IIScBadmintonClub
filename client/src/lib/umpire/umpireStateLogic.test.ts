@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { TournamentMatchForUmpire } from "@/components/umpire/UmpireTournamentTab";
 import type { BwfMatchState, MatchEditState } from "@/types/umpire";
+import { computeAddPoint } from "./umpireMutations";
 import {
   buildInitialUmpireMatch,
   deleteSetUpdates,
   editModeSets,
+  isByeLabel,
   pointFeedback,
   reopenSetUpdates,
+  savedWinnerSide,
   scoreAlertMessage,
   serveInfo,
   splitTeamLabel,
@@ -61,6 +64,20 @@ const playing = (o: Partial<BwfMatchState> = {}): BwfMatchState => ({
   status: "playing",
   setsHistory: [],
   ...o,
+});
+
+describe("isByeLabel", () => {
+  it("is true only for a label that reads BYE as a whole", () => {
+    expect(isByeLabel("BYE")).toBe(true);
+    expect(isByeLabel("bye")).toBe(true);
+    expect(isByeLabel("  Bye ")).toBe(true);
+    expect(isByeLabel("Abbye Thomas")).toBe(false);
+    expect(isByeLabel("Byers")).toBe(false);
+    expect(isByeLabel("BYE BYE")).toBe(false);
+    expect(isByeLabel("")).toBe(false);
+    expect(isByeLabel(null)).toBe(false);
+    expect(isByeLabel(undefined)).toBe(false);
+  });
 });
 
 describe("splitTeamLabel", () => {
@@ -119,6 +136,19 @@ describe("buildInitialUmpireMatch: tournament pre-fill", () => {
     const t2Bye = buildInitialUmpireMatch({ tournamentMatch: tm({ team2_label: "bye" }), userId: "u1", userName: "Ump", newId });
     expect(t2Bye).toMatchObject({ status: "finished", winner: 1 });
     expect([t2Bye.t1.games, t2Bye.t2.games]).toEqual([2, 0]);
+
+    const spaced = buildInitialUmpireMatch({ tournamentMatch: tm({ team2_label: " Bye " }), userId: "u1", userName: "Ump", newId });
+    expect(spaced).toMatchObject({ status: "finished", winner: 1 });
+  });
+
+  it("starts a real match for players whose names contain 'bye'", () => {
+    const pairs: [string, string][] = [["Abbye Thomas", "Asha Rao"], ["Asha Rao", "Byers"], ["Abbye Thomas & Ravi Byers", "Asha Rao & Bina Das"]];
+    for (const [team1_label, team2_label] of pairs) {
+      const m = buildInitialUmpireMatch({ tournamentMatch: tm({ team1_label, team2_label }), userId: "u1", userName: "Ump", newId });
+      expect(m).toMatchObject({ status: "setup", setsHistory: [] });
+      expect(m.winner).toBeUndefined();
+      expect([m.t1.games, m.t2.games]).toEqual([0, 0]);
+    }
   });
 
   it("falls back to Team 1 / Team 2 and blank ids when the bracket has no names yet", () => {
@@ -152,6 +182,17 @@ describe("buildInitialUmpireMatch: edit mode and resume", () => {
     expect([m.t1.p1Name, m.t1.p2Name, m.t2.p1Name, m.t2.p2Name]).toEqual(["Asha", "Bina", "Chitra", "Deepa"]);
   });
 
+  it("edits a match under its own scoring rules, not a fixed 21 × 3", () => {
+    const m = buildInitialUmpireMatch({
+      initialMatchState: edit({ sets_history: ["15-9"], best_of_sets: 1, points_to_win: 15, golden_point: 21 }),
+      userId: "u1", userName: "Ump", newId,
+    });
+    expect([m.pointsToWin, m.bestOfSets, m.goldenPoint]).toEqual([15, 1, 21]);
+
+    const plain = buildInitialUmpireMatch({ initialMatchState: edit({ sets_history: ["21-15"] }), userId: "u1", userName: "Ump", newId });
+    expect([plain.pointsToWin, plain.bestOfSets, plain.goldenPoint]).toEqual([21, 3, 30]);
+  });
+
   it("parses the display score when sets_history is missing", () => {
     expect(editModeSets({ sets_history: null, score: "15-21, 19-21 (W/O)" })).toEqual(["15-21", "19-21"]);
     expect(editModeSets({ sets_history: [], match_score: "21-10" })).toEqual(["21-10"]);
@@ -164,6 +205,8 @@ describe("buildInitialUmpireMatch: edit mode and resume", () => {
   it("leaves the winner unset when the stored games are level", () => {
     const m = buildInitialUmpireMatch({ initialMatchState: edit({ sets_history: ["21-15", "15-21"] }), userId: "u1", userName: "Ump", newId });
     expect(m.winner).toBeUndefined();
+    // ...so there is no side to save it for.
+    expect(savedWinnerSide(m)).toBeNull();
   });
 
   it("prefers linked player names over the label", () => {
@@ -296,6 +339,36 @@ describe("pointFeedback and scoreAlertMessage", () => {
     const msg = scoreAlertMessage(m, { t1: { ...m.t1, score: 0 }, t2: { ...m.t2, score: 0, games: 1 } });
     expect(msg).toContain("Set won by Chitra!");
     expect(scoreAlertMessage(at(3, 2), { t1: { ...at(3, 2).t1, score: 4 } })).toBeNull();
+  });
+
+  it("shows the finished game's score, not the 0-0 of the next game", () => {
+    // Without the game in the update, the score is the one before the rally plus the winning point.
+    const m = at(19, 20);
+    expect(scoreAlertMessage(m, { t1: { ...m.t1, score: 0 }, t2: { ...m.t2, score: 0, games: 1 } }))
+      .toBe("🏆 Doubles Match: Set won by Chitra! Asha & Bina [19 - 21] Chitra");
+
+    // The real update from a game-winning rally resets the scores before the alert is built.
+    const atGamePoint = at(20, 18, { setsHistory: [] });
+    const updates = computeAddPoint(atGamePoint, 1)!;
+    expect([updates.t1?.score, updates.t2?.score]).toEqual([0, 0]);
+    expect(scoreAlertMessage(atGamePoint, updates)).toBe("🏆 Doubles Match: Set won by Asha & Bina! Asha & Bina [21 - 18] Chitra");
+
+    // A deuce game in the second game reads its score from the history it appended.
+    const deuce = at(28, 29, {
+      setsHistory: ["21-15"],
+      t1: { p1Id: "a", p1Name: "Asha", p2Name: "Bina", score: 28, games: 1 },
+    });
+    const won = computeAddPoint(deuce, 2)!;
+    expect(scoreAlertMessage(deuce, won)).toContain("[28 - 30]");
+  });
+});
+
+describe("savedWinnerSide", () => {
+  it("returns the winning side, or null when the match has no winner", () => {
+    expect(savedWinnerSide({ winner: 1 })).toBe(1);
+    expect(savedWinnerSide({ winner: 2 })).toBe(2);
+    expect(savedWinnerSide({ winner: undefined })).toBeNull();
+    expect(savedWinnerSide({})).toBeNull();
   });
 });
 

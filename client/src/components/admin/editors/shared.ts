@@ -70,6 +70,10 @@ export type Player = {
   is_approved: boolean;
   created_at: string;
   stats?: AdminPlayerStats | null;
+  elo_rating?: number | null;
+  singles_elo?: number | null;
+  doubles_elo?: number | null;
+  mixed_elo?: number | null;
   iisc_email?: string;
   contact_number?: string;
   sr_number?: string;
@@ -77,6 +81,11 @@ export type Player = {
   is_retired?: boolean;
   gender?: string;
 };
+/** Ratings come from the *_elo columns; very old rows only had them in stats. */
+export const playerElo = (p: Player): number | null => p.elo_rating ?? p.stats?.elo ?? p.stats?.eloRating ?? null;
+export const playerSinglesElo = (p: Player): number | null => p.singles_elo ?? p.stats?.singles ?? null;
+export const playerDoublesElo = (p: Player): number | null => p.doubles_elo ?? p.stats?.doubles ?? null;
+export const playerMixedElo = (p: Player): number | null => p.mixed_elo ?? p.stats?.mixed ?? null;
 export type AuthUser = {
   id: string;
   email: string;

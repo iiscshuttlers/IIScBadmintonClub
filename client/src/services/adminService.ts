@@ -262,7 +262,7 @@ export const adminService = {
   async getPlayersForAdmin(): Promise<any[]> {
     const { data, error } = await supabase
       .from("players")
-      .select("id, full_name, department, is_approved, created_at, stats, role, is_retired, gender")
+      .select("id, full_name, department, is_approved, created_at, stats, role, is_retired, gender, elo_rating, singles_elo, doubles_elo, mixed_elo")
       .order("created_at", { ascending: false });
     if (error) throw error;
     // Contact columns are admin-only and come from a checked RPC.

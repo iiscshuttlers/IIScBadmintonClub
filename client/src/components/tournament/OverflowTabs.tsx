@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 export interface OverflowTab {
   id: string;
@@ -18,9 +18,8 @@ interface OverflowTabsProps {
 }
 
 /**
- * Horizontal tab strip that never overflows the viewport on mobile: it scrolls
- * with snap, fades at the edges to hint more tabs, and auto-scrolls the active
- * tab into view. Replaces raw `flex overflow-x-auto` tab rows that clipped the
+ * Tab strip that never overflows the viewport on mobile: the pills wrap onto
+ * extra rows. Replaces raw `flex overflow-x-auto` tab rows that clipped the
  * last tab on narrow screens.
  */
 export function OverflowTabs({
@@ -31,11 +30,9 @@ export function OverflowTabs({
   className = "",
 }: OverflowTabsProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-  }, [activeId]);
+  // No scrollIntoView on the active tab: the row wraps, so there is nothing to
+  // scroll sideways, and scrollIntoView also scrolled the whole page to the
+  // strip on mount and on every tab change.
 
   return (
     <div className={`relative ${className}`}>
@@ -49,7 +46,6 @@ export function OverflowTabs({
           return (
             <button
               key={tab.id}
-              ref={isActive ? activeRef : undefined}
               role="tab"
               aria-selected={isActive}
               onClick={() => onChange(tab.id)}

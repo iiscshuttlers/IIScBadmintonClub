@@ -91,10 +91,14 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
       }));
     };
 
-    // Fetch active banners and noticeboard items
-    feedService.fetchHomeBannersData().then((data) => {
-      if (data) processData(data);
-    });
+    // Fetch active banners and noticeboard items. Offline, the bar just stays
+    // empty (the uncaught rejection used to reach Sentry as an unhandled error).
+    feedService
+      .fetchHomeBannersData()
+      .then((data) => {
+        if (data) processData(data);
+      })
+      .catch((err) => console.warn("[home banners] fetch failed:", err?.message ?? err));
 
     // Realtime
     const unsubscribe = feedService.subscribeToHomeBanners((data) => {

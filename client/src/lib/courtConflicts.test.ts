@@ -92,6 +92,41 @@ describe("findCourtConflicts", () => {
   });
 });
 
+describe("findCourtConflicts: one court, many spellings", () => {
+  it('treats "1", "C1" and "Court 1" as the same court', () => {
+    const conflicts = findCourtConflicts([
+      match("a", "1", "2026-11-12T10:00:00Z"),
+      match("b", "C1", "2026-11-12T10:10:00Z"),
+      match("c", "Court 1", "2026-11-12T10:20:00Z"),
+    ]);
+    expect(conflicts.get("a")?.map((c) => c.otherCode)).toEqual(["B", "C"]);
+    expect(conflicts.get("c")?.map((c) => c.otherCode)).toEqual(["A", "B"]);
+  });
+
+  it("never matches different courts or placeholders", () => {
+    const conflicts = findCourtConflicts([
+      match("a", "C1", "2026-11-12T10:00:00Z"),
+      match("b", "C11", "2026-11-12T10:00:00Z"),
+      match("c", "Court", "2026-11-12T10:00:00Z"),
+      match("d", "Court", "2026-11-12T10:00:00Z"),
+    ]);
+    expect(conflicts.size).toBe(0);
+  });
+
+  it("applies a blackout typed as Court 2 to a match stored as 2", () => {
+    const conflicts = findCourtConflicts([match("a", "2", "2026-11-12T10:00:00Z")], {
+      unavailablePeriods: [{ court: "Court 2", start: "2026-11-12T09:00:00Z", end: "2026-11-12T11:00:00Z" }],
+    });
+    expect(conflicts.get("a")?.[0]).toMatchObject({ timingBasis: "unavailable_period", conflictType: "hard" });
+  });
+
+  it("doesn't suggest the same court under another spelling at the same time", () => {
+    const target = match("t", "1", "2026-11-12T10:00:00Z");
+    const slots = suggestAlternativeSlots(target, [target], ["C1", "C2"]);
+    expect(slots[0]).toMatchObject({ court: "C2", scheduledAt: "2026-11-12T10:00:00.000Z" });
+  });
+});
+
 describe("suggestAlternativeSlots", () => {
   it("suggests available alternative courts and subsequent slots", () => {
     const target = match("target", "1", "2026-11-12T10:00:00Z");

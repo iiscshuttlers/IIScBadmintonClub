@@ -109,11 +109,11 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
             >
-              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none">
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-on-media/75 text-sm font-medium select-none">
                 {lightboxIndex + 1} / {photos.length}
               </div>
               <button
-                className="absolute top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
+                className="absolute top-4 right-2 md:right-4 text-on-media hover:text-primary transition-colors p-2 z-50"
                 onClick={() => setLightboxIndex(null)}
                 aria-label="Close"
               >
@@ -121,7 +121,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               </button>
               
               <button
-                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 rounded-full bg-media/40 hover:bg-media/60 backdrop-blur-sm text-on-media hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(-1);
@@ -139,7 +139,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               />
 
               <button
-                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 rounded-full bg-media/40 hover:bg-media/60 backdrop-blur-sm text-on-media hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(1);
@@ -150,13 +150,13 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
 
               <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-media/90 via-media/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
                 <div className="pointer-events-auto flex flex-col items-center gap-2 w-full max-w-4xl">
-                  <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                  <p className="text-on-media text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                     {photo.title}
                   </p>
                   <div className="flex items-center gap-3 mt-3">
                     <a
                       href={galleryUrl}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-foreground text-background rounded-full text-sm font-bold shadow-lg hover:bg-soft transition-all active:scale-95"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-on-media text-media rounded-full text-sm font-bold shadow-lg hover:bg-on-media/85 transition-all active:scale-95"
                       onClick={(e) => e.stopPropagation()}
                     >
                       View in Album
@@ -167,7 +167,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 ${
                         reportedPaths.has(photo.path)
                           ? "bg-muted-strong text-muted-foreground cursor-default"
-                          : "bg-danger/80 hover:bg-danger text-on-accent"
+                          : "bg-danger hover:bg-danger/90 text-danger-foreground"
                       }`}
                       title="Report this photo"
                     >

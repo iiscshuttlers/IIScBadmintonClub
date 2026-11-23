@@ -169,6 +169,17 @@ describe("matchReadiness", () => {
     expect(freeCourts(board)).toEqual(["1", "2", "10"]);
   });
 
+  it("treats C1 / Court 1 / 1 as one court and ignores placeholders", () => {
+    const matches = [
+      match("a", { court_number: "C1" }),
+      match("b", { court_number: "1" }),
+      match("c", { court_number: "Court" }),
+      match("d", { court_number: "Court 2", status: "in_progress" }),
+    ];
+    const board = courtBoard(matches, [], NOW);
+    expect(board.map((c) => `${c.court}:${c.kind}`)).toEqual(["1:free", "2:live"]);
+  });
+
   it("suggests a match's own free court first, then the next free one", () => {
     const a = match("a", { court_number: "2" });
     const b = match("b");

@@ -178,7 +178,8 @@ export async function fetchCourtMatchesBetween(fromIso: string, toIso: string) {
 export async function fetchRefereeMatches(tournamentId: string) {
   const { data, error } = await supabase
     .from("tournament_matches")
-    .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, court_number, scheduled_at, status, score, winner_side, reminder_sent")
+    // tie_id + is_decider_tiebreaker: a tie's courts and reveal state come from its rubbers (organizerTieStatus).
+    .select("id, match_code, category, round_name, round, match_number, team1_label, team2_label, player1_id, player2_id, court_number, scheduled_at, status, score, winner_side, reminder_sent, tie_id, is_decider_tiebreaker")
     .eq("tournament_id", tournamentId)
     .order("round", { ascending: true })
     .order("match_number", { ascending: true });

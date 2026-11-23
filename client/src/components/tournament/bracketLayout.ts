@@ -235,21 +235,64 @@ export function bracketConnectors(roundData: Pick<BracketRoundLayout, "bySlot">[
   return lines;
 }
 
+/** Lower-case, trimmed, single-spaced. */
+function normName(value: string | null | undefined): string {
+  return (value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/** The player names in a side label: "A & B", "A / B", "A, B" or "A and B". */
+function sideNames(label: string): string[] {
+  return normName(label)
+    .split(/\s*(?:&|\/|,|\+|\band\b)\s*/)
+    .map((n) => n.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Whether a side label is the selected player or pair: whole names compared
+ * case-insensitively, so "Amit" matches "Amit" and "Amit & Ravi" but not
+ * "Amit Kumar", and a pair matches in either order.
+ */
+export function labelMatchesPlayer(label: string | null | undefined, player: string): boolean {
+  const l = normName(label);
+  const p = normName(player);
+  if (!l || !p) return false;
+  if (l === p) return true;
+  const names = sideNames(l);
+  const wanted = sideNames(p);
+  return wanted.length > 0 && wanted.every((w) => names.includes(w));
+}
+
+/** Whether a match is the selected match code, or a slot fed by it ("Winner of <code>"). */
+function matchesCodeSelection(m: BracketMatch, selection: string): boolean {
+  const code = normName(selection);
+  if (!code) return false;
+  if (normName(m.match_code) === code) return true;
+  const fedBy = (label: string | null | undefined) => {
+    const ref = (label ?? "").match(/(?:Winner|Loser) of (\S+)/i);
+    return !!ref && normName(ref[1]) === code;
+  };
+  return fedBy(m.team1_label) || fedBy(m.team2_label);
+}
+
+/** A match that names the selected player, pair or match code. */
+function matchHasSelection(m: BracketMatch, selection: string): boolean {
+  return (
+    labelMatchesPlayer(m.team1_label, selection) ||
+    labelMatchesPlayer(m.team2_label, selection) ||
+    matchesCodeSelection(m, selection)
+  );
+}
+
 /**
  * Matches highlighted for a selected player: every match whose side labels
- * or match code contain the name (case-insensitive), plus matches that player
- * won into.
+ * name the player (whole names, case-insensitive) or that is the selected
+ * match code or fed by it, plus matches that player won into.
  */
 export function bracketPathIds(matches: BracketMatch[], selectedPlayer: string): Set<string> {
-  const lowerPlayer = selectedPlayer.toLowerCase();
   const path = new Set<string>();
   matches.forEach((m) => {
-    if (
-      (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) ||
-      (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
-      (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
-    )
-      path.add(m.id);
+    if (matchHasSelection(m, selectedPlayer)) path.add(m.id);
   });
   let changed = true;
   while (changed) {
@@ -257,7 +300,7 @@ export function bracketPathIds(matches: BracketMatch[], selectedPlayer: string):
     matches.forEach((m) => {
       if (path.has(m.id)) return;
       const winner = m.winner_side === 1 ? m.team1_label : m.winner_side === 2 ? m.team2_label : null;
-      if (winner?.toLowerCase().includes(lowerPlayer) || (m.match_code ?? "").toLowerCase().includes(lowerPlayer)) { path.add(m.id); changed = true; }
+      if (labelMatchesPlayer(winner, selectedPlayer)) { path.add(m.id); changed = true; }
     });
   }
   return path;
@@ -279,15 +322,8 @@ export function playerRoadmap(matches: BracketMatch[], player: string): Roadmap 
   matches.forEach((m) => byCode.set(m.match_code, m));
 
   // Seed path with matches where player appears directly
-  const lowerPlayer = player.toLowerCase();
   const pathMatchIds = new Set<string>(
-    matches
-      .filter((m) =>
-        (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) ||
-        (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
-        (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
-      )
-      .map((m) => m.id)
+    matches.filter((m) => matchHasSelection(m, player)).map((m) => m.id)
   );
 
   // Trace forward via "Winner of <code>" references
@@ -330,8 +366,8 @@ export function roadmapCardSides(m: BracketMatch, player: string, rm: Pick<Roadm
   const isCompleted = matchOutcome(m).decided;
   const t1 = m.team1_label ?? "TBD";
   const t2 = m.team2_label ?? "TBD";
-  const playerIsT1 = t1.includes(player);
-  const playerIsT2 = t2.includes(player);
+  const playerIsT1 = labelMatchesPlayer(t1, player);
+  const playerIsT2 = !playerIsT1 && labelMatchesPlayer(t2, player);
 
   const slotRefersToPath = (label: string) => {
     const ref = label.match(/Winner of (\S+)/i);
@@ -360,8 +396,8 @@ export function isEliminatedAt(last: BracketMatch, player: string): boolean {
   return matchOutcome(last).decided && (() => {
     const t1 = last.team1_label ?? "";
     const t2 = last.team2_label ?? "";
-    const playerIsT1 = t1.includes(player);
-    return !((playerIsT1 && last.winner_side === 1) || (!playerIsT1 && last.winner_side === 2 && t2.includes(player)));
+    const playerIsT1 = labelMatchesPlayer(t1, player);
+    return !((playerIsT1 && last.winner_side === 1) || (!playerIsT1 && last.winner_side === 2 && labelMatchesPlayer(t2, player)));
   })();
 }
 

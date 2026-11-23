@@ -1037,11 +1037,11 @@ export default function Gallery() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="absolute top-12 md:top-6 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none z-50">
+          <div className="absolute top-12 md:top-6 left-1/2 -translate-x-1/2 text-on-media/75 text-sm font-medium select-none z-50">
             {selectedIndex + 1} / {filteredItems.length}
           </div>
           <button
-            className="absolute top-10 md:top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
+            className="absolute top-10 md:top-4 right-2 md:right-4 text-on-media hover:text-primary transition-colors p-2 z-50"
             onClick={() => {
               setSelectedIndex(null);
               setLightboxSrc(null);
@@ -1051,7 +1051,7 @@ export default function Gallery() {
             <X className="w-8 h-8" />
           </button>
           <button
-            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
+            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 rounded-full bg-media/40 hover:bg-media/60 backdrop-blur-sm text-on-media hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(-1);
@@ -1070,11 +1070,11 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div className="w-64 h-64 rounded-xl bg-muted animate-pulse relative z-40" />
+            <div className="w-64 h-64 rounded-xl bg-on-media/10 animate-pulse relative z-40" />
           )}
 
           <button
-            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
+            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 rounded-full bg-media/40 hover:bg-media/60 backdrop-blur-sm text-on-media hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(1);
@@ -1096,13 +1096,13 @@ export default function Gallery() {
                   <>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                        <p className="text-on-media text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                           {item?.title}
                         </p>
                         {isAdmin && item?.url && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditTitle(item); }}
-                            className="p-1.5 bg-foreground/10 hover:bg-primary/20 text-foreground/50 hover:text-primary rounded-full backdrop-blur-sm border border-foreground/10 transition-all pointer-events-auto"
+                            className="p-1.5 bg-on-media/10 hover:bg-on-media/20 text-on-media/80 hover:text-on-media rounded-full backdrop-blur-sm border border-on-media/20 transition-all pointer-events-auto"
                             title="Edit Title"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -1126,11 +1126,11 @@ export default function Gallery() {
                                 className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
                                   isLiked 
                                     ? "fill-danger text-danger" 
-                                    : "text-foreground hover:text-danger"
+                                    : "text-on-media hover:text-danger"
                                 }`} 
                               />
                             </motion.button>
-                            <span className="text-foreground font-bold text-sm drop-shadow-lg min-w-[3rem] text-left">
+                            <span className="text-on-media font-bold text-sm drop-shadow-lg min-w-[3rem] text-left">
                               {count} {count === 1 ? 'like' : 'likes'}
                             </span>
                           </div>
@@ -1150,14 +1150,14 @@ export default function Gallery() {
                           link.click();
                           document.body.removeChild(link);
                         }}
-                        className="ml-2 p-2 bg-foreground/10 hover:bg-primary/20 text-foreground/80 hover:text-primary rounded-full backdrop-blur-sm border border-foreground/10 transition-all pointer-events-auto flex items-center justify-center"
+                        className="ml-2 p-2 bg-on-media/10 hover:bg-on-media/20 text-on-media/90 hover:text-on-media rounded-full backdrop-blur-sm border border-on-media/20 transition-all pointer-events-auto flex items-center justify-center"
                         title="Download Image"
                       >
                         <Download className="w-5 h-5 md:w-6 md:h-6 drop-shadow-lg" />
                       </button>
                     </div>
                     {item?.subfolder && (
-                      <p className="text-primary/70 font-medium text-xs uppercase tracking-widest drop-shadow-md">
+                      <p className="text-on-media/75 font-semibold text-xs uppercase tracking-widest drop-shadow-md">
                         {formatText(item.subfolder)}
                       </p>
                     )}
@@ -1183,7 +1183,7 @@ export default function Gallery() {
                   {/* Remove Button for Remote Photos */}
                   {isAdmin && item?.url && (
                       <button
-                        className="flex items-center gap-1.5 text-foreground/50 hover:text-danger text-xs font-bold px-3 py-1.5 rounded-full border border-foreground/20 hover:border-danger/40 hover:bg-danger/10 transition-all"
+                        className="flex items-center gap-1.5 text-on-media/75 hover:text-on-media text-xs font-bold px-3 py-1.5 rounded-full border border-on-media/25 hover:border-danger hover:bg-danger/30 transition-all"
                         onClick={async (e) => {
                           e.stopPropagation();
                           const ok = await confirm({
@@ -1208,7 +1208,7 @@ export default function Gallery() {
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     )}
-                  <p className="text-foreground/60 text-[10px] mt-1 hidden sm:block">
+                  <p className="text-on-media/60 text-[10px] mt-1 hidden sm:block">
                     ← → to navigate &nbsp;·&nbsp; Esc to close
                   </p>
                 </>
@@ -1233,7 +1233,7 @@ export default function Gallery() {
 
       {/* Admin Bulk Selection Toolbar */}
       {session && (activeTab === "albums" || activeTab === "photos") && (
-        <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
+        <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
           {isSelectionMode ? (
             <div className="bg-card text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>

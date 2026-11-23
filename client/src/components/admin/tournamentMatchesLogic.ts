@@ -4,33 +4,30 @@
  * be tested directly.
  */
 import { toLocalDateTimeInput } from "@/lib/umpire/schedule";
+import { courtKey } from "@/lib/matchView";
+import { checkMatchScore, type Game, type MatchRules } from "@/lib/badmintonScore";
 
-/** Sets each side has won in a "21-15, 18-21" string; the side that reached a majority of `bestOfSets`, else null. */
-export function autoWinnerFromSets(setsStr: string, bestOfSets: number): 1 | 2 | null {
-  const sets = setsStr.split(",").map((s) => s.trim()).filter(Boolean);
-  let t1 = 0, t2 = 0;
-  for (const s of sets) {
-    const [a, b] = s.split("-").map(Number);
-    if (!isNaN(a) && !isNaN(b)) { if (a > b) t1++; else if (b > a) t2++; }
-  }
-  const needed = Math.ceil(bestOfSets / 2);
-  if (t1 >= needed) return 1;
-  if (t2 >= needed) return 2;
-  return null;
-}
+// One rule set for every score screen: game validity comes from lib/badmintonScore.
+export { isValidBadmintonGame } from "@/lib/badmintonScore";
 
 /**
- * A finished badminton game under the event's rules: won at `pointsToWin`
- * by 2+, or past it by exactly 2 during deuce, or at the `goldenPoint` cap by
- * 1 or 2.
+ * Winner of a "21-15, 18-21" score under the shared rules (checkMatchScore):
+ * the side that took a majority of games, or null while the match is undecided
+ * or any game isn't a possible score.
  */
-export function isValidBadmintonGame(t1: number, t2: number, pointsToWin: number, goldenPoint: number): boolean {
-  const win = Math.max(t1, t2);
-  const lose = Math.min(t1, t2);
-  if (win === pointsToWin && (win - lose) >= 2) return true;
-  if (win > pointsToWin && win < goldenPoint && (win - lose) === 2) return true;
-  if (win === goldenPoint && (win - lose) >= 1 && (win - lose) <= 2) return true;
-  return false;
+export function autoWinnerFromSets(setsStr: string, rules: MatchRules): 1 | 2 | null {
+  const games: Game[] = setsStr
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      const parts = s.split("-").map((p) => p.trim());
+      return parts.length === 2 && parts[0] !== "" && parts[1] !== ""
+        ? [Number(parts[0]), Number(parts[1])]
+        : [NaN, NaN];
+    });
+  const check = checkMatchScore(games, rules);
+  return check.ok ? check.winnerSide : null;
 }
 
 export interface SetInput {
@@ -38,55 +35,62 @@ export interface SetInput {
   t2: string;
 }
 
-export interface ScoreRules {
-  bestOfSets: number;
-  pointsToWin: number;
-  goldenPoint: number;
-}
-
 export type EditScoreResult =
-  | { ok: true; sets: string[]; score: string }
+  | { ok: true; sets: string[]; score: string; winnerSide: 1 | 2 | null }
   | { ok: false; error: string };
 
 /**
- * Validate the admin score editor. Half-filled rows are skipped, a 0-0 row is
- * allowed through, every other game must be a valid badminton score, and no
- * game may be entered after one side has already won the match.
+ * Validate the admin score editor against the shared rules (checkMatchScore).
+ * Rows are read in order. A blank, half-filled or 0-0 row is a game that wasn't
+ * played and is skipped, but a played game may not come after one. `winnerSide`
+ * is the side the games decide, or null when the score is incomplete; an
+ * incomplete score can only be saved as a retirement or concession, with the
+ * winning side chosen by hand.
  */
-export function validateEditScore(setsData: SetInput[], rules: ScoreRules): EditScoreResult {
-  const ptw = rules.pointsToWin;
-  const gp = rules.goldenPoint;
-  let t1Wins = 0;
-  let t2Wins = 0;
-  const needed = Math.ceil(rules.bestOfSets / 2);
+export function validateEditScore(setsData: SetInput[], rules: MatchRules): EditScoreResult {
+  const games: [number, number][] = [];
+  let firstUnplayed: number | null = null;
 
   for (let i = 0; i < setsData.length; i++) {
-    const s = setsData[i];
-    if (s.t1 === "" || s.t2 === "") continue;
-
-    if (t1Wins >= needed || t2Wins >= needed) {
-      return { ok: false, error: `Invalid score: The match was already won in earlier sets. You cannot enter a score for set ${i + 1}.` };
+    const a = setsData[i].t1.trim();
+    const b = setsData[i].t2.trim();
+    const t1 = Number(a);
+    const t2 = Number(b);
+    if (a === "" || b === "" || (t1 === 0 && t2 === 0)) {
+      if (firstUnplayed === null) firstUnplayed = i;
+      continue;
     }
-
-    const t1 = parseInt(s.t1, 10) || 0;
-    const t2 = parseInt(s.t2, 10) || 0;
-
-    const valid = isValidBadmintonGame(t1, t2, ptw, gp);
-    if (t1 === 0 && t2 === 0) continue;
-
-    if (!valid) {
-      return { ok: false, error: `Invalid score in set ${i + 1}: ${t1}-${t2}. Enter a mathematically valid badminton score.` };
+    if (firstUnplayed !== null) {
+      return { ok: false, error: `Fill in game ${firstUnplayed + 1} before game ${i + 1}.` };
     }
-
-    if (t1 > t2) t1Wins++;
-    else if (t2 > t1) t2Wins++;
+    if (Number.isNaN(t1) || Number.isNaN(t2)) {
+      return { ok: false, error: `Game ${i + 1}: enter the points as whole numbers.` };
+    }
+    games.push([t1, t2]);
   }
 
-  const setsArr = setsData
-    .filter((s) => s.t1 !== "" && s.t2 !== "")
-    .map((s) => `${s.t1}-${s.t2}`);
-  if (!setsArr.length) return { ok: false, error: "Enter at least one set score" };
-  return { ok: true, sets: setsArr, score: setsArr.join(", ") };
+  if (!games.length) return { ok: false, error: "Enter at least one set score" };
+  const check = checkMatchScore(games, rules);
+  if (check.ok === false) return { ok: false, error: check.error };
+  const sets = games.map(([t1, t2]) => `${t1}-${t2}`);
+  return { ok: true, sets, score: sets.join(", "), winnerSide: check.winnerSide };
+}
+
+/** A court as typed or stored: zero-width characters stripped and trimmed ("" when blank). */
+export function cleanCourt(court: string | null | undefined): string {
+  return (court ?? "").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").trim();
+}
+
+/**
+ * A bulk-typed court as stored: numbered courts take the preset form "C<n>"
+ * ("3", "Court 3", "c03" -> "C3"), placeholders ("TBD", "Court") are blank and
+ * other names pass through. Comparisons elsewhere use courtKey().
+ */
+export function bulkCourt(raw: string | null | undefined): string {
+  const cleaned = cleanCourt(raw);
+  const key = courtKey(cleaned);
+  if (!key) return "";
+  return /^\d+$/.test(key) ? `C${key}` : cleaned;
 }
 
 /**
@@ -233,6 +237,7 @@ export function parseBulkSchedule(
     const wrongCategory = match ? match.category !== activeCategory : false;
     const existing = results.find(r => r.matchCode === matchCode);
 
+    court = bulkCourt(court);
     if (existing) {
       if (court) existing.court = court;
       if (at) existing.at = at;
@@ -241,4 +246,44 @@ export function parseBulkSchedule(
     }
   }
   return results;
+}
+
+export interface BulkSchedulePatch {
+  court_number?: string;
+  scheduled_at?: string;
+  status: string;
+  reminder_sent: false;
+}
+
+function sameInstant(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return !a && !b;
+  const ta = new Date(a).getTime();
+  const tb = new Date(b).getTime();
+  return Number.isNaN(ta) || Number.isNaN(tb) ? a === b : ta === tb;
+}
+
+/**
+ * What one bulk order-of-play row changes on a match, or null when it changes
+ * nothing. The bulk formats have no way to clear a slot, so a court-only line
+ * keeps the match's time and a time-only line keeps its court. Like the
+ * single-match schedule edit, a change resets reminder_sent (so players are
+ * reminded about the new slot) and moves the status with statusAfterScheduleEdit.
+ * An unchanged row is left alone, so re-uploading the template doesn't re-send
+ * reminders for slots that didn't move.
+ */
+export function bulkSchedulePatch(
+  match: { status: string; court_number?: string | null; scheduled_at?: string | null },
+  row: Pick<BulkScheduleRow, "court" | "at">,
+): BulkSchedulePatch | null {
+  const court = cleanCourt(row.court);
+  // "1", "C1" and "Court 1" are one court: retyping it is not a change.
+  const courtChanged = court !== "" && courtKey(court) !== courtKey(match.court_number);
+  const atChanged = row.at !== "" && !sameInstant(row.at, match.scheduled_at);
+  if (!courtChanged && !atChanged) return null;
+  return {
+    ...(courtChanged ? { court_number: court } : {}),
+    ...(atChanged ? { scheduled_at: row.at } : {}),
+    status: statusAfterScheduleEdit(match.status, row.at || match.scheduled_at, court || cleanCourt(match.court_number)),
+    reminder_sent: false,
+  };
 }

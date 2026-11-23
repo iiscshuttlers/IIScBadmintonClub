@@ -22,7 +22,7 @@
  * someone as present. A timed break that has run out counts as "here".
  */
 
-import { LIVE_STATUSES } from "@/lib/matchView";
+import { LIVE_STATUSES, courtKey } from "@/lib/matchView";
 import { DEFAULT_MIN_REST_MINS, restEndsAt } from "@/lib/restConflicts";
 
 export interface CheckinRow {
@@ -286,7 +286,11 @@ export type CourtState =
   | { court: string; kind: "called"; match: ReadinessMatch; calledAt: string }
   | { court: string; kind: "free" };
 
-const normCourt = (c: string | null | undefined) => (c ?? "").trim();
+/**
+ * One key per physical court: "C1", "Court 1" and "1" are the same court, and
+ * placeholders ("Court", "TBD") are no court at all. Same rule as courtLabel.
+ */
+const normCourt = (c: string | null | undefined) => courtKey(c) ?? "";
 
 /**
  * Courts strip. The tournament's courts are those any of its matches is

@@ -70,8 +70,11 @@ export function SeedMark({ seed }: { seed: number | null }) {
  */
 export function SideName({ label, won, decided }: { label: string; won: boolean; decided: boolean }) {
   if (!decided) return <span className="font-semibold">{label}</span>;
+  // `relative` anchors the absolutely positioned sr-only text to this span, so a
+  // `truncate` parent clips it. Unanchored, it sits where the cut-off name ends,
+  // past the screen edge, and phones widen the page (and the fixed bottom nav) to fit.
   return (
-    <span className={won ? "font-black text-foreground" : "font-medium text-soft"}>
+    <span className={won ? "relative font-black text-foreground" : "font-medium text-soft"}>
       {label}
       {won && <span className="sr-only"> (winner)</span>}
     </span>

@@ -4,6 +4,7 @@
  * edits, score-tap feedback and the start-match error messages. Kept free of
  * React and Supabase so it can be tested directly.
  */
+import { matchRules } from "@/lib/badmintonScore";
 import type { TournamentMatchForUmpire } from "@/components/umpire/UmpireTournamentTab";
 import type { BwfMatchState, MatchEditState } from "@/types/umpire";
 
@@ -11,6 +12,15 @@ import type { BwfMatchState, MatchEditState } from "@/types/umpire";
 export const FORMAT_BY_CATEGORY: Record<string, string> = {
   MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
 };
+
+/**
+ * A bracket side is a bye only when its whole label reads "BYE" (any case,
+ * surrounding spaces ignored), the same rule as the admin tab and the bracket.
+ * A substring match turned players such as "Abbye Thomas" or "Byers" into byes.
+ */
+export function isByeLabel(label: string | null | undefined): boolean {
+  return (label ?? "").trim().toUpperCase() === "BYE";
+}
 
 /**
  * A bracket team label is a single string like "Kriti Kalia & Deepak Kumar".
@@ -67,6 +77,7 @@ export function buildInitialUmpireMatch({
     }).length;
     const t1Names = (editState.team1_label || "").split(" & ");
     const t2Names = (editState.team2_label || "").split(" & ");
+    const rules = matchRules(editState);
 
     return {
       id: editState.id || newId(),
@@ -77,9 +88,9 @@ export function buildInitialUmpireMatch({
       isTournamentMatch: editState.is_tournament_match,
       matchNumber: editState.round ?? "",
       category: editState.category ?? "Singles",
-      pointsToWin: 21,
-      bestOfSets: 3,
-      goldenPoint: 30,
+      pointsToWin: rules.pointsToWin,
+      bestOfSets: rules.bestOfSets,
+      goldenPoint: rules.cap,
       t1: {
         p1Id: editState.player1_id,
         p1Name: editState.player1?.full_name || t1Names[0] || "Team 1",
@@ -121,8 +132,8 @@ export function buildInitialUmpireMatch({
   }
   // Tournament match pre-fill — skip player-search setup, go straight to server selection
   if (tournamentMatch) {
-    const isT1Bye = (tournamentMatch.team1_label || "").toUpperCase().includes("BYE");
-    const isT2Bye = (tournamentMatch.team2_label || "").toUpperCase().includes("BYE");
+    const isT1Bye = isByeLabel(tournamentMatch.team1_label);
+    const isT2Bye = isByeLabel(tournamentMatch.team2_label);
     const isByeMatch = isT1Bye || isT2Bye;
     const byeWinner: 1 | 2 = isT1Bye ? 2 : 1;
 
@@ -281,8 +292,8 @@ export function reopenSetUpdates(match: SetsMatch, index: number): Partial<BwfMa
   };
 }
 
-type ScoreMatch = Pick<BwfMatchState, "t1" | "t2" | "pointsToWin" | "category">;
-type ScoreUpdates = Partial<Pick<BwfMatchState, "t1" | "t2" | "status" | "winner">>;
+type ScoreMatch = Pick<BwfMatchState, "t1" | "t2" | "pointsToWin" | "category"> & Partial<Pick<BwfMatchState, "setsHistory">>;
+type ScoreUpdates = Partial<Pick<BwfMatchState, "t1" | "t2" | "status" | "winner" | "setsHistory">>;
 
 /** First to reach half the game's points (11 in a 21-point game) while the other side is below it. */
 function reachedHalf(match: ScoreMatch, updates: ScoreUpdates): boolean {
@@ -304,13 +315,29 @@ export function pointFeedback(match: ScoreMatch, updates: ScoreUpdates): "matchW
   return "point";
 }
 
+/**
+ * Final score of the game this rally just won. The update has already reset
+ * the scores to 0-0 for the next game, so read the game it appended to the
+ * history; failing that, the rally winner's score before the point plus one.
+ */
+function finishedGameScore(match: ScoreMatch, updates: ScoreUpdates): [number, number] {
+  const history = updates.setsHistory;
+  if (history && history.length > (match.setsHistory?.length ?? 0)) {
+    const [a, b] = history[history.length - 1].split("-").map(Number);
+    if (Number.isFinite(a) && Number.isFinite(b)) return [a, b];
+  }
+  const t1Won = (updates.t1?.games ?? match.t1.games) > match.t1.games;
+  return t1Won ? [match.t1.score + 1, match.t2.score] : [match.t1.score, match.t2.score + 1];
+}
+
 /** The club-wide alert pushed at the half-time interval or when a game is won; null otherwise. */
 export function scoreAlertMessage(match: ScoreMatch, updates: ScoreUpdates): string | null {
   const isSetWon = gameJustWon(match, updates);
   if (!reachedHalf(match, updates) && !isSetWon) return null;
 
-  const newT1Score = updates.t1?.score ?? match.t1.score;
-  const newT2Score = updates.t2?.score ?? match.t2.score;
+  const [newT1Score, newT2Score] = isSetWon
+    ? finishedGameScore(match, updates)
+    : [updates.t1?.score ?? match.t1.score, updates.t2?.score ?? match.t2.score];
   const t1Games = updates.t1?.games ?? match.t1.games;
   const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
   const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
@@ -319,6 +346,15 @@ export function scoreAlertMessage(match: ScoreMatch, updates: ScoreUpdates): str
     : `Half-time interval!`;
   const fullScore = `${t1Name} [${newT1Score} - ${newT2Score}] ${t2Name}`;
   return `🏆 ${match.category} Match: ${scoreStr} ${fullScore}`;
+}
+
+/**
+ * The side a finished tournament match is saved for, or null when no side has
+ * won (edit mode opened on level games, for one). Saving used to treat
+ * "no winner" as a side-2 win.
+ */
+export function savedWinnerSide(match: Pick<BwfMatchState, "winner">): 1 | 2 | null {
+  return match.winner === 1 || match.winner === 2 ? match.winner : null;
 }
 
 /** Toast for a refused tournament start, from the RPC's "code: detail" error. */

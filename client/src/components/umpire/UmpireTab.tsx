@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
+import { isByeLabel } from "@/lib/umpire/umpireStateLogic";
 import { 
   fetchActiveTournamentId, 
   getLiveMatchesFromSiteData, 
@@ -150,11 +151,13 @@ export function UmpireTab({
       }
     });
 
-    fetchSiteData<{ maintenanceMode?: boolean }>("club_settings", "settings.json").then(data => {
-      if (data?.maintenanceMode) {
-        setMaintenanceMode(true);
-      }
-    });
+    fetchSiteData<{ maintenanceMode?: boolean }>("club_settings", null)
+      .then((data) => {
+        if (data?.maintenanceMode) {
+          setMaintenanceMode(true);
+        }
+      })
+      .catch(() => { /* settings unreachable: carry on without maintenance mode */ });
 
     // The realtime subscription handles remote takeover requests or external updates
     const unsub = subscribeToLiveMatches((newValue) => {
@@ -531,7 +534,7 @@ function RecentUmpireMatches({
 
   // Filter pipeline
   const filteredMatches = recent.filter(m => {
-    const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
+    const isByeMatch = isByeLabel(m.team1_label) || isByeLabel(m.team2_label) || m.score === "BYE";
     if (isByeMatch) return false;
 
     // Filter by Scored By Me

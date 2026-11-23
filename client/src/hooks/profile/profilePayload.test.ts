@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
 import {
+  primaryIndexAfterFilter,
   buildProfilePayload,
   isIiscEmail,
   mediaFromStats,
@@ -227,5 +228,30 @@ describe("buildProfilePayload", () => {
   it("uses a generated avatar when none is set", () => {
     expect(buildProfilePayload(values({ avatarUrl: "", fullName: "Asha" })).avatar_url)
       .toBe("https://ui-avatars.com/api/?name=Asha&background=random");
+  });
+});
+
+describe("primary racket and shoes after blank rows", () => {
+  it("keeps the chosen primary when a blank row comes before it", () => {
+    const p = buildProfilePayload(values({
+      rackets: [
+        { name: "", string: "", tension: "" },
+        { name: "Astrox 88D", string: "", tension: "" },
+        { name: "Nanoflare 800", string: "", tension: "" },
+      ],
+      primaryRacketIndex: 2,
+      shoesList: [{ name: "" }, { name: "SHB65" }, { name: "Aerus Z" }],
+      primaryShoeIndex: 2,
+    }));
+    expect(p.current_racket).toBe("Nanoflare 800");
+    expect(p.racket_details.map((r) => r.primary)).toEqual([false, true]);
+    expect(JSON.parse(p.shoes)).toEqual([{ name: "SHB65", primary: false }, { name: "Aerus Z", primary: true }]);
+  });
+
+  it("falls back to the first kept row when the primary row is blank", () => {
+    expect(primaryIndexAfterFilter([{ n: "A" }, { n: "" }], 1, (r) => r.n !== "")).toBe(0);
+    expect(primaryIndexAfterFilter([{ n: "A" }], 5, (r) => r.n !== "")).toBe(0);
+    expect(primaryIndexAfterFilter([{ n: "" }, { n: "" }, { n: "B" }], 2, (r) => r.n !== "")).toBe(0);
+    expect(primaryIndexAfterFilter([{ n: "A" }, { n: "" }, { n: "B" }], 2, (r) => r.n !== "")).toBe(1);
   });
 });

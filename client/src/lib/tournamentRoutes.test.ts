@@ -224,3 +224,19 @@ describe("match page tabs", () => {
     expect(parseMatchTab("POINTS")).toBe("points");
   });
 });
+
+describe("registration routes", () => {
+  it("parses ?cat= against the tournament's own categories", async () => {
+    const { parseCategory } = await import("./tournamentRoutes");
+    expect(parseCategory("?cat=md", ["MS", "MD"])).toBe("MD");
+    expect(parseCategory("?cat=U19%20BD", ["U19 BD"])).toBe("U19 BD");
+    expect(parseCategory("?cat=XD", ["MS", "MD"])).toBeNull();
+    expect(parseCategory("", ["MS"])).toBeNull();
+  });
+  it("builds the My entry link and parses the panel", async () => {
+    const { myEntryPath, parseTournamentPanel } = await import("./tournamentRoutes");
+    expect(myEntryPath(TID, "MD")).toBe(`/tournaments/${TID}?panel=my-entry&cat=MD`);
+    expect(myEntryPath(TID)).toBe(`/tournaments/${TID}?panel=my-entry`);
+    expect(parseTournamentPanel("my-entry")).toBe("my-entry");
+  });
+});

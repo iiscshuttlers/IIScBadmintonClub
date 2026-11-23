@@ -65,7 +65,7 @@ export default function TournamentDetail() {
         id: sb.id,
         slug: sb.slug,
         status: sb.status,
-        type: ((sb as any).tournament_type ?? sb.subtitle) as any,
+        type: (sb as any).tournament_type as any,
         format_family: (sb as any).format_family,
         counts_for_elo: (sb as any).counts_for_elo,
         startDate: sb.startDate,
