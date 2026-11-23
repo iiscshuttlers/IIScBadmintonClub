@@ -1,5 +1,18 @@
 [
   {
+    "versionCode": 436,
+    "versionName": "4.36",
+    "date": "2026-11-23T15:42:39.622Z",
+    "changes": [
+      "Register for tournaments in the app: pick your events and partner in My entry",
+      "Partner requests, waitlists and late withdrawal requests",
+      "Registration alerts arrive in the app, by push and by email",
+      "Organisers get a Registration view with reminders, share text and a QR poster",
+      "A cleaner admin page with a new Home",
+      "Court and scoring fixes for tournament days"
+    ]
+  },
+  {
     "versionCode": 435,
     "versionName": "4.35",
     "date": "2026-11-22T17:55:42.313Z",

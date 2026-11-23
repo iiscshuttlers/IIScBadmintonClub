@@ -1,6 +1,6 @@
 {
-  "versionCode": 435,
-  "versionName": "4.35",
+  "versionCode": 436,
+  "versionName": "4.36",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
-  "changelog": "Simpler layout: Home, Tournaments, Players and Club\nYour matches and form are now on your profile\nBack works the same everywhere, including the Android back key\nShared links open straight in the app\nOrganisers choose who sees contact numbers; finished events hide them\nHead-to-head pairs: pick a pair and the event follows\nUmpires can reschedule matches\nFollowers get every court or time change\nFaster start-up"
+  "changelog": "Register for tournaments in the app: pick your events and partner in My entry\nPartner requests, waitlists and late withdrawal requests\nRegistration alerts arrive in the app, by push and by email\nOrganisers get a Registration view with reminders, share text and a QR poster\nA cleaner admin page with a new Home\nCourt and scoring fixes for tournament days"
 }
