@@ -120,27 +120,176 @@ describe("TournamentMatchesTab score editor", () => {
     enterGames([["21", "20"]]);
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(toast.error).toHaveBeenCalledWith("Invalid score in set 1: 21-20. Enter a mathematically valid badminton score.");
+    expect(toast.error).toHaveBeenCalledWith("Game 1: 21-20 isn't a possible score (first to 21, win by 2, 30 wins).");
     expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  it("refuses an incomplete score until a side is chosen", () => {
+    renderTab([match()]);
+    fireEvent.click(screen.getByRole("button", { name: "Score" }));
+    enterGames([["21", "10"]]);
+
+    const winner = screen.getByRole("combobox", { name: "Winner" });
+    expect(winner).toHaveValue("");
+    expect(screen.getByText("Choose winner…")).toBeInTheDocument();
+    expect(screen.getByText("Score is incomplete — pick the side that won by retirement or concession")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(toast.error).toHaveBeenCalledWith("Score is incomplete. Choose the side that won by retirement or concession.");
+    expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  it("saves an incomplete score for the side chosen by hand", async () => {
+    renderTab([match()]);
+    fireEvent.click(screen.getByRole("button", { name: "Score" }));
+    enterGames([["21", "10"], ["15", "21"]]);
+    fireEvent.change(screen.getByRole("combobox", { name: "Winner" }), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.submitTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.submitTournamentMatch).toHaveBeenCalledWith(expect.objectContaining({
+      p_winner_side: 2,
+      p_score: "21-10, 15-21",
+      p_sets: ["21-10", "15-21"],
+    }));
+  });
+
+  it("keeps the editor open with the typed score when saving fails", async () => {
+    vi.mocked(svc.submitTournamentMatch).mockRejectedValueOnce(new Error("Result changed elsewhere"));
+    renderTab([match()]);
+    fireEvent.click(screen.getByRole("button", { name: "Score" }));
+    enterGames([["21", "10"], ["21", "15"]]);
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.submitTournamentMatch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled());
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("ignores a hand-picked side once the games decide the match", async () => {
+    renderTab([match()]);
+    fireEvent.click(screen.getByRole("button", { name: "Score" }));
+    enterGames([["21", "10"]]);
+    fireEvent.change(screen.getByRole("combobox", { name: "Winner" }), { target: { value: "2" } });
+    enterGames([["21", "10"], ["21", "15"]]);
+
+    expect(screen.queryByRole("combobox", { name: "Winner" })).not.toBeInTheDocument();
+    expect(screen.getByText("(auto-detected)").parentElement).toHaveTextContent("Asha Rao");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.submitTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.submitTournamentMatch).toHaveBeenCalledWith(expect.objectContaining({
+      p_winner_side: 1,
+      p_score: "21-10, 21-15",
+    }));
+  });
+});
+
+describe("TournamentMatchesTab schedule editor", () => {
+  it("saves a blank Other court as no court", async () => {
+    renderTab([match({ court_number: "C2" })]);
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Court" }), { target: { value: "other" } });
+    expect(screen.getByPlaceholderText("Enter court")).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledWith(
+      "m1",
+      expect.objectContaining({ court_number: null, reminder_sent: false }),
+      "Edit the match court and scheduled time",
+    );
+  });
+
+  it("trims a typed Other court", async () => {
+    renderTab([match()]);
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Court" }), { target: { value: "other" } });
+    fireEvent.change(screen.getByPlaceholderText("Enter court"), { target: { value: "  Annex 2 " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledWith(
+      "m1",
+      expect.objectContaining({ court_number: "Annex 2" }),
+      "Edit the match court and scheduled time",
+    );
+  });
+
+  it("does not re-arm the reminder when the slot is saved unchanged", async () => {
+    renderTab([match({ court_number: "C2", scheduled_at: null, reminder_sent: true })]);
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(1));
+    const patch = (vi.mocked(svc.adminUpdateTournamentMatch).mock.calls[0] as unknown[])[1];
+    expect(patch).toMatchObject({ court_number: "C2" });
+    expect(patch).not.toHaveProperty("reminder_sent");
+  });
+
+  it("opens a non-preset court in Other mode", () => {
+    renderTab([match({ court_number: "Annex 2" })]);
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    expect(screen.getByRole("combobox", { name: "Court" })).toHaveValue("other");
+    expect(screen.getByPlaceholderText("Enter court")).toHaveValue("Annex 2");
   });
 });
 
 describe("TournamentMatchesTab bulk schedule", () => {
+  function pasteAndPreview(text: string) {
+    fireEvent.change(screen.getByPlaceholderText(/MS_QF_01: Court 3/), { target: { value: text } });
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+  }
+
   it("schedules a pending match from a pasted line", async () => {
     const { load } = renderTab([match({ status: "pending" })], { showBulkSchedule: true });
-    fireEvent.change(screen.getByPlaceholderText(/MS_QF_01: Court 3/), {
-      target: { value: "MS_SF_01 court=C2 date=2026-06-30 time=10:00" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    pasteAndPreview("MS_SF_01 court=C2 date=2026-06-30 time=10:00");
     expect(screen.getByText("✓ Found")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Save 1 Match" }));
     await waitFor(() => expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(1));
     expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledWith(
       "m1",
-      { court_number: "C2", scheduled_at: new Date("2026-06-30T10:00").toISOString(), status: "scheduled" },
+      { court_number: "C2", scheduled_at: new Date("2026-06-30T10:00").toISOString(), status: "scheduled", reminder_sent: false },
       "Bulk order-of-play schedule update",
     );
     expect(load).toHaveBeenCalled();
+  });
+
+  it("keeps the existing time on a court-only line", async () => {
+    renderTab([match({ court_number: "C1", scheduled_at: "2026-06-30T04:30:00+00:00" })], { showBulkSchedule: true });
+    pasteAndPreview("MS_SF_01 court=C3");
+    fireEvent.click(screen.getByRole("button", { name: "Save 1 Match" }));
+
+    await waitFor(() => expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledWith(
+      "m1",
+      { court_number: "C3", status: "scheduled", reminder_sent: false },
+      "Bulk order-of-play schedule update",
+    );
+  });
+
+  it("saves every row when one fails and reports which one", async () => {
+    svc.adminUpdateTournamentMatch.mockRejectedValueOnce(new Error("permission denied")); // the first row (m1)
+    const { load } = renderTab(
+      [match(), match({ id: "m2", match_code: "MS_SF_02", match_number: 2 })],
+      { showBulkSchedule: true },
+    );
+    pasteAndPreview("MS_SF_01 court=C1\nMS_SF_02 court=C2");
+    fireEvent.click(screen.getByRole("button", { name: "Save 2 Matches" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      "Saved 1 of 2; 1 failed: MS_SF_01",
+      { description: "permission denied" },
+    ));
+    expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledTimes(2);
+    expect(svc.adminUpdateTournamentMatch).toHaveBeenCalledWith(
+      "m2",
+      expect.objectContaining({ court_number: "C2" }),
+      "Bulk order-of-play schedule update",
+    );
+    expect(load).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Save 2 Matches" })).toBeEnabled();
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });

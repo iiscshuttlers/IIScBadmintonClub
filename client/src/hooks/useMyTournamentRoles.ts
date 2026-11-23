@@ -19,14 +19,20 @@ interface MyRoleRow {
 export function useMyTournamentRoles(
   userId?: string | null,
   tournaments: Array<{ id: string; created_by?: string | null }> = [],
+  /**
+   * The resolved player id (profile.id). Registrations are keyed by player id,
+   * which differs from the auth uid for e-mail-linked accounts.
+   */
+  playerId?: string | null,
 ) {
+  const regPlayerId = playerId || userId;
   const createdIds = tournaments.filter(t => t.created_by === userId).map(t => t.id);
 
   // NOTE: cache plain arrays (not Map/Set) — react-query is persisted to
   // localStorage, where Map/Set serialize to {} and lose their methods.
   // The Map<…, MyRole> is rebuilt client-side via useMemo below.
   const { data: rows = [], refetch, isLoading } = useQuery<MyRoleRow[]>({
-    queryKey: ["my-tournament-roles", userId, [...createdIds].sort().join(",")],
+    queryKey: ["my-tournament-roles", userId, regPlayerId, [...createdIds].sort().join(",")],
     queryFn: async () => {
       if (!userId) return [];
       const byId = new Map<string, MyRoleRow>();
@@ -45,7 +51,7 @@ export function useMyTournamentRoles(
       const { data: regs, error: regError } = await supabase
         .from("tournament_registrations")
         .select("tournament_id, status")
-        .eq("player_id", userId);
+        .eq("player_id", regPlayerId);
       if (!regError && regs) {
         regs.forEach((r) => { ensure(r.tournament_id).registration = r.status as MyRoleRow["registration"]; });
       }

@@ -12,7 +12,7 @@ import {
   Swords, CheckSquare, Square, MapPin,
 } from "lucide-react";
 
-type Channel = "in_app" | "email" | "push";
+type Channel = "in_app" | "push";
 type Audience = "tournament" | "officials" | "matches" | "custom";
 
 interface MatchForReminder {
@@ -44,11 +44,11 @@ interface SendReminderSheetProps {
 }
 
 // In-app only lands in the bell list; the phone pop-up comes from Push, which
-// dispatch-scheduled-notifications sends on its 2-minute cron.
+// dispatch-scheduled-notifications sends on its 2-minute cron. The app is
+// push-only: no email channel is offered.
 const CHANNELS: { key: Channel; label: string; icon: typeof Mail; note: string }[] = [
   { key: "in_app", label: "In-app", icon: MonitorSmartphone, note: "Bell list, no pop-up" },
   { key: "push", label: "Push", icon: Smartphone, note: "Phone pop-up, within 2 min" },
-  { key: "email", label: "Email", icon: Mail, note: "Within 2 min" },
 ];
 
 const DEFAULT_CHANNELS: Channel[] = ["in_app", "push"];
@@ -316,7 +316,7 @@ export function SendReminderSheet({
 
       // 1. Durable queue row. For an immediate in-app send we deliver it
       //    ourselves below, so drop in_app from the queued channels to stop the
-      //    future dispatcher double-sending it; keep email/push pending.
+      //    future dispatcher double-sending it; keep push pending.
       const queuedChannels = deliverInAppNow ? channels.filter((c) => c !== "in_app") : channels;
       const queueRow = {
         tournament_id: tournament.id,
@@ -349,11 +349,7 @@ export function SendReminderSheet({
 
       if (isImmediate) {
         const who = `${recipients.length} ${recipients.length === 1 ? "person" : "people"}`;
-        const later = queuedChannels.includes("push")
-          ? "phone pop-up within 2 min"
-          : queuedChannels.includes("email")
-            ? "email within 2 min"
-            : "";
+        const later = queuedChannels.includes("push") ? "phone pop-up within 2 min" : "";
         toast.success(
           deliverInAppNow
             ? `In-app sent to ${who}` + (later ? ` · ${later}` : " · no pop-up (Push was off)")

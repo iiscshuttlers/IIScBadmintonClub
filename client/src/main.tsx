@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./pwa";
-import packageJson from "../../package.json";
 import { installNavHistory } from "./lib/navHistory";
 import { installAvatarFallback } from "./lib/avatarFallback";
 
@@ -15,11 +14,20 @@ installNavHistory();
 // A player photo that fails to load shows initials, never a broken-image icon.
 installAvatarFallback();
 
+// Dev servers, `vite preview` and e2e runs are served from localhost:<port>.
+// The Android app is https://localhost with no port, so it still reports.
+const isLocalRun =
+  import.meta.env.DEV ||
+  (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname) && window.location.port !== "");
+
 Sentry.init(
   {
     dsn: import.meta.env.VITE_SENTRY_DSN || "",
-    enabled: !!import.meta.env.VITE_SENTRY_DSN,
-    release: `shuttlers.iisc.com@${packageJson.version}`,
+    // Local runs used to report as "production" and filled Sentry with
+    // hot-reload and half-edited-code errors no user ever saw.
+    enabled: !!import.meta.env.VITE_SENTRY_DSN && !isLocalRun,
+    environment: isLocalRun ? "development" : "production",
+    release: `shuttlers.iisc.com@${import.meta.env.VITE_APP_VERSION_NAME}`,
     integrations: [
       SentryReact.browserTracingIntegration(),
     ],

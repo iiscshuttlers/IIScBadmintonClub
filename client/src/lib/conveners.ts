@@ -129,7 +129,7 @@ const CACHE_MS = 60_000;
 export function loadConveners(): Promise<ResolvedConveners> {
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.promise;
   const promise = (async () => {
-    const raw = await fetchSiteData<ConvenerData>("convener_photos", "convener_photos.json").catch(() => null);
+    const raw = await fetchSiteData<ConvenerData>("convener_photos", null).catch(() => null);
     const data = normaliseConvenerData(raw);
     const ids = CONVENER_ROLES.map((r) => data[r.key].playerId).filter((id): id is string => !!id);
     const players = ids.length ? await fetchConvenerPlayers(ids).catch(() => []) : [];

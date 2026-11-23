@@ -319,8 +319,12 @@ export const feedService = {
         "postgres_changes",
         { event: "*", schema: "public", table: "site_data", filter: "key=in.(home_banners,announcements,events,flyers)" },
         async () => {
-          const data = await feedService.fetchHomeBannersData();
-          callback(data);
+          try {
+            callback(await feedService.fetchHomeBannersData());
+          } catch (err) {
+            // Keep the banners already shown; the next change refetches.
+            console.warn("[home banners] refetch failed:", (err as { message?: string })?.message ?? err);
+          }
         }
       )
       .subscribe();

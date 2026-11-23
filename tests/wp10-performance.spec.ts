@@ -145,7 +145,7 @@ test("captures WP10 realistic-fixture performance baselines", async ({ page }, t
 
   // Warm lazy chunks and the dev server before collecting the baseline.
   await page.goto("/tournaments", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Tournaments Central" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Tournaments", exact: true })).toBeVisible();
 
   const tournamentOpeningMs: number[] = [];
   for (let i = 0; i < 3; i += 1) {
@@ -157,7 +157,7 @@ test("captures WP10 realistic-fixture performance baselines", async ({ page }, t
   }
 
   await page.goto("/tournaments", { waitUntil: "domcontentloaded" });
-  const search = page.getByPlaceholder("Search tournaments by name, venue or category…");
+  const search = page.getByRole("searchbox", { name: "Search tournaments" });
   await expect(search).toBeVisible();
   const filterStarted = performance.now();
   await search.fill("Qualification Tournament 47");

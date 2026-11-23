@@ -56,11 +56,14 @@ describe("ScoringRulesPanel", () => {
     expect(svc.setTournamentRoundRule).toHaveBeenCalledWith(expect.objectContaining({ category: "MD", round: 2, points_to_win: 11, best_of_sets: 5 }));
   });
 
-  it("copies one round's rule from a round of another format", async () => {
+  it("sets one round from a rule already in use, listing each rule once", async () => {
     render(<ScoringRulesPanel tournament={tournament} />);
     // A round shared by the semifinal and the playoff shows both names.
-    const select = await screen.findByLabelText("Copy Men's Doubles Semifinal + 3rd Place Playoff rule from another round");
-    fireEvent.change(select, { target: { value: "MS::2" } });
+    const select = await screen.findByLabelText("Set Men's Doubles Semifinal + 3rd Place Playoff to a rule used elsewhere");
+    // In use: 15/3/21 (MS SF) and 11/5/15 (MS Final); the row's own 21/3/30 is left out.
+    const inUse = Array.from(select.querySelectorAll('optgroup[label="In use"] option')).map((o) => o.textContent);
+    expect(inUse).toEqual(["15 · best of 3 · cap 21 (MS SF)", "11 · best of 5 · cap 15 (MS Final)"]);
+    fireEvent.change(select, { target: { value: "11|5|15" } });
     await waitFor(() => expect(svc.setTournamentRoundRule).toHaveBeenCalledTimes(1));
     expect(svc.setTournamentRoundRule).toHaveBeenCalledWith({
       tournament_id: "t1", category: "MD", round: 1, round_name: "Semifinal", points_to_win: 11, best_of_sets: 5, golden_point: 15,

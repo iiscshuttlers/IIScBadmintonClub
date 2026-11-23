@@ -1,3 +1,5 @@
+import { makeDrawWarnings } from "@/lib/registration/drawWarnings";
+import { isRegistrationFlagOn } from "@/services/tournament/registrationEntries";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -35,6 +37,9 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
     return parts[2] || (tournament.categories || [])[0] || "";
   };
   const [activeCat, setActiveCat] = useState<string>(getHashCat());
+  const shownCat = (tournament.categories || []).includes(activeCat)
+    ? activeCat
+    : (tournament.categories || [])[0] || "";
 
   useEffect(() => {
     if (isHost) return;
@@ -481,7 +486,25 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
       }
     }
 
-    const existingMatchesCount = await tournamentService.countTournamentMatches(tournament.id);
+    // In-app registration: warn about shared partners, partner-less doubles and
+    // seeds that are only sign-up order before the draw locks the category.
+    const drawWarnings = makeDrawWarnings(
+      catsToGenerate.flatMap((cat) => participants[cat] ?? []),
+      catsToGenerate,
+      { flagOn: isRegistrationFlagOn(tournament) },
+    );
+    if (drawWarnings.length > 0) {
+      const go = await confirm({
+        title: "Before you make the draw",
+        description: drawWarnings.join(" "),
+        confirmLabel: "Make draw anyway",
+        confirmVariant: "danger",
+      });
+      if (!go) return;
+    }
+
+    // Only this category's matches when regenerating one category.
+    const existingMatchesCount = await tournamentService.countTournamentMatches(tournament.id, onlyCat);
 
     if (existingMatchesCount > 0) {
       const msg = onlyCat
@@ -572,40 +595,29 @@ export function TournamentParticipantsTab({ tournament, variant = "manager" }: {
         />
       )}
 
-      {/* Category selector */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <button
-          onClick={() => setTabCat("ALL")}
-          className={`px-4 py-2 rounded-full text-sm font-black transition ${
-            activeCat === "ALL"
-              ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-muted text-muted-foreground hover:bg-muted-strong"
-          }`}
-        >
-          All Categories
-        </button>
+      {/* Category selector. Old "#…/participants/ALL" links land on the first category. */}
+      <div role="group" aria-label="Category" className="flex flex-wrap items-center gap-1.5 mb-4">
         {(tournament.categories || []).map((cat) => (
           <button
             key={cat}
+            type="button"
+            aria-pressed={shownCat === cat}
             onClick={() => setTabCat(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-black transition ${
-              activeCat === cat
-                ? "bg-primary text-primary-foreground shadow-md"
+            className={`px-3 py-1.5 rounded-full text-xs font-black transition ${
+              shownCat === cat
+                ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted-strong"
             }`}
           >
-            {cat} ({participants[cat]?.length ?? 0})
+            {cat} <span className="opacity-70">{participants[cat]?.length ?? 0}</span>
           </button>
         ))}
       </div>
 
       {/* Category View */}
       {(() => {
-        if (activeCat === "ALL") {
-          return null; // All categories view can show totals or switch to individual tabs
-        }
-
-        const cat = activeCat;
+        const cat = shownCat;
+        if (!cat) return null;
         const parts = participants[cat] ?? [];
         const doubles = isDoubles(cat);
         const catSearch = search[cat] || "";

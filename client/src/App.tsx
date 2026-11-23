@@ -1,10 +1,10 @@
+import { takeReturnUrl } from "@/lib/returnUrl";
 import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch, Router, useLocation } from "wouter";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, WifiOff, ExternalLink } from "lucide-react";
 
 import StatusBanner from "@/components/StatusBanner";
@@ -133,15 +133,11 @@ function AppRoutes() {
   return (
     <ErrorBoundary fallback={<PageErrorFallback />}>
       <Suspense fallback={<PageSkeleton />}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.split("/")[1] || "root"}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="w-full"
-          >
+        {/* Plain keyed div with a CSS fade (.route-enter). The old framer-motion
+            AnimatePresence mode="wait" wrapper left pages stuck near opacity 0
+            when a lazy route suspended mid-fade or the user navigated quickly,
+            and its exit delay made scroll restoration race the old page. */}
+          <div key={location.split("/")[1] || "root"} className="w-full route-enter">
             <Switch>
               <Route path="/" component={Home} />
           {/* Pulse and Legacy were retired in the nav regroup (Home · Tournaments · Players · Club).
@@ -257,8 +253,10 @@ function AppRoutes() {
             const { session, isInitializing } = useAuth();
             useEffect(() => { 
               if (!isInitializing) {
-                // If we have a session, go home. If not, go to join.
-                setLoc(session ? "/" : "/join"); 
+                // Signed in: back to the page that sent them to sign in
+                // (e.g. My entry), else home. Not signed in: keep the
+                // return address for /join.
+                setLoc(session ? (takeReturnUrl() ?? "/") : "/join");
               }
             }, [setLoc, session, isInitializing]);
             
@@ -327,8 +325,7 @@ function AppRoutes() {
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </Suspense>
     </ErrorBoundary>
   );

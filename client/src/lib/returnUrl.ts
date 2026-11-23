@@ -29,3 +29,27 @@ export function toAppPath(path: string): string {
 export function currentReturnUrl(): string {
   return toAppPath(window.location.pathname) + window.location.search + window.location.hash;
 }
+
+const RETURN_KEY = "return_url";
+
+/** Remember where to come back to after sign-in (defaults to the current page). */
+export function rememberReturnUrl(path: string = currentReturnUrl()): void {
+  try { sessionStorage.setItem(RETURN_KEY, toAppPath(path)); } catch { /* storage blocked: sign-in just lands on home */ }
+}
+
+/**
+ * Read and clear the stored return address. Only in-app paths ("/x", never
+ * "//host" or "https://…") are honoured, so a crafted value can't send the
+ * user off-site. Returns null when there is none.
+ */
+export function takeReturnUrl(): string | null {
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(RETURN_KEY);
+    sessionStorage.removeItem(RETURN_KEY);
+  } catch { /* storage blocked */ }
+  const inApp = (p: string) => p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\");
+  if (!raw || !inApp(raw)) return null;
+  const path = toAppPath(raw);
+  return inApp(path) ? path : null;
+}

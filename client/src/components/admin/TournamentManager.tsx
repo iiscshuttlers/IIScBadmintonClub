@@ -19,6 +19,8 @@ import { TeamBracketTab } from "./TeamBracketTab";
 import { TeamsTab } from "./TeamsTab";
 import { TeamTournamentManager } from "./TeamTournamentManager";
 import { TournamentRegistrationsPanel } from "./TournamentRegistrationsPanel";
+import { RegistrationView } from "@/components/registration/RegistrationView";
+import { isRegistrationFlagOn } from "@/services/tournament/registrationEntries";
 import { TournamentReportPanel } from "./TournamentReportPanel";
 import { TournamentArchiveTab } from "./TournamentArchiveTab";
 import { TournamentParticipantsTab } from "./TournamentParticipantsTab";
@@ -317,6 +319,8 @@ export function TournamentManager() {
 
             {activeTab === "entries" && (
               <>
+                {/* In-app registration: the Registration view; the legacy panel keeps approving old pending sign-ups. */}
+                {isRegistrationFlagOn(selected) && <RegistrationView tournament={selected} />}
                 {selected.require_app_registration && <TournamentRegistrationsPanel tournament={selected} />}
                 {isTeam ? <TeamsTab tournament={selected} /> : <TournamentParticipantsTab tournament={selected} />}
               </>

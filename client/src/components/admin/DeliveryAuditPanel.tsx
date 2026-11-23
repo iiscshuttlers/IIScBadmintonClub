@@ -26,6 +26,8 @@ type DeliveryCount = { status: string; count: number };
 
 type FailureRow = {
   id: string;
+  /** "failed", or "sent" with an error: some emails were rejected (partly sent). */
+  status: string;
   title: string;
   channels: string[];
   error: string | null;
@@ -83,8 +85,8 @@ export function DeliveryAuditPanel() {
       const since = new Date(Date.now() - days * 86_400_000).toISOString();
       const { data, error } = await sb
         .from("scheduled_notifications")
-        .select("id, title, channels, error, scheduled_at, created_at")
-        .eq("status", "failed")
+        .select("id, status, title, channels, error, scheduled_at, created_at")
+        .or("status.eq.failed,and(status.eq.sent,error.not.is.null)")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -248,7 +250,10 @@ export function DeliveryAuditPanel() {
                   <div key={f.id} className="rounded-2xl border border-danger/30 bg-danger/5 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-sm font-bold text-foreground">{f.title}</span>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">{relative(f.created_at)}</span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {f.status === "sent" && <span className="font-bold text-warning">Partly sent · </span>}
+                        {relative(f.created_at)}
+                      </span>
                     </div>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {(f.channels || []).join(", ")}

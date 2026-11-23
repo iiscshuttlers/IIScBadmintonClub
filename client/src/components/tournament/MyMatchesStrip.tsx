@@ -8,22 +8,11 @@ import { PathToFinalDialog } from "@/components/tournament/PathToFinalDialog";
 import { computeStakes, formatRange, DEFAULT_ELO_CONFIG, type Stakes } from "@/lib/eloStakes";
 import { matchOutcome } from "@/lib/matchView";
 import { SidesVs } from "@/components/match/MatchPrimitives";
+import { categoryTextClass as catColor } from "@/lib/categoryColors";
 
 const LIVE_STATUSES = new Set(["in_progress", "playing", "live", "ongoing"]);
-
-// Each category/format gets its own colour so a glance tells you the discipline.
-const CATEGORY_COLOR: Record<string, string> = {
-  MS: "text-cat-ms",
-  WS: "text-cat-ws",
-  MD: "text-cat-md",
-  WD: "text-cat-wd",
-  XD: "text-cat-xd",
-  BS: "text-accent",
-  GS: "text-danger",
-  BD: "text-team",
-  GD: "text-individual",
-};
-const catColor = (c?: string) => CATEGORY_COLOR[(c || "").toUpperCase()] || "text-soft";
+/** Finished matches: played out, or decided by walkover. */
+const isFinished = (status: string) => status === "completed" || status === "walkover";
 
 /** Winning side as an index into [team1, team2]; null until completed or walkover. */
 function winnerIndex(m: { status: string; winner_side?: number | null }): 0 | 1 | null {
@@ -33,16 +22,20 @@ function winnerIndex(m: { status: string; winner_side?: number | null }): 0 | 1 
 
 /**
  * Compact "My Matches" strip — the current player's tournament matches ordered
- * live → upcoming → completed. Shown on the Home dashboard and the Tournaments
- * hub so players instantly see when they're playing. Tournament matches only.
+ * live → upcoming → completed, so players instantly see when they're playing.
+ * Tournament matches only. With `upcomingOnly` (the Tournaments hub) finished
+ * matches are left to /my-matches and the strip shrinks to one line when
+ * nothing is coming up.
  */
 export function MyMatchesStrip({
   myPlayerId,
   limit = 4,
+  upcomingOnly = false,
   className = "",
 }: {
   myPlayerId: string | null | undefined;
   limit?: number;
+  upcomingOnly?: boolean;
   className?: string;
 }) {
   const [myMatches, setMyMatches] = useState<any[]>([]);
@@ -66,8 +59,9 @@ export function MyMatchesStrip({
   }, [myPlayerId]);
 
   const sortedMyMatches = useMemo(() => {
-    const rank = (m: any) => (LIVE_STATUSES.has(m.status) ? 0 : m.status === "completed" ? 2 : 1);
+    const rank = (m: any) => (LIVE_STATUSES.has(m.status) ? 0 : isFinished(m.status) ? 2 : 1);
     return [...myMatches]
+      .filter((m) => !upcomingOnly || !isFinished(m.status))
       .sort((a, b) => {
         const ra = rank(a),
           rb = rank(b);
@@ -77,7 +71,7 @@ export function MyMatchesStrip({
         return ra === 2 ? tb - ta : ta - tb;
       })
       .slice(0, limit);
-  }, [myMatches, limit]);
+  }, [myMatches, limit, upcomingOnly]);
 
   // Elo stakes for upcoming ranked matches with both sides decided.
   const [stakes, setStakes] = useState<Record<string, Stakes>>({});
@@ -85,7 +79,7 @@ export function MyMatchesStrip({
   useEffect(() => {
     if (!myPlayerId) return;
     const ranked = myMatches.filter(
-      (m) => m.status !== "completed" && !LIVE_STATUSES.has(m.status) && m.tournaments?.counts_for_elo !== false && m.player1_id && m.player2_id,
+      (m) => !isFinished(m.status) && !LIVE_STATUSES.has(m.status) && m.tournaments?.counts_for_elo !== false && m.player1_id && m.player2_id,
     );
     if (ranked.length === 0) {
       setStakes({});
@@ -133,7 +127,24 @@ export function MyMatchesStrip({
     }
   };
 
-  if (!myPlayerId || sortedMyMatches.length === 0) return null;
+  if (!myPlayerId || myMatches.length === 0) return null;
+
+  // Hub view with nothing coming up: one line pointing at past results.
+  if (sortedMyMatches.length === 0) {
+    return (
+      <div className={`flex items-center justify-between gap-2 flex-wrap ${className}`}>
+        <span className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wider">
+          <Swords className="w-3.5 h-3.5" aria-hidden="true" /> My Matches
+        </span>
+        <span className="text-xs text-muted-foreground">
+          No upcoming matches ·{" "}
+          <Link href="/my-matches" className="font-bold text-primary hover:underline">
+            Past results →
+          </Link>
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
@@ -160,7 +171,7 @@ export function MyMatchesStrip({
       <div className="space-y-2">
         {sortedMyMatches.map((m) => {
           const isLive = LIVE_STATUSES.has(m.status);
-          const isDone = m.status === "completed";
+          const isDone = isFinished(m.status);
           return (
             <Link key={m.id} href="/my-matches">
               <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/60 border border-border-strong/60 hover:border-primary/40 transition-colors cursor-pointer">

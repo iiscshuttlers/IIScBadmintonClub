@@ -39,16 +39,22 @@ import {
   UMPIRE_ROOT,
   categoryProgress,
   compareUmpireQueue,
+  describeMatchRules,
   directScorePreview,
   enrichUmpireMatches,
   filterUpcomingMatches,
+  hasByeSide,
   orderRoundNames,
   parentNav,
   queueCourts,
   resolveUmpireStep,
+  upcomingStatusCounts,
   validateDirectScore,
   type UmpireNav,
+  type UpcomingFilters,
 } from "./umpireTournamentLogic";
+import { matchRules } from "@/lib/badmintonScore";
+import { isByeLabel } from "@/lib/umpire/umpireStateLogic";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -178,7 +184,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   const submitDirectScore = async () => {
     if (!directScoreFor || !session?.user?.id) return;
 
-    const checked = validateDirectScore(directSets, directScoreFor.best_of_sets);
+    // Rules after enrichUmpireMatches: the round's rule, else the match's own columns.
+    const checked = validateDirectScore(directSets, matchRules(directScoreFor));
     if (checked.ok === false) {
       toast.error(checked.error);
       return;
@@ -420,12 +427,15 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
   if (step === "format") {
     const availableCourts = queueCourts(allMatches);
 
-    const upcomingScheduled = filterUpcomingMatches(allMatches, {
+    const listFilters: UpcomingFilters = {
       status: upcomingStatus,
       search: upcomingSearch,
       format: upcomingFormat,
       court: upcomingCourt,
-    });
+    };
+    const upcomingScheduled = filterUpcomingMatches(allMatches, listFilters);
+    // Pill numbers come from the same filter as the list, so they always agree.
+    const statusCounts = upcomingStatusCounts(allMatches, listFilters);
 
     const currentTournament = availableTournaments.find(t => t.id === selectedTournamentId) ?? availableTournaments[0];
 
@@ -543,10 +553,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
               {(["ALL", "upcoming", "live", "completed"] as const).map(s => {
                 const label = s === "ALL" ? "All" : s === "upcoming" ? "Upcoming" : s === "live" ? "Live" : "Done";
-                const count = s === "ALL" ? upcomingScheduled.length
-                  : s === "upcoming" ? allMatches.filter(m => m.status === "scheduled").length
-                  : s === "live" ? allMatches.filter(m => m.status === "in_progress").length
-                  : allMatches.filter(m => m.status === "completed" || m.status === "walkover").length;
+                const count = statusCounts[s];
                 return (
                   <button
                     key={s}
@@ -626,7 +633,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
             ) : (
               <div className="space-y-1.5">
                 {upcomingScheduled.map((m) => {
-                  const isBye = m.team1_label === "BYE" || m.team2_label === "BYE";
+                  const isBye = hasByeSide(m);
                   const noPlayers = !isBye && (!m.team1_label || !m.team2_label);
                   const isLive = m.status === "in_progress";
                   const isDone = m.status === "completed" || m.status === "walkover";
@@ -688,8 +695,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
                     {/* Players row */}
                     {(() => {
-                      const t1Won = m.winner_side === 1 || m.team2_label === "BYE";
-                      const t2Won = m.winner_side === 2 || m.team1_label === "BYE";
+                      const t1Won = m.winner_side === 1 || isByeLabel(m.team2_label);
+                      const t2Won = m.winner_side === 2 || isByeLabel(m.team1_label);
                       return (
                         <div className="flex items-center justify-between gap-2 mt-1.5">
                           <span className={cn("font-bold text-xs truncate flex-1", t1Won ? "text-success" : t2Won ? "text-muted-foreground line-through decoration-soft" : "text-foreground")}>
@@ -845,7 +852,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                     {roundMatches.map((m) => {
                       const isLive = m.status === "in_progress";
                       const isDoubles = m.category.includes('D') || m.category.includes('Doubles');
-                      const isBye = m.team1_label === "BYE" || m.team2_label === "BYE";
+                      const isBye = hasByeSide(m);
                       const hasLabels = m.team1_label && m.team2_label && m.team1_label !== "TBD" && m.team2_label !== "TBD";
                       const noPlayers = !isBye && !hasLabels;
 
@@ -909,8 +916,8 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
 
                             {(() => {
                               const w = m.winner_side;
-                              const t1Won = w === 1 || m.team2_label === "BYE";
-                              const t2Won = w === 2 || m.team1_label === "BYE";
+                              const t1Won = w === 1 || isByeLabel(m.team2_label);
+                              const t2Won = w === 2 || isByeLabel(m.team1_label);
                               return (
                                 <>
                                   <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
@@ -1258,6 +1265,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                 <p className="text-xs text-muted-foreground">
                   {directScoreFor.match_code} · {directScoreFor.team1_label ?? "TBD"} vs {directScoreFor.team2_label ?? "TBD"}
                 </p>
+                <p className="text-[11px] font-bold text-soft">{describeMatchRules(matchRules(directScoreFor))}</p>
               </div>
 
               <div className="space-y-3">
@@ -1281,7 +1289,7 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
                       placeholder="0"
                       className="w-full bg-muted border border-border-strong rounded-xl px-3 py-2.5 text-center text-sm text-foreground font-bold outline-none focus:border-success transition"
                     />
-                    <span className="text-[10px] font-black text-muted-foreground">Set {i + 1}</span>
+                    <span className="text-[10px] font-black text-muted-foreground">Game {i + 1}</span>
                     <input
                       type="number"
                       min={0}
@@ -1299,12 +1307,12 @@ export function UmpireTournamentTab({ onStartMatch, tournamentId, tournament }: 
               </div>
 
               {(() => {
-                const { leader, t1Wins, t2Wins, show } = directScorePreview(directSets);
+                const { leader, t1Wins, t2Wins, show } = directScorePreview(directSets, matchRules(directScoreFor));
                 const winner = leader === 1 ? directScoreFor.team1_label : leader === 2 ? directScoreFor.team2_label : null;
                 if (!winner || !show) return null;
                 return (
                   <div className="text-center text-xs text-success font-bold bg-success/10 border border-success/30 rounded-xl py-2">
-                    Winner: {winner} ({t1Wins}-{t2Wins} sets)
+                    Winner: {winner} ({t1Wins}-{t2Wins} in games)
                   </div>
                 );
               })()}

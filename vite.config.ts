@@ -206,6 +206,10 @@ function vendorChunk(id: string): string | undefined {
 /* ===================== MAIN CONFIG ===================== */
 const pkgPath = path.resolve(PROJECT_ROOT, "package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+// The shipped version lives in app-version.json (scripts/release.mjs bumps it
+// with build.gradle); package.json's version is not bumped on release.
+const appVersionPath = path.resolve(PROJECT_ROOT, "client/public/data/app-version.json");
+const appVersionName: string = JSON.parse(fs.readFileSync(appVersionPath, "utf-8")).versionName ?? pkg.version;
 
 export default defineConfig(({ command }) => {
   // 🔥 CRITICAL FIX
@@ -224,6 +228,8 @@ export default defineConfig(({ command }) => {
     base: basePath,
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
+      // Sentry release tag, e.g. shuttlers.iisc.com@4.35 (matches the Play build).
+      "import.meta.env.VITE_APP_VERSION_NAME": JSON.stringify(appVersionName),
     },
     plugins: [
       react(),

@@ -3,6 +3,10 @@ import { MyCertificatesCard } from "@/components/tournament/MyCertificatesCard";
 import { useState, useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { MyEntryPanel } from "@/components/registration/MyEntryPanel";
+import { isRegistrationFlagOn } from "@/services/tournament/registrationEntries";
+import { myEntryPath, parseCategory } from "@/lib/tournamentRoutes";
+import { rememberReturnUrl } from "@/lib/returnUrl";
 import { fetchTournaments, fetchUserTournamentRoles } from "@/services/tournamentService";
 import { getLiveMatchPicks, saveLiveMatchPick, fetchPollRevealedMatches, updatePollRevealedMatches } from "@/services/feedService";
 import {
@@ -126,6 +130,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
   const { myRoles, refetch: refetchMyRoles } = useMyTournamentRoles(
     session?.user?.id ?? null,
     activeTournament ? [activeTournament] : [],
+    ownProfile?.id ?? null,
   );
   const myRegistration = activeTournament ? myRoles.get(activeTournament.id)?.registration : undefined;
   const [tournaments, setTournaments] = useState<any[]>(route ? [route.tournament] : []);
@@ -415,7 +420,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
             session ? (
               myRegistration === "pending" || myRegistration === "approved" ? (
                 <button
-                  onClick={() => setShowRegister(true)}
+                  onClick={() => (route && isRegistrationFlagOn(activeTournament)
+                    ? route.navigate({ tab: route.tab, panel: "my-entry" })
+                    : setShowRegister(true))}
                   className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/40 bg-primary/10 text-primary text-sm font-black hover:bg-primary/15 transition"
                 >
                   <UserCheck className="w-4 h-4" />
@@ -423,7 +430,9 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
                 </button>
               ) : (
                 <button
-                  onClick={() => setShowRegister(true)}
+                  onClick={() => (route && isRegistrationFlagOn(activeTournament)
+                    ? route.navigate({ tab: route.tab, panel: "my-entry" })
+                    : setShowRegister(true))}
                   className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-black transition shadow-sm"
                 >
                   <ClipboardList className="w-4 h-4" /> Register for this event
@@ -432,6 +441,8 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
             ) : (
               <Link
                 href="/join"
+                // Come back to this tournament's My entry after signing in.
+                onClick={() => rememberReturnUrl(isRegistrationFlagOn(activeTournament) ? myEntryPath(activeTournament.id) : undefined)}
                 className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/40 text-primary text-sm font-black hover:bg-primary/10 transition"
               >
                 <ClipboardList className="w-4 h-4" /> Sign in to register
@@ -482,6 +493,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
             { key: "schedule", label: "Schedule", icon: Calendar, isActive: isTabActive("schedule"), onSelect: go({ tab: "schedule", panel: null }) },
             { key: "results", label: "Results", icon: Trophy, isActive: isTabActive("results"), onSelect: go({ tab: "results", panel: null }) },
             ...(session ? [{ key: "my-matches", label: "My matches", icon: UserCheck, isActive: route.panel === "my-matches", onSelect: go({ tab: route.tab, panel: "my-matches" }) }] : []),
+            ...(session && isRegistrationFlagOn(activeTournament) && !isRouteTeam ? [{ key: "my-entry", label: "My entry", icon: ClipboardList, isActive: route.panel === "my-entry", onSelect: go({ tab: route.tab, panel: "my-entry" }) }] : []),
             { key: "polls", label: "Predict", icon: ListChecks, isActive: route.panel === "polls", onSelect: go({ tab: route.tab, panel: "polls" }) },
           ];
           staff = [
@@ -560,6 +572,19 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
 
       {route?.beforeContent}
 
+      {/* My entry (in-app registration; canonical route, flag on) */}
+      {route && route.panel === "my-entry" && activeTournament && (
+        <div className="mb-6">
+          <MyEntryPanel
+            tournament={activeTournament}
+            playerId={ownProfile?.id ?? null}
+            playerGender={ownProfile?.gender ?? null}
+            signedIn={!!session}
+            initialCategory={parseCategory(typeof window !== "undefined" ? window.location.search : "", activeTournament.categories)}
+          />
+        </div>
+      )}
+
       {/* Players / Teams (canonical route only) */}
       {route && activeSubTab === "players" && activeTournament && (
         <div className="mb-6 bg-card rounded-3xl shadow-sm border border-border p-4 sm:p-6">
@@ -570,6 +595,7 @@ export function LiveTab({ embedded = false, route }: LiveTabProps = {}) {
               tournamentId={activeTournament.id}
               categories={activeTournament.categories || []}
               showParticipants={activeTournament.show_participants}
+              tournament={activeTournament}
             />
           )}
         </div>

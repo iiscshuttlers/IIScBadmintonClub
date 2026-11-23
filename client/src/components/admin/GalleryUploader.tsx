@@ -160,7 +160,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-info hover:bg-info/90 text-on-accent p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
+        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-40 bg-info hover:bg-info/90 text-on-accent p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
       >
         <Upload className="w-6 h-6" />
         <span className="font-bold hidden sm:block w-0 overflow-hidden group-hover:w-32 transition-all duration-300 whitespace-nowrap">Upload Photos</span>

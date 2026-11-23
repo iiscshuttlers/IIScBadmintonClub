@@ -34,6 +34,7 @@ import {
   deleteSetUpdates,
   pointFeedback,
   reopenSetUpdates,
+  savedWinnerSide,
   scoreAlertMessage,
   serveInfo,
   startErrorToast,
@@ -505,7 +506,12 @@ export function useUmpireState({
           const matchId = tournamentMatch?.id || match.dbId || match.id;
           if (!matchId) return toast.error("Match ID missing");
 
-          const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
+          // Never save a result without a real winner: level games in edit
+          // mode used to go through as a side-2 win.
+          const winnerSide = savedWinnerSide(match);
+          if (winnerSide === null) {
+            return toast.error("Neither side has won this match yet. Check the game scores before saving.");
+          }
           const scoreStr = match.setsHistory.join(", ");
           try {
             const submission = await submitTournamentMatch({

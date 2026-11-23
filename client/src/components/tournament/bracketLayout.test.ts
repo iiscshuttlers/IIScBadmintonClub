@@ -15,6 +15,7 @@ import {
   fuzzyMatch,
   initialHiddenRounds,
   isEliminatedAt,
+  labelMatchesPlayer,
   isPlayoffMatch,
   playerRoadmap,
   roadmapCardSides,
@@ -294,6 +295,32 @@ describe("bracketPathIds", () => {
 
   it("adds nothing for a player who is not in the draw", () => {
     expect(bracketPathIds(draw(8), "Nobody").size).toBe(0);
+  });
+
+  it("compares whole names, so Amit does not light up Amit Kumar", () => {
+    const matches = [
+      bm({ id: "a", round: 1, match_number: 1, team1_label: "Amit", team2_label: "Bela" }),
+      bm({ id: "b", round: 1, match_number: 2, team1_label: "Amit Kumar", team2_label: "Chitra" }),
+      bm({ id: "c", round: 1, match_number: 3, team1_label: "Anand & Ravi", team2_label: "Deepa & Esha" }),
+    ];
+    expect([...bracketPathIds(matches, "Amit")]).toEqual(["a"]);
+    expect([...bracketPathIds(matches, "anand & ravi")]).toEqual(["c"]);
+    expect([...bracketPathIds(matches, "Ravi & Anand")]).toEqual(["c"]);
+  });
+});
+
+describe("labelMatchesPlayer", () => {
+  it.each([
+    ["Amit", "amit", true],
+    ["Amit Kumar", "Amit", false],
+    ["Amit & Ravi", "Amit", true],
+    ["Amit / Ravi", "ravi", true],
+    ["Anand & Ravi", "and", false],
+    ["Ravi and Amit", "Amit & Ravi", true],
+    ["Winner of MS_R1_01", "MS_R1", false],
+    [null, "Amit", false],
+  ])("%s vs %s → %s", (label, player, expected) => {
+    expect(labelMatchesPlayer(label, player)).toBe(expected);
   });
 });
 

@@ -426,6 +426,14 @@
   }
 }
 
+/* Route change fade (App.tsx). A CSS animation, not a framer-motion one: it
+   ends on the element's own opacity even when Suspense hides the page mid-fade
+   or the main thread is busy, so a page can never be left invisible. Opacity
+   only: a transform would re-anchor position:fixed children while it runs. */
+.route-enter {
+  animation: fadeIn 0.18s ease-out;
+}
+
 @keyframes scaleIn {
   from {
     opacity: 0;

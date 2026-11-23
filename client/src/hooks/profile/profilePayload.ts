@@ -136,6 +136,16 @@ export interface ProfileFormValues {
 }
 
 /**
+ * Where the primary row lands once blank rows are dropped. The index points
+ * into the full list, so blank rows before it shift it down; a blank or
+ * missing primary falls back to the first kept row.
+ */
+export function primaryIndexAfterFilter<T>(rows: readonly T[], primary: number, keep: (row: T) => boolean): number {
+  if (primary < 0 || primary >= rows.length || !keep(rows[primary])) return 0;
+  return rows.slice(0, primary).filter(keep).length;
+}
+
+/**
  * The players row written on save. Blank rackets, shoes and media are
  * dropped; stats keep everything else from the loaded row; the profile is
  * always undeleted. `status` is only read (to derive is_looking_to_play).
@@ -145,8 +155,8 @@ export function buildProfilePayload(v: ProfileFormValues) {
   const validShoes = v.shoesList.filter((s) => s.name.trim() !== "");
   const validImages = v.mediaImages.filter((img) => img.url.trim() !== "");
   const validVideos = v.mediaVideos.filter((vid) => vid.url.trim() !== "");
-  const finalPrimaryRacketIdx = v.primaryRacketIndex < validRackets.length ? v.primaryRacketIndex : 0;
-  const finalPrimaryShoeIdx = v.primaryShoeIndex < validShoes.length ? v.primaryShoeIndex : 0;
+  const finalPrimaryRacketIdx = primaryIndexAfterFilter(v.rackets, v.primaryRacketIndex, (r) => r.name.trim() !== "");
+  const finalPrimaryShoeIdx = primaryIndexAfterFilter(v.shoesList, v.primaryShoeIndex, (s) => s.name.trim() !== "");
   const packedStats = {
     ...v.originalStats,
     media: [

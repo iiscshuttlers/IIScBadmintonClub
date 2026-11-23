@@ -242,7 +242,7 @@ export function MatchHistorySection({
 
                       if (opponents.length === 0) {
                         const labelStr = (oppTeamLabel || "").toUpperCase();
-                        if (labelStr.includes("BYE") || labelStr === "BYE") {
+                        if (labelStr.trim() === "BYE") {
                           opponents.push({ id: "bye", full_name: "BYE", gender: "unknown" });
                         } else if (labelStr) {
                           opponents.push({ id: "tbd", full_name: oppTeamLabel, gender: "unknown" });

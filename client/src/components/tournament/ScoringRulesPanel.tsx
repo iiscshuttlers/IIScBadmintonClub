@@ -5,7 +5,7 @@ import { ThemeScope } from "@/components/tournament/ThemeScope";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
 import { pairRounds } from "@/lib/roundRuleCopy";
 import {
-  Loader2, Gauge, Check, Wand2, RefreshCw, Info, AlertTriangle, Layers, Copy, CheckCheck,
+  Loader2, Gauge, Check, Wand2, RefreshCw, Info, AlertTriangle, Layers, Copy,
 } from "lucide-react";
 
 const CAT_LABELS: Record<string, string> = {
@@ -48,6 +48,18 @@ const ruleOf = (rules: RuleRow[], category: string, round: number): RuleVals => 
 };
 const short = (v: RuleVals) => `${v.points_to_win} · best of ${v.best_of_sets} · cap ${v.golden_point}`;
 const roundLabel = (m: { label: string }) => m.label;
+/** A rule as a select value: "21|3|30". */
+const encode = (v: RuleVals) => `${v.points_to_win}|${v.best_of_sets}|${v.golden_point}`;
+const decode = (s: string): RuleVals => {
+  const [points_to_win, best_of_sets, golden_point] = s.split("|").map(Number);
+  return { points_to_win, best_of_sets, golden_point };
+};
+/** "MS QF" for the picker's "used in" note. */
+const usedName = (category: string, m: { round_name: string | null; round: number }) =>
+  `${category} ${(m.round_name ?? `R${m.round}`)
+    .replace(/^Quarter-?finals?$/i, "QF")
+    .replace(/^Semi-?finals?$/i, "SF")
+    .replace(/^Round of /i, "R")}`;
 
 /** Typing pause before a change saves. Blur and copy actions save sooner. */
 const TYPING_DELAY_MS = 800;
@@ -277,56 +289,68 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
     );
   };
 
-  const copyRound = (targetKey: string, sourceKey: string) => {
+  const setRoundRule = (targetKey: string, vals: RuleVals) => {
     const t = metaRef.current.get(targetKey);
-    const s = metaRef.current.get(sourceKey);
-    if (!t || !s) return;
-    const from = s.category === t.category ? roundLabel(s) : `${catLabel(s.category)} · ${roundLabel(s)}`;
-    applyChanges({ [targetKey]: { ...current(sourceKey) } }, `${roundLabel(t)}: copied from ${from}`);
+    if (!t) return;
+    applyChanges({ [targetKey]: vals }, `${catLabel(t.category)} · ${roundLabel(t)}: set to ${short(vals)}`);
   };
+
+  // Every distinct rule in use, with where it's used: a round's picker offers
+  // these (a handful) instead of every round of every format.
+  const rulesInUse = (() => {
+    const map = new Map<string, { vals: RuleVals; uses: string[] }>();
+    for (const c of byCategory) {
+      for (const r of c.rounds) {
+        const vals = valueFor(c.category, r.round);
+        if (!complete(vals)) continue;
+        const code = encode(vals);
+        const entry = map.get(code) ?? { vals, uses: [] };
+        entry.uses.push(usedName(c.category, r));
+        map.set(code, entry);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([code, e]) => ({ code, ...e }))
+      .sort((a, b) => b.uses.length - a.uses.length);
+  })();
+  const unusedPresets = PRESETS.filter((p) => !rulesInUse.some((u) => u.code === encode(p.vals)));
 
   const saving = Object.values(status).filter((s) => s === "saving").length;
   const failed = Object.entries(status).filter(([, s]) => s === "error").map(([k]) => k);
 
   const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
-  const numCls = "w-16 bg-muted border border-border-strong rounded-lg px-2 py-1.5 text-sm font-black text-center outline-none focus:ring-2 focus:ring-primary/40";
+  const numCls = "w-full min-w-0 bg-muted border border-border-strong rounded-lg px-1 py-1.5 text-sm font-black text-center outline-none focus:ring-2 focus:ring-primary/40";
+  // One row per round on every screen: name | points | best of | cap | copy.
+  const rowGrid = "grid grid-cols-[minmax(0,1fr)_repeat(3,3rem)_2.25rem] sm:grid-cols-[minmax(0,1fr)_repeat(3,4rem)_2.25rem] gap-1.5 sm:gap-2 items-center";
   const chipCls = "px-2 py-1 rounded-lg bg-muted text-soft text-[10px] font-black hover:bg-primary/10 hover:text-primary transition";
 
   return (
     <ThemeScope {...tournament} className="space-y-4">
       {/* Header */}
-      <div className={`${cardCls} flex items-start gap-3`}>
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <Gauge className="w-5 h-5 text-primary" />
+      <div className={`${cardCls} flex items-center gap-3`}>
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <Gauge className="w-[18px] h-[18px] text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-black text-foreground">Scoring Rules</h3>
-          <p className="text-xs text-muted-foreground">
-            Set points, games and the point cap per {tournament.format_family === "TEAM" ? "rubber discipline" : "format"} and round.
-            The umpire desk reads these live for every match.
-          </p>
+          <h3 className="text-base font-black text-foreground leading-tight">Scoring Rules</h3>
+          <p className="text-xs text-muted-foreground">Points, games and cap for each round. Saves as you type.</p>
         </div>
-        {!loading && !loadError && byCategory.length > 0 && (
-          <div className="shrink-0 text-[11px] font-bold" aria-live="polite">
-            {failed.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => failed.forEach((k) => void flush(k))}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-danger/10 text-danger hover:bg-danger/20 transition"
-              >
-                <RefreshCw className="w-3.5 h-3.5" aria-hidden /> {failed.length} not saved · Retry
-              </button>
-            ) : saving > 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 text-muted-foreground">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> Saving…
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 text-muted-foreground">
-                <CheckCheck className="w-3.5 h-3.5" aria-hidden /> Changes save automatically
-              </span>
-            )}
-          </div>
-        )}
+        {/* Shown only while something is saving or failed; the line above covers the idle state. */}
+        <div className="shrink-0 text-[11px] font-bold" aria-live="polite">
+          {failed.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => failed.forEach((k) => void flush(k))}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-danger/10 text-danger hover:bg-danger/20 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden /> {failed.length} not saved · Retry
+            </button>
+          ) : saving > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> Saving…
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {loading ? (
@@ -352,8 +376,6 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
       ) : (
         byCategory.map(({ category, rounds }) => {
           const otherFormats = byCategory.filter((c) => c.category !== category);
-          // Copy-from list for a row: this format's rounds first, then the others.
-          const sourceGroups = [byCategory.find((c) => c.category === category)!, ...otherFormats];
           return (
             <div key={category} className={cardCls}>
               <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -393,66 +415,77 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
               </div>
 
               {/* Column headers */}
-              <div className="hidden sm:grid grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center px-1 mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+              <div className={`${rowGrid} px-1 mb-1 text-[10px] leading-tight font-black uppercase tracking-wide text-muted-foreground`}>
                 <span>Round</span>
-                <span className="text-center w-16">Points</span>
-                <span className="text-center w-16">Best of</span>
-                <span className="text-center w-16">Cap</span>
-                <span className="w-[104px]" />
+                <span className="text-center">Points</span>
+                <span className="text-center">Best of</span>
+                <span className="text-center">Cap</span>
+                <span />
               </div>
 
-              <div className="space-y-1.5">
+              <div>
                 {rounds.map((r) => {
                   const { round } = r;
                   const v = valueFor(category, round);
                   const k = key(category, round);
                   const st = status[k];
                   const dirty = isDirty(category, round) && st !== "saving";
+                  // The status sits beside the round name (the number columns
+                  // are fixed widths, so it never shifts them); phones get the icon only.
+                  const stText = "sr-only sm:not-sr-only";
                   return (
-                    <div key={round} className="grid grid-cols-[1fr_auto] sm:grid-cols-[1.4fr_auto_auto_auto_auto] gap-2 items-center py-1.5 border-b border-border last:border-0">
-                      <div className="flex items-center gap-2 min-w-0 col-span-2 sm:col-span-1">
-                        <span className="text-sm font-black text-soft truncate">{roundLabel(r)}</span>
+                    <div key={round} className={`${rowGrid} py-1.5 border-b border-border last:border-0`}>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs sm:text-sm font-black text-soft leading-tight break-words min-w-0">{roundLabel(r)}</span>
                         {dirty && <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" title="Not saved yet" />}
+                        {st && (
+                          <span className="shrink-0 text-[11px] font-bold">
+                            {st === "saving" ? (
+                              <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" aria-hidden /> <span className={stText}>Saving</span></span>
+                            ) : st === "saved" ? (
+                              <span className="inline-flex items-center gap-1 text-success"><Check className="w-3 h-3" aria-hidden /> <span className={stText}>Saved</span></span>
+                            ) : (
+                              <button type="button" onClick={() => void flush(k)} className="inline-flex items-center gap-1 p-1 -m-1 text-danger hover:underline">
+                                <RefreshCw className="w-3 h-3" aria-hidden /> <span className={stText}>Retry</span>
+                              </button>
+                            )}
+                          </span>
+                        )}
                       </div>
                       <input type="number" min={1} value={v.points_to_win || ""} onChange={(e) => setField(category, round, "points_to_win", e.target.value)} onBlur={() => onFieldBlur(category, round, "points_to_win")} className={numCls} aria-label={`${roundLabel(r)} points to win`} />
                       <input type="number" min={1} step={2} value={v.best_of_sets || ""} onChange={(e) => setField(category, round, "best_of_sets", e.target.value)} onBlur={() => onFieldBlur(category, round, "best_of_sets")} className={numCls} aria-label={`${roundLabel(r)} best of games`} />
                       <input type="number" min={1} value={v.golden_point || ""} onChange={(e) => setField(category, round, "golden_point", e.target.value)} onBlur={() => onFieldBlur(category, round, "golden_point")} className={numCls} aria-label={`${roundLabel(r)} point cap`} />
-                      <div className="flex items-center justify-end gap-1 w-[104px]">
-                        {/* Fixed-width slot, so the status never shifts the row. */}
-                        <span className="w-[62px] text-[11px] font-bold text-right">
-                          {st === "saving" ? (
-                            <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" aria-hidden /> Saving</span>
-                          ) : st === "saved" ? (
-                            <span className="inline-flex items-center gap-1 text-success"><Check className="w-3 h-3" aria-hidden /> Saved</span>
-                          ) : st === "error" ? (
-                            <button type="button" onClick={() => void flush(k)} className="inline-flex items-center gap-1 text-danger hover:underline">
-                              <RefreshCw className="w-3 h-3" aria-hidden /> Retry
-                            </button>
-                          ) : null}
-                        </span>
+                      <div className="flex items-center justify-end">
                         <label
                           className="relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-primary focus-within:ring-2 focus-within:ring-primary/40 transition cursor-pointer"
-                          title="Copy this round's rule from another round"
+                          title="Use a rule from another round"
                         >
                           <Copy className="w-4 h-4" aria-hidden />
                           <select
                             value=""
-                            onChange={(e) => { if (e.target.value) copyRound(k, e.target.value); }}
-                            aria-label={`Copy ${catLabel(category)} ${roundLabel(r)} rule from another round`}
+                            onChange={(e) => { if (e.target.value) setRoundRule(k, decode(e.target.value)); }}
+                            aria-label={`Set ${catLabel(category)} ${roundLabel(r)} to a rule used elsewhere`}
                             className="absolute inset-0 w-full opacity-0 cursor-pointer"
                           >
-                            <option value="" disabled>Copy from…</option>
-                            {sourceGroups.map((c) => (
-                              <optgroup key={c.category} label={catLabel(c.category)}>
-                                {c.rounds
-                                  .filter((s) => !(c.category === category && s.round === round))
-                                  .map((s) => (
-                                    <option key={s.round} value={key(c.category, s.round)}>
-                                      {roundLabel(s)} ({short(valueFor(c.category, s.round))})
+                            <option value="" disabled>Use the rule from…</option>
+                            {rulesInUse.filter((u) => u.code !== encode(v)).length > 0 && (
+                              <optgroup label="In use">
+                                {rulesInUse
+                                  .filter((u) => u.code !== encode(v))
+                                  .map((u) => (
+                                    <option key={u.code} value={u.code}>
+                                      {short(u.vals)} ({u.uses.length > 3 ? `${u.uses.length} rounds` : u.uses.join(", ")})
                                     </option>
                                   ))}
                               </optgroup>
-                            ))}
+                            )}
+                            {unusedPresets.length > 0 && (
+                              <optgroup label="Presets">
+                                {unusedPresets.map((p) => (
+                                  <option key={p.label} value={encode(p.vals)}>{p.label}</option>
+                                ))}
+                              </optgroup>
+                            )}
                           </select>
                         </label>
                       </div>
@@ -468,8 +501,7 @@ export function ScoringRulesPanel({ tournament }: { tournament: ScoringTournamen
       <div className="flex items-start gap-2 text-[11px] text-muted-foreground px-1">
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>
-          Changes save on their own. Use the copy buttons to take rules from another round, or every round from another format. Saving a rule also
-          updates matches already created for that round. The umpire desk always loads the latest rule, so changes apply to matches started afterwards.
+          Copy buttons reuse another round's or format's rules. A change updates that round's matches; ones already started keep their rule.
         </span>
       </div>
     </ThemeScope>

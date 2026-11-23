@@ -1,3 +1,4 @@
+import { takeReturnUrl } from "@/lib/returnUrl";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { supabase } from "@/lib/supabase";
@@ -343,7 +344,8 @@ export function useProfileSetup() {
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           if (isEditing) setLocation(`/player/${playerSlug}`);
-          else setLocation(`/player/${session.user.id}`);
+          // First setup after sign-in: go back where they started (e.g. My entry).
+          else setLocation(takeReturnUrl() ?? `/player/${session.user.id}`);
         }
       }
     } catch (err) {
@@ -356,7 +358,7 @@ export function useProfileSetup() {
     }
   }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation, iiscEmail, fullName, isGuest, contactNumber, gender, joinedYear, department, activeTab]);
 
-  // Auto-save: debounce 1.5s after any field change (skip on first load)
+  // Auto-save: debounce 300 ms after any field change (skip on first load)
   useEffect(() => {
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;

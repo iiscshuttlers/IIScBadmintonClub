@@ -1,3 +1,5 @@
+import { courtKey } from "@/lib/matchView";
+
 export interface CourtScheduledMatch {
   id: string;
   court_number?: string | null;
@@ -64,17 +66,18 @@ export function findCourtConflicts(
     : (optionsOrEstimatedMins?.unavailablePeriods ?? unavailablePeriodsParam ?? []);
 
   const usable = matches.filter((match) =>
-    match.status !== "walkover" && !!match.court_number && interval(match, estimatedMins) !== null,
+    // courtKey: "1", "C1" and "Court 1" are one court; placeholders ("Court", "TBD") are none.
+    match.status !== "walkover" && !!courtKey(match.court_number) && interval(match, estimatedMins) !== null,
   );
   const out = new Map<string, CourtConflict[]>();
 
   // 1. Check unavailable court periods
   for (const match of usable) {
     const matchInt = interval(match, estimatedMins)!;
-    const courtNorm = match.court_number!.trim().toLowerCase();
+    const courtNorm = courtKey(match.court_number);
 
     for (const period of unavailablePeriods) {
-      if (period.court.trim().toLowerCase() !== courtNorm) continue;
+      if (courtKey(period.court) !== courtNorm) continue;
       const periodStart = time(period.start);
       const periodEnd = time(period.end);
       if (!Number.isFinite(periodStart) || !Number.isFinite(periodEnd)) continue;
@@ -103,7 +106,7 @@ export function findCourtConflicts(
     for (let j = i + 1; j < usable.length; j++) {
       const left = usable[i];
       const right = usable[j];
-      if (left.court_number!.trim().toLowerCase() !== right.court_number!.trim().toLowerCase()) continue;
+      if (courtKey(left.court_number) !== courtKey(right.court_number)) continue;
       const a = interval(left, estimatedMins)!;
       const b = interval(right, estimatedMins)!;
       const overlapMins = Math.ceil((Math.min(a.end, b.end) - Math.max(a.start, b.start)) / 60_000);
@@ -163,7 +166,7 @@ export function suggestAlternativeSlots(
 ): SuggestedSlot[] {
   const baseTime = time(targetMatch.scheduled_at) || Date.now();
   const suggestions: SuggestedSlot[] = [];
-  const targetCourt = targetMatch.court_number?.trim();
+  const targetCourt = courtKey(targetMatch.court_number);
 
   // Try intervals of estimatedMins from baseTime up to 3 hours later
   const candidateTimes: number[] = [];
@@ -173,8 +176,8 @@ export function suggestAlternativeSlots(
 
   // Prioritize target court first, then other available courts
   const sortedCourts = courts.slice().sort((a, b) => {
-    if (targetCourt && a.toLowerCase() === targetCourt.toLowerCase()) return -1;
-    if (targetCourt && b.toLowerCase() === targetCourt.toLowerCase()) return 1;
+    if (targetCourt && courtKey(a) === targetCourt) return -1;
+    if (targetCourt && courtKey(b) === targetCourt) return 1;
     return a.localeCompare(b, undefined, { numeric: true });
   });
 
@@ -183,7 +186,7 @@ export function suggestAlternativeSlots(
     for (const c of sortedCourts) {
       if (suggestions.length >= 4) break;
       // Don't suggest the exact same court and time if it was the original target
-      if (candTime === baseTime && targetCourt && c.toLowerCase() === targetCourt.toLowerCase()) {
+      if (candTime === baseTime && targetCourt && courtKey(c) === targetCourt) {
         continue;
       }
       const candIso = new Date(candTime).toISOString();

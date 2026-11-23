@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import * as shared from "@/lib/badmintonScore";
 import {
   autoWinnerFromSets,
+  bulkSchedulePatch,
+  cleanCourt,
   csvRowsToBulkLines,
   isValidBadmintonGame,
   parseBulkSchedule,
@@ -11,24 +14,33 @@ import {
 } from "./tournamentMatchesLogic";
 
 const local = (s: string) => new Date(s).toISOString(); // "YYYY-MM-DDTHH:mm" read as local time
+const bo = (bestOfSets: number) => ({ bestOfSets, pointsToWin: 21, cap: 30 });
 
 describe("autoWinnerFromSets", () => {
   it("names the side that reached a majority of games", () => {
-    expect(autoWinnerFromSets("21-15, 21-18", 3)).toBe(1);
-    expect(autoWinnerFromSets("15-21, 21-18, 19-21", 3)).toBe(2);
-    expect(autoWinnerFromSets("30-29", 1)).toBe(1);
-    expect(autoWinnerFromSets("21-1, 21-2, 21-3", 5)).toBe(1);
+    expect(autoWinnerFromSets("21-15, 21-18", bo(3))).toBe(1);
+    expect(autoWinnerFromSets("15-21, 21-18, 19-21", bo(3))).toBe(2);
+    expect(autoWinnerFromSets("30-29", bo(1))).toBe(1);
+    expect(autoWinnerFromSets("21-1, 21-2, 21-3", bo(5))).toBe(1);
   });
 
   it("returns null while the match is undecided", () => {
-    expect(autoWinnerFromSets("", 3)).toBeNull();
-    expect(autoWinnerFromSets("21-15", 3)).toBeNull();
-    expect(autoWinnerFromSets("21-15, 15-21", 3)).toBeNull();
-    expect(autoWinnerFromSets("21-1, 21-2", 5)).toBeNull();
+    expect(autoWinnerFromSets("", bo(3))).toBeNull();
+    expect(autoWinnerFromSets("21-15", bo(3))).toBeNull();
+    expect(autoWinnerFromSets("21-15, 15-21", bo(3))).toBeNull();
+    expect(autoWinnerFromSets("21-1, 21-2", bo(5))).toBeNull();
   });
 
-  it("skips malformed and level games", () => {
-    expect(autoWinnerFromSets("21-15, abc, 20-20, 21-10", 3)).toBe(1);
+  it("names no winner when a game is malformed or impossible", () => {
+    expect(autoWinnerFromSets("21-15, abc, 21-10", bo(3))).toBeNull();
+    expect(autoWinnerFromSets("21-15, 20-20, 21-10", bo(3))).toBeNull();
+    expect(autoWinnerFromSets("21-20, 21-10", bo(3))).toBeNull();
+  });
+});
+
+describe("shared rules", () => {
+  it("re-exports the shared game validator, so there is one rule set", () => {
+    expect(isValidBadmintonGame).toBe(shared.isValidBadmintonGame);
   });
 });
 
@@ -54,46 +66,138 @@ describe("isValidBadmintonGame", () => {
 });
 
 describe("validateEditScore", () => {
-  const rules = { bestOfSets: 3, pointsToWin: 21, goldenPoint: 30 };
+  const rules = bo(3);
   const sets = (...pairs: [string, string][]) => pairs.map(([t1, t2]) => ({ t1, t2 }));
 
-  it("returns the filled games as the stored score", () => {
+  it("returns the filled games as the stored score, with the side they decide", () => {
     expect(validateEditScore(sets(["21", "15"], ["19", "21"], ["30", "29"]), rules)).toEqual({
       ok: true,
       sets: ["21-15", "19-21", "30-29"],
       score: "21-15, 19-21, 30-29",
+      winnerSide: 1,
     });
+    expect(validateEditScore(sets(["15", "21"], ["18", "21"], ["", ""]), rules)).toMatchObject({ ok: true, winnerSide: 2 });
   });
 
-  it("skips half-filled rows", () => {
+  it("reports an incomplete score with no winner", () => {
+    expect(validateEditScore(sets(["21", "10"], ["", ""], ["", ""]), rules)).toEqual({
+      ok: true,
+      sets: ["21-10"],
+      score: "21-10",
+      winnerSide: null,
+    });
+    expect(validateEditScore(sets(["21", "10"], ["15", "21"], ["", ""]), rules)).toMatchObject({ ok: true, winnerSide: null });
+  });
+
+  it("skips half-filled rows and a 0-0 row at the end", () => {
     expect(validateEditScore(sets(["21", "15"], ["21", "18"], ["5", ""]), rules)).toMatchObject({
       ok: true,
       score: "21-15, 21-18",
+      winnerSide: 1,
     });
+    expect(validateEditScore(sets(["21", "15"], ["0", "0"], ["", ""]), rules)).toMatchObject({
+      ok: true,
+      sets: ["21-15"],
+      winnerSide: null,
+    });
+  });
+
+  it("refuses a game that follows a blank one", () => {
+    expect(validateEditScore(sets(["21", "15"], ["", "4"], ["21", "18"]), rules)).toEqual({
+      ok: false,
+      error: "Fill in game 2 before game 3.",
+    });
+    expect(validateEditScore(sets(["0", "0"], ["21", "18"]), rules)).toMatchObject({ ok: false });
   });
 
   it("rejects an impossible game and says which one", () => {
     expect(validateEditScore(sets(["21", "15"], ["21", "20"]), rules)).toEqual({
       ok: false,
-      error: "Invalid score in set 2: 21-20. Enter a mathematically valid badminton score.",
+      error: "Game 2: 21-20 isn't a possible score (first to 21, win by 2, 30 wins).",
     });
+  });
+
+  it("rejects non-numeric and negative points", () => {
+    expect(validateEditScore(sets(["21", "x"]), rules)).toEqual({ ok: false, error: "Game 1: enter the points as whole numbers." });
+    expect(validateEditScore(sets(["21", "-1"]), rules)).toMatchObject({ ok: false });
+    expect(validateEditScore(sets(["21", "10.5"]), rules)).toMatchObject({ ok: false });
   });
 
   it("rejects a game entered after the match was already won", () => {
     expect(validateEditScore(sets(["21", "10"], ["21", "12"], ["10", "21"]), rules)).toEqual({
       ok: false,
-      error: "Invalid score: The match was already won in earlier sets. You cannot enter a score for set 3.",
+      error: "The match was already won after game 2. Remove game 3.",
     });
   });
 
+  it("rejects more games than the format allows", () => {
+    expect(validateEditScore(sets(["21", "10"], ["10", "21"]), bo(1))).toMatchObject({ ok: false });
+  });
+
   it("uses the event's rules for what counts as a finished game", () => {
-    const short = { bestOfSets: 1, pointsToWin: 15, goldenPoint: 21 };
-    expect(validateEditScore(sets(["15", "13"]), short)).toMatchObject({ ok: true, score: "15-13" });
+    const short = { bestOfSets: 1, pointsToWin: 15, cap: 21 };
+    expect(validateEditScore(sets(["15", "13"]), short)).toMatchObject({ ok: true, score: "15-13", winnerSide: 1 });
     expect(validateEditScore(sets(["21", "13"]), short)).toMatchObject({ ok: false });
   });
 
   it("needs at least one game", () => {
     expect(validateEditScore(sets(["", ""], ["", ""]), rules)).toEqual({ ok: false, error: "Enter at least one set score" });
+  });
+});
+
+describe("cleanCourt", () => {
+  it("strips zero-width characters and spaces, leaving blank as empty", () => {
+    expect(cleanCourt("\u200B")).toBe("");
+    expect(cleanCourt("  C4\u200B ")).toBe("C4");
+    expect(cleanCourt("\uFEFFAnnex 2")).toBe("Annex 2");
+    expect(cleanCourt(null)).toBe("");
+  });
+});
+
+describe("bulkSchedulePatch", () => {
+  const at = "2026-06-30T04:30:00.000Z";
+  const scheduled = { status: "scheduled", court_number: "C1", scheduled_at: "2026-06-30T04:30:00+00:00" };
+
+  it("schedules a pending match and resets the reminder", () => {
+    expect(bulkSchedulePatch({ status: "pending", court_number: null, scheduled_at: null }, { court: "C2", at })).toEqual({
+      court_number: "C2",
+      scheduled_at: at,
+      status: "scheduled",
+      reminder_sent: false,
+    });
+  });
+
+  it("keeps the time on a court-only line and the court on a time-only line", () => {
+    expect(bulkSchedulePatch(scheduled, { court: "C3", at: "" })).toEqual({
+      court_number: "C3",
+      status: "scheduled",
+      reminder_sent: false,
+    });
+    const later = "2026-06-30T06:00:00.000Z";
+    expect(bulkSchedulePatch(scheduled, { court: "", at: later })).toEqual({
+      scheduled_at: later,
+      status: "scheduled",
+      reminder_sent: false,
+    });
+  });
+
+  it("schedules a pending match from a court-only line", () => {
+    expect(bulkSchedulePatch({ status: "pending", court_number: null, scheduled_at: null }, { court: "C2", at: "" }))
+      .toMatchObject({ status: "scheduled" });
+  });
+
+  it("changes nothing when the slot is the same, so no reminder is re-sent", () => {
+    expect(bulkSchedulePatch(scheduled, { court: "C1", at })).toBeNull();
+    expect(bulkSchedulePatch(scheduled, { court: "", at: "" })).toBeNull();
+    // "1", "C1" and "Court 1" are the same court: no change, no re-sent reminder.
+    expect(bulkSchedulePatch(scheduled, { court: "1", at: "" })).toBeNull();
+    expect(bulkSchedulePatch(scheduled, { court: "Court 1", at: "" })).toBeNull();
+    expect(bulkSchedulePatch(scheduled, { court: "\u200B", at: "" })).toBeNull();
+  });
+
+  it("never moves a live or finished match's status", () => {
+    expect(bulkSchedulePatch({ ...scheduled, status: "in_progress" }, { court: "C5", at: "" }))
+      .toMatchObject({ status: "in_progress" });
   });
 });
 
@@ -210,10 +314,16 @@ describe("parseBulkSchedule", () => {
       "MS",
     );
     expect(rows).toEqual([
-      { matchCode: "MS_QF_01", court: "3", at: local("2026-06-30T10:00"), found: true, wrongCategory: false },
-      { matchCode: "MS_QF_02", court: "4", at: local("2026-06-30T11:30"), found: true, wrongCategory: false },
-      { matchCode: "MS_SF_01", court: "1", at: local("2026-06-30T14:00"), found: true, wrongCategory: false },
+      { matchCode: "MS_QF_01", court: "C3", at: local("2026-06-30T10:00"), found: true, wrongCategory: false },
+      { matchCode: "MS_QF_02", court: "C4", at: local("2026-06-30T11:30"), found: true, wrongCategory: false },
+      { matchCode: "MS_SF_01", court: "C1", at: local("2026-06-30T14:00"), found: true, wrongCategory: false },
     ]);
+  });
+
+  it("stores numbered courts in the preset form C<n>; placeholders blank, names as typed", () => {
+    const rows = parseBulkSchedule(["MS_QF_01 court=3", "MS_QF_02: Court 7", "MS_SF_01 court=c02", "WS_SF_01 court=Centre"].join("\n"), matches, "MS");
+    expect(rows.map((r) => r.court)).toEqual(["C3", "C7", "C2", "Centre"]);
+    expect(parseBulkSchedule("MS_QF_01 court=TBD", matches, "MS")[0].court).toBe("");
   });
 
   it("accepts day-first dates and bare hours in key=value lines", () => {
@@ -223,7 +333,7 @@ describe("parseBulkSchedule", () => {
 
   it("keeps a court-only or time-only line", () => {
     const rows = parseBulkSchedule("MS_QF_01 court=4\nMS_QF_02 2026-06-30 08:15", matches, "MS");
-    expect(rows[0]).toMatchObject({ court: "4", at: "" });
+    expect(rows[0]).toMatchObject({ court: "C4", at: "" });
     expect(rows[1]).toMatchObject({ court: "", at: local("2026-06-30T08:15") });
   });
 
@@ -233,7 +343,7 @@ describe("parseBulkSchedule", () => {
       matches,
       "MS",
     );
-    expect(rows).toEqual([{ matchCode: "MS_QF_01", court: "5", at: local("2026-06-30T10:00"), found: true, wrongCategory: false }]);
+    expect(rows).toEqual([{ matchCode: "MS_QF_01", court: "C5", at: local("2026-06-30T10:00"), found: true, wrongCategory: false }]);
   });
 
   it("flags unknown codes and codes from another category", () => {

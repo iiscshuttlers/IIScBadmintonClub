@@ -582,12 +582,11 @@ export function TournamentSettingsTab({
         </div>
 
         <div className="mt-4 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {!form.require_app_registration && (
-            <div className="sm:col-span-2">
-              <label className={labelCls}>Or link an external form</label>
-              <input type="url" value={form.form_url ?? ""} onChange={(e) => upd("form_url", e.target.value)} className={inputCls} placeholder="https://forms.office.com/…" />
-            </div>
-          )}
+          {/* With in-app registration on, the form is only the fallback for when the site is down; keep it editable. */}
+          <div className="sm:col-span-2">
+            <label className={labelCls}>{form.require_app_registration ? "Fallback form (only if the site is down)" : "Or link an external form"}</label>
+            <input type="url" value={form.form_url ?? ""} onChange={(e) => upd("form_url", e.target.value)} className={inputCls} placeholder="https://forms.office.com/…" />
+          </div>
           <div>
             <label className={labelCls}>Sign-up status</label>
             <select value={form.form_status} onChange={(e) => upd("form_status", e.target.value)} className={inputCls}>

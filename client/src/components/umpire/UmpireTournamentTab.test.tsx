@@ -126,7 +126,7 @@ describe("UmpireTournamentTab", () => {
     const values = ["15", "21", "21", "19", "18", "21"];
     inputs.forEach((input, i) => fireEvent.change(input, { target: { value: values[i] } }));
 
-    expect(screen.getByText(/Winner: Bina Das \(1-2 sets\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Winner: Bina Das \(1-2 in games\)/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
 
     await waitFor(() => expect(svc.submitTournamentMatch).toHaveBeenCalledTimes(1));
@@ -148,7 +148,109 @@ describe("UmpireTournamentTab", () => {
     fireEvent.change(t2, { target: { value: "10" } });
     fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
 
-    expect(toast.error).toHaveBeenCalledWith("Enter at least 2 sets");
+    expect(toast.error).toHaveBeenCalledWith("Enter at least 2 games");
     expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  async function enterScore(values: string[]) {
+    await openMatch();
+    fireEvent.click(screen.getByRole("button", { name: /enter score/i }));
+    screen.getAllByPlaceholderText("0").forEach((input, i) => fireEvent.change(input, { target: { value: values[i] ?? "" } }));
+  }
+
+  it("shows the match's rules above the score inputs", async () => {
+    await enterScore([]);
+    expect(screen.getByText("First to 21 · 30 wins · best of 3")).toBeInTheDocument();
+  });
+
+  it("refuses a score no badminton game can end on", async () => {
+    await enterScore(["5", "3", "21", "10"]);
+    expect(screen.queryByText(/Winner:/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
+
+    expect(toast.error).toHaveBeenCalledWith("Game 1: 5-3 isn't a possible score (first to 21, win by 2, 30 wins).");
+    expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  it("refuses a game entered after the match was won", async () => {
+    await enterScore(["21", "10", "21", "10", "10", "21"]);
+    expect(screen.queryByText(/Winner:/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
+
+    expect(toast.error).toHaveBeenCalledWith("The match was already won after game 2. Remove game 3.");
+    expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  it("refuses a match neither side has won", async () => {
+    await enterScore(["21", "10", "10", "21"]);
+    fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
+
+    expect(toast.error).toHaveBeenCalledWith("Neither side has won 2 games yet.");
+    expect(svc.submitTournamentMatch).not.toHaveBeenCalled();
+  });
+
+  it("checks the score against the round's own rules", async () => {
+    svc.fetchRoundRulesForTournaments.mockResolvedValue([
+      { tournament_id: "t1", category: "MS", round: 2, points_to_win: 15, best_of_sets: 1, golden_point: 21 },
+    ]);
+    await enterScore(["15", "13"]);
+    expect(screen.getAllByPlaceholderText("0")).toHaveLength(2);
+    expect(screen.getByText("First to 15 · 21 wins · best of 1")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /submit score/i }));
+
+    await waitFor(() => expect(svc.submitTournamentMatch).toHaveBeenCalledTimes(1));
+    expect(svc.submitTournamentMatch).toHaveBeenCalledWith(expect.objectContaining({ p_winner_side: 1, p_score: "15-13", p_sets: ["15-13"] }));
+  });
+});
+
+describe("UmpireTournamentTab match list", () => {
+  const row = (o: Record<string, unknown>) => ({ ...MATCH, scheduled_at: null, court_number: null, ...o });
+
+  beforeEach(() => {
+    svc.fetchUmpireOpenMatches.mockResolvedValue({
+      data: [
+        row({ id: "s1", match_code: "MS_QF_01", team1_label: "Asha Rao", team2_label: "Bina Das", status: "scheduled" }),
+        row({ id: "s2", match_code: "MS_QF_02", team1_label: "Abbye Thomas", team2_label: "Byers", status: "scheduled", match_number: 2 }),
+        row({ id: "p1", match_code: "MS_SF_01", team1_label: null, team2_label: null, status: "pending", round: 3 }),
+        row({ id: "l1", match_code: "MS_QF_03", team1_label: "Chitra", team2_label: "Deepa", status: "in_progress", match_number: 3 }),
+        row({ id: "b1", match_code: "MS_QF_04", team1_label: "Esha", team2_label: "BYE", status: "scheduled", match_number: 4 }),
+      ],
+      error: null,
+    });
+    svc.fetchUmpireDoneMatches.mockResolvedValue({
+      data: [
+        row({ id: "c1", match_code: "MS_R1_01", team1_label: "Farah", team2_label: "Gita", status: "completed", round: 1, winner_side: 1 }),
+        row({ id: "b2", match_code: "MS_R1_02", team1_label: "BYE", team2_label: "Hema", status: "completed", round: 1, winner_side: 2 }),
+      ],
+    });
+  });
+
+  it("counts on each status pill what the list shows, pending included and byes left out", async () => {
+    render(<UmpireTournamentTab onStartMatch={() => {}} tournamentId="t1" />);
+    expect(await screen.findByRole("button", { name: "All (5)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upcoming (3)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Live (1)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Done (1)" })).toBeInTheDocument();
+    expect(screen.getByText("5 matches")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Upcoming (3)" }));
+    expect(screen.getByText("3 matches")).toBeInTheDocument();
+    // The other pills keep their numbers whichever one is picked.
+    expect(screen.getByRole("button", { name: "All (5)" })).toBeInTheDocument();
+  });
+
+  it("lists players whose names contain 'bye' as a normal match", async () => {
+    render(<UmpireTournamentTab onStartMatch={() => {}} tournamentId="t1" />);
+    expect(await screen.findByText("Abbye Thomas")).toBeInTheDocument();
+    expect(screen.getByText("Byers")).toBeInTheDocument();
+    expect(screen.queryByText("Esha")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hema")).not.toBeInTheDocument();
+  });
+
+  it("lists pending matches with the ones still to play, before live and finished ones", async () => {
+    render(<UmpireTournamentTab onStartMatch={() => {}} tournamentId="t1" />);
+    await screen.findByText("Abbye Thomas");
+    const codes = screen.getAllByText(/^MS MS_/).map((el) => el.textContent);
+    expect(codes).toEqual(["MS MS_QF_01", "MS MS_QF_02", "MS MS_SF_01", "MS MS_QF_03", "MS MS_R1_01"]);
   });
 });

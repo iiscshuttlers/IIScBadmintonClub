@@ -41,14 +41,16 @@ describe("WP10 integrated release gate", () => {
     expect(dispatcher).toContain("await Promise.all(");
   });
 
-  it("treats push as best-effort only for gallery photo alerts", () => {
+  it("treats push as best-effort only for gallery photo alerts and registration notices", () => {
     const dispatcher = read("supabase/functions/dispatch-scheduled-notifications/index.ts");
     const migration = read("supabase/migrations/20261121150000_gallery_album_alerts.sql");
 
-    // Organiser/match rows keep the strict default; only gallery_photos opts out.
+    // Organiser/match rows keep the strict default; only gallery_photos and
+    // registration notices (also delivered in-app and by email) opt out.
     expect(dispatcher).toMatch(/DEFAULT_RULE: DeliveryRule = \{[^}]*pushOptional: false/);
     expect(dispatcher).toMatch(/gallery_photos: \{[^}]*pref: "pref_notify_gallery", pushOptional: true/);
-    expect(dispatcher.match(/pushOptional: true/g)).toHaveLength(1);
+    expect(dispatcher).toMatch(/registration: \{[^}]*inAppType: "tournament_registration", pref: "pref_notify_whistle", pushOptional: true/);
+    expect(dispatcher.match(/pushOptional: true/g)).toHaveLength(2);
     expect(migration).toContain("'gallery_photos'");
     expect(migration).toContain("ARRAY['in_app', 'push']");
   });

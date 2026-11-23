@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { canGoBackInApp, registerParentFallback } from "@/lib/navHistory";
+import { restoreScrollOnNextRoute } from "@/lib/scrollRestoreIntent";
 
 /**
  * Back for a screen: the previous in-app screen when there is one, otherwise
@@ -15,6 +16,8 @@ export function useGoBack(parent: string): () => void {
   parentRef.current = parent;
 
   const goToParent = useCallback(() => {
+    // Still a Back: return to where the parent list was left, if remembered.
+    restoreScrollOnNextRoute();
     navigate(parentRef.current, { replace: true });
   }, [navigate]);
 

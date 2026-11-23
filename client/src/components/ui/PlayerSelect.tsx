@@ -7,13 +7,22 @@ export function PlayerSelect({
   onChange,
   players,
   placeholder,
-  className
+  className,
+  autoFocus,
+  onDone,
+  menuClassName,
 }: {
   value: string;
   onChange: (v: string) => void;
   players: any[];
   placeholder?: string;
   className?: string;
+  /** Focus (and so open) the search as soon as it mounts. */
+  autoFocus?: boolean;
+  /** Called when a player is picked or the picker is left (Escape, click outside). */
+  onDone?: () => void;
+  /** Extra classes for the results list, e.g. a min width or right alignment. */
+  menuClassName?: string;
 }) {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -35,11 +44,12 @@ export function PlayerSelect({
           const p = players.find((p) => p.id === value);
           if (p) setSearch(p.full_name);
         } else setSearch("");
+        onDone?.();
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [value, players]);
+  }, [value, players, onDone]);
 
   const selectedPlayer = players.find((p) => p.id === value);
   const isSearchUnchanged = selectedPlayer && search === selectedPlayer.full_name;
@@ -80,9 +90,11 @@ export function PlayerSelect({
         onChange(p.id);
         setSearch(p.full_name);
         setIsOpen(false);
+        onDone?.();
       }
     } else if (e.key === "Escape") {
       setIsOpen(false);
+      onDone?.();
     }
   };
 
@@ -105,10 +117,12 @@ export function PlayerSelect({
           e.currentTarget.select();
         }}
         onKeyDown={handleKeyDown}
+        autoFocus={autoFocus}
+        aria-label={placeholder ?? "Search player"}
         className={className || "w-full text-xs font-bold bg-muted border border-border-strong rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-primary"}
       />
       {isOpen && (
-        <div className="absolute z-[60] w-full mt-1 bg-muted border border-border-strong rounded-lg shadow-xl max-h-72 overflow-y-auto">
+        <div className={`absolute z-[60] w-full mt-1 bg-muted border border-border-strong rounded-lg shadow-xl max-h-72 overflow-y-auto ${menuClassName ?? ""}`}>
           {filtered.length === 0 ? (
             <div className="p-2 text-xs text-muted-foreground text-center">No players found</div>
           ) : (
@@ -120,6 +134,7 @@ export function PlayerSelect({
                   onChange(p.id);
                   setSearch(p.full_name);
                   setIsOpen(false);
+                  onDone?.();
                 }}
                 className={`p-2 text-xs font-bold cursor-pointer flex items-center justify-between gap-2 ${
                   selectedIndex === idx

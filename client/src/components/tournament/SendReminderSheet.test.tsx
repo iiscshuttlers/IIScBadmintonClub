@@ -44,6 +44,8 @@ describe("SendReminderSheet", () => {
     await screen.findByText("1 recipient · 2 channels");
     expect(screen.getByText("Bell list, no pop-up")).toBeTruthy();
     expect(screen.getByText("Phone pop-up, within 2 min")).toBeTruthy();
+    // The app is push-only: email is never offered.
+    expect(screen.queryByText("Email")).toBeNull();
   });
 
   it("queues push and delivers in-app now for an Officials send", async () => {

@@ -65,7 +65,7 @@ export default function StatusBanner() {
         "announcements.json",
       ).catch(() => ({ recent: [] })),
       fetchSiteData<DynamicFlyer[]>("flyers", "flyers.json").catch(() => []),
-      fetchSiteData<any>("club_settings", "settings.json").catch(() => null),
+      fetchSiteData<any>("club_settings", null).catch(() => null),
     ])
       .then(([holidaysData, eventsData, announcementsData, flyersData, settingsData]) => {
         if (settingsData?.maintenanceMode) {

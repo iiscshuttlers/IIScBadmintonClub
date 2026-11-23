@@ -4,6 +4,8 @@
  * "Enter Score" validation. Kept free of React so it can be tested directly.
  */
 import type { TournamentMatchForUmpire } from "./UmpireTournamentTab";
+import { checkMatchScore, gamesToWin, type MatchRules } from "@/lib/badmintonScore";
+import { isByeLabel } from "@/lib/umpire/umpireStateLogic";
 
 /** Where the umpire is in the format → category → match drill-down. */
 export interface UmpireNav {
@@ -30,12 +32,23 @@ export function resolveUmpireStep(nav: UmpireNav, hasSelectedMatch: boolean): Um
 
 type QueueMatch = Pick<TournamentMatchForUmpire, "status" | "round" | "match_number">;
 
+/**
+ * The status pill a match belongs to: scheduled and pending (waiting for an
+ * earlier round) are both still to play. Null for any other status.
+ */
+export function statusBand(status: string): Exclude<UpcomingStatusFilter, "ALL"> | null {
+  if (status === "scheduled" || status === "pending") return "upcoming";
+  if (status === "in_progress") return "live";
+  if (status === "completed" || status === "walkover") return "completed";
+  return null;
+}
+
 /** Umpire queue order: live first, then everything still to play, then done; then by round and match number. */
 export function compareUmpireQueue(a: QueueMatch, b: QueueMatch): number {
+  const order = { live: 0, upcoming: 1, completed: 2 } as const;
   const priority = (s: string) => {
-    if (s === "in_progress") return 0;
-    if (s === "completed" || s === "walkover") return 2;
-    return 1;
+    const band = statusBand(s);
+    return band ? order[band] : 1;
   };
   const pA = priority(a.status);
   const pB = priority(b.status);
@@ -79,11 +92,13 @@ export function enrichUmpireMatches(
 
 type LabelledMatch = Pick<TournamentMatchForUmpire, "team1_label" | "team2_label">;
 
-/** A side reads BYE (any label containing "BYE", case-insensitive). Used to hide byes from the queue. */
+/**
+ * A side is a bye: its label is exactly "BYE" (any case). Used to hide byes
+ * from the queue. Names that merely contain "bye" ("Abbye Thomas", "Byers")
+ * are players.
+ */
 export function hasByeSide(m: LabelledMatch): boolean {
-  const t1 = m.team1_label;
-  const t2 = m.team2_label;
-  return Boolean(t1 === "BYE" || t2 === "BYE" || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE"));
+  return isByeLabel(m.team1_label) || isByeLabel(m.team2_label);
 }
 
 /** Courts used by real (non-bye) matches, in natural order (C2 before C10). */
@@ -102,46 +117,66 @@ export interface UpcomingFilters {
 }
 
 /**
- * The umpire's match list: byes dropped, status filter applied, ordered
- * scheduled → live → rest (by time when both have one, else round and match
- * number), then narrowed by search, format and court.
+ * Whether a match belongs in the umpire's list under these filters: not a bye,
+ * in the chosen status pill, and matching the search, format and court.
+ */
+function inUpcomingList(m: TournamentMatchForUmpire, filters: UpcomingFilters): boolean {
+  if (hasByeSide(m)) return false;
+  if (filters.status !== "ALL" && statusBand(m.status) !== filters.status) return false;
+  if (filters.search.trim()) {
+    const lowerQ = filters.search.toLowerCase();
+    const hit =
+      (m.team1_label?.toLowerCase() || "").includes(lowerQ) ||
+      (m.team2_label?.toLowerCase() || "").includes(lowerQ) ||
+      (m.match_code?.toLowerCase() || "").includes(lowerQ) ||
+      (m.court_number?.toLowerCase() || "").includes(lowerQ);
+    if (!hit) return false;
+  }
+  if (filters.format !== "ALL" && m.category !== filters.format) return false;
+  if (filters.court !== "ALL" && m.court_number !== filters.court) return false;
+  return true;
+}
+
+/**
+ * The umpire's match list: byes dropped, status, search, format and court
+ * filters applied, ordered still-to-play (scheduled and pending) → live →
+ * done, by time when both have one, else round and match number.
  */
 export function filterUpcomingMatches(
   allMatches: TournamentMatchForUmpire[],
   filters: UpcomingFilters,
 ): TournamentMatchForUmpire[] {
-  let upcomingScheduled = allMatches
-    .filter(m => !hasByeSide(m))
-    .filter(m => {
-      if (filters.status === "upcoming") return m.status === "scheduled" || m.status === "pending";
-      if (filters.status === "live") return m.status === "in_progress";
-      if (filters.status === "completed") return m.status === "completed" || m.status === "walkover";
-      return true;
-    })
+  const order = { upcoming: 0, live: 1, completed: 2 } as const;
+  const priority = (s: string) => {
+    const band = statusBand(s);
+    return band ? order[band] : 3;
+  };
+  return allMatches
+    .filter(m => inUpcomingList(m, filters))
     .sort((a, b) => {
-      const priority = (s: string) => s === "scheduled" ? 0 : s === "in_progress" ? 1 : 2;
       const pDiff = priority(a.status) - priority(b.status);
       if (pDiff !== 0) return pDiff;
       if (a.scheduled_at && b.scheduled_at) return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
       return (a.round || 0) - (b.round || 0) || (a.match_number || 0) - (b.match_number || 0);
     });
+}
 
-  if (filters.search.trim()) {
-    const lowerQ = filters.search.toLowerCase();
-    upcomingScheduled = upcomingScheduled.filter(m =>
-      (m.team1_label?.toLowerCase() || "").includes(lowerQ) ||
-      (m.team2_label?.toLowerCase() || "").includes(lowerQ) ||
-      (m.match_code?.toLowerCase() || "").includes(lowerQ) ||
-      (m.court_number?.toLowerCase() || "").includes(lowerQ)
-    );
+/**
+ * The number on each status pill: how many matches the list would show with
+ * that pill picked and the other filters (search, format, court) unchanged.
+ */
+export function upcomingStatusCounts(
+  allMatches: TournamentMatchForUmpire[],
+  filters: UpcomingFilters,
+): Record<UpcomingStatusFilter, number> {
+  const counts: Record<UpcomingStatusFilter, number> = { ALL: 0, upcoming: 0, live: 0, completed: 0 };
+  for (const m of allMatches) {
+    if (!inUpcomingList(m, { ...filters, status: "ALL" })) continue;
+    counts.ALL++;
+    const band = statusBand(m.status);
+    if (band) counts[band]++;
   }
-  if (filters.format !== "ALL") {
-    upcomingScheduled = upcomingScheduled.filter(m => m.category === filters.format);
-  }
-  if (filters.court !== "ALL") {
-    upcomingScheduled = upcomingScheduled.filter(m => m.court_number === filters.court);
-  }
-  return upcomingScheduled;
+  return counts;
 }
 
 /** Per-category progress for the "Select Format" cards. */
@@ -188,51 +223,66 @@ export type DirectScoreResult =
   | { ok: true; winnerSide: 1 | 2; sets: string[]; score: string }
   | { ok: false; error: string };
 
+/** The rules in words, shown above the "Enter Score" inputs: "First to 21 · 30 wins · best of 3". */
+export function describeMatchRules(rules: MatchRules): string {
+  const parts = [`First to ${rules.pointsToWin}`];
+  if (rules.cap > rules.pointsToWin) parts.push(`${rules.cap} wins`);
+  parts.push(`best of ${rules.bestOfSets}`);
+  return parts.join(" · ");
+}
+
+const WHOLE_NUMBER = /^\d+$/;
+const isBlankRow = (s: DirectSetInput) => s.t1.trim() === "" && s.t2.trim() === "";
+
 /**
- * Validate the umpire's "Enter Score" form. Needs at least 2 sets (1 for a
- * best-of-1), whole non-negative numbers, no tied set and a clear set
- * majority; the side with more sets wins.
+ * Validate the umpire's "Enter Score" form against the match's rules. Needs
+ * at least as many games as it takes to win, no empty game before a filled
+ * one, whole non-negative numbers in both boxes of every filled game, possible
+ * badminton scores, nothing after the match was decided, and a decided match.
  */
-export function validateDirectScore(directSets: DirectSetInput[], bestOfSets: number | null | undefined): DirectScoreResult {
-  const filledSets = directSets.filter(s => s.t1.trim() !== "" || s.t2.trim() !== "");
-  const minSets = (bestOfSets ?? 3) === 1 ? 1 : 2;
-  if (filledSets.length < minSets) {
-    return { ok: false, error: `Enter at least ${minSets} set${minSets > 1 ? "s" : ""}` };
+export function validateDirectScore(directSets: DirectSetInput[], rules: MatchRules): DirectScoreResult {
+  const needed = gamesToWin(rules.bestOfSets);
+  const filledCount = directSets.filter(s => !isBlankRow(s)).length;
+  if (filledCount < needed) {
+    return { ok: false, error: `Enter at least ${needed} game${needed > 1 ? "s" : ""}` };
   }
 
-  const parsed = filledSets.map(s => ({
-    t1: parseInt(s.t1, 10),
-    t2: parseInt(s.t2, 10),
-  }));
+  let lastFilled = directSets.length - 1;
+  while (lastFilled >= 0 && isBlankRow(directSets[lastFilled])) lastFilled--;
+  const rows = directSets.slice(0, lastFilled + 1);
+  const gap = rows.findIndex(isBlankRow);
+  if (gap >= 0) {
+    return { ok: false, error: `Game ${gap + 1} is empty. Fill it in or clear the games after it.` };
+  }
 
-  if (parsed.some(s => isNaN(s.t1) || isNaN(s.t2) || s.t1 < 0 || s.t2 < 0)) {
+  if (rows.some(s => !WHOLE_NUMBER.test(s.t1.trim()) || !WHOLE_NUMBER.test(s.t2.trim()))) {
     return { ok: false, error: "All scores must be valid non-negative numbers" };
   }
 
-  const t1Wins = parsed.filter(s => s.t1 > s.t2).length;
-  const t2Wins = parsed.filter(s => s.t2 > s.t1).length;
-  if (t1Wins === t2Wins) {
-    return { ok: false, error: "Scores must produce a winner — tied set count" };
-  }
-  if (parsed.some(s => s.t1 === s.t2)) {
-    return { ok: false, error: "A set cannot be tied" };
+  const games = rows.map(s => [Number(s.t1.trim()), Number(s.t2.trim())] as const);
+  const checked = checkMatchScore(games, rules);
+  if (checked.ok === false) return { ok: false, error: checked.error };
+  if (!checked.complete) {
+    return { ok: false, error: `Neither side has won ${needed} game${needed > 1 ? "s" : ""} yet.` };
   }
 
-  const winnerSide: 1 | 2 = t1Wins > t2Wins ? 1 : 2;
-  const setsArr = parsed.map(s => `${s.t1}-${s.t2}`);
-  return { ok: true, winnerSide, sets: setsArr, score: setsArr.join(", ") };
+  const setsArr = games.map(([a, b]) => `${a}-${b}`);
+  return { ok: true, winnerSide: checked.winnerSide, sets: setsArr, score: setsArr.join(", ") };
 }
 
 /**
- * Live preview under the "Enter Score" inputs: the side ahead on sets among
- * fully filled, untied sets. `show` is false until two such sets exist.
+ * Live preview under the "Enter Score" inputs: games won by each side among
+ * the fully filled games, and the side ahead. Any impossible game in them
+ * means no leader at all. `show` (the "Winner" line) is true only when the
+ * form would save as it stands.
  */
-export function directScorePreview(directSets: DirectSetInput[]) {
+export function directScorePreview(directSets: DirectSetInput[], rules: MatchRules) {
+  const none = { leader: null as 1 | 2 | null, t1Wins: 0, t2Wins: 0, show: false };
   const filled = directSets.filter(s => s.t1.trim() !== "" && s.t2.trim() !== "");
-  const parsed = filled.map(s => ({ t1: parseInt(s.t1, 10), t2: parseInt(s.t2, 10) }));
-  const valid = parsed.filter(s => !isNaN(s.t1) && !isNaN(s.t2) && s.t1 !== s.t2);
-  const t1Wins = valid.filter(s => s.t1 > s.t2).length;
-  const t2Wins = valid.filter(s => s.t2 > s.t1).length;
+  if (filled.some(s => !WHOLE_NUMBER.test(s.t1.trim()) || !WHOLE_NUMBER.test(s.t2.trim()))) return none;
+  const checked = checkMatchScore(filled.map(s => [Number(s.t1.trim()), Number(s.t2.trim())] as const), rules);
+  if (checked.ok === false) return none;
+  const [t1Wins, t2Wins] = checked.gamesWon;
   const leader: 1 | 2 | null = t1Wins > t2Wins ? 1 : t2Wins > t1Wins ? 2 : null;
-  return { leader, t1Wins, t2Wins, show: leader !== null && valid.length >= 2 };
+  return { leader, t1Wins, t2Wins, show: leader !== null && validateDirectScore(directSets, rules).ok };
 }

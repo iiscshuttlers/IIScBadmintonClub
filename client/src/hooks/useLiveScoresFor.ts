@@ -12,6 +12,8 @@ export interface LiveScorePeek {
   category?: string | null;
   round_name?: string | null;
   format_family?: string | null;
+  /** In-progress matches in this tournament right now (courts in play). */
+  live_count?: number;
 }
 
 /**
@@ -41,13 +43,15 @@ export function useLiveScoresFor(tournamentIds: string[]) {
         return [];
       }
 
-      // Keep the latest in-progress match per tournament
-      const seen = new Set<string>();
-      const out: LiveScorePeek[] = [];
+      // Keep the latest in-progress match per tournament, and count them all.
+      const byTournament = new Map<string, LiveScorePeek>();
       (data || []).forEach((m) => {
-        if (seen.has(m.tournament_id)) return;
-        seen.add(m.tournament_id);
-        out.push({
+        const existing = byTournament.get(m.tournament_id);
+        if (existing) {
+          existing.live_count = (existing.live_count ?? 1) + 1;
+          return;
+        }
+        byTournament.set(m.tournament_id, {
           tournament_id: m.tournament_id,
           score: m.score,
           court_number: m.court_number,
@@ -55,9 +59,10 @@ export function useLiveScoresFor(tournamentIds: string[]) {
           team2_label: m.team2_label,
           category: m.category,
           round_name: m.round_name,
+          live_count: 1,
         });
       });
-      return out;
+      return [...byTournament.values()];
     },
     enabled: ids.length > 0,
     refetchInterval: 25000,

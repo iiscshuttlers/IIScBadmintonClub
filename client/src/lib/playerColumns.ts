@@ -29,5 +29,13 @@ export function selectsPrivatePlayerColumns(select: string): boolean {
 export const PARTICIPANT_PUBLIC_COLUMNS =
   "id, tournament_id, category, player_id, partner_id, display_name, seed, created_at, entry_round";
 
+/**
+ * Participant columns plus the in-app registration ones (migration
+ * 20261123150000). Used only by the registration screens until the Supabase
+ * types are regenerated; then fold these into PARTICIPANT_PUBLIC_COLUMNS.
+ */
+export const PARTICIPANT_REGISTRATION_COLUMNS =
+  `${PARTICIPANT_PUBLIC_COLUMNS}, registered_by, source, looking_for_partner, updated_at`;
+
 export const FIND_LOST_PUBLIC_COLUMNS =
   "id, created_at, author_id, type, title, description, location, contact, image_urls, resolved, claimed_by_id, claimed_by_name, image_url, updated_at, claimed_at, claim_message, remarks, claim_msg, claim_contact_info";

@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { courtLabel, disciplineOf, DISCIPLINE_LABELS, matchState, type MatchState } from "@/lib/matchView";
+import { courtKey, courtLabel, disciplineOf, DISCIPLINE_LABELS, matchState, type MatchState } from "@/lib/matchView";
 import { matchPath, tournamentManagePath, tournamentPath } from "@/lib/tournamentRoutes";
 import {
   assessMatch,
@@ -34,7 +34,7 @@ const GROUPS: Array<{ key: Exclude<ListStatus, "all">; label: string; note?: str
   { key: "live", label: "Live", dot: "bg-live", initial: 2 },
   { key: "upcoming", label: "Upcoming", note: "by scheduled time", dot: "bg-primary", initial: 3 },
   { key: "unscheduled", label: "Unscheduled", note: "no time set yet", dot: "bg-warning", initial: 1 },
-  { key: "completed", label: "Completed", note: "newest first, folded", dot: "bg-muted-foreground", initial: 0, folded: true },
+  { key: "completed", label: "Completed", note: "newest first", dot: "bg-muted-foreground", initial: 0, folded: true },
 ];
 
 function bucket(m: ReadinessMatch): Exclude<ListStatus, "all"> {
@@ -64,8 +64,8 @@ function comparator(sort: SortKey) {
   return (a: ReadinessMatch, b: ReadinessMatch) => {
     switch (sort) {
       case "court": {
-        const ca = (a.court_number ?? "").trim() || "￿";
-        const cb = (b.court_number ?? "").trim() || "￿";
+        const ca = courtKey(a.court_number) ?? "￿";
+        const cb = courtKey(b.court_number) ?? "￿";
         return ca.localeCompare(cb, undefined, { numeric: true }) || compareQueueOrder(a, b);
       }
       case "round":
@@ -105,10 +105,14 @@ export function AllMatchesList({
   const [players, setPlayers] = useState<PlayersFilter>("any");
   const [sort, setSort] = useState<SortKey>("status");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // The five dropdowns fold behind one Filters button; a court picked from the
+  // Organiser's "Without a court" card opens them so the filter is visible.
+  const [showFilters, setShowFilters] = useState(initialCourt !== "");
 
   const matches = data.matches as ReadinessMatchRow[];
+  // "C1", "Court 1" and "1" are one court; "Court"/"TBD" placeholders are none.
   const courts = useMemo(
-    () => Array.from(new Set(matches.map((m) => (m.court_number ?? "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+    () => Array.from(new Set(matches.map((m) => courtKey(m.court_number)).filter((c): c is string => !!c))).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
     [matches],
   );
   const formats = useMemo(() => Array.from(new Set(matches.map(formatOf))).sort(), [matches]);
@@ -125,7 +129,7 @@ export function AllMatchesList({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return matches.filter((m) => {
-      if (court === "none" ? (m.court_number ?? "").trim() !== "" : court && (m.court_number ?? "").trim() !== court) return false;
+      if (court === "none" ? courtKey(m.court_number) !== null : court && courtKey(m.court_number) !== court) return false;
       if (format && formatOf(m) !== format) return false;
       if (round && (m.round_name ?? (m.round != null ? `Round ${m.round}` : "")) !== round) return false;
       if (players !== "any") {
@@ -251,19 +255,20 @@ export function AllMatchesList({
     }
 
     return (
-      <li key={m.id} className="grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto] sm:items-center">
-        <div className="flex items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
+      // Phones: two info lines, then the players with the action beside them.
+      <li key={m.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[8.5rem_6rem_1fr_auto]">
+        <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:flex-col sm:items-start sm:gap-1">
           <MatchCodeChip code={m.match_code ?? "—"} />
-          <span className="text-[11px] text-muted-foreground">
+          <span className="truncate text-[11px] text-muted-foreground">
             {formatOf(m)} · {roundShort(m)}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-xs sm:flex-col sm:items-start sm:gap-0.5">
+        <div className="col-span-2 flex items-center gap-2 text-xs sm:col-span-1 sm:flex-col sm:items-start sm:gap-0.5">
           <strong className="text-foreground">
-            {live ? (m.court_number ? courtLabel(m.court_number) : "On court") : m.scheduled_at ? clockLabel(m.scheduled_at) : "No time"}
+            {live ? (courtKey(m.court_number) ? courtLabel(m.court_number!) : "On court") : m.scheduled_at ? clockLabel(m.scheduled_at) : "No time"}
           </strong>
           <span className="text-muted-foreground">
-            {live ? (m as { score?: string | null }).score || "Live" : m.court_number ? courtLabel(m.court_number) : b === "completed" ? "" : "No court yet"}
+            {live ? (m as { score?: string | null }).score || "Live" : courtKey(m.court_number) ? courtLabel(m.court_number!) : b === "completed" ? "" : "No court yet"}
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-2">
@@ -278,16 +283,25 @@ export function AllMatchesList({
 
   const sorted = useMemo(() => [...visible].sort(comparator(sort)), [visible, sort]);
 
+  const onlyCompleted = sorted.length > 0 && sorted.every((m) => bucket(m) === "completed");
+  const activeFilters = [court, format, round, players !== "any", sort !== "status"].filter(Boolean).length;
+  const clearFilters = () => {
+    setCourt("");
+    setFormat("");
+    setRound("");
+    setPlayers("any");
+    setSort("status");
+  };
+
   return (
     <section aria-label="All matches" className="space-y-3 rounded-2xl border border-border bg-card/60 p-3 sm:p-4">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h3 className="text-base font-black text-foreground">All matches</h3>
-          <p className="text-xs text-muted-foreground">
-            {matches.length} matches · every player's status, and a Call button next to anyone who isn't here
-          </p>
-        </div>
-        <label className="relative w-full sm:w-64">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-base font-black text-foreground">All matches</h3>
+        <span className="text-xs text-muted-foreground">{matches.length} total</span>
+      </div>
+
+      <div className="flex gap-2">
+        <label className="relative min-w-0 flex-1">
           <span className="sr-only">Search</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input
@@ -298,17 +312,36 @@ export function AllMatchesList({
             className="min-h-[44px] w-full rounded-xl border border-border-strong bg-background pl-9 pr-3 text-sm text-foreground focus:border-primary focus:outline-none"
           />
         </label>
+        <button
+          type="button"
+          onClick={() => setShowFilters((v) => !v)}
+          aria-expanded={showFilters}
+          aria-controls="all-matches-filters"
+          className={`inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-black transition ${
+            showFilters || activeFilters > 0 ? "border-primary text-primary" : "border-border-strong text-soft hover:bg-muted"
+          }`}
+        >
+          <SlidersHorizontal className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Filters</span>
+          {activeFilters > 0 && (
+            <span className="rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground">{activeFilters}</span>
+          )}
+          <span className="sr-only sm:hidden">Filters</span>
+        </button>
       </div>
 
+      {/* Empty buckets are left out; the one you are on always stays. */}
       <div role="tablist" aria-label="Status" className="flex gap-1.5 overflow-x-auto pb-1">
-        {(["all", "live", "upcoming", "unscheduled", "completed"] as const).map((s) => (
+        {(["all", "live", "upcoming", "unscheduled", "completed"] as const)
+          .filter((s) => s === "all" || s === status || counts[s] > 0)
+          .map((s) => (
           <button
             key={s}
             type="button"
             role="tab"
             aria-selected={status === s}
             onClick={() => setStatus(s)}
-            className={`min-h-[40px] shrink-0 rounded-full px-3.5 text-xs font-black ${
+            className={`min-h-[36px] shrink-0 rounded-full px-3 text-xs font-black ${
               status === s ? "bg-primary text-primary-foreground" : "border border-border-strong bg-card text-soft"
             }`}
           >
@@ -317,7 +350,7 @@ export function AllMatchesList({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div id="all-matches-filters" className={`${showFilters ? "grid" : "hidden"} grid-cols-2 gap-2 rounded-xl bg-background/50 p-2 sm:grid-cols-5`}>
         <label className="flex flex-col gap-1 text-[11px] font-bold text-muted-foreground">
           Court
           <select value={court} onChange={(e) => setCourt(e.target.value)} className={selectCls}>
@@ -370,6 +403,11 @@ export function AllMatchesList({
             <option value="format">Format</option>
           </select>
         </label>
+        {activeFilters > 0 && (
+          <button type="button" onClick={clearFilters} className="col-span-2 justify-self-start text-xs font-black text-primary hover:underline sm:col-span-5">
+            Clear filters
+          </button>
+        )}
       </div>
 
       {sorted.length === 0 ? (
@@ -382,8 +420,12 @@ export function AllMatchesList({
             const list = sorted.filter((m) => bucket(m) === g.key);
             if (g.key === "completed") list.sort((a, b) => Date.parse(b.ended_at ?? "") - Date.parse(a.ended_at ?? "") || 0);
             if (list.length === 0) return null;
-            const open = expanded[g.key] ?? (status !== "all" || !g.folded);
-            const shown = expanded[g.key] || status !== "all" ? list : list.slice(0, g.initial);
+            // Completed folds away only while something is still to play; once
+            // the event is over it is the list, so its first ten show.
+            const folded = !!g.folded && !onlyCompleted;
+            const initial = g.key === "completed" && onlyCompleted ? 10 : g.initial;
+            const open = expanded[g.key] ?? (status !== "all" || !folded);
+            const shown = expanded[g.key] || status !== "all" ? list : list.slice(0, initial);
             return (
               <div key={g.key} className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -392,7 +434,7 @@ export function AllMatchesList({
                     {g.label} · {list.length}
                   </strong>
                   {g.note && <span className="text-xs text-muted-foreground">· {g.note}</span>}
-                  {g.folded && status === "all" && !expanded[g.key] && (
+                  {folded && status === "all" && !expanded[g.key] && (
                     <SmallButton className="ml-auto" onClick={() => setExpanded((e) => ({ ...e, [g.key]: true }))}>
                       Show
                     </SmallButton>
@@ -415,7 +457,7 @@ export function AllMatchesList({
         </SmallButton>
       )}
       <p className="text-xs leading-relaxed text-muted-foreground">
-        "Call" pushes to that one player only. Players who are playing on another court get no Call button.
+        "Call" notifies that one player. Anyone playing on another court has no Call button.
       </p>
     </section>
   );

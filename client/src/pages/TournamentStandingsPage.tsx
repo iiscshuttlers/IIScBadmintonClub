@@ -22,7 +22,7 @@ export default function TournamentStandingsPage() {
 
   useEffect(() => {
     // Check if standings are enabled in club_settings
-    fetchSiteData<any>("club_settings", "config_fallback.json")
+    fetchSiteData<any>("club_settings", null)
       .then((data: any) => {
         const isEnabled = !!data?.showTournamentStandings;
         setShowStandings(isEnabled);

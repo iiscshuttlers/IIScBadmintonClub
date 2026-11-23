@@ -37,3 +37,23 @@ describe("currentReturnUrl", () => {
     expect(currentReturnUrl()).toBe("/pulse?tab=live#m1");
   });
 });
+
+describe("rememberReturnUrl / takeReturnUrl", () => {
+  afterEach(() => sessionStorage.clear());
+
+  it("round-trips once and clears", async () => {
+    const { rememberReturnUrl, takeReturnUrl } = await import("./returnUrl");
+    rememberReturnUrl("/tournaments/t1?panel=my-entry&cat=MD");
+    expect(takeReturnUrl()).toBe("/tournaments/t1?panel=my-entry&cat=MD");
+    expect(takeReturnUrl()).toBeNull();
+  });
+
+  it("refuses off-site addresses", async () => {
+    const { takeReturnUrl } = await import("./returnUrl");
+    for (const bad of ["//evil.example/x", "https://evil.example", "/\\evil.example", "javascript:alert(1)"]) {
+      sessionStorage.setItem("return_url", bad);
+      expect(takeReturnUrl()).toBeNull();
+      expect(sessionStorage.getItem("return_url")).toBeNull();
+    }
+  });
+});

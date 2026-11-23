@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { feederLabels } from './teamBracketLabels';
 import { Button } from "@/components/ui/button";
 import { Trophy, Swords, Trash2, Calendar, Edit3, CheckCircle2, AlertCircle, Loader2, Layers, Filter, Eye, X, Settings2, Radio, Clock, ShieldCheck, GitFork, LayoutList, CalendarClock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,16 +20,9 @@ import type { TieFormatConfig, TieFormatConfigObject, TieFormatRubber, TieWithTe
 
 type BracketTeam = Awaited<ReturnType<typeof teamService.getTournamentTeams>>[number];
 
-/**
- * A tie as this tab loads it. tournament_ties has no team_a_label /
- * team_b_label columns (the generator's placeholder labels are never stored),
- * so the bracket fallbacks that read them are always undefined and an
- * undecided side shows "TBD".
- */
-type BracketTie = TieWithTeamsAndMatches & {
-  team_a_label?: undefined;
-  team_b_label?: undefined;
-};
+/** A tie as this tab loads it (with both teams and its rubbers). */
+type BracketTie = TieWithTeamsAndMatches;
+
 
 type StatusFilter = 'ALL' | 'LIVE' | 'SCHEDULED' | 'UNSCHEDULED';
 
@@ -365,6 +359,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: Tour
     });
 
     const matches: BracketMatch[] = [];
+    const placeholders = feederLabels(ties);
 
     roundGroups.forEach((groupTies, roundNum) => {
       // Sort ties in this round: regular ties first (SF1, SF2 / QF1..4 / FINAL), 3rd place playoff last
@@ -386,8 +381,8 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: Tour
           else if (tie.team_b_id && tie.winner_team_id === tie.team_b_id) winnerSide = 2;
         }
 
-        const team1Label = tie.team_a?.short_name || tie.team_a?.name || (tie.team_a_label || 'TBD');
-        const team2Label = tie.team_b?.short_name || tie.team_b?.name || (tie.team_b_label || 'TBD');
+        const team1Label = tie.team_a?.short_name || tie.team_a?.name || placeholders.get(tie.id)?.A || 'TBD';
+        const team2Label = tie.team_b?.short_name || tie.team_b?.name || placeholders.get(tie.id)?.B || 'TBD';
 
         const scoreString = (tie.score_team_a != null && tie.score_team_b != null)
           ? `${tie.score_team_a} - ${tie.score_team_b}`
@@ -417,7 +412,7 @@ export function TeamBracketTab({ tournament, isMasterAdmin }: { tournament: Tour
 
     const rounds = Array.from(roundGroups.keys()).sort((a, b) => a - b);
     return { knockoutMatches: matches, knockoutRounds: rounds };
-  }, [knockoutTies]);
+  }, [knockoutTies, ties]);
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 

@@ -9,7 +9,7 @@ import { playerService } from "@/services/playerService";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { 
   Holiday, Announcement, EventItem, Chapter, VideoItem, Player, FlyerItem, DynamicFlyer, AuthUser,
-  inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
+  inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime, playerElo, playerSinglesElo, playerDoublesElo, playerMixedElo
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -152,10 +152,10 @@ export function PlayersManager() {
     if (players.length === 0) return;
     const headers = ["ID", "Name", "Email", "Department", "Approved", "Created At", "ELO", "Singles", "Doubles", "Mixed"];
     const rows = players.map(p => {
-      const elo = p.stats?.elo ?? p.stats?.eloRating ?? "";
-      const s = p.stats?.singles ?? "";
-      const d = p.stats?.doubles ?? "";
-      const xd = p.stats?.mixed ?? "";
+      const elo = playerElo(p) ?? "";
+      const s = playerSinglesElo(p) ?? "";
+      const d = playerDoublesElo(p) ?? "";
+      const xd = playerMixedElo(p) ?? "";
       return [
         p.id,
         `"${p.full_name || ""}"`,
@@ -427,10 +427,10 @@ export function PlayersManager() {
     const sortBy = (getVal: (p: Player) => number) => 
       [...active].sort((a, b) => getVal(b) - getVal(a));
 
-    const getElo = (p: Player) => p.stats?.elo ?? p.stats?.eloRating ?? 0;
-    const getS = (p: Player) => p.stats?.singles ?? 0;
-    const getD = (p: Player) => p.stats?.doubles ?? 0;
-    const getM = (p: Player) => p.stats?.mixed ?? 0;
+    const getElo = (p: Player) => playerElo(p) ?? 0;
+    const getS = (p: Player) => playerSinglesElo(p) ?? 0;
+    const getD = (p: Player) => playerDoublesElo(p) ?? 0;
+    const getM = (p: Player) => playerMixedElo(p) ?? 0;
 
     const rankedOverall = sortBy(getElo);
     const rankedS = sortBy(getS);
@@ -499,17 +499,17 @@ export function PlayersManager() {
         valA = new Date(pa.created_at).getTime();
         valB = new Date(pb.created_at).getTime();
       } else if (sortField === "elo") {
-        valA = pa.stats?.elo ?? pa.stats?.eloRating ?? 0;
-        valB = pb.stats?.elo ?? pb.stats?.eloRating ?? 0;
+        valA = playerElo(pa) ?? 0;
+        valB = playerElo(pb) ?? 0;
       } else if (sortField === "singles") {
-        valA = pa.stats?.singles ?? 0;
-        valB = pb.stats?.singles ?? 0;
+        valA = playerSinglesElo(pa) ?? 0;
+        valB = playerSinglesElo(pb) ?? 0;
       } else if (sortField === "doubles") {
-        valA = pa.stats?.doubles ?? 0;
-        valB = pb.stats?.doubles ?? 0;
+        valA = playerDoublesElo(pa) ?? 0;
+        valB = playerDoublesElo(pb) ?? 0;
       } else if (sortField === "mixed") {
-        valA = pa.stats?.mixed ?? 0;
-        valB = pb.stats?.mixed ?? 0;
+        valA = playerMixedElo(pa) ?? 0;
+        valB = playerMixedElo(pb) ?? 0;
       }
 
       if (valA < valB) return sortDirection === "asc" ? -1 : 1;
@@ -864,25 +864,25 @@ export function PlayersManager() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-soft">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{playerElo(p) ?? "-"}</span>
                           {p.ranks?.overall !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.overall}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-soft">{p.stats?.singles ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{playerSinglesElo(p) ?? "-"}</span>
                           {p.ranks?.singles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.singles}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-soft">{p.stats?.doubles ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{playerDoublesElo(p) ?? "-"}</span>
                           {p.ranks?.doubles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.doubles}</span>}
                         </div>
                       </td>
                       <td className="p-3">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-sm text-soft">{p.stats?.mixed ?? "-"}</span>
+                          <span className="font-bold text-sm text-soft">{playerMixedElo(p) ?? "-"}</span>
                           {p.ranks?.mixed !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.mixed}</span>}
                         </div>
                       </td>
@@ -959,28 +959,28 @@ export function PlayersManager() {
                        <div className="flex flex-col items-center justify-center text-center">
                           <span className="text-[9px] text-warning uppercase font-extrabold tracking-wider">Overall</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-black text-sm text-foreground">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
+                            <span className="font-black text-sm text-foreground">{playerElo(p) ?? "-"}</span>
                             {p.ranks?.overall !== "-" && <span className="text-[10px] text-warning font-black tracking-tighter">#{p.ranks?.overall}</span>}
                           </div>
                        </div>
                        <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
                           <span className="text-[9px] text-info uppercase font-extrabold tracking-wider">Singles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-black text-sm text-foreground">{p.stats?.singles ?? "-"}</span>
+                            <span className="font-black text-sm text-foreground">{playerSinglesElo(p) ?? "-"}</span>
                             {p.ranks?.singles !== "-" && <span className="text-[10px] text-info font-black tracking-tighter">#{p.ranks?.singles}</span>}
                           </div>
                        </div>
                        <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
                           <span className="text-[9px] text-info uppercase font-extrabold tracking-wider">Doubles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-black text-sm text-foreground">{p.stats?.doubles ?? "-"}</span>
+                            <span className="font-black text-sm text-foreground">{playerDoublesElo(p) ?? "-"}</span>
                             {p.ranks?.doubles !== "-" && <span className="text-[10px] text-info font-black tracking-tighter">#{p.ranks?.doubles}</span>}
                           </div>
                        </div>
                        <div className="flex flex-col items-center justify-center text-center border-l border-border-strong/50">
                           <span className="text-[9px] text-individual uppercase font-extrabold tracking-wider">Mixed</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-black text-sm text-foreground">{p.stats?.mixed ?? "-"}</span>
+                            <span className="font-black text-sm text-foreground">{playerMixedElo(p) ?? "-"}</span>
                             {p.ranks?.mixed !== "-" && <span className="text-[10px] text-individual font-black tracking-tighter">#{p.ranks?.mixed}</span>}
                           </div>
                        </div>

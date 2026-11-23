@@ -46,14 +46,14 @@ export function GalleryLightboxTags({
           {tags.map((tag) => (
             <div
               key={tag.id}
-              className="flex items-center gap-1.5 bg-foreground/15 hover:bg-foreground/25 backdrop-blur-sm border border-foreground/20 text-foreground text-xs font-bold px-3 py-1 rounded-full cursor-pointer transition-colors group"
+              className="flex items-center gap-1.5 bg-on-media/15 hover:bg-on-media/25 backdrop-blur-sm border border-on-media/25 text-on-media text-xs font-bold px-3 py-1 rounded-full cursor-pointer transition-colors group"
               onClick={(e) => { e.stopPropagation(); setLocation(`/player/${tag.id}`); }}
             >
-              <Tag className="w-3 h-3 text-primary" />
+              <Tag className="w-3 h-3 text-on-media/70" />
               {tag.name}
               {isAdmin && (
                 <button
-                  className="ml-1 text-foreground/60 hover:text-danger opacity-0 group-hover:opacity-100 transition-all"
+                  className="ml-1 text-on-media/70 hover:text-on-media opacity-0 group-hover:opacity-100 transition-all"
                   onClick={(e) => { e.stopPropagation(); removeTag(itemPath, tag.id); }}
                 >
                   <X className="w-3 h-3" />
@@ -66,7 +66,7 @@ export function GalleryLightboxTags({
 
       {/* Pending Tags UI (For Admins) */}
       {isAdmin && pendingTags.length > 0 && (
-        <div className="flex flex-col items-center justify-center gap-1.5 mt-2 bg-card/60 border border-warning/30 p-2.5 rounded-2xl w-full max-w-sm backdrop-blur-md">
+        <div className="flex flex-col items-center justify-center gap-1.5 mt-2 bg-card border border-warning/40 p-2.5 rounded-2xl w-full max-w-sm shadow-lg">
           <span className="text-warning text-[10px] uppercase font-black tracking-widest mb-0.5">Pending Approvals</span>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {pendingTags.map((pt) => (
@@ -95,7 +95,7 @@ export function GalleryLightboxTags({
 
         if (isAlreadyPending) {
           return (
-            <div className="flex items-center gap-1.5 mt-2 text-warning bg-warning/10 border border-warning/20 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg">
+            <div className="flex items-center gap-1.5 mt-2 text-warning bg-card border border-warning/40 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg">
               <CheckCircle2 className="w-3.5 h-3.5" /> Tag Requested (Pending Approval)
             </div>
           );
@@ -104,7 +104,7 @@ export function GalleryLightboxTags({
         return (
           <button
             onClick={(e) => { e.stopPropagation(); requestTag(itemPath); }}
-            className="flex items-center gap-1.5 mt-2 text-foreground/80 hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-foreground/20 hover:border-foreground/40 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg transition-all"
+            className="flex items-center gap-1.5 mt-2 text-on-media/90 hover:text-on-media bg-on-media/10 hover:bg-on-media/20 border border-on-media/25 hover:border-on-media/50 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-lg transition-all"
           >
             🙋‍♂️ Is that you? Request Tag
           </button>
@@ -116,7 +116,7 @@ export function GalleryLightboxTags({
         <div className="flex items-center gap-2 relative">
           <div className="relative mt-2">
             <button
-              className="flex items-center gap-1.5 text-foreground/50 hover:text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-foreground/20 hover:border-foreground/40 hover:bg-foreground/10 transition-all"
+              className="flex items-center gap-1.5 text-on-media/75 hover:text-on-media text-xs font-bold px-3 py-1.5 rounded-full border border-on-media/25 hover:border-on-media/50 hover:bg-on-media/10 transition-all"
               onClick={(e) => { e.stopPropagation(); setShowTagPanel((v) => !v); setTagSearch(""); }}
             >
               <UserPlus className="w-3.5 h-3.5" /> Tag a player

@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { fetchRefereeMatches, notifyTournamentMatch, subscribeToRefereeBoard } from "@/services/tournamentService";
 import { teamService } from "@/services/teamService";
 import { toast } from "sonner";
 import { ThemeScope } from "@/components/tournament/ThemeScope";
-import { EventTypeBadge } from "@/components/tournament/EventTypeBadge";
-import { RankedBadge } from "@/components/tournament/RankedBadge";
 import { SendReminderSheet } from "@/components/tournament/SendReminderSheet";
 import { TieUmpireConsole } from "@/components/umpire/TieUmpireConsole";
 import { TeamLogo } from "@/components/events/TeamLogo";
+import { isTieRevealed, tieCourts } from "@/components/events/organizerTieStatus";
 import type { TournamentThemeInput } from "@/lib/tournamentTheme";
+import { courtKey, courtLabel } from "@/lib/matchView";
 import { useTournamentReadiness } from "@/hooks/queries/useCheckins";
 import { isReadyNow } from "@/components/tournament/AllMatchesList";
 import {
-  Loader2, Gavel, Radio, Clock, CheckCircle2, AlertTriangle, CalendarClock,
-  MapPin, Bell, Search, RefreshCw, Swords, Flag, LayoutGrid, Eye,
+  Loader2, Gavel, Radio, Clock, CheckCircle2, AlertTriangle, MapPin, Bell, Search, RefreshCw, Swords, Eye,
 } from "lucide-react";
 
 const CAT_LABELS: Record<string, string> = {
@@ -40,6 +38,9 @@ interface MatchRow {
   score: string | null;
   winner_side: number | null;
   reminder_sent: boolean | null;
+  /** Rubbers of a team tie: their courts and players say where the tie is and whether it was revealed. */
+  tie_id: string | null;
+  is_decider_tiebreaker: boolean | null;
 }
 
 interface RefTournament extends TournamentThemeInput {
@@ -52,6 +53,22 @@ interface RefTournament extends TournamentThemeInput {
 
 type StatusFilter = "all" | "attention" | "ready" | "live" | "upcoming" | "completed";
 
+/** "Quarterfinal" → "QF", "Round of 16" stays; keeps the first row of a match short. */
+const roundShort = (name: string | null | undefined, round: number | null | undefined) =>
+  (name ?? (round != null ? `Round ${round}` : ""))
+    .replace(/^Quarter-?finals?$/i, "QF")
+    .replace(/^Semi-?finals?$/i, "SF")
+    .replace(/^Round (\d+)$/i, "R$1");
+
+const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+const chipBase = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black whitespace-nowrap";
+
+/**
+ * Referee desk: one header with the counts that matter, one filter bar and one
+ * list. It opens on what needs attention, or on the whole list when nothing does.
+ */
 export function RefereeDashboard({ tournament }: { tournament: RefTournament }) {
   const isTeamEvent = tournament.format_family === "TEAM" || tournament.tournament_type === "TEAM";
   const [matches, setMatches] = useState<MatchRow[]>([]);
@@ -59,7 +76,8 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const [filter, setFilter] = useState<StatusFilter>("attention");
+  // null = follow the default (attention when anything needs it, else everything).
+  const [chosenFilter, setChosenFilter] = useState<StatusFilter | null>(null);
   // Check-in readiness for the "Ready" filter (shared with Umpire and Organiser panels).
   const readiness = useTournamentReadiness(tournament.id);
   const [category, setCategory] = useState<string>("ALL");
@@ -73,17 +91,9 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
     else setRefreshing(true);
 
     try {
-      // 1. Load tournament_matches
-      const matchesQuery = fetchRefereeMatches(tournament.id);
-
-      // 2. If team tournament, also load ties
-      const tiesQuery = isTeamEvent
-        ? teamService.getRefereeTies(tournament.id)
-        : null;
-
       const [matchesRes, tiesRes] = await Promise.all([
-        matchesQuery,
-        tiesQuery ? tiesQuery : Promise.resolve({ data: [], error: null })
+        fetchRefereeMatches(tournament.id),
+        isTeamEvent ? teamService.getRefereeTies(tournament.id) : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (matchesRes.error) throw matchesRes.error;
@@ -115,26 +125,22 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
   const now = Date.now();
   const isOverdue = (m: MatchRow) =>
     m.status === "scheduled" && !!m.scheduled_at && new Date(m.scheduled_at).getTime() < now;
+  // "Court" / "TBD" placeholders count as no court.
   const needsCourt = (m: MatchRow) =>
-    m.status !== "completed" && !m.court_number && !!m.team1_label && m.team1_label !== "TBD";
+    m.status !== "completed" && !courtKey(m.court_number) && !!m.team1_label && m.team1_label !== "TBD";
 
-  // Tie counts
-  const tiesAwaitingReveal = useMemo(() => {
-    return ties.filter((t: any) => t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed && t.state !== 'COMPLETED');
-  }, [ties]);
-
-  const tiesPendingLineup = useMemo(() => {
-    return ties.filter((t: any) => (!t.lineup_locked_a || !t.lineup_locked_b) && t.state !== 'COMPLETED');
-  }, [ties]);
-
-  const liveTies = useMemo(() => {
-    return ties.filter((t: any) => t.state === 'IN_PROGRESS');
-  }, [ties]);
-
+  // Ties: tournament_ties has no court or reveal columns; both come from the tie's rubbers.
+  const tieRevealed = (t: any) => isTieRevealed(t.id, matches);
+  const lineupsLocked = (t: any) => !!t.lineup_locked_a && !!t.lineup_locked_b;
+  const canReveal = (t: any) => lineupsLocked(t) && !tieRevealed(t) && t.state !== "COMPLETED";
   const isTieOverdue = (t: any) =>
     t.state !== "COMPLETED" && !!t.scheduled_at && new Date(t.scheduled_at).getTime() < now;
-  const tieNeedsCourt = (t: any) =>
-    t.state !== "COMPLETED" && !t.court_number;
+
+  const tiesAwaitingReveal = useMemo(() => ties.filter(canReveal),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ties, matches]);
+  const tiesPendingLineup = useMemo(() => ties.filter((t: any) => !lineupsLocked(t) && t.state !== "COMPLETED"), [ties]);
+  const liveTies = useMemo(() => ties.filter((t: any) => t.state === "IN_PROGRESS"), [ties]);
 
   const stats = useMemo(() => {
     let live = 0, upcoming = 0, completed = 0, overdue = 0, noCourt = 0;
@@ -144,24 +150,20 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
       else if (m.status === "scheduled") { upcoming++; if (isOverdue(m)) overdue++; }
       if (needsCourt(m)) noCourt++;
     }
-
-    const completedTiesCount = ties.filter((t: any) => t.state === "COMPLETED").length;
-    const overdueTiesCount = ties.filter(isTieOverdue).length;
-    const noCourtTiesCount = ties.filter(tieNeedsCourt).length;
-
-    return { 
-      total: matches.length > 0 ? matches.length : ties.length, 
-      live: matches.length > 0 ? live : liveTies.length, 
-      upcoming: matches.length > 0 ? upcoming : ties.filter((t: any) => t.state !== "IN_PROGRESS" && t.state !== "COMPLETED").length, 
-      completed: matches.length > 0 ? completed : completedTiesCount, 
-      overdue: matches.length > 0 ? overdue : overdueTiesCount, 
-      noCourt: matches.length > 0 ? noCourt : noCourtTiesCount 
+    const useTies = matches.length === 0;
+    return {
+      total: useTies ? ties.length : matches.length,
+      live: useTies ? liveTies.length : live,
+      upcoming: useTies ? ties.filter((t: any) => t.state !== "IN_PROGRESS" && t.state !== "COMPLETED").length : upcoming,
+      completed: useTies ? ties.filter((t: any) => t.state === "COMPLETED").length : completed,
+      overdue: useTies ? ties.filter(isTieOverdue).length : overdue,
+      noCourt: useTies ? ties.filter((t: any) => t.state !== "COMPLETED" && tieCourts(t.id, matches).length === 0).length : noCourt,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matches, liveTies.length, ties]);
 
   const categories = useMemo(
-    () => Array.from(new Set(matches.map((m) => m.category))).sort(),
+    () => Array.from(new Set(matches.map((m) => m.category))).filter(Boolean).sort(),
     [matches],
   );
 
@@ -170,6 +172,16 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [matches],
   );
+  const attentionTies = useMemo(
+    () => ties.filter((t: any) => t.state !== "COMPLETED" && (canReveal(t) || !lineupsLocked(t) || t.state === "IN_PROGRESS" || isTieOverdue(t))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ties, matches],
+  );
+  const attentionCount = matches.length > 0 ? attentionItems.length : attentionTies.length;
+  const readyCount = matches.filter((m) => isReadyNow(readiness, m.id)).length;
+
+  const filter: StatusFilter =
+    chosenFilter ?? (attentionCount > 0 ? "attention" : stats.live > 0 ? "live" : stats.upcoming > 0 ? "upcoming" : "all");
 
   const filteredMatches = useMemo(() => {
     let list = matches;
@@ -189,20 +201,11 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
     return list;
   }, [matches, attentionItems, filter, category, search, readiness]);
 
-  const attentionTies = useMemo(() => {
-    return ties.filter((t: any) => 
-      (t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed) ||
-      (!t.lineup_locked_a || !t.lineup_locked_b) ||
-      t.state === "IN_PROGRESS" ||
-      isTieOverdue(t)
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ties]);
-
   const filteredTies = useMemo(() => {
     if (!isTeamEvent) return [];
     let list = ties;
     if (filter === "attention") list = attentionTies;
+    else if (filter === "ready") list = []; // check-in readiness is per rubber, not per tie
     else if (filter === "live") list = list.filter((t: any) => t.state === "IN_PROGRESS");
     else if (filter === "upcoming") list = list.filter((t: any) => t.state !== "IN_PROGRESS" && t.state !== "COMPLETED");
     else if (filter === "completed") list = list.filter((t: any) => t.state === "COMPLETED");
@@ -229,209 +232,137 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
     }
   };
 
-  const cardCls = "bg-card rounded-2xl border border-border p-4 sm:p-5 shadow-sm";
-
-  const STAT_CARDS: { label: string; value: number; icon: typeof Radio; cls: string; onClick?: () => void }[] = [
-    { label: "Live now", value: stats.live, icon: Radio, cls: "text-live bg-live/10", onClick: () => setFilter("live") },
-    { label: "Overdue", value: stats.overdue, icon: AlertTriangle, cls: "text-warning bg-warning/10", onClick: () => setFilter("attention") },
-    { label: "Upcoming", value: stats.upcoming, icon: CalendarClock, cls: "text-primary bg-primary/10", onClick: () => setFilter("upcoming") },
-    { label: "Completed", value: stats.completed, icon: CheckCircle2, cls: "text-success bg-success/10", onClick: () => setFilter("completed") },
-  ];
+  const cardCls = "bg-card rounded-2xl border border-border p-3 sm:p-4 shadow-sm";
 
   const statusChip = (m: MatchRow) => {
     if (m.status === "in_progress")
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-live bg-live/10"><Radio className="w-3 h-3 animate-pulse" /> Live</span>;
+      return <span className={`${chipBase} text-live bg-live/10`}><Radio className="w-3 h-3 animate-pulse" aria-hidden /> Live</span>;
     if (m.status === "completed")
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-success bg-success/10"><CheckCircle2 className="w-3 h-3" /> Done</span>;
+      return <span className={`${chipBase} text-success bg-success/10`}><CheckCircle2 className="w-3 h-3" aria-hidden /> Done</span>;
     if (isOverdue(m))
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-warning bg-warning/10"><AlertTriangle className="w-3 h-3" /> Overdue</span>;
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-muted-foreground bg-muted"><Clock className="w-3 h-3" /> Scheduled</span>;
+      return <span className={`${chipBase} text-warning bg-warning/10`}><AlertTriangle className="w-3 h-3" aria-hidden /> Overdue</span>;
+    return <span className={`${chipBase} text-muted-foreground bg-muted`}><Clock className="w-3 h-3" aria-hidden /> Scheduled</span>;
   };
 
   const tieStatusChip = (t: any) => {
     if (t.state === "IN_PROGRESS")
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-live bg-live/15 border border-live/20"><Radio className="w-3 h-3 animate-pulse" /> Live Tie</span>;
+      return <span className={`${chipBase} text-live bg-live/10`}><Radio className="w-3 h-3 animate-pulse" aria-hidden /> Live</span>;
     if (t.state === "COMPLETED")
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-success bg-success/15 border border-success/20"><CheckCircle2 className="w-3 h-3" /> Final</span>;
-    if (t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed)
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-warning bg-warning/15 border border-warning/30"><Eye className="w-3 h-3" /> Ready to Reveal</span>;
-    if (!t.lineup_locked_a || !t.lineup_locked_b)
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-danger bg-danger/10 border border-danger/20"><Clock className="w-3 h-3" /> Missing Lineup</span>;
-    return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black text-muted-foreground bg-muted"><Clock className="w-3 h-3" /> Scheduled</span>;
+      return <span className={`${chipBase} text-success bg-success/10`}><CheckCircle2 className="w-3 h-3" aria-hidden /> Final</span>;
+    if (canReveal(t))
+      return <span className={`${chipBase} text-warning bg-warning/10`}><Eye className="w-3 h-3" aria-hidden /> Ready to reveal</span>;
+    if (!lineupsLocked(t))
+      return <span className={`${chipBase} text-danger bg-danger/10`}><Clock className="w-3 h-3" aria-hidden /> Lineup missing</span>;
+    return <span className={`${chipBase} text-muted-foreground bg-muted`}><Clock className="w-3 h-3" aria-hidden /> Scheduled</span>;
   };
 
-  const FILTERS: { key: StatusFilter; label: string; count: number }[] = [
-    { key: "attention", label: "Needs attention", count: matches.length > 0 ? attentionItems.length : attentionTies.length },
+  // Empty filters are left out, except Needs attention (0 there means all clear) and the one you're on.
+  const FILTERS = ([
+    { key: "attention", label: "Needs attention", count: attentionCount },
     // Every player checked in, nobody busy or resting (lib/matchReadiness).
-    { key: "ready", label: "Ready", count: matches.filter((m) => isReadyNow(readiness, m.id)).length },
+    { key: "ready", label: "Ready", count: readyCount },
     { key: "live", label: "Live", count: stats.live },
     { key: "upcoming", label: "Upcoming", count: stats.upcoming },
     { key: "completed", label: "Completed", count: stats.completed },
     { key: "all", label: "All", count: stats.total },
-  ];
+  ] as { key: StatusFilter; label: string; count: number }[]).filter(
+    (f) => f.count > 0 || f.key === "attention" || f.key === "all" || f.key === filter,
+  );
+
+  // One line under the title with only the counts that are not zero.
+  const summary = [
+    isTeamEvent && ties.length > 0 ? `${ties.length} tie${ties.length === 1 ? "" : "s"}` : `${matches.length} match${matches.length === 1 ? "" : "es"}`,
+    stats.live > 0 && `${stats.live} live`,
+    stats.overdue > 0 && `${stats.overdue} overdue`,
+    stats.noCourt > 0 && `${stats.noCourt} without a court`,
+    tiesAwaitingReveal.length > 0 && `${tiesAwaitingReveal.length} ready to reveal`,
+    tiesPendingLineup.length > 0 && `${tiesPendingLineup.length} missing a lineup`,
+  ].filter(Boolean).join(" · ");
+
+  const emptyText =
+    filter === "attention" ? "Nothing needs attention — all clear."
+    : filter === "ready" ? "No match has every player checked in yet."
+    : search.trim() || category !== "ALL" ? "Nothing matches your search."
+    : `No ${filter === "all" ? "" : `${filter} `}matches yet.`;
 
   return (
-    <ThemeScope {...tournament} className="space-y-4">
-      {/* Header */}
-      <div className={`${cardCls} flex items-center gap-3`}>
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <Gavel className="w-5 h-5 text-primary" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base font-black text-foreground truncate">Referee Oversight</h3>
-          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-            <EventTypeBadge tournament_type={tournament.tournament_type} format_family={tournament.format_family} />
-            <RankedBadge ranked={tournament.counts_for_elo} />
-          </div>
-        </div>
-        <button
-          onClick={() => load(true)}
-          className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition shrink-0"
-          title="Refresh"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-        </button>
-        <button
-          onClick={() => setNotifyOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black transition shrink-0"
-        >
-          <Bell className="w-3.5 h-3.5" /> Notify
-        </button>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {STAT_CARDS.map((s) => {
-          const Icon = s.icon;
-          return (
-            <button key={s.label} onClick={s.onClick} className={`${cardCls} flex items-center gap-3 text-left hover:ring-2 hover:ring-primary/30 transition`}>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.cls}`}>
-                <Icon className="w-4.5 h-4.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xl font-black text-foreground leading-none">{s.value}</div>
-                <div className="text-[11px] text-muted-foreground mt-1 truncate">{s.label}</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {stats.noCourt > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-bold text-warning">
-          <LayoutGrid className="w-4 h-4 shrink-0" />
-          {stats.noCourt} match{stats.noCourt === 1 ? "" : "es"} without an assigned court.
-        </div>
-      )}
-
-      {/* Filters */}
+    <ThemeScope {...tournament} className="space-y-3">
+      {/* Header + filters in one card */}
       <div className={`${cardCls} space-y-3`}>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Gavel className="w-[18px] h-[18px] text-primary" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-black text-foreground leading-tight">Referee desk</h3>
+            {!loading && !loadError && <p className="text-xs text-muted-foreground">{summary}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => load(true)}
+            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition shrink-0"
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifyOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black transition shrink-0"
+          >
+            <Bell className="w-3.5 h-3.5" aria-hidden /> Notify
+          </button>
+        </div>
+
+        <div role="tablist" aria-label="Show" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
-              <Button
+              <button
                 key={f.key}
-                size="pill"
-                variant="tab"
-                onClick={() => setFilter(f.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setChosenFilter(f.key)}
+                className={`inline-flex shrink-0 items-center gap-1.5 min-h-[36px] px-3 rounded-full text-xs font-black whitespace-nowrap transition-colors ${
                   active ? "bg-primary text-primary-foreground" : "bg-muted text-soft hover:bg-muted-strong"
                 }`}
               >
                 {f.label}
-                <span className={`px-1.5 rounded-full text-[10px] ${active ? "bg-foreground/20" : "bg-muted-strong"}`}>{f.count}</span>
-              </Button>
+                <span className={active ? "opacity-80" : "text-muted-foreground"}>{f.count}</span>
+              </button>
             );
           })}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+
+        <div className="flex gap-2">
+          <label className="relative flex-1 min-w-0">
+            <span className="sr-only">Search</span>
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" aria-hidden />
             <input
+              type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search match, player, round…"
-              className="w-full pl-9 pr-3 py-2 bg-muted border border-border-strong rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="Search"
+              className="w-full min-h-[40px] pl-9 pr-3 bg-muted border border-border-strong rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40"
             />
-          </div>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="bg-muted border border-border-strong rounded-xl px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/40"
-          >
-            <option value="ALL">All categories</option>
-            {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
-          </select>
+          </label>
+          {categories.length > 1 && (
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              aria-label="Format"
+              className="shrink-0 max-w-[40%] min-h-[40px] bg-muted border border-border-strong rounded-xl px-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <option value="ALL">All formats</option>
+              {categories.map((c) => <option key={c} value={c}>{CAT_LABELS[c] ?? c}</option>)}
+            </select>
+          )}
         </div>
       </div>
 
-      {/* Team Tournament Ties Quick Action & Status Banner */}
-      {isTeamEvent && (
-        <div className={`${cardCls} space-y-3 bg-gradient-to-r from-card via-info/10 to-card border-info/20`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-2.5">
-            <div>
-              <h4 className="text-sm font-black text-foreground flex items-center gap-2">
-                <Swords className="w-4 h-4 text-info" />
-                Team Ties Status ({ties.length} Total)
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                Oversight for tie lineup submissions, reveals, and match schedules
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {tiesAwaitingReveal.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warning/20 text-warning border border-warning/30">
-                  {tiesAwaitingReveal.length} Ready to Reveal
-                </span>
-              )}
-              {tiesPendingLineup.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-danger/20 text-danger border border-danger/30">
-                  {tiesPendingLineup.length} Missing Lineups
-                </span>
-              )}
-              {liveTies.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-success/20 text-success border border-success/30">
-                  {liveTies.length} Live
-                </span>
-              )}
-            </div>
-          </div>
-
-          {tiesAwaitingReveal.length > 0 && (
-            <div className="space-y-2 pt-1">
-              <span className="text-[11px] font-bold text-warning uppercase tracking-wider">
-                Action Needed: Lineups Locked &amp; Ready for Referee Reveal
-              </span>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {tiesAwaitingReveal.map((t: any) => (
-                  <div key={t.id} className="p-2.5 rounded-xl bg-background/70 border border-warning/30 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning">
-                          {t.tie_code}
-                        </span>
-                        <span className="text-xs font-black text-foreground truncate">
-                          {t.team_a?.name || 'TBD'} vs {t.team_b?.name || 'TBD'}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Both lineups locked</p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedTieForConsole(t)}
-                      className="px-2.5 py-1 rounded-lg bg-warning text-warning-foreground font-black text-xs hover:bg-warning/90 transition shrink-0 flex items-center gap-1"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> Reveal Lineup
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Match / Ties list */}
+      {/* Match / tie list */}
       <div className={cardCls}>
         {loading ? (
           <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -440,6 +371,7 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
             <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
             <p className="text-sm text-soft font-bold">Couldn't load data</p>
             <button
+              type="button"
               onClick={() => load()}
               className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
             >
@@ -448,195 +380,162 @@ export function RefereeDashboard({ tournament }: { tournament: RefTournament }) 
           </div>
         ) : filteredMatches.length === 0 && filteredTies.length === 0 ? (
           <div className="text-center py-10">
-            <Swords className="w-8 h-8 text-faint mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {filter === "attention" 
-                ? "Nothing needs attention — all clear."
-                : `No ${filter} matches or ties found.`}
-            </p>
+            {filter === "attention" ? (
+              <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
+            ) : (
+              <Swords className="w-8 h-8 text-faint mx-auto mb-2" />
+            )}
+            <p className="text-sm text-muted-foreground">{emptyText}</p>
+            {filter !== "all" && stats.total > 0 && (
+              <button type="button" onClick={() => setChosenFilter("all")} className="mt-2 text-xs font-black text-primary hover:underline">
+                Show all {stats.total}
+              </button>
+            )}
           </div>
         ) : (
-          <div className="space-y-3">
-            {/* 1. Team Ties List (when present in team tournaments) */}
+          <div className="space-y-4">
+            {/* Team ties */}
             {filteredTies.length > 0 && (
-              <div className="space-y-2">
+              <section aria-label="Ties">
                 {filteredMatches.length > 0 && (
-                  <div className="flex items-center justify-between pb-1 border-b border-border">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <Swords className="w-3.5 h-3.5 text-primary" /> Team Ties ({filteredTies.length})
-                    </span>
-                  </div>
+                  <h4 className="pb-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Ties · {filteredTies.length}</h4>
                 )}
-                {filteredTies.map((t: any) => {
-                  const hasCourt = !!t.court_number;
-                  const courtDisplay = t.court_number
-                    ? (t.court_number.toUpperCase().startsWith('COURT') || t.court_number.toUpperCase().startsWith('C') ? t.court_number : `Court ${t.court_number}`)
-                    : "No court";
-                  const canReveal = t.lineup_locked_a && t.lineup_locked_b && !t.lineup_revealed && t.state !== 'COMPLETED';
-
-                  return (
-                    <div
-                      key={t.id}
-                      className="rounded-2xl border border-border bg-background/40 p-3 sm:p-4 hover:border-border-strong transition"
-                    >
-                      {/* Top Header Row */}
-                      <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-border/60">
-                        <span className="text-[11px] font-mono font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                          {t.tie_code}
-                        </span>
-                        {t.round_name && (
-                          <span className="text-[11px] font-bold text-muted-foreground">
-                            {t.round_name}
+                <ul className="divide-y divide-border">
+                  {filteredTies.map((t: any) => {
+                    const courts = tieCourts(t.id, matches);
+                    const started = t.state === "COMPLETED" || t.state === "IN_PROGRESS";
+                    const side = (team: any, locked: boolean, align: "left" | "right") => (
+                      <div className={`flex min-w-0 flex-1 items-center gap-2 ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
+                        <TeamLogo name={team?.name || "TBD"} shortName={team?.short_name} logoUrl={team?.logo_url} size="sm" />
+                        <div className="min-w-0">
+                          <span className="block truncate text-sm font-black text-foreground">{team?.name || "TBD"}</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${locked ? "text-muted-foreground" : "text-warning"}`}>
+                            {locked ? "Lineup locked" : "Lineup pending"}
                           </span>
-                        )}
-                        <div className="ml-auto">{tieStatusChip(t)}</div>
-                      </div>
-
-                      {/* Team vs Team Row */}
-                      <div className="py-2.5 flex items-center justify-between gap-3">
-                        {/* Team A */}
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <TeamLogo
-                            name={t.team_a?.name || "Team A"}
-                            shortName={t.team_a?.short_name}
-                            logoUrl={t.team_a?.logo_url}
-                            size="sm"
-                          />
-                          <div className="min-w-0">
-                            <span className="text-sm sm:text-base font-black text-foreground truncate block">
-                              {t.team_a?.name || "Team A"}
-                            </span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                              {t.lineup_locked_a ? "Lineup Locked" : "Lineup Pending"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Score or VS */}
-                        <div className="px-3 py-1 rounded-xl bg-card border border-border shrink-0 font-mono font-black text-base sm:text-lg text-foreground shadow-2xs">
-                          {t.state === "COMPLETED" || t.state === "IN_PROGRESS"
-                            ? `${t.score_team_a ?? 0} - ${t.score_team_b ?? 0}`
-                            : "vs"}
-                        </div>
-
-                        {/* Team B */}
-                        <div className="flex items-center justify-end gap-2.5 flex-1 min-w-0 text-right">
-                          <div className="min-w-0">
-                            <span className="text-sm sm:text-base font-black text-foreground truncate block">
-                              {t.team_b?.name || "Team B"}
-                            </span>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                              {t.lineup_locked_b ? "Lineup Locked" : "Lineup Pending"}
-                            </span>
-                          </div>
-                          <TeamLogo
-                            name={t.team_b?.name || "Team B"}
-                            shortName={t.team_b?.short_name}
-                            logoUrl={t.team_b?.logo_url}
-                            size="sm"
-                          />
                         </div>
                       </div>
-
-                      {/* Footer Row: Court, Time & Referee Actions */}
-                      <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2 flex-wrap text-xs">
-                        <div className="flex items-center gap-3 text-muted-foreground text-[11px] flex-wrap">
-                          <span className={`inline-flex items-center gap-1 ${!hasCourt && t.state !== "COMPLETED" ? "text-warning font-bold" : ""}`}>
-                            <MapPin className="w-3 h-3" /> {courtDisplay}
+                    );
+                    return (
+                      <li key={t.id} className="py-3 first:pt-0 last:pb-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{t.tie_code}</span>
+                          {t.round_name && <span className="truncate text-[11px] font-bold text-muted-foreground">{t.round_name}</span>}
+                          <span className="ml-auto shrink-0">{tieStatusChip(t)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {side(t.team_a, !!t.lineup_locked_a, "left")}
+                          <span className="shrink-0 px-2 font-mono text-sm font-black text-foreground">
+                            {started ? `${t.score_team_a ?? 0}–${t.score_team_b ?? 0}` : "vs"}
                           </span>
-                          {t.scheduled_at ? (
+                          {side(t.team_b, !!t.lineup_locked_b, "right")}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
+                          {/* Courts of the rubbers still to play; a finished tie has none to show. */}
+                          {t.state !== "COMPLETED" && (
+                            <span className={`inline-flex items-center gap-1 ${courts.length === 0 ? "text-warning font-bold" : ""}`}>
+                              <MapPin className="w-3 h-3" aria-hidden />
+                              {courts.length > 0 ? courts.map((c) => courtLabel(c)).join(", ") : "No court"}
+                            </span>
+                          )}
+                          {t.scheduled_at && (
                             <span className={`inline-flex items-center gap-1 ${isTieOverdue(t) ? "text-warning font-bold" : ""}`}>
-                              <Clock className="w-3 h-3" />
-                              {new Date(t.scheduled_at).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} • {new Date(t.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <Clock className="w-3 h-3" aria-hidden /> {timeLabel(t.scheduled_at)}
                             </span>
-                          ) : (
-                            <span className="text-muted-foreground">Time not scheduled</span>
                           )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 ml-auto">
-                          {canReveal && (
+                          <span className="ml-auto flex items-center gap-1.5">
+                            {canReveal(t) && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedTieForConsole(t)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-warning hover:bg-warning/90 text-warning-foreground text-xs font-black transition"
+                              >
+                                <Eye className="w-3.5 h-3.5" aria-hidden /> Reveal
+                              </button>
+                            )}
                             <button
+                              type="button"
                               onClick={() => setSelectedTieForConsole(t)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-warning hover:bg-warning/90 text-warning-foreground text-xs font-black transition shadow-xs"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
                             >
-                              <Eye className="w-3.5 h-3.5" /> Reveal Lineups
+                              <Gavel className="w-3.5 h-3.5" aria-hidden /> Console
                             </button>
-                          )}
-                          <button
-                            onClick={() => setSelectedTieForConsole(t)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black transition"
-                          >
-                            <Gavel className="w-3.5 h-3.5" /> Referee Console
-                          </button>
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
             )}
 
-            {/* 2. Individual Matches List */}
+            {/* Matches (rubbers in a team event) */}
             {filteredMatches.length > 0 && (
-              <div className="space-y-2">
+              <section aria-label={isTeamEvent ? "Rubbers" : "Matches"}>
                 {filteredTies.length > 0 && (
-                  <div className="flex items-center justify-between pt-2 pb-1 border-b border-border">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                      Individual Rubbers ({filteredMatches.length})
-                    </span>
-                  </div>
+                  <h4 className="pb-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">Rubbers · {filteredMatches.length}</h4>
                 )}
-                {filteredMatches.map((m) => {
-                  const canRemind = m.status === "scheduled" && !!m.player1_id;
-                  return (
-                    <div key={m.id} className="rounded-xl border border-border bg-background/40 p-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{m.match_code}</span>
-                        <span className="text-[11px] font-bold text-muted-foreground">{CAT_LABELS[m.category] ?? m.category}</span>
-                        <span className="text-[11px] text-muted-foreground">· {m.round_name}</span>
-                        <div className="ml-auto">{statusChip(m)}</div>
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-black text-foreground truncate flex-1 text-right">
-                          {m.team1_label ?? "TBD"}
+                <ul className="divide-y divide-border">
+                  {filteredMatches.map((m) => {
+                    const canRemind = m.status === "scheduled" && !!m.player1_id;
+                    const done = m.status === "completed";
+                    const court = courtKey(m.court_number);
+                    const name = (side: 1 | 2) => {
+                      const label = (side === 1 ? m.team1_label : m.team2_label) ?? "TBD";
+                      const won = done && m.winner_side === side;
+                      return (
+                        <span className={`min-w-0 truncate text-sm ${won ? "font-black text-foreground" : done ? "font-bold text-muted-foreground" : "font-black text-foreground"}`}>
+                          {label}
+                          {won && <span className="sr-only"> (won)</span>}
                         </span>
-                        <span className="text-[11px] font-black text-muted-foreground shrink-0">
-                          {m.status === "completed" && m.score ? m.score : "vs"}
-                        </span>
-                        <span className="text-sm font-black text-foreground truncate flex-1">
-                          {m.team2_label ?? "TBD"}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-                        <span className={`inline-flex items-center gap-1 ${!m.court_number && m.status !== "completed" ? "text-warning font-bold" : ""}`}>
-                          <MapPin className="w-3 h-3" /> {m.court_number ? `Court ${m.court_number}` : "No court"}
-                        </span>
-                        {m.scheduled_at && (
-                          <span className={`inline-flex items-center gap-1 ${isOverdue(m) ? "text-warning font-bold" : ""}`}>
-                            <Clock className="w-3 h-3" />
-                            {new Date(m.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
+                      );
+                    };
+                    return (
+                      <li key={m.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="shrink-0 text-[11px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{m.match_code}</span>
+                          <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+                            <span title={CAT_LABELS[m.category] ?? m.category}>{m.category}</span>
+                            {" · "}{roundShort(m.round_name, m.round)}
+                            {(court || !done) && (
+                              <>
+                                {" · "}
+                                <span className={!court ? "font-bold text-warning" : ""}>
+                                  {court ? courtLabel(m.court_number!) : "No court"}
+                                </span>
+                              </>
+                            )}
+                            {m.scheduled_at && !done && (
+                              <>
+                                {" · "}
+                                <span className={isOverdue(m) ? "font-bold text-warning" : ""}>{timeLabel(m.scheduled_at)}</span>
+                              </>
+                            )}
                           </span>
-                        )}
-                        {m.status === "completed" && m.winner_side ? (
-                          <span className="inline-flex items-center gap-1 text-success font-bold">
-                            <Flag className="w-3 h-3" /> {m.winner_side === 1 ? m.team1_label : m.team2_label} won
-                          </span>
-                        ) : null}
-                        {canRemind && (
-                          <button
-                            onClick={() => remindMatch(m)}
-                            disabled={notifyMatchId === m.id}
-                            className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-black transition disabled:opacity-50"
-                          >
-                            {notifyMatchId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />} Remind
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                          <span className="ml-auto shrink-0">{statusChip(m)}</span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                            <span className="flex min-w-0 justify-end">{name(1)}</span>
+                            <span className="shrink-0 text-[11px] font-black text-muted-foreground">{done && m.score ? m.score : "vs"}</span>
+                            <span className="flex min-w-0">{name(2)}</span>
+                          </div>
+                          {canRemind && (
+                            <button
+                              type="button"
+                              onClick={() => remindMatch(m)}
+                              disabled={notifyMatchId === m.id}
+                              aria-label={`Remind players of ${m.match_code}`}
+                              className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-black transition disabled:opacity-50"
+                            >
+                              {notifyMatchId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />} Remind
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
             )}
           </div>
         )}
