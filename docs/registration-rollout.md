@@ -1,8 +1,10 @@
 # In-app tournament registration: rollout
 
 Plan: `C:\Users\JANMEJAY\.claude\plans\happy-gliding-book.md` (approved 23 Nov 2026).
-Everything below was built locally and is **uncommitted**. No migration has been applied
-to production and no edge function has been deployed.
+**Shipped 23 Nov 2026 (~21:00 IST)** in PR #30: all six migrations applied to production, the
+dispatcher deployed, the backup-inbox secret set, the site deployed, and an Android release
+uploaded. Registration is still **off** for every tournament (`require_app_registration`)
+until an organiser turns it on (checklist steps 10–12). See "Ship log" at the end.
 
 ## Rollout checklist (do these in order)
 
@@ -47,9 +49,9 @@ day. If the limit is hit: sends fail, registration rows retry at 5 min / 30 min 
 failed in the admin Delivery panel; in-app and push still go out. Move to a Workspace/M365 sender or
 spread reminders (turn off automatic reminders) for big events.
 
-**Still to do (not built in this run):** the A4 poster with QR code (needs the `qrcode` package),
-the daily CSV digest email, `source = 'form'` on imports (after type regen), a rehearsal of the
-guest-claim flow against the conflict trigger.
+**Status:** steps 1–9 done on 23 Nov 2026 (see the ship log). Steps 10–12 belong to the user.
+The poster, the daily CSV digest, `source = 'form'` on imports and the guest-claim rehearsal
+were built on 23 Nov evening (see "Leftovers").
 
 ---
 
@@ -442,3 +444,65 @@ Decisions
 - Memories updated: `in-app-registration-direction`, `tournament-day-open-bugs`,
   `supabase-cli-on-this-machine`, MEMORY.md index.
 - Temporary Playwright config removed. Nothing committed, pushed, applied or deployed.
+
+### Leftovers built (23 Nov, ~20:00 IST)
+
+- **`source = 'form'`:** `bulkImportParticipants` takes an optional `source`; `ParticipantImportModal`
+  passes `"form"` only when the flag is on, so flag-off imports insert exactly as before (unit test).
+- **Guest-claim rehearsal** (`supabase/tests/registration_guest_claim_assertions.sql`, 11 checks, own
+  fixtures). It **found a real bug**: approving a claim on a registration tournament failed with
+  `tournament_registrations_unique`. The summary trigger wrote the real player's row when
+  `merge_player_identity` moved the participant row, and then the merge's own
+  `tournament_registrations` update collided. Fix (Migration B, `reg_sync_registration_summary`):
+  a guest left with no entries has their summary row deleted instead of being marked withdrawn. A claim
+  where both are already entered in the same category stays refused (`merge_blocked: history_conflict`),
+  so nobody ends up in two rows.
+- **`court_start_assertions.sql`** is now self-contained (own players, tournament and matches, no psql
+  `\set`) and also checks a bare `"2"` clashes with `"C2"`. Run:
+  `node supabase/tests/registration_rehearse.mjs partb supabase/tests/court_start_assertions.sql`.
+- **`deno check`:** `_shared/notifications.ts` types its client structurally (`{ from(table) }`), so the
+  supabase-js 2.39.3 vs 2.10.0 clash is gone. The dispatcher, lineup-deadline-reminders, notify-up-next,
+  push-live-score, send-announcement and send-match-reminders type-check clean. match-notifier and
+  notify-social still have their own pre-existing type errors (not deployed in this work).
+- **Daily CSV digest:**
+  - a new table `tournament_backup_digests` (service role only);
+  - `queue_registration_backup_digest()`, run by cron `registration-backup-digest` at `35 14 * * *`
+    (20:05 IST), queues one row per IST day when anything was backed up in the last 24 h;
+  - the dispatcher's `drainBackupDigest` emails a CSV attachment (`BACKUP_CSV_HEADER` columns, oldest
+    first, formula-safe) to the club inbox, with the same 5 min / 30 min / give-up retries.
+  Pure builders `digestCsv` / `digestSubject` / `digestBody` are unit-tested.
+- **QR poster:**
+  - `qrcode@1.5.4` was added;
+  - a "Poster (A4)" button in the organiser's Registration view opens a printable page (club name,
+    tournament, open categories with closing times, QR for the My entry link);
+  - if pop-ups are blocked, the page downloads instead;
+  - share links and the poster now use the public https site (`publicLink`), so they also work when
+    copied from the Android app.
+
+### Ship log (23 Nov 2026)
+
+1. **Gate:**
+   - `npm run check` clean;
+   - vitest 148 files / 1375 tests;
+   - full rehearsal (all six migrations, every suite, plus guest-claim and court-start) passed, rolled
+     back;
+   - Playwright 21 / 22: `wp10-performance` also fails on `main` at f9ad3528 (not this work), and the
+     flaky scroll journey was skipped;
+   - the gallery e2e mock was updated for batched `site_data` reads (`key=in.(…)`).
+2. **PR #30** (`feat/registration-and-admin-revamp`, 4 commits) included all uncommitted work in the
+   checkout except local tool config.
+3. **Migrations applied** in this order, each in BEGIN/COMMIT with `lock_timeout 3s`, then
+   `migration repair`: 20261123150000 (A), then dispatcher deploy, then 150100 (B), 150200 (C), 150300
+   (court key; 17 rows `'1'` → `'C1'`), 150400 (role checks), 150500 (cron: 3 jobs active).
+   - New tables: RLS on, no client writes.
+   - Anon can execute only `registration_waitlist_counts`.
+   - The security advisors' only new entries are the intended client RPCs.
+4. **Dispatcher deployed** (`dispatch-scheduled-notifications`). The live copy matched the previous
+   `main`, and after the deploy it returns 200 every 2 min with the backup and digest drains active.
+5. **Secret set:** `REGISTRATION_BACKUP_EMAIL` (the club inbox; function secret only).
+6. **Types regenerated.** The registration columns are folded into `PARTICIPANT_PUBLIC_COLUMNS`, the
+   Feed reads `format_family` and `registration_opens_at`, and the import `source` cast is gone. The
+   registration service keeps an untyped table helper because participants embed `players` twice,
+   which the generated types report as ambiguous.
+7. **Merged** to `main`; the GitHub Pages deploy succeeded and the live site loads.
+8. **Android release:** v4.36 (build 436) uploaded to the production track and rolled out; tag `v4.36-build436` pushed.
